@@ -1,9 +1,21 @@
+"use client";
+
 import AutoComplete from "@/components/molecules/AutoComplete";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Landing() {
+  const router = useRouter();
+
+  const [selectedAddress, setSelectedAddress] = useState("");
+
+  const handleClicked = () => {
+    router.push(`/events?location=${selectedAddress}`);
+  };
+
   return (
     <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-screen relative text-white flex flex-col items-center">
       {/* Header */}
@@ -39,8 +51,14 @@ export default function Landing() {
             Explore, post and attend <br /> events near you
           </h1>
           <div className="flex gap-2 items-center justify-center lg:justify-start">
-            <AutoComplete />
-            <Link href="/events">
+            <AutoComplete
+              placeholderText={{
+                text: "Enter your address",
+                svgUrl: "assets/images/location.svg",
+              }}
+            />
+
+            <button type="button" onClick={handleClicked}>
               <Image
                 className="w-[50px] h-[50px] md:w-[70px] md:h-[70px]"
                 src="/assets/images/go.svg"
@@ -48,7 +66,7 @@ export default function Landing() {
                 width={50}
                 height={50}
               />
-            </Link>
+            </button>
           </div>
         </div>
       </div>
