@@ -56,6 +56,7 @@ export default function Landing() {
                 text: "Enter your address",
                 svgUrl: "assets/images/location.svg",
               }}
+              address={{ address: setSelectedAddress }}
             />
 
             <button type="button" onClick={handleClicked}>
