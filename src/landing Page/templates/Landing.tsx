@@ -4,22 +4,48 @@ import AutoComplete from "@/components/molecules/AutoComplete";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { type ButtonHTMLAttributes, useState } from "react";
 import { useRouter } from "next/navigation";
+import AuthPopup from "@/components/organisms/AuthPopup";
+import MobileAuthPopup from "@/components/organisms/MobileAuthPopup";
 
 export default function Landing() {
   const router = useRouter();
 
   const [selectedAddress, setSelectedAddress] = useState("");
 
+  const [buttonText, setButtonText] = useState("");
+
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
+
   const handleClicked = () => {
     router.push(`/events?location=${selectedAddress}`);
   };
 
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const text = (event.target as HTMLButtonElement).innerText;
+    setButtonText(text);
+
+    setShowAuthPopup((prevState) => !prevState);
+  };
+
   return (
     <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-screen relative text-white flex flex-col items-center">
+      {showAuthPopup && (
+        <>
+          <AuthPopup
+            buttonText={buttonText}
+            onClose={() => setShowAuthPopup(false)}
+          />
+          <MobileAuthPopup
+            buttonText={buttonText}
+            onClose={() => setShowAuthPopup(false)}
+          />
+        </>
+      )}
+
       {/* Header */}
-      <nav className="w-full bg-black bg-opacity-30 flex justify-center">
+      <nav className="w-full bg-black bg-opacity-30 flex justify-center z-20">
         <div className="flex justify-between py-5 w-[90%] md:w-[80%]">
           <div>
             <Link href="/">
@@ -30,12 +56,14 @@ export default function Landing() {
             <Button
               variant="outline"
               className="bg-transparent rounded-full font-bold"
+              onClick={handleClick}
             >
               Sign Up
             </Button>
             <Button
               variant="outline"
               className="bg-transparent rounded-full font-bold"
+              onClick={handleClick}
             >
               Sign In
             </Button>
