@@ -82,12 +82,12 @@ export default function AutoComplete({
         onChange={handleInputChange}
         value={inputValue}
         placeholder={placeholderText.text}
-        className="text-black text-xl outline-none md:min-w-[400px]"
+        className="text-black text-lg md:text-xl outline-none md:min-w-[400px]"
       />
 
       {/* 🔥 Show suggestions below input */}
       {searchResults.length > 0 && (
-        <ul className="absolute top-full left-0 w-full h-56 bg-white text-black text-sm md:text-lg border rounded shadow-md mt-1 z-10 overflow-y-scroll">
+        <ul className="absolute top-full left-0 w-full h-56 bg-white text-black text-lg md:text-lg border rounded shadow-md mt-1 z-10 overflow-y-scroll">
           {searchResults.map((result) => (
             // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
             <li

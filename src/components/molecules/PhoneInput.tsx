@@ -8,11 +8,13 @@ import { cn } from "../lib/utils";
 type Props = {
   selectedCountry: string;
   onSelectCountry: (dialCode: string) => void;
+  onChange: (phoneNumber: string) => void;
 };
 
 export default function PhoneInput({
   selectedCountry,
   onSelectCountry,
+  onChange,
 }: Props) {
   const countries = useCountries();
 
@@ -24,7 +26,7 @@ export default function PhoneInput({
 
   return (
     <div className="flex w-full gap-3 relative">
-      <div className="bg-black bg-opacity-10 rounded-xl p-4 text-xl flex items-center gap-2 ">
+      <div className="bg-black bg-opacity-10 rounded-xl p-4 text-xl flex items-center gap-2 min-w-28">
         <span>{selectedCountry}</span>
         <button type="button" onClick={handleRotate}>
           <Image
@@ -64,9 +66,10 @@ export default function PhoneInput({
         </div>
       )}
 
-      <div className="bg-black bg-opacity-10 rounded-xl p-4 flex-1">
+      <div className="bg-black bg-opacity-10 rounded-xl p-4 flex-1 min-w-[28]">
         <input
           type="text"
+          onChange={(event) => onChange(event.target.value)}
           placeholder="Phone number"
           className="bg-transparent outline-none text-xl"
         />

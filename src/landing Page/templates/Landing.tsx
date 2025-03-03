@@ -75,7 +75,7 @@ export default function Landing() {
       <div className="absolute flex justify-center items-center w-full h-screen bg-black bg-opacity-30">
         {/* Hero */}
         <div className="w-[90%] md:w-[80%] space-y-12">
-          <h1 className="font-bold text-4xl text-center md:text-5xl lg:text-6xl lg:text-left">
+          <h1 className="font-bold text-5xl text-center lg:text-6xl lg:text-left">
             Explore, post and attend <br /> events near you
           </h1>
           <div className="flex gap-2 items-center justify-center lg:justify-start">

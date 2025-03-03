@@ -1,13 +1,29 @@
+import { signInWithGoogle } from "@/services/authService";
 import Image from "next/image";
 
 type GoogleTextProp = {
   buttonText: string;
+  location: string | null;
 };
 
-export default function GoogleAuthButton({ buttonText }: GoogleTextProp) {
+export default function GoogleAuthButton({
+  buttonText,
+  location,
+}: GoogleTextProp) {
+  const handlSignin = async () => {
+    try {
+      const { url } = await signInWithGoogle(location);
+
+      window.location.href = url;
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+    }
+  };
+
   return (
     <button
       type="button"
+      onClick={handlSignin}
       className="flex items-center w-full bg-black bg-opacity-10 px-20 py-4 md:p-4 md:text-lg lg:text-xl rounded-xl"
     >
       <Image
