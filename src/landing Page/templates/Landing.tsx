@@ -30,7 +30,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-screen relative text-white flex flex-col items-center">
+    <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-dvh relative text-white flex flex-col items-center">
       {showAuthPopup && (
         <>
           <AuthPopup
@@ -72,7 +72,7 @@ export default function Landing() {
       </nav>
 
       {/* overlay */}
-      <div className="absolute flex justify-center items-center w-full h-screen bg-black bg-opacity-30">
+      <div className="absolute flex justify-center items-center w-full h-dvh bg-black bg-opacity-30">
         {/* Hero */}
         <div className="w-[90%] md:w-[80%] space-y-12">
           <h1 className="font-bold text-5xl text-center lg:text-6xl lg:text-left">

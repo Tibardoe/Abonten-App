@@ -1,3 +1,4 @@
+import type { authUserType } from "@/types/userProfileType";
 import { supabase } from "../config/supabase";
 
 export const signInWithGoogle = async (location: string | null) => {
@@ -11,7 +12,25 @@ export const signInWithGoogle = async (location: string | null) => {
   });
 
   if (error) throw error;
+
   return data;
+};
+
+// Fetch User After OAuth Redirect
+export const fetchAuthenticatedUser = async () => {
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    console.error("No active session found.", error?.message);
+    return null;
+  }
+
+  const user = data.user;
+
+  // Ensure `user_info` exists
+  await ensureUserInfoExists(user);
+
+  return user;
 };
 
 export const signInWithPhone = async (phone: string) => {
@@ -36,7 +55,41 @@ export const verifyOtp = async (phone: string, otp: string) => {
     throw error;
   }
 
+  // Ensure user exists in `user_info` after phone sign-in
+  if (data?.user) {
+    await ensureUserInfoExists(data?.user);
+  }
+
   return data;
+};
+
+const ensureUserInfoExists = async (user: authUserType) => {
+  const { data, error } = await supabase
+    .from("user_info")
+    .select("id")
+    .eq("id", user.id)
+    .single();
+
+  if (!data) {
+    console.log("Creating new user_info entry...");
+
+    const { error: insertError } = await supabase.from("user_info").insert({
+      id: user.id, // Match `auth.users.id`
+      status_id: 1, // Default status
+      username: user.email
+        ? user.email.split("@")[0]
+        : `user_${user.id.slice(0, 8)}`, // Generate a username if email exists, else use UID
+      full_name: user.displayName || null,
+      avatar_public_id: null,
+      avatar_version: null,
+      bio: null,
+      updated_at: new Date().toISOString(),
+    });
+
+    if (insertError) {
+      console.error("Error inserting user_info:", insertError.message);
+    }
+  }
 };
 
 export const signOut = async () => {

@@ -1,11 +1,12 @@
 import { supabase } from "@/config/supabase";
 import { signOut } from "@/services/authService";
-import type { User } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  session: Session | null;
   signOut: () => Promise<void>;
 }
 
@@ -16,20 +17,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const [loading, setLoading] = useState(true);
 
+  const [session, setSession] = useState<Session | null>(null);
+
   useEffect(() => {
     const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getSession();
 
-      setUser(data?.user || null);
+      if (error) {
+        console.error("Error fetching session:", error.message);
+        setLoading(false);
+        return;
+      }
 
+      setUser(data?.session?.user || null);
+      setSession(data?.session || null);
       setLoading(false);
     };
 
     fetchUser();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setUser(session?.user || null);
+        setSession(session || null);
       },
     );
 
@@ -39,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

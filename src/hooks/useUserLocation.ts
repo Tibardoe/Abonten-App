@@ -35,8 +35,6 @@ export function getUserLocation() {
           const { latitude, longitude } = position.coords;
           const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-          console.log("Latitude:", latitude, "Longitude:", longitude);
-
           try {
             const res = await fetch(
               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}`,
@@ -46,7 +44,6 @@ export function getUserLocation() {
 
             if (data.results.length > 0) {
               const addressComponents = data.results[0].address_components;
-              console.log("Address Components:", addressComponents);
 
               let town = null;
 
