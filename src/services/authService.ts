@@ -64,31 +64,36 @@ export const verifyOtp = async (phone: string, otp: string) => {
 };
 
 const ensureUserInfoExists = async (user: authUserType) => {
-  const { data, error } = await supabase
-    .from("user_info")
-    .select("id")
-    .eq("id", user.id)
-    .single();
+  try {
+    // Check if the user already exists in `user_info`
+    const { data, error } = await supabase
+      .from("user_info")
+      .select("id")
+      .eq("id", user.id)
+      .single();
 
-  if (!data) {
-    console.log("Creating new user_info entry...");
+    if (!data) {
+      console.log("Creating new user_info entry...");
 
-    const { error: insertError } = await supabase.from("user_info").insert({
-      id: user.id, // Match `auth.users.id`
-      status_id: 1, // Default status
-      username: user.email
-        ? user.email.split("@")[0]
-        : `user_${user.id.slice(0, 8)}`, // Generate a username if email exists, else use UID
-      full_name: user.displayName || null,
-      avatar_public_id: null,
-      avatar_version: null,
-      bio: null,
-      updated_at: new Date().toISOString(),
-    });
+      const { error: insertError } = await supabase.from("user_info").insert({
+        id: user.id, // Match `auth.users.id`
+        status_id: 1, // Default status
+        username: user.email
+          ? user.email.split("@")[0]
+          : `user_${user.id.slice(0, 8)}`, // Generate username from email if exists, else use UID
+        full_name: user.user_metadata?.full_name || null,
+        avatar_public_id: null,
+        avatar_version: null,
+        bio: null,
+        updated_at: new Date().toISOString(),
+      });
 
-    if (insertError) {
-      console.error("Error inserting user_info:", insertError.message);
+      if (insertError) {
+        console.error("Error inserting user_info:", insertError.message);
+      }
     }
+  } catch (error) {
+    console.error("Error ensuring user exists in user_info:", error);
   }
 };
 

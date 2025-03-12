@@ -110,10 +110,10 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
 
   return (
     // Overlay
-    <div className="bg-black top-0 w-full h-screen z-30 absolute bg-opacity-50  justify-center items-center hidden md:flex">
+    <div className="bg-black top-0 w-full h-screen absolute bg-opacity-50 justify-center items-center hidden md:flex z-20">
       {step === 1 ? (
         // Popup
-        <div className="md:w-[60%] lg:w-[40%] bg-white text-black px-10 py-5  flex-col items-center gap-5 rounded-xl hidden md:flex">
+        <div className="md:w-[60%] lg:w-[40%] bg-white text-black px-10 py-5 flex-col items-center gap-5 rounded-xl hidden md:flex">
           <button type="button" className="ml-auto" onClick={onClose}>
             <Image
               src="/assets/images/authExit.svg"

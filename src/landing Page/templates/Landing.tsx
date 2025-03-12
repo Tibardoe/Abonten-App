@@ -45,7 +45,7 @@ export default function Landing() {
       )}
 
       {/* Header */}
-      <nav className="w-full bg-black bg-opacity-30 flex justify-center z-20">
+      <nav className="w-full bg-black bg-opacity-30 flex justify-center z-10">
         <div className="flex justify-between py-5 w-[90%] md:w-[80%]">
           <div>
             <Link href="/">

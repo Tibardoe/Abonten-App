@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   session: Session | null;
+  setSession: (session: Session | null) => void;
   signOut: () => Promise<void>;
 }
 
@@ -49,7 +50,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, setSession, loading, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

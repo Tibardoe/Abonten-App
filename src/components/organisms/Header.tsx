@@ -2,28 +2,52 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
-import { useShowMenu } from "@/context/uiContext";
-import useUserProfile from "@/hooks/useUserProfile";
 import { signOut } from "@/services/authService";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { cn } from "../lib/utils";
 import AuthPopup from "./AuthPopup";
 import MobileAuthPopup from "./MobileAuthPopup";
+import SideBar from "./SideBar";
 
 export default function Header() {
   const [buttonText, setButtonText] = useState("");
 
+  const [profilePicture, setProfilePicture] = useState("");
+
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
-  const userProfile = useUserProfile();
+  const [isMenuClicked, setIsMenuClicked] = useState(false);
 
-  const { user } = useAuth();
+  const pathname = usePathname();
+
+  const { user, session } = useAuth();
 
   const router = useRouter();
 
-  const { toggleComponent, isMenuClicked } = useShowMenu();
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (!user) {
+        return;
+      }
+
+      const res = await fetch("/api/user-profile", {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.url) {
+        setProfilePicture(result.url);
+      }
+    };
+
+    fetchProfilePicture();
+  }, [user, session]);
+
+  const isUserAccount = pathname === "/user-account";
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const text = (event.target as HTMLButtonElement).innerText;
@@ -41,8 +65,12 @@ export default function Header() {
     }
   };
 
+  const handleMenuClicked = () => {
+    setIsMenuClicked((prevState) => !prevState);
+  };
+
   return (
-    <nav className="w-full text flex justify-center fixed bg-white">
+    <nav className="w-full text flex justify-center fixed bg-white z-10">
       {showAuthPopup && (
         <>
           <AuthPopup
@@ -56,13 +84,15 @@ export default function Header() {
         </>
       )}
 
+      {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
+
       <div className="flex justify-between py-5 w-[90%] md:w-[80%] border-b border-black-500 items-center">
         <div className="mx-auto lg:mx-0 flex items-center w-full">
           {/* Menu button on small devices */}
           {isMenuClicked ? (
             <div className="w-[30px] h-[30px] md:w-[40px] md:h-[40px] flex items-center justify-center">
               <button
-                onClick={toggleComponent}
+                onClick={handleMenuClicked}
                 type="button"
                 className="lg:hidden w-[20px] h-[20px] md:w-[25px] md:h-[25px]"
               >
@@ -77,7 +107,7 @@ export default function Header() {
           ) : (
             <button
               type="button"
-              onClick={toggleComponent}
+              onClick={handleMenuClicked}
               className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
             >
               <Image
@@ -98,7 +128,7 @@ export default function Header() {
         </div>
 
         {user ? (
-          <div className="hidden lg:flex items-center gap-16">
+          <div className="hidden lg:flex items-center gap-10 min-w-fit">
             <Link href="#" className="flex gap-1 items-center">
               <Image
                 src="/assets/images/post.svg"
@@ -122,18 +152,25 @@ export default function Header() {
               SignOut
             </button>
 
-            <button
-              type="button"
-              className="bg-transparent rounded-full font-bold border-black"
+            <Link
+              href="/user-account"
+              className={cn(
+                "bg-transparent rounded-full font-bold border-black",
+                { hidden: isUserAccount },
+              )}
             >
               <Image
-                src="/assets/images/AnonymousProfile.jpg"
+                src={
+                  profilePicture
+                    ? profilePicture
+                    : "/assets/images/AnonymousProfile.jpg"
+                }
                 alt="Profile Picture"
-                width={100}
-                height={100}
+                width={60}
+                height={60}
                 className="rounded-full"
               />
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="space-x-5 hidden lg:flex">
