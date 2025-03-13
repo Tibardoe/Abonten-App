@@ -16,15 +16,16 @@ export default function ProfileDetails() {
 
   const router = useRouter();
 
-  const { user, session } = useAuth();
+  const { loading, session, user } = useAuth();
 
   useEffect(() => {
     const fetchUser = async () => {
-      if (!session) {
-        router.push("/");
-        return;
-      }
       try {
+        if (!loading && !user) {
+          router.push("/");
+          return;
+        }
+
         const res = await fetch("/api/user-profile", {
           headers: { Authorization: `Bearer ${session?.access_token}` },
         });
@@ -44,7 +45,7 @@ export default function ProfileDetails() {
     };
 
     fetchUser();
-  }, [session, router]);
+  }, [loading, session, user, router]);
 
   console.log("user details=", userDetails);
 

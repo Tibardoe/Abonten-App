@@ -32,8 +32,6 @@ export async function GET(req: NextRequest) {
 
     const userId = user.id;
 
-    console.log(userId);
-
     const { data, error } = await supabase
       .from("user_profile_detail")
       .select("*")
