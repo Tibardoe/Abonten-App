@@ -7,6 +7,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   session: Session | null;
+  activeTab: string | null;
+  setActiveTab: (text: string) => void;
   setSession: (session: Session | null) => void;
   signOut: () => Promise<void>;
 }
@@ -19,6 +21,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const [session, setSession] = useState<Session | null>(null);
+
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+
+  useEffect(() => {
+    const savedTab = localStorage.getItem("activeTab");
+
+    if (savedTab) {
+      setActiveTab(savedTab);
+    } else {
+      setActiveTab("Posts");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== null) {
+      localStorage.setItem("activeTab", activeTab);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -51,7 +71,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, setSession, loading, signOut }}
+      value={{
+        user,
+        session,
+        setSession,
+        loading,
+        signOut,
+        activeTab,
+        setActiveTab,
+      }}
     >
       {children}
     </AuthContext.Provider>

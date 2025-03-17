@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SettingsButton from "../atoms/SettingsButton";
+import Higlight from "../molecules/Highlight";
 
 export default function ProfileDetails() {
   const [userDetails, setUserDetails] = useState<userProfileDetailsType | null>(
@@ -102,19 +103,6 @@ export default function ProfileDetails() {
         <Button variant="outline" className="border-black border-2 font-bold">
           <Link href="/user-profile">Edit Profile</Link>
         </Button>
-
-        <div className="space-y-3">
-          <h2 className="font-semibold">Highlights</h2>
-
-          <button type="button">
-            <Image
-              src="/assets/images/highlight.svg"
-              alt="Highlight button"
-              width={80}
-              height={80}
-            />
-          </button>
-        </div>
       </div>
 
       {/* On tablet and desktop */}
