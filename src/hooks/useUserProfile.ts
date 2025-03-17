@@ -1,4 +1,4 @@
-import { supabase } from "@/config/supabase";
+import { supabase } from "@/config/supabase/client";
 import type { userProfileType } from "@/types/userProfileType";
 import { useEffect, useState } from "react";
 

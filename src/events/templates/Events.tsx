@@ -1,7 +1,7 @@
 "use client";
 
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
-import { supabase } from "@/config/supabase";
+import { supabase } from "@/config/supabase/client";
 import { useAuth } from "@/context/authContext";
 import useUserProfile from "@/hooks/useUserProfile";
 import { fetchAuthenticatedUser } from "@/services/authService";

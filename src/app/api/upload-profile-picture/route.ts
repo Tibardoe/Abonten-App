@@ -1,4 +1,4 @@
-import { supabase } from "@/config/supabase";
+import { supabase } from "@/config/supabase/client";
 import { type UploadApiOptions, v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 

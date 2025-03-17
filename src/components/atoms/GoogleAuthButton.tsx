@@ -17,9 +17,7 @@ export default function GoogleAuthButton({
     try {
       const { url } = await signInWithGoogle(location);
 
-      // router.push(url);
-
-      // window.location.href = url;
+      router.push(url);
     } catch (error) {
       console.error("Google Sign-In Error:", error);
     }

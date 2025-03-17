@@ -1,5 +1,5 @@
 import type { authUserType } from "@/types/userProfileType";
-import { supabase } from "../config/supabase";
+import { supabase } from "../config/supabase/client";
 
 export const signInWithGoogle = async (location: string | null) => {
   const { data, error } = await supabase.auth.signInWithOAuth({

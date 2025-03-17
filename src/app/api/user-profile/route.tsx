@@ -1,27 +1,14 @@
-import { supabase } from "@/config/supabase";
+import { createClient } from "@/config/supabase/server";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-      return NextResponse.json(
-        { error: "Invalid token format" },
-        { status: 401 },
-      );
-    }
+    const supabase = await createClient();
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser(token);
+    } = await supabase.auth.getUser();
 
     if (userError || !user) {
       return NextResponse.json(
