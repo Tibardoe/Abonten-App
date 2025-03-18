@@ -7,7 +7,7 @@ export default function Posts() {
 
       <p>Post events for others to attend</p>
 
-      <Button className="w-32 font-bold text-lg">Post</Button>
+      <Button className="font-bold md:text-lg px-10">Post</Button>
     </div>
   );
 }

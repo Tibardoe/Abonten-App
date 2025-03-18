@@ -10,7 +10,7 @@ export default function RootLayout({
   return (
     <>
       <Header />
-      <main className="h-dvh">{children}</main>
+      <main>{children}</main>
       <DesktopFooter />
       <MobileNavBar />
     </>

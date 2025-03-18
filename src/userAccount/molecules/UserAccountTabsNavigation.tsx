@@ -32,15 +32,15 @@ export default function UserAccountTabsNavigation() {
         <UserAccountTabsNavButton
           imgUrl="/assets/images/favorites.svg"
           text="Favorites"
-          isActive={activeTab === "favorites"}
-          onClick={() => handleClick("favorites")}
+          isActive={activeTab === "Favorites"}
+          onClick={() => handleClick("Favorites")}
         />
 
         <UserAccountTabsNavButton
           imgUrl="/assets/images/reviews.svg"
           text="Reviews"
-          isActive={activeTab === "reviews"}
-          onClick={() => handleClick("reviews")}
+          isActive={activeTab === "Reviews"}
+          onClick={() => handleClick("Reviews")}
         />
       </div>
     </div>

@@ -1,3 +1,10 @@
+import Settings from "@/settings/templates/Settings";
+import SettingsPageWrapper from "@/settings/templates/SettingsPageWrapper";
+
 export default function page() {
-  return <div>Settings</div>;
+  return (
+    <section>
+      <SettingsPageWrapper />
+    </section>
+  );
 }
