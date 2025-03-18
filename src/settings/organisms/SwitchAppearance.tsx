@@ -10,14 +10,18 @@ export default function SwitchAppearance() {
   };
 
   return (
-    <div>
-      <div>
-        <p>Dark mode</p>
+    <div className="flex justify-between items-start w-full">
+      <div className="flex gap-5 items-center">
+        <p className="text-xl">Dark mode</p>
         <Image
-          src={"/assets/images/darkMode.svg"}
+          src={
+            toggle
+              ? "/assets/images/lightMode.svg"
+              : "/assets/images/darkMode.svg"
+          }
           alt={"Dark mode icon"}
-          width={40}
-          height={40}
+          width={30}
+          height={30}
         />
       </div>
 
@@ -28,8 +32,8 @@ export default function SwitchAppearance() {
       >
         <span
           className={cn(
-            "w-5 h-5 rounded-full bg-white transition-all duration-200 ease-in-out transform",
-            toggle ? "-translate-x-0" : "translate-x-0",
+            "w-5 h-5 rounded-full absolute bg-white transition-all duration-200 ease-in-out transform",
+            toggle ? "translate-x-9" : "translate-x-0",
           )}
         />
       </button>
