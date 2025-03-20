@@ -1,10 +1,17 @@
+import BackButton from "@/components/atoms/BackButton";
+import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import Image from "next/image";
 import Link from "next/link";
-import DetailsContainer from "../atoms/DetailsContainer";
 
-export default function Overview() {
+export default function page() {
   return (
     <div className="w-full flex flex-col gap-14">
+      <div className="flex items-center w-full">
+        <BackButton />
+
+        <p className="mx-auto font-bold text-2xl">Overview</p>
+      </div>
+
       <div className="space-y-2">
         <h1>Plan Details</h1>
         <DetailsContainer>
@@ -17,7 +24,7 @@ export default function Overview() {
 
           <div className="flex justify-between items-center">
             <p className="font-bold">Manage plan</p>
-            <Link href="#">
+            <Link href="/settings">
               <Image
                 src="/assets/images/arrowRight.svg"
                 alt="Arrow right"
