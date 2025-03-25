@@ -23,7 +23,7 @@ export default function Input({ title, inputPlaceholder }: inputProp) {
         {title}
       </label>
 
-      <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-black">
+      <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-black border-opacity-30">
         {title === "Bio" ? (
           <textarea
             className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
