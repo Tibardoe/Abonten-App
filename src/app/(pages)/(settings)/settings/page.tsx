@@ -23,7 +23,7 @@ export default function page() {
 
             <div className="flex justify-between items-center">
               <p className="font-bold">Manage plan</p>
-              <Link href="/settings">
+              <Link href="/settings/membership">
                 <Image
                   src="/assets/images/arrowRight.svg"
                   alt="Arrow right"
@@ -41,7 +41,7 @@ export default function page() {
           <DetailsContainer>
             <div className="flex justify-between items-center">
               <p className="font-bold text-lg">Change plan</p>
-              <Link href="#">
+              <Link href="/plans">
                 <Image
                   src="/assets/images/arrowRight.svg"
                   alt="Arrow right"
@@ -55,7 +55,7 @@ export default function page() {
 
             <div className="flex justify-between items-center">
               <p className="font-bold text-lg">Manage payment method</p>
-              <Link href="#">
+              <Link href="/wallet">
                 <Image
                   src="/assets/images/arrowRight.svg"
                   alt="Arrow right"
