@@ -1,21 +1,33 @@
-import { useState } from "react";
+"use client";
+
+import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
+import { Button } from "../ui/button";
 
 export default function EditProfileInputFields() {
-  const [value, setValue] = useState("");
+  const form = useForm();
 
-  const handleChange = (string: string) => {
-    setValue(string);
-  };
+  const { register } = form;
 
   return (
-    <div>
+    <form className="flex flex-col gap-5">
       <Input
         title="Username"
         inputPlaceholder="Username"
-        value={value}
-        onchange={handleChange}
+        {...register("username")}
       />
-    </div>
+
+      <Input title="Name" inputPlaceholder="Name" {...register("name")} />
+
+      <Input
+        title="Website"
+        inputPlaceholder="Website"
+        {...register("website")}
+      />
+
+      <Input title="Bio" inputPlaceholder="Bio" {...register("bio")} />
+
+      <Button className="self-end font-bold">Submit</Button>
+    </form>
   );
 }

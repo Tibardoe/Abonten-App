@@ -9,7 +9,7 @@ export default function MobileSettingsHeaderNav({ title }: titleProp) {
     <div className="flex items-center w-full">
       <BackButton />
 
-      <p className="mx-auto font-bold text-2xl">{title}</p>
+      <p className="mx-auto font-bold text-xl md:text-2xl">{title}</p>
     </div>
   );
 }

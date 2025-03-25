@@ -10,7 +10,9 @@ export default function RootLayout({
   return (
     <>
       <Header />
-      <main>{children}</main>
+      <main className="w-[90%] md:w-[80%] mx-auto pt-24 md:pt-32 min-h-dvh mb-20">
+        {children}
+      </main>
       <DesktopFooter />
       <MobileNavBar />
     </>

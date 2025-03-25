@@ -11,6 +11,7 @@ export default function BackButton() {
         alt="Back"
         width={40}
         height={40}
+        className="w-8 h-8 md:w-10 md:h-10"
       />
     </Link>
   );

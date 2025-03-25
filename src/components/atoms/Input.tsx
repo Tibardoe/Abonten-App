@@ -1,39 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type inputProp = {
   title: string;
   inputPlaceholder: string;
-  value: string;
-  onchange: (string: string) => void;
 };
 
-export default function Input({
-  title,
-  inputPlaceholder,
-  value,
-  onchange,
-}: inputProp) {
+export default function Input({ title, inputPlaceholder }: inputProp) {
   const [inputFieldDisabled, setInputFieldDisabled] = useState(true);
 
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleClick = () => {
+    setInputFieldDisabled((prevState) => !prevState);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
   return (
-    <div className="space-y-3">
-      <h2 className="font-bold">{title}</h2>
-      <div className="w-full flex justify-between items-center gap-5">
-        <input
-          type="text"
-          placeholder={inputPlaceholder}
-          value={value}
-          onChange={(e) => onchange(e.target.value)}
-          disabled={inputFieldDisabled}
-          className="bg-transparent outline-none text-xl flex-1"
-        />
+    <div className="space-y-2">
+      <label htmlFor={title} className="font-bold md:text-lg">
+        {title}
+      </label>
+
+      <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-black">
+        {title === "Bio" ? (
+          <textarea
+            className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+            placeholder={inputPlaceholder}
+          />
+        ) : (
+          <input
+            type="text"
+            ref={inputRef}
+            placeholder={inputPlaceholder}
+            disabled={title === "Bio" ? false : inputFieldDisabled}
+            className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+          />
+        )}
 
         <button
           type="button"
-          onClick={() => setInputFieldDisabled(false)}
-          className={`${title} === "Bio"` && "hidden"}
+          onClick={handleClick}
+          className={title === "Bio" ? "hidden" : "flex font-bold"}
         >
           Edit
         </button>
