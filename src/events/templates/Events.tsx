@@ -26,7 +26,7 @@ export default function Events() {
   }, [session]);
 
   return (
-    <section className="w-[90%] md:w-[80%] mx-auto pt-24 md:pt-32 min-h-dvh">
+    <section>
       <LocationAndFilterSection />
     </section>
   );
