@@ -55,3 +55,15 @@ export type userProfileDetailsType = {
   highlightMediaUrl?: string;
   highlightCreatedAt?: string;
 };
+
+export type userProfileSettingsDetailsType = {
+  username: string;
+  fullName: string;
+  bio: string;
+  phone: number;
+  email: string;
+  subscriptionName: string;
+  website: string;
+  avatarPublicId: string;
+  avatarVersion: string;
+};

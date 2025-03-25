@@ -1,4 +1,5 @@
 import BackButton from "@/components/atoms/BackButton";
+import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,11 +7,7 @@ import Link from "next/link";
 export default function page() {
   return (
     <div className="w-full flex flex-col gap-14">
-      <div className="flex items-center w-full">
-        <BackButton />
-
-        <p className="mx-auto font-bold text-2xl">Overview</p>
-      </div>
+      <MobileSettingsHeaderNav title="Overview" />
 
       <div className="space-y-2">
         <h1>Plan Details</h1>
@@ -56,6 +53,20 @@ export default function page() {
 
           <div className="flex justify-between items-center">
             <p className="font-bold text-lg">Manage payment method</p>
+            <Link href="#">
+              <Image
+                src="/assets/images/arrowRight.svg"
+                alt="Arrow right"
+                width={30}
+                height={30}
+              />
+            </Link>
+          </div>
+
+          <hr />
+
+          <div className="flex justify-between items-center">
+            <p className="font-bold text-lg">View transaction history</p>
             <Link href="#">
               <Image
                 src="/assets/images/arrowRight.svg"

@@ -8,7 +8,7 @@ export default function RootLayout({
 }>) {
   return (
     <SettingsProviderWrapper>
-      <main className="w-[90%] md:w-[80%] mx-auto pt-24 md:pt-32 min-h-dvh">
+      <main className="w-[90%] md:w-[80%] mx-auto pt-24 md:pt-32 min-h-dvh mb-20">
         <section className="hidden lg:grid lg:grid-cols-[auto_1fr] gap-20">
           <SettingsDesktopSideBar />
           {children}

@@ -1,8 +1,12 @@
+// import { createClient } from "@/config/supabase/server";
+// import type { userProfileSettingsDetailsType } from "@/types/userProfileType";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface SettingsContextProp {
   settingsActiveTab: string | null;
   setSettingsActiveTab: (text: string) => void;
+  // userProfileSettingsDetails: userProfileSettingsDetailsType;
+  // setUserProfileSettingsDetails: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextProp | undefined>(
@@ -17,6 +21,22 @@ export const SettingsProvider = ({
   const [settingsActiveTab, setSettingsActiveTab] = useState<string | null>(
     null,
   );
+
+  // const [userProfileSettingsDetails, setUserProfileSettingsDetails] =
+  //   useState<userProfileSettingsDetailsType | null>(null);
+
+  // useEffect(() => {
+  //   const settingsProfile = async () => {
+  //     const supabase = await createClient();
+  //     const { data: user, error } = await supabase.auth.getUser();
+
+  //     if (!user) {
+  //       return;
+  //     }
+
+  //     const {data, error:dataError} = await supabase.from()
+  //   };
+  // }, []);
 
   useEffect(() => {
     const savedActiveTab = localStorage.getItem("settingsActiveTab");

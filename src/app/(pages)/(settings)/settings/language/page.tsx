@@ -1,3 +1,10 @@
+import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+
 export default function page() {
-  return <div>Language</div>;
+  return (
+    <div className="w-full flex flex-col gap-14">
+      <MobileSettingsHeaderNav title="Language" />
+      Language
+    </div>
+  );
 }
