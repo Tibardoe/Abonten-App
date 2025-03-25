@@ -46,6 +46,7 @@ export default function page() {
           <button
             type="button"
             className="font-bold border border-black rounded-md text-lg py-1 px-5"
+            onClick={() => window.history.back()}
           >
             Back
           </button>
