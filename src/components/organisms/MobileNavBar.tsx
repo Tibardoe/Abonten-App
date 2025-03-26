@@ -20,7 +20,7 @@ export default function MobileNavBar() {
           imgUrl="/assets/images/transactions.svg"
         />
         <MobileNavButton
-          href="/wallets"
+          href="/wallet"
           text="Wallets"
           imgUrl="/assets/images/wallet.svg"
         />
