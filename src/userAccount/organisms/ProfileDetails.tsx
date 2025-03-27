@@ -91,7 +91,7 @@ export default function ProfileDetails() {
         </div>
 
         <Button variant="outline" className="border-black border-2 font-bold">
-          <Link href="/user-profile">Edit Profile</Link>
+          <Link href="/settings/edit-profile">Edit Profile</Link>
         </Button>
       </div>
 
@@ -116,7 +116,7 @@ export default function ProfileDetails() {
           <h2>{userDetails?.username}</h2>
 
           <Button variant="outline" className="border-black font-bold">
-            <Link href="/user-profile">Edit Profile</Link>
+            <Link href="/settings/edit-profile">Edit Profile</Link>
           </Button>
 
           <SettingsButton />
