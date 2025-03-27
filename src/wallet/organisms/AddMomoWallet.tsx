@@ -65,7 +65,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
           </label>
           <div className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-white">
             <input
-              type="text"
+              type="tel"
               className="outline-none w-full"
               {...register("phone")}
               placeholder="Eg. +233 54 927 3094"
@@ -97,7 +97,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
               {/* for mobile */}
               {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
               <div
-                onClick={onclick}
+                onClick={() => setShowDropdown(false)}
                 className="flex items-end md:hidden fixed top-0 left-0 w-full bg-black bg-opacity-70 h-dvh"
               >
                 {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}

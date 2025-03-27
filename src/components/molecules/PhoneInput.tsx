@@ -68,7 +68,7 @@ export default function PhoneInput({
 
       <div className="bg-black bg-opacity-10 rounded-xl p-4 flex-1 min-w-[28]">
         <input
-          type="text"
+          type="tel"
           onChange={(event) => onChange(event.target.value)}
           placeholder="Phone number"
           className="bg-transparent outline-none text-xl"
