@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import PaymentOptionCard from "../molecules/PaymentOptionCard";
+import AddBankCard from "./AddBankCard";
 import AddMomoWallet from "./AddMomoWallet";
 
 type PopupCloseProp = {
@@ -12,8 +13,11 @@ type PopupCloseProp = {
 export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
   const [step, setStep] = useState(1);
 
-  const increaseStep = () => {
-    setStep(step + 1);
+  const [title, setTitle] = useState("");
+
+  const increaseStep = (title: string) => {
+    setTitle(title);
+    setStep((prevState) => prevState + 1);
   };
 
   return (
@@ -21,7 +25,7 @@ export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
       onClick={onclick}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
-          onclick;
+          onclick();
         }
       }}
       className="fixed top-0 left-0 z-10 bg-black bg-opacity-30 w-full min-h-dvh flex justify-center items-end md:items-center"
@@ -61,7 +65,10 @@ export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
         </div>
       )}
 
-      {step === 2 && <AddMomoWallet onclick={onclick} />}
+      {step === 2 && title === "Mobile Money" && (
+        <AddMomoWallet onclick={onclick} />
+      )}
+      {step === 2 && title === "Bank Card" && <AddBankCard onclick={onclick} />}
     </div>
   );
 }

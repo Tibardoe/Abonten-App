@@ -5,7 +5,6 @@ import { useAuth } from "@/context/authContext";
 import type { userProfileDetailsType } from "@/types/userProfileType";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
@@ -15,18 +14,9 @@ export default function ProfileDetails() {
     null,
   );
 
-  const router = useRouter();
-
-  const { loading, user } = useAuth();
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        if (!loading && !user) {
-          router.push("/");
-          return;
-        }
-
         const res = await fetch("/api/user-profile");
 
         const result = await res.json();
@@ -42,7 +32,7 @@ export default function ProfileDetails() {
     };
 
     fetchUser();
-  }, [loading, user, router]);
+  }, []);
 
   return (
     <>

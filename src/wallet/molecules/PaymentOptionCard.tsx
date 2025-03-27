@@ -4,7 +4,7 @@ type PaymentOptionCardProp = {
   imgUrl: string;
   optionTitle: string;
   optionDetails: string;
-  handleStep: () => void;
+  handleStep: (title: string) => void;
 };
 
 export default function PaymentOptionCard({
@@ -16,7 +16,7 @@ export default function PaymentOptionCard({
   return (
     <button
       type="button"
-      onClick={handleStep}
+      onClick={() => handleStep(optionTitle)}
       className="rounded-lg flex gap-3 border border-black border-opacity-40 w-full p-3"
     >
       <Image src={imgUrl} alt="option icon" width={40} height={40} />

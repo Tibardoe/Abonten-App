@@ -26,7 +26,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
       className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-white md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
     >
       <div className="hidden md:flex justify-between items-center">
-        <h1 className="font-bold text-lg">Add wallet</h1>
+        <h1 className="font-bold text-lg">Add Mobile Money Wallet</h1>
 
         <button type="button" onClick={onclick}>
           <Image
