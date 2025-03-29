@@ -12,11 +12,11 @@ export default function UserAccountLogin() {
     showAuthPopup && (
       <>
         <AuthPopup
-          buttonText={buttonText}
+          buttonText="Sign In"
           onClose={() => setShowAuthPopup(false)}
         />
         <MobileAuthPopup
-          buttonText={buttonText}
+          buttonText="Sign In"
           onClose={() => setShowAuthPopup(false)}
         />
       </>
