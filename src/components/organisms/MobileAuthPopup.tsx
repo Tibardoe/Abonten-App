@@ -106,7 +106,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
   };
 
   return step === 1 ? (
-    <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-dvh z-30 absolute items-center">
+    <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-dvh z-30 fixed left-0 items-center">
       <div className="w-[90%] text-black h-screen relative">
         <button type="button" className="ml-auto mb-10" onClick={onClose}>
           <Image
