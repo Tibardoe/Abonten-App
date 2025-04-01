@@ -32,11 +32,12 @@ export default function EditProfileInputFields({
 
   const { register, handleSubmit } = form;
 
+  const onSubmit = (data: FormValues) => {
+    console.log(data);
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit((data) => console.log(data))}
-      className="flex flex-col gap-5"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
       <Input
         title="Username"
         inputPlaceholder="Username"
