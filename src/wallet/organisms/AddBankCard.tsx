@@ -71,8 +71,9 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
           <div className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-white">
             <input
               type="tel"
+              inputMode="numeric"
               className="outline-none w-full"
-              {...register("phone")}
+              {...register("creditCard")}
               placeholder="Eg. 1234 1234 1234 1234"
             />
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import PlanContainer from "@/components/molecules/PlanContainer";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function page() {
@@ -51,12 +52,13 @@ export default function page() {
             Back
           </button>
 
-          <button
+          <Link
+            href="/wallet"
             type="button"
             className="font-bold bg-black rounded-md text-lg py-1 px-5 text-white"
           >
             Continue
-          </button>
+          </Link>
         </div>
       </div>
     </div>
