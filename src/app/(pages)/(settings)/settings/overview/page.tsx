@@ -1,14 +1,11 @@
 import { userSubscription } from "@/actions/getUserSubscription";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
-import type { SubscriptionType } from "@/types/subscriptionType";
 import Image from "next/image";
 import Link from "next/link";
 
 export default async function page() {
-  const subscription: SubscriptionType = await userSubscription();
-
-  console.log(subscription);
+  const subscription = await userSubscription();
 
   return (
     <div className="w-full flex flex-col gap-10">
