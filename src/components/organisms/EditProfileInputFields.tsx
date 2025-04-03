@@ -1,17 +1,9 @@
 "use client";
 
+import type { UserDetailsFormType } from "@/types/userProfileType";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
 import { Button } from "../ui/button";
-
-type FormValues = {
-  username: string;
-  full_name: string;
-  avatar_public_id: string;
-  avatar_version: string;
-  bio: string;
-  website: string;
-};
 
 type InitialDataProps = {
   initialData: {
@@ -28,11 +20,11 @@ type InitialDataProps = {
 export default function EditProfileInputFields({
   initialData,
 }: InitialDataProps) {
-  const form = useForm<FormValues>({ defaultValues: initialData });
+  const form = useForm<UserDetailsFormType>({ defaultValues: initialData });
 
   const { register, handleSubmit } = form;
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = (data: UserDetailsFormType) => {
     console.log(data);
   };
 

@@ -67,3 +67,12 @@ export type userProfileSettingsDetailsType = {
   avatarPublicId: string;
   avatarVersion: string;
 };
+
+export type UserDetailsFormType = {
+  username: string;
+  full_name: string;
+  avatar_public_id: string;
+  avatar_version: string;
+  bio: string;
+  website: string;
+};
