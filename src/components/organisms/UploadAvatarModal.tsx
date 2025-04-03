@@ -1,3 +1,4 @@
+import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { Button } from "../ui/button";
@@ -10,6 +11,11 @@ export default function UploadAvatarModal({
   handleClosePopup,
 }: closePopupModalType) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [isUploading, setIsUploading] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadButton = () => {
@@ -22,6 +28,27 @@ export default function UploadAvatarModal({
     if (file) {
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      alert("Please select a file first!");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      await saveAvatarToCloudinary(selectedFile);
+      alert("Upload successful!");
+      handleClosePopup(false);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -62,7 +89,13 @@ export default function UploadAvatarModal({
               />
             </div>
 
-            <Button className="p-6 text-lg rounded-xl">Upload</Button>
+            <Button
+              className="p-6 text-lg rounded-xl"
+              onClick={handleUpload}
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Upload"}
+            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-5 my-auto">
@@ -76,7 +109,22 @@ export default function UploadAvatarModal({
               <p className="text-lg">Upload avatar here</p>
             </div>
 
-            <label htmlFor="fileUpload">
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
+
+            <Button
+              className="p-6 text-lg rounded-xl"
+              onClick={handleUploadButton}
+            >
+              Upload avatar
+            </Button>
+
+            {/* <label htmlFor="fileUpload">
               <input
                 type="file"
                 accept="image/*"
@@ -90,7 +138,7 @@ export default function UploadAvatarModal({
               >
                 Upload
               </Button>
-            </label>
+            </label> */}
           </div>
         )}
       </div>
