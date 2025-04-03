@@ -1,4 +1,5 @@
 import { getUserDetails } from "@/actions/getUserDetails";
+import AvatarUploadButton from "@/components/atoms/AvatarUploadButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
@@ -36,7 +37,8 @@ export default async function page() {
             </div>
           </div>
 
-          <Button className="font-bold">Change Photo</Button>
+          {/* <Button className="font-bold">Change Photo</Button> */}
+          <AvatarUploadButton />
         </div>
 
         <EditProfileInputFields initialData={userDetails} />

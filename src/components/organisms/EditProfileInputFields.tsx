@@ -1,5 +1,6 @@
 "use client";
 
+import { updateUserDetails } from "@/actions/updateUserDetails";
 import type { UserDetailsFormType } from "@/types/userProfileType";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
@@ -25,7 +26,7 @@ export default function EditProfileInputFields({
   const { register, handleSubmit } = form;
 
   const onSubmit = (data: UserDetailsFormType) => {
-    console.log(data);
+    updateUserDetails(data);
   };
 
   return (
