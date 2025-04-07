@@ -2,7 +2,11 @@
 
 import { createClient } from "@/config/supabase/server";
 
-export async function saveToSupabase(publicId: string, version: string) {
+export async function saveToSupabase(
+  publicId: string,
+  version: number,
+  transformation: string,
+) {
   const supabase = await createClient();
 
   const { data: user, error: userError } = await supabase.auth.getUser();
@@ -29,7 +33,12 @@ export async function saveToSupabase(publicId: string, version: string) {
 
   const { error: insertEror } = await supabase
     .from("user_image_history")
-    .insert({ public_id: publicId, version: version })
+    .insert({
+      user_id: user.user.id,
+      public_id: publicId,
+      version: version,
+      transformation: transformation,
+    })
     .eq("user_id", user.user.id);
 
   if (insertEror) {

@@ -1,5 +1,6 @@
 "use client";
 
+import UserAvatar from "@/components/atoms/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
 import type { userProfileDetailsType } from "@/types/userProfileType";
@@ -9,30 +10,16 @@ import { useEffect, useState } from "react";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
 
-export default function ProfileDetails() {
-  const [userDetails, setUserDetails] = useState<userProfileDetailsType | null>(
-    null,
-  );
+export default function ProfileDetails({ userData }) {
+  const userDetails = userData;
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch("/api/user-profile");
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
-        const result = await res.json();
+  const defaultAvatar = "AnonymousProfile_rn6qez";
 
-        if (res.ok) {
-          setUserDetails(result.data);
-        } else {
-          console.error("Error:", result.error);
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-      }
-    };
-
-    fetchUser();
-  }, []);
+  const avatarUrl = userDetails?.avatarPublicId
+    ? `${cloudinaryBaseUrl}v${userDetails.avatarVersion}/${userDetails.avatarPublicId}.jpg`
+    : defaultAvatar;
 
   return (
     <>
@@ -47,19 +34,17 @@ export default function ProfileDetails() {
         <div className="flex flex-col gap-5">
           <div className="flex items-start gap-10">
             <div className="w-[100px] h-[100px] rounded-full">
-              <Image
+              {/* <Image
                 className="w-full h-full rounded-full"
-                src={
-                  userDetails?.avatarPublicId && userDetails.avatarVersion
-                    ? "tyh"
-                    : "/assets/images/AnonymousProfile.jpg"
-                }
+                src={avatarUrl}
                 // src="/assets/images/AnonymousProfile.jpg"
                 alt="User profile picture"
                 loading="lazy"
                 width={40}
                 height={40}
-              />
+              /> */}
+
+              <UserAvatar avatarUrl={avatarUrl} />
             </div>
             <div className="grid grid-cols-3 gap-5 justify-start items-center">
               <h2 className="col-span-3">{userDetails?.username}</h2>
