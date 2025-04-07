@@ -123,22 +123,6 @@ export default function UploadAvatarModal({
             >
               Upload avatar
             </Button>
-
-            {/* <label htmlFor="fileUpload">
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                ref={fileInputRef}
-                onChange={handleFileChange}
-              />
-              <Button
-                className="p-6 text-lg rounded-xl"
-                onClick={handleUploadButton}
-              >
-                Upload
-              </Button>
-            </label> */}
           </div>
         )}
       </div>

@@ -1,9 +1,10 @@
 import { getUserPosts } from "@/actions/getUserPosts";
 import { Button } from "@/components/ui/button";
+import type { PostsType } from "@/types/postsType";
 import { useEffect, useState } from "react";
 
 export default function Posts() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<PostsType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,7 +13,7 @@ export default function Posts() {
       try {
         const response = await getUserPosts();
 
-        if (response.status === 200) {
+        if (response.status === 200 && response.data) {
           setPosts(response.data);
         } else {
           setError(`Failed to load posts.- ${response.message}`);
@@ -35,10 +36,10 @@ export default function Posts() {
     return <p className="text-red-500 text-center">{error}</p>;
   }
 
-  return posts.length ? (
+  return posts?.length ? (
     <ul>
       {posts.map((post) => (
-        <li key={post}>posts</li>
+        <li key={post.slug}>posts</li>
       ))}
     </ul>
   ) : (

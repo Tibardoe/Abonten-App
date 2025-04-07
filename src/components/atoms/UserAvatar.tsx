@@ -19,7 +19,7 @@ export default function UserAvatar({
       alt="Profile picture"
       width={width}
       height={height}
-      className="w-full h-full rounded-full"
+      className="rounded-full"
     />
   );
 }

@@ -1,9 +1,10 @@
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
+import type { FavoriteEvents } from "@/types/favoriteEventTypes";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 export default function Favorites() {
-  const [favorites, setfavorites] = useState([]);
+  const [favorites, setfavorites] = useState<FavoriteEvents[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -12,7 +13,7 @@ export default function Favorites() {
       try {
         const response = await getUserFavoritePosts();
 
-        if (response.status === 200) {
+        if (response.status === 200 && response.data) {
           setfavorites(response.data);
         } else {
           setError(`Failed to load posts.- ${response.message}`);
@@ -34,10 +35,10 @@ export default function Favorites() {
   if (error) {
     return <p className="text-red-500 text-center">{error}</p>;
   }
-  return favorites.length > 0 ? (
+  return favorites?.length > 0 ? (
     <ul>
-      {favorites.map((favorite) => (
-        <li key={favorite}>posts</li>
+      {favorites?.map((favorite) => (
+        <li key={favorite.event.slug}>posts</li>
       ))}
     </ul>
   ) : (

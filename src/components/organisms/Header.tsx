@@ -1,5 +1,6 @@
 "use client";
 
+import { getUserDetails } from "@/actions/getUserDetails";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
 import { signOut } from "@/services/authService";
@@ -7,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
 import AuthPopup from "./AuthPopup";
 import MobileAuthPopup from "./MobileAuthPopup";
@@ -15,7 +17,10 @@ import SideBar from "./SideBar";
 export default function Header() {
   const [buttonText, setButtonText] = useState("");
 
-  const [profilePicture, setProfilePicture] = useState("");
+  const [profilePicture, setProfilePicture] = useState({
+    avatar_public_id: "",
+    avatar_version: "",
+  });
 
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
@@ -23,29 +28,31 @@ export default function Header() {
 
   const pathname = usePathname();
 
-  const { user, session } = useAuth();
+  const { user } = useAuth();
 
   const router = useRouter();
 
   useEffect(() => {
     const fetchProfilePicture = async () => {
-      if (!user) {
-        return;
-      }
+      try {
+        const response = await getUserDetails();
 
-      const res = await fetch("/api/user-profile", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+        if (response.status !== 200) return;
 
-      const result = await res.json();
+        const avatar_public_id = response.userDetails?.avatar_public_id;
 
-      if (res.ok && result.url) {
-        setProfilePicture(result.url);
+        const avatar_version = response.userDetails?.avatar_version;
+
+        const avatarDetails = { avatar_public_id, avatar_version };
+
+        setProfilePicture(avatarDetails);
+      } catch (error) {
+        console.log("An error occurred: ", error);
       }
     };
 
     fetchProfilePicture();
-  }, [user, session]);
+  }, []);
 
   const isUserAccount = pathname === "/user-account";
 
@@ -64,6 +71,14 @@ export default function Header() {
       console.error("Error signing out:", error);
     }
   };
+
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
+
+  const defaultAvatar = "AnonymousProfile_rn6qez";
+
+  const avatarUrl = profilePicture.avatar_public_id
+    ? `${cloudinaryBaseUrl}v${profilePicture.avatar_version}/${profilePicture.avatar_public_id}.jpg`
+    : defaultAvatar;
 
   const handleMenuClicked = () => {
     setIsMenuClicked((prevState) => !prevState);
@@ -128,7 +143,7 @@ export default function Header() {
         </div>
 
         {user ? (
-          <div className="hidden lg:flex items-center gap-10 min-w-fit">
+          <div className="hidden lg:flex items-center gap-7 min-w-fit">
             <Link href="#" className="flex gap-1 items-center">
               <Image
                 src="/assets/images/post.svg"
@@ -159,17 +174,7 @@ export default function Header() {
                 { hidden: isUserAccount },
               )}
             >
-              <Image
-                src={
-                  profilePicture
-                    ? profilePicture
-                    : "/assets/images/AnonymousProfile.jpg"
-                }
-                alt="Profile Picture"
-                width={60}
-                height={60}
-                className="rounded-full"
-              />
+              <UserAvatar avatarUrl={avatarUrl} width={60} height={60} />
             </Link>
           </div>
         ) : (

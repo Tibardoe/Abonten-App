@@ -31,9 +31,8 @@ export default function ProfileDetails({ userData }: userProfileDetailsType) {
 
         <div className="flex flex-col gap-2">
           <div className="flex items-start gap-7">
-            <div className="w-[100px] h-[100px] rounded-full">
-              <UserAvatar avatarUrl={avatarUrl} width={50} height={50} />
-            </div>
+            <UserAvatar avatarUrl={avatarUrl} width={110} height={110} />
+
             <div className="grid grid-cols-3 gap-5 justify-start items-center">
               <h2 className="col-span-3">{userData?.username}</h2>
 
@@ -70,9 +69,11 @@ export default function ProfileDetails({ userData }: userProfileDetailsType) {
 
       {/* On tablet and desktop */}
       <div className="hidden md:flex gap-10 items-start">
-        <div className="w-[100px] h-[100px] md:w-[150px] md:h-[150px] lg:w-[180px] lg:h-[180px] rounded-full grid place-items-center">
-          <UserAvatar avatarUrl={avatarUrl} width={40} height={40} />
-        </div>
+        {/* <div className="w-[100px] h-[100px] md:w-[150px] md:h-[150px] lg:w-[180px] lg:h-[180px] rounded-full grid place-items-center">
+         
+        </div> */}
+
+        <UserAvatar avatarUrl={avatarUrl} width={150} height={150} />
         <div className="grid grid-cols-3 gap-3 justify-start items-center">
           <h2>{userData?.username}</h2>
 
