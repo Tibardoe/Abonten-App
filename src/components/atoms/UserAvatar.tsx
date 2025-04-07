@@ -4,16 +4,22 @@ import { CldImage } from "next-cloudinary";
 
 type AvatarUrlProp = {
   avatarUrl: string;
+  width: number;
+  height: number;
 };
 
-export default function UserAvatar({ avatarUrl }: AvatarUrlProp) {
+export default function UserAvatar({
+  avatarUrl,
+  width,
+  height,
+}: AvatarUrlProp) {
   return (
     <CldImage
       src={avatarUrl}
       alt="Profile picture"
-      width={40}
-      height={40}
-      className="w-20 h-20 rounded-full"
+      width={width}
+      height={height}
+      className="w-full h-full rounded-full"
     />
   );
 }

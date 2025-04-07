@@ -29,7 +29,7 @@ export default async function page() {
       <div className="space-y-16 mb-5">
         <div className="flex justify-between items-center bg-black bg-opacity-5 rounded-xl p-5">
           <div className="flex gap-5 items-center">
-            <UserAvatar avatarUrl={avatarUrl} />
+            <UserAvatar avatarUrl={avatarUrl} width={40} height={40} />
 
             <div>
               <h1 className="font-bold">{userDetails.username}</h1>

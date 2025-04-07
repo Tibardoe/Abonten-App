@@ -1,70 +1,58 @@
-"use client";
-
 import UserAvatar from "@/components/atoms/UserAvatar";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/authContext";
 import type { userProfileDetailsType } from "@/types/userProfileType";
-import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import SettingsButton from "../atoms/SettingsButton";
-import Higlight from "../molecules/Highlight";
 
-export default function ProfileDetails({ userData }) {
-  const userDetails = userData;
-
+export default function ProfileDetails({ userData }: userProfileDetailsType) {
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
   const defaultAvatar = "AnonymousProfile_rn6qez";
 
-  const avatarUrl = userDetails?.avatarPublicId
-    ? `${cloudinaryBaseUrl}v${userDetails.avatarVersion}/${userDetails.avatarPublicId}.jpg`
+  const avatarUrl = userData?.avatar_public_id
+    ? `${cloudinaryBaseUrl}v${userData.avatar_version}/${userData.avatar_public_id}.jpg`
     : defaultAvatar;
+
+  const numberOfPosts = userData.event_id?.length || 0;
+
+  const numberOfFavorites = userData.favorite_event_id?.length || 0;
+
+  const numberOfRatings = userData.rating || 0;
 
   return (
     <>
       {/* On mobile */}
-      <div className="md:hidden flex flex-col gap-10">
+      <div className="md:hidden flex flex-col gap-7">
         <div className="flex w-full justify-between">
-          <h2 className="font-bold">{userDetails?.username}</h2>
+          <h2 className="font-bold">{userData?.username}</h2>
 
           <SettingsButton />
         </div>
 
-        <div className="flex flex-col gap-5">
-          <div className="flex items-start gap-10">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start gap-7">
             <div className="w-[100px] h-[100px] rounded-full">
-              {/* <Image
-                className="w-full h-full rounded-full"
-                src={avatarUrl}
-                // src="/assets/images/AnonymousProfile.jpg"
-                alt="User profile picture"
-                loading="lazy"
-                width={40}
-                height={40}
-              /> */}
-
-              <UserAvatar avatarUrl={avatarUrl} />
+              <UserAvatar avatarUrl={avatarUrl} width={50} height={50} />
             </div>
             <div className="grid grid-cols-3 gap-5 justify-start items-center">
-              <h2 className="col-span-3">{userDetails?.username}</h2>
+              <h2 className="col-span-3">{userData?.username}</h2>
 
               <span>
                 <h2>
-                  <span className="font-bold">{0}</span> Posts
+                  <span className="font-bold">{numberOfPosts}</span> Posts
                 </h2>
               </span>
 
               <span>
                 <h2>
-                  <span className="font-bold">{0}</span> Favorites
+                  <span className="font-bold">{numberOfFavorites}</span>{" "}
+                  Favorites
                 </h2>
               </span>
 
               <span>
                 <h2>
-                  <span className="font-bold">{userDetails?.rating || 0}</span>{" "}
-                  Ratings
+                  <span className="font-bold">{numberOfRatings}</span> Ratings
                 </h2>
               </span>
             </div>
@@ -81,24 +69,12 @@ export default function ProfileDetails({ userData }) {
       </div>
 
       {/* On tablet and desktop */}
-      <div className="hidden md:flex gap-20 items-start">
-        <div className="w-[100px] h-[100px] md:w-[150px] md:h-[150px] lg:w-[180px] lg:h-[180px] rounded-full">
-          <Image
-            className="w-full h-full rounded-full"
-            src={
-              userDetails?.avatarPublicId && userDetails.avatarVersion
-                ? "tyh"
-                : "/assets/images/AnonymousProfile.jpg"
-            }
-            // src="/assets/images/AnonymousProfile.jpg"
-            alt="User profile picture"
-            loading="lazy"
-            width={40}
-            height={40}
-          />
+      <div className="hidden md:flex gap-10 items-start">
+        <div className="w-[100px] h-[100px] md:w-[150px] md:h-[150px] lg:w-[180px] lg:h-[180px] rounded-full grid place-items-center">
+          <UserAvatar avatarUrl={avatarUrl} width={40} height={40} />
         </div>
-        <div className="grid grid-cols-3 gap-5 justify-start items-center">
-          <h2>{userDetails?.username}</h2>
+        <div className="grid grid-cols-3 gap-3 justify-start items-center">
+          <h2>{userData?.username}</h2>
 
           <Button variant="outline" className="border-black font-bold">
             <Link href="/settings/edit-profile">Edit Profile</Link>
@@ -108,20 +84,19 @@ export default function ProfileDetails({ userData }) {
 
           <span>
             <h2>
-              <span className="font-bold">{0}</span> Posts
+              <span className="font-bold">{numberOfPosts}</span> Posts
             </h2>
           </span>
 
           <span>
             <h2>
-              <span className="font-bold">{0}</span> Favorites
+              <span className="font-bold">{numberOfFavorites}</span> Favorites
             </h2>
           </span>
 
           <span>
             <h2>
-              <span className="font-bold">{userDetails?.rating || 0}</span>{" "}
-              Ratings
+              <span className="font-bold">{numberOfRatings}</span> Ratings
             </h2>
           </span>
 

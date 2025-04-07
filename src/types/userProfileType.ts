@@ -29,31 +29,33 @@ export type authUserType = {
 };
 
 export type userProfileDetailsType = {
-  id: string;
-  username?: string;
-  fullName?: string;
-  avatarPublicId?: string;
-  avatarVersion?: string;
-  bio?: string;
-  eventId?: string;
-  title?: string;
-  price?: number;
-  currency?: string;
-  address?: string;
-  flyerPublicId?: string;
-  flyerVersion?: string;
-  startAt?: Date;
-  endsAt?: Date;
-  favoriteEventId?: string;
-  reviewId?: string;
-  reviewerId?: string;
-  reviewdId?: string;
-  rating?: number;
-  comment?: string;
-  reviewCreatedAt?: string;
-  highlightCOntent?: string;
-  highlightMediaUrl?: string;
-  highlightCreatedAt?: string;
+  userData: {
+    id: string;
+    username?: string;
+    full_name?: string;
+    avatar_public_id?: string | null;
+    avatar_version?: string | null;
+    bio?: string | null;
+    event_id?: string | null;
+    title?: string | null;
+    price?: number | null;
+    currency?: string | null;
+    address?: string | null;
+    flyer_public_id?: string | null;
+    flyer_version?: string | null;
+    starts_at?: Date | null;
+    ends_at?: Date | null;
+    favorite_event_id?: string | null;
+    review_id?: string | null;
+    reviewer_id?: string | null;
+    reviewed_id?: string | null;
+    rating?: number | null;
+    comment?: string | null;
+    review_created_at?: string | null;
+    highlight_content?: string | null;
+    highlight_media_url?: string | null;
+    highlight_created_at?: string | null;
+  };
 };
 
 export type userProfileSettingsDetailsType = {
