@@ -16,6 +16,8 @@ export default function UploadAvatarModal({
 
   const [isUploading, setIsUploading] = useState(false);
 
+  const [step, setStep] = useState(1);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadButton = () => {
@@ -29,6 +31,7 @@ export default function UploadAvatarModal({
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
       setSelectedFile(file);
+      setStep((prevStep) => prevStep + 1);
     }
   };
 
@@ -70,32 +73,63 @@ export default function UploadAvatarModal({
       </button>
 
       {/* Inner popup */}
+
       <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[75%] rounded-2xl py-3">
         <div className="w-full">
-          <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
-            Upload Avatar
-          </h1>
+          {step === 1 && (
+            <div>
+              <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
+                Upload Avatar
+              </h1>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="flex justify-between w-[90%] mx-auto">
+              {step === 2 && (
+                <button
+                  type="button"
+                  onClick={() => setStep((prevStep) => prevStep - 1)}
+                >
+                  <Image
+                    src="/assets/images/moveBack.svg"
+                    alt="Back"
+                    width={30}
+                    height={30}
+                  />
+                </button>
+              )}
+
+              <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
+                Upload Avatar
+              </h1>
+
+              {step === 2 && (
+                <button
+                  type="button"
+                  className="font-bold"
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </button>
+              )}
+            </div>
+          )}
+
           <hr />
         </div>
 
-        {imagePreview ? (
-          <div className="flex flex-col items-center gap-5 my-auto">
+        {step === 2 && imagePreview ? (
+          <div className="flex flex-col items-center gap-5 mt-5 w-[90%]">
             <div>
               <Image
                 src={imagePreview}
                 alt="Selected Avatar"
-                width={200}
-                height={200}
+                width={300}
+                height={300}
               />
             </div>
-
-            <Button
-              className="p-6 text-lg rounded-xl"
-              onClick={handleUpload}
-              disabled={isUploading}
-            >
-              {isUploading ? "Uploading..." : "Upload"}
-            </Button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-5 my-auto">
