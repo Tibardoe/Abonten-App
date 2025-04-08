@@ -1,5 +1,6 @@
 import type { PostsType } from "@/types/postsType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,7 +15,7 @@ export default function EventCard({
 }: PostsType) {
   return (
     <li key={title} className="space-y-2">
-      <Link href="#">
+      <Link href={`/events/${title && generateSlug(title)}`}>
         <Image
           src={flyerUrl || "/default-image.jpg"}
           alt="Event flyer"
