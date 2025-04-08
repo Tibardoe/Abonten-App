@@ -19,7 +19,7 @@ export default function AvatarUploadButton() {
     <>
       {showPopup && <UploadAvatarModal handleClosePopup={closePopup} />}
 
-      <Button className="font-bold" onClick={handlePopup}>
+      <Button className="font-bold hidden md:flex" onClick={handlePopup}>
         Change Photo
       </Button>
     </>
