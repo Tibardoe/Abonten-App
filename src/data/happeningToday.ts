@@ -1,0 +1,47 @@
+export const happeningToday = [
+  {
+    flyerUrl: "/assets/eventFlyers/flyer4.jpg",
+    title: "Event 4",
+    description:
+      "Get ready to learn, explore, and connect with like-minded individuals. This event offers a unique blend of fun and professional growth opportunities.",
+    price: "GHS 110",
+    location: "Accra",
+    startDate: "2025-04-08",
+    endDate: "2025-04-08",
+    time: "12:00 PM",
+    category: "Tech",
+    type: "Concert",
+    telephone: "+233 54 8849938",
+    website: "https://eventlink4.com",
+  },
+  {
+    flyerUrl: "/assets/eventFlyers/flyer42.jpg",
+    title: "Event 42",
+    description:
+      "Get ready to learn, explore, and connect with like-minded individuals. This event offers a unique blend of fun and professional growth opportunities.",
+    price: "Free",
+    location: "Cape Coast",
+    startDate: "2025-04-08",
+    endDate: "2025-04-08",
+    time: "1:30 PM",
+    category: "Health",
+    type: "Exhibition",
+    telephone: "+233 54 3367626",
+    website: "https://eventlink5.com",
+  },
+  {
+    flyerUrl: "/assets/eventFlyers/flyer45.jpg",
+    title: "Event 45",
+    description:
+      "Celebrate creativity and culture at this one-of-a-kind event featuring local artists, live music, delicious cuisine, and interactive exhibitions.",
+    price: "Free",
+    location: "Cape Coast",
+    startDate: "2025-04-08",
+    endDate: "2025-04-09",
+    time: "6:30 AM",
+    category: "Education",
+    type: "Conference",
+    telephone: "+233 54 5380253",
+    website: "https://eventlink5.com",
+  },
+];

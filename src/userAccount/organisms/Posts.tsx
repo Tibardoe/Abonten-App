@@ -1,6 +1,10 @@
 import { getUserPosts } from "@/actions/getUserPosts";
+import EventCard from "@/components/molecules/EventCard";
 import { Button } from "@/components/ui/button";
+import { userEvents } from "@/data/userEvents";
 import type { PostsType } from "@/types/postsType";
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Posts() {
@@ -28,18 +32,27 @@ export default function Posts() {
     fetchUserPosts();
   }, []);
 
-  if (loading) {
-    return <p className="text-center">Loading posts...</p>;
-  }
+  // if (loading) {
+  //   return <p className="text-center">Loading posts...</p>;
+  // }
 
-  if (error) {
-    return <p className="text-red-500 text-center">{error}</p>;
-  }
+  // if (error) {
+  //   return <p className="text-red-500 text-center">{error}</p>;
+  // }
 
-  return posts?.length ? (
-    <ul>
-      {posts.map((post) => (
-        <li key={post.slug}>posts</li>
+  return userEvents?.length ? (
+    <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
+      {userEvents.map((post) => (
+        <EventCard
+          key={post.title}
+          title={post.title}
+          flyerUrl={post.flyerUrl}
+          location={post.location}
+          start_at={post.startDate}
+          end_at={post.endDate}
+          timezone={post.time}
+          price={post.price}
+        />
       ))}
     </ul>
   ) : (

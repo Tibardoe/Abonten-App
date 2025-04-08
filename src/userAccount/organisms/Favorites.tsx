@@ -1,4 +1,6 @@
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
+import EventCard from "@/components/molecules/EventCard";
+import { userFavoritedEvents } from "@/data/userFavoritedEvents";
 import type { FavoriteEvents } from "@/types/favoriteEventTypes";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -28,17 +30,27 @@ export default function Favorites() {
     fetchUserPosts();
   }, []);
 
-  if (loading) {
-    return <p className="text-center">Loading posts...</p>;
-  }
+  // if (loading) {
+  //   return <p className="text-center">Loading posts...</p>;
+  // }
 
-  if (error) {
-    return <p className="text-red-500 text-center">{error}</p>;
-  }
-  return favorites?.length > 0 ? (
-    <ul>
-      {favorites?.map((favorite) => (
-        <li key={favorite.event.slug}>posts</li>
+  // if (error) {
+  //   return <p className="text-red-500 text-center">{error}</p>;
+  // }
+
+  return userFavoritedEvents?.length > 0 ? (
+    <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
+      {userFavoritedEvents.map((post) => (
+        <EventCard
+          key={post.title}
+          title={post.title}
+          flyerUrl={post.flyerUrl}
+          location={post.location}
+          start_at={post.startDate}
+          end_at={post.endDate}
+          timezone={post.time}
+          price={post.price}
+        />
       ))}
     </ul>
   ) : (
