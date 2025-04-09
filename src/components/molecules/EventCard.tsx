@@ -27,7 +27,10 @@ export default function EventCard({
 
       <div className="flex flex-col gap-2 justify-start text-sm">
         <div className="flex justify-between">
-          <Link href="#" className="font-bold text-lg md:text-xl col-span-2">
+          <Link
+            href={`/events/${title && generateSlug(title)}`}
+            className="font-bold text-lg md:text-xl col-span-2"
+          >
             {title}
           </Link>
 

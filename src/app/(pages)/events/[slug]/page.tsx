@@ -1,3 +1,8 @@
+import { Button } from "@/components/ui/button";
+import { allEvents } from "@/data/allEvents";
+import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import Image from "next/image";
+
 export default async function page({
   params,
 }: {
@@ -10,5 +15,158 @@ export default async function page({
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize the first letter and lowercase the rest
     .join(" "); // Join the words back with spaces
 
-  return <div>{unformatTitle}</div>;
+  const event = allEvents.find((event) => event.title === unformatTitle);
+
+  if (!event) {
+    return <p>No event found</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="space-y-4">
+        <h1>Posted by</h1>
+
+        <div className="flex justify-between">
+          <div className="flex gap-2">
+            <div className="bg-black rounded-full w-20 h-20" />
+
+            <div>
+              <p>Big_Ceo</p>
+              <p>
+                <span className="font-bold">7.8</span> Ratings
+              </p>
+            </div>
+          </div>
+
+          <p>1hour ago</p>
+        </div>
+      </div>
+
+      <div className="md:flex gap-5">
+        <Image
+          src={event.flyerUrl}
+          alt="Event flyer"
+          width={500}
+          height={500}
+          className="w-full md:w-[700px] md:h-[650px] rounded-xl"
+        />
+
+        {/* Event details */}
+        <div className="flex flex-col gap-5">
+          {/* title */}
+          <h2 className="font-bold text-lg md:text-2xl">{event.title}</h2>
+
+          {/* description */}
+          <div>
+            <h2 className="font-bold md:text-lg">Description</h2>
+            <p className="text-justify">{event.description}</p>
+          </div>
+
+          {/* Event date, time, location and price */}
+          <div className="grid grid-cols-[auto_1fr] gap-3">
+            <div className="flex items-center">
+              <Image
+                src="/assets/images/location.svg"
+                alt="Event flyer"
+                width={20}
+                height={20}
+              />
+
+              <p>{event.location}</p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Image
+                src="/assets/images/date.svg"
+                alt="Event flyer"
+                width={15}
+                height={15}
+              />
+
+              <p>
+                {event.startDate
+                  ? formatDateWithSuffix(event.startDate)
+                  : "Date not available"}{" "}
+                -
+                {event.endDate
+                  ? formatDateWithSuffix(event.startDate)
+                  : "End date not available"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <Image
+                src="/assets/images/time.svg"
+                alt="Event flyer"
+                width={20}
+                height={20}
+              />
+
+              <p>{event.time}</p>
+            </div>
+
+            <p>{event.price}</p>
+          </div>
+
+          {/* Buttons */}
+
+          <div className="flex flex-col gap-3">
+            <Button className="font-bold rounded-full w-full p-6 text-lg">
+              Buy Ticket
+            </Button>
+
+            <div className="grid grid-cols-2 outline-none gap-3">
+              <Button
+                variant="outline"
+                className="rounded-full text-lg p-5 md:p-6 border border-black"
+              >
+                Direction
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full text-lg p-5 md:p-6 border border-black"
+              >
+                Share
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full text-lg p-5 md:p-6 border border-black"
+              >
+                Website
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full text-lg p-5 md:p-6 border border-black"
+              >
+                Contact
+              </Button>
+            </div>
+
+            {/* Event category and tag */}
+            <div className="space-y-5 mt-5">
+              <div className="space-y-2">
+                <h2 className="font-bold md:text-lg">EVENT CATEGORY</h2>
+                <Button
+                  variant="outline"
+                  className="rounded-xl text-lg p-5 md:p-6 border border-black w-full"
+                >
+                  {event.category}
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="font-bold md:text-lg">TAG</h2>
+                <Button
+                  variant="outline"
+                  className="rounded-xl text-lg p-5 md:p-6 border border-black w-full"
+                >
+                  {event.type}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
