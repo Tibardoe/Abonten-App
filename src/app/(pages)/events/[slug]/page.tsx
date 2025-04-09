@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { allEvents } from "@/data/allEvents";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import Image from "next/image";
+import Link from "next/link";
 
 export default async function page({
   params,
@@ -118,26 +119,50 @@ export default async function page({
             <div className="grid grid-cols-2 outline-none gap-3">
               <Button
                 variant="outline"
-                className="rounded-full text-lg p-5 md:p-6 border border-black"
+                className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
               >
+                <Image
+                  src="/assets/images/direction.svg"
+                  alt="Direction"
+                  width={30}
+                  height={30}
+                />
                 Direction
               </Button>
               <Button
                 variant="outline"
-                className="rounded-full text-lg p-5 md:p-6 border border-black"
+                className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
               >
+                <Image
+                  src="/assets/images/share.svg"
+                  alt="Share"
+                  width={30}
+                  height={30}
+                />
                 Share
               </Button>
               <Button
                 variant="outline"
-                className="rounded-full text-lg p-5 md:p-6 border border-black"
+                className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
               >
+                <Image
+                  src="/assets/images/website.svg"
+                  alt="Website"
+                  width={30}
+                  height={30}
+                />
                 Website
               </Button>
               <Button
                 variant="outline"
-                className="rounded-full text-lg p-5 md:p-6 border border-black"
+                className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
               >
+                <Image
+                  src="/assets/images/contact.svg"
+                  alt="Contact"
+                  width={30}
+                  height={30}
+                />
                 Contact
               </Button>
             </div>
@@ -167,6 +192,22 @@ export default async function page({
           </div>
         </div>
       </div>
+
+      <ul className="my-10">
+        <div className="flex justify-between font-bold">
+          <h2 className="text-lg">Similar Events</h2>
+
+          <Link href="#" className="flex gap-1 items-center font-bold">
+            All
+            <Image
+              src="/assets/images/arrowRight.svg"
+              alt="Arrow right"
+              width={30}
+              height={30}
+            />
+          </Link>
+        </div>
+      </ul>
     </div>
   );
 }
