@@ -1,3 +1,5 @@
+import EventCard from "@/components/molecules/EventCard";
+import EventsSlider from "@/components/organisms/EventsSlider";
 import { Button } from "@/components/ui/button";
 import { allEvents } from "@/data/allEvents";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
@@ -17,6 +19,10 @@ export default async function page({
     .join(" "); // Join the words back with spaces
 
   const event = allEvents.find((event) => event.title === unformatTitle);
+
+  const similarEvents = allEvents.filter(
+    (events) => events.category === event?.category,
+  );
 
   if (!event) {
     return <p>No event found</p>;
@@ -193,21 +199,11 @@ export default async function page({
         </div>
       </div>
 
-      <ul className="my-10">
-        <div className="flex justify-between font-bold">
-          <h2 className="text-lg">Similar Events</h2>
-
-          <Link href="#" className="flex gap-1 items-center font-bold">
-            All
-            <Image
-              src="/assets/images/arrowRight.svg"
-              alt="Arrow right"
-              width={30}
-              height={30}
-            />
-          </Link>
-        </div>
-      </ul>
+      <EventsSlider
+        heading="Similar Events"
+        events={similarEvents}
+        eventCategory={event.category}
+      />
     </div>
   );
 }

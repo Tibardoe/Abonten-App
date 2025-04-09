@@ -19,9 +19,9 @@ export default function EventCard({
         <Image
           src={flyerUrl || "/default-image.jpg"}
           alt="Event flyer"
-          width={300}
-          height={300}
-          className="w-full md:h-[350px]"
+          width={500}
+          height={500}
+          className="w-full h-[300px] md:h-[350px] object-cover"
         />
       </Link>
 
