@@ -38,7 +38,6 @@ export default async function ProfileDetails() {
 
           <SettingsButton />
         </div>
-
         <div className="flex flex-col gap-2">
           <div className="flex items-start gap-7">
             <UserAvatar avatarUrl={avatarUrl} width={110} height={110} />
@@ -71,7 +70,6 @@ export default async function ProfileDetails() {
             <p>It is working</p>
           </div>
         </div>
-
         <Button variant="outline" className="border-black border-2 font-bold">
           <Link href="/settings/edit-profile">Edit Profile</Link>
         </Button>
@@ -80,12 +78,8 @@ export default async function ProfileDetails() {
       </div>
 
       {/* On tablet and desktop */}
-      <div className="flex flex-col gap-7">
+      <div className="hidden md:flex flex-col gap-7">
         <div className="hidden md:flex gap-10 items-start">
-          {/* <div className="w-[100px] h-[100px] md:w-[150px] md:h-[150px] lg:w-[180px] lg:h-[180px] rounded-full grid place-items-center">
-         
-        </div> */}
-
           <UserAvatar avatarUrl={avatarUrl} width={150} height={150} />
           <div className="grid grid-cols-3 gap-3 justify-start items-center">
             <h2>{data?.username}</h2>

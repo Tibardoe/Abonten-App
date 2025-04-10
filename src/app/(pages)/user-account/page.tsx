@@ -17,7 +17,6 @@ export default async function page() {
   return (
     <div className="flex flex-col gap-7">
       <ProfileDetails />
-      <Higlight />
       <ContentArea />
     </div>
   );
