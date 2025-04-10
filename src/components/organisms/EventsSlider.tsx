@@ -8,7 +8,8 @@ import EventCard from "../molecules/EventCard";
 
 type EventsSliderProp = {
   heading: string;
-  eventCategory: string;
+  eventCategory?: string;
+  urlPath?: string;
   events: {
     flyerUrl: string;
     title: string;
@@ -29,6 +30,7 @@ export default function EventsSlider({
   heading,
   events,
   eventCategory,
+  urlPath,
 }: EventsSliderProp) {
   const scrollRef = useRef<HTMLUListElement>(null);
 
@@ -49,11 +51,17 @@ export default function EventsSlider({
   return (
     <div className="my-10 space-y-5">
       <div className="flex justify-between font-bold">
-        <h2 className="text-lg">{heading}</h2>
+        <h2 className="text-xl">{heading}</h2>
 
         <Link
-          href={`/events/category?category=${generateSlug(eventCategory)}`}
-          className="flex gap-1 items-center font-bold"
+          href={
+            urlPath
+              ? `/events/${urlPath}`
+              : `/events/category?category=${
+                  eventCategory && generateSlug(eventCategory)
+                }`
+          }
+          className="flex gap-1 items-center font-bold text-xl"
         >
           All
           <Image
