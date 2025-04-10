@@ -5,19 +5,23 @@ import Higlight from "@/userAccount/molecules/Highlight";
 import ContentArea from "@/userAccount/organisms/ContentArea";
 import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
 
-export default async function page() {
-  const supabase = await createClient();
+export default async function page({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const username = (await params).username;
 
-  const { data: user, error } = await supabase.auth.getUser();
+  const userDetails = await getUserProfileDetails();
 
-  if (error || !user.user) {
-    return <UserAccountLogin />;
-  }
+  const { data } = userDetails;
 
   return (
     <div className="flex flex-col gap-7">
-      <ProfileDetails />
-      <Higlight />
+      <ProfileDetails userData={data} />
+
+      {data.username === username && <Higlight />}
+
       <ContentArea />
     </div>
   );

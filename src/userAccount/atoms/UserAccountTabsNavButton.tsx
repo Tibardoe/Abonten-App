@@ -1,23 +1,30 @@
+"use client";
+
 import { cn } from "@/components/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 type TabsNavButtonProp = {
   imgUrl: string;
   text: string;
-  isActive: boolean;
-  onClick: () => void;
+  username: string;
 };
 
 export default function UserAccountTabsNavButton({
   imgUrl,
   text,
-  isActive,
-  onClick,
+  username,
 }: TabsNavButtonProp) {
+  const pathname = usePathname();
+
+  const href = `/user/${username}/${text.toLowerCase()}`;
+  const isActive = pathname === href;
+
   return (
-    <button
+    <Link
+      href={href}
       type="button"
-      onClick={onClick}
       className={cn(
         "flex gap-3 items-center p-3",
         isActive ? "border-t-2 border-black font-bold" : "border-transparent",
@@ -25,6 +32,6 @@ export default function UserAccountTabsNavButton({
     >
       <Image src={imgUrl} alt="text" height={30} width={30} />
       <p className="md:text-md lg:text-lg">{text}</p>
-    </button>
+    </Link>
   );
 }

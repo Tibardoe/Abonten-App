@@ -1,17 +1,14 @@
 "use client";
 
-import { useAuth } from "@/context/authContext";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
 import UserAccountTabsNavButton from "../atoms/UserAccountTabsNavButton";
 
 export default function UserAccountTabsNavigation() {
-  const { activeTab, setActiveTab } = useAuth();
+  const pathname = usePathname(); // e.g. /Tibardoe/posts
 
-  if (!activeTab) return null;
-
-  const handleClick = (text: string) => {
-    setActiveTab(text);
-  };
+  // Extract the username from the pathname
+  const parts = pathname.split("/"); // ["", "Tibardoe", "posts"]
+  const username = parts[2]; // "Tibardoe"
 
   const tabs = [
     { imgUrl: "/assets/images/posts.svg", text: "Posts" },
@@ -25,22 +22,19 @@ export default function UserAccountTabsNavigation() {
         <UserAccountTabsNavButton
           imgUrl="/assets/images/posts.svg"
           text="Posts"
-          isActive={activeTab === "Posts"}
-          onClick={() => handleClick("Posts")}
+          username={username}
         />
 
         <UserAccountTabsNavButton
           imgUrl="/assets/images/favorites.svg"
           text="Favorites"
-          isActive={activeTab === "Favorites"}
-          onClick={() => handleClick("Favorites")}
+          username={username}
         />
 
         <UserAccountTabsNavButton
           imgUrl="/assets/images/reviews.svg"
           text="Reviews"
-          isActive={activeTab === "Reviews"}
-          onClick={() => handleClick("Reviews")}
+          username={username}
         />
       </div>
     </div>

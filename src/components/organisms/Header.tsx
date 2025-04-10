@@ -17,9 +17,10 @@ import SideBar from "./SideBar";
 export default function Header() {
   const [buttonText, setButtonText] = useState("");
 
-  const [profilePicture, setProfilePicture] = useState({
+  const [profile, setProfile] = useState({
     avatar_public_id: "",
     avatar_version: "",
+    username: "",
   });
 
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -43,9 +44,11 @@ export default function Header() {
 
         const avatar_version = response.userDetails?.avatar_version;
 
-        const avatarDetails = { avatar_public_id, avatar_version };
+        const username = response.userDetails?.username;
 
-        setProfilePicture(avatarDetails);
+        const avatarDetails = { avatar_public_id, avatar_version, username };
+
+        setProfile(avatarDetails);
       } catch (error) {
         console.log("An error occurred: ", error);
       }
@@ -54,7 +57,7 @@ export default function Header() {
     fetchProfilePicture();
   }, []);
 
-  const isUserAccount = pathname === "/user-account";
+  const isUserAccount = pathname === `/user/${profile.username}/posts`;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const text = (event.target as HTMLButtonElement).innerText;
@@ -76,8 +79,8 @@ export default function Header() {
 
   const defaultAvatar = "AnonymousProfile_rn6qez";
 
-  const avatarUrl = profilePicture.avatar_public_id
-    ? `${cloudinaryBaseUrl}v${profilePicture.avatar_version}/${profilePicture.avatar_public_id}.jpg`
+  const avatarUrl = profile.avatar_public_id
+    ? `${cloudinaryBaseUrl}v${profile.avatar_version}/${profile.avatar_public_id}.jpg`
     : defaultAvatar;
 
   const handleMenuClicked = () => {
@@ -168,7 +171,7 @@ export default function Header() {
             </button>
 
             <Link
-              href="/user-account"
+              href={`/user/${profile.username}/posts`}
               className={cn(
                 "bg-transparent rounded-full font-bold border-black",
                 { hidden: isUserAccount },

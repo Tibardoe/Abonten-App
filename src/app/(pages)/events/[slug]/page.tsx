@@ -38,10 +38,13 @@ export default async function page({
 
         <div className="flex justify-between">
           <div className="flex gap-2">
-            <div className="bg-black rounded-full w-20 h-20" />
+            <Link href={`/user-account/${"Big"}`}>
+              <div className="bg-black rounded-full w-20 h-20" />
+            </Link>
 
             <div>
-              <p>Big_Ceo</p>
+              <Link href={`/user-account/${"Big"}`}>Big_Ceo</Link>
+
               <p>
                 <span className="font-bold">7.8</span> Ratings
               </p>
