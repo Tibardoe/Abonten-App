@@ -1,3 +1,4 @@
+import { getEvents } from "@/actions/getEvents";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { Button } from "@/components/ui/button";

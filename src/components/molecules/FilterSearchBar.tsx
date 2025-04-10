@@ -1,6 +1,15 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
+import FilterModalPopup from "../organisms/FilterModalPopup";
 
 export default function FilterSearchBar() {
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handleShowPopup = (state: boolean) => {
+    setShowPopup(state);
+  };
   return (
     <div className="w-full md:w-fit bg-black bg-opacity-10 rounded-lg flex justify-between p-3">
       <div className="flex gap-5">
@@ -18,7 +27,7 @@ export default function FilterSearchBar() {
         />
       </div>
 
-      <button type="button">
+      <button type="button" onClick={() => handleShowPopup(true)}>
         <Image
           className="w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
           src="/assets/images/filter.svg"
@@ -27,6 +36,8 @@ export default function FilterSearchBar() {
           height={40}
         />
       </button>
+
+      {showPopup && <FilterModalPopup handlePopup={handleShowPopup} />}
     </div>
   );
 }

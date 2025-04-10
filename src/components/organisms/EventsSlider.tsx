@@ -88,7 +88,7 @@ export default function EventsSlider({
         </button>
         <ul
           ref={scrollRef}
-          className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 p-4 pt-0"
+          className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4"
         >
           {events.map((event) => (
             <EventCard

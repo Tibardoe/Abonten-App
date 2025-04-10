@@ -4,32 +4,14 @@ import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
-import { supabase } from "@/config/supabase/client";
-import { useAuth } from "@/context/authContext";
 import { allEvents } from "@/data/allEvents";
 import { aroundYou } from "@/data/aroundYou";
 import { happeningThisMonth } from "@/data/happeningThisMonth";
 import { happeningThisWeek } from "@/data/happeningThisWeek";
 import { happeningToday } from "@/data/happeningToday";
 import { topRatedOrganizers } from "@/data/topRatedOrganizers";
-import useUserProfile from "@/hooks/useUserProfile";
-import { fetchAuthenticatedUser } from "@/services/authService";
-import type { userProfileType } from "@/types/userProfileType";
-import React, { useEffect } from "react";
 
 export default function Events() {
-  const { session } = useAuth();
-
-  useEffect(() => {
-    const getUser = async () => {
-      if (!session) return;
-
-      await fetchAuthenticatedUser();
-    };
-
-    getUser();
-  }, [session]);
-
   return (
     <section className="space-y-10">
       <LocationAndFilterSection />
@@ -39,37 +21,37 @@ export default function Events() {
       <EventsSlider
         heading="Around-You"
         events={aroundYou}
-        urlPath="around-you"
+        urlPath="hc/around-you"
       />
 
       <EventsSlider
         heading="Top-rated Organizers"
         events={topRatedOrganizers}
-        urlPath="top-rated-organizers"
+        urlPath="hc/top-rated-organizers"
       />
 
       <EventsSlider
         heading="Happening Today"
         events={topRatedOrganizers}
-        urlPath="happening-today"
+        urlPath="hc/happening-today"
       />
 
       <EventsSlider
         heading="Happening Today"
         events={happeningToday}
-        urlPath="happening-today"
+        urlPath="hc/happening-today"
       />
 
       <EventsSlider
         heading="Happening This Week"
         events={happeningThisWeek}
-        urlPath="happening-this-week"
+        urlPath="hc/happening-this-week"
       />
 
       <EventsSlider
         heading="Happening This Month"
         events={happeningThisMonth}
-        urlPath="happening-this-month"
+        urlPath="hc/happening-this-month"
       />
 
       <div className="mb-5">

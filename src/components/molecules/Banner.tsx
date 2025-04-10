@@ -44,19 +44,19 @@ export default function Banner() {
     <div className="bg-black h-[200px] md:h-[300px] rounded-lg bg-opacity-10 flex justify-between items-start gap-3 md:gap-5 shadow-lg">
       <Link
         href={`/events/${event.title && generateSlug(event.title)}`}
-        className="w-1/2 h-[200px] md:h-[300px]"
+        className="w-1/2 h-[200px] md:h-[300px] aspect-video"
       >
         <Image
           src={event?.flyerUrl}
           alt="Event flyer"
           width={500}
           height={500}
-          className="w-full h-full rounded-l-lg"
+          className="w-full h-full rounded-l-lg object-cover"
         />
       </Link>
 
       {/* Details */}
-      <div className="mt-3 md:mt-5 flex flex-col gap-1 md:gap-4 mr-5 w-1/2">
+      <div className="mt-3 md:mt-5 flex flex-col gap-1 md:gap-4 pr-5 w-1/2">
         <h2 className="font-bold text-sm md:text-lg">Most anticipated</h2>
         <Link
           href={`/events/${event.title && generateSlug(event.title)}`}
