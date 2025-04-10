@@ -14,7 +14,7 @@ export default function EventCard({
   price,
 }: PostsType) {
   return (
-    <li key={title} className="space-y-2">
+    <li key={title} className="space-y-2 shadow-lg">
       <Link href={`/events/${title && generateSlug(title)}`}>
         <Image
           src={flyerUrl || "/default-image.jpg"}
@@ -25,16 +25,16 @@ export default function EventCard({
         />
       </Link>
 
-      <div className="flex flex-col gap-2 justify-start text-sm">
-        <div className="flex justify-between">
+      <div className="flex flex-col gap-2 justify-start text-sm p-3">
+        <div className="flex justify-between items-start">
           <Link
             href={`/events/${title && generateSlug(title)}`}
-            className="font-bold text-lg md:text-xl col-span-2"
+            className="font-bold text-lg md:text-xl flex-grow"
           >
             {title}
           </Link>
 
-          <button type="button">
+          <button type="button" className="flex-shrink-0">
             <Image
               src="/assets/images/menuDots.svg"
               alt="Event flyer"

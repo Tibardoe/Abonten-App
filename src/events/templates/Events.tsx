@@ -75,7 +75,7 @@ export default function Events() {
       <div className="mb-5">
         <h2 className="text-2xl font-bold mb-2">All Events</h2>
 
-        <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
+        <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
           {allEvents.map((post) => (
             <EventCard
               key={post.title}

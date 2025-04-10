@@ -15,10 +15,12 @@ export default async function page({
 
   const unformatTitle = title
     .split("-") // Split the string by hyphens
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize the first letter and lowercase the rest
+
     .join(" "); // Join the words back with spaces
 
-  const event = allEvents.find((event) => event.title === unformatTitle);
+  const event = allEvents.find(
+    (event) => event.title.toLowerCase() === unformatTitle,
+  );
 
   const similarEvents = allEvents.filter(
     (events) => events.category === event?.category,
