@@ -14,7 +14,7 @@ export default function FilterSearchBar() {
     <div className="w-full md:w-fit bg-black bg-opacity-10 rounded-lg flex justify-between p-3">
       <div className="flex gap-5">
         <Image
-          className="w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
+          className="w-[25px] h-[25px] md:w-[30px] md:h-[30px]"
           src="/assets/images/search.svg"
           alt="Search icon"
           width={40}
@@ -29,7 +29,7 @@ export default function FilterSearchBar() {
 
       <button type="button" onClick={() => handleShowPopup(true)}>
         <Image
-          className="w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
+          className="w-[25px] h-[25px] md:w-[30px] md:h-[30px]"
           src="/assets/images/filter.svg"
           alt="Search icon"
           width={40}
