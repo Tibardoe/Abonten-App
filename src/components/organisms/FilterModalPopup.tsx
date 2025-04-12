@@ -17,6 +17,7 @@ import { distance, rating } from "@/data/distanceAndRating";
 // Date moodules
 import { addDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { DateRange } from "react-day-picker";
 import { cn } from "../lib/utils";
 
@@ -43,6 +44,42 @@ export default function FilterModalPopup({
   const [category, setCategory] = useState("");
 
   const [types, setTypes] = useState<string[]>([]);
+
+  const [ratingg, setRating] = useState("");
+
+  const [distancee, setDistance] = useState("");
+
+  const router = useRouter();
+
+  const handleFilter = () => {
+    const query = new URLSearchParams({
+      price: `GHS ${minMax[0]} - GHS ${minMax[1]}`,
+      category,
+      types: types.join(","),
+      from: date?.from?.toISOString() || "",
+      to: date?.to?.toISOString() || "",
+      rating: ratingg,
+      distance: distancee,
+    });
+
+    router.push(`/search?${query.toString()}`);
+  };
+
+  const handleReset = () => {
+    const now = new Date();
+
+    setDate({ from: now, to: now });
+
+    setMinMax([0, 0]);
+
+    setCategory("");
+
+    setTypes([]);
+
+    setRating("");
+
+    setDistance("");
+  };
 
   const handleCategory = (event: React.MouseEvent<HTMLButtonElement>) => {
     setCategory(event.currentTarget.textContent || "");
@@ -81,7 +118,11 @@ export default function FilterModalPopup({
 
             <h1 className="md:mx-auto text-xl md:text-2xl">Filter</h1>
 
-            <button type="button" className="flex md:hidden">
+            <button
+              onClick={handleReset}
+              type="button"
+              className="flex md:hidden"
+            >
               Clear
             </button>
 
@@ -283,7 +324,11 @@ export default function FilterModalPopup({
                 <button
                   key={r}
                   type="button"
-                  className="px-4 py-3 bg-black bg-opacity-10 rounded-lg text-sm md:text-lg"
+                  onClick={() => setRating(r)}
+                  className={cn(
+                    "px-4 py-3 bg-slate-200 rounded-lg text-sm md:text-lg",
+                    r === ratingg && "bg-black text-white",
+                  )}
                 >
                   {r}
                 </button>
@@ -302,7 +347,11 @@ export default function FilterModalPopup({
                 <button
                   type="button"
                   key={d}
-                  className="px-4 py-3 bg-black bg-opacity-10 rounded-lg text-sm md:text-lg"
+                  onClick={() => setDistance(d)}
+                  className={cn(
+                    "px-4 py-3 bg-slate-200 rounded-lg text-sm md:text-lg",
+                    distancee === d && "bg-black text-white",
+                  )}
                 >
                   {d}
                 </button>
@@ -313,11 +362,24 @@ export default function FilterModalPopup({
           </div>
 
           <div className="gap-5 justify-end pb-5 hidden md:flex">
-            <Button className="text-lg py-6 px-8 rounded-full">Reset</Button>
-            <Button className="text-lg py-6 px-8 rounded-full">Filter</Button>
+            <Button
+              onClick={handleReset}
+              className="text-lg py-6 px-8 rounded-full"
+            >
+              Reset
+            </Button>
+            <Button
+              onClick={handleFilter}
+              className="text-lg py-6 px-8 rounded-full"
+            >
+              Filter
+            </Button>
           </div>
 
-          <Button className="font-bold w-full rounded-full text-lg md:hidden p-6">
+          <Button
+            onClick={handleFilter}
+            className="font-bold w-full rounded-full text-lg md:hidden p-6"
+          >
             Filter
           </Button>
         </div>

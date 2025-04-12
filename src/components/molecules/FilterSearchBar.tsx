@@ -11,7 +11,7 @@ export default function FilterSearchBar() {
     setShowPopup(state);
   };
   return (
-    <div className="w-full md:w-fit bg-black bg-opacity-10 rounded-lg flex justify-between p-3">
+    <div className="w-full md:w-fit bg-black bg-opacity-5 rounded-lg flex justify-between p-3">
       <div className="flex gap-5">
         <Image
           className="w-[25px] h-[25px] md:w-[30px] md:h-[30px]"
