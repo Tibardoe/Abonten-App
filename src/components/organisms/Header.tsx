@@ -57,7 +57,10 @@ export default function Header() {
     fetchProfilePicture();
   }, []);
 
-  const isUserAccount = pathname === `/user/${profile.username}/posts`;
+  const isUserAccount =
+    pathname === `/user/${profile.username}/posts` ||
+    `/user/${profile.username}/posts` ||
+    `/user/${profile.username}/posts`;
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const text = (event.target as HTMLButtonElement).innerText;

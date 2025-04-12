@@ -56,17 +56,17 @@ export default function Banner() {
       </Link>
 
       {/* Details */}
-      <div className="mt-3 md:mt-5 flex flex-col gap-1 md:gap-4 pr-5 w-1/2">
+      <div className="py-3 md:py-5 flex flex-col h-full justify-between gap-1 md:gap-4 pr-5 w-1/2">
         <h2 className="font-bold text-sm md:text-lg">Most anticipated</h2>
         <Link
           href={`/events/${event.title && generateSlug(event.title)}`}
-          className="font-bold text-lg md:text-4xl"
+          className="font-bold text-lg md:text-4xl mb-auto md:mb-0"
         >
           {event.title}
         </Link>
 
         {/* Location, time and date */}
-        <div className="grid grid-cols-[auto_1fr] gap-2 md:gap-x-5 text-[12px] md:text-lg">
+        <div className="flex flex-col text-sm gap-1 md:gap-2 md:gap-x-5 md:text-lg">
           <div className="flex items-center">
             <Image
               src="/assets/images/location.svg"
@@ -78,7 +78,7 @@ export default function Banner() {
             <p>{event.location}</p>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1">
             <Image
               src="/assets/images/time.svg"
               alt="Event flyer"
@@ -104,7 +104,7 @@ export default function Banner() {
             </p>
           </div>
 
-          <p>{event.price}</p>
+          <p className="hidden md:flex">{event.price}</p>
         </div>
       </div>
     </div>
