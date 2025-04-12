@@ -38,7 +38,7 @@ export default async function page({
 
         <div className="flex justify-between">
           <div className="flex gap-2">
-            <Link href={`/user-account/${"Big"}`}>
+            <Link href={`/user/${"Big_Ceo"}/posts`}>
               <div className="bg-black rounded-full w-20 h-20" />
             </Link>
 

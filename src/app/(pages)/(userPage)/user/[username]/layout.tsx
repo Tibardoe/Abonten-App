@@ -1,18 +1,22 @@
+import { getUserDetails } from "@/actions/getUserDetails";
 import UserAccountTabsNavigation from "@/userAccount/molecules/UserAccountTabsNavigation";
 import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
 
-export default async function layout({
-  children,
-}: Readonly<{
+type LayoutProps = {
   children: React.ReactNode;
-}>) {
+  params: Promise<{
+    username: string; // ← You get this for free
+  }>;
+};
+
+export default async function layout({ children, params }: LayoutProps) {
+  const username = (await params).username;
+
   return (
     <div className="flex flex-col gap-7">
-      <ProfileDetails />
+      <ProfileDetails username={username} />
 
       <section className="flex flex-col w-full gap-10 min-h-dvh">
-        <UserAccountTabsNavigation />
-
         {children}
       </section>
     </div>

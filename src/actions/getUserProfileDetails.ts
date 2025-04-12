@@ -1,25 +1,27 @@
 import { createClient } from "@/config/supabase/server";
 
-export async function getUserProfileDetails() {
+export async function getUserProfileDetails(username: string) {
   try {
     const supabase = await createClient();
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return { status: 401, message: "User not logged in" };
-    }
-
-    const userId = user.id;
 
     const { data, error } = await supabase
       .from("user_profile_detail")
       .select("*")
-      .eq("user_id", userId)
+      .eq("username", username)
       .single();
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    let ownUsername = null;
+
+    if (authData?.user) {
+      const { data: ownInfo } = await supabase
+        .from("user_info")
+        .select("username")
+        .eq("id", authData.user.id)
+        .single();
+      ownUsername = ownInfo?.username;
+    }
 
     if (error || !data) {
       return {
@@ -29,7 +31,7 @@ export async function getUserProfileDetails() {
       };
     }
 
-    return { status: 200, data };
+    return { status: 200, data, ownUsername };
   } catch (error) {
     console.error("Error fetching user profile", error);
     return { status: 500, message: "Internal server error" };

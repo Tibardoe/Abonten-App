@@ -3,12 +3,20 @@
 import { usePathname } from "next/navigation";
 import UserAccountTabsNavButton from "../atoms/UserAccountTabsNavButton";
 
-export default function UserAccountTabsNavigation() {
+type UsernameProp = {
+  ownUsername: string;
+};
+
+export default function UserAccountTabsNavigation({
+  ownUsername,
+}: UsernameProp) {
   const pathname = usePathname(); // e.g. /Tibardoe/posts
 
   // Extract the username from the pathname
   const parts = pathname.split("/"); // ["", "Tibardoe", "posts"]
   const username = parts[2]; // "Tibardoe"
+
+  const isCurrentUser = username === ownUsername;
 
   const tabs = [
     { imgUrl: "/assets/images/posts.svg", text: "Posts" },
@@ -25,11 +33,13 @@ export default function UserAccountTabsNavigation() {
           username={username}
         />
 
-        <UserAccountTabsNavButton
-          imgUrl="/assets/images/favorites.svg"
-          text="Favorites"
-          username={username}
-        />
+        {isCurrentUser && (
+          <UserAccountTabsNavButton
+            imgUrl="/assets/images/favorites.svg"
+            text="Favorites"
+            username={username}
+          />
+        )}
 
         <UserAccountTabsNavButton
           imgUrl="/assets/images/reviews.svg"

@@ -28,35 +28,81 @@ export type authUserType = {
   };
 };
 
-export type userProfileDetailsType = {
-  userData: {
-    id: string;
-    username?: string;
-    full_name?: string;
-    avatar_public_id?: string | null;
-    avatar_version?: string | null;
-    bio?: string | null;
-    event_id?: string | null;
-    title?: string | null;
-    price?: number | null;
-    currency?: string | null;
-    address?: string | null;
-    flyer_public_id?: string | null;
-    flyer_version?: string | null;
-    starts_at?: Date | null;
-    ends_at?: Date | null;
-    favorite_event_id?: string | null;
-    review_id?: string | null;
-    reviewer_id?: string | null;
-    reviewed_id?: string | null;
-    rating?: number | null;
-    comment?: string | null;
-    review_created_at?: string | null;
-    highlight_content?: string | null;
-    highlight_media_url?: string | null;
-    highlight_created_at?: string | null;
-  };
-};
+// export type userProfileDetailsType = {
+//   userData: {
+//     id: string;
+//     username?: string;
+//     full_name?: string;
+//     avatar_public_id?: string | null;
+//     avatar_version?: string | null;
+//     bio?: string | null;
+//     event_id?: string | null;
+//     title?: string | null;
+//     price?: number | null;
+//     currency?: string | null;
+//     address?: string | null;
+//     flyer_public_id?: string | null;
+//     flyer_version?: string | null;
+//     starts_at?: Date | null;
+//     ends_at?: Date | null;
+//     favorite_event_id?: string | null;
+//     review_id?: string | null;
+//     reviewer_id?: string | null;
+//     reviewed_id?: string | null;
+//     rating?: number | null;
+//     comment?: string | null;
+//     review_created_at?: string | null;
+//     highlight_content?: string | null;
+//     highlight_media_url?: string | null;
+//     highlight_created_at?: string | null;
+//   };
+// };
+
+export type userProfileDetailsType =
+  | {
+      status: number;
+      message: string;
+      error?: undefined;
+      data?: undefined;
+    }
+  | {
+      status: number;
+      message: string;
+      error: string | undefined;
+      data?: undefined;
+    }
+  | {
+      status: number;
+      data: {
+        id: string;
+        username?: string;
+        full_name?: string;
+        avatar_public_id?: string | null;
+        avatar_version?: string | null;
+        bio?: string | null;
+        event_id?: string | null;
+        title?: string | null;
+        price?: number | null;
+        currency?: string | null;
+        address?: string | null;
+        flyer_public_id?: string | null;
+        flyer_version?: string | null;
+        starts_at?: Date | null;
+        ends_at?: Date | null;
+        favorite_event_id?: string | null;
+        review_id?: string | null;
+        reviewer_id?: string | null;
+        reviewed_id?: string | null;
+        rating?: number | null;
+        comment?: string | null;
+        review_created_at?: string | null;
+        highlight_content?: string | null;
+        highlight_media_url?: string | null;
+        highlight_created_at?: string | null;
+      };
+      message?: undefined;
+      error?: undefined;
+    };
 
 export type userProfileSettingsDetailsType = {
   username: string;

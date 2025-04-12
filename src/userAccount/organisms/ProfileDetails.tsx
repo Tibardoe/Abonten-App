@@ -1,17 +1,20 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import { Button } from "@/components/ui/button";
-import type { userProfileDetailsType } from "@/types/userProfileType";
+import Image from "next/image";
 import Link from "next/link";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
+import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
-export default async function ProfileDetails() {
-  const userDetails = await getUserProfileDetails();
+type LayoutUserProp = {
+  username: string;
+};
 
-  if (userDetails.status !== 200) {
-    return <p className="text-red-500">{userDetails.message}</p>;
-  }
+export default async function ProfileDetails({ username }: LayoutUserProp) {
+  const userDetails = await getUserProfileDetails(username);
+
+  const isCurrentUser = userDetails.ownUsername === username;
 
   const { data } = userDetails;
 
@@ -36,33 +39,47 @@ export default async function ProfileDetails() {
         <div className="flex w-full justify-between">
           <h2 className="font-bold">{data?.username}</h2>
 
-          <SettingsButton />
+          {isCurrentUser ? (
+            <SettingsButton />
+          ) : (
+            <button type="button" className="flex gap-1 items-cente font-bold">
+              <Image
+                src="/assets/images/post.svg"
+                alt="Post"
+                width={25}
+                height={25}
+              />
+              Add Review
+            </button>
+          )}
         </div>
         <div className="flex flex-col gap-2">
-          <div className="flex items-start gap-7">
+          <div className="flex items-start gap-4">
             <UserAvatar avatarUrl={avatarUrl} width={110} height={110} />
 
-            <div className="grid grid-cols-3 gap-5 justify-start items-center">
-              <h2 className="col-span-3">{data?.username}</h2>
+            <div className="flex flex-col justify-start w-full gap-2">
+              <h2>{data?.full_name}</h2>
 
-              <span>
-                <h2>
-                  <span className="font-bold">{numberOfPosts}</span> Posts
-                </h2>
-              </span>
+              <div className="flex justify-between">
+                <span>
+                  <h2>
+                    <span className="font-bold">{numberOfPosts}</span> Posts
+                  </h2>
+                </span>
 
-              <span>
-                <h2>
-                  <span className="font-bold">{numberOfFavorites}</span>{" "}
-                  Favorites
-                </h2>
-              </span>
+                <span>
+                  <h2>
+                    <span className="font-bold">{numberOfFavorites}</span>{" "}
+                    Favorites
+                  </h2>
+                </span>
 
-              <span>
-                <h2>
-                  <span className="font-bold">{numberOfRatings}</span> Ratings
-                </h2>
-              </span>
+                <span>
+                  <h2>
+                    <span className="font-bold">{numberOfRatings}</span> Ratings
+                  </h2>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -70,11 +87,16 @@ export default async function ProfileDetails() {
             <p>It is working</p>
           </div>
         </div>
-        <Button variant="outline" className="border-black border-2 font-bold">
-          <Link href="/settings/edit-profile">Edit Profile</Link>
-        </Button>
 
-        <Higlight />
+        {isCurrentUser && (
+          <Button variant="outline" className="border-black border-2 font-bold">
+            <Link href="/settings/edit-profile">Edit Profile</Link>
+          </Button>
+        )}
+
+        {isCurrentUser && <Higlight />}
+
+        <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
       </div>
 
       {/* On tablet and desktop */}
@@ -84,11 +106,25 @@ export default async function ProfileDetails() {
           <div className="grid grid-cols-3 gap-3 justify-start items-center">
             <h2>{data?.username}</h2>
 
-            <Button variant="outline" className="border-black font-bold">
-              <Link href="/settings/edit-profile">Edit Profile</Link>
-            </Button>
+            {isCurrentUser && (
+              <Button variant="outline" className="border-black font-bold">
+                <Link href="/settings/edit-profile">Edit Profile</Link>
+              </Button>
+            )}
 
-            <SettingsButton />
+            {isCurrentUser ? (
+              <SettingsButton />
+            ) : (
+              <button type="button" className="flex gap-1 items-center">
+                <Image
+                  src="/assets/images/post.svg"
+                  alt="Post"
+                  width={30}
+                  height={30}
+                />
+                Add Review
+              </button>
+            )}
 
             <span>
               <h2>
@@ -114,7 +150,9 @@ export default async function ProfileDetails() {
           </div>
         </div>
 
-        <Higlight />
+        {isCurrentUser && <Higlight />}
+
+        <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
       </div>
     </>
   );
