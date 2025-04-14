@@ -1,13 +1,13 @@
 "use client";
 
 import AutoComplete from "@/components/molecules/AutoComplete";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { type ButtonHTMLAttributes, useState } from "react";
-import { useRouter } from "next/navigation";
 import AuthPopup from "@/components/organisms/AuthPopup";
 import MobileAuthPopup from "@/components/organisms/MobileAuthPopup";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { type ButtonHTMLAttributes, useState } from "react";
 
 export default function Landing() {
   const router = useRouter();
@@ -78,7 +78,7 @@ export default function Landing() {
           <h1 className="font-bold text-5xl text-center lg:text-6xl lg:text-left">
             Explore, post and attend <br /> events near you
           </h1>
-          <div className="flex gap-2 items-center justify-center lg:justify-start">
+          <div className="flex md:w-[40%] gap-2 items-center justify-center lg:justify-start">
             <AutoComplete
               placeholderText={{
                 text: "Enter your address",

@@ -41,7 +41,7 @@ export default function Banner() {
   if (!event || !event.flyerUrl) return null;
 
   return (
-    <div className="bg-black h-[200px] md:h-[300px] rounded-lg bg-opacity-10 flex justify-between items-start gap-3 md:gap-5 shadow-lg">
+    <div className="bg-black h-[200px] md:h-[300px] rounded-lg bg-opacity-5 flex justify-between items-start gap-3 md:gap-5 shadow-lg">
       <Link
         href={`/events/${event.title && generateSlug(event.title)}`}
         className="w-1/2 h-[200px] md:h-[300px] aspect-video"

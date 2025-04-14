@@ -11,7 +11,7 @@ const libraries: Libraries = ["places"];
 
 type AddressProp = {
   placeholderText: AutoCompletePlaceholderType;
-  address: AutoCompleteAddressType;
+  address?: AutoCompleteAddressType;
 };
 
 export default function AutoComplete({
@@ -58,9 +58,40 @@ export default function AutoComplete({
   };
 
   const handleSelectPrediction = (description: string) => {
-    address.address(description);
+    address?.address(description);
     setInputValue(description);
     setSearchResults([]); // Clear dropdown
+  };
+
+  const handleSelectCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        const geocoder = new google.maps.Geocoder();
+        const latlng = { lat: latitude, lng: longitude };
+
+        geocoder.geocode({ location: latlng }, (results, status) => {
+          if (status === "OK" && results && results.length > 0) {
+            const locationDescription = results[0].formatted_address;
+            address?.address(locationDescription); // update parent
+            setInputValue(locationDescription); // fill input
+            setSearchResults([]); // close dropdown
+          } else {
+            alert("No address found for your location.");
+          }
+        });
+      },
+      (error) => {
+        console.error("Error getting current location:", error);
+        alert("Unable to retrieve your location.");
+      },
+    );
   };
 
   if (!isLoaded)
@@ -69,7 +100,7 @@ export default function AutoComplete({
     );
 
   return (
-    <div className="bg-white rounded-lg flex items-center py-4 px-2 gap-2 relative">
+    <div className="bg-white rounded-lg flex items-center py-3 md:py-4 px-2 gap-2 relative w-full">
       <Image
         className="w-5 h-5 md:w-6 md:h-6 lg:h-8 lg:w-8"
         src={placeholderText.svgUrl}
@@ -82,21 +113,29 @@ export default function AutoComplete({
         onChange={handleInputChange}
         value={inputValue}
         placeholder={placeholderText.text}
-        className="text-black text-lg md:text-xl outline-none md:min-w-[400px]"
+        className="text-black text-lg md:text-xl outline-none w-full"
       />
 
       {/* 🔥 Show suggestions below input */}
       {searchResults.length > 0 && (
         <ul className="absolute top-full left-0 w-full h-56 bg-white text-black text-lg border rounded shadow-md mt-1 z-10 overflow-y-scroll">
+          <button
+            type="button"
+            onClick={handleSelectCurrentLocation}
+            className="p-2 w-full font-semibold text-start hover:bg-gray-100 cursor-pointer border-b border-black border-opacity-30"
+          >
+            📍 Use my current location
+          </button>
+
           {searchResults.map((result) => (
-            // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-            <li
+            <button
+              type="button"
               key={result.place_id}
               onClick={() => handleSelectPrediction(result.description)}
-              className="p-2 hover:bg-gray-100 cursor-pointer border-b border-black border-opacity-30"
+              className="p-2 w-full text-start hover:bg-gray-100 cursor-pointer border-b border-black border-opacity-30"
             >
               {result.description}
-            </li>
+            </button>
           ))}
         </ul>
       )}

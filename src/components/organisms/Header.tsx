@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import EventUploadButton from "../atoms/EventUploadButton";
 import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
 import AuthPopup from "./AuthPopup";
@@ -88,7 +89,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="w-full text flex justify-center fixed bg-white z-10">
+    <nav className="w-full flex justify-center fixed bg-white z-10">
       {showAuthPopup && (
         <>
           <AuthPopup
@@ -147,15 +148,8 @@ export default function Header() {
 
         {user ? (
           <div className="hidden lg:flex items-center gap-7 min-w-fit">
-            <Link href="#" className="flex gap-1 items-center">
-              <Image
-                src="/assets/images/post.svg"
-                alt="Post"
-                width={30}
-                height={30}
-              />
-              Post
-            </Link>
+            <EventUploadButton />
+
             <button
               type="button"
               onClick={handleSignOut}
