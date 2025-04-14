@@ -3,6 +3,7 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useState } from "react";
+import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import AutoComplete from "../molecules/AutoComplete";
 import CategoryFilter from "../molecules/CategoryFilter";
@@ -137,7 +138,7 @@ export default function EventUploadMobileModal({
             <hr />
           </div>
 
-          <div className="overflow-y-scroll space-y-5">
+          <div className="overflow-y-scroll space-y-5 w-full">
             {/* image preview */}
             <div className="w-[70%] mx-auto">
               <div className="w-full">
@@ -153,20 +154,32 @@ export default function EventUploadMobileModal({
 
             {/* Post content form */}
             <div className="space-y-4">
-              <PostInput inputPlaceholder="Title" />
+              {/* <PostInput inputPlaceholder="Title" /> */}
+
+              <div className="space-y-2">
+                <div className="w-full flex justify-between items-center gap-5 p-3">
+                  <input
+                    type="text"
+                    placeholder="Title"
+                    className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+                  />
+                </div>
+
+                <hr />
+              </div>
 
               <PostInput inputPlaceholder="Description" />
 
-              <AutoComplete
-                placeholderText={{
-                  text: "Location",
-                  svgUrl: "assets/images/location.svg",
-                }}
-              />
+              <div className="space-y-4 px-3">
+                <PostAutoComplete
+                  placeholderText={{
+                    text: "Location",
+                    svgUrl: "assets/images/location.svg",
+                  }}
+                />
 
-              <DateTimePicker />
+                <DateTimePicker />
 
-              <div className="px-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <input
                     type="number"
@@ -194,8 +207,8 @@ export default function EventUploadMobileModal({
                   <Image
                     src="/assets/images/website.svg"
                     alt="Website"
-                    width={25}
-                    height={25}
+                    width={30}
+                    height={30}
                   />
                 </div>
 

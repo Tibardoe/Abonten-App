@@ -78,7 +78,7 @@ export default function Landing() {
           <h1 className="font-bold text-5xl text-center lg:text-6xl lg:text-left">
             Explore, post and attend <br /> events near you
           </h1>
-          <div className="flex md:w-[40%] gap-2 items-center justify-center lg:justify-start">
+          <div className="flex md:w-[40%] gap-2 items-center justify-center lg:justify-start text-lg md:text-xl">
             <AutoComplete
               placeholderText={{
                 text: "Enter your address",

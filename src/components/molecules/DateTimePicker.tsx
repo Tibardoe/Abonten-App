@@ -60,17 +60,21 @@ export default function DateTimePicker() {
 
               <FormControl>
                 <Popover>
-                  <PopoverTrigger className="flex w-full justify-between items-center px-3">
+                  <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
                     <span>
                       {date?.from && date?.to
-                        ? `${date?.from?.toISOString()}-${date?.to?.toISOString()}`
+                        ? `${formatDateWithSuffix(
+                            date?.from,
+                          )}-${formatDateWithSuffix(date?.to)}`
                         : "Date and Time"}
 
                       {date?.from &&
                         !date?.to &&
-                        `${date?.from?.toISOString()}`}
+                        `${formatDateWithSuffix(date?.from)}`}
 
-                      {date?.to && !date?.from && `${date?.to?.toISOString()}`}
+                      {date?.to &&
+                        !date?.from &&
+                        `${formatDateWithSuffix(date?.to)}`}
                     </span>
                     <Image
                       src="/assets/images/date.svg"

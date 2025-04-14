@@ -1,6 +1,7 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import AutoComplete from "../molecules/AutoComplete";
 import CategoryFilter from "../molecules/CategoryFilter";
@@ -226,12 +227,36 @@ export default function UploadEventModal({
 
               {/* Post details */}
 
-              <div className="space-y-4 w-1/2 overflow-y-scroll py-5 overflow-x-hidden">
-                <PostInput inputPlaceholder="Title" />
+              <div className="space-y-4 w-1/2 overflow-y-scroll py-5 overflow-x-hidden font-normal">
+                {/* <PostInput inputPlaceholder="Title" /> */}
 
-                <PostInput inputPlaceholder="Description" />
+                <div className="space-y-2">
+                  <div className="w-full">
+                    <input
+                      type="text"
+                      placeholder="Title"
+                      className="bg-transparent outline-none text-md flex-1"
+                    />
+                  </div>
 
-                <AutoComplete
+                  <hr />
+                </div>
+
+                {/* <PostInput inputPlaceholder="Description" /> */}
+
+                <div className="space-y-2">
+                  <div className="w-full">
+                    <textarea
+                      rows={5}
+                      placeholder="Description"
+                      className="bg-transparent outline-none text-md flex-1"
+                    />
+                  </div>
+
+                  <hr />
+                </div>
+
+                <PostAutoComplete
                   placeholderText={{
                     text: "Location",
                     svgUrl: "assets/images/location.svg",
@@ -240,7 +265,7 @@ export default function UploadEventModal({
 
                 <DateTimePicker />
 
-                <div className="px-4 space-y-4">
+                <div className="space-y-4 text-sm font-normal">
                   <div className="flex justify-between items-center">
                     <input
                       type="number"
