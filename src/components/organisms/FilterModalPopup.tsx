@@ -198,6 +198,7 @@ export default function FilterModalPopup({
               <CategoryFilter
                 handleCategory={handleCategory}
                 category={category}
+                classname="font-bold md:text-lg"
               />
 
               <hr className="mt-5" />
@@ -209,6 +210,7 @@ export default function FilterModalPopup({
                 selectedTypes={types}
                 selectedCategory={category}
                 handleType={handleType}
+                classname="font-bold md:text-lg"
               />
 
               <hr className="mt-5" />

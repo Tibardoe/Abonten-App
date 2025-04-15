@@ -1,6 +1,7 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useRef, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import AutoComplete from "../molecules/AutoComplete";
@@ -23,6 +24,11 @@ export default function UploadEventModal({
   const [isUploading, setIsUploading] = useState(false);
 
   const [step, setStep] = useState(1);
+
+  const [dateAndTime, setDateAndTime] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,6 +82,10 @@ export default function UploadEventModal({
           ? prevTypes.filter((t) => t !== selectedType) // Remove if already selected
           : [...prevTypes, selectedType], // Add if not selected
     );
+  };
+
+  const handleDateAndTime = (date: DateRange) => {
+    setDateAndTime(date);
   };
 
   return (
@@ -235,7 +245,7 @@ export default function UploadEventModal({
                     <input
                       type="text"
                       placeholder="Title"
-                      className="bg-transparent outline-none text-md flex-1"
+                      className="bg-transparent outline-none text-md w-full"
                     />
                   </div>
 
@@ -249,7 +259,7 @@ export default function UploadEventModal({
                     <textarea
                       rows={5}
                       placeholder="Description"
-                      className="bg-transparent outline-none text-md flex-1"
+                      className="bg-transparent outline-none text-md w-full"
                     />
                   </div>
 
@@ -263,15 +273,24 @@ export default function UploadEventModal({
                   }}
                 />
 
-                <DateTimePicker />
+                <DateTimePicker handleDateAndTime={handleDateAndTime} />
 
                 <div className="space-y-4 text-sm font-normal">
                   <div className="flex justify-between items-center">
-                    <input
-                      type="number"
-                      placeholder="Fee"
-                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        placeholder="Fee"
+                        className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                      />
+
+                      <button
+                        type="button"
+                        className="border border-black p-2 rounded-md px-4"
+                      >
+                        Free
+                      </button>
+                    </div>
 
                     <span>GHS</span>
                   </div>
@@ -301,10 +320,19 @@ export default function UploadEventModal({
                   <div className="flex justify-between items-center">
                     <span>Capacity</span>
 
-                    <input
-                      type="number"
-                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
-                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="border border-black p-2 rounded-md px-4"
+                      >
+                        Any
+                      </button>
+
+                      <input
+                        type="number"
+                        className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                      />
+                    </div>
                   </div>
 
                   <hr />

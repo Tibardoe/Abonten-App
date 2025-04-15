@@ -181,11 +181,20 @@ export default function EventUploadMobileModal({
                 <DateTimePicker />
 
                 <div className="flex justify-between items-center">
-                  <input
-                    type="number"
-                    placeholder="Fee"
-                    className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="Fee"
+                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                    />
+
+                    <button
+                      type="button"
+                      className="border border-black p-2 rounded-md px-4"
+                    >
+                      Free
+                    </button>
+                  </div>
 
                   <span>GHS</span>
                 </div>
@@ -193,12 +202,14 @@ export default function EventUploadMobileModal({
                 <CategoryFilter
                   handleCategory={handleCategory}
                   category={category}
+                  classname="md:text-lg"
                 />
 
                 <TypeFilter
                   selectedTypes={types}
                   selectedCategory={category}
                   handleType={handleType}
+                  classname="md:text-lg"
                 />
 
                 <div className="flex justify-between items-center">
@@ -215,10 +226,19 @@ export default function EventUploadMobileModal({
                 <div className="flex justify-between items-center">
                   <span>Capacity</span>
 
-                  <input
-                    type="number"
-                    className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
-                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="border border-black p-2 rounded-md px-4"
+                    >
+                      Any
+                    </button>
+
+                    <input
+                      type="number"
+                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                    />
+                  </div>
                 </div>
 
                 <hr />

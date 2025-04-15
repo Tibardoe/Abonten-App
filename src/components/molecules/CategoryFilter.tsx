@@ -6,11 +6,13 @@ import { cn } from "../lib/utils";
 type CategoryType = {
   category: string;
   handleCategory: (categoryName: string) => void;
+  classname?: string;
 };
 
 export default function CategoryFilter({
   handleCategory,
   category,
+  classname,
 }: CategoryType) {
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
@@ -22,7 +24,7 @@ export default function CategoryFilter({
           onClick={() => setShowCategoryDropdown((prevState) => !prevState)}
           className="flex gap-2 justify-between w-full items-center"
         >
-          <h2 className="font-bold md:text-lg">Category</h2>
+          <h2 className={`${classname}`}>Category</h2>
           <Image
             src="/assets/images/arrowDown.svg"
             alt="Dropdown menu"

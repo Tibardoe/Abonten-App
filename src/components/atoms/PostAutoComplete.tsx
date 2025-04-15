@@ -119,7 +119,7 @@ export default function PostAutoComplete({
 
       {/* 🔥 Show suggestions below input */}
       {searchResults.length > 0 && (
-        <ul className="absolute top-full left-0 w-full h-56 bg-white text-black text-lg border rounded shadow-md mt-1 z-10 overflow-y-scroll">
+        <ul className="absolute top-full left-0 w-full h-56 bg-white text-black border rounded shadow-md mt-1 z-10 overflow-y-scroll">
           <button
             type="button"
             onClick={handleSelectCurrentLocation}

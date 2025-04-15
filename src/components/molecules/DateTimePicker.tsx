@@ -20,6 +20,7 @@ import {
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addDays } from "date-fns";
+import { Clock } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import type { DateRange } from "react-day-picker";
@@ -27,85 +28,80 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { TimePicker } from "../atoms/timePicker";
 
-const formSchema = z.object({
-  //   dateTime: z.date(),
-  dateTime: z.string(),
-});
+type DateAndTimeType = { handleDateAndTime: (dateAndTime: DateRange) => void };
 
-type DateTimeSchemaType = z.infer<typeof formSchema>;
-
-export default function DateTimePicker() {
+export default function DateTimePicker({ handleDateAndTime }: DateAndTimeType) {
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
   });
 
-  const form = useForm<DateTimeSchemaType>({
-    resolver: zodResolver(formSchema),
-  });
-
-  function onSubmit(values: DateTimeSchemaType) {
-    console.log(values);
-  }
+  const handleDate = () => {
+    if (date) {
+      setDate(date);
+      handleDateAndTime(date);
+    }
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="dateTime"
-          render={({ field }) => (
-            <FormItem className="">
-              {/* <FormLabel className="text-sm">Date and Time</FormLabel> */}
+    <Popover>
+      <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
+        <span>
+          {date?.from && date?.to
+            ? `${formatDateWithSuffix(date?.from)} - ${formatDateWithSuffix(
+                date?.to,
+              )}`
+            : "Date and Time"}
 
-              <FormControl>
-                <Popover>
-                  <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
-                    <span>
-                      {date?.from && date?.to
-                        ? `${formatDateWithSuffix(
-                            date?.from,
-                          )}-${formatDateWithSuffix(date?.to)}`
-                        : "Date and Time"}
+          {date?.from && !date?.to && `${formatDateWithSuffix(date?.from)}`}
 
-                      {date?.from &&
-                        !date?.to &&
-                        `${formatDateWithSuffix(date?.from)}`}
-
-                      {date?.to &&
-                        !date?.from &&
-                        `${formatDateWithSuffix(date?.to)}`}
-                    </span>
-                    <Image
-                      src="/assets/images/date.svg"
-                      alt="Date"
-                      height={20}
-                      width={20}
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={date?.from}
-                      selected={date}
-                      onSelect={setDate}
-                      numberOfMonths={1}
-                    />
-
-                    {/* <TimePicker setDate={field.onChange} date={field.value} /> */}
-                  </PopoverContent>
-                </Popover>
-              </FormControl>
-              {/* <FormDescription>
-                This is your public display name.
-              </FormDescription> */}
-              <FormMessage />
-            </FormItem>
-          )}
+          {date?.to && !date?.from && `${formatDateWithSuffix(date?.to)}`}
+        </span>
+        <Image
+          src="/assets/images/date.svg"
+          alt="Date"
+          height={20}
+          width={20}
         />
-        {/* <Button type="submit">Submit</Button> */}
-      </form>
-    </Form>
+      </PopoverTrigger>
+      <PopoverContent className="space-y-4">
+        <Calendar
+          initialFocus
+          mode="range"
+          defaultMonth={date?.from}
+          selected={date}
+          onSelect={handleDate}
+          numberOfMonths={1}
+        />
+
+        <div className="flex justify-between items-end w-full">
+          <TimePicker
+            date={date?.from}
+            setDate={(newDate) => {
+              setDate((prev) => ({
+                from: newDate,
+                to: prev?.to ?? newDate, // fallback to newDate if `to` is undefined
+              }));
+            }}
+          />
+
+          <span className="self-center">--</span>
+
+          <TimePicker
+            date={date?.to}
+            setDate={(newDate) =>
+              setDate((prev) => ({
+                from: prev?.from ?? newDate, // fallback to newDate if `from` is undefined
+                to: newDate,
+              }))
+            }
+          />
+
+          <div className="flex h-10 items-center">
+            <Clock className="ml-2 h-4 w-4" />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

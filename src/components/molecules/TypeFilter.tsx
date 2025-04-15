@@ -8,12 +8,14 @@ type TypeFIlter = {
   selectedCategory: string;
   selectedTypes: string[];
   handleType: (type: string) => void;
+  classname?: string;
 };
 
 export default function TypeFilter({
   selectedCategory,
   selectedTypes,
   handleType,
+  classname,
 }: TypeFIlter) {
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
@@ -25,7 +27,7 @@ export default function TypeFilter({
           onClick={() => setShowTypeDropdown((prevState) => !prevState)}
           className="flex gap-2 justify-between w-full items-center"
         >
-          <h2 className="font-bold md:text-lg">Type</h2>
+          <h2 className={`${classname}`}>Type</h2>
           <Image
             src="/assets/images/arrowDown.svg"
             alt="Dropdown menu"
