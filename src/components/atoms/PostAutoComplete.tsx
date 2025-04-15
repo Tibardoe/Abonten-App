@@ -5,13 +5,13 @@ import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholde
 import { type Libraries, useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const libraries: Libraries = ["places"];
 
 type AddressProp = {
   placeholderText: AutoCompletePlaceholderType;
-  address?: AutoCompleteAddressType;
+  address: AutoCompleteAddressType;
 };
 
 export default function PostAutoComplete({
@@ -19,12 +19,13 @@ export default function PostAutoComplete({
   address,
 }: AddressProp) {
   const [searchResults, setSearchResults] = useState<
-    google.maps.places.AutocompletePrediction[]
+    google.maps.places.PlacePrediction[]
   >([]);
   const [inputValue, setInputValue] = useState("");
+  const sessionTokenRef =
+    useRef<google.maps.places.AutocompleteSessionToken | null>(null);
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
   if (!googleMapsApiKey) {
     console.error(
       "Google Maps API key is missing. Check your .env.local file.",
@@ -37,16 +38,44 @@ export default function PostAutoComplete({
     libraries,
   });
 
-  // ✅ Calls Google Places API when user stops typing
-  const fetchPlacePredictions = (value: string) => {
-    if (!value.trim() || !window.google) return;
+  useEffect(() => {
+    if (isLoaded && window.google) {
+      sessionTokenRef.current =
+        new google.maps.places.AutocompleteSessionToken();
+    }
+  }, [isLoaded]);
 
-    const service = new google.maps.places.AutocompleteService();
-    service.getPlacePredictions({ input: value }, (predictions) => {
-      setSearchResults(predictions || []);
-    });
+  const fetchPlacePredictions = async (value: string) => {
+    if (!value.trim() || !window.google || !sessionTokenRef.current) return;
+
+    try {
+      const { AutocompleteSuggestion } = (await google.maps.importLibrary(
+        "places",
+      )) as google.maps.PlacesLibrary;
+      const request: google.maps.places.AutocompleteRequest = {
+        input: value,
+        sessionToken: sessionTokenRef.current,
+      };
+
+      const response =
+        await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+      const suggestions = response.suggestions || [];
+
+      // Filter out any null predictions and map to PlacePrediction array.
+      const predictions = suggestions
+        .map((suggestion) => suggestion.placePrediction)
+        .filter(
+          (prediction): prediction is google.maps.places.PlacePrediction =>
+            prediction !== null,
+        );
+
+      setSearchResults(predictions);
+    } catch (error) {
+      console.error("Error fetching autocomplete suggestions:", error);
+    }
   };
 
+  // Debounce the API call to avoid excessive calls while typing.
   const debouncedApiCall = useCallback(
     debounce(fetchPlacePredictions, 300),
     [],
@@ -60,7 +89,7 @@ export default function PostAutoComplete({
   const handleSelectPrediction = (description: string) => {
     address?.address(description);
     setInputValue(description);
-    setSearchResults([]); // Clear dropdown
+    setSearchResults([]);
   };
 
   const handleSelectCurrentLocation = () => {
@@ -72,16 +101,15 @@ export default function PostAutoComplete({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-
         const geocoder = new google.maps.Geocoder();
         const latlng = { lat: latitude, lng: longitude };
 
         geocoder.geocode({ location: latlng }, (results, status) => {
           if (status === "OK" && results && results.length > 0) {
             const locationDescription = results[0].formatted_address;
-            address?.address(locationDescription); // update parent
-            setInputValue(locationDescription); // fill input
-            setSearchResults([]); // close dropdown
+            address?.address(locationDescription);
+            setInputValue(locationDescription);
+            setSearchResults([]);
           } else {
             alert("No address found for your location.");
           }
@@ -117,7 +145,6 @@ export default function PostAutoComplete({
         height={30}
       />
 
-      {/* 🔥 Show suggestions below input */}
       {searchResults.length > 0 && (
         <ul className="absolute top-full left-0 w-full h-56 bg-white text-black border rounded shadow-md mt-1 z-10 overflow-y-scroll">
           <button
@@ -131,11 +158,11 @@ export default function PostAutoComplete({
           {searchResults.map((result) => (
             <button
               type="button"
-              key={result.place_id}
-              onClick={() => handleSelectPrediction(result.description)}
+              key={result.placeId}
+              onClick={() => handleSelectPrediction(result.text.toString())}
               className="p-2 w-full text-start hover:bg-gray-100 cursor-pointer border-b border-black border-opacity-30"
             >
-              {result.description}
+              {result.text.toString()}
             </button>
           ))}
         </ul>

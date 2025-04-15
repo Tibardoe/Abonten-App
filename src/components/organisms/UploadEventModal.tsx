@@ -30,6 +30,8 @@ export default function UploadEventModal({
     to: new Date(),
   });
 
+  const [selectedAddress, setSelectedAddress] = useState("");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadButton = () => {
@@ -267,6 +269,7 @@ export default function UploadEventModal({
                 </div>
 
                 <PostAutoComplete
+                  address={{ address: setSelectedAddress }}
                   placeholderText={{
                     text: "Location",
                     svgUrl: "assets/images/location.svg",

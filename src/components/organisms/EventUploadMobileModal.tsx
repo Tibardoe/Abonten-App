@@ -3,6 +3,7 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useState } from "react";
+import type { DateRange } from "react-day-picker";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import AutoComplete from "../molecules/AutoComplete";
@@ -30,6 +31,13 @@ export default function EventUploadMobileModal({
   const [category, setCategory] = useState("");
 
   const [types, setTypes] = useState<string[]>([]);
+
+  const [dateAndTime, setDateAndTime] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
+
+  const [selectedAddress, setSelectedAddress] = useState("");
 
   const handleCategory = (categoryName: string) => {
     setCategory(categoryName);
@@ -62,6 +70,10 @@ export default function EventUploadMobileModal({
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleDateAndTime = (date: DateRange) => {
+    setDateAndTime(date);
   };
 
   return (
@@ -172,13 +184,14 @@ export default function EventUploadMobileModal({
 
               <div className="space-y-4 px-3">
                 <PostAutoComplete
+                  address={{ address: setSelectedAddress }}
                   placeholderText={{
                     text: "Location",
                     svgUrl: "assets/images/location.svg",
                   }}
                 />
 
-                <DateTimePicker />
+                <DateTimePicker handleDateAndTime={handleDateAndTime} />
 
                 <div className="flex justify-between items-center">
                   <div className="flex gap-2">
