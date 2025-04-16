@@ -14,14 +14,14 @@ export default async function page() {
     } else {
       return (
         <div className="text-center mt-5 text-red-500">
-          Failed to load posts: {response.message}
+          Failed to load favorited posts: {response.message}
         </div>
       );
     }
   } catch (error) {
     return (
       <div className="text-center mt-5 text-red-500">
-        An error occurred while fetching posts.
+        An error occurred while fetching favorited posts.
       </div>
     );
   }

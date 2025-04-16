@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 
-export async function getUserReviews() {
+export async function getUserReviews(username: string) {
   const supabase = await createClient();
 
   const { data: user, error: userError } = await supabase.auth.getUser();
@@ -20,8 +20,8 @@ export async function getUserReviews() {
 
   const { data, error } = await supabase
     .from("review")
-    .select("*, user_info(*)")
-    .eq("reviewed_id", user.user.id);
+    .select("*, user_info!inner(*)")
+    .eq("user_info.username", username);
 
   if (error) {
     return {

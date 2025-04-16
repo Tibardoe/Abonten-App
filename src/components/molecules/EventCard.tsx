@@ -1,4 +1,4 @@
-import type { PostsType, UserPostType } from "@/types/postsType";
+import type { UserPostType } from "@/types/postsType";
 import { formatFullDateTimeRange } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
