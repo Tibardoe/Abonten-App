@@ -50,7 +50,7 @@ export default function EventCard({
             height={20}
           />
 
-          <p>{address.full_address}</p>
+          <p>{address?.full_address ? address.full_address : "wee"}</p>
         </div>
 
         <div className="flex items-center gap-2">

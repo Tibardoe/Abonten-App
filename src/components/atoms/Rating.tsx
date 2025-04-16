@@ -1,50 +1,34 @@
-import React from "react";
+import type React from "react";
+import { IoIosStar, IoIosStarHalf, IoIosStarOutline } from "react-icons/io";
 
-type RatingProp = {
-  rating: number;
+type Props = {
+  rating: number; // e.g., 3.5
+  totalStars?: number; // default to 5
 };
 
-const Rating = ({ rating }: RatingProp) => {
-  const fullStars = Math.floor(rating); // Number of full stars
-  const halfStar = rating % 1 !== 0; // Whether there's a half star
-  const emptyStars = 5 - Math.ceil(rating); // Remaining empty stars
+const StarRatingDisplay: React.FC<Props> = ({ rating, totalStars = 5 }) => {
+  const stars = [];
 
-  return (
-    <div className="flex items-center space-x-1">
-      {/* Full Stars */}
-      {[...Array(fullStars)].map((_, index) => (
-        <span
-          key={`full-${
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            index
-          }`}
-          className="text-black text-2xl"
-        >
-          &#9733;
-        </span> // Full star
-      ))}
+  for (let i = 1; i <= totalStars; i++) {
+    if (i <= rating) {
+      stars.push(
+        <IoIosStar key={i} className="text-black text-xl md:text-2xl" />,
+      );
+    } else if (i - rating < 1) {
+      stars.push(
+        <IoIosStarHalf key={i} className="text-black text-xl md:text-2xl" />,
+      );
+    } else {
+      stars.push(
+        <IoIosStarOutline
+          key={i}
+          className="text-gray-400 text-xl md:text-2xl"
+        />,
+      );
+    }
+  }
 
-      {/* Half Star */}
-      {halfStar && (
-        <span key="half" className="text-black text-2xl">
-          &#189;
-        </span>
-      )}
-
-      {/* Empty Stars */}
-      {[...Array(emptyStars)].map((_, index) => (
-        <span
-          key={`empty-${
-            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-            index
-          }`}
-          className="text-black text-2xl"
-        >
-          &#9734;
-        </span> // Empty star
-      ))}
-    </div>
-  );
+  return <div className="flex">{stars}</div>;
 };
 
-export default Rating;
+export default StarRatingDisplay;
