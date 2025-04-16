@@ -1,9 +1,5 @@
 import type { PostsType, UserPostType } from "@/types/postsType";
-import {
-  formatDateWithSuffix,
-  formatFullDateTimeRange,
-  formatSingleDateTime,
-} from "@/utils/dateFormatter";
+import { formatFullDateTimeRange } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";

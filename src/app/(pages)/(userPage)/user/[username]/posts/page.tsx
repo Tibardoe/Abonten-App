@@ -1,11 +1,7 @@
 import { getUserPosts } from "@/actions/getUserPosts";
 import EventCard from "@/components/molecules/EventCard";
 import { Button } from "@/components/ui/button";
-import { userEvents } from "@/data/userEvents";
 import type { UserPostType } from "@/types/postsType";
-import Image from "next/image";
-import Link from "next/link";
-// import { useEffect, useState } from "react";
 
 export default async function page({
   params,

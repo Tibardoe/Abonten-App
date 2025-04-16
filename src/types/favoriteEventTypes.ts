@@ -12,7 +12,7 @@ export type FavoriteEvents = {
     price: number;
     currency: string;
     location: string;
-    address: string;
+    address: { full_address: string };
     capacity: number;
     created_at: Date;
     organizer_id: string;
@@ -20,8 +20,8 @@ export type FavoriteEvents = {
     website_url: string;
     flyer_public_id: string;
     flyer_version: string;
-    start_at: Date;
-    end_at: Date;
+    starts_at: Date;
+    ends_at: Date;
     timezone: string;
     status: string;
   };
