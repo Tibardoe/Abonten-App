@@ -2,56 +2,54 @@ import { getUserPosts } from "@/actions/getUserPosts";
 import EventCard from "@/components/molecules/EventCard";
 import { Button } from "@/components/ui/button";
 import { userEvents } from "@/data/userEvents";
-import type { PostsType } from "@/types/postsType";
+import type { UserPostType } from "@/types/postsType";
 import Image from "next/image";
 import Link from "next/link";
 // import { useEffect, useState } from "react";
 
-export default function page() {
-  //   const [posts, setPosts] = useState<PostsType[]>([]);
-  //   const [loading, setLoading] = useState<boolean>(true);
-  //   const [error, setError] = useState<string | null>(null);
+export default async function page({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const username = (await params).username;
 
-  //   useEffect(() => {
-  //     const fetchUserPosts = async () => {
-  //       try {
-  //         const response = await getUserPosts();
+  let userPosts: UserPostType[] = [];
 
-  //         if (response.status === 200 && response.data) {
-  //           setPosts(response.data);
-  //         } else {
-  //           setError(`Failed to load posts.- ${response.message}`);
-  //         }
-  //       } catch (error) {
-  //         setError("An error occurred while fetching posts.");
-  //       } finally {
-  //         setLoading(false);
-  //       }
-  //     };
+  try {
+    const response = await getUserPosts(username);
 
-  //     fetchUserPosts();
-  //   }, []);
+    if (response.status === 200 && response.data) {
+      userPosts = response.data;
+    } else {
+      return (
+        <div className="text-center mt-5 text-red-500">
+          Failed to load posts: {response.message}
+        </div>
+      );
+    }
+  } catch (error) {
+    return (
+      <div className="text-center mt-5 text-red-500">
+        An error occurred while fetching posts.
+      </div>
+    );
+  }
 
-  // if (loading) {
-  //   return <p className="text-center">Loading posts...</p>;
-  // }
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
-  // if (error) {
-  //   return <p className="text-red-500 text-center">{error}</p>;
-  // }
-
-  return userEvents?.length ? (
+  return userPosts?.length ? (
     <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
-      {userEvents.map((post) => (
+      {userPosts.map((post) => (
         <EventCard
           key={post.title}
           title={post.title}
-          flyerUrl={post.flyerUrl}
-          location={post.location}
-          start_at={post.startDate}
-          end_at={post.endDate}
-          timezone={post.time}
+          flyerUrl={`${cloudinaryBaseUrl}v${post.flyer_version}/${post.flyer_public_id}.jpg`}
+          address={post.address}
+          starts_at={post.starts_at}
+          ends_at={post.ends_at}
           price={post.price}
+          created_at={post.created_at}
         />
       ))}
     </ul>

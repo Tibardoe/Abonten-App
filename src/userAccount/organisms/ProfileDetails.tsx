@@ -26,12 +26,6 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
     ? `${cloudinaryBaseUrl}v${data.avatar_version}/${data.avatar_public_id}.jpg`
     : defaultAvatar;
 
-  const numberOfPosts = data.event_id?.length || 0;
-
-  const numberOfFavorites = data.favorite_event_id?.length || 0;
-
-  const numberOfRatings = data.rating || 0;
-
   return (
     <>
       {/* On mobile */}
@@ -63,20 +57,23 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
               <div className="flex justify-between">
                 <span>
                   <h2>
-                    <span className="font-bold">{numberOfPosts}</span> Posts
+                    <span className="font-bold">{data.total_posts}</span> Posts
                   </h2>
                 </span>
 
                 <span>
                   <h2>
-                    <span className="font-bold">{numberOfFavorites}</span>{" "}
+                    <span className="font-bold">{data.total_favorites}</span>{" "}
                     Favorites
                   </h2>
                 </span>
 
                 <span>
                   <h2>
-                    <span className="font-bold">{numberOfRatings}</span> Ratings
+                    <span className="font-bold">
+                      {data.average_rating === null && 0}
+                    </span>{" "}
+                    Ratings
                   </h2>
                 </span>
               </div>
@@ -130,19 +127,23 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
 
             <span>
               <h2>
-                <span className="font-bold">{numberOfPosts}</span> Posts
+                <span className="font-bold">{data.total_posts}</span> Posts
               </h2>
             </span>
 
             <span>
               <h2>
-                <span className="font-bold">{numberOfFavorites}</span> Favorites
+                <span className="font-bold">{data.total_favorites}</span>{" "}
+                Favorites
               </h2>
             </span>
 
             <span>
               <h2>
-                <span className="font-bold">{numberOfRatings}</span> Ratings
+                <span className="font-bold">
+                  {data.average_rating === null && 0}
+                </span>{" "}
+                Ratings
               </h2>
             </span>
 

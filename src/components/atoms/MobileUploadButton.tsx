@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import MobileUploadModal from "../organisms/MobileUploadModal";
-import UploadAvatarModal from "../organisms/UploadAvatarModal";
 import { Button } from "../ui/button";
 
 export default function MobileUploadButton() {

@@ -1,36 +1,30 @@
 "use client";
 
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useRef } from "react";
 
 type inputProp = {
   inputPlaceholder: string;
+  type: string;
 } & React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>;
 
 const PostInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
-  ({ title, inputPlaceholder, ...props }, ref) => {
-    const [inputFieldDisabled, setInputFieldDisabled] = useState(true);
-
+  ({ title, type, inputPlaceholder, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
-
-    const handleClick = () => {
-      setInputFieldDisabled((prevState) => !prevState);
-      setTimeout(() => inputRef.current?.focus(), 0);
-    };
 
     return (
       <div className="space-y-2">
-        <div className="w-full flex justify-between items-center gap-5 p-3">
+        <div className="w-full flex justify-between items-center gap-5 p-3 md:p-0">
           {inputPlaceholder === "Description" ? (
             <textarea
               ref={ref as React.Ref<HTMLTextAreaElement>}
-              className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+              className="bg-transparent outline-none text-md w-full"
               rows={5}
               placeholder={inputPlaceholder}
               {...props}
             />
           ) : (
             <input
-              type="text"
+              type={type}
               ref={(e) => {
                 inputRef.current = e;
                 if (typeof ref === "function") {
@@ -42,8 +36,7 @@ const PostInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
                 }
               }}
               placeholder={inputPlaceholder}
-              disabled={title === "Bio" ? false : inputFieldDisabled}
-              className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+              className="bg-transparent outline-none text-md w-full"
               {...props}
             />
           )}

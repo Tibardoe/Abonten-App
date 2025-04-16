@@ -5,7 +5,7 @@ export async function getUserProfileDetails(username: string) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from("user_profile_detail")
+      .from("user_profile_details")
       .select("*")
       .eq("username", username)
       .single();

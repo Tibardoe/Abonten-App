@@ -1,31 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { addDays } from "date-fns";
+import {
+  formatFullDateTimeRange,
+  formatSingleDateTime,
+} from "@/utils/dateFormatter";
 import { Clock } from "lucide-react";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect } from "react";
 import type { DateRange } from "react-day-picker";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { TimePicker } from "../atoms/timePicker";
 
 type DateAndTimeType = { handleDateAndTime: (dateAndTime: DateRange) => void };
@@ -36,26 +24,19 @@ export default function DateTimePicker({ handleDateAndTime }: DateAndTimeType) {
     to: new Date(),
   });
 
-  const handleDate = () => {
-    if (date) {
-      setDate(date);
+  useEffect(() => {
+    if (date?.from || date?.to) {
       handleDateAndTime(date);
     }
-  };
+  }, [date, handleDateAndTime]);
+
+  const dateTime = formatFullDateTimeRange(date?.from, date?.to);
 
   return (
     <Popover>
       <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
         <span>
-          {date?.from && date?.to
-            ? `${formatDateWithSuffix(date?.from)} - ${formatDateWithSuffix(
-                date?.to,
-              )}`
-            : "Date and Time"}
-
-          {date?.from && !date?.to && `${formatDateWithSuffix(date?.from)}`}
-
-          {date?.to && !date?.from && `${formatDateWithSuffix(date?.to)}`}
+          {dateTime.date}, {dateTime.time}
         </span>
         <Image
           src="/assets/images/date.svg"
@@ -70,7 +51,7 @@ export default function DateTimePicker({ handleDateAndTime }: DateAndTimeType) {
           mode="range"
           defaultMonth={date?.from}
           selected={date}
-          onSelect={handleDate}
+          onSelect={setDate}
           numberOfMonths={1}
         />
 

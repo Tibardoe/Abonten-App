@@ -1,7 +1,13 @@
+import { postEvent } from "@/actions/postEvent";
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
+import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
+import { getUserCurrency } from "@/utils/getUserCurrency";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import AutoComplete from "../molecules/AutoComplete";
@@ -13,6 +19,39 @@ import { Button } from "../ui/button";
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;
 };
+
+const eventSchema = z.object({
+  title: z
+    .string()
+    .min(1, { message: "Title is required" })
+    .max(150, { message: "Title must be less than 150 characters" }),
+
+  description: z.string().min(1, { message: "Description is required" }),
+
+  website_url: z
+    .string()
+    .refine(
+      (val) =>
+        val === "" ||
+        /^((https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-z]{2,})(\/\S*)?$/.test(val),
+      {
+        message:
+          "Enter a valid URL (e.g., www.example.com or https://example.com)",
+      },
+    )
+    .optional(),
+
+  price: z
+    .number({ invalid_type_error: "Price must be a number" })
+    .min(0, { message: "Price cannot be negative" })
+    .optional(),
+
+  capacity: z
+    .number({ invalid_type_error: "Capacity must be a number" })
+    .int({ message: "Capacity must be a whole number" })
+    .positive({ message: "Capacity must be greater than 0" })
+    .optional(),
+});
 
 export default function UploadEventModal({
   handleClosePopup,
@@ -32,6 +71,22 @@ export default function UploadEventModal({
 
   const [selectedAddress, setSelectedAddress] = useState("");
 
+  const [category, setCategory] = useState("");
+
+  const [types, setTypes] = useState<string[]>([]);
+
+  const [currency, setCurrency] = useState("");
+
+  const form = useForm<z.infer<typeof eventSchema>>({
+    resolver: zodResolver(eventSchema),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadButton = () => {
@@ -49,29 +104,14 @@ export default function UploadEventModal({
     }
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      alert("Please select a file first!");
-      return;
-    }
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      const userCurrency = await getUserCurrency();
+      setCurrency(userCurrency);
+    };
 
-    setIsUploading(true);
-
-    try {
-      await saveAvatarToCloudinary(selectedFile);
-      alert("Upload successful!");
-      handleClosePopup(false);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Upload failed. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const [category, setCategory] = useState("");
-
-  const [types, setTypes] = useState<string[]>([]);
+    fetchCurrency();
+  }, []);
 
   const handleCategory = (categoryName: string) => {
     setCategory(categoryName);
@@ -88,6 +128,49 @@ export default function UploadEventModal({
 
   const handleDateAndTime = (date: DateRange) => {
     setDateAndTime(date);
+  };
+
+  const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
+    if (!selectedFile) {
+      alert("Please select a file first!");
+      return;
+    }
+
+    if (!selectedAddress) {
+      alert("Please enter a location");
+      return;
+    }
+
+    const coords = await getCoordinatesFromAddress(selectedAddress);
+
+    if (!coords) {
+      alert("Could not fetch coordinates");
+      return;
+    }
+
+    const finalData = {
+      ...formData,
+      address: selectedAddress,
+      latitude: coords.lat,
+      longitude: coords.lng,
+      category,
+      types,
+      starts_at: dateAndTime?.from,
+      ends_at: dateAndTime?.to,
+      selectedFile,
+      currency,
+    };
+
+    setIsUploading(true);
+    const response = await postEvent(finalData);
+    setIsUploading(false);
+
+    if (response.status === 200) {
+      alert("Event posted successfully!");
+      handleClosePopup(false);
+    } else {
+      alert(`Something went wrong: ${response.message}`);
+    }
   };
 
   return (
@@ -216,10 +299,10 @@ export default function UploadEventModal({
                 <button
                   type="button"
                   className="font-bold"
-                  onClick={() => setStep((prevStep) => prevStep + 1)}
+                  onClick={handleSubmit(onSubmit)}
                   disabled={isUploading}
                 >
-                  Share
+                  {isUploading ? "Uploading..." : "Upload"}
                 </button>
               </div>
 
@@ -239,75 +322,76 @@ export default function UploadEventModal({
 
               {/* Post details */}
 
-              <div className="space-y-4 w-1/2 overflow-y-scroll py-5 overflow-x-hidden font-normal">
-                {/* <PostInput inputPlaceholder="Title" /> */}
+              <form className="space-y-4 w-1/2 overflow-y-scroll py-5 overflow-x-hidden font-normal">
+                <PostInput
+                  type="text"
+                  inputPlaceholder="Title"
+                  {...register("title")}
+                />
+                {errors.title && (
+                  <p className="text-red-500 text-sm pl-3">
+                    {errors.title.message}
+                  </p>
+                )}
 
-                <div className="space-y-2">
-                  <div className="w-full">
-                    <input
-                      type="text"
-                      placeholder="Title"
-                      className="bg-transparent outline-none text-md w-full"
-                    />
-                  </div>
-
-                  <hr />
-                </div>
-
-                {/* <PostInput inputPlaceholder="Description" /> */}
-
-                <div className="space-y-2">
-                  <div className="w-full">
-                    <textarea
-                      rows={5}
-                      placeholder="Description"
-                      className="bg-transparent outline-none text-md w-full"
-                    />
-                  </div>
-
-                  <hr />
-                </div>
+                <PostInput
+                  type="text"
+                  inputPlaceholder="Description"
+                  {...register("description")}
+                />
+                {errors.description && (
+                  <p className="text-red-500 text-sm pl-3">
+                    {errors.description.message}
+                  </p>
+                )}
 
                 <PostAutoComplete
                   address={{ address: setSelectedAddress }}
                   placeholderText={{
                     text: "Location",
-                    svgUrl: "assets/images/location.svg",
+                    svgUrl: "/assets/images/location.svg",
                   }}
                 />
+                {selectedAddress === "" && (
+                  <p className="text-red-500 text-sm">Location required</p>
+                )}
 
                 <DateTimePicker handleDateAndTime={handleDateAndTime} />
+                {dateAndTime === undefined && (
+                  <p className="text-red-500 text-sm pl-3">Set date and time</p>
+                )}
 
                 <div className="space-y-4 text-sm font-normal">
                   <div className="flex justify-between items-center">
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Fee"
-                        className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
-                      />
+                    <input
+                      type="number"
+                      placeholder="0 if free"
+                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                    />
 
-                      <button
-                        type="button"
-                        className="border border-black p-2 rounded-md px-4"
-                      >
-                        Free
-                      </button>
-                    </div>
-
-                    <span>GHS</span>
+                    <span>{currency}</span>
                   </div>
 
                   <CategoryFilter
                     handleCategory={handleCategory}
                     category={category}
                   />
+                  {category === "" && (
+                    <p className="text-red-500 text-sm">
+                      Select event category
+                    </p>
+                  )}
 
                   <TypeFilter
                     selectedTypes={types}
                     selectedCategory={category}
                     handleType={handleType}
                   />
+                  {types.length === 0 && (
+                    <p className="text-red-500 text-sm">
+                      Select at least one type for event
+                    </p>
+                  )}
 
                   <div className="flex justify-between items-center">
                     <input type="text" placeholder="Website" />
@@ -319,28 +403,30 @@ export default function UploadEventModal({
                       height={25}
                     />
                   </div>
+                  {errors.website_url && (
+                    <p className="text-red-500 text-sm">
+                      {errors.website_url.message}
+                    </p>
+                  )}
 
                   <div className="flex justify-between items-center">
                     <span>Capacity</span>
 
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        className="border border-black p-2 rounded-md px-4"
-                      >
-                        Any
-                      </button>
-
-                      <input
-                        type="number"
-                        className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
-                      />
-                    </div>
+                    <input
+                      type="number"
+                      placeholder="0 if any"
+                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                    />
                   </div>
+                  {errors.capacity && (
+                    <p className="text-red-500 text-sm">
+                      {errors.capacity.message}
+                    </p>
+                  )}
 
                   <hr />
                 </div>
-              </div>
+              </form>
             </div>
           </>
         )}

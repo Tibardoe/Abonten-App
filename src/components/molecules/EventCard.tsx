@@ -1,27 +1,29 @@
-import type { PostsType } from "@/types/postsType";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import type { PostsType, UserPostType } from "@/types/postsType";
+import {
+  formatDateWithSuffix,
+  formatFullDateTimeRange,
+  formatSingleDateTime,
+} from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
+import EventCardFlyerImage from "../atoms/EventCardFlyerImage";
 
 export default function EventCard({
   title,
   flyerUrl,
-  location,
-  start_at,
-  end_at,
-  timezone,
+  address,
+  starts_at,
+  ends_at,
   price,
-}: PostsType) {
+}: UserPostType) {
+  const dateTime = formatFullDateTimeRange(starts_at, ends_at);
+
   return (
     <li key={title} className="space-y-2 shadow-lg">
       <Link href={`/events/${title && generateSlug(title)}`}>
-        <Image
-          src={flyerUrl || "/default-image.jpg"}
-          alt="Event flyer"
-          width={500}
-          height={500}
-          className="w-full h-[300px] md:h-[350px] object-cover"
+        <EventCardFlyerImage
+          flyerUrl={flyerUrl ?? "/assets/images/default-flyer.png"}
         />
       </Link>
 
@@ -52,7 +54,7 @@ export default function EventCard({
             height={20}
           />
 
-          <p>{location}</p>
+          <p>{address.full_address}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -64,8 +66,8 @@ export default function EventCard({
           />
 
           <p>
-            {start_at ? formatDateWithSuffix(start_at) : "Date not available"} -
-            {end_at ? formatDateWithSuffix(end_at) : "End date not available"}
+            {starts_at ? dateTime.date : "Date not available"} -
+            {ends_at ? dateTime.date : "End date not available"}
           </p>
         </div>
 
@@ -78,10 +80,10 @@ export default function EventCard({
               height={20}
             />
 
-            <p>{timezone}</p>
+            <p>{starts_at ? dateTime.time : "Time not available"}</p>
           </div>
 
-          <p>{price}</p>
+          <p>{price === 0 && "Free"}</p>
         </div>
       </div>
     </li>
