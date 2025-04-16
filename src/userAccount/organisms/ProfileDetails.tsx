@@ -1,4 +1,5 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
+import AddReviewButton from "@/components/atoms/AddReviewButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -36,15 +37,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
           {isCurrentUser ? (
             <SettingsButton />
           ) : (
-            <button type="button" className="flex gap-1 items-cente font-bold">
-              <Image
-                src="/assets/images/post.svg"
-                alt="Post"
-                width={25}
-                height={25}
-              />
-              Add Review
-            </button>
+            <AddReviewButton username={username} />
           )}
         </div>
         <div className="flex flex-col gap-2">
@@ -113,7 +106,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
               <SettingsButton />
             ) : (
               <div className="col-span-2 font-bold">
-                <button type="button" className="flex gap-1 items-center">
+                {/* <button type="button" className="flex gap-1 items-center">
                   <Image
                     src="/assets/images/post.svg"
                     alt="Post"
@@ -121,7 +114,9 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
                     height={30}
                   />
                   Add Review
-                </button>
+                </button> */}
+
+                <AddReviewButton username={username} />
               </div>
             )}
 

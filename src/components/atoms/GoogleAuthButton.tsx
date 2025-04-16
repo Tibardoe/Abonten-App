@@ -27,7 +27,7 @@ export default function GoogleAuthButton({
     <button
       type="button"
       onClick={handleSignin}
-      className="flex items-center w-full bg-black bg-opacity-10 px-20 py-4 md:p-4 md:text-lg lg:text-xl rounded-xl"
+      className="flex items-center w-full bg-black bg-opacity-5 px-20 py-4 md:p-4 md:text-lg lg:text-xl rounded-xl"
     >
       <Image
         src="/assets/images/google.svg"
