@@ -50,7 +50,7 @@ export default function EventCard({
             height={20}
           />
 
-          <p>{address?.full_address ? address.full_address : "wee"}</p>
+          <p>{address?.full_address ? address.full_address : "No address"}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export default function EventCard({
             <p>{starts_at ? dateTime.time : "Time not available"}</p>
           </div>
 
-          <p>{price === 0 && "Free"}</p>
+          <p>{price === 0 || price === null ? "Free" : price}</p>
         </div>
       </div>
     </li>

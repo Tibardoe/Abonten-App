@@ -1,3 +1,5 @@
+import { formatDistanceToNow } from "date-fns";
+
 export function formatDateWithSuffix(date: string | Date): string {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
@@ -73,4 +75,11 @@ export function formatSingleDateTime(date: Date | string): {
   });
 
   return { date: dateStr, time: timeStr };
+}
+
+export function getRelativeTime(date: string | Date) {
+  return formatDistanceToNow(new Date(date), { addSuffix: true }).replace(
+    "about ",
+    "",
+  );
 }

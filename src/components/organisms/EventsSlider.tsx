@@ -1,5 +1,6 @@
 "use client";
 
+import type { UserPostType } from "@/types/postsType";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,20 +11,7 @@ type EventsSliderProp = {
   heading: string;
   eventCategory?: string;
   urlPath?: string;
-  events: {
-    flyerUrl: string;
-    title: string;
-    description: string;
-    price: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    time: string;
-    category: string;
-    type: string;
-    telephone: string;
-    website: string;
-  }[];
+  events: UserPostType[];
 };
 
 export default function EventsSlider({
@@ -33,6 +21,8 @@ export default function EventsSlider({
   urlPath,
 }: EventsSliderProp) {
   const scrollRef = useRef<HTMLUListElement>(null);
+
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
   const scroll = (direction: "left" | "right") => {
     const container = scrollRef.current;
@@ -94,12 +84,12 @@ export default function EventsSlider({
             <EventCard
               key={event.title}
               title={event.title}
-              flyerUrl={event.flyerUrl}
-              location={event.location}
-              start_at={event.startDate}
-              end_at={event.endDate}
-              timezone={event.time}
+              flyerUrl={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
+              address={event.address}
+              starts_at={event.starts_at}
+              ends_at={event.ends_at}
               price={event.price}
+              created_at={event.created_at}
             />
           ))}
         </ul>

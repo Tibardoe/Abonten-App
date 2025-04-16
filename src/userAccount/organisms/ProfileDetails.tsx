@@ -1,4 +1,5 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
+import { getUserRating } from "@/actions/getUserRating";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,8 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
   const avatarUrl = data?.avatar_public_id
     ? `${cloudinaryBaseUrl}v${data.avatar_version}/${data.avatar_public_id}.jpg`
     : defaultAvatar;
+
+  const averageRating = await getUserRating(userDetails.data.user_id);
 
   return (
     <>
@@ -64,7 +67,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
                 <span>
                   <h2>
                     <span className="font-bold">
-                      {data.average_rating === null && 0}
+                      {averageRating.averageRating}
                     </span>{" "}
                     Ratings
                   </h2>

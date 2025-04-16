@@ -1,9 +1,16 @@
 import { getEvents } from "@/actions/getEvents";
+import { getUserRating } from "@/actions/getUserRating";
+import SlugImage from "@/components/atoms/SlugImage";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/config/supabase/server";
 import { allEvents } from "@/data/allEvents";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import { getRelativeTime } from "@/utils/dateFormatter";
+import {
+  formatDateWithSuffix,
+  formatFullDateTimeRange,
+} from "@/utils/dateFormatter";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -12,6 +19,8 @@ export default async function page({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const supabase = await createClient();
+
   const title = (await params).slug;
 
   const unformatTitle = title
@@ -19,13 +28,34 @@ export default async function page({
 
     .join(" "); // Join the words back with spaces
 
-  const event = allEvents.find(
-    (event) => event.title.toLowerCase() === unformatTitle,
+  const { data: event } = await supabase
+    .from("event")
+    .select(
+      "*, user_info!event_organizer_id_fkey(avatar_public_id,avatar_version,username)",
+    )
+    .eq("slug", title)
+    .single();
+
+  const { data: similarEvents } = await supabase
+    .from("event")
+    .select("*")
+    .eq("event_category", event.event_category);
+
+  const postedAt = getRelativeTime(event.created_at);
+
+  const eventDateAndTime = formatFullDateTimeRange(
+    event.starts_at,
+    event.ends_at,
   );
 
-  const similarEvents = allEvents.filter(
-    (events) => events.category === event?.category,
-  );
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
+
+  const tags =
+    typeof event.event_type === "string"
+      ? JSON.parse(event.event_type)
+      : event.event_type; // if it's already an array
+
+  const averageRating = await getUserRating(event.organizer_id);
 
   if (!event) {
     return <p>No event found</p>;
@@ -43,31 +73,33 @@ export default async function page({
             </Link>
 
             <div>
-              <Link href={`/user-account/${"Big"}`}>Big_Ceo</Link>
+              <Link href={`/user/${event.user_info.username}/posts`}>
+                {event.user_info.username}
+              </Link>
 
               <p>
-                <span className="font-bold">7.8</span> Ratings
+                <span className="font-bold">{averageRating.averageRating}</span>{" "}
+                Ratings
               </p>
             </div>
           </div>
 
-          <p>1hour ago</p>
+          {/* Posted at */}
+          <p>{postedAt}</p>
         </div>
       </div>
 
-      <div className="md:flex gap-5">
-        <Image
-          src={event.flyerUrl}
-          alt="Event flyer"
-          width={500}
-          height={500}
-          className="w-full md:w-[700px] md:h-[650px] rounded-xl"
+      <div className="md:grid grid-cols-2 gap-5 md:h-[700px]">
+        <SlugImage
+          flyerUrl={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
         />
 
         {/* Event details */}
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-5 md:overflow-y-scroll">
           {/* title */}
-          <h2 className="font-bold text-lg md:text-2xl">{event.title}</h2>
+          <h2 className="font-bold mt-3 md:mt-0 text-lg md:text-2xl">
+            {event.title}
+          </h2>
 
           {/* description */}
           <div>
@@ -76,8 +108,8 @@ export default async function page({
           </div>
 
           {/* Event date, time, location and price */}
-          <div className="grid grid-cols-[auto_1fr] gap-3">
-            <div className="flex items-center">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center col-span-2">
               <Image
                 src="/assets/images/location.svg"
                 alt="Event flyer"
@@ -85,7 +117,7 @@ export default async function page({
                 height={20}
               />
 
-              <p>{event.location}</p>
+              <p>{event.address.full_address}</p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -96,15 +128,7 @@ export default async function page({
                 height={15}
               />
 
-              <p>
-                {event.startDate
-                  ? formatDateWithSuffix(event.startDate)
-                  : "Date not available"}{" "}
-                -
-                {event.endDate
-                  ? formatDateWithSuffix(event.startDate)
-                  : "End date not available"}
-              </p>
+              <p>{eventDateAndTime.date}</p>
             </div>
 
             <div className="flex items-center gap-1">
@@ -115,18 +139,28 @@ export default async function page({
                 height={20}
               />
 
-              <p>{event.time}</p>
+              <p>{eventDateAndTime.time}</p>
             </div>
 
-            <p>{event.price}</p>
+            <p>
+              {event.price === 0 || event.price === null
+                ? "Free"
+                : `${event.currency} ${event.price}`}
+            </p>
+
+            {event.capacity && <p>Capacity: {event.capacity}</p>}
           </div>
 
           {/* Buttons */}
 
           <div className="flex flex-col gap-3">
-            <Button className="font-bold rounded-full w-full p-6 text-lg">
-              Buy Ticket
-            </Button>
+            {event.price === 0 || event.price === null ? (
+              ""
+            ) : (
+              <Button className="font-bold rounded-full w-full p-6 text-lg">
+                Buy Ticket
+              </Button>
+            )}
 
             <div className="grid grid-cols-2 outline-none gap-3">
               <Button
@@ -153,18 +187,21 @@ export default async function page({
                 />
                 Share
               </Button>
-              <Button
-                variant="outline"
-                className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
-              >
-                <Image
-                  src="/assets/images/website.svg"
-                  alt="Website"
-                  width={30}
-                  height={30}
-                />
-                Website
-              </Button>
+              {event.website_url && (
+                <Link
+                  href={event.website_url}
+                  className="rounded-full text-lg p-1 md:p-2 border border-black flex items-center justify-center gap-3"
+                >
+                  <Image
+                    src="/assets/images/website.svg"
+                    alt="Website"
+                    width={30}
+                    height={30}
+                  />
+                  {event.website_url}
+                </Link>
+              )}
+
               <Button
                 variant="outline"
                 className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
@@ -183,22 +220,25 @@ export default async function page({
             <div className="space-y-5 mt-5">
               <div className="space-y-2">
                 <h2 className="font-bold md:text-lg">EVENT CATEGORY</h2>
-                <Button
-                  variant="outline"
-                  className="rounded-xl text-lg p-5 md:p-6 border border-black w-full"
+                <button
+                  type="button"
+                  className="rounded-xl text-lg p-2 md:p-3 border border-black w-full"
                 >
-                  {event.category}
-                </Button>
+                  {event.event_category}
+                </button>
               </div>
 
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <h2 className="font-bold md:text-lg">TAG</h2>
-                <Button
-                  variant="outline"
-                  className="rounded-xl text-lg p-5 md:p-6 border border-black w-full"
-                >
-                  {event.type}
-                </Button>
+                {tags.map((tag: string) => (
+                  <button
+                    type="button"
+                    key={tag}
+                    className="rounded-xl text-lg p-2 md:p-3 border border-black w-full"
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -207,7 +247,7 @@ export default async function page({
 
       <EventsSlider
         heading="Similar Events"
-        events={similarEvents}
+        events={similarEvents ?? []}
         eventCategory={event.category}
       />
     </div>
