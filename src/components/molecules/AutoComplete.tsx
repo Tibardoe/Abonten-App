@@ -13,11 +13,21 @@ const libraries: Libraries = ["places"];
 type AddressProp = {
   placeholderText: AutoCompletePlaceholderType;
   address: AutoCompleteAddressType;
+  classname?: string;
+  value?: string;
+  onSelectCoordinates?: (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => void;
 };
 
 export default function PostAutoComplete({
   placeholderText,
   address,
+  classname,
+  value,
+  onSelectCoordinates,
 }: AddressProp) {
   const [searchResults, setSearchResults] = useState<
     google.maps.places.PlacePrediction[]
@@ -91,9 +101,15 @@ export default function PostAutoComplete({
     address?.address(description);
     setInputValue(description);
     localStorage.setItem("address", description);
+
     const coords = await getCoordinatesFromAddress(description);
     localStorage.setItem("coordinates", JSON.stringify(coords));
+
     setSearchResults([]);
+
+    if (coords && onSelectCoordinates) {
+      onSelectCoordinates({ ...coords, address: description });
+    }
   };
 
   const handleSelectCurrentLocation = () => {
@@ -129,13 +145,21 @@ export default function PostAutoComplete({
     );
   };
 
+  useEffect(() => {
+    if (value) setInputValue(value);
+  }, [value]);
+
   if (!isLoaded)
     return (
       <div className="text-center text-gray-500">Loading Google Maps...</div>
     );
 
   return (
-    <div className="bg-white rounded-lg flex items-center py-3 md:py-4 px-2 gap-2 relative w-full">
+    <div
+      className={`${
+        classname ? classname : "bg-white"
+      } rounded-lg flex items-center py-3 md:py-4 px-2 gap-2 relative w-full`}
+    >
       <Image
         className="w-5 h-5 md:w-6 md:h-6 lg:h-8 lg:w-8"
         src={placeholderText.svgUrl}
@@ -148,7 +172,7 @@ export default function PostAutoComplete({
         onChange={handleInputChange}
         value={inputValue}
         placeholder={placeholderText.text}
-        className="text-black outline-none w-full"
+        className="text-black outline-none w-full bg-transparent"
       />
 
       {/* 🔥 Show suggestions below input */}

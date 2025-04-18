@@ -60,10 +60,10 @@ export default async function page({
 
   return (
     <section className="space-y-10">
+      <LocationAndFilterSection />
+
       {aroundYou?.length ? (
         <>
-          <LocationAndFilterSection />
-
           <Banner />
 
           <EventsSlider
