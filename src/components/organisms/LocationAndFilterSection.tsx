@@ -1,13 +1,18 @@
 "use client";
 
+import { undoSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import FilterSearchBar from "../molecules/FilterSearchBar";
 
 export default function LocationAndFilterSection() {
-  const searchParams = useSearchParams();
+  const params = useParams();
+  const locationParam = params?.location;
 
-  const location = searchParams.get("location");
+  const location =
+    typeof locationParam === "string"
+      ? undoSlug(locationParam)
+      : "Unknown Location"; // fallback if undefined or not a string
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">

@@ -4,6 +4,7 @@ import type { UserPostType } from "@/types/postsType";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useRef } from "react";
 import EventCard from "../molecules/EventCard";
 
@@ -22,7 +23,7 @@ export default function EventsSlider({
 }: EventsSliderProp) {
   const scrollRef = useRef<HTMLUListElement>(null);
 
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
+  const { location } = useParams();
 
   const scroll = (direction: "left" | "right") => {
     const container = scrollRef.current;
@@ -47,7 +48,7 @@ export default function EventsSlider({
           href={
             urlPath
               ? `/events/${urlPath}`
-              : `/events/category?category=${
+              : `/events/${location}/explore/similar-events?category=${
                   eventCategory && generateSlug(eventCategory)
                 }`
           }
@@ -64,27 +65,40 @@ export default function EventsSlider({
       </div>
 
       <div className="relative">
-        <button
-          type="button"
-          onClick={() => scroll("left")}
-          className="bg-white shadow-xl hidden md:grid place-items-center rounded-full w-10 h-10 absolute top-[50%] -translate-y-[50%]"
-        >
-          <Image
-            src="/assets/images/moveBack.svg"
-            alt="Slide left"
-            width={30}
-            height={30}
-          />
-        </button>
+        {/* Overlay */}
+        {events.length === 0 && (
+          <div className="text-gray-200 font-semibold md:text-xl rounded-xl w-full h-56 bg-black bg-opacity-60 flex justify-center items-center">
+            Events unavailable in this category
+          </div>
+        )}
+
+        {/* slide left button */}
+        {events.length !== 0 && (
+          <button
+            type="button"
+            onClick={() => scroll("left")}
+            className="bg-white shadow-xl hidden md:grid place-items-center rounded-full w-10 h-10 absolute top-[50%] -translate-y-[50%]"
+          >
+            <Image
+              src="/assets/images/moveBack.svg"
+              alt="Slide left"
+              width={30}
+              height={30}
+            />
+          </button>
+        )}
+
+        {/* slider container and element */}
         <ul
           ref={scrollRef}
-          className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4"
+          className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4 relative"
         >
           {events.map((event) => (
             <EventCard
               key={event.title}
               title={event.title}
-              flyerUrl={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
+              flyer_public_id={event.flyer_public_id}
+              flyer_version={event.flyer_version}
               address={event.address}
               starts_at={event.starts_at}
               ends_at={event.ends_at}
@@ -94,19 +108,21 @@ export default function EventsSlider({
           ))}
         </ul>
 
-        <button
-          type="button"
-          onClick={() => scroll("right")}
-          className="bg-white shadow-xl hidden md:grid place-items-center rounded-full w-10 h-10 absolute top-[50%] -translate-y-[50%] right-0 rotate-180"
-        >
-          <Image
-            src="/assets/images/moveBack.svg"
-            alt="Slide left"
-            width={30}
-            height={30}
-            className=""
-          />
-        </button>
+        {/* slide right button */}
+        {events.length !== 0 && (
+          <button
+            type="button"
+            onClick={() => scroll("right")}
+            className="bg-white shadow-xl hidden md:grid place-items-center rounded-full w-10 h-10 absolute top-[50%] -translate-y-[50%] right-0 rotate-180"
+          >
+            <Image
+              src="/assets/images/moveBack.svg"
+              alt="Slide right"
+              width={30}
+              height={30}
+            />
+          </button>
+        )}
       </div>
     </div>
   );

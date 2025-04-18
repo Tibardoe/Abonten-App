@@ -1,13 +1,17 @@
+"use client";
+
 import type { UserPostType } from "@/types/postsType";
 import { formatFullDateTimeRange } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import EventCardFlyerImage from "../atoms/EventCardFlyerImage";
 
 export default function EventCard({
   title,
-  flyerUrl,
+  flyer_public_id,
+  flyer_version,
   address,
   starts_at,
   ends_at,
@@ -15,11 +19,15 @@ export default function EventCard({
 }: UserPostType) {
   const dateTime = formatFullDateTimeRange(starts_at, ends_at);
 
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
+
+  const { location } = useParams();
+
   return (
     <li key={title} className="space-y-2 shadow-lg">
-      <Link href={`/events/${title && generateSlug(title)}`}>
+      <Link href={`/events/${location}/event/${title && generateSlug(title)}`}>
         <EventCardFlyerImage
-          flyerUrl={flyerUrl ?? "/assets/images/default-flyer.png"}
+          flyerUrl={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
         />
       </Link>
 

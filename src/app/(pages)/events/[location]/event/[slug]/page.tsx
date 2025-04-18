@@ -248,7 +248,7 @@ export default async function page({
       <EventsSlider
         heading="Similar Events"
         events={similarEvents ?? []}
-        eventCategory={event.category}
+        eventCategory={event.event_category}
       />
     </div>
   );

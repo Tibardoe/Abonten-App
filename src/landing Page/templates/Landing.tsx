@@ -4,6 +4,7 @@ import AutoComplete from "@/components/molecules/AutoComplete";
 import AuthPopup from "@/components/organisms/AuthPopup";
 import MobileAuthPopup from "@/components/organisms/MobileAuthPopup";
 import { Button } from "@/components/ui/button";
+import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +20,9 @@ export default function Landing() {
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   const handleClicked = () => {
-    router.push(`/events?location=${selectedAddress}`);
+    router.push(
+      `/events/${selectedAddress ? generateSlug(selectedAddress) : ""}`,
+    );
   };
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {

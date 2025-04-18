@@ -2,6 +2,7 @@
 
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
+import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { type Libraries, useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import Image from "next/image";
@@ -86,9 +87,12 @@ export default function PostAutoComplete({
     debouncedApiCall(event.target.value);
   };
 
-  const handleSelectPrediction = (description: string) => {
+  const handleSelectPrediction = async (description: string) => {
     address?.address(description);
     setInputValue(description);
+    localStorage.setItem("address", description);
+    const coords = await getCoordinatesFromAddress(description);
+    localStorage.setItem("coordinates", JSON.stringify(coords));
     setSearchResults([]);
   };
 
@@ -103,12 +107,15 @@ export default function PostAutoComplete({
         const { latitude, longitude } = position.coords;
         const geocoder = new google.maps.Geocoder();
         const latlng = { lat: latitude, lng: longitude };
+        localStorage.setItem("coordinates", JSON.stringify(latlng));
 
         geocoder.geocode({ location: latlng }, (results, status) => {
           if (status === "OK" && results && results.length > 0) {
             const locationDescription = results[0].formatted_address;
             address?.address(locationDescription);
             setInputValue(locationDescription);
+            localStorage.setItem("address", locationDescription);
+
             setSearchResults([]);
           } else {
             alert("No address found for your location.");
@@ -160,6 +167,7 @@ export default function PostAutoComplete({
               type="button"
               key={result.placeId}
               onClick={() => handleSelectPrediction(result.text.toString())}
+              aria-label={`Use location ${result.text}`}
               className="p-2 w-full text-start hover:bg-gray-100 cursor-pointer border-b border-black border-opacity-30"
             >
               {result.text.toString()}

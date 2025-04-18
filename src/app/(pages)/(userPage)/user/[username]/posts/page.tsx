@@ -32,15 +32,14 @@ export default async function page({
     );
   }
 
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-
   return userPosts?.length ? (
     <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
       {userPosts.map((post) => (
         <EventCard
           key={post.title}
           title={post.title}
-          flyerUrl={`${cloudinaryBaseUrl}v${post.flyer_version}/${post.flyer_public_id}.jpg`}
+          flyer_public_id={post.flyer_public_id}
+          flyer_version={post.flyer_version}
           address={post.address}
           starts_at={post.starts_at}
           ends_at={post.ends_at}

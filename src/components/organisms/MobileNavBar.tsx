@@ -7,6 +7,14 @@ import MobileNavButton from "../atoms/MobileNavButton";
 export default function MobileNavBar() {
   const [username, setUsername] = useState(null);
 
+  const [address, setAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedAddress = localStorage.getItem("address");
+
+    setAddress(storedAddress);
+  }, []);
+
   useEffect(() => {
     const fetchUsername = async () => {
       const {
@@ -31,7 +39,7 @@ export default function MobileNavBar() {
     <div className="flex md:hidden justify-center w-full fixed bottom-0 border-t border-black-500 py-4 bg-white">
       <div className="flex justify-between w-[90%]">
         <MobileNavButton
-          href="/events"
+          href={`/events?location=${address}`}
           text="Home"
           imgUrl="/assets/images/home.svg"
         />

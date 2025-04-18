@@ -26,8 +26,6 @@ export default async function page() {
     );
   }
 
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-
   return userFavoritedEvents?.length > 0 ? (
     <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
       {userFavoritedEvents.map((favorite) => {
@@ -36,7 +34,8 @@ export default async function page() {
           <EventCard
             key={event.title}
             title={event.title}
-            flyerUrl={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
+            flyer_public_id={event.flyer_public_id}
+            flyer_version={event.flyer_version}
             address={event.address}
             starts_at={event.starts_at}
             ends_at={event.ends_at}
