@@ -1,5 +1,3 @@
-import { getUserDetails } from "@/actions/getUserDetails";
-import UserAccountTabsNavigation from "@/userAccount/molecules/UserAccountTabsNavigation";
 import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
 
 type LayoutProps = {
