@@ -1,5 +1,6 @@
 "use client";
 
+import { animateMarkerTo } from "@/utils/animateMarker";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -60,6 +61,18 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const handleMapInteraction = (lat: number, lng: number) => {
     const newCoords = { lat, lng };
+
+    if (mapRef.current) {
+      mapRef.current.panTo(newCoords); // Smoothly pan the map to new location
+    }
+
+    animateMarkerTo(
+      markerPosition,
+      newCoords,
+      500, // duration in ms
+      setMarkerPosition,
+    );
+
     setMarkerPosition(newCoords);
     reverseGeocode(lat, lng);
   };
