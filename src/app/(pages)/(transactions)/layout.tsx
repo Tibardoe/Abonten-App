@@ -1,5 +1,4 @@
 import TransactionsFilterLinks from "@/components/molecules/TransactionsFilterLinks";
-import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
 
 export default async function layout({
   children,

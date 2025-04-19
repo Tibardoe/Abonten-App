@@ -2,14 +2,15 @@
 
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React from "react";
 import { Calendar } from "../ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 export default function TransactionsFilterLinks() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const pathname = usePathname();
 
-  const dateAndTime = date ? formatSingleDateTime(date) : { date: "" };
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
 
   const today = new Date();
   const toISOStringDate = (d: Date) => d.toISOString().split("T")[0];
@@ -30,25 +31,45 @@ export default function TransactionsFilterLinks() {
   lastMonth.setDate(today.getDate() - 30);
   const lastMonthStr = toISOStringDate(lastMonth);
 
+  const isActive = (href: string) => pathname === href;
+
+  const baseLinkClass = "shrink-0";
+  const getLinkClass = (href: string) =>
+    `${baseLinkClass} ${
+      isActive(href) ? "font-bold text-black" : "text-gray-500"
+    }`;
+
   return (
     <div className="flex justify-between items-center overflow-x-scroll md:overflow-x-hidden gap-5 md:gap-0">
-      <Link className="shrink-0" href="/transactions">
+      <Link className={getLinkClass("/transactions")} href="/transactions">
         All Time
       </Link>
 
-      <Link className="shrink-0" href={`/transactions/date/${todayStr}`}>
+      <Link
+        className={getLinkClass(`/transactions/date/${todayStr}`)}
+        href={`/transactions/date/${todayStr}`}
+      >
         Today
       </Link>
 
-      <Link className="shrink-0" href={`/transactions/date/${yesterdayStr}`}>
+      <Link
+        className={getLinkClass(`/transactions/date/${yesterdayStr}`)}
+        href={`/transactions/date/${yesterdayStr}`}
+      >
         Yesterday
       </Link>
 
-      <Link className="shrink-0" href={`/transactions/date/${lastWeekStr}`}>
+      <Link
+        className={getLinkClass(`/transactions/date/${lastWeekStr}`)}
+        href={`/transactions/date/${lastWeekStr}`}
+      >
         Last Week
       </Link>
 
-      <Link className="shrink-0" href={`/transactions/date/${lastMonthStr}`}>
+      <Link
+        className={getLinkClass(`/transactions/date/${lastMonthStr}`)}
+        href={`/transactions/date/${lastMonthStr}`}
+      >
         Last Month
       </Link>
 
