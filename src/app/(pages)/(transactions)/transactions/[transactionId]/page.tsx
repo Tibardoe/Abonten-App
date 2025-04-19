@@ -1,7 +1,10 @@
+import ViewReciptButton from "@/components/atoms/ViewReciptButton";
 import { Button } from "@/components/ui/button";
 import { transactionsDummyData } from "@/data/transactionsDummyData";
 import Image from "next/image";
+import { BsFillDashCircleFill } from "react-icons/bs";
 import { IoMdCheckmarkCircle } from "react-icons/io";
+import { MdCancel } from "react-icons/md";
 
 export default async function page({
   params,
@@ -27,6 +30,11 @@ export default async function page({
         <div className="flex justify-between items-center">
           <p>Payment Wallet</p>
           <p>{transactionSlip?.paymentOption}</p>
+        </div>
+
+        <div className="flex justify-between items-center">
+          <p>Transaction Id</p>
+          <p>{transactionSlip?.transactionId}</p>
         </div>
 
         <div className="flex justify-between items-center">
@@ -64,7 +72,17 @@ export default async function page({
 
       <div className="space-y-10">
         <div className="flex gap-3">
-          <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+          {transactionSlip?.status === "Successful" && (
+            <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+          )}
+
+          {transactionSlip?.status === "Pending" && (
+            <BsFillDashCircleFill className="text-xl md:text-2xl" />
+          )}
+
+          {transactionSlip?.status === "Failed" && (
+            <MdCancel className="text-2xl md:text-3xl" />
+          )}
 
           <div className="space-y-2">
             <p className="font-bold">{transactionSlip?.status}</p>
@@ -80,7 +98,17 @@ export default async function page({
         </div>
 
         <div className="flex gap-3">
-          <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+          {transactionSlip?.status === "Successful" && (
+            <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+          )}
+
+          {transactionSlip?.status === "Pending" && (
+            <BsFillDashCircleFill className="text-xl md:text-2xl" />
+          )}
+
+          {transactionSlip?.status === "Failed" && (
+            <MdCancel className="text-2xl md:text-3xl" />
+          )}
 
           <div className="space-y-2">
             <p className="font-bold">{transactionSlip?.status}</p>
@@ -93,7 +121,17 @@ export default async function page({
         </div>
 
         <div className="flex gap-3">
-          <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+          {transactionSlip?.status === "Successful" && (
+            <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+          )}
+
+          {transactionSlip?.status === "Pending" && (
+            <BsFillDashCircleFill className="text-xl md:text-2xl" />
+          )}
+
+          {transactionSlip?.status === "Failed" && (
+            <MdCancel className="text-2xl md:text-3xl" />
+          )}
 
           <div className="space-y-2">
             <p className="font-bold">{transactionSlip?.status}</p>
@@ -123,12 +161,7 @@ export default async function page({
       </div>
 
       <div className="flex md:justify-end">
-        <Button
-          variant={"outline"}
-          className="text-sm font-bold rounded-full border border-black w-full md:w-fit p-6"
-        >
-          View Receipt
-        </Button>
+        <ViewReciptButton />
       </div>
     </div>
   );

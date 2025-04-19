@@ -2,6 +2,8 @@ import { transactionsDummyData } from "@/data/transactionsDummyData";
 import { IoMdCheckmarkCircle } from "react-icons/io";
 
 import Link from "next/link";
+import { BsFillDashCircleFill } from "react-icons/bs";
+import { MdCancel } from "react-icons/md";
 
 export default function page() {
   return transactionsDummyData.length ? (
@@ -26,7 +28,17 @@ export default function page() {
               {transactionSlip.currency} {transactionSlip.amount}
             </p>
 
-            <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+            {transactionSlip?.status === "Successful" && (
+              <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
+            )}
+
+            {transactionSlip?.status === "Pending" && (
+              <BsFillDashCircleFill className="text-xl md:text-2xl" />
+            )}
+
+            {transactionSlip?.status === "Failed" && (
+              <MdCancel className="text-2xl md:text-3xl" />
+            )}
           </div>
         </Link>
       ))}
