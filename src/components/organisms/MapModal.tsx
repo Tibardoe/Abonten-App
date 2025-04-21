@@ -1,5 +1,6 @@
 "use client";
 
+import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
@@ -91,7 +92,7 @@ const MapModal: React.FC<MapModalProps> = ({
         {/* Set address button */}
         <div className="flex mt-10 px-4">
           <Link
-            href={`/events/${currentLocation?.address}`}
+            href={`/events/${generateSlug(currentLocation?.address ?? "")}`}
             type="button"
             onClick={handleConfirm}
             className="bg-black w-full rounded-full text-white font-bold px-4 py-2 text-center"
