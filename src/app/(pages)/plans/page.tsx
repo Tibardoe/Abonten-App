@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function page() {
-  const [activeSubscription, setActiveSubscription] = useState("Daily");
+  const [activeSubscription, setActiveSubscription] = useState("");
 
   return (
     <div className="space-y-3">

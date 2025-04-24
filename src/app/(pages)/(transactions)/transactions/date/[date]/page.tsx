@@ -1,3 +1,4 @@
+import { getUserTransactions } from "@/actions/getUserTransactions";
 import { transactionsDummyData } from "@/data/transactionsDummyData";
 import Link from "next/link";
 import { IoMdCheckmarkCircle } from "react-icons/io";
@@ -9,11 +10,13 @@ export default async function page({
 }) {
   const { date } = await params;
 
-  const filteredEvents = transactionsDummyData.filter(
+  const transactions = await getUserTransactions();
+
+  const filteredEvents = transactions.data?.filter(
     (transactionSlips) => transactionSlips.date === date.toString(),
   );
 
-  return filteredEvents.length ? (
+  return filteredEvents?.length ? (
     <ul>
       {filteredEvents.map((transactionSlip) => (
         <Link

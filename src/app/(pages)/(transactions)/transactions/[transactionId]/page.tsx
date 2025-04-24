@@ -1,3 +1,4 @@
+import { getUserTransactions } from "@/actions/getUserTransactions";
 import ViewReciptButton from "@/components/atoms/ViewReciptButton";
 import { Button } from "@/components/ui/button";
 import { transactionsDummyData } from "@/data/transactionsDummyData";
@@ -13,7 +14,9 @@ export default async function page({
 }) {
   const { transactionId } = await params;
 
-  const transactionSlip = transactionsDummyData.find(
+  const transactions = await getUserTransactions();
+
+  const transactionSlip = transactions.data?.find(
     (transaction) => transaction.transactionId === transactionId,
   );
 

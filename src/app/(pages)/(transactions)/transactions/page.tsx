@@ -1,12 +1,14 @@
+import { getUserTransactions } from "@/actions/getUserTransactions";
 import { transactionsDummyData } from "@/data/transactionsDummyData";
-import { IoMdCheckmarkCircle } from "react-icons/io";
-
 import Link from "next/link";
 import { BsFillDashCircleFill } from "react-icons/bs";
+import { IoMdCheckmarkCircle } from "react-icons/io";
 import { MdCancel } from "react-icons/md";
 
-export default function page() {
-  return transactionsDummyData.length ? (
+export default async function page() {
+  const transactions = await getUserTransactions();
+
+  return transactions.data?.length ? (
     <ul>
       {transactionsDummyData.map((transactionSlip) => (
         <Link
