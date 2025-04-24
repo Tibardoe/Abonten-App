@@ -59,7 +59,7 @@ export default async function page({
   });
 
   return (
-    <section className="space-y-10">
+    <section className="space-y-10 h-dvh">
       <LocationAndFilterSection />
 
       {aroundYou?.length ? (
@@ -118,7 +118,7 @@ export default async function page({
           </div>
         </>
       ) : (
-        <div className="w-full h-full flex flex-col gap-5 items-center justify-center">
+        <div className="h-[50%] flex flex-col gap-5 items-center justify-center">
           <div>
             <h2 className="font-bold">
               Sorry, no events available in this location
