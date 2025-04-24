@@ -87,7 +87,11 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
           </Button>
         )}
 
-        {isCurrentUser && <Higlight />}
+        <div className="flex flex-col gap-3">
+          <h2 className="font-semibold">Highlights</h2>
+
+          {isCurrentUser && <Higlight />}
+        </div>
 
         <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
       </div>
@@ -151,7 +155,11 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
           </div>
         </div>
 
-        {isCurrentUser && <Higlight />}
+        <div className="flex flex-col gap-3">
+          <h2 className="font-semibold">Highlights</h2>
+
+          {isCurrentUser && <Higlight />}
+        </div>
 
         <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
       </div>

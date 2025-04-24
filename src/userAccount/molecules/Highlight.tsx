@@ -1,11 +1,28 @@
+"use client";
+
+import HighlightModal from "@/components/organisms/HighlightModal";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Higlight() {
-  return (
-    <div className="space-y-3">
-      <h2 className="font-semibold">Highlights</h2>
+  const [showHighlighModal, setShowHighlightModal] = useState(false);
 
-      <button type="button">
+  const handleShowHighlightModal = (state: boolean) => {
+    setShowHighlightModal(state);
+  };
+
+  return (
+    <>
+      {showHighlighModal && (
+        <HighlightModal handleShowHighlightModal={handleShowHighlightModal} />
+      )}
+
+      <button
+        type="button"
+        onClick={() => {
+          handleShowHighlightModal(true);
+        }}
+      >
         <Image
           src="/assets/images/highlight.svg"
           alt="Highlight button"
@@ -13,6 +30,6 @@ export default function Higlight() {
           height={80}
         />
       </button>
-    </div>
+    </>
   );
 }
