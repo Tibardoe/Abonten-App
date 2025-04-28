@@ -1,7 +1,6 @@
 "use client";
 
 import { postEvent } from "@/actions/postEvent";
-import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,11 +12,9 @@ import { TbWorld } from "react-icons/tb";
 import { z } from "zod";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
-import AutoComplete from "../molecules/AutoComplete";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
 import TypeFilter from "../molecules/TypeFilter";
-import { Button } from "../ui/button";
 
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;

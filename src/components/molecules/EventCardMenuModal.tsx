@@ -11,7 +11,7 @@ type EventProp = {
 
 export default function EventCardMenuModal({ eventId }: EventProp) {
   return (
-    <div className="bg-white absolute right-0 rounded-md border shadow-lg p-3 min-w-60 font-bold space-y-3 text-gray-700 overflow-y-scroll h-36">
+    <div className="bg-white absolute right-0 rounded-md border shadow-lg p-3 min-w-60 font-bold flex flex-col gap-3 text-gray-700 overflow-y-scroll h-36">
       <AddToFavoriteButton eventId={eventId} />
 
       <hr />
@@ -32,7 +32,7 @@ export default function EventCardMenuModal({ eventId }: EventProp) {
 
       <hr />
 
-      <DeleteEventButton />
+      <DeleteEventButton eventId={eventId} />
     </div>
   );
 }

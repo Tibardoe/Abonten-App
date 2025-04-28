@@ -40,19 +40,10 @@ export default function EventCard({
         <div className="flex justify-between items-start">
           <Link
             href={`/events/${location}/event/${title && generateSlug(title)}`}
-            className="font-bold text-lg md:text-xl flex-grow"
+            className="font-bold text-lg md:text-xl"
           >
             {title}
           </Link>
-
-          {/* <button type="button" className="flex-shrink-0">
-            <Image
-              src="/assets/images/menuDots.svg"
-              alt="Event flyer"
-              width={20}
-              height={20}
-            />
-          </button> */}
 
           <EventCardMenuBtn eventId={id} />
         </div>

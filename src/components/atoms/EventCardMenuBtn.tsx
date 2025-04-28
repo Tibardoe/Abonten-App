@@ -13,8 +13,8 @@ export default function EventCardMenuBtn({ eventId }: EventProp) {
     setShowMenu((prevState) => !prevState);
   };
   return (
-    <div className="relative">
-      <button type="button" className="flex-shrink-0" onClick={handleShowMenu}>
+    <div className="relative flex-shrink-0">
+      <button type="button" onClick={handleShowMenu}>
         <Image
           src="/assets/images/menuDots.svg"
           alt="Event flyer"

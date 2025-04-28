@@ -34,6 +34,7 @@ export default async function page() {
           <EventCard
             key={event.title}
             title={event.title}
+            id={event.id}
             flyer_public_id={event.flyer_public_id}
             flyer_version={event.flyer_version}
             address={event.address}

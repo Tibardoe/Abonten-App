@@ -1,4 +1,5 @@
 import { getUserPosts } from "@/actions/getUserPosts";
+import PostButton from "@/components/atoms/PostButton";
 import EventCard from "@/components/molecules/EventCard";
 import { Button } from "@/components/ui/button";
 import type { UserPostType } from "@/types/postsType";
@@ -37,6 +38,7 @@ export default async function page({
       {userPosts.map((post) => (
         <EventCard
           key={post.title}
+          id={post.id}
           title={post.title}
           flyer_public_id={post.flyer_public_id}
           flyer_version={post.flyer_version}
@@ -55,7 +57,7 @@ export default async function page({
 
       <p>Post events for others to attend</p>
 
-      <Button className="font-bold md:text-lg px-10">Post</Button>
+      <PostButton />
     </div>
   );
 }
