@@ -7,6 +7,8 @@ import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
+import { MdOutlineDateRange } from "react-icons/md";
 
 export default function Banner() {
   const [event, setEvent] = useState<PostsType | null>(null);
@@ -56,46 +58,31 @@ export default function Banner() {
       </Link>
 
       {/* Details */}
-      <div className="py-3 md:py-5 flex flex-col h-full justify-between gap-1 md:gap-4 pr-5 w-1/2">
-        <h2 className="font-bold text-sm md:text-lg">Most anticipated</h2>
+      <div className="py-3 md:py-5 flex flex-col h-full gap-1 md:gap-4 pr-5 w-1/2 overflow-y-scroll">
+        <h2 className="font-bold md:text-lg">Most anticipated</h2>
         <Link
           href={`/events/${event.title && generateSlug(event.title)}`}
-          className="font-bold text-lg md:text-4xl mb-auto md:mb-0"
+          className="font-bold text-lg md:text-4xl mb-2 md:mb-0"
         >
           {event.title}
         </Link>
 
         {/* Location, time and date */}
         <div className="flex flex-col text-sm gap-1 md:gap-2 md:gap-x-5 md:text-lg">
-          <div className="flex items-center">
-            <Image
-              src="/assets/images/location.svg"
-              alt="Event flyer"
-              width={20}
-              height={20}
-            />
+          <div className="flex items-center gap-1 md:gap-2">
+            <IoLocationOutline className="text-xl" />
 
             <p>{event.location}</p>
           </div>
 
-          <div className="hidden md:flex items-center gap-1">
-            <Image
-              src="/assets/images/time.svg"
-              alt="Event flyer"
-              width={20}
-              height={20}
-            />
+          <div className="hidden md:flex items-center gap-1 md:gap-2">
+            <IoTimeOutline className="text-xl" />
 
             <p>{event.timezone ? event.timezone : "9:00Pm"}</p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Image
-              src="/assets/images/date.svg"
-              alt="Event flyer"
-              width={15}
-              height={15}
-            />
+          <div className="flex items-center gap-1 md:gap-2">
+            <MdOutlineDateRange className="text-xl" />
 
             <p>
               {event.start_at
@@ -104,7 +91,7 @@ export default function Banner() {
             </p>
           </div>
 
-          <p className="hidden md:flex">{event.price}</p>
+          <p>{event.price}</p>
         </div>
       </div>
     </div>

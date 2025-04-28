@@ -4,6 +4,7 @@ import { undoSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { IoLocationOutline } from "react-icons/io5";
 import FilterSearchBar from "../molecules/FilterSearchBar";
 import ChangeLocationModal from "./ChangeLocationModal";
 
@@ -36,13 +37,8 @@ export default function LocationAndFilterSection() {
           className="flex gap-3 items-center text-lg md:text-xl"
           onClick={() => handleShowChangeLocationModal(true)}
         >
-          <Image
-            className="w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
-            src="/assets/images/location.svg"
-            alt="Location icon"
-            width={40}
-            height={40}
-          />
+          <IoLocationOutline className="text-3xl md:text-4xl lg:text-4xl" />
+
           <p>{location}</p>
         </button>
         <FilterSearchBar />

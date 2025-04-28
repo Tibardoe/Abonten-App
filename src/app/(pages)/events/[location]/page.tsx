@@ -59,7 +59,7 @@ export default async function page({
   });
 
   return (
-    <section className="space-y-10 h-dvh">
+    <section className="space-y-10 min-h-dvh">
       <LocationAndFilterSection />
 
       {aroundYou?.length ? (

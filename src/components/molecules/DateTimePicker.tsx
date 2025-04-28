@@ -14,6 +14,7 @@ import { Clock } from "lucide-react";
 import Image from "next/image";
 import React, { useEffect } from "react";
 import type { DateRange } from "react-day-picker";
+import { MdOutlineDateRange } from "react-icons/md";
 import { TimePicker } from "../atoms/timePicker";
 
 type DateAndTimeType = { handleDateAndTime: (dateAndTime: DateRange) => void };
@@ -38,12 +39,8 @@ export default function DateTimePicker({ handleDateAndTime }: DateAndTimeType) {
         <span>
           {dateTime.date}, {dateTime.time}
         </span>
-        <Image
-          src="/assets/images/date.svg"
-          alt="Date"
-          height={20}
-          width={20}
-        />
+
+        <MdOutlineDateRange className="text-2xl" />
       </PopoverTrigger>
       <PopoverContent className="space-y-4">
         <Calendar

@@ -7,12 +7,14 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
+import { TbWorld } from "react-icons/tb";
 import { z } from "zod";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import AutoComplete from "../molecules/AutoComplete";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
+import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
 import { Button } from "../ui/button";
 
@@ -362,7 +364,7 @@ export default function UploadEventModal({
                 )}
 
                 <div className="space-y-4 text-sm font-normal">
-                  <div className="flex justify-between items-center">
+                  {/* <div className="flex justify-between items-center">
                     <input
                       type="number"
                       placeholder="0 if free"
@@ -370,7 +372,9 @@ export default function UploadEventModal({
                     />
 
                     <span>{currency}</span>
-                  </div>
+                  </div> */}
+
+                  <TicketType />
 
                   <CategoryFilter
                     handleCategory={handleCategory}
@@ -396,12 +400,7 @@ export default function UploadEventModal({
                   <div className="flex justify-between items-center">
                     <input type="text" placeholder="Website" />
 
-                    <Image
-                      src="/assets/images/website.svg"
-                      alt="Website"
-                      width={25}
-                      height={25}
-                    />
+                    <TbWorld className="text-2xl" />
                   </div>
                   {errors.website_url && (
                     <p className="text-red-500 text-sm">

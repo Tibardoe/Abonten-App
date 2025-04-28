@@ -6,6 +6,8 @@ import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
+import { MdOutlineDateRange } from "react-icons/md";
 import EventCardFlyerImage from "../atoms/EventCardFlyerImage";
 
 export default function EventCard({
@@ -16,6 +18,7 @@ export default function EventCard({
   starts_at,
   ends_at,
   price,
+  capacity,
 }: UserPostType) {
   const dateTime = formatFullDateTimeRange(starts_at, ends_at);
 
@@ -50,24 +53,22 @@ export default function EventCard({
           </button>
         </div>
 
-        <div className="flex items-center">
-          <Image
-            src="/assets/images/location.svg"
-            alt="Event flyer"
-            width={20}
-            height={20}
-          />
+        <div className="flex justify-between items-start font-semibold mb-2">
+          <p>
+            Capacity: {`${capacity && capacity > 0 ? capacity : "Unlimited"}`}
+          </p>
+
+          <p>Attending: {`${0}`}</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <IoLocationOutline className="text-xl" />
 
           <p>{address?.full_address ? address.full_address : "No address"}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Image
-            src="/assets/images/date.svg"
-            alt="Event flyer"
-            width={15}
-            height={15}
-          />
+          <MdOutlineDateRange className="text-xl" />
 
           <p>
             {starts_at ? dateTime.date : "Date not available"} -
@@ -76,13 +77,8 @@ export default function EventCard({
         </div>
 
         <div className="flex justify-between">
-          <div className="flex items-center gap-1">
-            <Image
-              src="/assets/images/time.svg"
-              alt="Event flyer"
-              width={20}
-              height={20}
-            />
+          <div className="flex items-center gap-2">
+            <IoTimeOutline className="text-xl" />
 
             <p>{starts_at ? dateTime.time : "Time not available"}</p>
           </div>

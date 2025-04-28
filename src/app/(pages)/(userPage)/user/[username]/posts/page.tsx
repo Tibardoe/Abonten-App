@@ -45,6 +45,7 @@ export default async function page({
           ends_at={post.ends_at}
           price={post.price}
           created_at={post.created_at}
+          capacity={post.capacity}
         />
       ))}
     </ul>

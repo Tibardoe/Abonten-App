@@ -4,8 +4,8 @@ import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
 import { type Libraries, useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { IoLocationOutline } from "react-icons/io5";
 
 const libraries: Libraries = ["places"];
 
@@ -137,13 +137,7 @@ export default function PostAutoComplete({
         className="text-black outline-none w-full"
       />
 
-      <Image
-        className="w-6 h-6"
-        src={placeholderText.svgUrl}
-        alt="Location image"
-        width={30}
-        height={30}
-      />
+      <IoLocationOutline className="text-2xl" />
 
       {searchResults.length > 0 && (
         <ul className="absolute top-full left-0 w-full h-56 bg-white text-black border rounded shadow-md mt-1 z-10 overflow-y-scroll">

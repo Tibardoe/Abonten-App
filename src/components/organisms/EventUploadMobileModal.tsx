@@ -9,6 +9,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
+import { TbWorld } from "react-icons/tb";
 import { z } from "zod";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
@@ -333,12 +334,7 @@ export default function EventUploadMobileModal({
                     {...register("website_url")}
                   />
 
-                  <Image
-                    src="/assets/images/website.svg"
-                    alt="Website"
-                    width={30}
-                    height={30}
-                  />
+                  <TbWorld className="text-2xl" />
                 </div>
                 {errors.website_url && (
                   <p className="text-red-500 text-sm">

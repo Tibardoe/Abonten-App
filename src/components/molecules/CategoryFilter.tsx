@@ -1,6 +1,7 @@
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
 import Image from "next/image";
 import { useState } from "react";
+import { IoIosArrowDown } from "react-icons/io";
 import { cn } from "../lib/utils";
 
 type CategoryType = {
@@ -25,12 +26,7 @@ export default function CategoryFilter({
           className="flex gap-2 justify-between w-full items-center"
         >
           <h2 className={`${classname}`}>Category</h2>
-          <Image
-            src="/assets/images/arrowDown.svg"
-            alt="Dropdown menu"
-            width={30}
-            height={30}
-          />
+          <IoIosArrowDown className="text-2xl" />
         </button>
 
         {showCategoryDropdown && (

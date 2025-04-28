@@ -5,8 +5,8 @@ import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholde
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { type Libraries, useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { IoLocationOutline } from "react-icons/io5";
 
 const libraries: Libraries = ["places"];
 
@@ -160,13 +160,8 @@ export default function PostAutoComplete({
         classname ? classname : "bg-white"
       } rounded-lg flex items-center py-3 md:py-4 px-2 gap-2 relative w-full`}
     >
-      <Image
-        className="w-5 h-5 md:w-6 md:h-6 lg:h-8 lg:w-8"
-        src={placeholderText.svgUrl}
-        alt="Location image"
-        width={30}
-        height={30}
-      />
+      <IoLocationOutline className="text-3xl md:text-4xl lg:text-4xl text-gray-900" />
+
       <input
         type="text"
         onChange={handleInputChange}

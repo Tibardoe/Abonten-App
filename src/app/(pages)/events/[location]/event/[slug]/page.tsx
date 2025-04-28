@@ -13,6 +13,8 @@ import {
 } from "@/utils/dateFormatter";
 import Image from "next/image";
 import Link from "next/link";
+import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
+import { MdOutlineDateRange } from "react-icons/md";
 
 export default async function page({
   params,
@@ -109,35 +111,20 @@ export default async function page({
 
           {/* Event date, time, location and price */}
           <div className="flex flex-col gap-3">
-            <div className="flex items-center col-span-2">
-              <Image
-                src="/assets/images/location.svg"
-                alt="Event flyer"
-                width={20}
-                height={20}
-              />
+            <div className="flex items-center gap-1 md:gap-2 col-span-2">
+              <IoLocationOutline className="text-xl md:text-2xl" />
 
               <p>{event.address.full_address}</p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Image
-                src="/assets/images/date.svg"
-                alt="Event flyer"
-                width={15}
-                height={15}
-              />
+            <div className="flex items-center gap-1 md:gap-2">
+              <MdOutlineDateRange className="text-xl md:text-2xl" />
 
               <p>{eventDateAndTime.date}</p>
             </div>
 
-            <div className="flex items-center gap-1">
-              <Image
-                src="/assets/images/time.svg"
-                alt="Event flyer"
-                width={20}
-                height={20}
-              />
+            <div className="flex items-center gap-1 md:gap-2">
+              <IoTimeOutline className="text-xl md:text-2xl" />
 
               <p>{eventDateAndTime.time}</p>
             </div>
