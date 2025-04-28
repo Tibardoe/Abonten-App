@@ -103,6 +103,7 @@ export default async function page({
               {events.map((post) => (
                 <EventCard
                   key={post.title}
+                  id={post.id}
                   title={post.title}
                   flyer_public_id={post.flyer_public_id}
                   flyer_version={post.flyer_version}

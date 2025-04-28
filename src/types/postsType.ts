@@ -44,6 +44,7 @@ export type PostsType = {
 };
 
 export type UserPostType = {
+  id?: string;
   created_at: Date | undefined;
   flyer_public_id?: string;
   flyer_version?: string;

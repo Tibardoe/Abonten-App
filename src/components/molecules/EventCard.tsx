@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import EventCardFlyerImage from "../atoms/EventCardFlyerImage";
+import EventCardMenuBtn from "../atoms/EventCardMenuBtn";
 
 export default function EventCard({
   title,
@@ -19,6 +20,7 @@ export default function EventCard({
   ends_at,
   price,
   capacity,
+  id,
 }: UserPostType) {
   const dateTime = formatFullDateTimeRange(starts_at, ends_at);
 
@@ -37,20 +39,22 @@ export default function EventCard({
       <div className="flex flex-col gap-2 justify-start text-sm p-3">
         <div className="flex justify-between items-start">
           <Link
-            href={`/events/${title && generateSlug(title)}`}
+            href={`/events/${location}/event/${title && generateSlug(title)}`}
             className="font-bold text-lg md:text-xl flex-grow"
           >
             {title}
           </Link>
 
-          <button type="button" className="flex-shrink-0">
+          {/* <button type="button" className="flex-shrink-0">
             <Image
               src="/assets/images/menuDots.svg"
               alt="Event flyer"
               width={20}
               height={20}
             />
-          </button>
+          </button> */}
+
+          <EventCardMenuBtn eventId={id} />
         </div>
 
         <div className="flex justify-between items-start font-semibold mb-2">
