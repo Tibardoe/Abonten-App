@@ -1,7 +1,6 @@
 import { getUserPosts } from "@/actions/getUserPosts";
 import PostButton from "@/components/atoms/PostButton";
 import EventCard from "@/components/molecules/EventCard";
-import { Button } from "@/components/ui/button";
 import type { UserPostType } from "@/types/postsType";
 
 export default async function page({
@@ -16,8 +15,8 @@ export default async function page({
   try {
     const response = await getUserPosts(username);
 
-    if (response.status === 200 && response.data) {
-      userPosts = response.data;
+    if (response.status === 200 && response.eventsWithMinPrice) {
+      userPosts = response.eventsWithMinPrice;
     } else {
       return (
         <div className="text-center mt-5 text-red-500">
@@ -35,21 +34,24 @@ export default async function page({
 
   return userPosts?.length ? (
     <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
-      {userPosts.map((post) => (
-        <EventCard
-          key={post.title}
-          id={post.id}
-          title={post.title}
-          flyer_public_id={post.flyer_public_id}
-          flyer_version={post.flyer_version}
-          address={post.address}
-          starts_at={post.starts_at}
-          ends_at={post.ends_at}
-          price={post.price}
-          created_at={post.created_at}
-          capacity={post.capacity}
-        />
-      ))}
+      {userPosts.map((post) => {
+        return (
+          <EventCard
+            key={post.title}
+            id={post.id}
+            title={post.title}
+            flyer_public_id={post.flyer_public_id}
+            flyer_version={post.flyer_version}
+            address={post.address}
+            starts_at={post.starts_at}
+            ends_at={post.ends_at}
+            min_price={post.min_price}
+            currency={post.currency}
+            created_at={post.created_at}
+            capacity={post.capacity}
+          />
+        );
+      })}
     </ul>
   ) : (
     <div className="flex flex-col items-center gap-3">

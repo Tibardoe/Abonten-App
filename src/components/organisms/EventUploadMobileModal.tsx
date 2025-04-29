@@ -1,6 +1,7 @@
 "use client";
 
 import { postEvent } from "@/actions/postEvent";
+import type { Ticket } from "@/types/ticketType";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,10 +11,15 @@ import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { TbWorld } from "react-icons/tb";
 import { z } from "zod";
+import Notification from "../atoms/Notification";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
+import PromoCodeBtn from "../atoms/PromoCodeBtn";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
+import PromoCodeInputs from "../molecules/PromoCodeInputs";
+import TicketInputs from "../molecules/TicketInputs";
+import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
 
 type closePopupModalType = {
@@ -89,6 +95,29 @@ export default function EventUploadMobileModal({
 
   const [currency, setCurrency] = useState("");
 
+  const [promoCodes, setPromoCodes] = useState<
+    {
+      promoCode: string;
+      discount: number;
+      maximumUse: number;
+      expiryDate: Date;
+    }[]
+  >([]);
+
+  const [ticket, setTicket] = useState("");
+
+  const [singleTicket, setSingleTicket] = useState<number | null>(null);
+
+  const [multipleTickets, setMultipleTickets] = useState<Ticket[]>([]);
+
+  const handleTicket = (ticketName: string) => {
+    setTicket(ticketName);
+  };
+
+  const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(false);
+
+  const [notification, setNotification] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchCurrency = async () => {
       const userCurrency = await getUserCurrency();
@@ -115,21 +144,31 @@ export default function EventUploadMobileModal({
     setDateAndTime(date);
   };
 
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000); // 3 seconds
+
+      return () => clearTimeout(timer); // Cleanup
+    }
+  }, [notification]);
+
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
     if (!selectedFile) {
-      alert("Please select a file first!");
+      setNotification("Please select a file first!");
       return;
     }
 
     if (!selectedAddress) {
-      alert("Please enter a location");
+      setNotification("Please enter a location");
       return;
     }
 
     const coords = await getCoordinatesFromAddress(selectedAddress);
 
     if (!coords) {
-      alert("Could not fetch coordinates");
+      setNotification("Could not fetch coordinates");
       return;
     }
 
@@ -143,6 +182,10 @@ export default function EventUploadMobileModal({
       starts_at: dateAndTime?.from,
       ends_at: dateAndTime?.to,
       selectedFile,
+      promoCodes: promoCodes,
+      freeEvents: ticket,
+      singleTicket: singleTicket,
+      multipleTickets: multipleTickets,
       currency,
     };
 
@@ -151,11 +194,34 @@ export default function EventUploadMobileModal({
     setIsUploading(false);
 
     if (response.status === 200) {
-      alert("Event posted successfully!");
+      setNotification("✅ Event posted successfully!");
       handleClosePopup(false);
     } else {
-      alert(`Something went wrong: ${response.message}`);
+      setNotification(`❌ ${response.message}`);
     }
+  };
+
+  const handlePromoCodesChange = (
+    updatedPromoCodes: {
+      promoCode: string;
+      discount: number;
+      maximumUse: number;
+      expiryDate: Date;
+    }[],
+  ) => {
+    setPromoCodes(updatedPromoCodes);
+  };
+
+  const handleSingleTicket = (amount: number) => {
+    setSingleTicket(amount);
+  };
+
+  const handleMultipleTickets = (tickets: Ticket[]) => {
+    setMultipleTickets(tickets);
+  };
+
+  const handlePromoCodeFormPopup = (state: boolean) => {
+    setShowPromoCodeFormPopup((prevState) => !prevState);
   };
 
   return (
@@ -288,7 +354,7 @@ export default function EventUploadMobileModal({
                   <p className="text-red-500 text-sm pl-3">Set date and time</p>
                 )}
 
-                <div className="flex justify-between items-center">
+                {/* <div className="flex justify-between items-center">
                   <input
                     type="number"
                     placeholder="0 if free"
@@ -300,12 +366,44 @@ export default function EventUploadMobileModal({
                 </div>
                 {errors.price && (
                   <p className="text-red-500 text-sm">{errors.price.message}</p>
-                )}
+                )} */}
+
+                <div className="space-y-3">
+                  <TicketType handleTicket={handleTicket} ticket={ticket} />
+
+                  {ticket === "Single Ticket Type" && (
+                    <TicketInputs
+                      ticketType={ticket}
+                      singleTicketPrice={singleTicket}
+                      handleSingleTicket={handleSingleTicket}
+                    />
+                  )}
+
+                  {ticket === "Multiple Ticket Types" && (
+                    <TicketInputs
+                      ticketType={ticket}
+                      handleMultipleTickets={handleMultipleTickets}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <PromoCodeBtn
+                    ticket={ticket}
+                    handlePromoCodeFormPopup={handlePromoCodeFormPopup}
+                  />
+
+                  {showPromoCodeFormPopup && (
+                    <PromoCodeInputs
+                      onPromoCodesChange={handlePromoCodesChange}
+                    />
+                  )}
+                </div>
 
                 <CategoryFilter
                   handleCategory={handleCategory}
                   category={category}
-                  classname="md:text-lg"
+                  classname="md:text-lg font-semibold text-slate-700"
                 />
                 {category === "" && (
                   <p className="text-red-500 text-sm">Select event category</p>
@@ -315,7 +413,7 @@ export default function EventUploadMobileModal({
                   selectedTypes={types}
                   selectedCategory={category}
                   handleType={handleType}
-                  classname="md:text-lg"
+                  classname="md:text-lg font-semibold text-slate-700"
                 />
                 {types.length === 0 && (
                   <p className="text-red-500 text-sm">
@@ -361,6 +459,8 @@ export default function EventUploadMobileModal({
           </div>
         </>
       )}
+
+      <Notification notification={notification} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { postEvent } from "@/actions/postEvent";
-import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
+import type { Ticket } from "@/types/ticketType";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,11 +9,14 @@ import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { TbWorld } from "react-icons/tb";
 import { z } from "zod";
+import Notification from "../atoms/Notification";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
-import AutoComplete from "../molecules/AutoComplete";
+import PromoCodeBtn from "../atoms/PromoCodeBtn";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
+import PromoCodeInputs from "../molecules/PromoCodeInputs";
+import TicketInputs from "../molecules/TicketInputs";
 import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
 import { Button } from "../ui/button";
@@ -60,6 +63,8 @@ export default function UploadEventModal({
 }: closePopupModalType) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(false);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [isUploading, setIsUploading] = useState(false);
@@ -71,13 +76,30 @@ export default function UploadEventModal({
     to: new Date(),
   });
 
+  const [promoCodes, setPromoCodes] = useState<
+    {
+      promoCode: string;
+      discount: number;
+      maximumUse: number;
+      expiryDate: Date;
+    }[]
+  >([]);
+
+  const [currency, setCurrency] = useState("");
+
+  const [singleTicket, setSingleTicket] = useState<number | null>(null);
+
+  const [multipleTickets, setMultipleTickets] = useState<Ticket[]>([]);
+
   const [selectedAddress, setSelectedAddress] = useState("");
 
   const [category, setCategory] = useState("");
 
+  const [ticket, setTicket] = useState("");
+
   const [types, setTypes] = useState<string[]>([]);
 
-  const [currency, setCurrency] = useState("");
+  const [notification, setNotification] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
@@ -90,6 +112,15 @@ export default function UploadEventModal({
   } = form;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      const userCurrency = await getUserCurrency();
+      setCurrency(userCurrency);
+    };
+
+    fetchCurrency();
+  }, []);
 
   const handleUploadButton = () => {
     fileInputRef.current?.click();
@@ -106,17 +137,12 @@ export default function UploadEventModal({
     }
   };
 
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      const userCurrency = await getUserCurrency();
-      setCurrency(userCurrency);
-    };
-
-    fetchCurrency();
-  }, []);
-
   const handleCategory = (categoryName: string) => {
     setCategory(categoryName);
+  };
+
+  const handleTicket = (ticketName: string) => {
+    setTicket(ticketName);
   };
 
   const handleType = (selectedType: string) => {
@@ -132,21 +158,31 @@ export default function UploadEventModal({
     setDateAndTime(date);
   };
 
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000); // 3 seconds
+
+      return () => clearTimeout(timer); // Cleanup
+    }
+  }, [notification]);
+
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
     if (!selectedFile) {
-      alert("Please select a file first!");
+      setNotification("Please select a file first!");
       return;
     }
 
     if (!selectedAddress) {
-      alert("Please enter a location");
+      setNotification("Please enter a location");
       return;
     }
 
     const coords = await getCoordinatesFromAddress(selectedAddress);
 
     if (!coords) {
-      alert("Could not fetch coordinates");
+      setNotification("Could not fetch coordinates");
       return;
     }
 
@@ -160,6 +196,10 @@ export default function UploadEventModal({
       starts_at: dateAndTime?.from,
       ends_at: dateAndTime?.to,
       selectedFile,
+      promoCodes: promoCodes,
+      freeEvents: ticket,
+      singleTicket: singleTicket,
+      multipleTickets: multipleTickets,
       currency,
     };
 
@@ -168,11 +208,34 @@ export default function UploadEventModal({
     setIsUploading(false);
 
     if (response.status === 200) {
-      alert("Event posted successfully!");
+      setNotification("✅ Event posted successfully!");
       handleClosePopup(false);
     } else {
-      alert(`Something went wrong: ${response.message}`);
+      setNotification(`❌ ${response.message}`);
     }
+  };
+
+  const handlePromoCodesChange = (
+    updatedPromoCodes: {
+      promoCode: string;
+      discount: number;
+      maximumUse: number;
+      expiryDate: Date;
+    }[],
+  ) => {
+    setPromoCodes(updatedPromoCodes);
+  };
+
+  const handleSingleTicket = (amount: number) => {
+    setSingleTicket(amount);
+  };
+
+  const handleMultipleTickets = (tickets: Ticket[]) => {
+    setMultipleTickets(tickets);
+  };
+
+  const handlePromoCodeFormPopup = (state: boolean) => {
+    setShowPromoCodeFormPopup((prevState) => !prevState);
   };
 
   return (
@@ -364,19 +427,40 @@ export default function UploadEventModal({
                 )}
 
                 <div className="space-y-4 text-sm font-normal">
-                  {/* <div className="flex justify-between items-center">
-                    <input
-                      type="number"
-                      placeholder="0 if free"
-                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                  <div className="space-y-3">
+                    <TicketType handleTicket={handleTicket} ticket={ticket} />
+
+                    {ticket === "Single Ticket Type" && (
+                      <TicketInputs
+                        ticketType={ticket}
+                        singleTicketPrice={singleTicket}
+                        handleSingleTicket={handleSingleTicket}
+                      />
+                    )}
+
+                    {ticket === "Multiple Ticket Types" && (
+                      <TicketInputs
+                        ticketType={ticket}
+                        handleMultipleTickets={handleMultipleTickets}
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <PromoCodeBtn
+                      ticket={ticket}
+                      handlePromoCodeFormPopup={handlePromoCodeFormPopup}
                     />
 
-                    <span>{currency}</span>
-                  </div> */}
-
-                  <TicketType />
+                    {showPromoCodeFormPopup && (
+                      <PromoCodeInputs
+                        onPromoCodesChange={handlePromoCodesChange}
+                      />
+                    )}
+                  </div>
 
                   <CategoryFilter
+                    classname="font-semibold text-slate-700"
                     handleCategory={handleCategory}
                     category={category}
                   />
@@ -389,6 +473,7 @@ export default function UploadEventModal({
                   <TypeFilter
                     selectedTypes={types}
                     selectedCategory={category}
+                    classname="font-semibold text-slate-700"
                     handleType={handleType}
                   />
                   {types.length === 0 && (
@@ -398,7 +483,11 @@ export default function UploadEventModal({
                   )}
 
                   <div className="flex justify-between items-center">
-                    <input type="text" placeholder="Website" />
+                    <input
+                      type="text"
+                      placeholder="Website"
+                      {...register("website_url")}
+                    />
 
                     <TbWorld className="text-2xl" />
                   </div>
@@ -408,12 +497,13 @@ export default function UploadEventModal({
                     </p>
                   )}
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center font-semibold text-slate-700">
                     <span>Capacity</span>
 
                     <input
                       type="number"
                       placeholder="0 if any"
+                      {...register("capacity", { valueAsNumber: true })}
                       className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
                     />
                   </div>
@@ -430,6 +520,8 @@ export default function UploadEventModal({
           </>
         )}
       </div>
+
+      <Notification notification={notification} />
     </div>
   );
 }

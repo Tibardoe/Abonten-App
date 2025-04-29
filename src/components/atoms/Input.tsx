@@ -3,7 +3,7 @@
 import { forwardRef, useRef, useState } from "react";
 
 type inputProp = {
-  title: string;
+  title?: string;
   inputPlaceholder: string;
 } & React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>;
 

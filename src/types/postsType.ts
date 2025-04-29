@@ -1,3 +1,5 @@
+import type { Ticket } from "./ticketType";
+
 // export type PostsType = {
 //   id?: string;
 //   slug?: string;
@@ -41,11 +43,22 @@ export type PostsType = {
   capacity?: number | undefined;
   selectedFile: File;
   currency: string;
+  freeEvents: string;
+  singleTicket: number | null;
+  multipleTickets: Ticket[];
+  promoCodes: {
+    promoCode: string;
+    discount: number;
+    maximumUse: number;
+    expiryDate: Date;
+  }[];
 };
 
 export type UserPostType = {
   id?: string;
+  ticket_type?: { price: number; currency: string }[]; // ✅ Fix here
   created_at: Date | undefined;
+  event_category?: string;
   flyer_public_id?: string;
   flyer_version?: string;
   address: { full_address: string };
@@ -53,6 +66,8 @@ export type UserPostType = {
   ends_at: Date | undefined;
   title: string;
   capacity?: number | undefined;
-  price?: number | undefined;
+  min_price?: number | undefined;
+  currency: string;
   flyerUrl?: string;
+  minTicket?: { price: number; currency: string };
 };

@@ -110,9 +110,11 @@ export default async function page({
                   address={post.address}
                   starts_at={post.starts_at}
                   ends_at={post.ends_at}
-                  price={post.price}
+                  minTicket={post.minTicket}
                   created_at={post.created_at}
                   capacity={post.capacity}
+                  min_price={post.min_price}
+                  currency={post.currency}
                 />
               ))}
             </ul>

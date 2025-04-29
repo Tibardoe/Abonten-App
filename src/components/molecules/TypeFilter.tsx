@@ -41,7 +41,7 @@ export default function TypeFilter({
                   key={typeItem}
                   type="button"
                   onClick={() => handleType(typeItem)}
-                  className="flex justify-between items-center w-full text-sm font-semibold text-slate-700"
+                  className="flex justify-between items-center w-full text-sm"
                 >
                   {typeItem}
 

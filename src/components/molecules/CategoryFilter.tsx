@@ -36,7 +36,7 @@ export default function CategoryFilter({
                 key={categories.category}
                 type="button"
                 onClick={() => handleCategory(categories.category)}
-                className="flex justify-between items-center w-full text-sm font-semibold text-slate-700"
+                className="flex justify-between items-center w-full text-sm"
               >
                 {categories.category}
                 <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-black">

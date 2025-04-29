@@ -3,7 +3,6 @@
 import type { UserPostType } from "@/types/postsType";
 import { formatFullDateTimeRange } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
@@ -18,7 +17,8 @@ export default function EventCard({
   address,
   starts_at,
   ends_at,
-  price,
+  min_price,
+  currency,
   capacity,
   id,
 }: UserPostType) {
@@ -30,7 +30,11 @@ export default function EventCard({
 
   return (
     <li key={title} className="space-y-2 shadow-lg">
-      <Link href={`/events/${location}/event/${title && generateSlug(title)}`}>
+      <Link
+        href={`/events/${location ? location : address.full_address}/event/${
+          title && generateSlug(title)
+        }`}
+      >
         <EventCardFlyerImage
           flyerUrl={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
         />
@@ -57,13 +61,13 @@ export default function EventCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <IoLocationOutline className="text-xl" />
+          <IoLocationOutline className="text-xl shrink-0" />
 
           <p>{address?.full_address ? address.full_address : "No address"}</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <MdOutlineDateRange className="text-xl" />
+          <MdOutlineDateRange className="text-xl shrink-0" />
 
           <p>
             {starts_at ? dateTime.date : "Date not available"} -
@@ -73,12 +77,16 @@ export default function EventCard({
 
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
-            <IoTimeOutline className="text-xl" />
+            <IoTimeOutline className="text-xl shrink-0" />
 
             <p>{starts_at ? dateTime.time : "Time not available"}</p>
           </div>
 
-          <p>{price === 0 || price === null ? "Free" : price}</p>
+          <p>
+            {min_price === 0 || min_price === null
+              ? "Free"
+              : `${currency} ${min_price}`}
+          </p>
         </div>
       </div>
     </li>

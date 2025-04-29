@@ -1,11 +1,14 @@
 import { getEvents } from "@/actions/getEvents";
+import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import SlugImage from "@/components/atoms/SlugImage";
+import UserAvatar from "@/components/atoms/UserAvatar";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/config/supabase/server";
 import { allEvents } from "@/data/allEvents";
+import type { UserPostType } from "@/types/postsType";
 import { getRelativeTime } from "@/utils/dateFormatter";
 import {
   formatDateWithSuffix,
@@ -19,29 +22,87 @@ import { MdOutlineDateRange } from "react-icons/md";
 export default async function page({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; location: string }>;
 }) {
   const supabase = await createClient();
 
-  const title = (await params).slug;
+  const { slug, location } = await params;
 
-  const unformatTitle = title
+  const unformatTitle = slug
     .split("-") // Split the string by hyphens
 
     .join(" "); // Join the words back with spaces
 
+  // const { data: event } = await supabase
+  //   .from("event")
+  //   .select(
+  //     "*, user_info!event_organizer_id_fkey(avatar_public_id,avatar_version,username)",
+  //   )
+  //   .eq("slug", title)
+  //   .single();
+
   const { data: event } = await supabase
     .from("event")
     .select(
-      "*, user_info!event_organizer_id_fkey(avatar_public_id,avatar_version,username)",
+      "*, user_info!organizer_id(avatar_public_id, avatar_version, username), ticket_type(id, type, price, currency, available_from, available_until)",
     )
-    .eq("slug", title)
+    .eq("slug", slug)
     .single();
 
-  const { data: similarEvents } = await supabase
-    .from("event")
-    .select("*")
-    .eq("event_category", event.event_category);
+  // Fetch the minimum ticket type by price
+  const { data: minTicket } = await supabase
+    .from("ticket_type")
+    .select("id, type, price, currency")
+    .eq("event_id", event.id)
+    .order("price", { ascending: true })
+    .limit(1)
+    .single();
+
+  // const { data: similarEvents } = await supabase
+  //   .from("event")
+  //   .select("*")
+  //   .eq("event_category", event.event_category);
+
+  const safeLocation = location ?? "";
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const res = await fetch(
+    `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
+  );
+
+  const { lat, lng } = await res.json();
+
+  const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
+
+  const data: UserPostType[] = eventsWithinLocation.data;
+
+  const similarEvents = data.filter(
+    (evt) => evt.event_category === event.event_category && evt.id !== event.id,
+  );
+
+  // const { data: similarEventsRaw } = await supabase
+  //   .from("event")
+  //   .select("*")
+  //   .eq("event_category", event.event_category)
+  //   .neq("id", event.id); // exclude current event from similar list
+
+  // For each similar event, fetch the min ticket and attach it
+  // const similarEvents = await Promise.all(
+  //   (similarEventsRaw ?? []).map(async (similarEvent) => {
+  //     const { data: minTicket } = await supabase
+  //       .from("ticket_type")
+  //       .select("price, currency")
+  //       .eq("event_id", similarEvent.id)
+  //       .order("price", { ascending: true })
+  //       .limit(1)
+  //       .single();
+
+  //     return {
+  //       ...similarEvent,
+  //       minTicket,
+  //     };
+  //   })
+  // );
 
   const postedAt = getRelativeTime(event.created_at);
 
@@ -70,8 +131,15 @@ export default async function page({
 
         <div className="flex justify-between">
           <div className="flex gap-2">
-            <Link href={`/user/${"Big_Ceo"}/posts`}>
-              <div className="bg-black rounded-full w-20 h-20" />
+            <Link
+              href={`/user/${event.user_info.username}/posts`}
+              className="shrink-0"
+            >
+              <UserAvatar
+                width={100}
+                height={100}
+                avatarUrl={`${cloudinaryBaseUrl}v${event.user_info.avatar_version}/${event.user_info.avatar_public_id}.jpg`}
+              />
             </Link>
 
             <div>
@@ -130,9 +198,9 @@ export default async function page({
             </div>
 
             <p>
-              {event.price === 0 || event.price === null
+              {minTicket?.price === 0 || minTicket === null
                 ? "Free"
-                : `${event.currency} ${event.price}`}
+                : `${minTicket?.currency} ${minTicket?.price}`}
             </p>
 
             {event.capacity && <p>Capacity: {event.capacity}</p>}
@@ -141,7 +209,7 @@ export default async function page({
           {/* Buttons */}
 
           <div className="flex flex-col gap-3">
-            {event.price === 0 || event.price === null ? (
+            {minTicket?.price === 0 || minTicket?.price === null ? (
               ""
             ) : (
               <Button className="font-bold rounded-full w-full p-6 text-lg">
