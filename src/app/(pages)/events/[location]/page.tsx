@@ -26,9 +26,9 @@ export default async function page({
 
   const eventsAroundYou = await getNearByEvents(lat, lng, 5);
 
-  const aroundYou: UserPostType[] = eventsAroundYou.data;
+  const aroundYou: UserPostType[] = eventsAroundYou.data || [];
 
-  const events: UserPostType[] = eventsWithinLocation.data;
+  const events: UserPostType[] = eventsWithinLocation.data || [];
 
   const topRatedOrganizers: UserPostType[] = await getFilteredEvents({
     lat: lat,
@@ -115,6 +115,7 @@ export default async function page({
                   capacity={post.capacity}
                   min_price={post.min_price}
                   currency={post.currency}
+                  attendanceCount={post.attendanceCount}
                 />
               ))}
             </ul>

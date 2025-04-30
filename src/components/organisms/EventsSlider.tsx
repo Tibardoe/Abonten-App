@@ -107,6 +107,7 @@ export default function EventsSlider({
               currency={event.currency}
               created_at={event.created_at}
               capacity={event.capacity}
+              attendanceCount={event.attendanceCount}
             />
           ))}
         </ul>

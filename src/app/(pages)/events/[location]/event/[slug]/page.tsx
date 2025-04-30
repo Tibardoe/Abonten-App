@@ -1,6 +1,7 @@
 import { getEvents } from "@/actions/getEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
+import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
 import SlugImage from "@/components/atoms/SlugImage";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import EventCard from "@/components/molecules/EventCard";
@@ -33,14 +34,6 @@ export default async function page({
 
     .join(" "); // Join the words back with spaces
 
-  // const { data: event } = await supabase
-  //   .from("event")
-  //   .select(
-  //     "*, user_info!event_organizer_id_fkey(avatar_public_id,avatar_version,username)",
-  //   )
-  //   .eq("slug", title)
-  //   .single();
-
   const { data: event } = await supabase
     .from("event")
     .select(
@@ -48,6 +41,11 @@ export default async function page({
     )
     .eq("slug", slug)
     .single();
+
+  const { count: attendanceCount, error: attendanceError } = await supabase
+    .from("attendance") // or your table name
+    .select("*", { count: "exact", head: true })
+    .eq("event_id", event.id);
 
   // Fetch the minimum ticket type by price
   const { data: minTicket } = await supabase
@@ -57,11 +55,6 @@ export default async function page({
     .order("price", { ascending: true })
     .limit(1)
     .single();
-
-  // const { data: similarEvents } = await supabase
-  //   .from("event")
-  //   .select("*")
-  //   .eq("event_category", event.event_category);
 
   const safeLocation = location ?? "";
 
@@ -74,35 +67,11 @@ export default async function page({
 
   const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
 
-  const data: UserPostType[] = eventsWithinLocation.data;
+  const data: UserPostType[] = eventsWithinLocation.data || [];
 
   const similarEvents = data.filter(
     (evt) => evt.event_category === event.event_category && evt.id !== event.id,
   );
-
-  // const { data: similarEventsRaw } = await supabase
-  //   .from("event")
-  //   .select("*")
-  //   .eq("event_category", event.event_category)
-  //   .neq("id", event.id); // exclude current event from similar list
-
-  // For each similar event, fetch the min ticket and attach it
-  // const similarEvents = await Promise.all(
-  //   (similarEventsRaw ?? []).map(async (similarEvent) => {
-  //     const { data: minTicket } = await supabase
-  //       .from("ticket_type")
-  //       .select("price, currency")
-  //       .eq("event_id", similarEvent.id)
-  //       .order("price", { ascending: true })
-  //       .limit(1)
-  //       .single();
-
-  //     return {
-  //       ...similarEvent,
-  //       minTicket,
-  //     };
-  //   })
-  // );
 
   const postedAt = getRelativeTime(event.created_at);
 
@@ -204,18 +173,24 @@ export default async function page({
             </p>
 
             {event.capacity && <p>Capacity: {event.capacity}</p>}
+
+            <p>Attendance: {attendanceCount}</p>
           </div>
 
           {/* Buttons */}
 
           <div className="flex flex-col gap-3">
-            {minTicket?.price === 0 || minTicket?.price === null ? (
-              ""
-            ) : (
-              <Button className="font-bold rounded-full w-full p-6 text-lg">
-                Buy Ticket
-              </Button>
-            )}
+            <BuyTicketBtn
+              eventId={event.id}
+              btnText={
+                minTicket?.price === 0 || minTicket === null
+                  ? "Register"
+                  : "Buy Ticket"
+              }
+              eventTitle={event.title}
+              date={eventDateAndTime.date}
+              time={eventDateAndTime.time}
+            />
 
             <div className="grid grid-cols-2 outline-none gap-3">
               <Button
@@ -243,8 +218,10 @@ export default async function page({
                 Share
               </Button>
               {event.website_url && (
-                <Link
-                  href={event.website_url}
+                <a
+                  href={`https://${event.website_url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="rounded-full text-lg p-1 md:p-2 border border-black flex items-center justify-center gap-3"
                 >
                   <Image
@@ -254,7 +231,7 @@ export default async function page({
                     height={30}
                   />
                   {event.website_url}
-                </Link>
+                </a>
               )}
 
               <Button

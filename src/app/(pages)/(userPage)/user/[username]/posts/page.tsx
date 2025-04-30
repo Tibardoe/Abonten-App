@@ -15,8 +15,8 @@ export default async function page({
   try {
     const response = await getUserPosts(username);
 
-    if (response.status === 200 && response.eventsWithMinPrice) {
-      userPosts = response.eventsWithMinPrice;
+    if (response.status === 200 && response.eventsWithMinPriceAndAttendance) {
+      userPosts = response.eventsWithMinPriceAndAttendance;
     } else {
       return (
         <div className="text-center mt-5 text-red-500">
@@ -49,6 +49,7 @@ export default async function page({
             currency={post.currency}
             created_at={post.created_at}
             capacity={post.capacity}
+            attendanceCount={post.attendanceCount}
           />
         );
       })}

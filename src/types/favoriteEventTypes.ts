@@ -9,8 +9,9 @@ export type FavoriteEvents = {
     title: string;
     description: string;
     caegory_id: number;
-    price: number;
-    currency: string;
+    price?: number;
+    currency?: string;
+    attendanceCount?: number | null;
     location: string;
     address: { full_address: string };
     capacity: number;
@@ -24,5 +25,11 @@ export type FavoriteEvents = {
     ends_at: Date;
     timezone: string;
     status: string;
+    ticket_type?: { price: number; currency: string }[];
   };
+};
+
+export type TicketType = {
+  price: number;
+  currency: string;
 };

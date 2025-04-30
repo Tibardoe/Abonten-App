@@ -55,7 +55,7 @@ export type PostsType = {
 };
 
 export type UserPostType = {
-  id?: string;
+  id: string;
   ticket_type?: { price: number; currency: string }[]; // ✅ Fix here
   created_at: Date | undefined;
   event_category?: string;
@@ -70,4 +70,5 @@ export type UserPostType = {
   currency: string;
   flyerUrl?: string;
   minTicket?: { price: number; currency: string };
+  attendanceCount: number | null;
 };

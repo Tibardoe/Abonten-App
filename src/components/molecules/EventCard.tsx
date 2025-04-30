@@ -18,6 +18,7 @@ export default function EventCard({
   starts_at,
   ends_at,
   min_price,
+  attendanceCount,
   currency,
   capacity,
   id,
@@ -57,7 +58,7 @@ export default function EventCard({
             Capacity: {`${capacity && capacity > 0 ? capacity : "Unlimited"}`}
           </p>
 
-          <p>Attending: {`${0}`}</p>
+          <p>Attending: {attendanceCount}</p>
         </div>
 
         <div className="flex items-center gap-2">

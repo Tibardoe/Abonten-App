@@ -9,8 +9,11 @@ export default async function page() {
   try {
     const response = await getUserFavoritePosts();
 
-    if (response.status === 200 && response.data) {
-      userFavoritedEvents = response.data;
+    if (
+      response.status === 200 &&
+      response.favoritesWithMinPriceAndAttendance
+    ) {
+      userFavoritedEvents = response.favoritesWithMinPriceAndAttendance;
     } else {
       return (
         <div className="text-center mt-5 text-red-500">
@@ -40,8 +43,10 @@ export default async function page() {
             address={event.address}
             starts_at={event.starts_at}
             ends_at={event.ends_at}
-            price={event.price}
+            min_price={event.price}
+            currency={event.currency ?? ""}
             created_at={event.created_at}
+            attendanceCount={event.attendanceCount ?? 0}
           />
         );
       })}

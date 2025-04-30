@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { UserPostType } from "@/types/postsType";
+import { getEventAttendanceCount } from "./getAttendace";
 
 export async function getNearByEvents(
   lat: number,
@@ -19,5 +21,17 @@ export async function getNearByEvents(
     return { status: 500, data: null, error };
   }
 
-  return { status: 200, data, error: null };
+  // Attach attendance counts to each event
+  const eventsWithAttendance = await Promise.all(
+    data.map(async (event: UserPostType) => {
+      const { count } = await getEventAttendanceCount(event.id);
+
+      return {
+        ...event,
+        attendanceCount: count ?? 0,
+      };
+    }),
+  );
+
+  return { status: 200, data: eventsWithAttendance, error: null };
 }
