@@ -11,75 +11,168 @@ import {
   formatSingleDateTime,
 } from "@/utils/dateFormatter";
 import { Clock } from "lucide-react";
-import Image from "next/image";
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { MdOutlineDateRange } from "react-icons/md";
 import { TimePicker } from "../atoms/timePicker";
+import { Button } from "../ui/button";
 
-type DateAndTimeType = { handleDateAndTime: (dateAndTime: DateRange) => void };
+type DateAndTimeType = {
+  dateType: string;
+  handleDateAndTime: (dateAndTime: DateRange | Date[]) => void;
+};
 
-export default function DateTimePicker({ handleDateAndTime }: DateAndTimeType) {
-  const [date, setDate] = React.useState<DateRange | undefined>({
+type Entry = { date: Date; from: Date; to: Date };
+
+export default function DateTimePicker({
+  handleDateAndTime,
+  dateType,
+}: DateAndTimeType) {
+  // single-range
+  const [dateRange, _setDateRange] = useState<DateRange>({
     from: new Date(),
     to: new Date(),
   });
+  // wrapper to update and notify
+  const setDateRange = (r: DateRange) => {
+    _setDateRange(r);
+    handleDateAndTime(r);
+  };
 
-  useEffect(() => {
-    if (date?.from || date?.to) {
-      handleDateAndTime(date);
-    }
-  }, [date, handleDateAndTime]);
+  // specific-mode temps + list
+  const [tempDate, setTempDate] = useState<Date | undefined>(new Date());
+  const [tempFrom, setTempFrom] = useState<Date | undefined>(new Date());
+  const [tempTo, setTempTo] = useState<Date | undefined>(new Date());
+  const [entries, setEntries] = useState<Entry[]>([]);
 
-  const dateTime = formatFullDateTimeRange(date?.from, date?.to);
+  const addEntry = () => {
+    if (!tempDate || !tempFrom || !tempTo) return;
+    const next = [...entries, { date: tempDate, from: tempFrom, to: tempTo }];
+    setEntries(next);
+    handleDateAndTime(next.map((e) => e.date));
+    setTempDate(undefined);
+    setTempFrom(undefined);
+    setTempTo(undefined);
+  };
+
+  const removeAt = (idx: number) => {
+    const next = entries.filter((_, i) => i !== idx);
+    setEntries(next);
+    handleDateAndTime(next.map((e) => e.date));
+  };
 
   return (
-    <Popover>
-      <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
-        <span>
-          {dateTime.date}, {dateTime.time}
-        </span>
+    <>
+      <Popover>
+        <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
+          Click to set date & time
+          <MdOutlineDateRange className="text-2xl" />
+        </PopoverTrigger>
 
-        <MdOutlineDateRange className="text-2xl" />
-      </PopoverTrigger>
-      <PopoverContent className="space-y-4">
-        <Calendar
-          initialFocus
-          mode="range"
-          defaultMonth={date?.from}
-          selected={date}
-          onSelect={setDate}
-          numberOfMonths={1}
-        />
+        <PopoverContent className="space-y-4">
+          {dateType === "single" ? (
+            <>
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange.from}
+                selected={dateRange}
+                onSelect={(r) => setDateRange(r as DateRange)}
+                numberOfMonths={1}
+              />
+              <div className="flex items-end justify-between mt-4">
+                <TimePicker
+                  date={dateRange.from}
+                  setDate={(d) =>
+                    d && setDateRange({ from: d, to: dateRange.to })
+                  }
+                />
+                <span className="mx-2">—</span>
+                <TimePicker
+                  date={dateRange.to}
+                  setDate={(d) =>
+                    d && setDateRange({ from: dateRange.from, to: d })
+                  }
+                />
+                <div className="flex items-center ml-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <Calendar
+                initialFocus
+                mode="single"
+                defaultMonth={tempDate ?? new Date()}
+                selected={tempDate}
+                onSelect={(d) => setTempDate(d as Date)}
+                numberOfMonths={1}
+              />
+              <div className="flex items-end justify-between mt-4">
+                <TimePicker
+                  date={tempFrom}
+                  setDate={(d) => d && setTempFrom(d)}
+                />
+                <span className="mx-2">—</span>
+                <TimePicker date={tempTo} setDate={(d) => d && setTempTo(d)} />
+                <div className="flex items-center ml-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                </div>
+              </div>
+              <Button
+                className="mt-4 w-full"
+                onClick={addEntry}
+                disabled={!tempDate || !tempFrom || !tempTo}
+              >
+                Add date
+              </Button>
+            </>
+          )}
+        </PopoverContent>
+      </Popover>
 
-        <div className="flex justify-between items-end w-full">
-          <TimePicker
-            date={date?.from}
-            setDate={(newDate) => {
-              setDate((prev) => ({
-                from: newDate,
-                to: prev?.to ?? newDate, // fallback to newDate if `to` is undefined
-              }));
-            }}
-          />
+      {/* single display */}
+      {dateType === "single" && dateRange.from && (
+        <p className="mt-3 text-sm text-gray-700">
+          {formatFullDateTimeRange(dateRange.from, dateRange.to).date},{" "}
+          {formatFullDateTimeRange(dateRange.from, dateRange.to).time}
+        </p>
+      )}
 
-          <span className="self-center">--</span>
-
-          <TimePicker
-            date={date?.to}
-            setDate={(newDate) =>
-              setDate((prev) => ({
-                from: prev?.from ?? newDate, // fallback to newDate if `from` is undefined
-                to: newDate,
-              }))
-            }
-          />
-
-          <div className="flex h-10 items-center">
-            <Clock className="ml-2 h-4 w-4" />
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+      {/* specific list */}
+      {dateType === "specific" && entries.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {entries.map((e, i) => {
+            const { date: ds } = formatSingleDateTime(e.date);
+            const time = `${e.from.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} - ${e.to.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`;
+            return (
+              <li
+                key={e.date.toISOString()}
+                className="flex justify-between items-center bg-gray-100 rounded px-3 py-2"
+              >
+                <div>
+                  <p className="text-sm">{ds}</p>
+                  <p className="text-xs text-gray-600">{time}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => removeAt(i)}
+                >
+                  Delete
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
   );
 }

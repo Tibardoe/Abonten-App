@@ -1,7 +1,10 @@
 "use client";
 
 import type { UserPostType } from "@/types/postsType";
-import { formatFullDateTimeRange } from "@/utils/dateFormatter";
+import {
+  formatFullDateTimeRange,
+  getFormattedEventDate,
+} from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -17,13 +20,14 @@ export default function EventCard({
   address,
   starts_at,
   ends_at,
+  event_dates,
   min_price,
   attendanceCount,
   currency,
   capacity,
   id,
 }: UserPostType) {
-  const dateTime = formatFullDateTimeRange(starts_at, ends_at);
+  const dateTime = getFormattedEventDate(starts_at, ends_at, event_dates);
 
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
@@ -70,17 +74,21 @@ export default function EventCard({
         <div className="flex items-center gap-2">
           <MdOutlineDateRange className="text-xl shrink-0" />
 
-          <p>
+          {/* <p>
             {starts_at ? dateTime.date : "Date not available"} -
             {ends_at ? dateTime.date : "End date not available"}
-          </p>
+          </p> */}
+
+          <p>{dateTime ? dateTime.date : "Date not available"}</p>
         </div>
 
         <div className="flex justify-between">
           <div className="flex items-center gap-2">
             <IoTimeOutline className="text-xl shrink-0" />
 
-            <p>{starts_at ? dateTime.time : "Time not available"}</p>
+            {/* <p>{starts_at ? dateTime.time : "Time not available"}</p> */}
+
+            <p>{dateTime ? dateTime.time : "Time not available"}</p>
           </div>
 
           <p>

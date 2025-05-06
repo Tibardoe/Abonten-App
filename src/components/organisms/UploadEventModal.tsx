@@ -1,4 +1,5 @@
 import { postEvent } from "@/actions/postEvent";
+import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
@@ -13,6 +14,7 @@ import Notification from "../atoms/Notification";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
 import PromoCodeBtn from "../atoms/PromoCodeBtn";
+import { cn } from "../lib/utils";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
 import PromoCodeInputs from "../molecules/PromoCodeInputs";
@@ -71,7 +73,9 @@ export default function UploadEventModal({
 
   const [step, setStep] = useState(1);
 
-  const [dateAndTime, setDateAndTime] = useState<DateRange | undefined>({
+  const [dateAndTime, setDateAndTime] = useState<
+    DateRange | Date[] | undefined
+  >({
     from: new Date(),
     to: new Date(),
   });
@@ -98,6 +102,8 @@ export default function UploadEventModal({
   const [ticket, setTicket] = useState("");
 
   const [types, setTypes] = useState<string[]>([]);
+
+  const [dateType, setDateType] = useState("single");
 
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -154,7 +160,7 @@ export default function UploadEventModal({
     );
   };
 
-  const handleDateAndTime = (date: DateRange) => {
+  const handleDateAndTime = (date: DateRange | Date[]) => {
     setDateAndTime(date);
   };
 
@@ -186,6 +192,22 @@ export default function UploadEventModal({
       return;
     }
 
+    let eventDates: EventDates;
+
+    if (dateType === "single" && !Array.isArray(dateAndTime)) {
+      eventDates = {
+        starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
+        ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
+      };
+    } else if (Array.isArray(dateAndTime)) {
+      eventDates = {
+        specific_dates: dateAndTime, // Array of dates
+      };
+    } else {
+      setNotification("Invalid date selection");
+      return;
+    }
+
     const finalData = {
       ...formData,
       address: selectedAddress,
@@ -193,14 +215,13 @@ export default function UploadEventModal({
       longitude: coords.lng,
       category,
       types,
-      starts_at: dateAndTime?.from,
-      ends_at: dateAndTime?.to,
       selectedFile,
-      promoCodes: promoCodes,
+      promoCodes,
       freeEvents: ticket,
-      singleTicket: singleTicket,
-      multipleTickets: multipleTickets,
+      singleTicket,
+      multipleTickets,
       currency,
+      ...eventDates, // Merge the eventDates
     };
 
     setIsUploading(true);
@@ -421,10 +442,78 @@ export default function UploadEventModal({
                   <p className="text-red-500 text-sm">Location required</p>
                 )}
 
-                <DateTimePicker handleDateAndTime={handleDateAndTime} />
-                {dateAndTime === undefined && (
-                  <p className="text-red-500 text-sm pl-3">Set date and time</p>
-                )}
+                {/* Date and time */}
+                <div className="space-y-2 text-sm">
+                  <h2 className="font-bold text-slate-700">Date</h2>
+
+                  <div className="space-y-1">
+                    <div>
+                      <button
+                        type="button"
+                        className="space-y-1 border rounded-md p-2 shadow-md"
+                        onClick={() => setDateType("single")}
+                      >
+                        <span className="flex justify-between items-center w-full text-slate-700">
+                          <p className="font-bold">Single or Range</p>
+                          <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-black">
+                            <span
+                              className={cn(
+                                "bg-black w-[10px] h-[10px] rounded-full",
+                                {
+                                  hidden: dateType !== "single",
+                                  flex: dateType === "single",
+                                },
+                              )}
+                            />
+                          </span>
+                        </span>
+
+                        <p className="text-start text-[13px] text-slate-700">
+                          Choose one date or a continuous range (e.g., Feb 21 –
+                          Feb 25).
+                        </p>
+                      </button>
+                    </div>
+
+                    <div>
+                      <button
+                        type="button"
+                        className="space-y-1 border rounded-md p-2 shadow-md"
+                        onClick={() => setDateType("specific")}
+                      >
+                        <span className="flex justify-between items-center w-full text-slate-700">
+                          <p className="font-bold">Custom Dates</p>
+                          <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-black">
+                            <span
+                              className={cn(
+                                "bg-black w-[10px] h-[10px] rounded-full",
+                                {
+                                  hidden: dateType !== "specific",
+                                  flex: dateType === "specific",
+                                },
+                              )}
+                            />
+                          </span>
+                        </span>
+
+                        <p className="text-start text-[13px] text-slate-700">
+                          Set multiple specific dates (e.g., Jan 20, Mar 6, Feb
+                          5).
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
+                  <DateTimePicker
+                    handleDateAndTime={handleDateAndTime}
+                    dateType={dateType}
+                  />
+                  {dateAndTime === undefined && (
+                    <p className="text-red-500 text-sm pl-3">
+                      Set date and time
+                    </p>
+                  )}
+                </div>
 
                 <div className="space-y-4 text-sm font-normal">
                   <div className="space-y-3">

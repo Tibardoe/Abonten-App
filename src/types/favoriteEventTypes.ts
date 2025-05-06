@@ -21,8 +21,9 @@ export type FavoriteEvents = {
     website_url: string;
     flyer_public_id: string;
     flyer_version: string;
-    starts_at: Date;
-    ends_at: Date;
+    starts_at?: Date;
+    ends_at?: Date;
+    event_dates?: Date[];
     timezone: string;
     status: string;
     ticket_type?: { price: number; currency: string }[];

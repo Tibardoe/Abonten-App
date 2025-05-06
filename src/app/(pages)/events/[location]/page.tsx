@@ -110,6 +110,7 @@ export default async function page({
                   address={post.address}
                   starts_at={post.starts_at}
                   ends_at={post.ends_at}
+                  event_dates={post.event_dates}
                   minTicket={post.minTicket}
                   created_at={post.created_at}
                   capacity={post.capacity}

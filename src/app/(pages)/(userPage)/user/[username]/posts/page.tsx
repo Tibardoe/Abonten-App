@@ -45,6 +45,7 @@ export default async function page({
             address={post.address}
             starts_at={post.starts_at}
             ends_at={post.ends_at}
+            event_dates={post.event_dates}
             min_price={post.min_price}
             currency={post.currency}
             created_at={post.created_at}

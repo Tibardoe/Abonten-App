@@ -34,8 +34,9 @@ export type PostsType = {
   longitude: number;
   category: string;
   types: string[];
-  starts_at: Date | undefined;
-  ends_at: Date | undefined;
+  starts_at?: Date | undefined;
+  ends_at?: Date | undefined;
+  specific_dates?: Date[];
   title: string;
   description: string;
   website_url?: string | undefined;
@@ -54,6 +55,12 @@ export type PostsType = {
   }[];
 };
 
+export type EventDates = {
+  starts_at?: Date;
+  ends_at?: Date;
+  specific_dates?: Date[];
+};
+
 export type UserPostType = {
   id: string;
   ticket_type?: { price: number; currency: string }[]; // ✅ Fix here
@@ -62,8 +69,9 @@ export type UserPostType = {
   flyer_public_id?: string;
   flyer_version?: string;
   address: { full_address: string };
-  starts_at: Date | undefined;
-  ends_at: Date | undefined;
+  starts_at?: Date | undefined;
+  ends_at?: Date | undefined;
+  event_dates?: Date[] | [];
   title: string;
   capacity?: number | undefined;
   min_price?: number | undefined;

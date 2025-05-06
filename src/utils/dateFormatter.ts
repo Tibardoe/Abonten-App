@@ -83,3 +83,91 @@ export function getRelativeTime(date: string | Date) {
     "",
   );
 }
+
+export function formatSpecificDateWithTimeRange(item: {
+  date: Date;
+  from: Date;
+  to: Date;
+}): string {
+  const dateStr = formatSingleDateTime(item.date).date;
+
+  const fromTime = item.from.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const toTime = item.to.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return `${dateStr} ${fromTime} - ${toTime}`;
+}
+
+export function getDateParts(dateInput: string | Date) {
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
+
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const day = daysOfWeek[date.getDay()];
+  const month = months[date.getMonth()];
+  const dateNum = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+
+  const formattedTime = `${hours % 12 || 12}:${minutes
+    .toString()
+    .padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`;
+
+  return {
+    day,
+    month,
+    date: dateNum,
+    time: formattedTime,
+  };
+}
+
+export function getFormattedEventDate(
+  startsAt: string | Date | undefined,
+  endsAt: string | Date | undefined,
+  fallbackDates?: [] | Date[] | undefined | string,
+): { date: string; time: string } {
+  const formatted = formatFullDateTimeRange(startsAt, endsAt);
+
+  const hasValidDates =
+    formatted.date !== "N/A - N/A" && formatted.time !== "N/A - N/A";
+
+  if (hasValidDates) {
+    return formatted;
+  }
+
+  if (fallbackDates?.[0]) {
+    return formatSingleDateTime(fallbackDates[0]);
+  }
+
+  return { date: "Date not available", time: "Time not available" };
+}

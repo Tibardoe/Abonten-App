@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/config/supabase/server";
 import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@/types/postsType";
-import { getRelativeTime } from "@/utils/dateFormatter";
 import {
-  formatDateWithSuffix,
-  formatFullDateTimeRange,
+  getDateParts,
+  getFormattedEventDate,
+  getRelativeTime,
 } from "@/utils/dateFormatter";
 import Image from "next/image";
 import Link from "next/link";
@@ -75,9 +75,10 @@ export default async function page({
 
   const postedAt = getRelativeTime(event.created_at);
 
-  const eventDateAndTime = formatFullDateTimeRange(
+  const eventDateAndTime = getFormattedEventDate(
     event.starts_at,
     event.ends_at,
+    event.event_dates,
   );
 
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
@@ -176,6 +177,37 @@ export default async function page({
 
             <p>Attendance: {attendanceCount}</p>
           </div>
+
+          {/* Dates if event has a date range */}
+          {event.event_dates?.length > 0 && (
+            <div>
+              <h2 className="font-bold mb-2">Dates</h2>
+              <div className="flex overflow-x-auto gap-3">
+                {event.event_dates.map((dateString: string) => {
+                  const { day, month, date, time } = getDateParts(dateString);
+                  return (
+                    <button
+                      type="button"
+                      key={dateString}
+                      className="rounded-md border px-4 py-2 flex-shrink-0 space-y-2 hover:shadow-md text-sm min-w-32"
+                    >
+                      <p className="font-[600]">{day}</p>
+
+                      <hr />
+
+                      <p>{month}</p>
+
+                      <p className="rounded-full w-16 h-16 grid place-items-center text-2xl bg-black bg-opacity-5 mx-auto">
+                        {date}
+                      </p>
+
+                      <p>{time}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Buttons */}
 

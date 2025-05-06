@@ -42,7 +42,10 @@ export async function postEvent(formData: PostsType) {
     selectedFile,
     starts_at,
     ends_at,
+    specific_dates,
   } = formData;
+
+  console.log(formData);
 
   const eventCode = generateEventCode(title);
 
@@ -66,6 +69,16 @@ export async function postEvent(formData: PostsType) {
 
   const { public_id, version, transformation } = flyerUpload;
 
+  // Handle specific dates or start and end times
+  const eventStartDate = starts_at;
+  const eventEndDate = ends_at;
+  let eventDates = specific_dates || [];
+
+  // If specific_dates is not provided, use the provided start and end date
+  if (!specific_dates || specific_dates.length === 0) {
+    eventDates = [];
+  }
+
   // 3. Insert the event
   const { data: insertedEvent, error: insertError } = await supabase
     .from("event")
@@ -82,8 +95,9 @@ export async function postEvent(formData: PostsType) {
       website_url: website_url,
       flyer_public_id: public_id,
       flyer_version: version,
-      starts_at,
-      ends_at,
+      starts_at: eventStartDate ?? null,
+      ends_at: eventEndDate ?? null,
+      event_dates: eventDates ?? null,
       status: "published",
       event_category: category,
       event_type: types,
