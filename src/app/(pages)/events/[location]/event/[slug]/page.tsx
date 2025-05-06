@@ -189,9 +189,9 @@ export default async function page({
                     <button
                       type="button"
                       key={dateString}
-                      className="rounded-md border px-4 py-2 flex-shrink-0 space-y-2 hover:shadow-md text-sm min-w-32"
+                      className="rounded-md border px-4 py-2 flex-shrink-0 space-y-2 shadow-md text-sm min-w-32"
                     >
-                      <p className="font-[600]">{day}</p>
+                      <p className="font-bold">{day}</p>
 
                       <hr />
 
