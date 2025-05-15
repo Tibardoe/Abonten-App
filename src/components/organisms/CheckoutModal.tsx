@@ -4,6 +4,7 @@ import type { TicketType } from "@/types/ticketType";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoAddSharp } from "react-icons/io5";
 import { MdDiscount } from "react-icons/md";
@@ -41,6 +42,8 @@ export default function CheckoutModal({
 
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
@@ -74,10 +77,6 @@ export default function CheckoutModal({
     return acc + price * qty;
   }, 0);
 
-  const handleData = () => {
-    console.log("hi");
-  };
-
   const handlePromoCode = async (promoCode: string) => {
     setLoading(true);
     const response = await getPromoCode(promoCode);
@@ -96,6 +95,40 @@ export default function CheckoutModal({
   const removePromoCode = () => {
     setDiscountAmount(null);
     setPromoCode("");
+  };
+
+  const handleData = () => {
+    console.log("hi");
+  };
+
+  const handleProceed = () => {
+    const selectedTickets = Object.entries(quantities)
+      .filter(([type, value]) => value > 0)
+      .map(([type, quantity]) => {
+        const ticket = tickets.find((t) => t.type === type);
+
+        if (!ticket) {
+          setError(`Ticket of type ${type} not found`);
+          return;
+        }
+
+        return {
+          Quantity: quantity,
+          Discount: discountAmount ? discountAmount * ticket?.price : 0,
+          Price: discountAmount
+            ? ticket?.price - discountAmount * ticket?.price
+            : ticket?.price,
+        };
+      });
+
+    if (selectedTickets.length === 0) {
+      setError("Please select at least one ticket.");
+      return;
+    }
+
+    const encodedData = encodeURIComponent(JSON.stringify(selectedTickets));
+
+    router.push(`/wallet?eventId=${eventId}&tickets=${encodedData}`);
   };
 
   return (
@@ -181,6 +214,7 @@ export default function CheckoutModal({
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
+                      disabled={(quantities[ticket.type] || 0) <= 0}
                       onClick={() =>
                         setQuantities((prev) => ({
                           ...prev,
@@ -190,7 +224,7 @@ export default function CheckoutModal({
                           ),
                         }))
                       }
-                      className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md"
+                      className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <TfiMinus />
                     </button>
@@ -199,13 +233,16 @@ export default function CheckoutModal({
 
                     <button
                       type="button"
+                      disabled={
+                        (quantities[ticket.type] || 0) >= (ticket.quantity ?? 0)
+                      }
                       onClick={() =>
                         setQuantities((prev) => ({
                           ...prev,
                           [ticket.type]: (prev[ticket.type] || 0) + 1,
                         }))
                       }
-                      className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md"
+                      className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md disabled:bg-opacity-50 disabled:cursor-not-allowed"
                     >
                       <IoAddSharp />
                     </button>
@@ -215,17 +252,21 @@ export default function CheckoutModal({
                 <hr />
 
                 <div className="flex flex-col items-start gap-2 px-4">
-                  <p className="font-bold flex items-center gap-2">
-                    {ticket.currency} {""}
-                    {discountAmount ? (
-                      <span className="flex justify-center items-center gap-1">
-                        {ticket.price - discountAmount * ticket.price}{" "}
-                        <MdDiscount className="text-lg" />
-                      </span>
-                    ) : (
-                      ticket.price
-                    )}
-                  </p>
+                  <div className="flex justify-between items-center w-full font-bold">
+                    <p className="flex items-center gap-2">
+                      {ticket.currency} {""}
+                      {discountAmount ? (
+                        <span className="flex justify-center items-center gap-1">
+                          {ticket.price - discountAmount * ticket.price}{" "}
+                          <MdDiscount className="text-lg" />
+                        </span>
+                      ) : (
+                        ticket.price
+                      )}
+                    </p>
+
+                    <p>Quantity left: {ticket.quantity}</p>
+                  </div>
 
                   {ticket.type !== "SINGLE TICKET" &&
                     ticket.available_until && (
@@ -268,12 +309,13 @@ export default function CheckoutModal({
                 </p>
               </div>
 
-              <Link
-                href={"#"}
+              <button
+                type="button"
+                onClick={handleProceed}
                 className="rounded-full p-4 font-bold text-white bg-black text-center mt-5"
               >
-                Proceed
-              </Link>
+                Proceed to payment
+              </button>
             </>
           )}
         </div>
