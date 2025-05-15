@@ -1,13 +1,13 @@
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
+import DateBtn from "@/components/atoms/DateBtn";
 import SlugImage from "@/components/atoms/SlugImage";
 import UserAvatar from "@/components/atoms/UserAvatar";
-import EventCard from "@/components/molecules/EventCard";
+import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/config/supabase/server";
-import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@/types/postsType";
 import {
   getDateParts,
@@ -178,39 +178,15 @@ export default async function page({
           </div>
 
           {/* Dates if event has a date range */}
-          {event.event_dates?.length > 0 && (
-            <div>
-              <h2 className="font-bold mb-2">Dates</h2>
-              <div className="flex overflow-x-auto gap-3">
-                {event.event_dates.map((dateString: string) => {
-                  const { day, month, date, time } = getDateParts(dateString);
-                  return (
-                    <button
-                      type="button"
-                      key={dateString}
-                      className="rounded-md border px-4 py-2 flex-shrink-0 space-y-2 shadow-md text-sm min-w-32"
-                    >
-                      <p className="font-bold">{day}</p>
-
-                      <hr />
-
-                      <p>{month}</p>
-
-                      <p className="rounded-full w-16 h-16 grid place-items-center text-2xl bg-black bg-opacity-5 mx-auto">
-                        {date}
-                      </p>
-
-                      <p>{time}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Buttons */}
-
-          <div className="flex flex-col gap-3">
+          {event.event_dates?.length > 0 ? (
+            <EventDateSelector
+              eventDates={event.event_dates}
+              eventId={event.id}
+              time={eventDateAndTime.time}
+              eventTitle={event.title}
+              minTicket={minTicket}
+            />
+          ) : (
             <BuyTicketBtn
               eventId={event.id}
               btnText={
@@ -222,7 +198,10 @@ export default async function page({
               date={eventDateAndTime.date}
               time={eventDateAndTime.time}
             />
+          )}
 
+          {/* Buttons */}
+          <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 outline-none gap-3">
               <Button
                 variant="outline"
