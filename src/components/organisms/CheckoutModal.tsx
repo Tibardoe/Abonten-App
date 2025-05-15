@@ -1,3 +1,4 @@
+import getPromoCode from "@/actions/getPromoCode";
 import { getTickets } from "@/actions/getTickets";
 import type { TicketType } from "@/types/ticketType";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
@@ -5,7 +6,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IoAddSharp } from "react-icons/io5";
+import { MdDiscount } from "react-icons/md";
 import { TfiMinus } from "react-icons/tfi";
+import Notification from "../atoms/Notification";
 
 type CheckoutProp = {
   handleCheckoutModal: (state: boolean) => void;
@@ -26,11 +29,27 @@ export default function CheckoutModal({
 }: CheckoutProp) {
   const [tickets, setTickets] = useState<TicketType[]>([]);
 
+  const [promoCode, setPromoCode] = useState("");
+
+  const [discountAmount, setDiscountAmount] = useState<number | null>(null);
+
+  const [loading, setLoading] = useState(false);
+
   const [quantities, setQuantities] = useState<{
     [ticketType: string]: number;
   }>({});
 
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -49,11 +68,34 @@ export default function CheckoutModal({
 
   const total = tickets.reduce((acc, ticket) => {
     const qty = quantities[ticket.type] || 0;
-    return acc + ticket.price * qty;
+    const price = discountAmount
+      ? ticket.price - discountAmount * ticket.price
+      : ticket.price;
+    return acc + price * qty;
   }, 0);
 
   const handleData = () => {
     console.log("hi");
+  };
+
+  const handlePromoCode = async (promoCode: string) => {
+    setLoading(true);
+    const response = await getPromoCode(promoCode);
+
+    if (response.status !== 200) {
+      setError(response.message ?? "Failed to get promo code");
+      setLoading(false);
+      return;
+    }
+
+    setDiscountAmount(response.discountPercentage / 100);
+    setPromoCode("");
+    setLoading(false);
+  };
+
+  const removePromoCode = () => {
+    setDiscountAmount(null);
+    setPromoCode("");
   };
 
   return (
@@ -92,14 +134,33 @@ export default function CheckoutModal({
           {btnText !== "Register" && (
             <div className="flex flex-col text-sm gap-2">
               <span>Promo Code</span>
-              <div className="flex gap-1 justify-between items-center border p-4 rounded-md">
-                <input
-                  type="text"
-                  className="outline-none"
-                  placeholder="Enter code"
-                />
 
-                <button type="button">Apply</button>
+              <div className="space-y-2 flex flex-col">
+                <div className="flex gap-5 justify-between items-center border p-4 rounded-md">
+                  <input
+                    type="text"
+                    className="outline-none w-full h-full"
+                    placeholder="Enter code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    className="font-bold"
+                    onClick={() => handlePromoCode(promoCode)}
+                  >
+                    {loading ? "Loading..." : "Apply"}
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={removePromoCode}
+                  className="self-end font-bold border border-black rounded-md p-2"
+                >
+                  Remove
+                </button>
               </div>
             </div>
           )}
@@ -154,8 +215,16 @@ export default function CheckoutModal({
                 <hr />
 
                 <div className="flex flex-col items-start gap-2 px-4">
-                  <p className="font-bold">
-                    {ticket.currency} {ticket.price}
+                  <p className="font-bold flex items-center gap-2">
+                    {ticket.currency} {""}
+                    {discountAmount ? (
+                      <span className="flex justify-center items-center gap-1">
+                        {ticket.price - discountAmount * ticket.price}{" "}
+                        <MdDiscount className="text-lg" />
+                      </span>
+                    ) : (
+                      ticket.price
+                    )}
                   </p>
 
                   {ticket.type !== "SINGLE TICKET" &&
@@ -209,6 +278,8 @@ export default function CheckoutModal({
           )}
         </div>
       </div>
+
+      {error && <Notification notification={error} />}
     </div>
   );
 }

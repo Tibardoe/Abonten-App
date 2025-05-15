@@ -36,9 +36,9 @@ export default function EventCard({
   return (
     <li key={title} className="space-y-2 shadow-lg">
       <Link
-        href={`/events/${location ? location : address.full_address}/event/${
-          title && generateSlug(title)
-        }`}
+        href={`/events/${
+          location ? location : generateSlug(address.full_address)
+        }/event/${title && generateSlug(title)}`}
       >
         <EventCardFlyerImage
           flyerUrl={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}

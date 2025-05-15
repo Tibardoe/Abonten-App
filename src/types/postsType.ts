@@ -79,4 +79,6 @@ export type UserPostType = {
   flyerUrl?: string;
   minTicket?: { price: number; currency: string };
   attendanceCount: number | null;
+  ticket_price?: number | undefined;
+  ticket_currency?: string;
 };

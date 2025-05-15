@@ -148,14 +148,19 @@ export default function PromoCodeInputs({
               className="space-y-2 border rounded-md p-2 shadow-md"
             >
               <div className="flex items-center justify-between">
-                <p>{`Discount: ${promoCodes.discount}%`}</p>
-                <p>{`Maximum usage: ${promoCodes.maximumUse}`}</p>
+                <p>Promo Code: {promoCodes.promoCode}</p>
+
                 <button
                   type="button"
                   onClick={(event) => handleRemove(event, promoCodes.promoCode)}
                 >
                   <LiaTimesSolid className="text-xl" />
                 </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p>{`Discount: ${promoCodes.discount}%`}</p>
+                <p>{`Maximum usage: ${promoCodes.maximumUse}`}</p>
               </div>
 
               <p> Expiry date: {promoCodes.expiryDate.toLocaleDateString()}</p>

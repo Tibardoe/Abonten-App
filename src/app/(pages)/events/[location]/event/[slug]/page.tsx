@@ -1,4 +1,3 @@
-import { getEvents } from "@/actions/getEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import BuyTicketBtn from "@/components/atoms/CheckoutBtn";

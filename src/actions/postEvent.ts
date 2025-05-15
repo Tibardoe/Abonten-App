@@ -42,6 +42,7 @@ export async function postEvent(formData: PostsType) {
     selectedFile,
     starts_at,
     ends_at,
+    promoCodes,
     specific_dates,
   } = formData;
 
@@ -112,6 +113,8 @@ export async function postEvent(formData: PostsType) {
     };
   }
 
+  // ⚠️ ❌ Error inserting event: duplicate key value violates unique constraint "event_slug_key"
+
   const eventId = insertedEvent.id;
 
   // Insert ticket(s)
@@ -180,6 +183,29 @@ export async function postEvent(formData: PostsType) {
           };
         }
       }
+    }
+  }
+
+  // Insert promo codes if any
+  if (promoCodes && promoCodes.length > 0) {
+    const promoInsertPayload = promoCodes.map((promo) => ({
+      event_id: eventId,
+      promo_code: promo.promoCode,
+      discount_percentage: promo.discount,
+      expires_at: promo.expiryDate,
+      max_uses: promo.maximumUse,
+      is_active: promo.expiryDate > new Date(),
+    }));
+
+    const { error: promoInsertError } = await supabase
+      .from("promo_code")
+      .insert(promoInsertPayload);
+
+    if (promoInsertError) {
+      return {
+        status: 500,
+        message: `Error inserting promo codes: ${promoInsertError.message}`,
+      };
     }
   }
 
