@@ -5,15 +5,22 @@ import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 export default async function page({
   searchParams,
 }: {
-  searchParams: Promise<{
-    eventId: string;
-    tickets: string;
-    totalAmount: string;
-  }>;
+  searchParams?: {
+    eventId?: string;
+    tickets?: string;
+    totalAmount?: string;
+  };
 }) {
-  const { eventId, tickets, totalAmount } = await searchParams;
+  const eventId = searchParams?.eventId || "";
+  const tickets = searchParams?.tickets || "[]";
+  const totalAmount = searchParams?.totalAmount || "0";
 
-  const ticketSummary = JSON.parse(tickets);
+  let ticketSummary = [];
+  try {
+    ticketSummary = JSON.parse(tickets);
+  } catch (error) {
+    console.error("Failed to parse tickets:", error);
+  }
 
   return (
     <div className="flex flex-col justify-center gap-5">
@@ -25,7 +32,6 @@ export default async function page({
         </p>
       </div>
 
-      {/* Order summary */}
       {ticketSummary.length > 0 && (
         <OrderSummary
           ticketSummary={ticketSummary}

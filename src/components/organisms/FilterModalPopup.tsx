@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { distance, rating } from "@/data/distanceAndRating";
+import { getCurrentPosition } from "@/utils/getCurrentPosition";
 // Date moodules
 import { addDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -49,7 +50,9 @@ export default function FilterModalPopup({
 
   const router = useRouter();
 
-  const handleFilter = () => {
+  const handleFilter = async () => {
+    const coordinates = await getCurrentPosition();
+
     const query = new URLSearchParams({
       price: `GHS ${minMax[0]} - GHS ${minMax[1]}`,
       category,
@@ -58,6 +61,8 @@ export default function FilterModalPopup({
       to: date?.to?.toISOString() || "",
       rating: ratingg,
       distance: distancee,
+      lat: coordinates.coords.latitude.toString(),
+      lng: coordinates.coords.longitude.toString(),
     });
 
     router.push(`/search?${query.toString()}`);

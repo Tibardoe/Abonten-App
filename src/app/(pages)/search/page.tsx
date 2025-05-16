@@ -1,7 +1,8 @@
+import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import EventCard from "@/components/molecules/EventCard";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
-import { allEvents } from "@/data/allEvents";
-import Image from "next/image";
+import type { UserPostType } from "@/types/postsType";
+import { parseFilters } from "@/utils/parseFilterModalQueries";
 
 export default async function page({
   searchParams,
@@ -9,6 +10,28 @@ export default async function page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const queryParams = await searchParams;
+
+  const {
+    minPrice,
+    maxPrice,
+    minRating,
+    maxDistanceKm,
+    startDate,
+    endDate,
+    lat,
+    lng,
+  } = parseFilters(queryParams);
+
+  const events = await getQueriedEvents({
+    minPrice,
+    maxPrice,
+    minRating,
+    maxDistanceKm,
+    lat,
+    lng,
+    startDate,
+    endDate,
+  });
 
   // Helper to format date
   const formatDate = (dateString: string) => {
@@ -77,33 +100,24 @@ export default async function page({
       </div>
 
       <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
-        {allEvents.map((post) => (
+        {events.QueriedData.map((event: UserPostType) => (
           <EventCard
-            key={post.title}
-            title={post.title}
-            flyerUrl={post.flyerUrl}
-            address={post.location}
-            start_at={post.startDate}
-            end_at={post.endDate}
-            timezone={post.time}
-            price={post.price}
+            key={event.title}
+            id={event.id}
+            title={event.title}
+            flyer_public_id={event.flyer_public_id}
+            flyer_version={event.flyer_version}
+            address={event.address}
+            starts_at={event.starts_at}
+            ends_at={event.ends_at}
+            event_dates={event.event_dates}
+            minTicket={event.minTicket}
+            created_at={event.created_at}
+            capacity={event.capacity}
+            min_price={event.min_price}
+            currency={event.currency}
+            attendanceCount={event.attendanceCount}
           />
-
-          //  <EventCard
-          //                 key={post.title}
-          //                 title={post.title}
-          //                 id={post.id}
-          //                 flyer_public_id={post.flyer_public_id}
-          //                 flyer_version={post.flyer_version}
-          //                 address={post.address}
-          //                 starts_at={post.starts_at}
-          //                 event_dates={post.event_dates}
-          //                 ends_at={post.ends_at}
-          //                 min_price={post.ticket_price}
-          //                 currency={post.ticket_currency ?? ""}
-          //                 created_at={post.created_at}
-          //                 attendanceCount={post.attendanceCount ?? 0}
-          //               />
         ))}
       </ul>
     </div>
