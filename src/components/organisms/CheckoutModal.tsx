@@ -3,7 +3,6 @@ import { getTickets } from "@/actions/getTickets";
 import type { TicketType } from "@/types/ticketType";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoAddSharp } from "react-icons/io5";
@@ -72,7 +71,7 @@ export default function CheckoutModal({
   const total = tickets.reduce((acc, ticket) => {
     const qty = quantities[ticket.type] || 0;
     const price = discountAmount
-      ? ticket.price - discountAmount * ticket.price
+      ? +(ticket.price - discountAmount * ticket.price).toFixed(2)
       : ticket.price;
     return acc + price * qty;
   }, 0);
@@ -113,9 +112,10 @@ export default function CheckoutModal({
         }
 
         return {
+          ticketType: type,
           Quantity: quantity,
           Discount: discountAmount ? discountAmount * ticket?.price : 0,
-          Price: discountAmount
+          Amount: discountAmount
             ? ticket?.price - discountAmount * ticket?.price
             : ticket?.price,
         };
@@ -128,7 +128,9 @@ export default function CheckoutModal({
 
     const encodedData = encodeURIComponent(JSON.stringify(selectedTickets));
 
-    router.push(`/wallet?eventId=${eventId}&tickets=${encodedData}`);
+    router.push(
+      `/wallet?eventId=${eventId}&tickets=${encodedData}&totalAmount=${total}`,
+    );
   };
 
   return (

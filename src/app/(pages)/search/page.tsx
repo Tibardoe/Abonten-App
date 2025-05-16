@@ -82,12 +82,28 @@ export default async function page({
             key={post.title}
             title={post.title}
             flyerUrl={post.flyerUrl}
-            location={post.location}
+            address={post.location}
             start_at={post.startDate}
             end_at={post.endDate}
             timezone={post.time}
             price={post.price}
           />
+
+          //  <EventCard
+          //                 key={post.title}
+          //                 title={post.title}
+          //                 id={post.id}
+          //                 flyer_public_id={post.flyer_public_id}
+          //                 flyer_version={post.flyer_version}
+          //                 address={post.address}
+          //                 starts_at={post.starts_at}
+          //                 event_dates={post.event_dates}
+          //                 ends_at={post.ends_at}
+          //                 min_price={post.ticket_price}
+          //                 currency={post.ticket_currency ?? ""}
+          //                 created_at={post.created_at}
+          //                 attendanceCount={post.attendanceCount ?? 0}
+          //               />
         ))}
       </ul>
     </div>
