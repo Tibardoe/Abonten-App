@@ -4,9 +4,15 @@ import EventCardMenuModal from "../molecules/EventCardMenuModal";
 
 type EventProp = {
   eventId?: string;
+  eventTitle?: string;
+  address: string;
 };
 
-export default function EventCardMenuBtn({ eventId }: EventProp) {
+export default function EventCardMenuBtn({
+  eventId,
+  eventTitle,
+  address,
+}: EventProp) {
   const [showMenu, setShowMenu] = useState(false);
 
   const handleShowMenu = () => {
@@ -22,7 +28,13 @@ export default function EventCardMenuBtn({ eventId }: EventProp) {
           height={20}
         />
       </button>
-      {showMenu && <EventCardMenuModal eventId={eventId ? eventId : ""} />}
+      {showMenu && (
+        <EventCardMenuModal
+          eventId={eventId ? eventId : ""}
+          eventTitle={eventTitle ? eventTitle : ""}
+          address={address ? address : ""}
+        />
+      )}
     </div>
   );
 }

@@ -54,7 +54,11 @@ export default function EventCard({
             {title}
           </Link>
 
-          <EventCardMenuBtn eventId={id} />
+          <EventCardMenuBtn
+            eventId={id}
+            eventTitle={title}
+            address={address.full_address}
+          />
         </div>
 
         <div className="flex justify-between items-start font-semibold mb-2">

@@ -2,6 +2,7 @@ import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
 import DateBtn from "@/components/atoms/DateBtn";
+import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import SlugImage from "@/components/atoms/SlugImage";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
@@ -215,18 +216,12 @@ export default async function page({
                 />
                 Direction
               </Button>
-              <Button
-                variant="outline"
-                className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
-              >
-                <Image
-                  src="/assets/images/share.svg"
-                  alt="Share"
-                  width={30}
-                  height={30}
-                />
-                Share
-              </Button>
+
+              <OutlinedShareBtn
+                title={event.title}
+                address={event.address.full_address}
+              />
+
               {event.website_url && (
                 <a
                   href={`https://${event.website_url}`}
