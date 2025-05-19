@@ -6,6 +6,7 @@ import {
   getFormattedEventDate,
 } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
+import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
@@ -26,6 +27,7 @@ export default function EventCard({
   currency,
   capacity,
   id,
+  status,
 }: UserPostType) {
   const dateTime = getFormattedEventDate(starts_at, ends_at, event_dates);
 
@@ -33,8 +35,26 @@ export default function EventCard({
 
   const { location } = useParams();
 
+  const overlayMessage = getEventStatusOverlay(starts_at, ends_at, event_dates);
+
+  console.log(
+    `event_dates:${event_dates}, starts_at:${starts_at}, ends_at:${ends_at}`,
+  );
+
   return (
-    <li key={title} className="space-y-2 shadow-lg">
+    <li key={title} className="space-y-2 shadow-lg relative">
+      {status === "canceled" && (
+        <div className="absolute left-0 top-0 w-full h-full bg-black bg-opacity-60 text-gray-300 z-10 md:text-xl text-2xl flex justify-center items-center font-bold">
+          Event canceled
+        </div>
+      )}
+
+      {overlayMessage && status !== "canceled" && (
+        <div className="absolute left-0 top-0 w-full h-full bg-black bg-opacity-50 text-white z-10 md:text-xl text-2xl flex justify-center items-center font-bold">
+          {overlayMessage}
+        </div>
+      )}
+
       <Link
         href={`/events/${
           location ? location : generateSlug(address.full_address)

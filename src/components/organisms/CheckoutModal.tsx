@@ -134,7 +134,7 @@ export default function CheckoutModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-10">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
       <div className="w-full h-full bg-white md:w-[60%] md:h-[90%] lg:w-[40%] md:rounded-xl py-5 space-y-5">
         {/* Header */}
         <div className="space-y-5">
@@ -294,6 +294,7 @@ export default function CheckoutModal({
                 placeholder="Enter your email"
                 className="border p-3 rounded-md"
               />
+
               <button
                 type="button"
                 onClick={handleData}

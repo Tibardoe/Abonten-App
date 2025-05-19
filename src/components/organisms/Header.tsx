@@ -89,7 +89,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="w-full flex justify-center fixed bg-white z-10">
+    <nav className="w-full flex justify-center fixed bg-white z-30">
       {showAuthPopup && (
         <>
           <AuthPopup

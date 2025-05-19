@@ -109,6 +109,7 @@ export default function EventsSlider({
               created_at={event.created_at}
               capacity={event.capacity}
               attendanceCount={event.attendanceCount}
+              status={event.status}
             />
           ))}
         </ul>

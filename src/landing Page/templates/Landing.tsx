@@ -7,23 +7,16 @@ import { Button } from "@/components/ui/button";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { type ButtonHTMLAttributes, useState } from "react";
+import { useState } from "react";
 
 export default function Landing() {
-  const router = useRouter();
-
   const [selectedAddress, setSelectedAddress] = useState("");
 
   const [buttonText, setButtonText] = useState("");
 
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
-  const handleClicked = () => {
-    router.push(
-      `/events/${selectedAddress ? generateSlug(selectedAddress) : ""}`,
-    );
-  };
+  console.log(selectedAddress);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const text = (event.target as HTMLButtonElement).innerText;
@@ -90,7 +83,7 @@ export default function Landing() {
               address={{ address: setSelectedAddress }}
             />
 
-            <button type="button" onClick={handleClicked}>
+            <Link href={`/events/${generateSlug(selectedAddress)}`}>
               <Image
                 className="w-[50px] h-[50px] md:w-[70px] md:h-[70px]"
                 src="/assets/images/go.svg"
@@ -98,7 +91,7 @@ export default function Landing() {
                 width={50}
                 height={50}
               />
-            </button>
+            </Link>
           </div>
         </div>
       </div>

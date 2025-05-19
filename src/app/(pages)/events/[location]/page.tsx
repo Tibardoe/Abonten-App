@@ -117,6 +117,7 @@ export default async function page({
                   min_price={post.min_price}
                   currency={post.currency}
                   attendanceCount={post.attendanceCount}
+                  status={post.status}
                 />
               ))}
             </ul>

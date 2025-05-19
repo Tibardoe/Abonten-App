@@ -1,4 +1,5 @@
 import { signInWithGoogle } from "@/services/authService";
+import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +16,7 @@ export default function GoogleAuthButton({
 
   const handleSignin = async () => {
     try {
-      const { url } = await signInWithGoogle(location);
+      const { url } = await signInWithGoogle(generateSlug(location ?? ""));
 
       router.push(url);
     } catch (error) {

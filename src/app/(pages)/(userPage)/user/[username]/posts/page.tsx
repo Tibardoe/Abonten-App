@@ -51,6 +51,7 @@ export default async function page({
             created_at={post.created_at}
             capacity={post.capacity}
             attendanceCount={post.attendanceCount}
+            status={post.status}
           />
         );
       })}

@@ -90,7 +90,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
       <div className="bg-black bg-opacity-50 w-full flex lg:hidden fixed left-0 top-[71px] h-[100%]">
         <div
           className={cn(
-            "bg-white z-20 w-[80%]",
+            "bg-white w-[80%]",
             menuClicked ? "animate-slideIn" : "animate-slideOut",
           )}
         >

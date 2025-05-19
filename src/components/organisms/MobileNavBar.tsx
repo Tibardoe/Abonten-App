@@ -50,7 +50,7 @@ export default function MobileNavBar() {
 
   return (
     <>
-      <div className="flex md:hidden justify-center w-full fixed bottom-0 border-t border-black-500 py-4 bg-white">
+      <div className="flex md:hidden justify-center w-full fixed bottom-0 border-t border-black-500 py-4 bg-white z-20">
         <div className="flex justify-between w-[90%]">
           <MobileNavButton
             href={`/events/${generateSlug(address || "default-location")}`}

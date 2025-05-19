@@ -81,4 +81,5 @@ export type UserPostType = {
   attendanceCount: number | null;
   ticket_price?: number | undefined;
   ticket_currency?: string;
+  status?: string;
 };

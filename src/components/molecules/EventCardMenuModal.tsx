@@ -37,7 +37,7 @@ export default function EventCardMenuModal({
 
       <hr />
 
-      <CancelButton />
+      <CancelButton eventId={eventId} />
 
       <hr />
 
