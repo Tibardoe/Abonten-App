@@ -37,10 +37,6 @@ export default function EventCard({
 
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, event_dates);
 
-  console.log(
-    `event_dates:${event_dates}, starts_at:${starts_at}, ends_at:${ends_at}`,
-  );
-
   return (
     <li key={title} className="space-y-2 shadow-lg relative">
       {status === "canceled" && (
@@ -50,7 +46,7 @@ export default function EventCard({
       )}
 
       {overlayMessage && status !== "canceled" && (
-        <div className="absolute left-0 top-0 w-full h-full bg-black bg-opacity-50 text-white z-10 md:text-xl text-2xl flex justify-center items-center font-bold">
+        <div className="absolute left-0 top-0 w-full h-full bg-black bg-opacity-50 text-gray-300 z-10 md:text-xl text-2xl flex justify-center items-center font-bold">
           {overlayMessage}
         </div>
       )}
