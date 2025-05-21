@@ -132,9 +132,7 @@ export default function Header() {
         </>
       )}
 
-      {isMenuClicked && (
-        <SideBar username={profile.username} menuClicked={isMenuClicked} />
-      )}
+      {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
 
       <div className="flex justify-between py-5 w-[90%] md:w-[80%] border-b border-black-500 items-center">
         <div className="mx-auto lg:mx-0 flex items-center w-full">
@@ -181,7 +179,7 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-7 min-w-fit">
             {userRole === "organizer" && (
               <Link
-                href={`/manage/${profile.username}/attendance`}
+                href="/manage/attendance/event-list"
                 className="flex gap-1 items-center"
               >
                 <MdOutlineManageHistory className="text-2xl" />
@@ -191,7 +189,7 @@ export default function Header() {
 
             {userRole === "attendee" && (
               <Link
-                href={`/manage/${profile.username}/my-events`}
+                href="/manage/my-events"
                 className="flex gap-1 items-center"
               >
                 <GiPartyFlags className="text-2xl" />

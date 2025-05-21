@@ -23,10 +23,9 @@ import MobileFooter from "./MobileFooter";
 
 type menuClickedProp = {
   menuClicked: boolean;
-  username: string;
 };
 
-export default function SideBar({ menuClicked, username }: menuClickedProp) {
+export default function SideBar({ menuClicked }: menuClickedProp) {
   const { user } = useAuth();
 
   const [showAuthPopup, setShowAuthPopup] = useState(false);
@@ -137,7 +136,7 @@ export default function SideBar({ menuClicked, username }: menuClickedProp) {
 
               {userRole === "organizer" && (
                 <Link
-                  href={`/manage/${username}/attendance`}
+                  href="/manage/attendance/event-list"
                   className="flex gap-1 items-center"
                 >
                   <MdOutlineManageHistory className="text-2xl" />
@@ -147,7 +146,7 @@ export default function SideBar({ menuClicked, username }: menuClickedProp) {
 
               {userRole === "attendee" && (
                 <Link
-                  href={`/manage/${username}/my-events`}
+                  href="/manage/my-events"
                   className="bg-transparent rounded-full border-black border p-2"
                 >
                   <GiPartyFlags className="text-2xl" />
