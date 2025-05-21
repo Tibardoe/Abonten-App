@@ -1,10 +1,7 @@
 "use client";
 
 import type { UserPostType } from "@/types/postsType";
-import {
-  formatFullDateTimeRange,
-  getFormattedEventDate,
-} from "@/utils/dateFormatter";
+import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
 import Link from "next/link";

@@ -1,6 +1,7 @@
 "use client";
 
 import { getUserDetails } from "@/actions/getUserDetails";
+import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
 import { signOut } from "@/services/authService";
@@ -8,6 +9,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { GiPartyFlags } from "react-icons/gi";
+import { HiOutlineLogin } from "react-icons/hi";
+import { MdOutlineManageHistory } from "react-icons/md";
 import EventUploadButton from "../atoms/EventUploadButton";
 import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
@@ -17,6 +21,10 @@ import SideBar from "./SideBar";
 
 export default function Header() {
   const [buttonText, setButtonText] = useState("");
+
+  const [userRole, setUserRole] = useState<"organizer" | "attendee" | "none">(
+    "none",
+  );
 
   const [profile, setProfile] = useState({
     avatar_public_id: "",
@@ -57,6 +65,27 @@ export default function Header() {
 
     fetchProfilePicture();
   }, []);
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!user) return;
+
+      try {
+        const res = await getUserEventRole(user.id);
+
+        // ✅ Validate the role value before setting state
+        if (res.role === "organizer" || res.role === "attendee") {
+          setUserRole(res.role);
+        } else {
+          setUserRole("none");
+        }
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+
+    fetchUserRole();
+  }, [user]);
 
   const isUserAccount = pathname === `/user/${profile.username}/posts`;
 
@@ -103,7 +132,9 @@ export default function Header() {
         </>
       )}
 
-      {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
+      {isMenuClicked && (
+        <SideBar username={profile.username} menuClicked={isMenuClicked} />
+      )}
 
       <div className="flex justify-between py-5 w-[90%] md:w-[80%] border-b border-black-500 items-center">
         <div className="mx-auto lg:mx-0 flex items-center w-full">
@@ -148,6 +179,26 @@ export default function Header() {
 
         {user ? (
           <div className="hidden lg:flex items-center gap-7 min-w-fit">
+            {userRole === "organizer" && (
+              <Link
+                href={`/manage/${profile.username}/attendance`}
+                className="flex gap-1 items-center"
+              >
+                <MdOutlineManageHistory className="text-2xl" />
+                Manage Attendance
+              </Link>
+            )}
+
+            {userRole === "attendee" && (
+              <Link
+                href={`/manage/${profile.username}/my-events`}
+                className="flex gap-1 items-center"
+              >
+                <GiPartyFlags className="text-2xl" />
+                My Events
+              </Link>
+            )}
+
             <EventUploadButton />
 
             <button
@@ -155,12 +206,7 @@ export default function Header() {
               onClick={handleSignOut}
               className="flex gap-1 items-center"
             >
-              <Image
-                src="/assets/images/signout.svg"
-                alt="Post"
-                width={30}
-                height={30}
-              />
+              <HiOutlineLogin className="text-3xl opacity-70" />
               SignOut
             </button>
 
