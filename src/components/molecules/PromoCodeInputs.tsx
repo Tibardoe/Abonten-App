@@ -85,7 +85,7 @@ export default function PromoCodeInputs({
             placeholder="Promo code"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
-            className="border border-black w-48 p-2 rounded-md"
+            className="outline-black border border-black w-48 p-2 rounded-md"
           />
 
           <input
@@ -93,7 +93,7 @@ export default function PromoCodeInputs({
             placeholder="discount"
             value={discount ?? ""}
             onChange={(e) => setDiscount(Number(e.target.value))}
-            className="border border-black w-24 p-2 rounded-md"
+            className="outline-black border border-black w-24 p-2 rounded-md"
           />
         </div>
 
@@ -105,7 +105,7 @@ export default function PromoCodeInputs({
             placeholder="Max use"
             value={maximumUse ?? ""}
             onChange={(e) => setMaximumUse(Number(e.target.value))}
-            className="border border-black w-24 p-2 rounded-md"
+            className="outline-black border border-black w-24 p-2 rounded-md"
           />
         </div>
 
@@ -141,14 +141,20 @@ export default function PromoCodeInputs({
       </div>
 
       {multiplePromoCodes.length > 0 && (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {multiplePromoCodes.map((promoCodes) => (
             <li
               key={promoCodes.promoCode}
               className="space-y-2 border rounded-md p-2 shadow-md"
             >
-              <div className="flex items-center justify-between">
-                <p>Promo Code: {promoCodes.promoCode}</p>
+              <div className="flex items-start justify-between">
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm text-muted-foreground">Promo Code</p>
+
+                  <p className="text-sm font-semibold">
+                    {promoCodes.promoCode}
+                  </p>
+                </div>
 
                 <button
                   type="button"
@@ -158,12 +164,25 @@ export default function PromoCodeInputs({
                 </button>
               </div>
 
-              <div className="flex items-center justify-between">
-                <p>{`Discount: ${promoCodes.discount}%`}</p>
-                <p>{`Maximum usage: ${promoCodes.maximumUse}`}</p>
-              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <p>Discount</p>
 
-              <p> Expiry date: {promoCodes.expiryDate.toLocaleDateString()}</p>
+                  <p>{promoCodes.discount}%</p>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <p>Maximum usage</p>
+
+                  <p>{promoCodes.maximumUse}</p>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <p> Expiry date </p>
+
+                  <p>{promoCodes.expiryDate.toLocaleDateString()}</p>
+                </div>
+              </div>
             </li>
           ))}
         </ul>

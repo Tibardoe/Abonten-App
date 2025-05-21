@@ -201,23 +201,46 @@ export default function TicketInputs({
               {multipleTickets.map((ticket) => (
                 <li
                   key={ticket.category}
-                  className="space-y-2 border rounded-md p-2 shadow-md"
+                  className="border rounded-md p-3 shadow-md bg-white flex flex-col gap-2"
                 >
                   <div className="flex items-center justify-between">
-                    {ticket.category} - {currency} {ticket.price}
-                    <p>{`Quantity: ${ticket.quantity}`}</p>
+                    <div className="flex flex-col">
+                      <span className="text-sm text-muted-foreground">
+                        Category
+                      </span>
+                      <span className="text-sm font-semibold">
+                        {ticket.category}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col text-right">
+                      <span className="text-sm text-muted-foreground">
+                        Price
+                      </span>
+                      <span className="text-sm font-semibold">
+                        {currency} {ticket.price}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Quantity</span>
+                    <p>{ticket.quantity}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <MdDateRange className="text-xl" />
+                      {ticket.availableFrom.toLocaleDateString()} &rarr;{" "}
+                      {ticket.availableUntil.toLocaleDateString()}
+                    </div>
+
                     <button
                       type="button"
                       onClick={(event) => handleRemove(event, ticket.category)}
                     >
                       <LiaTimesSolid className="text-xl" />
                     </button>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <p> {ticket.availableFrom.toLocaleDateString()}</p>
-                    To
-                    <p>{ticket.availableUntil.toLocaleDateString()}</p>
                   </div>
                 </li>
               ))}

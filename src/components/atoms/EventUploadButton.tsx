@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { IoCreateOutline } from "react-icons/io5";
 import UploadEventModal from "../organisms/UploadEventModal";
@@ -25,12 +24,6 @@ export default function EventUploadButton() {
         className="flex gap-1 items-center"
         onClick={handlePopup}
       >
-        {/* <Image
-          src="/assets/images/post.svg"
-          alt="Post"
-          width={30}
-          height={30}
-        /> */}
         <IoCreateOutline className="text-3xl" />
         Post
       </button>

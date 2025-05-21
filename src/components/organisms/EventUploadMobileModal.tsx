@@ -497,12 +497,14 @@ export default function EventUploadMobileModal({
                 )}
 
                 <div className="flex justify-between items-center">
-                  <input
-                    type="text"
-                    className="w-full outline-none"
-                    placeholder="Website"
-                    {...register("website_url")}
-                  />
+                  <div className="bg-white border border-black rounded-md">
+                    <input
+                      type="text"
+                      placeholder="Website"
+                      className="bg-transparent outline-black rounded-md p-2"
+                      {...register("website_url")}
+                    />
+                  </div>
 
                   <TbWorld className="text-2xl" />
                 </div>
