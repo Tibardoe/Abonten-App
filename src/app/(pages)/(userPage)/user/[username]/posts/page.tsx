@@ -8,8 +8,7 @@ export default async function page({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  const username = (await params).username;
-
+  const { username } = await params;
   let userPosts: UserPostType[] = [];
 
   try {

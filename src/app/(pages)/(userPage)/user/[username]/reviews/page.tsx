@@ -8,8 +8,6 @@ export default async function page({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  const username = (await params).username;
-
   // let userReviews = [];
 
   // try {
