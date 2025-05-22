@@ -22,9 +22,9 @@ import SideBar from "./SideBar";
 export default function Header() {
   const [buttonText, setButtonText] = useState("");
 
-  const [userRole, setUserRole] = useState<"organizer" | "attendee" | "none">(
-    "none",
-  );
+  const [userRole, setUserRole] = useState<
+    ("organizer" | "attendee" | "none")[]
+  >([]);
 
   const [profile, setProfile] = useState({
     avatar_public_id: "",
@@ -74,10 +74,10 @@ export default function Header() {
         const res = await getUserEventRole(user.id);
 
         // ✅ Validate the role value before setting state
-        if (res.role === "organizer" || res.role === "attendee") {
-          setUserRole(res.role);
+        if (Array.isArray(res.role)) {
+          setUserRole(res.role); // e.g. ["organizer", "attendee"]
         } else {
-          setUserRole("none");
+          setUserRole([]);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -177,7 +177,7 @@ export default function Header() {
 
         {user ? (
           <div className="hidden lg:flex items-center gap-7 min-w-fit">
-            {userRole === "organizer" && (
+            {userRole.includes("organizer") && (
               <Link
                 href="/manage/attendance/event-list"
                 className="flex gap-1 items-center"
@@ -187,7 +187,7 @@ export default function Header() {
               </Link>
             )}
 
-            {userRole === "attendee" && (
+            {userRole.includes("attendee") && (
               <Link
                 href="/manage/my-events"
                 className="flex gap-1 items-center"

@@ -96,7 +96,7 @@ export default function CheckoutModal({
     setPromoCode("");
   };
 
-  const handleData = () => {
+  const handleRegister = () => {
     console.log("hi");
   };
 
@@ -284,7 +284,7 @@ export default function CheckoutModal({
           {btnText === "Register" ? (
             <div className="flex flex-col gap-4">
               {/* You can replace this with your real registration form */}
-              <input
+              {/* <input
                 type="text"
                 placeholder="Enter your name"
                 className="border p-3 rounded-md"
@@ -293,11 +293,11 @@ export default function CheckoutModal({
                 type="email"
                 placeholder="Enter your email"
                 className="border p-3 rounded-md"
-              />
+              /> */}
 
               <button
                 type="button"
-                onClick={handleData}
+                onClick={handleRegister}
                 className="rounded-full p-4 font-bold text-white bg-black text-center"
               >
                 Register

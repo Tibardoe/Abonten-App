@@ -58,7 +58,7 @@ export default function ChangeLocationModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-10">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
       <div className="w-full h-full bg-white md:w-[60%] md:h-[80%] lg:w-[40%] md:rounded-xl p-5 space-y-10">
         <div className="flex justify-between">
           <h1 className="text-2xl font-bold mx-auto">Set your location</h1>

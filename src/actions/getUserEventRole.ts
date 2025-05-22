@@ -6,11 +6,12 @@ export async function getUserEventRole(userId: string) {
   const supabase = await createClient();
 
   try {
+    const roles: ("organizer" | "attendee")[] = [];
     // Check if user is an organizer
     const { data: organizerEvent, error: organizerEventError } = await supabase
       .from("event")
       .select("organizer_id")
-      .eq("id", userId);
+      .eq("organizer_id", userId);
 
     if (organizerEventError) {
       console.log(
@@ -20,8 +21,8 @@ export async function getUserEventRole(userId: string) {
       return { status: 500, message: "Something went wrong!" };
     }
 
-    if (organizerEvent) {
-      return { role: "organizer" };
+    if (organizerEvent && organizerEvent.length > 0) {
+      roles.push("organizer");
     }
 
     // Check if user is an attendee
@@ -38,11 +39,15 @@ export async function getUserEventRole(userId: string) {
       return { status: 500, message: "Something went wrong!" };
     }
 
-    if (attendeeEntry) {
-      return { role: "attendee" };
+    if (attendeeEntry && attendeeEntry.length > 0) {
+      roles.push("attendee");
     }
 
-    return { role: "none" };
+    if (roles.length === 0) {
+      return { role: "none" };
+    }
+
+    return { role: roles };
   } catch (error) {
     console.error("Error checking user event role:", error);
     return { role: "none" };

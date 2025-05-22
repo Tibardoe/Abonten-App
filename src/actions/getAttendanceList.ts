@@ -8,7 +8,9 @@ export default async function getAttendanceList(eventId: string) {
   try {
     const { data: attendanceList, error: attendanceListError } = await supabase
       .from("attendance")
-      .select("*")
+      .select(
+        "*, auth:id(email, phone), user_info:id(username, full_name), ticket_type(type, price, currency)",
+      )
       .eq("event_id", eventId);
 
     if (attendanceListError) {
