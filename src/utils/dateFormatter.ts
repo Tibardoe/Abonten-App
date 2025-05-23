@@ -24,8 +24,8 @@ export function formatDateWithSuffix(date: string | Date): string {
 }
 
 export function formatFullDateTimeRange(
-  from?: Date | string,
-  to?: Date | string,
+  from?: Date | null | string,
+  to?: Date | null | string,
 ): { date: string; time: string } {
   const fromObj = from
     ? formatSingleDateTime(from)
@@ -152,8 +152,8 @@ export function getDateParts(dateInput: string | Date) {
 }
 
 export function getFormattedEventDate(
-  startsAt: string | Date | undefined,
-  endsAt: string | Date | undefined,
+  startsAt: string | Date | null | undefined,
+  endsAt: string | Date | null | undefined,
   fallbackDates?: [] | Date[] | undefined | string,
 ): { date: string; time: string } {
   const formatted = formatFullDateTimeRange(startsAt, endsAt);

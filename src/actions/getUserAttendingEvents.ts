@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { promise } from "zod";
 
 export default async function getUserAttendingEvents() {
   const supabase = await createClient();
@@ -18,24 +19,47 @@ export default async function getUserAttendingEvents() {
 
     const userId = user.id;
 
-    const { data: attendingEvents, error: attendingEventsError } =
-      await supabase
-        .from("attendance")
-        .select("*, event(*), ticket_type:ticket_type_id(*)")
-        .eq("user_id", userId);
+    const { data: tickets, error: ticketsError } = await supabase
+      .from("ticket")
+      .select("*, ticket_type:ticket_type_id(*)")
+      .eq("user_id", userId);
 
-    if (attendingEventsError) {
+    if (ticketsError) {
       console.error(
-        `Error fetching user attending events:${attendingEventsError.message}`,
+        `Error fetching user attending events:${ticketsError.message}`,
       );
 
       return { status: 500, message: "Something went wrong" };
     }
 
-    if (!attendingEvents || attendingEvents.length === 0) {
+    if (!tickets || tickets.length === 0) {
       return { status: 404, message: "No events found!" };
     }
 
-    return { status: 200, data: attendingEvents };
+    const ticketsWithEvents = await Promise.all(
+      tickets.map(async (ticket) => {
+        const { data: event, error: eventError } = await supabase
+          .from("event")
+          .select("*")
+          .eq("id", ticket.ticket_type.event_id)
+          .single();
+
+        if (eventError) {
+          console.log(
+            `Failed fetching event for ticket: ${eventError.message}`,
+          );
+
+          return { status: 500, message: "Something went wrong!" };
+        }
+
+        if (!event) {
+          return { status: 404, message: "No event found!" };
+        }
+
+        return { ...ticket, event };
+      }),
+    );
+
+    return { status: 200, data: ticketsWithEvents };
   } catch (error) {}
 }
