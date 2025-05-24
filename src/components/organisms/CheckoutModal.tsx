@@ -1,5 +1,6 @@
 import getPromoCode from "@/actions/getPromoCode";
 import { getTickets } from "@/actions/getTickets";
+import validateCheckout from "@/actions/validateCheckout";
 import type { TicketType } from "@/types/ticketType";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import Image from "next/image";
@@ -29,14 +30,20 @@ export default function CheckoutModal({
 }: CheckoutProp) {
   const [tickets, setTickets] = useState<TicketType[]>([]);
 
-  const [promoCode, setPromoCode] = useState("");
+  const [promoCode, setPromoCode] = useState<string | null>(null);
 
   const [discountAmount, setDiscountAmount] = useState<number | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+
+  const [isProceeding, setIsProceeding] = useState(false);
+
+  const [checkoutSectionId, setCheckoutSectionId] = useState<string | null>(
+    null,
+  );
 
   const [quantities, setQuantities] = useState<{
-    [ticketType: string]: number;
+    [ticketTypeId: string]: number;
   }>({});
 
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +76,7 @@ export default function CheckoutModal({
   }, [eventId]);
 
   const total = tickets.reduce((acc, ticket) => {
-    const qty = quantities[ticket.type] || 0;
+    const qty = quantities[ticket.id] || 0;
     const price = discountAmount
       ? +(ticket.price - discountAmount * ticket.price).toFixed(2)
       : ticket.price;
@@ -77,18 +84,17 @@ export default function CheckoutModal({
   }, 0);
 
   const handlePromoCode = async (promoCode: string) => {
-    setLoading(true);
+    setIsApplyingPromo(true);
     const response = await getPromoCode(promoCode);
 
     if (response.status !== 200) {
       setError(response.message ?? "Failed to get promo code");
-      setLoading(false);
+      setIsApplyingPromo(false);
       return;
     }
 
     setDiscountAmount(response.discountPercentage / 100);
-    setPromoCode("");
-    setLoading(false);
+    setIsApplyingPromo(false);
   };
 
   const removePromoCode = () => {
@@ -96,41 +102,21 @@ export default function CheckoutModal({
     setPromoCode("");
   };
 
-  const handleRegister = () => {
-    console.log("hi");
-  };
+  const handleProceed = async () => {
+    setIsProceeding(true);
 
-  const handleProceed = () => {
-    const selectedTickets = Object.entries(quantities)
-      .filter(([type, value]) => value > 0)
-      .map(([type, quantity]) => {
-        const ticket = tickets.find((t) => t.type === type);
+    const response = await validateCheckout({ eventId, quantities, promoCode });
 
-        if (!ticket) {
-          setError(`Ticket of type ${type} not found`);
-          return;
-        }
-
-        return {
-          ticketType: type,
-          Quantity: quantity,
-          Discount: discountAmount ? discountAmount * ticket?.price : 0,
-          Amount: discountAmount
-            ? ticket?.price - discountAmount * ticket?.price
-            : ticket?.price,
-        };
-      });
-
-    if (selectedTickets.length === 0) {
-      setError("Please select at least one ticket.");
+    if (response?.status !== 200) {
+      setError(response?.message ?? "Something ocurred");
+      setIsProceeding(false);
       return;
     }
 
-    const encodedData = encodeURIComponent(JSON.stringify(selectedTickets));
-
-    router.push(
-      `/wallet?eventId=${eventId}&tickets=${encodedData}&totalAmount=${total}`,
-    );
+    if (response?.status === 200 && response.checkoutSessionId) {
+      setCheckoutSectionId(response.checkoutSessionId);
+      router.push(`/wallet?checkoutId=${response.checkoutSessionId}`);
+    }
   };
 
   return (
@@ -166,95 +152,92 @@ export default function CheckoutModal({
         </div>
 
         <div className="flex flex-col gap-5 overflow-y-scroll h-[80%] px-5">
-          {btnText !== "Register" && (
-            <div className="flex flex-col text-sm gap-2">
-              <span>Promo Code</span>
+          <div className="flex flex-col text-sm gap-2">
+            <span>Promo Code</span>
 
-              <div className="space-y-2 flex flex-col">
-                <div className="flex gap-5 justify-between items-center border p-4 rounded-md">
-                  <input
-                    type="text"
-                    className="outline-none w-full h-full"
-                    placeholder="Enter code"
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                  />
-
-                  <button
-                    type="button"
-                    className="font-bold"
-                    onClick={() => handlePromoCode(promoCode)}
-                  >
-                    {loading ? "Loading..." : "Apply"}
-                  </button>
-                </div>
+            <div className="space-y-2 flex flex-col">
+              <div className="flex gap-5 justify-between items-center border p-4 rounded-md">
+                <input
+                  type="text"
+                  className="outline-none w-full h-full"
+                  placeholder="Enter code"
+                  value={promoCode ?? ""}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                />
 
                 <button
                   type="button"
-                  onClick={removePromoCode}
-                  className="self-end font-bold border border-black rounded-md p-2"
+                  className="font-bold"
+                  disabled={isApplyingPromo}
+                  onClick={() => handlePromoCode(promoCode ?? "")}
                 >
-                  Remove
+                  {isApplyingPromo ? "Loading..." : "Apply"}
                 </button>
               </div>
-            </div>
-          )}
 
-          {btnText === "Buy Ticket" &&
-            tickets.map((ticket) => (
-              <div
-                key={ticket.type}
-                className={`border-2 border-black rounded-md py-4 space-y-4 ${
-                  quantities[ticket.type] > 0
-                    ? "border-opacity-100"
-                    : "border-opacity-40"
-                }`}
+              <button
+                type="button"
+                onClick={removePromoCode}
+                className="self-end font-bold border border-black rounded-md p-2"
               >
-                <div className="flex items-center justify-between px-4">
-                  <p>{ticket.type}</p>
+                Remove
+              </button>
+            </div>
+          </div>
 
-                  <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      disabled={(quantities[ticket.type] || 0) <= 0}
-                      onClick={() =>
-                        setQuantities((prev) => ({
-                          ...prev,
-                          [ticket.type]: Math.max(
-                            (prev[ticket.type] || 0) - 1,
-                            0,
-                          ),
-                        }))
-                      }
-                      className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <TfiMinus />
-                    </button>
+          {/* Display tickets */}
+          {tickets.map((ticket) => (
+            <div
+              key={ticket.type}
+              className={`border-2 border-black rounded-md py-4 space-y-4 ${
+                quantities[ticket.type] > 0
+                  ? "border-opacity-100"
+                  : "border-opacity-40"
+              }`}
+            >
+              <div className="flex items-center justify-between px-4">
+                <p>{ticket.type}</p>
 
-                    <span>{quantities[ticket.type] ?? 0}</span>
+                <div className="flex items-center gap-4">
+                  <button
+                    type="button"
+                    disabled={(quantities[ticket.id] || 0) <= 0}
+                    onClick={() =>
+                      setQuantities((prev) => ({
+                        ...prev,
+                        [ticket.id]: Math.max((prev[ticket.id] || 0) - 1, 0),
+                      }))
+                    }
+                    className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <TfiMinus />
+                  </button>
 
-                    <button
-                      type="button"
-                      disabled={
-                        (quantities[ticket.type] || 0) >= (ticket.quantity ?? 0)
-                      }
-                      onClick={() =>
-                        setQuantities((prev) => ({
-                          ...prev,
-                          [ticket.type]: (prev[ticket.type] || 0) + 1,
-                        }))
-                      }
-                      className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md disabled:bg-opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <IoAddSharp />
-                    </button>
-                  </div>
+                  <span>{quantities[ticket.id] ?? 0}</span>
+
+                  <button
+                    type="button"
+                    disabled={
+                      (quantities[ticket.id] || 0) >= (ticket.quantity ?? 0)
+                    }
+                    onClick={() =>
+                      setQuantities((prev) => ({
+                        ...prev,
+                        [ticket.id]: (prev[ticket.id] || 0) + 1,
+                      }))
+                    }
+                    className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md disabled:bg-opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <IoAddSharp />
+                  </button>
                 </div>
+              </div>
 
-                <hr />
+              <hr />
 
-                <div className="flex flex-col items-start gap-2 px-4">
-                  <div className="flex justify-between items-center w-full font-bold">
+              <div className="flex flex-col items-start gap-2 px-4">
+                <div className="flex justify-between items-center w-full font-bold">
+                  <div className="flex flex-col">
                     <p className="flex items-center gap-2">
                       {ticket.currency} {""}
                       {discountAmount ? (
@@ -267,60 +250,37 @@ export default function CheckoutModal({
                       )}
                     </p>
 
-                    <p>Quantity left: {ticket.quantity}</p>
+                    <p className="text-xs text-gray-400">Fee +20USD</p>
                   </div>
 
-                  {ticket.type !== "SINGLE TICKET" &&
-                    ticket.available_until && (
-                      <p className="text-sm">
-                        Sales end on{" "}
-                        {formatSingleDateTime(ticket.available_until).date}
-                      </p>
-                    )}
+                  <p>Quantity left: {ticket.quantity}</p>
                 </div>
+
+                {ticket.type !== "SINGLE TICKET" && ticket.available_until && (
+                  <p className="text-sm">
+                    Sales end on{" "}
+                    {formatSingleDateTime(ticket.available_until).date}
+                  </p>
+                )}
               </div>
-            ))}
-
-          {btnText === "Register" ? (
-            <div className="flex flex-col gap-4">
-              {/* You can replace this with your real registration form */}
-              {/* <input
-                type="text"
-                placeholder="Enter your name"
-                className="border p-3 rounded-md"
-              />
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="border p-3 rounded-md"
-              /> */}
-
-              <button
-                type="button"
-                onClick={handleRegister}
-                className="rounded-full p-4 font-bold text-white bg-black text-center"
-              >
-                Register
-              </button>
             </div>
-          ) : (
-            <>
-              <div className="flex justify-between items-center font-bold mt-5">
-                <p>Total</p>
-                <p>
-                  {"GHS"} {total}
-                </p>
-              </div>
+          ))}
 
-              <button
-                type="button"
-                onClick={handleProceed}
-                className="rounded-full p-4 font-bold text-white bg-black text-center mt-5"
-              >
-                Proceed to payment
-              </button>
-            </>
-          )}
+          <div className="flex justify-between items-center font-bold mt-5">
+            <p>Total</p>
+            <p>
+              {"GHS"} {total}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleProceed}
+            disabled={isProceeding}
+            className="rounded-full p-4 font-bold text-white bg-black text-center mt-5"
+          >
+            {isProceeding ? "Loading..." : "Proceed to Payment"}
+          </button>
         </div>
       </div>
 

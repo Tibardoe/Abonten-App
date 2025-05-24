@@ -11,6 +11,7 @@ export type Ticket = {
 };
 
 export type TicketType = {
+  id: string;
   price: number;
   quantity?: number;
   currency?: string;
@@ -67,4 +68,11 @@ export type UserTicketType = {
     event_code: string;
     event_dates: Date[]; // You can specify a better type if you know it
   };
+};
+
+export type TicketData = {
+  quantity: number;
+  discount?: number;
+  amount?: number;
+  type: string;
 };

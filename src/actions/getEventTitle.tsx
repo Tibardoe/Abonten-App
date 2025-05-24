@@ -5,9 +5,9 @@ import { createClient } from "@/config/supabase/server";
 export default async function getEventTitle(eventId: string) {
   const supabase = await createClient();
 
-  const { data: eventTitle, error: eventTitleError } = await supabase
+  const { data: eventData, error: eventTitleError } = await supabase
     .from("event")
-    .select("title")
+    .select("title,starts_at, ends_at, event_dates")
     .eq("id", eventId)
     .single();
 
@@ -17,9 +17,9 @@ export default async function getEventTitle(eventId: string) {
     return { status: 500, message: "Error fetching event title" };
   }
 
-  if (!eventTitle) {
+  if (!eventData) {
     return { status: 404, message: "No event found!" };
   }
 
-  return { status: 200, eventTitle };
+  return { status: 200, data: eventData };
 }

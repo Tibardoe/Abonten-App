@@ -11,14 +11,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 type TicketInputProp = {
   ticketType: string;
   singleTicketPrice?: number | null;
+  singleTicketQuantity?: number | null;
   handleSingleTicket?: (amount: number) => void;
   handleMultipleTickets?: (tickets: Ticket[]) => void;
+  handleSingleTicketQuantity?: (quantity: number) => void;
 };
 
 export default function TicketInputs({
   ticketType,
   singleTicketPrice,
+  singleTicketQuantity,
   handleSingleTicket,
+  handleSingleTicketQuantity,
   handleMultipleTickets,
 }: TicketInputProp) {
   const [currency, setCurrency] = useState("");
@@ -99,14 +103,26 @@ export default function TicketInputs({
   return (
     <>
       {ticketType === "Single Ticket Type" && (
-        <div className="flex justify-between items-center">
-          <input
-            type="number"
-            placeholder="Fee"
-            value={singleTicketPrice ?? ""}
-            onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
-            className="border border-black w-24 p-2 rounded-md text-sm"
-          />
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col w-24 gap-2">
+            <input
+              type="number"
+              placeholder="Fee"
+              value={singleTicketPrice ?? ""}
+              onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
+              className="border border-black w-full p-2 rounded-md text-sm"
+            />
+
+            <input
+              type="number"
+              placeholder="Quantity"
+              value={singleTicketQuantity ?? ""}
+              onChange={(e) =>
+                handleSingleTicketQuantity?.(Number(e.target.value))
+              }
+              className="border border-black w-full p-2 rounded-md text-sm"
+            />
+          </div>
 
           <span>{currency}</span>
         </div>

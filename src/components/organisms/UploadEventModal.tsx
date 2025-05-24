@@ -93,6 +93,10 @@ export default function UploadEventModal({
 
   const [singleTicket, setSingleTicket] = useState<number | null>(null);
 
+  const [singleTicketQuantity, setSingleTicketQuantity] = useState<
+    number | null
+  >(null);
+
   const [multipleTickets, setMultipleTickets] = useState<Ticket[]>([]);
 
   const [selectedAddress, setSelectedAddress] = useState("");
@@ -219,6 +223,7 @@ export default function UploadEventModal({
       promoCodes,
       freeEvents: ticket,
       singleTicket,
+      singleTicketQuantity,
       multipleTickets,
       currency,
       ...eventDates, // Merge the eventDates
@@ -249,6 +254,10 @@ export default function UploadEventModal({
 
   const handleSingleTicket = (amount: number) => {
     setSingleTicket(amount);
+  };
+
+  const handleSingleTicketQuantity = (amount: number) => {
+    setSingleTicketQuantity(amount);
   };
 
   const handleMultipleTickets = (tickets: Ticket[]) => {
@@ -524,6 +533,8 @@ export default function UploadEventModal({
                         ticketType={ticket}
                         singleTicketPrice={singleTicket}
                         handleSingleTicket={handleSingleTicket}
+                        singleTicketQuantity={singleTicketQuantity}
+                        handleSingleTicketQuantity={handleSingleTicketQuantity}
                       />
                     )}
 

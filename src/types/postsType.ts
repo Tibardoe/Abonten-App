@@ -46,6 +46,7 @@ export type PostsType = {
   currency: string;
   freeEvents: string;
   singleTicket: number | null;
+  singleTicketQuantity: number | null;
   multipleTickets: Ticket[];
   promoCodes: {
     promoCode: string;

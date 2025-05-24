@@ -27,7 +27,7 @@ export async function getUserEventRole(userId: string) {
 
     // Check if user is an attendee
     const { data: attendeeEntry, error: attendeeEntryError } = await supabase
-      .from("attendance")
+      .from("ticket")
       .select("user_id")
       .eq("user_id", userId);
 

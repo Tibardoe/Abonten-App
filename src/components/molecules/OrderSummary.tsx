@@ -1,65 +1,68 @@
 import getEventTitle from "@/actions/getEventTitle";
+import type { TicketData } from "@/types/ticketType";
 
-type TicketData = {
-  Quantity: string;
-  Discount: number;
-  Amount: number;
-  ticketType: string;
+type TicketSummaryItem = {
+  type: string;
+  quantity: number;
+  discount: number;
+  amount: number;
+  unitPrice: string;
 };
 
-type OrderSummaryProp = {
-  ticketSummary: TicketData[];
-  eventId: string;
-  totalAmount: string;
+type OrderSummaryProps = {
+  orderSummary: {
+    eventTitle: string;
+    ticketSummary: TicketSummaryItem[];
+    totalAmount: number;
+  };
 };
 
 export default async function OrderSummary({
-  ticketSummary,
-  eventId,
-  totalAmount,
-}: OrderSummaryProp) {
-  let message = "";
+  orderSummary,
+}: OrderSummaryProps) {
+  const { eventTitle, ticketSummary, totalAmount } = orderSummary;
 
-  const response = await getEventTitle(eventId);
-
-  if (response.status !== 200) {
-    message = response.message ?? "An error occurred";
-  }
-
-  const eventTitle = response.eventTitle;
   return (
-    <div className="border rounded-md shadow-md p-4 space-y-2">
-      <div>
-        <h1 className="font-bold text-slate-900 text-lg mb-3">Order Summary</h1>
-
-        <div className="flex justify-between items-center font-bold text-slate-900">
-          <p>Event Title:</p>
-
-          <p>{eventTitle?.title}</p>
-        </div>
+    <div className="border rounded-2xl shadow-lg p-6 space-y-4 bg-white">
+      <div className="flex justify-between items-center">
+        <h2 className="font-semibold text-lg text-gray-800">Order Summary</h2>
+        <span className="text-sm text-gray-500">
+          #{ticketSummary.length} Tickets
+        </span>
       </div>
 
-      {ticketSummary.map((ticket) => (
-        <div key={ticket.ticketType} className="mt-4 border-t pt-2">
-          <div className="flex justify-between items-center font-semibold text-sm">
-            <p>{ticket.ticketType}</p>
-            <p>X{ticket.Quantity}</p>
+      <div className="flex justify-between text-sm border-b pb-2">
+        <p className="text-gray-600 font-medium">Event</p>
+        <p className="text-gray-900 font-semibold">{eventTitle}</p>
+      </div>
+
+      {ticketSummary.map((ticket, index) => (
+        <div
+          key={ticket.type}
+          className="border rounded-md px-4 py-3 bg-gray-50 shadow-sm"
+        >
+          <div className="flex justify-between text-sm font-semibold text-gray-700">
+            <p>Type: {ticket.type}</p>
+            <p>Qty: {ticket.quantity}</p>
           </div>
 
-          <div className="flex justify-between text-sm opacity-70">
-            <p>Discount</p>
-            <p>{ticket.Discount}</p>
+          <div className="flex justify-between text-xs mt-1 text-gray-500">
+            <p>Actual Price:</p>
+            <p>₵{ticket.unitPrice}</p>
           </div>
-
-          <div className="flex justify-between text-sm opacity-70">
-            <p>Amount</p>
-            <p>₵{ticket.Amount}</p>
+          <div className="flex justify-between text-xs text-gray-500">
+            <p>Discount:</p>
+            <p>₵{ticket.discount}</p>
+          </div>
+          <div className="flex justify-between text-xs text-gray-500">
+            <p>Subtotal:</p>
+            <p>₵{ticket.amount}</p>
           </div>
         </div>
       ))}
 
-      <div className="flex justify-between text-sm font-bold">
-        <p>Total amount</p>
+      <div className="flex justify-between pt-2 border-t font-bold text-gray-800">
+        <p>Total Amount</p>
         <p>₵{totalAmount}</p>
       </div>
     </div>

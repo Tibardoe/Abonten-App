@@ -1,6 +1,8 @@
 "use client";
 
 import generateTicket from "@/actions/generateTicket";
+import type { TicketData } from "@/types/ticketType";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CheckoutModal from "../organisms/CheckoutModal";
 import { Button } from "../ui/button";
@@ -12,6 +14,8 @@ type EventSlugPageProp = {
   eventTitle: string;
   date: string;
   time: string;
+  ticketSummary?: TicketData[];
+  promoCode?: string;
 };
 
 export default function CheckoutBtn({
@@ -20,6 +24,8 @@ export default function CheckoutBtn({
   eventTitle,
   date,
   time,
+  ticketSummary,
+  promoCode,
 }: EventSlugPageProp) {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
@@ -31,8 +37,12 @@ export default function CheckoutBtn({
     setShowCheckoutModal(state);
   };
 
-  const handleRegistration = async () => {
+  const router = useRouter();
+
+  const handleRegistration = async (ticketQuantityAndType: TicketData[]) => {
     setLoading(true);
+
+    console.log(ticketQuantityAndType);
 
     const rawDate = date;
 
@@ -44,18 +54,23 @@ export default function CheckoutBtn({
 
     const response = await generateTicket(
       eventId,
-      [{ type: "FREE", quantity: 1 }],
+      ticketQuantityAndType,
+      promoCode,
       endDate,
     );
 
-    if (response.status !== 200) {
+    if (response.status !== 200 && response.message) {
       setNotification(response.message);
       setLoading(false);
+
+      return;
     }
 
-    setNotification(response.message);
-    setLoading(false);
-    console.log("registered");
+    if (response.status === 200 && response.message) {
+      setNotification(response.message);
+      setLoading(false);
+      router.push("/manage/my-events");
+    }
   };
 
   useEffect(() => {
@@ -68,36 +83,63 @@ export default function CheckoutBtn({
     }
   }, [notification]);
 
-  return btnText === "Buy Ticket" ? (
-    <>
-      <Button
-        className="font-bold rounded-full w-full p-6 text-lg"
-        onClick={() => handleCheckoutModal(true)}
-      >
-        {btnText}
-      </Button>
-      {showCheckoutModal && (
-        <CheckoutModal
-          handleCheckoutModal={handleCheckoutModal}
-          eventId={eventId}
-          btnText={btnText}
-          eventTitle={eventTitle}
-          date={date}
-          time={time}
-        />
-      )}
-    </>
-  ) : (
-    <>
-      <Button
-        className="font-bold rounded-full w-full p-6 text-lg"
-        onClick={() => handleRegistration()}
-        disabled={loading}
-      >
-        {loading ? "Registering..." : btnText}
-      </Button>
+  let actionButton: React.ReactNode = null;
 
-      {notification !== null && <Notification notification={notification} />}
+  switch (btnText) {
+    case "Buy Ticket":
+      actionButton = (
+        <>
+          <Button
+            className="font-bold rounded-full w-full p-6 text-lg"
+            onClick={() => handleCheckoutModal(true)}
+          >
+            {btnText}
+          </Button>
+          {showCheckoutModal && (
+            <CheckoutModal
+              handleCheckoutModal={handleCheckoutModal}
+              eventId={eventId}
+              btnText={btnText}
+              eventTitle={eventTitle}
+              date={date}
+              time={time}
+            />
+          )}
+        </>
+      );
+      break;
+
+    case "Register":
+      actionButton = (
+        <Button
+          className="font-bold rounded-full w-full p-6 text-lg"
+          onClick={() => handleRegistration([{ type: "Free", quantity: 1 }])}
+          disabled={loading}
+        >
+          {loading ? "Registering..." : btnText}
+        </Button>
+      );
+      break;
+
+    case "Make Payment":
+      if (ticketSummary) {
+        actionButton = (
+          <Button
+            className="font-bold rounded-full w-full p-6 text-lg"
+            onClick={() => handleRegistration(ticketSummary)}
+            disabled={loading}
+          >
+            {loading ? "Please wait..." : btnText}
+          </Button>
+        );
+      }
+      break;
+  }
+
+  return (
+    <>
+      {actionButton}
+      {notification && <Notification notification={notification} />}
     </>
   );
 }

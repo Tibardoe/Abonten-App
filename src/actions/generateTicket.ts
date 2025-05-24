@@ -5,6 +5,7 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
+import insertPromoCodeUsage from "./InsertPromoCodeUsage";
 import insertUserAttendance from "./insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
@@ -16,6 +17,7 @@ type TicketInput = {
 export default async function generateTicket(
   eventId: string,
   ticketInputs: TicketInput[],
+  promoCode: string | undefined,
   eventEndDate: Date,
   transactionId?: string,
   transactionMetada?: string,
@@ -46,7 +48,7 @@ export default async function generateTicket(
       .from("ticket_type")
       .select("id")
       .eq("event_id", eventId)
-      .eq("type", input.type)
+      .eq("type", input.type.toUpperCase())
       .maybeSingle();
 
     if (ticketTypeError || !ticketType) {
@@ -111,6 +113,19 @@ export default async function generateTicket(
       }
     }
 
+    if (promoCode) {
+      const insertPromoCodeResponse = await insertPromoCodeUsage(promoCode);
+
+      if (insertPromoCodeResponse.status !== 200) {
+        console.log(insertPromoCodeResponse.message);
+
+        return {
+          status: insertPromoCodeResponse.status,
+          message: insertPromoCodeResponse.message,
+        };
+      }
+    }
+
     const attendanceInsertResponse = await insertUserAttendance(
       eventId,
       input.quantity,
@@ -118,7 +133,10 @@ export default async function generateTicket(
     );
 
     if (attendanceInsertResponse.status !== 200) {
-      return { status: 500, message: attendanceInsertResponse.message };
+      return {
+        status: attendanceInsertResponse.status,
+        message: attendanceInsertResponse.message,
+      };
     }
   }
 

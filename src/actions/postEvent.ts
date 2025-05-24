@@ -35,6 +35,7 @@ export async function postEvent(formData: PostsType) {
     latitude,
     longitude,
     address,
+    singleTicketQuantity,
     website_url,
     freeEvents,
     currency,
@@ -45,8 +46,6 @@ export async function postEvent(formData: PostsType) {
     promoCodes,
     specific_dates,
   } = formData;
-
-  console.log(formData);
 
   const eventCode = generateEventCode(title);
 
@@ -146,7 +145,7 @@ export async function postEvent(formData: PostsType) {
           type: "SINGLE TICKET",
           price: singleTicket,
           currency,
-          quantity: 0,
+          quantity: singleTicketQuantity,
           available_from: null,
           available_until: null,
         });

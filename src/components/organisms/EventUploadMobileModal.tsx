@@ -112,6 +112,10 @@ export default function EventUploadMobileModal({
 
   const [singleTicket, setSingleTicket] = useState<number | null>(null);
 
+  const [singleTicketQuantity, setSingleTicketQuantity] = useState<
+    number | null
+  >(null);
+
   const [multipleTickets, setMultipleTickets] = useState<Ticket[]>([]);
 
   const handleTicket = (ticketName: string) => {
@@ -205,6 +209,7 @@ export default function EventUploadMobileModal({
       promoCodes,
       freeEvents: ticket,
       singleTicket,
+      singleTicketQuantity,
       multipleTickets,
       currency,
       ...eventDates, // Merge the eventDates
@@ -235,6 +240,10 @@ export default function EventUploadMobileModal({
 
   const handleSingleTicket = (amount: number) => {
     setSingleTicket(amount);
+  };
+
+  const handleSingleTicketQuantity = (amount: number) => {
+    setSingleTicketQuantity(amount);
   };
 
   const handleMultipleTickets = (tickets: Ticket[]) => {
@@ -451,6 +460,8 @@ export default function EventUploadMobileModal({
                       ticketType={ticket}
                       singleTicketPrice={singleTicket}
                       handleSingleTicket={handleSingleTicket}
+                      singleTicketQuantity={singleTicketQuantity}
+                      handleSingleTicketQuantity={handleSingleTicketQuantity}
                     />
                   )}
 

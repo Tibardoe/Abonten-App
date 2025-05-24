@@ -10,7 +10,7 @@ export default async function insertPromoCodeUsage(code: string) {
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401, message: "User not logged in!" };
   }
 
   const { data: promoCode, error: promoCodeError } = await supabase
