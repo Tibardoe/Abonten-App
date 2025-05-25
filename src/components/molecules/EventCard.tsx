@@ -4,6 +4,7 @@ import type { UserPostType } from "@/types/postsType";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
@@ -35,7 +36,10 @@ export default function EventCard({
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, event_dates);
 
   return (
-    <li key={title} className="space-y-2 shadow-lg relative">
+    <li
+      key={title}
+      className="relative overflow-hidden rounded-xl shadow-md border border-gray-200 transition-transform hover:scale-[1.015] bg-white"
+    >
       {status === "canceled" && (
         <div className="absolute left-0 top-0 w-full h-full bg-black bg-opacity-60 text-gray-300 z-10 md:text-xl text-2xl flex justify-center items-center font-bold">
           Event canceled
@@ -48,7 +52,7 @@ export default function EventCard({
         </div>
       )}
 
-      <Link
+      {/* <Link
         href={`/events/${
           location ? location : generateSlug(address.full_address)
         }/event/${title && generateSlug(title)}`}
@@ -56,13 +60,29 @@ export default function EventCard({
         <EventCardFlyerImage
           flyerUrl={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
         />
+      </Link> */}
+
+      <Link
+        href={`/events/${
+          location ? location : generateSlug(address.full_address)
+        }/event/${generateSlug(title)}`}
+        className="block relative h-56 w-full overflow-hidden rounded-t-2xl"
+      >
+        <Image
+          src={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
+          alt={`Flyer for ${title}`}
+          layout="fill"
+          objectFit="cover"
+          className="transition-transform duration-300 hover:scale-105"
+          priority
+        />
       </Link>
 
-      <div className="flex flex-col gap-2 justify-start text-sm p-3">
+      <div className="flex flex-col gap-2 p-4">
         <div className="flex justify-between items-start">
           <Link
-            href={`/events/${location}/event/${title && generateSlug(title)}`}
-            className="font-bold text-lg md:text-xl"
+            href={`/events/${location}/event/${generateSlug(title)}`}
+            className="text-xl font-semibold text-gray-800"
           >
             {title}
           </Link>
@@ -74,45 +94,40 @@ export default function EventCard({
           />
         </div>
 
-        <div className="flex justify-between items-start font-semibold mb-2">
-          <p>
-            Capacity: {`${capacity && capacity > 0 ? capacity : "Unlimited"}`}
-          </p>
-
-          <p>Attending: {attendanceCount}</p>
+        <div className="flex justify-between text-sm text-gray-600">
+          <span>
+            Capacity: {capacity && capacity > 0 ? capacity : "Unlimited"}
+          </span>
+          <span>Attending: {attendanceCount}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <IoLocationOutline className="text-xl shrink-0" />
-
-          <p>{address?.full_address ? address.full_address : "No address"}</p>
+        <div className="flex items-center gap-2 text-gray-700 text-sm">
+          <IoLocationOutline className="text-lg" />
+          <p>{address?.full_address || "No address"}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <MdOutlineDateRange className="text-xl shrink-0" />
-
-          {/* <p>
-            {starts_at ? dateTime.date : "Date not available"} -
-            {ends_at ? dateTime.date : "End date not available"}
-          </p> */}
-
-          <p>{dateTime ? dateTime.date : "Date not available"}</p>
+        <div className="flex items-center gap-2 text-gray-700 text-sm">
+          <MdOutlineDateRange className="text-lg" />
+          <p>{dateTime?.date || "Date not available"}</p>
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center text-sm text-gray-700">
           <div className="flex items-center gap-2">
-            <IoTimeOutline className="text-xl shrink-0" />
-
-            {/* <p>{starts_at ? dateTime.time : "Time not available"}</p> */}
-
-            <p>{dateTime ? dateTime.time : "Time not available"}</p>
+            <IoTimeOutline className="text-lg" />
+            <p>{dateTime?.time || "Time not available"}</p>
           </div>
 
-          <p>
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              min_price === 0 || min_price === null
+                ? "bg-green-100 text-green-700"
+                : "bg-blue-100 text-blue-700"
+            }`}
+          >
             {min_price === 0 || min_price === null
               ? "Free"
               : `${currency} ${min_price}`}
-          </p>
+          </span>
         </div>
       </div>
     </li>
