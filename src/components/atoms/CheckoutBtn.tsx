@@ -1,5 +1,6 @@
 "use client";
 
+import deleteCheckout from "@/actions/deleteCheckout";
 import generateTicket from "@/actions/generateTicket";
 import type { TicketData } from "@/types/ticketType";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,8 @@ type EventSlugPageProp = {
   time: string;
   ticketSummary?: TicketData[];
   promoCode?: string;
+  checkoutId?: string;
+  checkoutType?: "ticket" | "subscription";
 };
 
 export default function CheckoutBtn({
@@ -26,6 +29,8 @@ export default function CheckoutBtn({
   time,
   ticketSummary,
   promoCode,
+  checkoutId,
+  checkoutType,
 }: EventSlugPageProp) {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
@@ -68,6 +73,18 @@ export default function CheckoutBtn({
 
     if (response.status === 200 && response.message) {
       setNotification(response.message);
+
+      if (checkoutId && checkoutType) {
+        const deleteCheckoutResponse = await deleteCheckout(
+          checkoutId,
+          checkoutType,
+        );
+
+        if (deleteCheckoutResponse.status !== 200) {
+          setNotification(deleteCheckoutResponse.message);
+        }
+      }
+
       setLoading(false);
       router.push("/manage/my-events");
     }
@@ -90,7 +107,7 @@ export default function CheckoutBtn({
       actionButton = (
         <>
           <Button
-            className="font-bold rounded-full w-full p-6 text-lg"
+            className="font-bold rounded-lg w-full p-6 text-lg"
             onClick={() => handleCheckoutModal(true)}
           >
             {btnText}
@@ -112,7 +129,7 @@ export default function CheckoutBtn({
     case "Register":
       actionButton = (
         <Button
-          className="font-bold rounded-full w-full p-6 text-lg"
+          className="font-bold rounded-lg w-full p-6 text-lg"
           onClick={() => handleRegistration([{ type: "Free", quantity: 1 }])}
           disabled={loading}
         >

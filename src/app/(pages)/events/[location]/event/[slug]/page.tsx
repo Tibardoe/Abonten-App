@@ -557,8 +557,8 @@ export default async function page({
                   eventId={event.id}
                   btnText={
                     minTicket?.price === 0 || minTicket === null
-                      ? "Register Now"
-                      : "Get Tickets"
+                      ? "Register"
+                      : "Buy Ticket"
                   }
                   eventTitle={event.title}
                   date={eventDateAndTime.date}
@@ -570,6 +570,18 @@ export default async function page({
 
           {/* Sidebar */}
           <div className="space-y-4 md:space-y-6">
+            {/* Event Category */}
+            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-3 md:mb-4 text-gray-800">
+                Event Category
+              </h3>
+              <div className="flex">
+                <span className="p-2 text-center border border-black w-full bg-gray-100 text-gray-600 rounded-full text-xs md:text-sm">
+                  {event.event_category}
+                </span>
+              </div>
+            </div>
+
             {/* Event Tags */}
             <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-3 md:mb-4 text-gray-800">

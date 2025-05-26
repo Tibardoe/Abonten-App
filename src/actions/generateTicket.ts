@@ -101,7 +101,7 @@ export default async function generateTicket(
 
         return {
           status: 500,
-          message: "Failed to insert ticket into database",
+          message: "Something went wrong!",
         };
       }
 

@@ -287,7 +287,7 @@ export default function UploadEventModal({
 
       {/* Inner popup */}
 
-      <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[75%] rounded-2xl py-3">
+      <div className="flex flex-col items-center justify-start bg-white w-[50%] h-[80%] rounded-2xl py-3">
         {step === 1 && (
           <>
             <div className="w-full space-y-3">

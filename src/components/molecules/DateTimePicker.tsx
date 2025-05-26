@@ -28,11 +28,13 @@ export default function DateTimePicker({
   handleDateAndTime,
   dateType,
 }: DateAndTimeType) {
-  // single-range
+  const [isRangeMode, setIsRangeMode] = useState(false);
+
   const [dateRange, _setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: new Date(),
+    from: undefined,
+    to: undefined,
   });
+
   // wrapper to update and notify
   const setDateRange = (r: DateRange) => {
     _setDateRange(r);
@@ -72,14 +74,50 @@ export default function DateTimePicker({
         <PopoverContent className="space-y-4">
           {dateType === "single" ? (
             <>
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={dateRange.from}
-                selected={dateRange}
-                onSelect={(r) => setDateRange(r as DateRange)}
-                numberOfMonths={1}
-              />
+              {/* Toggle for Single/Range */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="rangeMode"
+                  checked={isRangeMode}
+                  onChange={(e) => setIsRangeMode(e.target.checked)}
+                />
+                <label htmlFor="rangeMode" className="text-sm">
+                  Use Date Range
+                </label>
+              </div>
+
+              {/* Calendar */}
+              {isRangeMode ? (
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange.from ?? new Date()}
+                  selected={dateRange}
+                  onSelect={(d) => setDateRange(d as DateRange)}
+                  numberOfMonths={1}
+                  disabled={{ before: new Date() }}
+                />
+              ) : (
+                <Calendar
+                  initialFocus
+                  mode="single"
+                  defaultMonth={dateRange.from ?? new Date()}
+                  selected={dateRange.from}
+                  onSelect={(d) => {
+                    if (d instanceof Date) {
+                      setDateRange({
+                        from: d,
+                        to: new Date(d.getTime() + 60 * 60 * 1000),
+                      });
+                    }
+                  }}
+                  numberOfMonths={1}
+                  disabled={{ before: new Date() }}
+                />
+              )}
+
+              {/* Time Pickers */}
               <div className="flex items-end justify-between mt-4">
                 <TimePicker
                   date={dateRange.from}
@@ -133,7 +171,14 @@ export default function DateTimePicker({
       </Popover>
 
       {/* single display */}
-      {dateType === "single" && dateRange.from && (
+      {/* {dateType === "single" && dateRange.from && (
+        <p className="mt-3 text-sm text-gray-700">
+          {formatFullDateTimeRange(dateRange.from, dateRange.to).date},{" "}
+          {formatFullDateTimeRange(dateRange.from, dateRange.to).time}
+        </p>
+      )} */}
+
+      {dateType === "single" && dateRange.from && dateRange.to && (
         <p className="mt-3 text-sm text-gray-700">
           {formatFullDateTimeRange(dateRange.from, dateRange.to).date},{" "}
           {formatFullDateTimeRange(dateRange.from, dateRange.to).time}

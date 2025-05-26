@@ -38,10 +38,6 @@ export default function CheckoutModal({
 
   const [isProceeding, setIsProceeding] = useState(false);
 
-  const [checkoutSectionId, setCheckoutSectionId] = useState<string | null>(
-    null,
-  );
-
   const [quantities, setQuantities] = useState<{
     [ticketTypeId: string]: number;
   }>({});
@@ -114,8 +110,9 @@ export default function CheckoutModal({
     }
 
     if (response?.status === 200 && response.checkoutSessionId) {
-      setCheckoutSectionId(response.checkoutSessionId);
-      router.push(`/wallet?checkoutId=${response.checkoutSessionId}`);
+      router.push(
+        `/wallet?checkoutId=${response.checkoutSessionId}&type=ticket`,
+      );
     }
   };
 

@@ -5,7 +5,7 @@ type PlanContainerProp = {
   subscriptionName: string;
   subscriptionDetails: string;
   subscriptionPrice: string;
-  activeSubscription: string;
+  activeSubscription: string | null;
   setActiveSubscription: (name: string) => void;
 };
 

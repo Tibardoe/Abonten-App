@@ -76,3 +76,26 @@ export type TicketData = {
   amount?: number;
   type: string;
 };
+
+export type TicketSummaryItem = {
+  type: string;
+  quantity: number;
+  discount: number;
+  amount: number;
+  unitPrice: string;
+};
+
+export type TicketSummaryProps = {
+  type: "ticket";
+  eventTitle: string;
+  ticketSummary: TicketSummaryItem[];
+  totalAmount: number;
+};
+
+export type SubscriptionSummaryProps = {
+  type: "subscription";
+  planName: string;
+  amount: number;
+  features: string[];
+  totalAmount: number;
+};
