@@ -38,6 +38,7 @@ export type PostsType = {
   ends_at?: Date | undefined;
   specific_dates?: Date[];
   title: string;
+  checked: boolean;
   description: string;
   website_url?: string | undefined;
   price?: number | undefined;

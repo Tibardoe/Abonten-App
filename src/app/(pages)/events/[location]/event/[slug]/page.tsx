@@ -563,6 +563,7 @@ export default async function page({
                   eventTitle={event.title}
                   date={eventDateAndTime.date}
                   time={eventDateAndTime.time}
+                  requireRegistration={event.require_registration}
                 />
               )}
             </div>

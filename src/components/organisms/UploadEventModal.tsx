@@ -111,6 +111,8 @@ export default function UploadEventModal({
 
   const [notification, setNotification] = useState<string | null>(null);
 
+  const [checked, setChecked] = useState(false);
+
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
   });
@@ -226,6 +228,7 @@ export default function UploadEventModal({
       singleTicketQuantity,
       multipleTickets,
       currency,
+      checked,
       ...eventDates, // Merge the eventDates
     };
 
@@ -266,6 +269,10 @@ export default function UploadEventModal({
 
   const handlePromoCodeFormPopup = (state: boolean) => {
     setShowPromoCodeFormPopup((prevState) => !prevState);
+  };
+
+  const handleChecked = () => {
+    setChecked((prevState) => !prevState);
   };
 
   return (
@@ -526,7 +533,12 @@ export default function UploadEventModal({
 
                 <div className="space-y-4 text-sm font-normal">
                   <div className="space-y-3">
-                    <TicketType handleTicket={handleTicket} ticket={ticket} />
+                    <TicketType
+                      handleTicket={handleTicket}
+                      ticket={ticket}
+                      checked={checked}
+                      handleChecked={handleChecked}
+                    />
 
                     {ticket === "Single Ticket Type" && (
                       <TicketInputs

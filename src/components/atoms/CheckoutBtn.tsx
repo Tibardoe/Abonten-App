@@ -19,6 +19,7 @@ type EventSlugPageProp = {
   promoCode?: string;
   checkoutId?: string;
   checkoutType?: "ticket" | "subscription";
+  requireRegistration?: boolean;
 };
 
 export default function CheckoutBtn({
@@ -31,6 +32,7 @@ export default function CheckoutBtn({
   promoCode,
   checkoutId,
   checkoutType,
+  requireRegistration,
 }: EventSlugPageProp) {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
@@ -47,15 +49,25 @@ export default function CheckoutBtn({
   const handleRegistration = async (ticketQuantityAndType: TicketData[]) => {
     setLoading(true);
 
-    console.log(ticketQuantityAndType);
-
     const rawDate = date;
 
-    const cleanedDateStr = rawDate.replace(/(\d+)(st|nd|rd|th)/, "$1");
+    // Step 1: Extract the end date string
+    let endDateStr = rawDate.includes("-")
+      ? rawDate.split("-")[1].trim()
+      : rawDate.trim();
 
-    const parsedDate = new Date(cleanedDateStr);
+    // Step 2: Remove ordinal suffixes
+    endDateStr = endDateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
 
-    const endDate = new Date(parsedDate.getTime() + 24 * 60 * 60 * 1000);
+    // Step 3: Parse end date
+    const parsedEndDate = new Date(endDateStr);
+
+    // Step 4: Add 24 hours (in milliseconds)
+    const endDatePlusOneDay = new Date(
+      parsedEndDate.getTime() + 24 * 60 * 60 * 1000,
+    );
+
+    const endDate = new Date(endDatePlusOneDay.getTime() + 24 * 60 * 60 * 1000);
 
     const response = await generateTicket(
       eventId,
@@ -127,7 +139,7 @@ export default function CheckoutBtn({
       break;
 
     case "Register":
-      actionButton = (
+      actionButton = requireRegistration && (
         <Button
           className="font-bold rounded-lg w-full p-6 text-lg"
           onClick={() => handleRegistration([{ type: "Free", quantity: 1 }])}

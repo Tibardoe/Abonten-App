@@ -28,6 +28,7 @@ export async function postEvent(formData: PostsType) {
   const {
     category,
     singleTicket,
+    checked,
     multipleTickets,
     types,
     title,
@@ -101,6 +102,7 @@ export async function postEvent(formData: PostsType) {
       status: "published",
       event_category: category,
       event_type: types,
+      require_registration: checked,
     })
     .select("id") // ✅ Better: Get inserted event ID directly
     .single();
