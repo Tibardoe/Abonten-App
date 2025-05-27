@@ -28,6 +28,9 @@ export async function postEvent(formData: PostsType) {
   const {
     category,
     singleTicket,
+    selectedNetwork,
+    receivingAccountDetails,
+    paymentOption,
     checked,
     multipleTickets,
     types,
@@ -114,9 +117,53 @@ export async function postEvent(formData: PostsType) {
     };
   }
 
-  // ⚠️ ❌ Error inserting event: duplicate key value violates unique constraint "event_slug_key"
-
   const eventId = insertedEvent.id;
+
+  // isert receiving account if event is not free
+  if (paymentOption && paymentOption === "Mobile Money") {
+    const { error: insertReceivingAccountDetailsError } = await supabase
+      .from("receiving_account")
+      .insert({
+        full_name: receivingAccountDetails?.name,
+        email: receivingAccountDetails?.email,
+        phone: receivingAccountDetails?.phone,
+        network_service_provider: selectedNetwork,
+        user_id: user.id,
+        event_id: eventId,
+        payment_option: paymentOption,
+      });
+
+    if (insertReceivingAccountDetailsError) {
+      console.log(
+        `Error inserting user receiving account details: ${insertReceivingAccountDetailsError.message}`,
+      );
+
+      return { status: 500, message: "Something went wrong!" };
+    }
+  }
+
+  if (paymentOption && paymentOption === "Bank") {
+    const { error: insertReceivingAccountDetailsError } = await supabase
+      .from("receiving_account")
+      .insert({
+        full_name: receivingAccountDetails?.name,
+        email: receivingAccountDetails?.email,
+        user_id: user.id,
+        event_id: eventId,
+        bank_name: receivingAccountDetails?.bankName,
+        bank_branch: receivingAccountDetails?.branch,
+        bank_account_number: receivingAccountDetails?.bankAccountNumber,
+        payment_option: paymentOption,
+      });
+
+    if (insertReceivingAccountDetailsError) {
+      console.log(
+        `Error inserting user receiving account details: ${insertReceivingAccountDetailsError.message}`,
+      );
+
+      return { status: 500, message: "Something went wrong!" };
+    }
+  }
 
   // Insert ticket(s)
   if (isFreeEvent) {

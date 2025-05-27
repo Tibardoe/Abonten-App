@@ -45,6 +45,16 @@ export type PostsType = {
   capacity?: number | undefined;
   selectedFile: File;
   currency: string;
+  paymentOption?: string | null;
+  selectedNetwork?: string | null;
+  receivingAccountDetails?: {
+    name: string;
+    email: string;
+    phone: string;
+    bankName: string;
+    branch?: string;
+    bankAccountNumber: string;
+  };
   freeEvents: string;
   singleTicket: number | null;
   singleTicketQuantity: number | null;

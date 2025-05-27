@@ -3,6 +3,7 @@ import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
+import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +19,7 @@ import { cn } from "../lib/utils";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
 import PromoCodeInputs from "../molecules/PromoCodeInputs";
+import ReceivingAccountForms from "../molecules/ReceivingAccountForms";
 import TicketInputs from "../molecules/TicketInputs";
 import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
@@ -112,6 +114,17 @@ export default function UploadEventModal({
   const [notification, setNotification] = useState<string | null>(null);
 
   const [checked, setChecked] = useState(false);
+
+  const [paymentOption, setPaymentOption] = useState<string | null>(null);
+
+  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+
+  const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
+
+  // At the top of EventUploadMobileModal
+  const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
+    resolver: zodResolver(receivingAccountSchema),
+  });
 
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
@@ -214,6 +227,8 @@ export default function UploadEventModal({
       return;
     }
 
+    const receivingAccountDetails = receivingAccountForm.getValues();
+
     const finalData = {
       ...formData,
       address: selectedAddress,
@@ -229,6 +244,9 @@ export default function UploadEventModal({
       multipleTickets,
       currency,
       checked,
+      paymentOption,
+      receivingAccountDetails,
+      selectedNetwork,
       ...eventDates, // Merge the eventDates
     };
 
@@ -273,6 +291,17 @@ export default function UploadEventModal({
 
   const handleChecked = () => {
     setChecked((prevState) => !prevState);
+  };
+
+  const handlePaymentOption = (option: string) => setPaymentOption(option);
+
+  const handleSelectedNetwork = (network: string) => {
+    setSelectedNetwork(network);
+    setShowNetworkDropdown(false);
+  };
+
+  const handleNetworkDropdown = () => {
+    setShowNetworkDropdown((prevState) => !prevState);
   };
 
   return (
@@ -554,6 +583,19 @@ export default function UploadEventModal({
                       <TicketInputs
                         ticketType={ticket}
                         handleMultipleTickets={handleMultipleTickets}
+                      />
+                    )}
+
+                    {(ticket === "Single Ticket Type" ||
+                      ticket === "Multiple Ticket Types") && (
+                      <ReceivingAccountForms
+                        form={receivingAccountForm}
+                        handlePaymentOption={handlePaymentOption}
+                        paymentOption={paymentOption}
+                        handleSelectedNetwork={handleSelectedNetwork}
+                        selectedNetwork={selectedNetwork}
+                        showNetworkDropdown={showNetworkDropdown}
+                        setShowNetworkDropdown={handleNetworkDropdown}
                       />
                     )}
                   </div>

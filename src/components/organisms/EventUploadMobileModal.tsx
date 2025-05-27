@@ -5,6 +5,7 @@ import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
+import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -20,6 +21,7 @@ import { cn } from "../lib/utils";
 import CategoryFilter from "../molecules/CategoryFilter";
 import DateTimePicker from "../molecules/DateTimePicker";
 import PromoCodeInputs from "../molecules/PromoCodeInputs";
+import ReceivingAccountForms from "../molecules/ReceivingAccountForms";
 import TicketInputs from "../molecules/TicketInputs";
 import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
@@ -88,12 +90,19 @@ export default function EventUploadMobileModal({
     formState: { errors },
   } = form;
 
-  const [dateAndTime, setDateAndTime] = useState<
-    DateRange | Date[] | undefined
-  >({
+  // const [dateAndTime, setDateAndTime] = useState<
+  //   DateRange | Date[] | undefined
+  // >({
+  //   from: new Date(),
+  //   to: new Date(),
+  // });
+
+  const [singleDateRange, setSingleDateRange] = useState<DateRange>({
     from: new Date(),
     to: new Date(),
   });
+
+  const [multipleDates, setMultipleDates] = useState<Date[]>([]);
 
   const [selectedAddress, setSelectedAddress] = useState("");
 
@@ -128,6 +137,19 @@ export default function EventUploadMobileModal({
 
   const [dateType, setDateType] = useState("single");
 
+  const [checked, setChecked] = useState(false);
+
+  const [paymentOption, setPaymentOption] = useState<string | null>(null);
+
+  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+
+  const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
+
+  // At the top of EventUploadMobileModal
+  const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
+    resolver: zodResolver(receivingAccountSchema),
+  });
+
   useEffect(() => {
     const fetchCurrency = async () => {
       const userCurrency = await getUserCurrency();
@@ -150,8 +172,16 @@ export default function EventUploadMobileModal({
     );
   };
 
+  // const handleDateAndTime = (date: DateRange | Date[]) => {
+  //   setDateAndTime(date);
+  // };
+
   const handleDateAndTime = (date: DateRange | Date[]) => {
-    setDateAndTime(date);
+    if (dateType === "single" && !Array.isArray(date)) {
+      setSingleDateRange(date);
+    } else if (dateType === "multiple" && Array.isArray(date)) {
+      setMultipleDates(date);
+    }
   };
 
   useEffect(() => {
@@ -184,19 +214,35 @@ export default function EventUploadMobileModal({
 
     let eventDates: EventDates;
 
-    if (dateType === "single" && !Array.isArray(dateAndTime)) {
+    // if (dateType === "single" && !Array.isArray(dateAndTime)) {
+    //   eventDates = {
+    //     starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
+    //     ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
+    //   };
+    // } else if (Array.isArray(dateAndTime)) {
+    //   eventDates = {
+    //     specific_dates: dateAndTime, // Array of dates
+    //   };
+    // } else {
+    //   setNotification("Invalid date selection");
+    //   return;
+    // }
+
+    if (dateType === "single") {
       eventDates = {
-        starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
-        ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
+        starts_at: singleDateRange.from,
+        ends_at: singleDateRange.to,
       };
-    } else if (Array.isArray(dateAndTime)) {
+    } else if (dateType === "multiple") {
       eventDates = {
-        specific_dates: dateAndTime, // Array of dates
+        specific_dates: multipleDates,
       };
     } else {
       setNotification("Invalid date selection");
       return;
     }
+
+    const receivingAccountDetails = receivingAccountForm.getValues();
 
     const finalData = {
       ...formData,
@@ -212,6 +258,10 @@ export default function EventUploadMobileModal({
       singleTicketQuantity,
       multipleTickets,
       currency,
+      checked,
+      paymentOption,
+      receivingAccountDetails,
+      selectedNetwork,
       ...eventDates, // Merge the eventDates
     };
 
@@ -252,6 +302,21 @@ export default function EventUploadMobileModal({
 
   const handlePromoCodeFormPopup = (state: boolean) => {
     setShowPromoCodeFormPopup((prevState) => !prevState);
+  };
+
+  const handleChecked = () => {
+    setChecked((prevState) => !prevState);
+  };
+
+  const handlePaymentOption = (option: string) => setPaymentOption(option);
+
+  const handleSelectedNetwork = (network: string) => {
+    setSelectedNetwork(network);
+    setShowNetworkDropdown(false);
+  };
+
+  const handleNetworkDropdown = () => {
+    setShowNetworkDropdown((prevState) => !prevState);
   };
 
   return (
@@ -445,15 +510,20 @@ export default function EventUploadMobileModal({
                     handleDateAndTime={handleDateAndTime}
                     dateType={dateType}
                   />
-                  {dateAndTime === undefined && (
+                  {/* {dateAndTime === undefined && (
                     <p className="text-red-500 text-sm pl-3">
                       Set date and time
                     </p>
-                  )}
+                  )} */}
                 </div>
 
                 <div className="space-y-3">
-                  <TicketType handleTicket={handleTicket} ticket={ticket} />
+                  <TicketType
+                    handleTicket={handleTicket}
+                    ticket={ticket}
+                    checked={checked}
+                    handleChecked={handleChecked}
+                  />
 
                   {ticket === "Single Ticket Type" && (
                     <TicketInputs
@@ -469,6 +539,19 @@ export default function EventUploadMobileModal({
                     <TicketInputs
                       ticketType={ticket}
                       handleMultipleTickets={handleMultipleTickets}
+                    />
+                  )}
+
+                  {(ticket === "Single Ticket Type" ||
+                    ticket === "Multiple Ticket Types") && (
+                    <ReceivingAccountForms
+                      form={receivingAccountForm}
+                      handlePaymentOption={handlePaymentOption}
+                      paymentOption={paymentOption}
+                      handleSelectedNetwork={handleSelectedNetwork}
+                      selectedNetwork={selectedNetwork}
+                      showNetworkDropdown={showNetworkDropdown}
+                      setShowNetworkDropdown={handleNetworkDropdown}
                     />
                   )}
                 </div>
