@@ -105,9 +105,9 @@ export default function FilterModalPopup({
   };
 
   return (
-    <div className="fixed top-0 left-0 bg-black bg-opacity-40 h-dvh w-full z-10 flex justify-center items-end md:items-center">
+    <div className="fixed top-0 left-0 bg-black bg-opacity-40 h-dvh w-full z-30 flex justify-center items-end md:items-center">
       {/* Popup */}
-      <div className="w-full h-[95%] md:w-[50%] bg-white py-5 rounded-t-2xl md:rounded-xl">
+      <div className="w-full h-[95%] md:w-[40%] bg-white py-5 rounded-t-2xl md:rounded-xl">
         {/* Top elements */}
         <div>
           <div className="flex justify-between items-center w-[90%] md:w-full mx-auto font-bold md:px-5">
@@ -251,7 +251,7 @@ export default function FilterModalPopup({
                   type="button"
                   onClick={() => setRating(r)}
                   className={cn(
-                    "px-4 py-3 bg-slate-200 rounded-lg text-sm md:text-lg",
+                    "p-2 bg-slate-200 rounded-md text-sm",
                     r === ratingg && "bg-black text-white",
                   )}
                 >
@@ -274,7 +274,7 @@ export default function FilterModalPopup({
                   key={d}
                   onClick={() => setDistance(d)}
                   className={cn(
-                    "px-4 py-3 bg-slate-200 rounded-lg text-sm md:text-lg",
+                    "p-2 bg-slate-200 rounded-md text-sm",
                     distancee === d && "bg-black text-white",
                   )}
                 >
@@ -286,16 +286,16 @@ export default function FilterModalPopup({
             <hr className="mt-5" />
           </div>
 
-          <div className="gap-5 justify-end pb-5 hidden md:flex">
+          <div className="gap-2 justify-end pb-3 hidden md:flex">
             <Button
               onClick={handleReset}
-              className="text-lg py-6 px-8 rounded-full"
+              className="text-lg py-5 px-7 rounded-md"
             >
               Reset
             </Button>
             <Button
               onClick={handleFilter}
-              className="text-lg py-6 px-8 rounded-full"
+              className="text-lg py-5 px-7 rounded-md"
             >
               Filter
             </Button>

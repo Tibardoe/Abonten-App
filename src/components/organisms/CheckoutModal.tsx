@@ -103,6 +103,29 @@ export default function CheckoutModal({
 
     const response = await validateCheckout({ eventId, quantities, promoCode });
 
+    if (
+      response?.status !== 200 &&
+      response.message ===
+        "You already have a pending ticket checkout for this event"
+    ) {
+      setError(response?.message ?? "Something ocurred");
+      router.push(`/wallet?checkoutId=${response.checkoutId}&type=ticket`);
+
+      setIsProceeding(false);
+      return;
+    }
+
+    if (
+      response?.status !== 200 &&
+      response.message === "Ticket for this event already bought"
+    ) {
+      setError(response?.message ?? "Something ocurred");
+      router.push("/manage/my-events");
+
+      setIsProceeding(false);
+      return;
+    }
+
     if (response?.status !== 200) {
       setError(response?.message ?? "Something ocurred");
       setIsProceeding(false);

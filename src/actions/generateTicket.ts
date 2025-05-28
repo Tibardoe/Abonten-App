@@ -14,6 +14,13 @@ type TicketInput = {
   quantity: number;
 };
 
+type TicketWithEvent = {
+  user_id: string;
+  ticket_type_id: {
+    event_id: string;
+  };
+};
+
 export default async function generateTicket(
   eventId: string,
   ticketInputs: TicketInput[],
@@ -29,17 +36,35 @@ export default async function generateTicket(
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError) {
-    console.log(`Failed fetching user: ${userError.message}`);
+  if (userError || !user) {
+    console.log(`Failed fetching user: ${userError?.message}`);
 
     return {
-      status: 500,
-      message: "Something went wrong!",
+      status: 401,
+      message: "User not logged in",
     };
   }
 
-  if (!user) {
-    return { status: 401, message: "User not logged in" };
+  // Check if user has already bought ticket for the event
+  const { data: rawTicketData, error: ticketDataError } = await supabase
+    .from("ticket")
+    .select("user_id, ticket_type_id(event_id)")
+    .eq("user_id", user.id);
+
+  if (ticketDataError || !rawTicketData) {
+    console.log(`Error fetching ticket data: ${ticketDataError.message}`);
+
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const ticketData = rawTicketData as unknown as TicketWithEvent[];
+
+  const alreadyBought = ticketData?.some(
+    (ticket) => ticket.ticket_type_id.event_id === eventId,
+  );
+
+  if (alreadyBought) {
+    return { status: 300, message: "Ticket for this event already bought" };
   }
 
   for (const input of ticketInputs) {

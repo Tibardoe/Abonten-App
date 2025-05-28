@@ -34,9 +34,9 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
 
   const [buttonText, setButtonText] = useState("");
 
-  const [userRole, setUserRole] = useState<"organizer" | "attendee" | "none">(
-    "none",
-  );
+  const [userRole, setUserRole] = useState<
+    ("organizer" | "attendee" | "none")[]
+  >([]);
 
   const router = useRouter();
 
@@ -86,10 +86,10 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
         const res = await getUserEventRole(user.id);
 
         // ✅ Validate the role value before setting state
-        if (res.role === "organizer" || res.role === "attendee") {
-          setUserRole(res.role);
+        if (Array.isArray(res.role)) {
+          setUserRole(res.role); // e.g. ["organizer", "attendee"]
         } else {
-          setUserRole("none");
+          setUserRole([]);
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
@@ -134,7 +134,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 Home
               </Link>
 
-              {userRole === "organizer" && (
+              {userRole.includes("organizer") && (
                 <Link
                   href="/manage/attendance/event-list"
                   className="flex gap-1 items-center"
@@ -144,10 +144,10 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 </Link>
               )}
 
-              {userRole === "attendee" && (
+              {userRole.includes("attendee") && (
                 <Link
                   href="/manage/my-events"
-                  className="bg-transparent rounded-full border-black border p-2"
+                  className="flex gap-1 items-center"
                 >
                   <GiPartyFlags className="text-2xl" />
                   My Events

@@ -10,6 +10,13 @@ type CheckoutDetailsProp = {
   promoCode?: string | null;
 };
 
+type TicketWithEvent = {
+  user_id: string;
+  ticket_type_id: {
+    event_id: string;
+  };
+};
+
 export default async function validateCheckout({
   eventId,
   quantities,
@@ -22,15 +29,63 @@ export default async function validateCheckout({
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError) {
+  if (userError || !user) {
+    console.log(`Error fetching user: ${userError?.message}`);
+
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message} `,
+      message: "User not logged in",
     };
   }
 
-  if (!user) {
-    return { status: 401, message: "User not authenticated" };
+  // check if user has a pending ticket checkout
+  const { data: ticketCheckoutData, error: ticketCheckoutDataError } =
+    await supabase
+      .from("ticket_checkout")
+      .select("checkout_session_id, event_id, status")
+      .eq("user_id", user.id)
+      .eq("event_id", eventId);
+
+  if (ticketCheckoutDataError || !ticketCheckoutData) {
+    console.log(
+      `Error fetching ticket checkout data: ${ticketCheckoutDataError.message}`,
+    );
+
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const pendingCheckout = ticketCheckoutData?.find(
+    (checkout) => checkout.status === "pending",
+  );
+
+  if (pendingCheckout) {
+    return {
+      status: 300,
+      checkoutId: pendingCheckout.checkout_session_id,
+      message: "You already have a pending ticket checkout for this event",
+    };
+  }
+
+  // Check if user has already bought ticket for the event
+  const { data: rawTicketData, error: ticketDataError } = await supabase
+    .from("ticket")
+    .select("user_id, ticket_type_id(event_id)")
+    .eq("user_id", user.id);
+
+  if (ticketDataError || !rawTicketData) {
+    console.log(`Error fetching ticket data: ${ticketDataError.message}`);
+
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const ticketData = rawTicketData as unknown as TicketWithEvent[];
+
+  const alreadyBought = ticketData?.some(
+    (ticket) => ticket.ticket_type_id.event_id === eventId,
+  );
+
+  if (alreadyBought) {
+    return { status: 300, message: "Ticket for this event already bought" };
   }
 
   const { data: event, error: eventError } = await supabase

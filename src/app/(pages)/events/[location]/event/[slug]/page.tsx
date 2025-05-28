@@ -294,6 +294,7 @@
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
+import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
@@ -485,12 +486,14 @@ export default async function page({
                 <p className="text-gray-600 mb-4 text-sm md:text-base">
                   {event.address.full_address}
                 </p>
-                <button
+                {/* <button
                   type="button"
                   className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
                 >
                   <IoLocationOutline /> Get Directions
-                </button>
+                </button> */}
+
+                <GetDirectionBtn location={event.location} />
               </div>
 
               <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">

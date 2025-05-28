@@ -76,6 +76,17 @@ export default function CheckoutBtn({
       endDate,
     );
 
+    if (
+      response?.status !== 200 &&
+      response.message === "Ticket for this event already bought"
+    ) {
+      setNotification(response?.message ?? "Something ocurred");
+      router.push("/manage/my-events");
+
+      setLoading(false);
+      return;
+    }
+
     if (response.status !== 200 && response.message) {
       setNotification(response.message);
       setLoading(false);
