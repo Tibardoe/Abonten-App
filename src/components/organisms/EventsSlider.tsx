@@ -40,7 +40,7 @@ export default function EventsSlider({
   };
 
   return (
-    <div className="my-10 space-y-5">
+    <div className="my-8 space-y-3">
       <div className="flex justify-between font-bold">
         <h2 className="text-xl">{heading}</h2>
 

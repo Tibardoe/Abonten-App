@@ -59,10 +59,10 @@ export default async function page({
   });
 
   return (
-    <section className="space-y-10 min-h-dvh">
+    <section className="space-y-5 min-h-dvh">
       <LocationAndFilterSection />
 
-      {aroundYou?.length ? (
+      {eventsWithinLocation.data?.length ? (
         <>
           <Banner />
 
@@ -99,7 +99,7 @@ export default async function page({
           <div className="mb-5">
             <h2 className="text-2xl font-bold mb-2">All Events</h2>
 
-            <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
+            <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
               {events.map((post) => (
                 <EventCard
                   key={post.title}
