@@ -1,8 +1,8 @@
 "use client";
 
 import { allEvents } from "@/data/allEvents";
-import type { PostsType } from "@/types/postsType";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import type { PostsType, UserPostType } from "@/types/postsType";
+import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,60 +12,27 @@ import { FaArrowRightLong } from "react-icons/fa6";
 import { FiCalendar, FiClock, FiMapPin } from "react-icons/fi";
 import { PiTicketBold } from "react-icons/pi";
 
-export default function Banner() {
-  const [event, setEvent] = useState<PostsType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface BannerProps {
+  event: UserPostType | null;
+}
 
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+export default function Banner({ event }: BannerProps) {
+  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
-  useEffect(() => {
-    try {
-      const savedData = localStorage.getItem("dailyEvent");
-      const now = Date.now();
+  if (!event || !event.flyer_public_id) return null;
 
-      if (savedData) {
-        const { event, timestamp } = JSON.parse(savedData);
-        if (now - timestamp < ONE_DAY_MS) {
-          setEvent(event);
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const randomIndex = Math.floor(Math.random() * allEvents.length);
-      const selected = allEvents[randomIndex];
-
-      localStorage.setItem(
-        "dailyEvent",
-        JSON.stringify({ event: selected, timestamp: now }),
-      );
-
-      setEvent(selected);
-    } catch (err) {
-      setError("Failed to load featured event");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="w-full h-[180px] xs:h-[220px] sm:h-[280px] md:h-[350px] lg:h-[400px] bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
-    );
-  }
-
-  if (error || !event || !event.flyerUrl) {
-    return null; // or render an error state
-  }
+  const dateTime = getFormattedEventDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_dates,
+  );
 
   return (
-    <div className="group relative w-full h-[250px] md:h-[350px] lg:h-[400px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+    <div className="group relative w-full h-[250px] md:h-[350px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
       {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0">
         <Image
-          src={event.flyerUrl}
+          src={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
           alt={`${event.title} event flyer`}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -95,7 +62,9 @@ export default function Banner() {
 
           {/* Event Title - Responsive font sizes */}
           <Link
-            href={`/events/${event.title && generateSlug(event.title)}`}
+            href={`/events/${generateSlug(
+              event.address.full_address,
+            )}/event/${generateSlug(event.title)}`}
             className="block mb-2 xs:mb-3 sm:mb-4"
           >
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">
@@ -107,34 +76,34 @@ export default function Banner() {
           <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 text-xs md:text-base">
             <div className="flex items-center gap-1 xs:gap-2">
               <FiMapPin className="flex-shrink-0 text-xs xs:text-sm" />
-              <span className="truncate">{event.location || "Venue TBA"}</span>
-            </div>
-
-            <div className="flex items-center gap-1 xs:gap-2">
-              <FiCalendar className="flex-shrink-0 text-xs xs:text-sm" />
-              <span>
-                {event.start_at
-                  ? formatDateWithSuffix(event.start_at)
-                  : "Date TBA"}
+              <span className="truncate">
+                {event.address.full_address || "Venue TBA"}
               </span>
             </div>
 
             <div className="flex items-center gap-1 xs:gap-2">
+              <FiCalendar className="flex-shrink-0 text-xs xs:text-sm" />
+              <span>{dateTime ? dateTime.date : "Date TBA"}</span>
+            </div>
+
+            <div className="flex items-center gap-1 xs:gap-2">
               <FiClock className="flex-shrink-0 text-xs xs:text-sm" />
-              <span>{event.timezone || "Time TBA"}</span>
+              <span>{dateTime.time || "Time TBA"}</span>
             </div>
           </div>
 
           {/* Price & CTA - Responsive layout and sizing */}
           <div className="mt-3 flex md:flex-col md:items-start items-center justify-between gap-2">
-            {event.price && (
-              <div className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full font-medium text-xs xs:text-sm">
-                {event.price === "Free" ? "FREE ENTRY" : `FROM ${event.price}`}
-              </div>
-            )}
+            <div className="px-2 py-1 xs:px-3 xs:py-1.5 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full font-medium text-xs xs:text-sm">
+              {event.min_price === 0 || event.min_price === null
+                ? "FREE ENTRY"
+                : `FROM ${event.currency} ${event.min_price}`}
+            </div>
 
             <Link
-              href={`/events/${event.title && generateSlug(event.title)}`}
+              href={`/events/${generateSlug(
+                event.address.full_address,
+              )}/event/${generateSlug(event.title)}`}
               className="px-3 py-1.5 md:px-4 md:py-2 bg-black hover:bg-gray-400 text-white rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
               View Details

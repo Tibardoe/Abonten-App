@@ -5,6 +5,7 @@ import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import type { UserPostType } from "@/types/postsType";
+import { getDailyEvent } from "@/utils/dailyEventCache";
 
 export default async function page({
   params,
@@ -58,13 +59,15 @@ export default async function page({
     radius: 10,
   });
 
+  const selected = await getDailyEvent(events, safeLocation);
+
   return (
     <section className="space-y-5 min-h-dvh">
       <LocationAndFilterSection />
 
       {eventsWithinLocation.data?.length ? (
         <>
-          <Banner />
+          <Banner event={selected} />
 
           <EventsSlider
             heading="Around-You"
