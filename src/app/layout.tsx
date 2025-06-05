@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/context/authProvider";
+import ReactQueryProvider from "@/providers/ReactQueryProvider";
 // import { NextIntlClientProvider, hasLocale } from "next-intl";
 // import { notFound } from "next/navigation";
 // import { routing } from "@/i18n/routing";
@@ -40,9 +41,11 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          <main>{children}</main>
-        </Providers>
+        <ReactQueryProvider>
+          <Providers>
+            <main>{children}</main>
+          </Providers>
+        </ReactQueryProvider>
       </body>
     </html>
   );

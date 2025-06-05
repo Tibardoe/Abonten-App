@@ -80,13 +80,6 @@ export default async function page() {
                   </p>
 
                   <div className="flex justify-between gap-2">
-                    {/* <Link
-                      href={`/my-events/${event.id}`}
-                      className="bg-black text-white border border-black text-sm px-4 py-2 rounded-lg"
-                    >
-                      View Ticket
-                    </Link> */}
-
                     <ViewTicketBtn event={event} />
 
                     <CancelUserTicketBtn

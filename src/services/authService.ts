@@ -45,10 +45,14 @@ export const verifyOtp = async (phone: string, otp: string) => {
   });
 
   if (error) {
-    console.log(error);
+    console.log(`Error verifying OTP: ${error.message}`);
 
     if (error.message.includes("expired")) {
-      throw new Error("OTP has expired. Please request a new one.");
+      return {
+        status: 401,
+        message: "OTP has expired. Please request a new one.",
+      };
+      // throw new Error("OTP has expired. Please request a new one.");
     }
     throw error;
   }
@@ -58,7 +62,33 @@ export const verifyOtp = async (phone: string, otp: string) => {
     await ensureUserInfoExists(data?.user);
   }
 
-  return data;
+  return { status: 200, data, message: "OTP verfied successfully!" };
+};
+
+export const updatePhoneNumberInUserTable = async (phone: string) => {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError || !userData?.user) {
+    console.error(
+      "Could not authenticate user before updating phone.",
+      userError?.message,
+    );
+    return { status: 401, message: "User not authenticated." };
+  }
+
+  const { error: updatePhoneNumberError } = await supabase.auth.updateUser({
+    phone: phone,
+  });
+
+  if (updatePhoneNumberError) {
+    console.log(
+      `Error updating user phone number: ${updatePhoneNumberError.message}`,
+    );
+
+    return { status: 500, message: "Something went wrong!" };
+  }
+
+  return { status: 200, message: "Phone number updated successfully." };
 };
 
 const ensureUserInfoExists = async (user: authUserType) => {

@@ -61,21 +61,21 @@ export function getEventStatusOverlay(
 
   if (!startDate || !endDate) return null;
 
-  if (now < startDate) {
-    const isSameDay =
-      now.getFullYear() === startDate.getFullYear() &&
-      now.getMonth() === startDate.getMonth() &&
-      now.getDate() === startDate.getDate();
-    return isSameDay ? "Starting Soon" : null;
-  }
+  // if (now < startDate) {
+  //   const isSameDay =
+  //     now.getFullYear() === startDate.getFullYear() &&
+  //     now.getMonth() === startDate.getMonth() &&
+  //     now.getDate() === startDate.getDate();
+  //   return isSameDay ? "Starting Soon" : null;
+  // }
 
   if (now >= startDate && now <= endDate) {
     return "Ongoing";
   }
 
-  if (now > endDate) {
-    return "Event Ended";
-  }
+  // if (now > endDate) {
+  //   return "Event Ended";
+  // }
 
   return null;
 }

@@ -1,71 +1,85 @@
 import { addEventToFavorite } from "@/actions/addEventToFavorite";
 import { checkIfEventIsFavorited } from "@/actions/checkIfEventIsFavorited";
 import { removeEventFromFavorite } from "@/actions/removeEventFromFavorite";
-import React, { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 import Notification from "./Notification";
 
 type EventProp = {
-  eventId?: string;
+  eventId: string;
 };
 
 export default function AddToFavoriteButton({ eventId }: EventProp) {
-  const [isFavorite, setIsFavorite] = useState(false);
-
   const [error, setError] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchFavoriteStatus = async () => {
+  const { isError, data, isLoading } = useQuery({
+    queryKey: ["user-favorited", eventId],
+    queryFn: () => checkIfEventIsFavorited(eventId),
+    enabled: !!eventId,
+    initialData: () => {
+      return queryClient.getQueryData(["user-favorited", eventId]);
+    },
+  });
+
+  const isFavorite = data?.status === 200 ? data.isFavorited : false;
+
+  const {
+    mutate,
+    data: response,
+    isPending,
+  } = useMutation({
+    mutationFn: async () => {
       if (!eventId) return;
 
-      const response = await checkIfEventIsFavorited(eventId);
-
-      if (response.status === 200) {
-        setIsFavorite(response.isFavorited); // true or false
-      }
-    };
-
-    fetchFavoriteStatus();
-  }, [eventId]);
-
-  const handleClickedFavorite = async () => {
-    if (!eventId) return;
-
-    try {
-      setLoading(true);
-
-      const response = isFavorite
+      return isFavorite
         ? await removeEventFromFavorite(eventId)
         : await addEventToFavorite(eventId);
+    },
 
-      if (response.status === 200) {
-        setIsFavorite(!isFavorite); // flip it!
-      } else {
-        setError(response.message || "Something went wrong. Please try again.");
-      }
-    } catch (err) {
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: ["user-favorited", eventId],
+      });
+
+      const previousState = queryClient.getQueryData<{
+        isFavorited: boolean;
+        status: number;
+      }>(["user-favorited", eventId]);
+
+      queryClient.setQueryData(["user-favorited", eventId], {
+        ...previousState,
+        isFavorited: !isFavorite,
+      });
+
+      return { previousState };
+    },
+
+    onError: (_error, _data, context) => {
+      queryClient.setQueryData(
+        ["user-favorited", eventId],
+        context?.previousState,
+      );
       setError("Something went wrong. Please try again later.");
-    } finally {
-      setLoading(false);
-      setTimeout(() => setError(null), 3000); // Clear error after 5 seconds
-    }
-  };
+    },
 
-  const buttonText = loading
-    ? "Loading..."
-    : isFavorite
-      ? "Remove from Favorite"
-      : "Add to Favorite";
+    onSettled: () => {
+      setTimeout(() => setError(null), 3000);
+      queryClient.invalidateQueries({ queryKey: ["user-favorited", eventId] });
+    },
+  });
+
+  const buttonText = isFavorite ? "Remove Favorited" : "Add to Favorite";
 
   return (
     <>
       <button
         type="button"
         className="flex items-center gap-1 p-1"
-        onClick={handleClickedFavorite}
-        disabled={loading}
+        onClick={() => mutate()}
+        disabled={isPending}
       >
         {isFavorite ? (
           <MdFavorite className="text-xl text-red-500" />
