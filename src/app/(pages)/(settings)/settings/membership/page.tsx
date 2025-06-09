@@ -1,9 +1,12 @@
+import { userSubscription } from "@/actions/getUserSubscription";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
-export default function page() {
+export default async function page() {
+  const subscription = await userSubscription();
+
   return (
     <div className="w-full flex flex-col gap-10">
       <MobileSettingsHeaderNav title="Membership" />

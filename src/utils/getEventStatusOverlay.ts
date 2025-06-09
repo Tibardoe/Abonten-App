@@ -73,9 +73,9 @@ export function getEventStatusOverlay(
     return "Ongoing";
   }
 
-  // if (now > endDate) {
-  //   return "Event Ended";
-  // }
+  if (now > endDate) {
+    return "Event Ended";
+  }
 
   return null;
 }

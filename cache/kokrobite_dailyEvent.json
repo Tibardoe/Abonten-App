@@ -1,0 +1,29 @@
+{
+  "event": {
+    "id": "fc7c1306-4474-435e-bc66-162172755a14",
+    "organizer_id": "4c726a28-da76-4360-9f2d-34ae2e5fd4e9",
+    "event_category": "Entertainment and Cultural Events",
+    "event_type": "[\"Music Festival and Concert\",\"Movie Premier\",\"Art Exhibition\",\"Theatre Performance\"]",
+    "title": "Friday Euphoria",
+    "slug": "friday-euphoria",
+    "description": "Step into the vibe, feel the beat, and let the night come alive!\nFRIDAY EUPHORIA is your ultimate weekend kickoff — an electrifying fusion of music, dance, and unforgettable moments. Join us for a euphoric night of high-energy performances, immersive lighting, and heart-thumping rhythms spun by top DJs. Whether you're here to dance, connect, or just escape the ordinary, this is the place to be.\n\n✨ Good vibes only.\n🎶 Non-stop music.\n🍹 Chilled drinks.\n📍 Epic location.\n\nLet’s make Friday legendary.",
+    "location": "0101000020E6100000ED87331A5476D7BF36C8C969F4FF1540",
+    "address": {
+      "full_address": "Kokrobite, Ghana"
+    },
+    "website_url": "www.fridays.com",
+    "capacity": 100,
+    "flyer_public_id": "event_flyers/blblh26luxjyscs4zgyx",
+    "flyer_version": "1748164613",
+    "starts_at": "2025-05-28T23:00:00+00:00",
+    "ends_at": null,
+    "event_dates": [],
+    "status": "published",
+    "created_at": "2025-05-25T09:16:53.701+00:00",
+    "event_code": "FE1998",
+    "min_price": 200,
+    "currency": "GHS",
+    "attendanceCount": 0
+  },
+  "timestamp": 1749400447221
+}
