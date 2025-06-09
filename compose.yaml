@@ -15,11 +15,6 @@ services:
       NODE_ENV: development
     ports:
       - 3000:3000
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    working_dir: /usr/src/app
-    command: npm run dev
     develop:
       watch:
         - path: Dockerfile
@@ -31,7 +26,7 @@ services:
         - path: next.config.ts
           action: rebuild
         - path: .
-          target: src
+          target: /app
           action: sync
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
@@ -65,4 +60,5 @@ services:
 # secrets:
 #   db-password:
 #     file: db/password.txt
-
+volumes:
+  events:

@@ -12,9 +12,9 @@ FROM node:${NODE_VERSION}-alpine
 
 # Use production node environment by default.
 # ENV NODE_ENV production
-ENV NODE_ENV development
+ENV NODE_ENV=development
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy dependencies to docker image
 COPY package*.json ./
@@ -28,11 +28,14 @@ COPY package*.json ./
 #     --mount=type=cache,target=/root/.npm \
 #     npm ci --omit=dev
 
-# Run the application as a non-root user.
-USER node
-
 # Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
+
+# # Create and set permissions for .next before switching user
+# RUN mkdir -p .next && chown -R node:node /usr/src/app
+
+# # Run the application as a non-root user.
+# USER node
 
 # Copy the rest of the source files into the image.
 COPY . .
@@ -41,4 +44,4 @@ COPY . .
 EXPOSE 3000
 
 # Run the application.
-CMD npm run dev
+CMD ["npm", "run", "dev"]
