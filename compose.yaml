@@ -7,27 +7,27 @@
 # You can add other services your application may depend on here, such as a
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
-services:
-  web:
-    build:
-      context: .
-    environment:
-      NODE_ENV: development
-    ports:
-      - 3000:3000
-    develop:
-      watch:
-        - path: Dockerfile
-          action: rebuild
-        - path: package.json
-          action: rebuild
-        - path: package-lock.json
-          action: rebuild
-        - path: next.config.ts
-          action: rebuild
-        - path: .
-          target: /app
-          action: sync
+# services:
+#   web:
+#     build:
+#       context: .
+#     environment:
+#       NODE_ENV: development
+#     ports:
+#       - 3000:3000
+#     develop:
+#       watch:
+#         - path: Dockerfile
+#           action: rebuild
+#         - path: package.json
+#           action: rebuild
+#         - path: package-lock.json
+#           action: rebuild
+#         - path: next.config.ts
+#           action: rebuild
+#         - path: .
+#           target: /app
+#           action: sync
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
 # start the database before your application. The `db-data` volume persists the
@@ -60,5 +60,61 @@ services:
 # secrets:
 #   db-password:
 #     file: db/password.txt
-volumes:
-  events:
+
+# version: '3.8'
+
+# services:
+#   web:
+#     build:
+#       context: .
+#       target: ${BUILD_TARGET:-dev}  # Use target stages: dev or runner
+#     environment:
+#       - NODE_ENV=${NODE_ENV:-development}
+#     ports:
+#       - "3000:3000"
+#     volumes:
+#       - /app/node_modules
+#     develop:
+#       watch:
+#         - path: Dockerfile
+#           action: rebuild
+#         - path: package.json
+#           action: rebuild
+#         - path: package-lock.json
+#           action: rebuild
+#         - path: next.config.ts
+#           action: rebuild
+#         - path: .
+#           target: /app
+#           action: sync
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:3000"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 3
+
+services:
+  web:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-prod-run} # prod-runner
+      args:
+        - NODE_ENV=${NODE_ENV:-production}
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    healthcheck:
+      # test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.75"
+          memory: 1G
