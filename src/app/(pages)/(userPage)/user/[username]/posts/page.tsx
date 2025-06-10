@@ -42,6 +42,7 @@ export default async function page({
             flyer_public_id={post.flyer_public_id}
             flyer_version={post.flyer_version}
             address={post.address}
+            event_code={post.event_code}
             starts_at={post.starts_at}
             ends_at={post.ends_at}
             event_dates={post.event_dates}

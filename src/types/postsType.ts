@@ -83,6 +83,7 @@ export type UserPostType = {
   address: { full_address: string };
   starts_at?: Date | undefined;
   ends_at?: Date | undefined;
+  event_code: string;
   event_dates?: Date[] | [];
   title: string;
   capacity?: number | undefined;

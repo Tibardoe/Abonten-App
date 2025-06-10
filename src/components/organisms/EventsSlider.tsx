@@ -101,6 +101,7 @@ export default function EventsSlider({
               flyer_public_id={event.flyer_public_id}
               flyer_version={event.flyer_version}
               address={event.address}
+              event_code={event.event_code}
               starts_at={event.starts_at}
               ends_at={event.ends_at}
               event_dates={event.event_dates}

@@ -54,6 +54,7 @@ export default async function page({
                 key={event.title}
                 title={event.title}
                 id={event.id}
+                event_code={event.event_code}
                 flyer_public_id={event.flyer_public_id}
                 flyer_version={event.flyer_version}
                 address={event.address}

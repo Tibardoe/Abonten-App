@@ -326,7 +326,7 @@ export default async function page({
     .select(
       "*, user_info!organizer_id(avatar_public_id, avatar_version, username), ticket_type(id, type, price, currency, available_from, available_until)",
     )
-    .eq("slug", slug)
+    .eq("event_code", slug)
     .single();
 
   if (!event) return <p className="p-8 text-center">No event found</p>;
@@ -344,7 +344,7 @@ export default async function page({
     .limit(1)
     .single();
 
-  const safeLocation = location ?? "";
+  const safeLocation = event.address.full_address ?? "";
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const res = await fetch(
     `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,

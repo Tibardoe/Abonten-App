@@ -25,6 +25,7 @@ export default function EventCard({
   currency,
   capacity,
   id,
+  event_code,
   status,
 }: UserPostType) {
   const dateTime = getFormattedEventDate(starts_at, ends_at, event_dates);
@@ -65,7 +66,7 @@ export default function EventCard({
       <Link
         href={`/events/${
           location ? location : generateSlug(address.full_address)
-        }/event/${generateSlug(title)}`}
+        }/${event_code}`}
         className="block relative h-56 w-full overflow-hidden rounded-t-2xl"
       >
         <Image
