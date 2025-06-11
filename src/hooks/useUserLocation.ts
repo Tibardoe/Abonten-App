@@ -20,7 +20,70 @@ export default function useUserLocation() {
   return dialCode;
 }
 
-export function getUserLocation() {
+// export function getUserLocation() {
+//   const [location, setLocation] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     const fetchLocation = async () => {
+//       if (!navigator.geolocation) {
+//         console.error("Geolocation not supported");
+//         return;
+//       }
+
+//       navigator.geolocation.getCurrentPosition(
+//         async (position) => {
+//           const { latitude, longitude } = position.coords;
+//           const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+//           try {
+//             const res = await fetch(
+//               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}`
+//             );
+
+//             const data = await res.json();
+
+//             if (data.results.length > 0) {
+//               const addressComponents = data.results[0].address_components;
+
+//               let town = null;
+
+//               // Search for the most specific location (sublocality or locality)
+//               for (const component of addressComponents) {
+//                 if (component.types.includes("sublocality_level_1")) {
+//                   town = component.long_name; // Example: "Kokrobite"
+//                   break;
+//                 }
+//                 if (component.types.includes("locality") && !town) {
+//                   town = component.long_name; // Fallback to city
+//                   break;
+//                 }
+//               }
+
+//               if (!town) {
+//                 console.warn(
+//                   "Could not determine specific town, using default city."
+//                 );
+//                 town = "Unknown Location";
+//               }
+
+//               setLocation(town);
+//             }
+//           } catch (error) {
+//             console.error("Error fetching location:", error);
+//           }
+//         },
+//         (error) => console.error("Geolocation error:", error),
+//         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+//       );
+//     };
+
+//     fetchLocation();
+//   }, []);
+
+//   return location;
+// }
+
+export function useGetUserLocation() {
   const [location, setLocation] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,34 +102,24 @@ export function getUserLocation() {
             const res = await fetch(
               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}`,
             );
-
             const data = await res.json();
 
             if (data.results.length > 0) {
               const addressComponents = data.results[0].address_components;
-
               let town = null;
 
-              // Search for the most specific location (sublocality or locality)
               for (const component of addressComponents) {
                 if (component.types.includes("sublocality_level_1")) {
-                  town = component.long_name; // Example: "Kokrobite"
+                  town = component.long_name;
                   break;
                 }
                 if (component.types.includes("locality") && !town) {
-                  town = component.long_name; // Fallback to city
+                  town = component.long_name;
                   break;
                 }
               }
 
-              if (!town) {
-                console.warn(
-                  "Could not determine specific town, using default city.",
-                );
-                town = "Unknown Location";
-              }
-
-              setLocation(town);
+              setLocation(town || "Unknown Location");
             }
           } catch (error) {
             console.error("Error fetching location:", error);
@@ -83,59 +136,59 @@ export function getUserLocation() {
   return location;
 }
 
-export function useTownLocation() {
-  const [location, setLocation] = useState<string | null>(null);
+// export function useTownLocation() {
+//   const [location, setLocation] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchLocation = async () => {
-      if (!navigator.geolocation) {
-        console.error("Geolocation not supported");
-        return;
-      }
+//   useEffect(() => {
+//     const fetchLocation = async () => {
+//       if (!navigator.geolocation) {
+//         console.error("Geolocation not supported");
+//         return;
+//       }
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+//       navigator.geolocation.getCurrentPosition(
+//         async (position) => {
+//           const { latitude, longitude } = position.coords;
+//           const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-          try {
-            const res = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}`,
-            );
-            const data = await res.json();
+//           try {
+//             const res = await fetch(
+//               `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleApiKey}`,
+//             );
+//             const data = await res.json();
 
-            if (data.results.length > 0) {
-              const addressComponents = data.results[0].address_components;
+//             if (data.results.length > 0) {
+//               const addressComponents = data.results[0].address_components;
 
-              let town = null;
-              for (const component of addressComponents) {
-                if (component.types.includes("sublocality_level_1")) {
-                  town = component.long_name;
-                  break;
-                }
-                if (component.types.includes("locality") && !town) {
-                  town = component.long_name;
-                }
-              }
+//               let town = null;
+//               for (const component of addressComponents) {
+//                 if (component.types.includes("sublocality_level_1")) {
+//                   town = component.long_name;
+//                   break;
+//                 }
+//                 if (component.types.includes("locality") && !town) {
+//                   town = component.long_name;
+//                 }
+//               }
 
-              if (!town) {
-                console.warn("Could not determine specific town.");
-                town = "Unknown Location";
-              }
+//               if (!town) {
+//                 console.warn("Could not determine specific town.");
+//                 town = "Unknown Location";
+//               }
 
-              setLocation(town);
-            }
-          } catch (error) {
-            console.error("Error fetching location:", error);
-          }
-        },
-        (error) => console.error("Geolocation error:", error),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
-      );
-    };
+//               setLocation(town);
+//             }
+//           } catch (error) {
+//             console.error("Error fetching location:", error);
+//           }
+//         },
+//         (error) => console.error("Geolocation error:", error),
+//         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+//       );
+//     };
 
-    fetchLocation();
-  }, []);
+//     fetchLocation();
+//   }, []);
 
-  return location;
-}
+//   return location;
+// }

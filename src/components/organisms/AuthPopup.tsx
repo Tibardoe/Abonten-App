@@ -1,4 +1,4 @@
-import useUserLocation, { getUserLocation } from "@/hooks/useUserLocation";
+import useUserLocation, { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
 import Image from "next/image";
@@ -16,7 +16,7 @@ type PopupProp = {
 export default function AuthPopup({ buttonText, onClose }: PopupProp) {
   const country = useUserLocation();
 
-  const location = getUserLocation();
+  const location = useGetUserLocation();
 
   const [countryCode, setCountryCode] = useState("");
 

@@ -133,9 +133,7 @@ export default function CheckoutModal({
     }
 
     if (response?.status === 200 && response.checkoutSessionId) {
-      router.push(
-        `/wallet?checkoutId=${response.checkoutSessionId}&type=ticket`,
-      );
+      router.push(`/wallet/${response.checkoutSessionId}?type=ticket`);
     }
   };
 

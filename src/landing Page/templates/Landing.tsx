@@ -16,8 +16,6 @@ export default function Landing() {
 
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
-  console.log(selectedAddress);
-
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const text = (event.target as HTMLButtonElement).innerText;
     setButtonText(text);
