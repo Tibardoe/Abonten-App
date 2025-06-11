@@ -5,7 +5,7 @@ import AuthPopup from "./AuthPopup";
 import MobileAuthPopup from "./MobileAuthPopup";
 
 export default function UserAccountLogin() {
-  const [buttonText, setButtonText] = useState("");
+  // const [buttonText, setButtonText] = useState("");
   const [showAuthPopup, setShowAuthPopup] = useState(true);
 
   return (

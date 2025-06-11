@@ -24,6 +24,8 @@ export default async function page({
       );
     }
   } catch (error) {
+    console.log(error);
+
     return (
       <div className="text-center mt-5 text-red-500">
         An error occurred while fetching posts.

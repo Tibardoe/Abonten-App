@@ -1,7 +1,7 @@
 "use server";
 
-export default async function issueRefund(transaction) {
-  console.log("refunded");
+export default async function issueRefund(transaction: string) {
+  console.log("refunded", transaction);
 
   return { status: 200, message: "Refund successfull" };
 }

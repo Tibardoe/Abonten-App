@@ -8,27 +8,31 @@ export default async function page({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  // let userReviews = [];
+  const { username } = await params;
 
-  // try {
-  //   const response = await getUserReviews(username);
+  let userReviews = [];
 
-  //   if (response.status === 200 && response.data) {
-  //     userReviews = response.data;
-  //   } else {
-  //     return (
-  //       <div className="text-center mt-5 text-red-500">
-  //         Failed to load reviews: {response.message}
-  //       </div>
-  //     );
-  //   }
-  // } catch (error) {
-  //   return (
-  //     <div className="text-center mt-5 text-red-500">
-  //       An error occurred while fetching reviews.
-  //     </div>
-  //   );
-  // }
+  try {
+    const response = await getUserReviews(username);
+
+    if (response.status === 200 && response.data) {
+      userReviews = response.data;
+    } else {
+      return (
+        <div className="text-center mt-5 text-red-500">
+          Failed to load reviews: {response.message}
+        </div>
+      );
+    }
+  } catch (error) {
+    console.log(error);
+
+    return (
+      <div className="text-center mt-5 text-red-500">
+        An error occurred while fetching reviews.
+      </div>
+    );
+  }
 
   return reviews.length > 0 ? (
     <ul className="flex flex-col gap-5">

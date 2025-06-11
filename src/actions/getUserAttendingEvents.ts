@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { promise } from "zod";
 
 export default async function getUserAttendingEvents() {
   const supabase = await createClient();
@@ -61,5 +60,7 @@ export default async function getUserAttendingEvents() {
     );
 
     return { status: 200, data: ticketsWithEvents };
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
 }

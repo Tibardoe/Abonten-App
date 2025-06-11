@@ -38,8 +38,8 @@ export default function EventUploadMobileModal({
   handleClosePopup,
   imgUrl,
   selectedFile,
-  className,
-}: closePopupModalType) {
+}: // className,
+closePopupModalType) {
   const [isUploading, setIsUploading] = useState(false);
 
   const [step, setStep] = useState(1);
@@ -268,7 +268,7 @@ export default function EventUploadMobileModal({
     setMultipleTickets(tickets);
   };
 
-  const handlePromoCodeFormPopup = (state: boolean) => {
+  const handlePromoCodeFormPopup = () => {
     setShowPromoCodeFormPopup((prevState) => !prevState);
   };
 

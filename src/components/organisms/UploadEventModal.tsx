@@ -253,7 +253,7 @@ export default function UploadEventModal({
     setMultipleTickets(tickets);
   };
 
-  const handlePromoCodeFormPopup = (state: boolean) => {
+  const handlePromoCodeFormPopup = () => {
     setShowPromoCodeFormPopup((prevState) => !prevState);
   };
 

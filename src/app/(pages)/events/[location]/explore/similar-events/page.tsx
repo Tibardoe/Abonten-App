@@ -1,5 +1,5 @@
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
-import Notification from "@/components/atoms/Notification";
+// import Notification from "@/components/atoms/Notification";
 import EventCard from "@/components/molecules/EventCard";
 import type { UserPostType } from "@/types/postsType";
 import { undoSlug } from "@/utils/geerateSlug";

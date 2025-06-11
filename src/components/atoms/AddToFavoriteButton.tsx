@@ -15,7 +15,7 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
 
   const queryClient = useQueryClient();
 
-  const { isError, data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["user-favorited", eventId],
     queryFn: () => checkIfEventIsFavorited(eventId),
     enabled: !!eventId,
@@ -28,7 +28,7 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
 
   const {
     mutate,
-    data: response,
+    // data: response,
     isPending,
   } = useMutation({
     mutationFn: async () => {

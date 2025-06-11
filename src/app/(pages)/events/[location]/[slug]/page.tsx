@@ -301,14 +301,14 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import { createClient } from "@/config/supabase/server";
 import type { UserPostType } from "@/types/postsType";
 import {
-  getDateParts,
+  // getDateParts,
   getFormattedEventDate,
   getRelativeTime,
 } from "@/utils/dateFormatter";
 import Image from "next/image";
 import Link from "next/link";
-import { FiArrowUpRight, FiMail, FiShare2 } from "react-icons/fi";
-import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
+import { FiArrowUpRight, FiMail } from "react-icons/fi";
+import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import { PiTicketBold } from "react-icons/pi";
 
@@ -319,7 +319,7 @@ export default async function page({
 }) {
   const supabase = await createClient();
 
-  const { slug, location } = await params;
+  const { slug } = await params;
 
   const { data: event } = await supabase
     .from("event")

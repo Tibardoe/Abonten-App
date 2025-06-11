@@ -1,13 +1,13 @@
 "use client";
 
-import { allEvents } from "@/data/allEvents";
-import type { PostsType, UserPostType } from "@/types/postsType";
+// import { allEvents } from "@/data/allEvents";
+import type { UserPostType } from "@/types/postsType";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { FaArrowRight } from "react-icons/fa";
+// import { useEffect, useState } from "react";
+// import { FaArrowRight } from "react-icons/fa";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { FiCalendar, FiClock, FiMapPin } from "react-icons/fi";
 import { PiTicketBold } from "react-icons/pi";

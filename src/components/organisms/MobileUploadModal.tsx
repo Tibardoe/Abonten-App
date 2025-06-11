@@ -3,7 +3,6 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useState } from "react";
-import { Button } from "../ui/button";
 
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;

@@ -1,9 +1,9 @@
-import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
+// import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import UserAccountLogin from "@/components/organisms/UserAccountLogin";
 import { createClient } from "@/config/supabase/server";
-import Higlight from "@/userAccount/molecules/Highlight";
+// import Higlight from "@/userAccount/molecules/Highlight";
 import ContentArea from "@/userAccount/organisms/ContentArea";
-import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
+// import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
 
 export default async function page() {
   const supabase = await createClient();
@@ -16,7 +16,7 @@ export default async function page() {
 
   return (
     <div className="flex flex-col gap-7">
-      <ProfileDetails />
+      {/* <ProfileDetails /> */}
       <ContentArea />
     </div>
   );

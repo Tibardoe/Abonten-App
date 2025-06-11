@@ -94,11 +94,13 @@
 #       timeout: 10s
 #       retries: 3
 
+# comopose.yml file for prod
+
 services:
   web:
     build:
       context: .
-      target: ${BUILD_TARGET:-prod-run} # prod-runner
+      target: ${BUILD_TARGET:-prod-runner} # prod-runner
       args:
         - NODE_ENV=${NODE_ENV:-production}
     environment:

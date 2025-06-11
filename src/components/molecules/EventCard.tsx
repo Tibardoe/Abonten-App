@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
-import EventCardFlyerImage from "../atoms/EventCardFlyerImage";
+// import EventCardFlyerImage from "../atoms/EventCardFlyerImage";
 import EventCardMenuBtn from "../atoms/EventCardMenuBtn";
 
 export default function EventCard({

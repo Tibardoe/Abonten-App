@@ -13,9 +13,9 @@ export default function MobileUploadButton() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePopup = () => {
-    setShowPopup(true);
-  };
+  // const handlePopup = () => {
+  //   setShowPopup(true);
+  // };
 
   const closePopup = (state: boolean) => {
     setShowPopup(state);

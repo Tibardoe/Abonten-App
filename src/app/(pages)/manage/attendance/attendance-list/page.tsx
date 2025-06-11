@@ -22,6 +22,7 @@ export default async function page({
   return (
     <div>
       <h1 className="font-bold md:text-xl">List of Attendance</h1>
+      <p>{attendanceList}</p>
     </div>
   );
 }

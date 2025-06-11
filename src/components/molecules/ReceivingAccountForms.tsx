@@ -277,9 +277,9 @@
 
 import { networks } from "@/utils/networkProviderData";
 import type { receivingAccountSchema } from "@/utils/receivingAcountSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
+// import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
-import { useState } from "react";
+// import { useState } from "react";
 import type { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { cn } from "../lib/utils";
@@ -305,8 +305,8 @@ export default function ReceivingAccountForms({
 }: ReceivingAccountType) {
   const {
     register,
-    handleSubmit,
-    getValues,
+    // handleSubmit,
+    // getValues,
     formState: { errors },
   } = form;
 

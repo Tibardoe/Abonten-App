@@ -1,7 +1,7 @@
 "use client";
 
 import { generateSlug } from "@/utils/geerateSlug";
-import Image from "next/image";
+// import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
@@ -40,7 +40,7 @@ const MapModal: React.FC<MapModalProps> = ({
     setCurrentLocation(location); // update local input value
   };
 
-  const [selectedAddress, setSelectedAddress] = useState("");
+  const [_selectedAddress, setSelectedAddress] = useState("");
 
   const handleConfirm = () => {
     if (currentLocation) {

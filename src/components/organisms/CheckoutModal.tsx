@@ -23,7 +23,7 @@ type CheckoutProp = {
 export default function CheckoutModal({
   handleCheckoutModal,
   eventId,
-  btnText,
+  // btnText,
   eventTitle,
   time,
   date,

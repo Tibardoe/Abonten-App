@@ -26,7 +26,13 @@ export async function POST(req: Request) {
     const { data: userSession, error: sessionError } =
       await supabase.auth.getSession();
 
-    if (!userSession.session || userSession.session.user.id !== userId) {
+    if (
+      !userSession.session ||
+      userSession.session.user.id !== userId ||
+      sessionError
+    ) {
+      console.log(`Error getting user session:${sessionError?.message}`);
+
       return NextResponse.json({ message: "No user found" }, { status: 401 });
     }
 
@@ -46,7 +52,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ url: uploadResponse.secure_url });
+    return NextResponse.json({ url: uploadResponse.secure_url, data: data });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ message: "Upload failed" }, { status: 500 });

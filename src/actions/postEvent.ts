@@ -71,7 +71,7 @@ export async function postEvent(formData: PostsType) {
 
   const slug = generateSlug(title);
 
-  const { public_id, version, transformation } = flyerUpload;
+  const { public_id, version } = flyerUpload;
 
   // Handle specific dates or start and end times
   const eventStartDate = starts_at;

@@ -18,11 +18,11 @@ export default function UserAccountTabsNavigation({
 
   const isCurrentUser = username === ownUsername;
 
-  const tabs = [
-    { imgUrl: "/assets/images/posts.svg", text: "Posts" },
-    { imgUrl: "/assets/images/favorites.svg", text: "Favorites" },
-    { imgUrl: "/assets/images/reviews.svg", text: "Reviews" },
-  ];
+  // const tabs = [
+  //   { imgUrl: "/assets/images/posts.svg", text: "Posts" },
+  //   { imgUrl: "/assets/images/favorites.svg", text: "Favorites" },
+  //   { imgUrl: "/assets/images/reviews.svg", text: "Reviews" },
+  // ];
 
   return (
     <div className="w-full flex justify-center items-center flex-col border-t border-black-500">

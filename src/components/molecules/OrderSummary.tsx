@@ -153,7 +153,7 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
 
   // Subscription summary
   if (orderSummary.type === "subscription") {
-    const { planName, features, totalAmount } = orderSummary;
+    const { planName, totalAmount } = orderSummary;
     return (
       <div className="border rounded-2xl shadow-lg p-6 space-y-4 bg-white">
         <div className="flex justify-between items-center">

@@ -65,7 +65,7 @@ export function formatSingleDateTime(date: Date | string): {
   else if (day % 10 === 3 && day !== 13) suffix = "rd";
 
   const formattedDate = parsedDate.toLocaleDateString("en-GB", options);
-  const [dayStr, monthStr, yearStr] = formattedDate.split(" ");
+  const [_dayStr, monthStr, yearStr] = formattedDate.split(" ");
 
   const dateStr = `${day}${suffix} ${monthStr}, ${yearStr}`;
   const timeStr = parsedDate.toLocaleTimeString("en-US", {

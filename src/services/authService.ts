@@ -100,7 +100,7 @@ const ensureUserInfoExists = async (user: authUserType) => {
       .eq("id", user.id)
       .single();
 
-    if (!data) {
+    if (!data || error) {
       console.log("Creating new user_info entry...");
 
       const { error: insertError } = await supabase.from("user_info").insert({

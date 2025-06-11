@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/config/supabase/client";
-import { generateSlug, undoSlug } from "@/utils/geerateSlug";
+import { generateSlug } from "@/utils/geerateSlug";
 import { useEffect, useState } from "react";
 import MobileNavButton from "../atoms/MobileNavButton";
 import MobileAuthPopup from "./MobileAuthPopup";

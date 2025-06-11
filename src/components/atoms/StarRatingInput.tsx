@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState } from "react";
-import { IoIosStar, IoIosStarHalf, IoIosStarOutline } from "react-icons/io";
+import { IoIosStar } from "react-icons/io";
 
 type Props = {
   onChange: (rating: number) => void;

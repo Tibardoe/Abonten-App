@@ -1,6 +1,6 @@
 "use client";
 
-import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+// import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
 import Image from "next/image";
 import React from "react";
 import { useState } from "react";
@@ -8,16 +8,16 @@ import RangeSlider from "react-range-slider-input";
 import "react-range-slider-input/dist/style.css";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+// import {
+//   Popover,
+//   PopoverContent,
+//   PopoverTrigger,
+// } from "@/components/ui/popover";
 import { distance, rating } from "@/data/distanceAndRating";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 // Date moodules
-import { addDays, format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+// import { addDays, format } from "date-fns";
+// import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { DateRange } from "react-day-picker";
 import { cn } from "../lib/utils";

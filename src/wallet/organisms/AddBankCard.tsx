@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { networks } from "@/utils/networkProviderData";
+// import { networks } from "@/utils/networkProviderData";
 import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -13,11 +13,11 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
 
   const { register } = form;
 
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [_showDropdown, setShowDropdown] = useState(false);
 
-  const handleDropdown = () => {
-    setShowDropdown((prevState) => !prevState);
-  };
+  // const handleDropdown = () => {
+  //   setShowDropdown((prevState) => !prevState);
+  // };
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>

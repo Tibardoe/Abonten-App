@@ -27,7 +27,7 @@ export default function ChangeLocationModal({
   );
   const [isMapOpen, setIsMapOpen] = useState(false);
 
-  const [selectedLocation, setSelectedLocation] = useState<{
+  const [_selectedLocation, setSelectedLocation] = useState<{
     lat: number;
     lng: number;
     address: string;

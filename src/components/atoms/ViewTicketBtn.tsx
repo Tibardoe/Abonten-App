@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "../ui/button";
+// import { Button } from "../ui/button";
 
 import type { UserTicketType } from "@/types/ticketType";
-import { useParams } from "next/navigation";
-import RecieptModal from "../organisms/RecieptModal";
+// import { useParams } from "next/navigation";
+// import RecieptModal from "../organisms/RecieptModal";
 import TicketModal from "../organisms/TicketModal";
 
 type ViewTicketBtnProps = {
@@ -15,7 +15,7 @@ type ViewTicketBtnProps = {
 export default function ViewTicketBtn({ event }: ViewTicketBtnProps) {
   const [showTicket, setShowTicket] = useState(false);
 
-  const { transactionId } = useParams();
+  // const { transactionId } = useParams();
 
   const handleShowTicket = (state: boolean) => {
     setShowTicket(state);

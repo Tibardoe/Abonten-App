@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import EventUploadMobileModal from "../organisms/EventUploadMobileModal";
-import { Button } from "../ui/button";
+// import { Button } from "../ui/button";
 
 export default function MobileUploadButton() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -14,9 +14,9 @@ export default function MobileUploadButton() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePopup = () => {
-    setShowPopup(true);
-  };
+  // const handlePopup = () => {
+  //   setShowPopup(true);
+  // };
 
   const closePopup = (state: boolean) => {
     setShowPopup(state);

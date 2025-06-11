@@ -8,7 +8,7 @@ type inputProp = {
 } & React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>;
 
 const PostInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
-  ({ title, type, inputPlaceholder, ...props }, ref) => {
+  ({ type, inputPlaceholder, ...props }, ref) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
 
     return (

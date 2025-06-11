@@ -1,7 +1,5 @@
 import { getUserTransactions } from "@/actions/getUserTransactions";
 import ViewReciptButton from "@/components/atoms/ViewReciptButton";
-import { Button } from "@/components/ui/button";
-import { transactionsDummyData } from "@/data/transactionsDummyData";
 import Image from "next/image";
 import { BsFillDashCircleFill } from "react-icons/bs";
 import { IoMdCheckmarkCircle } from "react-icons/io";

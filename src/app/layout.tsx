@@ -1,5 +1,7 @@
+import { GeistMono } from "geist/font/mono";
+// import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "@/context/authProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
@@ -7,15 +9,15 @@ import ReactQueryProvider from "@/providers/ReactQueryProvider";
 // import { notFound } from "next/navigation";
 // import { routing } from "@/i18n/routing";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// const geistSans = Geist({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
 
 export const metadata: Metadata = {
   title:
@@ -37,9 +39,9 @@ export default async function RootLayout({
   // }
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ReactQueryProvider>
           <Providers>

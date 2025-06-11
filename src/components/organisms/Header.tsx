@@ -278,8 +278,8 @@ export default function Header() {
   // Query for user session
   const {
     data: userSession,
-    isLoading: sessionLoading,
-    error: sessionError,
+    // isLoading: sessionLoading,
+    // error: sessionError,
   } = useQuery({
     queryKey: ["session"],
     queryFn: async () => {
@@ -290,7 +290,10 @@ export default function Header() {
   });
 
   // Query for user details
-  const { data: userDetails, isLoading: detailsLoading } = useQuery({
+  const {
+    data: userDetails,
+    // isLoading: detailsLoading
+  } = useQuery({
     queryKey: ["user-details", userSession?.id],
     enabled: !!userSession?.id,
     queryFn: async () => {

@@ -2,7 +2,7 @@
 
 import deleteUser from "@/actions/deleteUser";
 import sendOtpForPhoneUpdate from "@/actions/sendOtpForPhoneUpdate";
-import updateUserPhoneNumber from "@/actions/updateUserPhoneNumber";
+// import updateUserPhoneNumber from "@/actions/updateUserPhoneNumber";
 import verifyPhoneUpdateOtp from "@/actions/verifyOtpAndUpdatePhone";
 import useUserLocation, { getUserLocation } from "@/hooks/useUserLocation";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
@@ -10,7 +10,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { HiArrowLongLeft } from "react-icons/hi2";
 import Input from "../atoms/Input";
 import Notification from "../atoms/Notification";
 import PhoneInput from "../molecules/PhoneInput";
@@ -47,7 +46,7 @@ export default function SecurityInputFields() {
   // From auth popup
   const country = useUserLocation();
 
-  const location = getUserLocation();
+  // const location = getUserLocation();
 
   const [countryCode, setCountryCode] = useState("");
 
@@ -59,7 +58,7 @@ export default function SecurityInputFields() {
 
   const [otpErrorMessageShown, setOtpErrorMessageShown] = useState(false);
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -195,7 +194,7 @@ export default function SecurityInputFields() {
             <h1 className="font-bold text-3xl">Update phone number</h1>
 
             <p className="text-sm text-gray-500">
-              We'll send an SMS code for verification
+              We&apos;ll send an SMS code for verification
             </p>
           </div>
 
@@ -233,7 +232,7 @@ export default function SecurityInputFields() {
             <h1 className="font-bold text-3xl">Enter Code</h1>
 
             <p>
-              We've sent it to <br /> {fullPhoneNumber}
+              We&apos;ve sent it to <br /> {fullPhoneNumber}
             </p>
           </div>
 

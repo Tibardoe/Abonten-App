@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default async function page() {
-  const subscription = await userSubscription();
+  // const subscription = await userSubscription();
 
   return (
     <div className="w-full flex flex-col gap-10">

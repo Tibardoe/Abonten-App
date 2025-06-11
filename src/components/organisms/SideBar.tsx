@@ -1,10 +1,10 @@
 "use client";
 
-import { getUserDetails } from "@/actions/getUserDetails";
+// import { getUserDetails } from "@/actions/getUserDetails";
 import { getUserEventRole } from "@/actions/getUserEventRole";
 import { useAuth } from "@/context/authContext";
 import { signOut } from "@/services/authService";
-import Image from "next/image";
+// import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -13,8 +13,8 @@ import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
 import { MdOutlineManageHistory } from "react-icons/md";
-import { TbLogin } from "react-icons/tb";
-import EventUploadMobileButton from "../atoms/EventUploadMobileButton";
+// import { TbLogin } from "react-icons/tb";
+// import EventUploadMobileButton from "../atoms/EventUploadMobileButton";
 import { cn } from "../lib/utils";
 import AuthPopup from "./AuthPopup";
 import EventUploadMobileModal from "./EventUploadMobileModal";

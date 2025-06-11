@@ -22,6 +22,7 @@ export type FavoriteEvents = {
     flyer_public_id: string;
     flyer_version: string;
     starts_at?: Date;
+    event_code: string;
     ends_at?: Date;
     event_dates?: Date[];
     timezone: string;

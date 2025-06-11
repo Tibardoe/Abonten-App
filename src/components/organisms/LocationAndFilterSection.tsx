@@ -1,7 +1,7 @@
 "use client";
 
 import { undoSlug } from "@/utils/geerateSlug";
-import Image from "next/image";
+// import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { IoLocationOutline } from "react-icons/io5";

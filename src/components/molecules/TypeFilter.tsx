@@ -1,7 +1,6 @@
 "use client";
 
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
-import Image from "next/image";
 import { useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 

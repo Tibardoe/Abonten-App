@@ -1,4 +1,4 @@
-const getFormattedPlaceDetails = (placeId: string) => {
+export const getFormattedPlaceDetails = (placeId: string) => {
   return new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
     const service = new google.maps.places.PlacesService(
       document.createElement("div"),

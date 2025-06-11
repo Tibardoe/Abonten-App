@@ -1,5 +1,4 @@
 import { getUserTransactions } from "@/actions/getUserTransactions";
-import { transactionsDummyData } from "@/data/transactionsDummyData";
 import Link from "next/link";
 import { IoMdCheckmarkCircle } from "react-icons/io";
 

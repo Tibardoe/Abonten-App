@@ -121,7 +121,7 @@ export default async function validateCheckout({
 
   const selectedTickets = await Promise.all(
     Object.entries(quantities)
-      .filter(([id, value]) => value > 0)
+      .filter(([_id, value]) => value > 0)
       .map(async ([ticketTypeId, quantity]) => {
         const { data: ticketType, error: ticketError } = await supabase
           .from("ticket_type")

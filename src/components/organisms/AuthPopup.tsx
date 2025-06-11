@@ -165,7 +165,7 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
 
           <div className="text-opacity-50 text-lg mb-10">
             <p>
-              We've sent it to <br /> {fullPhoneNumber}
+              We&apos;ve sent it to <br /> {fullPhoneNumber}
             </p>
           </div>
 

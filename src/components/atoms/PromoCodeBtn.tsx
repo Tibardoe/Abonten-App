@@ -10,7 +10,7 @@ export default function PromoCodeBtn({
   ticket,
   handlePromoCodeFormPopup,
 }: PromoCodeProp) {
-  const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(false);
+  const [showPromoCodeFormPopup, _setShowPromoCodeFormPopup] = useState(false);
 
   return (
     <button

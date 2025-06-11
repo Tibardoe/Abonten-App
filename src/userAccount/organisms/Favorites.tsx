@@ -6,9 +6,9 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 export default function Favorites() {
-  const [favorites, setfavorites] = useState<FavoriteEvents[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [favorites, setfavorites] = useState<FavoriteEvents[]>([]);
+  // const [loading, setLoading] = useState<boolean>(true);
+  // const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserPosts = async () => {
@@ -21,6 +21,8 @@ export default function Favorites() {
           setError(`Failed to load posts.- ${response.message}`);
         }
       } catch (error) {
+        console.log(error);
+
         setError("An error occurred while fetching posts.");
       } finally {
         setLoading(false);

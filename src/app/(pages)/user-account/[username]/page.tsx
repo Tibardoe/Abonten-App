@@ -1,6 +1,6 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
-import UserAccountLogin from "@/components/organisms/UserAccountLogin";
-import { createClient } from "@/config/supabase/server";
+// import UserAccountLogin from "@/components/organisms/UserAccountLogin";
+// import { createClient } from "@/config/supabase/server";
 import Higlight from "@/userAccount/molecules/Highlight";
 import ContentArea from "@/userAccount/organisms/ContentArea";
 import ProfileDetails from "@/userAccount/organisms/ProfileDetails";

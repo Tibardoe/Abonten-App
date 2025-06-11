@@ -5,8 +5,6 @@ import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
-import { allEvents } from "@/data/allEvents";
-import { aroundYou } from "@/data/aroundYou";
 import { happeningThisMonth } from "@/data/happeningThisMonth";
 import { happeningThisWeek } from "@/data/happeningThisWeek";
 import { happeningToday } from "@/data/happeningToday";

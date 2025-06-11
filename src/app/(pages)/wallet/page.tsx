@@ -1,4 +1,4 @@
-import getEventTitle from "@/actions/getEventTitle";
+// import getEventTitle from "@/actions/getEventTitle";
 import getSubscriptionCheckout from "@/actions/getSubscriptionCheckout";
 import getTicketCheckout from "@/actions/getTicketCheckout";
 import CheckoutBtn from "@/components/atoms/CheckoutBtn";
@@ -19,7 +19,7 @@ export default async function page({
   const checkoutId = searchParams?.checkoutId || "";
   const checkoutType = searchParams?.type;
 
-  let notification: string | null;
+  // let notification: string | null;
 
   let orderSummary = null;
   let eventTitle = "";
