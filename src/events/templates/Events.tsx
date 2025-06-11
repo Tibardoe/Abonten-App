@@ -1,136 +1,134 @@
-"use client";
-
+import { getFilteredEvents } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
-import { happeningThisMonth } from "@/data/happeningThisMonth";
-import { happeningThisWeek } from "@/data/happeningThisWeek";
-import { happeningToday } from "@/data/happeningToday";
-import { topRatedOrganizers } from "@/data/topRatedOrganizers";
 import type { UserPostType } from "@/types/postsType";
-import { useEffect, useState } from "react";
+import { getDailyEvent } from "@/utils/dailyEventCache";
 
-export default function Events() {
-  const [coordinates, setCoordinates] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
+export default async function page({
+  params,
+}: {
+  params: Promise<{ location: string }>;
+}) {
+  const { location } = await params;
 
-  const [eventsNearBy, setEventsNearBy] = useState<UserPostType[] | null>(null);
+  const safeLocation = location ?? "";
 
-  const [loading, setLoading] = useState(true);
-
-  const [eventsAroundYou, setEventsAroundYou] = useState<UserPostType[] | null>(
-    null,
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const res = await fetch(
+    `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
   );
 
-  useEffect(() => {
-    const stored = localStorage.getItem("coordinates");
+  const { lat, lng } = await res.json();
 
-    if (stored) {
-      const coords = JSON.parse(stored);
-      setCoordinates({ lat: coords.lat, lng: coords.lng });
-    } else {
-      setCoordinates({ lat: 0, lng: 0 });
-    }
-  }, []);
+  const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
 
-  useEffect(() => {
-    const fetchNearByEvents = async () => {
-      if (!coordinates) return;
+  const eventsAroundYou = await getNearByEvents(lat, lng, 5);
 
-      try {
-        const eventsWithinLocation = await getNearByEvents(
-          coordinates.lat,
-          coordinates.lng,
-          10,
-        );
+  const aroundYou: UserPostType[] = eventsAroundYou.data || [];
 
-        if (eventsWithinLocation) {
-          setEventsNearBy(eventsWithinLocation.data);
-          setLoading(false);
-        }
+  const events: UserPostType[] = eventsWithinLocation.data || [];
 
-        const nearbyEvents = await getNearByEvents(
-          coordinates.lat,
-          coordinates.lng,
-          5,
-        );
+  const topRatedOrganizers: UserPostType[] = await getFilteredEvents({
+    lat: lat,
+    lng: lng,
+    filter: "top-rated-organizers",
+    radius: 10,
+  });
 
-        setEventsAroundYou(nearbyEvents.data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  const happeningToday: UserPostType[] = await getFilteredEvents({
+    lat: lat,
+    lng: lng,
+    filter: "happening-today",
+    radius: 10,
+  });
 
-    fetchNearByEvents();
-  }, [coordinates]);
+  const happeningThisWeek: UserPostType[] = await getFilteredEvents({
+    lat: lat,
+    lng: lng,
+    filter: "happening-this-week",
+    radius: 10,
+  });
 
-  if (loading) return "loading";
+  const happeningThisMonth: UserPostType[] = await getFilteredEvents({
+    lat: lat,
+    lng: lng,
+    filter: "happening-this-month",
+    radius: 10,
+  });
+
+  const selected = await getDailyEvent(events, safeLocation);
 
   return (
-    <section className="space-y-10">
-      {eventsNearBy?.length ? (
-        <>
-          <LocationAndFilterSection />
+    <section className="space-y-5 min-h-dvh">
+      <LocationAndFilterSection />
 
-          <Banner />
+      {eventsWithinLocation.data?.length ? (
+        <>
+          <Banner event={selected} />
 
           <EventsSlider
             heading="Around-You"
-            events={eventsAroundYou || []}
-            urlPath="hc/around-you"
+            events={aroundYou || []}
+            urlPath={`${safeLocation}/explore/around-you`}
           />
 
           <EventsSlider
             heading="Top-rated Organizers"
             events={topRatedOrganizers}
-            urlPath="hc/top-rated-organizers"
+            urlPath={`${safeLocation}/explore/top-rated-organizers`}
           />
 
           <EventsSlider
             heading="Happening Today"
             events={happeningToday}
-            urlPath="hc/happening-today"
+            urlPath={`${safeLocation}/explore/happening-today`}
           />
 
           <EventsSlider
             heading="Happening This Week"
             events={happeningThisWeek}
-            urlPath="hc/happening-this-week"
+            urlPath={`${safeLocation}/explore/happening-this-week`}
           />
 
           <EventsSlider
             heading="Happening This Month"
             events={happeningThisMonth}
-            urlPath="hc/happening-this-month"
+            urlPath={`${safeLocation}/explore/happening-this-month`}
           />
 
           <div className="mb-5">
             <h2 className="text-2xl font-bold mb-2">All Events</h2>
 
-            <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
-              {eventsNearBy.map((post) => (
+            <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
+              {events.map((post) => (
                 <EventCard
                   key={post.title}
+                  id={post.id}
                   title={post.title}
                   flyer_public_id={post.flyer_public_id}
                   flyer_version={post.flyer_version}
                   address={post.address}
+                  event_code={post.event_code}
                   starts_at={post.starts_at}
                   ends_at={post.ends_at}
-                  price={post.price}
+                  event_dates={post.event_dates}
+                  minTicket={post.minTicket}
                   created_at={post.created_at}
                   capacity={post.capacity}
+                  min_price={post.min_price}
+                  currency={post.currency}
+                  attendanceCount={post.attendanceCount}
+                  status={post.status}
                 />
               ))}
             </ul>
           </div>
         </>
       ) : (
-        <div className="w-full h-full flex flex-col gap-5 items-center justify-center">
+        <div className="h-[50%] flex flex-col gap-5 items-center justify-center">
           <div>
             <h2 className="font-bold">
               Sorry, no events available in this location

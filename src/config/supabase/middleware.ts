@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: DO NOT REMOVE auth.getUser()
 
   const {
-    data: { user },
+    data: { user: _user },
   } = await supabase.auth.getUser();
 
   // if (
