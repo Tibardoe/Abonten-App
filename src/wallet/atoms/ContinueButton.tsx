@@ -1,10 +1,12 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
-import { useState } from "react";
+// import { useState } from "react";
 
 export default function ContinueButton() {
-  const [disabled, setDisabled] = useState(true);
+  // const [disabled, setDisabled] = useState(true);
+
+  const disabled = true;
 
   return (
     <button

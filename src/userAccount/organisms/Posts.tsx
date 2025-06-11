@@ -2,10 +2,10 @@ import { getUserPosts } from "@/actions/getUserPosts";
 import EventCard from "@/components/molecules/EventCard";
 import { Button } from "@/components/ui/button";
 import { userEvents } from "@/data/userEvents";
-import type { PostsType } from "@/types/postsType";
+// import type { PostsType } from "@/types/postsType";
 // import Image from "next/image";
 // import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function Posts() {
   // const [posts, setPosts] = useState<PostsType[]>([]);

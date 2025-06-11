@@ -1,9 +1,9 @@
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
 import EventCard from "@/components/molecules/EventCard";
 import { userFavoritedEvents } from "@/data/userFavoritedEvents";
-import type { FavoriteEvents } from "@/types/favoriteEventTypes";
+// import type { FavoriteEvents } from "@/types/favoriteEventTypes";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 export default function Favorites() {
   // const [favorites, setfavorites] = useState<FavoriteEvents[]>([]);

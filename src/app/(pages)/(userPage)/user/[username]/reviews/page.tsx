@@ -36,7 +36,7 @@ export default async function page({
 
   return reviews.length > 0 ? (
     <ul className="flex flex-col gap-5">
-      {reviews.map((review) => (
+      {userReviews.map((review) => (
         <li
           key={review.title}
           className="w-full bg-black bg-opacity-5 p-5 flex flex-col gap-3 rounded-lg md:rounded-2xl text-justify text-sm md:text-md"

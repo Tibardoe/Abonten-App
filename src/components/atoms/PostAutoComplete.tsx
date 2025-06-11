@@ -172,7 +172,7 @@ import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholde
 // import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IoLocationOutline } from "react-icons/io5";
 
@@ -569,7 +569,7 @@ export default function PostAutoComplete({
   ) => {
     try {
       const place = await getFormattedPlaceDetails(placeId);
-      const formattedAddress = place.formatted_address || description;
+      // const formattedAddress = place.formatted_address || description;
       const coords = {
         lat: place.geometry?.location?.lat() ?? 0,
         lng: place.geometry?.location?.lng() ?? 0,

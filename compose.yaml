@@ -94,7 +94,7 @@
 #       timeout: 10s
 #       retries: 3
 
-# comopose.yml file for prod
+# comopose.yml file
 
 services:
   web:

@@ -1,4 +1,4 @@
-import { userSubscription } from "@/actions/getUserSubscription";
+// import { userSubscription } from "@/actions/getUserSubscription";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import Image from "next/image";

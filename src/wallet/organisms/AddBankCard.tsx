@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 // import { networks } from "@/utils/networkProviderData";
 import Image from "next/image";
-import { useState } from "react";
+// import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 type PopupCloseProp = {
@@ -13,7 +13,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
 
   const { register } = form;
 
-  const [_showDropdown, setShowDropdown] = useState(false);
+  // const [showDropdown, setShowDropdown] = useState(false);
 
   // const handleDropdown = () => {
   //   setShowDropdown((prevState) => !prevState);

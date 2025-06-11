@@ -2,7 +2,7 @@ import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import { getUserRating } from "@/actions/getUserRating";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
-// import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
