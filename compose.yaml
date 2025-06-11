@@ -115,8 +115,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: "0.75"
-          memory: 1G
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "2"
+    #       memory: 4G
