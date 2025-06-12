@@ -17,7 +17,7 @@ export default async function page({
 
   const formattedCategory = undoSlug(category);
 
-  const formattedLocation = undoSlug(location);
+  // const formattedLocation = undoSlug(location);
 
   const safeLocation = location ?? "";
 
