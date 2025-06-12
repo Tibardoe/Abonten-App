@@ -13,7 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 //   PopoverContent,
 //   PopoverTrigger,
 // } from "@/components/ui/popover";
-import { distance, rating } from "@/data/distanceAndRating";
+import { distances, rating } from "@/data/distanceAndRating";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 // Date moodules
 // import { addDays, format } from "date-fns";
@@ -46,7 +46,7 @@ export default function FilterModalPopup({
 
   const [ratingg, setRating] = useState("");
 
-  const [distancee, setDistance] = useState("");
+  const [distance, setDistance] = useState("");
 
   const router = useRouter();
 
@@ -60,7 +60,7 @@ export default function FilterModalPopup({
       from: date?.from?.toISOString() || "",
       to: date?.to?.toISOString() || "",
       rating: ratingg,
-      distance: distancee,
+      distance: distance,
       lat: coordinates.coords.latitude.toString(),
       lng: coordinates.coords.longitude.toString(),
     });
@@ -268,14 +268,14 @@ export default function FilterModalPopup({
             <h2 className="font-bold md:text-lg mb-5">Distance</h2>
 
             <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              {distance.map((d) => (
+              {distances.map((d) => (
                 <button
                   type="button"
                   key={d}
                   onClick={() => setDistance(d)}
                   className={cn(
                     "p-2 bg-slate-200 rounded-md text-sm",
-                    distancee === d && "bg-black text-white",
+                    distance === d && "bg-black text-white",
                   )}
                 >
                   {d}

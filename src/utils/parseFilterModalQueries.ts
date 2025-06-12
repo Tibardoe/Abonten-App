@@ -28,7 +28,7 @@ export function parseFilters(params: FilterParams) {
 
   // Distance example: "Up to 3km" -> parse number 3
   const maxDistanceKm = params.distance
-    ? Number.parseFloat(params.distance.replace(/[^\d.]/g, ""))
+    ? Number.parseFloat(params.distance.replace(/[^\d.]/g, "")) * 1000
     : 10000; // big number if not specified
 
   // Dates

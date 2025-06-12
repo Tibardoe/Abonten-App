@@ -121,10 +121,9 @@ RUN addgroup -g 1001 -S nodejs && \
 USER nextjs
 
 EXPOSE 3000
-CMD ["node", "server.js"]  # For Next.js standalone output
+CMD ["node", "server.js"]
 
 # Stage 4: Development
 FROM base AS dev
 ENV NODE_ENV=development
-VOLUME /app/node_modules  # For host-machine bind mounts
 CMD ["npm", "run", "dev"]

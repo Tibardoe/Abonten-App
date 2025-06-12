@@ -1,4 +1,4 @@
-export const distance = [
+export const distances = [
   "Up to 1km",
   "Up to 2km",
   "Up to 3km",

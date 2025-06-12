@@ -1,0 +1,33 @@
+{
+  "event": {
+    "id": "8e70c4e2-855f-4715-ac8d-818e5a50c398",
+    "organizer_id": "4c726a28-da76-4360-9f2d-34ae2e5fd4e9",
+    "event_category": "Entertainment and Cultural Events",
+    "event_type": "[\"Music Festival and Concert\"]",
+    "title": "Saturday Night",
+    "slug": "saturday-night",
+    "description": "Get ready to unwind and turn up the energy at Saturday Night – the ultimate weekend vibe! Join us for an unforgettable evening filled with good music, great people, and an atmosphere that brings Saturday to life. Whether you're coming to dance, chill, or just enjoy the night with friends, this is the place to be. Expect live DJs, food and drinks, and an electric vibe that keeps you going till late. Don’t miss out – your Saturday deserves a story!",
+    "location": "0101000020E6100000ED87331A5476D7BF36C8C969F4FF1540",
+    "address": {
+      "full_address": "Kokrobite, Ghana"
+    },
+    "website_url": "www.saturdaynight.com",
+    "capacity": 120,
+    "flyer_public_id": "event_flyers/vxmotbljal8mbho6rtqu",
+    "flyer_version": "1747046611",
+    "starts_at": null,
+    "ends_at": null,
+    "event_dates": [
+      "2025-05-19T23:00:00+00:00",
+      "2025-05-21T23:00:00+00:00",
+      "2025-05-23T23:00:00+00:00"
+    ],
+    "status": "canceled",
+    "created_at": "2025-05-12T10:43:31.966+00:00",
+    "event_code": "SN9734",
+    "min_price": 150,
+    "currency": "GHS",
+    "attendanceCount": 0
+  },
+  "timestamp": 1749715598933
+}

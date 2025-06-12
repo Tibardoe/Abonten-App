@@ -6,6 +6,7 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import type { UserPostType } from "@/types/postsType";
 import { getDailyEvent } from "@/utils/dailyEventCache";
+import { geocodeAddress } from "@/utils/geocodeServerSide";
 
 export default async function page({
   params,
@@ -16,16 +17,13 @@ export default async function page({
 
   const safeLocation = location ?? "";
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(
-    `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
-  );
+  const res = await geocodeAddress(safeLocation);
 
-  const { lat, lng } = await res.json();
+  const { lat, lng } = res;
 
-  const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
+  const eventsWithinLocation = await getNearByEvents(lat, lng, 10000);
 
-  const eventsAroundYou = await getNearByEvents(lat, lng, 5);
+  const eventsAroundYou = await getNearByEvents(lat, lng, 5000);
 
   const aroundYou: UserPostType[] = eventsAroundYou.data || [];
 
@@ -35,28 +33,28 @@ export default async function page({
     lat: lat,
     lng: lng,
     filter: "top-rated-organizers",
-    radius: 10,
+    radius: 10000,
   });
 
   const happeningToday: UserPostType[] = await getFilteredEvents({
     lat: lat,
     lng: lng,
     filter: "happening-today",
-    radius: 10,
+    radius: 10000,
   });
 
   const happeningThisWeek: UserPostType[] = await getFilteredEvents({
     lat: lat,
     lng: lng,
     filter: "happening-this-week",
-    radius: 10,
+    radius: 10000,
   });
 
   const happeningThisMonth: UserPostType[] = await getFilteredEvents({
     lat: lat,
     lng: lng,
     filter: "happening-this-month",
-    radius: 10,
+    radius: 10000,
   });
 
   const selected = await getDailyEvent(events, safeLocation);

@@ -2,8 +2,12 @@ import type { NextConfig } from "next";
 // import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
-  /* config options here */
   output: "standalone",
+
+  experimental: {
+    serverActions: {}, // ✅ Enable Server Actions
+  },
+
   images: {
     remotePatterns: [
       {

@@ -305,6 +305,7 @@ import {
   getFormattedEventDate,
   getRelativeTime,
 } from "@/utils/dateFormatter";
+import { geocodeAddress } from "@/utils/geocodeServerSide";
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiMail } from "react-icons/fi";
@@ -345,11 +346,14 @@ export default async function page({
     .single();
 
   const safeLocation = event.address.full_address ?? "";
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(
-    `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
-  );
-  const { lat, lng } = await res.json();
+  // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  // const res = await fetch(
+  //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
+  // );
+
+  const res = await geocodeAddress(safeLocation);
+
+  const { lat, lng } = res;
   const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
   const data: UserPostType[] = eventsWithinLocation.data || [];
   const similarEvents = data.filter(

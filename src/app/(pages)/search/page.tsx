@@ -11,6 +11,8 @@ export default async function page({
 }) {
   const queryParams = await searchParams;
 
+  const { category, type } = queryParams;
+
   const {
     minPrice,
     maxPrice,
@@ -31,7 +33,11 @@ export default async function page({
     lng,
     startDate,
     endDate,
+    category,
+    type,
   });
+
+  console.log(events);
 
   // Helper to format date
   const formatDate = (dateString: string) => {

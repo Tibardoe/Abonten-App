@@ -4,7 +4,6 @@ export async function getSimilarEvents(
   category: string,
   lng: number,
   lat: number,
-  fullAddress: string,
 ) {
   const supabase = await createClient();
 
@@ -13,7 +12,7 @@ export async function getSimilarEvents(
     {
       input_category: category,
       input_location: `SRID=4326;POINT(${lng} ${lat})`,
-      input_address: fullAddress,
+      input_radius_km: 10,
     },
   );
 

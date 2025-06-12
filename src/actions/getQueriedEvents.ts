@@ -12,21 +12,25 @@ interface FilterParams {
   startDate?: string | null;
   endDate?: string | null;
   searchText?: string | null;
+  category?: string | string[] | undefined;
+  type?: string | string[] | undefined;
 }
 
 export async function getQueriedEvents(queryParams: FilterParams) {
   const supabase = await createClient();
 
   const {
-    minPrice = null,
-    maxPrice = null,
-    minRating = null,
-    lat = null,
-    lng = null,
-    maxDistanceKm = null,
-    startDate = null,
-    endDate = null,
-    searchText = null,
+    minPrice,
+    maxPrice,
+    minRating,
+    lat,
+    lng,
+    maxDistanceKm,
+    startDate,
+    endDate,
+    searchText,
+    category,
+    type,
   } = queryParams;
 
   // Call your PostgreSQL function using supabase.rpc
@@ -39,7 +43,9 @@ export async function getQueriedEvents(queryParams: FilterParams) {
     p_max_distance_km: maxDistanceKm,
     p_start_date: startDate,
     p_end_date: endDate,
-    p_search_text: searchText,
+    p_search_text: searchText ?? "",
+    p_event_category: category ?? "",
+    p_event_type: type ?? "",
   });
 
   if (error) {

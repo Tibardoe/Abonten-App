@@ -3,6 +3,7 @@ import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import EventCard from "@/components/molecules/EventCard";
 import type { UserPostType } from "@/types/postsType";
 import { undoSlug } from "@/utils/geerateSlug";
+import { geocodeAddress } from "@/utils/geocodeServerSide";
 
 export default async function page({
   searchParams,
@@ -20,19 +21,16 @@ export default async function page({
 
   const safeLocation = location ?? "";
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(
-    `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
-  );
+  // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  // const res = await fetch(
+  //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
+  // );
 
-  const { lat, lng } = await res.json();
+  const res = await geocodeAddress(safeLocation);
 
-  const response = await getSimilarEvents(
-    formattedCategory,
-    lng,
-    lat,
-    formattedLocation,
-  );
+  const { lat, lng } = res;
+
+  const response = await getSimilarEvents(formattedCategory, lng, lat);
 
   let errorMessage: string | undefined = undefined;
 

@@ -61,10 +61,11 @@ export default function Banner({ event }: BannerProps) {
           </div>
 
           {/* Event Title - Responsive font sizes */}
+
           <Link
-            href={`/events/${generateSlug(
-              event.address.full_address,
-            )}/event/${generateSlug(event.title)}`}
+            href={`/events/${generateSlug(event.address.full_address)}/${
+              event.event_code
+            }`}
             className="block mb-2 xs:mb-3 sm:mb-4"
           >
             <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight">
@@ -101,9 +102,9 @@ export default function Banner({ event }: BannerProps) {
             </div>
 
             <Link
-              href={`/events/${generateSlug(
-                event.address.full_address,
-              )}/event/${generateSlug(event.title)}`}
+              href={`/events/${generateSlug(event.address.full_address)}/${
+                event.event_code
+              }`}
               className="px-3 py-1.5 md:px-4 md:py-2 bg-black hover:bg-gray-400 text-white rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
               View Details

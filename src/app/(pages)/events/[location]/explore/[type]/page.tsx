@@ -42,7 +42,7 @@ export default async function page({
     lat: lat,
     lng: lng,
     filter: type as FilterType,
-    radius: 10,
+    radius: 10000,
   });
 
   return (

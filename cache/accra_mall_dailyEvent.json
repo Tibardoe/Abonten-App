@@ -1,0 +1,33 @@
+{
+  "event": {
+    "id": "80e33d48-bdfc-4131-9741-b987831d37a6",
+    "organizer_id": "4c726a28-da76-4360-9f2d-34ae2e5fd4e9",
+    "event_category": "Entertainment and Cultural Events",
+    "event_type": "[\"Music Festival and Concert\",\"Movie Premier\",\"Art Exhibition\",\"Theatre Performance\"]",
+    "title": "Alter Ego",
+    "slug": "alter-ego",
+    "description": "Alter Ego is a transformative night of immersive art, fashion, music, and performance—where your inner persona takes center stage. Step into a world where reality blurs with fantasy, and explore the power of self-expression beyond the everyday.\n\nCome dressed as your boldest alter ego and experience live DJs, avant-garde visuals, interactive installations, and daring performances that challenge convention. Whether you're channeling your hidden confidence, creativity, or chaos—Alter Ego is the space to unveil your other side.\n\nLet go of limits. Embrace the unexpected. Become who you were never allowed to be.",
+    "location": "0101000020E6100000F21021095630C6BFC0536DDC077D1640",
+    "address": {
+      "full_address": "Accra Mall, Spintex Road, Accra, Ghana"
+    },
+    "website_url": "www.ego.com",
+    "capacity": 100,
+    "flyer_public_id": "event_flyers/nmaea4xfgmf4rxjlxujj",
+    "flyer_version": "1748118572",
+    "starts_at": null,
+    "ends_at": null,
+    "event_dates": [
+      "2025-05-25T23:00:00+00:00",
+      "2025-05-26T23:00:00+00:00",
+      "2025-05-27T23:00:00+00:00"
+    ],
+    "status": "published",
+    "created_at": "2025-05-24T20:29:32.587+00:00",
+    "event_code": "AE3300",
+    "min_price": 500,
+    "currency": "GHS",
+    "attendanceCount": 1
+  },
+  "timestamp": 1749664029195
+}
