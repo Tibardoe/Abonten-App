@@ -18,6 +18,8 @@ export async function getNearByEvents(
   });
 
   if (error) {
+    console.log(`Error fetching get nearby events: ${error.message}`);
+
     return { status: 500, data: null, error };
   }
 

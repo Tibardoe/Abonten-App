@@ -1,0 +1,29 @@
+{
+  "event": {
+    "id": "198746ed-83fc-4525-a29d-6df6bdb28aef",
+    "organizer_id": "4c726a28-da76-4360-9f2d-34ae2e5fd4e9",
+    "event_category": "Entertainment and Cultural Events",
+    "event_type": "[\"Music Festival and Concert\",\"Movie Premier\",\"Art Exhibition\"]",
+    "title": "Leemckrazy",
+    "slug": "leemckrazy",
+    "description": "Get ready for an electrifying night as Leemckrazy takes over the stage! 🎤🔥 This unforgettable event blends Afrobeat rhythms, street dance, and pure creative energy in a way that only Leemckrazy can deliver. Whether you're a music lover, dance fanatic, or just here for the vibes, this is your night to let loose and experience the crazy in the best way possible. Expect surprise guests, crowd-shaking performances, and non-stop entertainment that’ll leave you wanting more. Come with your crew, dress to impress, and bring the energy—Leemckrazy is about to go off!",
+    "location": "0101000020E6100000643BDF4F8D17DBBF156AF2391C221640",
+    "address": {
+      "full_address": "Tuba Junction, Kasoa Road, Kasoa, Ghana"
+    },
+    "website_url": "www.leemckrazy.com",
+    "capacity": 500,
+    "flyer_public_id": "event_flyers/majq8xcihqx6atueprsl",
+    "flyer_version": "1748288537",
+    "starts_at": "2025-05-29T08:00:00+00:00",
+    "ends_at": "2025-05-29T22:00:00+00:00",
+    "event_dates": [],
+    "status": "published",
+    "created_at": "2025-05-26T19:42:17.616+00:00",
+    "event_code": "L9490",
+    "min_price": 0,
+    "currency": "GHS",
+    "attendanceCount": 0
+  },
+  "timestamp": 1749760506760
+}

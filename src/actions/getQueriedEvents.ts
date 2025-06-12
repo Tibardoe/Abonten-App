@@ -20,17 +20,17 @@ export async function getQueriedEvents(queryParams: FilterParams) {
   const supabase = await createClient();
 
   const {
-    minPrice,
-    maxPrice,
-    minRating,
-    lat,
-    lng,
-    maxDistanceKm,
-    startDate,
-    endDate,
-    searchText,
-    category,
-    type,
+    minPrice = null,
+    maxPrice = null,
+    minRating = null,
+    lat = null,
+    lng = null,
+    maxDistanceKm = null,
+    startDate = null,
+    endDate = null,
+    searchText = null,
+    category = null,
+    type = null,
   } = queryParams;
 
   // Call your PostgreSQL function using supabase.rpc

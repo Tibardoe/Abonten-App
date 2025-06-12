@@ -18,5 +18,7 @@ export async function geocodeAddress(address: string) {
     return { lat: location.lat, lng: location.lng };
   }
 
-  throw new Error(data.status || "Geocoding failed");
+  return { lat: null, lng: null, error: "Location not found" };
+
+  // throw new Error(data.status || "Geocoding failed");
 }
