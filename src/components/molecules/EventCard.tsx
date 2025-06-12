@@ -72,9 +72,8 @@ export default function EventCard({
         <Image
           src={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
           alt={`Flyer for ${title}`}
-          layout="fill"
-          objectFit="cover"
-          className="transition-transform duration-300 hover:scale-105"
+          fill
+          className="transition-transform duration-300 hover:scale-105 object-cover"
           priority
         />
       </Link>

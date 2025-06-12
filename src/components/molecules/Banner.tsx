@@ -52,7 +52,7 @@ export default function Banner({ event }: BannerProps) {
         </div>
 
         {/* Event Info */}
-        <div className="max-w-2xl space-y-1 xs:space-y-1.5 sm:space-y-2 md:space-y-3 lg:space-y-4">
+        <div className="w-fit space-y-1 xs:space-y-1.5 sm:space-y-2 md:space-y-3 lg:space-y-4">
           {/* Most Anticipated Tag */}
           <div className="mb-1 xs:mb-1.5 sm:mb-2">
             <span className="inline-block px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs xs:text-sm font-medium">
