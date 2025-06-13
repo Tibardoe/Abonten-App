@@ -1,7 +1,8 @@
 import { getUserReviews } from "@/actions/getUserReviews";
 import Rating from "@/components/atoms/Rating";
 import { Button } from "@/components/ui/button";
-import { reviews } from "@/data/reviews";
+import { getRelativeTime } from "@/utils/dateFormatter";
+import { ClockIcon, UserIcon } from "lucide-react"; // Assuming you're using Lucide
 
 export default async function page({
   params,
@@ -26,7 +27,6 @@ export default async function page({
     }
   } catch (error) {
     console.log(error);
-
     return (
       <div className="text-center mt-5 text-red-500">
         An error occurred while fetching reviews.
@@ -34,32 +34,45 @@ export default async function page({
     );
   }
 
-  return reviews.length > 0 ? (
-    <ul className="flex flex-col gap-5">
+  return userReviews.length > 0 ? (
+    <ul className="flex flex-col gap-6">
       {userReviews.map((review) => (
         <li
-          key={review.title}
-          className="w-full bg-black bg-opacity-5 p-5 flex flex-col gap-3 rounded-lg md:rounded-2xl text-justify text-sm md:text-md"
+          key={review.title + review.created_at}
+          className="w-full bg-white shadow-sm hover:shadow-md transition rounded-xl p-5 flex flex-col gap-3 border border-gray-200"
         >
-          <h2 className="font-bold text-lg">{review.title}</h2>
-          <div className="flex justify-start items-center gap-5">
-            <Rating rating={review.ratingStars} />
-            <p>{review.datePosted}</p>
-            <p>{review.reviewer}</p>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-800">
+              {review.title}
+            </h2>
+            <Rating rating={review.rating} />
           </div>
 
-          <p>{review.comment}</p>
+          <p className="text-gray-700 text-justify leading-relaxed">
+            {review.comment}
+          </p>
+
+          <div className="flex flex-wrap items-center text-sm gap-4 text-gray-500">
+            <div className="flex items-center gap-1">
+              <UserIcon size={16} />
+              <span>{review.user_info.username}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <ClockIcon size={16} />
+              <span>{getRelativeTime(review.created_at)}</span>
+            </div>
+          </div>
         </li>
       ))}
     </ul>
   ) : (
-    <div className="flex flex-col items-center gap-3">
-      <h1 className="font-bold text-2xl">No reviews yet</h1>
-
-      <p>Leave a review and rating</p>
-
-      <Button className="w-32 font-bold md:text-lg py-3 px-5">
-        Add review
+    <div className="flex flex-col items-center justify-center mt-10 gap-4 text-center">
+      <h1 className="text-2xl font-bold text-gray-800">No reviews yet</h1>
+      <p className="text-gray-600">
+        Be the first to leave a review and rating.
+      </p>
+      <Button className="px-6 py-3 text-lg rounded-full font-semibold">
+        Add Review
       </Button>
     </div>
   );

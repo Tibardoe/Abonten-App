@@ -19,6 +19,7 @@ type TicketWithEvent = {
   ticket_type_id: {
     event_id: string;
   };
+  status: string;
 };
 
 export default async function generateTicket(
@@ -48,7 +49,7 @@ export default async function generateTicket(
   // Check if user has already bought ticket for the event
   const { data: rawTicketData, error: ticketDataError } = await supabase
     .from("ticket")
-    .select("user_id, ticket_type_id(event_id)")
+    .select("user_id, status, ticket_type_id(event_id)")
     .eq("user_id", user.id);
 
   if (ticketDataError || !rawTicketData) {
@@ -60,7 +61,8 @@ export default async function generateTicket(
   const ticketData = rawTicketData as unknown as TicketWithEvent[];
 
   const alreadyBought = ticketData?.some(
-    (ticket) => ticket.ticket_type_id.event_id === eventId,
+    (ticket) =>
+      ticket.ticket_type_id.event_id === eventId && ticket.status === "active",
   );
 
   if (alreadyBought) {

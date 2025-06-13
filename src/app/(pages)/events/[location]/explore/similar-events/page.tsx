@@ -59,6 +59,7 @@ export default async function page({
                 starts_at={event.starts_at}
                 event_dates={event.event_dates}
                 ends_at={event.ends_at}
+                organizer_id={event.organizer_id}
                 min_price={event.ticket_price}
                 currency={event.ticket_currency ?? ""}
                 created_at={event.created_at}

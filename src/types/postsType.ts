@@ -77,6 +77,7 @@ export type UserPostType = {
   id: string;
   ticket_type?: { price: number; currency: string }[]; // ✅ Fix here
   created_at: Date | undefined;
+  organizer_id?: string;
   event_category?: string;
   flyer_public_id?: string;
   flyer_version?: string;

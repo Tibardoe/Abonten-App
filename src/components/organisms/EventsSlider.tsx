@@ -106,6 +106,7 @@ export default function EventsSlider({
               ends_at={event.ends_at}
               event_dates={event.event_dates}
               min_price={event.min_price}
+              organizerId={event.organizerId}
               currency={event.currency}
               created_at={event.created_at}
               capacity={event.capacity}

@@ -15,6 +15,7 @@ type TicketWithEvent = {
   ticket_type_id: {
     event_id: string;
   };
+  status: string;
 };
 
 export default async function validateCheckout({
@@ -33,7 +34,7 @@ export default async function validateCheckout({
     console.log(`Error fetching user: ${userError?.message}`);
 
     return {
-      status: 500,
+      status: 401,
       message: "User not logged in",
     };
   }
@@ -69,7 +70,7 @@ export default async function validateCheckout({
   // Check if user has already bought ticket for the event
   const { data: rawTicketData, error: ticketDataError } = await supabase
     .from("ticket")
-    .select("user_id, ticket_type_id(event_id)")
+    .select("user_id, ticket_type_id(event_id), status")
     .eq("user_id", user.id);
 
   if (ticketDataError || !rawTicketData) {
@@ -81,7 +82,8 @@ export default async function validateCheckout({
   const ticketData = rawTicketData as unknown as TicketWithEvent[];
 
   const alreadyBought = ticketData?.some(
-    (ticket) => ticket.ticket_type_id.event_id === eventId,
+    (ticket) =>
+      ticket.ticket_type_id.event_id === eventId && ticket.status === "active",
   );
 
   if (alreadyBought) {
@@ -187,8 +189,6 @@ export default async function validateCheckout({
 
     if (checkoutIdError) {
       console.log(`Failed to insert checkout: ${checkoutIdError.message}`);
-
-      console.log("hww");
 
       return {
         status: 500,

@@ -327,7 +327,7 @@ export default async function page({
     .select(
       "*, user_info!organizer_id(avatar_public_id, avatar_version, username), ticket_type(id, type, price, currency, available_from, available_until)",
     )
-    .eq("event_code", slug)
+    .eq("event_code", slug.toUpperCase())
     .single();
 
   if (!event) return <p className="p-8 text-center">No event found</p>;
@@ -470,6 +470,7 @@ export default async function page({
               <OutlinedShareBtn
                 title={event.title}
                 address={event.address.full_address}
+                eventCode={event.event_code}
               />
 
               <button
@@ -529,6 +530,7 @@ export default async function page({
               <OutlinedShareBtn
                 title={event.title}
                 address={event.address.full_address}
+                eventCode={event.event_code}
               />
 
               <button
@@ -623,6 +625,7 @@ export default async function page({
               <OutlinedShareBtn
                 title={event.title}
                 address={event.address.full_address}
+                eventCode={event.event_code}
               />
 
               <button

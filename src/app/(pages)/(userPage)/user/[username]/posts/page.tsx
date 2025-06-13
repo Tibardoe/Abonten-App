@@ -50,6 +50,7 @@ export default async function page({
             event_dates={post.event_dates}
             min_price={post.min_price}
             currency={post.currency}
+            organizer_id={post.organizer_id}
             created_at={post.created_at}
             capacity={post.capacity}
             attendanceCount={post.attendanceCount}

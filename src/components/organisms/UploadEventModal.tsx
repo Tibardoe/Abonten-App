@@ -273,7 +273,7 @@ export default function UploadEventModal({
   };
 
   return (
-    <div className="w-full h-dvh fixed left-0 top-0 bg-black bg-opacity-50 justify-center items-center z-10 hidden md:flex">
+    <div className="w-full h-dvh fixed left-0 top-0 bg-black bg-opacity-50 justify-center items-center z-30 hidden md:flex">
       {/* cancel button */}
       <button
         type="button"

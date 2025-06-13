@@ -10,11 +10,10 @@ export async function getTickets(eventId: string) {
     .select("*")
     .eq("event_id", eventId);
 
-  if (ticketsError) {
-    return {
-      status: 500,
-      message: `Failed to fetch tickets: ${ticketsError.message}`,
-    };
+  if (!tickets || ticketsError) {
+    console.log(`Error fetching tickets: ${ticketsError?.message}`);
+
+    throw new Error("Something went wrong");
   }
 
   return { status: 200, tickets };

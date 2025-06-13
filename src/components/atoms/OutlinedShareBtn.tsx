@@ -8,10 +8,15 @@ import { FiShare2 } from "react-icons/fi";
 type ShareProp = {
   title: string;
   address: string;
+  eventCode: string;
 };
 
-export default function OutlinedShareBtn({ title, address }: ShareProp) {
-  const url = getEventShareUrl(title, address);
+export default function OutlinedShareBtn({
+  eventCode,
+  address,
+  title,
+}: ShareProp) {
+  const url = getEventShareUrl(eventCode, address);
 
   return (
     <button

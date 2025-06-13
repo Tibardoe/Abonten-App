@@ -11,19 +11,12 @@ const StarRatingDisplay: React.FC<Props> = ({ rating, totalStars = 5 }) => {
 
   for (let i = 1; i <= totalStars; i++) {
     if (i <= rating) {
-      stars.push(
-        <IoIosStar key={i} className="text-black text-xl md:text-2xl" />,
-      );
+      stars.push(<IoIosStar key={i} className="text-black text-xl" />);
     } else if (i - rating < 1) {
-      stars.push(
-        <IoIosStarHalf key={i} className="text-black text-xl md:text-2xl" />,
-      );
+      stars.push(<IoIosStarHalf key={i} className="text-black text-xl" />);
     } else {
       stars.push(
-        <IoIosStarOutline
-          key={i}
-          className="text-gray-400 text-xl md:text-2xl"
-        />,
+        <IoIosStarOutline key={i} className="text-gray-400 text-xl" />,
       );
     }
   }

@@ -6,12 +6,14 @@ type EventProp = {
   eventId?: string;
   eventTitle?: string;
   address: string;
+  organizerId?: string;
 };
 
 export default function EventCardMenuBtn({
   eventId,
   eventTitle,
   address,
+  organizerId,
 }: EventProp) {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -33,6 +35,7 @@ export default function EventCardMenuBtn({
           eventId={eventId ? eventId : ""}
           eventTitle={eventTitle ? eventTitle : ""}
           address={address ? address : ""}
+          organizerId={organizerId}
         />
       )}
     </div>

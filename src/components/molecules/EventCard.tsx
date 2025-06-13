@@ -27,6 +27,7 @@ export default function EventCard({
   id,
   event_code,
   status,
+  organizer_id,
 }: UserPostType) {
   const dateTime = getFormattedEventDate(starts_at, ends_at, event_dates);
 
@@ -53,20 +54,10 @@ export default function EventCard({
         </div>
       )}
 
-      {/* <Link
-        href={`/events/${
-          location ? location : generateSlug(address.full_address)
-        }/event/${title && generateSlug(title)}`}
-      >
-        <EventCardFlyerImage
-          flyerUrl={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
-        />
-      </Link> */}
-
       <Link
         href={`/events/${
           location ? location : generateSlug(address.full_address)
-        }/${event_code}`}
+        }/${event_code.toLowerCase()}`}
         className="block relative h-56 w-full overflow-hidden rounded-t-2xl"
       >
         <Image
@@ -83,7 +74,7 @@ export default function EventCard({
           <Link
             href={`/events/${
               location ? location : generateSlug(address.full_address)
-            }/${event_code}`}
+            }/${event_code.toLowerCase()}`}
             className="text-xl font-semibold text-gray-800"
           >
             {title}
@@ -93,6 +84,7 @@ export default function EventCard({
             eventId={id}
             eventTitle={title}
             address={address.full_address}
+            organizerId={organizer_id}
           />
         </div>
 

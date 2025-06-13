@@ -21,19 +21,21 @@ export const signInWithGoogle = async (location: string | null) => {
 
 // Fetch User After OAuth Redirect
 export const fetchAuthenticatedUser = async () => {
-  const { data, error } = await supabase.auth.getUser();
+  try {
+    const { data, error } = await supabase.auth.getUser();
 
-  if (error || !data?.user) {
-    console.error("No active session found.", error?.message);
-    return null;
+    if (error || !data?.user) {
+      console.error("Authentication failed:", error?.message);
+      throw new Error(error?.message || "No active session");
+    }
+
+    await ensureUserInfoExists(data.user);
+    return data.user;
+  } catch (error) {
+    console.error("User profile verification failed:", error);
+    await supabase.auth.signOut(); // Prevent partial auth state
+    throw error;
   }
-
-  const user = data.user;
-
-  // Ensure `user_info` exists
-  await ensureUserInfoExists(user);
-
-  return user;
 };
 
 export const signInWithPhone = async (phone: string) => {
@@ -97,40 +99,61 @@ export const updatePhoneNumberInUserTable = async (phone: string) => {
 };
 
 const ensureUserInfoExists = async (user: authUserType) => {
-  try {
-    // Check if the user already exists in `user_info`
-    const { data, error } = await supabase
-      .from("user_info")
-      .select("id")
-      .eq("id", user.id)
-      .single();
+  const { data: existingUser, error: selectError } = await supabase
+    .from("user_info")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
 
-    if (!data || error) {
-      console.log("Creating new user_info entry...");
+  if (selectError) {
+    console.error("Error checking user existence:", selectError.message);
+    throw new Error("Failed to verify user profile");
+  }
 
-      const { error: insertError } = await supabase.from("user_info").insert({
-        id: user.id, // Match `auth.users.id`
-        status_id: 1, // Default status
-        username: user.email
-          ? user.email.split("@")[0]
-          : `user_${user.id.slice(0, 8)}`, // Generate username from email if exists, else use UID
+  if (!existingUser) {
+    try {
+      const userData = {
+        id: user.id,
+        status_id: 1, // Default status (active)
+        username: generateUsername(user),
         full_name: user.user_metadata?.full_name || null,
         avatar_public_id: null,
         avatar_version: null,
         bio: null,
         updated_at: new Date().toISOString(),
-      });
+      };
+
+      const { error: insertError } = await supabase
+        .from("user_info")
+        .insert(userData)
+        .select()
+        .single();
 
       if (insertError) {
-        console.error("Error inserting user_info:", insertError.message);
+        console.error("Error creating user profile:", insertError.message);
+        throw new Error("Failed to create user profile");
       }
+
+      console.log("Created new user profile for:", user.id);
+    } catch (error) {
+      console.error("User profile creation failed:", error);
+      throw error; // Re-throw to handle in calling function
     }
-  } catch (error) {
-    console.error("Error ensuring user exists in user_info:", error);
   }
 };
 
 export const signOut = async () => {
   await supabase.auth.signOut();
-  window.location.reload();
+  window.location.href = "/";
+};
+
+const generateUsername = (user: authUserType): string => {
+  if (user.email) {
+    const base = user.email.split("@")[0];
+    return base.replace(/[^a-zA-Z0-9_]/g, "_").slice(0, 20);
+  }
+  if (user.phone) {
+    return `user_${user.phone.slice(-4)}`;
+  }
+  return `user_${user.id.slice(0, 8)}`;
 };

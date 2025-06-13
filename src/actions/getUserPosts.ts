@@ -7,12 +7,29 @@ import { getEventAttendanceCount } from "./getAttendace";
 export async function getUserPosts(username: string) {
   const supabase = await createClient();
 
+  const { data: user, error: userError } = await supabase
+    .from("user_info")
+    .select("id")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (!user || userError) {
+    console.log(`Error fetching user id: ${userError?.message}`);
+
+    return { status: 500, message: "Something went wrong!" };
+  }
+
+  // const { data, error } = await supabase
+  //   .from("event")
+  //   .select(
+  //     "*, user_info:event_organizer_id_fkey(username), ticket_type(price, currency)"
+  //   )
+  //   .eq("user_info.username", username);
+
   const { data, error } = await supabase
     .from("event")
-    .select(
-      "*, user_info:event_organizer_id_fkey(username), ticket_type(price, currency)",
-    )
-    .eq("user_info.username", username);
+    .select("*, ticket_type(price, currency)")
+    .eq("organizer_id", user.id);
 
   if (error) {
     return { status: 500, message: `Failed fetching events: ${error.message}` };

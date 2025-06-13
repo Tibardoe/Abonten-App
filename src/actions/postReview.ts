@@ -12,7 +12,10 @@ type FormDataType = {
 export async function postReview(formData: FormDataType) {
   const supabase = await createClient();
 
-  const { data: user, error: userError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
   if (userError) {
     return {
@@ -21,14 +24,14 @@ export async function postReview(formData: FormDataType) {
     };
   }
 
-  if (!user.user) {
+  if (!user) {
     return { status: 401, message: "User not authenticated" };
   }
 
   const { data: userDetails, error: userDetailsError } = await supabase
     .from("user_info")
     .select("*")
-    .eq("id", user.user.id)
+    .eq("id", user.id)
     .single();
 
   if (userDetailsError) {
@@ -49,7 +52,7 @@ export async function postReview(formData: FormDataType) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  console.log(title, review, rating, reviewedId);
+  console.log(formattedTitle, review, rating, reviewedId);
 
   const { error: insertEror } = await supabase.from("review").insert({
     created_at: new Date(),
@@ -62,7 +65,9 @@ export async function postReview(formData: FormDataType) {
   });
 
   if (insertEror) {
-    throw insertEror;
+    console.log(`Error inserting review: ${insertEror.message}`);
+
+    return { status: 500, message: "Something went wrong!" };
   }
 
   return { status: 200, message: "Review posted successfully!" };

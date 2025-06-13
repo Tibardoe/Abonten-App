@@ -3,11 +3,11 @@ import { getTickets } from "@/actions/getTickets";
 import validateCheckout from "@/actions/validateCheckout";
 import type { TicketType } from "@/types/ticketType";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
-import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoAddSharp } from "react-icons/io5";
-import { MdDiscount } from "react-icons/md";
+import { MdDiscount, MdOutlineCancel } from "react-icons/md";
 import { TfiMinus } from "react-icons/tfi";
 import Notification from "../atoms/Notification";
 
@@ -28,7 +28,7 @@ export default function CheckoutModal({
   time,
   date,
 }: CheckoutProp) {
-  const [tickets, setTickets] = useState<TicketType[]>([]);
+  // const [tickets, setTickets] = useState<TicketType[]>([]);
 
   const [promoCode, setPromoCode] = useState<string | null>(null);
 
@@ -56,28 +56,28 @@ export default function CheckoutModal({
     }
   }, [error]);
 
-  useEffect(() => {
-    const fetchTickets = async () => {
-      const response = await getTickets(eventId);
+  const {
+    data: ticketData,
+    // isLoading: isTicketsLoading,
+    isError: isTicketsError,
+    error: ticketsError,
+  } = useQuery({
+    queryKey: ["eventTickets", eventId],
+    enabled: !!eventId,
+    queryFn: () => getTickets(eventId),
+  });
 
-      if (response.status !== 200 || !response.tickets) {
-        setError(response.message ?? "Failed to fetch tickets");
-        return;
-      }
-
-      setTickets(response.tickets);
-    };
-
-    fetchTickets();
-  }, [eventId]);
-
-  const total = tickets.reduce((acc, ticket) => {
+  const subTotal = ticketData?.tickets.reduce((acc, ticket) => {
     const qty = quantities[ticket.id] || 0;
     const price = discountAmount
       ? +(ticket.price - discountAmount * ticket.price).toFixed(2)
       : ticket.price;
     return acc + price * qty;
   }, 0);
+
+  const fee = subTotal > 0 ? subTotal * 0.02 : 0;
+
+  const total = subTotal + fee;
 
   const handlePromoCode = async (promoCode: string) => {
     setIsApplyingPromo(true);
@@ -109,7 +109,7 @@ export default function CheckoutModal({
         "You already have a pending ticket checkout for this event"
     ) {
       setError(response?.message ?? "Something ocurred");
-      router.push(`/wallet/${response.checkoutSessionId}?type=ticket`);
+      router.push(`/wallet/${response.checkoutId}?type=ticket`);
 
       setIsProceeding(false);
       return;
@@ -143,11 +143,11 @@ export default function CheckoutModal({
         {/* Header */}
         <div className="space-y-5">
           <div className="flex justify-between px-5">
-            <div className="text-gray-500 flex flex-col items-center gap-2 w-full">
+            <div className="text-gray-500 flex flex-col items-center md:gap-2 w-full">
               <h1 className="text-xl md:text-2xl">
                 {eventTitle.toUpperCase()}
               </h1>
-              <p>
+              <p className="text-xs md:text-sm">
                 {date} {time}
               </p>
             </div>
@@ -157,12 +157,7 @@ export default function CheckoutModal({
               onClick={() => handleCheckoutModal(false)}
               className="self-start"
             >
-              <Image
-                src="/assets/images/circularCancel.svg"
-                alt="Cancel"
-                width={30}
-                height={30}
-              />
+              <MdOutlineCancel className="text-2xl" />
             </button>
           </div>
 
@@ -204,7 +199,7 @@ export default function CheckoutModal({
           </div>
 
           {/* Display tickets */}
-          {tickets.map((ticket) => (
+          {ticketData?.tickets.map((ticket) => (
             <div
               key={ticket.type}
               className={`border-2 border-black rounded-md py-4 space-y-4 ${
@@ -267,8 +262,6 @@ export default function CheckoutModal({
                         ticket.price
                       )}
                     </p>
-
-                    <p className="text-xs text-gray-400">Fee +20USD</p>
                   </div>
 
                   <p>Quantity left: {ticket.quantity}</p>
@@ -284,25 +277,55 @@ export default function CheckoutModal({
             </div>
           ))}
 
-          <div className="flex justify-between items-center font-bold mt-5">
-            <p>Total</p>
-            <p>
-              {"GHS"} {total}
-            </p>
+          <div className="rounded-2xl mt-5">
+            {/* Subtotal */}
+            <div className="flex justify-between items-center text-sm text-gray-700 mb-2">
+              <p>Subtotal</p>
+              <p>
+                <span className="font-medium">GHS</span>
+                {typeof subTotal === "number" ? subTotal.toFixed(2) : "0.00"}
+              </p>
+            </div>
+
+            {/* Fee (2%) */}
+            <div className="flex justify-between items-center text-sm text-gray-700 mb-2">
+              <p>
+                Fee <span className="text-xs text-gray-500">(2%)</span>
+              </p>
+              <p>
+                <span className="font-medium">GHS</span>{" "}
+                {typeof fee === "number" ? fee.toFixed(2) : "0.00"}
+              </p>
+            </div>
+
+            {/* Divider */}
+            <hr className="my-3" />
+
+            {/* Total */}
+            <div className="flex justify-between items-center text-base font-bold text-gray-900">
+              <p>Total</p>
+              <p>
+                <span className="text-green-600">GHS</span>{" "}
+                {typeof total === "number" ? total.toFixed(2) : "0.00"}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={handleProceed}
             disabled={isProceeding}
-            className="rounded-full p-4 font-bold text-white bg-black text-center mt-5"
+            className="rounded-md p-4 font-bold text-white bg-black text-center mt-5"
           >
             {isProceeding ? "Loading..." : "Proceed to Payment"}
           </button>
         </div>
       </div>
 
-      {error && <Notification notification={error} />}
+      {isTicketsError ||
+        (error && (
+          <Notification notification={ticketsError ? ticketsError : error} />
+        ))}
     </div>
   );
 }

@@ -12,6 +12,8 @@ export default async function getTicketCheckout(checkoutSessionId: string) {
     )
     .eq("checkout_session_id", checkoutSessionId);
 
+  console.log("diufnglius", checkoutData);
+
   if (checkoutDataError) {
     console.log(`Failed fetching checout data: ${checkoutDataError.message}`);
 

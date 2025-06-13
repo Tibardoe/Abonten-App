@@ -20,6 +20,7 @@ export type authUserType = {
   id: string;
   fullName?: string;
   email?: string;
+  phone?: string;
   provider?: Provider;
   url?: string;
   user_metadata?: {
