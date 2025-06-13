@@ -37,8 +37,6 @@ export default async function page({
     type,
   });
 
-  console.log(events);
-
   // Helper to format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

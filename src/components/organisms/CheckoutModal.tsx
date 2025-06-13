@@ -109,7 +109,7 @@ export default function CheckoutModal({
         "You already have a pending ticket checkout for this event"
     ) {
       setError(response?.message ?? "Something ocurred");
-      router.push(`/wallet?checkoutId=${response.checkoutId}&type=ticket`);
+      router.push(`/wallet/${response.checkoutSessionId}?type=ticket`);
 
       setIsProceeding(false);
       return;
