@@ -32,7 +32,7 @@ export default async function page() {
             <UserAvatar avatarUrl={avatarUrl} width={80} height={80} />
             <div className="min-w-fit">
               <h1 className="font-bold">{userDetails.username}</h1>
-              <p>{userDetails.full_name}</p>
+              <p className="text-xs">{userDetails.full_name}</p>
             </div>
           </div>
 
