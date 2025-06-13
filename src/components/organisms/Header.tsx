@@ -252,7 +252,7 @@ import { signOut } from "@/services/authService";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
@@ -273,7 +273,6 @@ export default function Header() {
   const [isMenuClicked, setIsMenuClicked] = useState(false);
 
   const pathname = usePathname();
-  const router = useRouter();
 
   // Query for user session
   const {
@@ -331,7 +330,6 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push("/");
     } catch (error) {
       console.error("Error signing out:", error);
     }

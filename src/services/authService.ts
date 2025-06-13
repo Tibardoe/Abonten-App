@@ -5,7 +5,7 @@ export const signInWithGoogle = async (location: string | null) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/events/${location || "unknown"}`,
+      redirectTo: `/events/${location || "unknown"}`,
     },
   });
 
@@ -127,4 +127,5 @@ const ensureUserInfoExists = async (user: authUserType) => {
 
 export const signOut = async () => {
   await supabase.auth.signOut();
+  window.location.reload();
 };
