@@ -26,13 +26,13 @@ export default async function page() {
     <div className="w-full flex flex-col gap-10">
       <MobileSettingsHeaderNav title="Edit Profile" />
 
-      <div className="space-y-16 mb-5">
+      <div className="space-y-10 md:space-y-16">
         <div className="flex justify-between items-center bg-black bg-opacity-5 rounded-xl p-3 md:p-5">
           <div className="flex gap-3 items-center">
             <UserAvatar avatarUrl={avatarUrl} width={80} height={80} />
             <div className="min-w-fit">
               <h1 className="font-bold">{userDetails.username}</h1>
-              <p className="text-xs">{userDetails.full_name}</p>
+              <p className="text-sm md:text-lg">{userDetails.full_name}</p>
             </div>
           </div>
 
