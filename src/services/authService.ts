@@ -1,13 +1,20 @@
 import type { authUserType } from "@/types/userProfileType";
 import { supabase } from "../config/supabase/client";
 
+const BASE_URL =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_SITE_URL;
+
 export const signInWithGoogle = async (location: string | null) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/events/${location || "unknown"}`,
+      redirectTo: `${BASE_URL}/events/${location || "unknown"}`,
     },
   });
+
+  console.log(`url- ${window.location.origin}`);
 
   if (error) throw error;
 
