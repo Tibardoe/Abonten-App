@@ -1,29 +1,33 @@
 {
   "event": {
-    "id": "2d8f0aac-bd39-4fcd-a98a-77fe952e3a0a",
+    "id": "9acc583a-236a-4080-b468-d855e18e454a",
     "organizer_id": "4c726a28-da76-4360-9f2d-34ae2e5fd4e9",
     "event_category": "Entertainment and Cultural Events",
-    "event_type": "[\"Art Exhibition\",\"Theatre Performance\"]",
-    "title": "Dorben Must Launch",
-    "slug": "dorben-must-launch",
-    "description": "Join industry leaders and enthusiasts in a full-day event packed with networking opportunities, hands-on workshops, and insightful talks that inspire and educate.",
-    "location": "0101000020E6100000ED87331A5476D7BF36C8C969F4FF1540",
+    "event_type": "[\"Music Festival and Concert\",\"Movie Premier\",\"Art Exhibition\",\"Theatre Performance\"]",
+    "title": "Hello August",
+    "slug": "hello-august",
+    "description": "Step into a new month with fresh energy, positive vibes, and unforgettable moments at \"Hello August\" — a celebration of new beginnings, connections, and creativity! Whether you're here to network, unwind, or simply welcome August in style, this event is your perfect escape into a vibrant atmosphere filled with music, laughter, and inspiration.\n\nJoin us for an experience packed with interactive sessions, great food, entertainment, and a chance to reflect, reset, and recharge for the month ahead. Let’s make August amazing—together.",
+    "location": "0101000020E610000055127E4EE644D5BFFB29447694291640",
     "address": {
-      "full_address": "Kokrobite, Ghana"
+      "full_address": "Block Factory Road, Weija, Ghana"
     },
-    "website_url": "www.msc.com",
-    "capacity": 1500,
-    "flyer_public_id": "event_flyers/afgpfq2hbc2ecmw2owj1",
-    "flyer_version": "1745938329",
-    "starts_at": "2025-05-01T09:00:00+00:00",
-    "ends_at": "2025-05-01T21:00:00+00:00",
-    "event_dates": null,
+    "website_url": "www.helloaugust.com",
+    "capacity": 150,
+    "flyer_public_id": "event_flyers/fvylxqhsee0cbbnmgngy",
+    "flyer_version": "1747941458",
+    "starts_at": null,
+    "ends_at": null,
+    "event_dates": [
+      "2025-05-26T23:00:00+00:00",
+      "2025-05-28T23:00:00+00:00",
+      "2025-05-30T23:00:00+00:00"
+    ],
     "status": "published",
-    "created_at": "2025-04-29T14:52:06.645+00:00",
-    "event_code": "DM3601",
+    "created_at": "2025-05-22T19:17:39.467+00:00",
+    "event_code": "HA4087",
     "min_price": 100,
     "currency": "USD",
     "attendanceCount": 0
   },
-  "timestamp": 1749714035696
+  "timestamp": 1749820593650
 }

@@ -1,6 +1,7 @@
 // utils/dailyEventCache.ts
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { UserPostType } from "@/types/postsType";
 
@@ -8,7 +9,9 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const THREE_DAYS_MS = 3 * ONE_DAY_MS;
 const MAX_LOCATIONS = 20;
 
-const CACHE_DIR = path.join(process.cwd(), "cache");
+// const CACHE_DIR = path.join(process.cwd(), "cache");
+
+const CACHE_DIR = path.join(os.tmpdir(), "daily-event-cache");
 
 export async function getDailyEvent(
   events: UserPostType[],
