@@ -28,7 +28,7 @@ export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
           onclick();
         }
       }}
-      className="fixed top-0 left-0 z-10 bg-black bg-opacity-30 w-full min-h-dvh flex justify-center items-end md:items-center"
+      className="fixed top-0 left-0 z-30 bg-black bg-opacity-30 w-full min-h-dvh flex justify-center items-end md:items-center"
     >
       {step === 1 && (
         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
