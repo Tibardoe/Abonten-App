@@ -1,31 +1,31 @@
 "use client";
 
 import { supabase } from "@/config/supabase/client";
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import ReviewModal from "../organisms/ReviewModal";
+import { Button } from "../ui/button";
 
 export default function AddReviewButton({ username }: { username: string }) {
   const [showReviewModal, setShowReviewModal] = useState(false);
-
-  const [userId, setUserId] = useState<string | null>(null);
 
   const handleShowReviewModal = (state: boolean) => {
     setShowReviewModal(state);
   };
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: user } = await supabase.auth.getUser();
-      if (user.user) {
-        setUserId(user.user?.id);
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        return user.id;
       }
-    };
+    },
+  });
 
-    getUser();
-  }, []);
-
-  if (!userId) return;
+  if (!user) return;
 
   return (
     <>
@@ -36,7 +36,14 @@ export default function AddReviewButton({ username }: { username: string }) {
         />
       )}
 
-      <button
+      <Button
+        className="p-3 rounded-md font-semibold"
+        onClick={() => handleShowReviewModal(true)}
+      >
+        Add Review
+      </Button>
+
+      {/* <button
         type="button"
         className="flex gap-1 items-cente font-bold"
         onClick={() => handleShowReviewModal(true)}
@@ -48,7 +55,7 @@ export default function AddReviewButton({ username }: { username: string }) {
           height={25}
         />
         Add Review
-      </button>
+      </button> */}
     </>
   );
 }

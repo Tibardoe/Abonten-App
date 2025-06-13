@@ -1,4 +1,5 @@
 import { getUserReviews } from "@/actions/getUserReviews";
+import AddReviewButton from "@/components/atoms/AddReviewButton";
 import Rating from "@/components/atoms/Rating";
 import { Button } from "@/components/ui/button";
 import { getRelativeTime } from "@/utils/dateFormatter";
@@ -71,9 +72,7 @@ export default async function page({
       <p className="text-gray-600">
         Be the first to leave a review and rating.
       </p>
-      <Button className="px-6 py-3 text-lg rounded-full font-semibold">
-        Add Review
-      </Button>
+      <AddReviewButton username={username} />
     </div>
   );
 }

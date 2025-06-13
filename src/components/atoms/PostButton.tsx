@@ -37,7 +37,7 @@ export default function PostButton() {
   return (
     <>
       <Button
-        className="font-bold md:text-lg px-10 hidden md:flex"
+        className="font-bold px-10 hidden md:flex"
         onClick={() => handlePostModal(true)}
       >
         Post

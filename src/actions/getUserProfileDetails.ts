@@ -1,3 +1,5 @@
+"use server";
+
 import { createClient } from "@/config/supabase/server";
 
 export async function getUserProfileDetails(username: string) {

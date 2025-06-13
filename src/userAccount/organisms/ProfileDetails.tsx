@@ -141,9 +141,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
 
             <span>
               <h2>
-                <span className="font-bold">
-                  {data.average_rating === null && 0}
-                </span>{" "}
+                <span className="font-bold">{averageRating.averageRating}</span>{" "}
                 Ratings
               </h2>
             </span>
