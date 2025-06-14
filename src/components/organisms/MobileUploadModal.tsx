@@ -3,6 +3,7 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import Image from "next/image";
 import { useState } from "react";
+import { LiaTimesSolid } from "react-icons/lia";
 
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;
@@ -38,15 +39,10 @@ export default function MobileUploadModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 z-10 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden">
+    <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden">
       <div className="w-[90%] flex justify-between mt-5">
         <button type="button" onClick={() => handleClosePopup(false)}>
-          <Image
-            src="/assets/images/cancel.svg"
-            alt="Cancel"
-            width={15}
-            height={15}
-          />
+          <LiaTimesSolid className="text-2xl" />
         </button>
 
         <h1 className="font-bold text-lg">New Post</h1>
@@ -63,7 +59,7 @@ export default function MobileUploadModal({
 
       {imgUrl && (
         <div className="w-[90%]">
-          <div className="w-full">
+          <div className="w-[70%] mx-auto">
             <Image
               src={imgUrl}
               alt="Selected Avatar"

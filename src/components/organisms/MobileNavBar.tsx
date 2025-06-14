@@ -1,48 +1,39 @@
 "use client";
 
 import { supabase } from "@/config/supabase/client";
+import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import MobileNavButton from "../atoms/MobileNavButton";
 import MobileAuthPopup from "./MobileAuthPopup";
 
 export default function MobileNavBar() {
-  const [username, setUsername] = useState(null);
-
-  const [address, setAddress] = useState<string | null>(null);
-
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
-  useEffect(() => {
-    const storedAddress = localStorage.getItem("address");
+  const location = useGetUserLocation();
 
-    setAddress(storedAddress);
-  }, []);
-
-  useEffect(() => {
-    const fetchUsername = async () => {
+  const { data: userData } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) return;
 
-      if (user) {
-        const response = await supabase
-          .from("user_info")
-          .select("username")
-          .eq("id", user.id)
-          .single();
+      const response = await supabase
+        .from("user_info")
+        .select("username")
+        .eq("id", user.id)
+        .single();
 
-        setUsername(response.data?.username);
-      }
-    };
-
-    fetchUsername();
-  }, []);
+      return response.data;
+    },
+  });
 
   const handleAccountClick = (e: React.MouseEvent) => {
-    if (!username) {
+    if (!userData?.username) {
       e.preventDefault(); // prevent navigation
       setShowAuthPopup(true); // show modal instead
     }
@@ -53,7 +44,7 @@ export default function MobileNavBar() {
       <div className="flex md:hidden justify-center w-full fixed bottom-0 border-t border-black-500 py-4 bg-white z-20">
         <div className="flex justify-between w-[90%]">
           <MobileNavButton
-            href={`/events/${generateSlug(address || "default-location")}`}
+            href={`/events/${generateSlug(location || "default-location")}`}
             text="Home"
             imgUrl="/assets/images/home.svg"
           />
@@ -73,7 +64,7 @@ export default function MobileNavBar() {
             imgUrl="/assets/images/wallet.svg"
           />
           <MobileNavButton
-            href={username ? `/user/${username}/posts` : "#"}
+            href={userData?.username ? `/user/${userData.username}/posts` : "#"}
             text="Account"
             imgUrl="/assets/images/account.svg"
             onClick={handleAccountClick}

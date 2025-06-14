@@ -356,7 +356,7 @@ export default function Header() {
 
       {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
 
-      <div className="flex justify-between py-5 w-[90%] md:w-[80%] border-b border-black-500 items-center">
+      <div className="flex justify-between py-5 w-[95%] border-b border-black-500 items-center">
         <div className="mx-auto lg:mx-0 flex items-center w-full">
           {/* Menu toggle button */}
           <button

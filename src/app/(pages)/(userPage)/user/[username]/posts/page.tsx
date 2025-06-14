@@ -34,7 +34,7 @@ export default async function page({
   }
 
   return userPosts?.length ? (
-    <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
+    <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
       {userPosts.map((post) => {
         return (
           <EventCard
