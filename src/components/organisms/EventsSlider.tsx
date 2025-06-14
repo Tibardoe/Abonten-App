@@ -112,7 +112,7 @@ export default function EventsSlider({
         {/* slider container and element */}
         <ul
           ref={scrollRef}
-          className="grid grid-flow-col auto-cols-[75%] sm:auto-cols-[45%] md:auto-cols-[35%] lg:auto-cols-[28%] xl:auto-cols-[23%] gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-2 py-3"
+          className="grid grid-flow-col auto-cols-[80%] sm:auto-cols-[45%] md:auto-cols-[35%] lg:auto-cols-[28%] xl:auto-cols-[25%] gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-2 py-3"
           // className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4 relative"
         >
           {events.map((event) => (
