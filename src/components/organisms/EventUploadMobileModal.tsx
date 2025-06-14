@@ -163,85 +163,91 @@ closePopupModalType) {
   }, [notification]);
 
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
-    if (!selectedFile) {
-      setNotification("Please select a file first!");
-      return;
-    }
+    try {
+      if (!selectedFile) {
+        setNotification("Please select a file first!");
+        return;
+      }
 
-    if (!selectedAddress) {
-      setNotification("Please enter a location");
-      return;
-    }
+      if (!selectedAddress) {
+        setNotification("Please enter a location");
+        return;
+      }
 
-    const coords = await getCoordinatesFromAddress(selectedAddress);
+      const coords = await getCoordinatesFromAddress(selectedAddress);
 
-    if (!coords) {
-      setNotification("Could not fetch coordinates");
-      return;
-    }
+      if (!coords) {
+        setNotification("Could not fetch coordinates");
+        return;
+      }
 
-    let eventDates: EventDates;
+      console.log(coords);
 
-    // if (dateType === "single" && !Array.isArray(dateAndTime)) {
-    //   eventDates = {
-    //     starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
-    //     ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
-    //   };
-    // } else if (Array.isArray(dateAndTime)) {
-    //   eventDates = {
-    //     specific_dates: dateAndTime, // Array of dates
-    //   };
-    // } else {
-    //   setNotification("Invalid date selection");
-    //   return;
-    // }
+      let eventDates: EventDates;
 
-    if (dateType === "single") {
-      eventDates = {
-        starts_at: singleDateRange.from,
-        ends_at: singleDateRange.to,
+      // if (dateType === "single" && !Array.isArray(dateAndTime)) {
+      //   eventDates = {
+      //     starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
+      //     ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
+      //   };
+      // } else if (Array.isArray(dateAndTime)) {
+      //   eventDates = {
+      //     specific_dates: dateAndTime, // Array of dates
+      //   };
+      // } else {
+      //   setNotification("Invalid date selection");
+      //   return;
+      // }
+
+      if (dateType === "single") {
+        eventDates = {
+          starts_at: singleDateRange.from,
+          ends_at: singleDateRange.to,
+        };
+      } else if (dateType === "multiple") {
+        eventDates = {
+          specific_dates: multipleDates,
+        };
+      } else {
+        setNotification("Invalid date selection");
+        return;
+      }
+
+      const receivingAccountDetails = receivingAccountForm.getValues();
+
+      const finalData = {
+        ...formData,
+        address: selectedAddress,
+        latitude: coords.lat,
+        longitude: coords.lng,
+        category,
+        types,
+        selectedFile,
+        promoCodes,
+        freeEvents: ticket,
+        singleTicket,
+        singleTicketQuantity,
+        multipleTickets,
+        currency,
+        checked,
+        paymentOption,
+        receivingAccountDetails,
+        selectedNetwork,
+        ...eventDates, // Merge the eventDates
       };
-    } else if (dateType === "multiple") {
-      eventDates = {
-        specific_dates: multipleDates,
-      };
-    } else {
-      setNotification("Invalid date selection");
-      return;
-    }
 
-    const receivingAccountDetails = receivingAccountForm.getValues();
+      setIsUploading(true);
+      const response = await postEvent(finalData);
+      setIsUploading(false);
 
-    const finalData = {
-      ...formData,
-      address: selectedAddress,
-      latitude: coords.lat,
-      longitude: coords.lng,
-      category,
-      types,
-      selectedFile,
-      promoCodes,
-      freeEvents: ticket,
-      singleTicket,
-      singleTicketQuantity,
-      multipleTickets,
-      currency,
-      checked,
-      paymentOption,
-      receivingAccountDetails,
-      selectedNetwork,
-      ...eventDates, // Merge the eventDates
-    };
-
-    setIsUploading(true);
-    const response = await postEvent(finalData);
-    setIsUploading(false);
-
-    if (response.status === 200) {
-      setNotification("✅ Event posted successfully!");
-      handleClosePopup(false);
-    } else {
-      setNotification(`❌ ${response.message}`);
+      if (response.status === 200) {
+        setNotification("✅ Event posted successfully!");
+        handleClosePopup(false);
+      } else {
+        setNotification(`❌ ${response.message}`);
+      }
+    } catch (error) {
+      setNotification("Location unknown! Try again with different location");
     }
   };
 
