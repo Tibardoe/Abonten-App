@@ -193,9 +193,11 @@ export default function DateTimePicker({
             const time = `${e.from.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
+              hour12: true,
             })} - ${e.to.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
+              hour12: true,
             })}`;
             return (
               <li
