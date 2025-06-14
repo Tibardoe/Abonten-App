@@ -23,6 +23,28 @@ export function formatDateWithSuffix(date: string | Date): string {
   return formattedDate.replace(/\d+/, `${day}${suffix}`);
 }
 
+// export function formatFullDateTimeRange(
+//   from?: Date | null | string,
+//   to?: Date | null | string,
+// ): { date: string; time: string } {
+//   const fromObj = from
+//     ? formatSingleDateTime(from)
+//     : { date: "N/A", time: "N/A" };
+//   const toObj = to ? formatSingleDateTime(to) : { date: "N/A", time: "N/A" };
+
+//   if (from && to && fromObj.date === toObj.date) {
+//     return {
+//       date: fromObj.date,
+//       time: `${fromObj.time} - ${toObj.time}`,
+//     };
+//   }
+
+//   return {
+//     date: `${fromObj.date} - ${toObj.date}`,
+//     time: `${fromObj.time} - ${toObj.time}`,
+//   };
+// }
+
 export function formatFullDateTimeRange(
   from?: Date | null | string,
   to?: Date | null | string,
@@ -32,15 +54,10 @@ export function formatFullDateTimeRange(
     : { date: "N/A", time: "N/A" };
   const toObj = to ? formatSingleDateTime(to) : { date: "N/A", time: "N/A" };
 
-  if (from && to && fromObj.date === toObj.date) {
-    return {
-      date: fromObj.date,
-      time: `${fromObj.time} - ${toObj.time}`,
-    };
-  }
+  const isSameDate = fromObj.date === toObj.date;
 
   return {
-    date: `${fromObj.date} - ${toObj.date}`,
+    date: isSameDate ? fromObj.date : `${fromObj.date} - ${toObj.date}`,
     time: `${fromObj.time} - ${toObj.time}`,
   };
 }
@@ -51,30 +68,65 @@ export function formatSingleDateTime(date: Date | string): {
 } {
   const parsedDate = new Date(date);
 
-  const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  };
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
+  const dayOfWeek = daysOfWeek[parsedDate.getDay()];
+  const month = months[parsedDate.getMonth()];
   const day = parsedDate.getDate();
-  let suffix = "th";
+  const year = parsedDate.getFullYear();
 
+  let suffix = "th";
   if (day % 10 === 1 && day !== 11) suffix = "st";
   else if (day % 10 === 2 && day !== 12) suffix = "nd";
   else if (day % 10 === 3 && day !== 13) suffix = "rd";
 
-  const formattedDate = parsedDate.toLocaleDateString("en-GB", options);
-  const [monthStr, yearStr] = formattedDate.split(" ");
+  // const options: Intl.DateTimeFormatOptions = {
+  //   year: "numeric",
+  //   month: "short",
+  //   day: "numeric",
+  // };
 
-  const dateStr = `${day}${suffix} ${monthStr}, ${yearStr}`;
+  // const day = parsedDate.getDate();
+  // let suffix = "th";
+
+  // if (day % 10 === 1 && day !== 11) suffix = "st";
+  // else if (day % 10 === 2 && day !== 12) suffix = "nd";
+  // else if (day % 10 === 3 && day !== 13) suffix = "rd";
+
+  // const formattedDate = parsedDate.toLocaleDateString("en-GB", options);
+  // const [monthStr, yearStr] = formattedDate.split(" ");
+
+  const formattedDate = `${dayOfWeek}, ${day}${suffix} ${month} ${year}`;
+
+  // const dateStr = `${day}${suffix} ${monthStr}, ${yearStr}`;
+  // const timeStr = parsedDate.toLocaleTimeString("en-US", {
+  //   hour: "2-digit",
+  //   minute: "2-digit",
+  //   hour12: true,
+  // });
+
   const timeStr = parsedDate.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
 
-  return { date: dateStr, time: timeStr };
+  return { date: formattedDate, time: timeStr };
 }
 
 export function getRelativeTime(date: string | Date) {

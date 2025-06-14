@@ -75,6 +75,8 @@ export default async function page({
     }
   }
 
+  console.log(eventDateAndTime.date);
+
   return (
     <div className="flex flex-col justify-center gap-5">
       {!orderSummary && checkoutType === "ticket" ? (
