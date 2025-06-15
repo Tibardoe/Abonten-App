@@ -22,6 +22,8 @@ export default function AddReviewButton({ username }: { username: string }) {
       if (user) {
         return user.id;
       }
+
+      return null;
     },
   });
 

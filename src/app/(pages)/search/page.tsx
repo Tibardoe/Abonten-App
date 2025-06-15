@@ -122,7 +122,7 @@ export default async function page({
             capacity={event.capacity}
             min_price={event.min_price}
             currency={event.currency}
-            attendanceCount={event.attendanceCount}
+            attendance_count={event.attendance_count}
           />
         ))}
       </ul>

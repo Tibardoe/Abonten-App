@@ -11,6 +11,7 @@ import ShareButton from "../atoms/ShareButton";
 type EventProp = {
   eventId: string;
   eventTitle: string;
+  eventCode: string;
   address: string;
   organizerId?: string;
 };
@@ -19,9 +20,10 @@ export default function EventCardMenuModal({
   eventId,
   eventTitle,
   address,
+  eventCode,
   organizerId,
 }: EventProp) {
-  const shareUrl = getEventShareUrl(eventTitle, address);
+  const shareUrl = getEventShareUrl(eventCode, address);
 
   const { data: userData } = useQuery({
     queryKey: ["user"],

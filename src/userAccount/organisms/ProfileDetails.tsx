@@ -112,16 +112,6 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
               <SettingsButton />
             ) : (
               <div className="col-span-2 font-bold">
-                {/* <button type="button" className="flex gap-1 items-center">
-                  <Image
-                    src="/assets/images/post.svg"
-                    alt="Post"
-                    width={30}
-                    height={30}
-                  />
-                  Add Review
-                </button> */}
-
                 <AddReviewButton username={username} />
               </div>
             )}

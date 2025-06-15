@@ -16,12 +16,6 @@ export async function getUserProfileDetails(username: string) {
 
     let ownUsername = null;
 
-    if (!authData || authError) {
-      console.log(`Error fetching auth data: ${authError?.message}`);
-
-      return { status: 500, message: "Something went wrong!" };
-    }
-
     if (authData?.user) {
       const { data: ownInfo } = await supabase
         .from("user_info")

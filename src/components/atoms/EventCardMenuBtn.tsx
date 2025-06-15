@@ -5,6 +5,7 @@ import EventCardMenuModal from "../molecules/EventCardMenuModal";
 type EventProp = {
   eventId?: string;
   eventTitle?: string;
+  eventCode: string;
   address: string;
   organizerId?: string;
 };
@@ -12,6 +13,7 @@ type EventProp = {
 export default function EventCardMenuBtn({
   eventId,
   eventTitle,
+  eventCode,
   address,
   organizerId,
 }: EventProp) {
@@ -34,6 +36,7 @@ export default function EventCardMenuBtn({
         <EventCardMenuModal
           eventId={eventId ? eventId : ""}
           eventTitle={eventTitle ? eventTitle : ""}
+          eventCode={eventCode}
           address={address ? address : ""}
           organizerId={organizerId}
         />

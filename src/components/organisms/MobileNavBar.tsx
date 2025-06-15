@@ -20,7 +20,7 @@ export default function MobileNavBar() {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) return;
+      if (!user) return null;
 
       const response = await supabase
         .from("user_info")
@@ -28,12 +28,12 @@ export default function MobileNavBar() {
         .eq("id", user.id)
         .single();
 
-      return response.data;
+      return response.data?.username;
     },
   });
 
   const handleAccountClick = (e: React.MouseEvent) => {
-    if (!userData?.username) {
+    if (!userData) {
       e.preventDefault(); // prevent navigation
       setShowAuthPopup(true); // show modal instead
     }
@@ -64,7 +64,7 @@ export default function MobileNavBar() {
             imgUrl="/assets/images/wallet.svg"
           />
           <MobileNavButton
-            href={userData?.username ? `/user/${userData.username}/posts` : "#"}
+            href={userData ? `/user/${userData}/posts` : "#"}
             text="Account"
             imgUrl="/assets/images/account.svg"
             onClick={handleAccountClick}

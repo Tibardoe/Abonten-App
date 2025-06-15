@@ -2,11 +2,9 @@
 
 import type { UserPostType } from "@/types/postsType";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
-import { generateSlug } from "@/utils/geerateSlug";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import EventCardMenuBtn from "../atoms/EventCardMenuBtn";
@@ -30,7 +28,6 @@ export default function EventCard({
 }: UserPostType) {
   const dateTime = getFormattedEventDate(starts_at, ends_at, event_dates);
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-  const { location } = useParams();
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, event_dates);
 
   return (
@@ -48,9 +45,7 @@ export default function EventCard({
 
       {/* Flyer Image */}
       <Link
-        href={`/events/${
-          location ? location : generateSlug(address.full_address)
-        }/${event_code.toLowerCase()}`}
+        href={`/events/${event_code.toLowerCase()}`}
         className="block relative h-64 w-full overflow-hidden"
       >
         <Image
@@ -70,9 +65,7 @@ export default function EventCard({
       <div className="p-5 space-y-3">
         <div className="flex justify-between items-start gap-3">
           <Link
-            href={`/events/${
-              location ? location : generateSlug(address.full_address)
-            }/${event_code.toLowerCase()}`}
+            href={`/events/${event_code.toLowerCase()}`}
             className="text-xl font-bold text-gray-900 hover:text-primary transition-colors line-clamp-2"
             title={title}
           >
@@ -82,6 +75,7 @@ export default function EventCard({
           <EventCardMenuBtn
             eventId={id}
             eventTitle={title}
+            eventCode={event_code}
             address={address.full_address}
             organizerId={organizer_id}
           />
