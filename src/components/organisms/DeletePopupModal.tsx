@@ -1,4 +1,5 @@
 import { deleteEvent } from "@/actions/deleteEvent";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Notification from "../atoms/Notification";
 
@@ -19,6 +20,8 @@ export default function DeletePopupModal({
 
   const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
+
   const handleDeleteEvent = async () => {
     if (!eventId) return;
 
@@ -30,8 +33,8 @@ export default function DeletePopupModal({
       if (response.status === 200) {
         setSuccess(response.message);
         setTimeout(() => {
-          window.location.reload(); // This will reload the page
-        }, 2000); // Optional delay before refreshing
+          router.refresh(); // This will reload the page
+        }, 1000); // Optional delay before refreshing
       } else {
         setError(response.message || "Something went wrong.");
       }
@@ -45,7 +48,7 @@ export default function DeletePopupModal({
   };
   return (
     <>
-      <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-10">
+      <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
         <div className="w-[70%] md:w-[40%] p-3 bg-white rounded-xl">
           <h1 className="text-lg font-bold text-center pb-3">Warning</h1>
 

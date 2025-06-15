@@ -7,6 +7,7 @@ import { getUserCurrency } from "@/utils/getUserCurrency";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
@@ -89,6 +90,8 @@ export default function UploadEventModal({
 
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
 
+  const router = useRouter();
+
   // At the top of EventUploadMobileModal
   const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
     resolver: zodResolver(receivingAccountSchema),
@@ -163,6 +166,8 @@ export default function UploadEventModal({
 
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
     try {
+      setIsUploading(true);
+
       if (!selectedFile) {
         setNotification("Please select a file first!");
         return;
@@ -225,12 +230,17 @@ export default function UploadEventModal({
 
       if (response.status === 200) {
         setNotification("✅ Event posted successfully!");
+        router.refresh();
+
         handleClosePopup(false);
       } else {
         setNotification(`❌ ${response.message}`);
       }
     } catch (error) {
       setNotification("Location unknown! Try again with different location");
+      setIsUploading(false);
+    } finally {
+      setIsUploading(false);
     }
   };
 

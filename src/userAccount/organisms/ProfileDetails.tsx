@@ -21,11 +21,13 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
 
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
-  const defaultAvatar = "AnonymousProfile_rn6qez";
+  const defaultPublicId = "AnonymousProfile_rn6qez";
+
+  const defaulfVersion = "1743533914";
 
   const avatarUrl = data?.avatar_public_id
     ? `${cloudinaryBaseUrl}v${data.avatar_version}/${data.avatar_public_id}.jpg`
-    : defaultAvatar;
+    : `${cloudinaryBaseUrl}v${defaulfVersion}/${defaultPublicId}.jpg`;
 
   const averageRating = await getUserRating(userDetails.data.user_id);
 
@@ -97,7 +99,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
 
       {/* On tablet and desktop */}
       <div className="hidden md:flex flex-col gap-7">
-        <div className="hidden md:flex gap-10 items-start">
+        <div className="hidden md:flex gap-10 items-start w-[50%]">
           <UserAvatar avatarUrl={avatarUrl} width={150} height={150} />
           <div className="grid grid-cols-3 gap-3 justify-start items-center">
             <h2>{data?.username}</h2>
@@ -136,7 +138,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
               </h2>
             </span>
 
-            <div>
+            <div className="col-span-3">
               <p>{userDetails.data.bio}</p>
             </div>
           </div>

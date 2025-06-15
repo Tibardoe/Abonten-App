@@ -14,7 +14,7 @@ export default function MobileNavBar() {
   const location = useGetUserLocation();
 
   const { data: userData } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["username"],
     queryFn: async () => {
       const {
         data: { user },

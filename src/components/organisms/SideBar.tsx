@@ -1,21 +1,18 @@
 "use client";
 
-// import { getUserDetails } from "@/actions/getUserDetails";
 import { getUserEventRole } from "@/actions/getUserEventRole";
-import { useAuth } from "@/context/authContext";
+import { supabase } from "@/config/supabase/client";
+import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { useQuery } from "@tanstack/react-query";
-// import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
 import { MdOutlineManageHistory } from "react-icons/md";
-// import { TbLogin } from "react-icons/tb";
-// import EventUploadMobileButton from "../atoms/EventUploadMobileButton";
 import { cn } from "../lib/utils";
 import AuthPopup from "./AuthPopup";
 import EventUploadMobileModal from "./EventUploadMobileModal";
@@ -27,13 +24,13 @@ type menuClickedProp = {
 };
 
 export default function SideBar({ menuClicked }: menuClickedProp) {
-  const { user } = useAuth();
-
   const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   const [showPostModal, setShowPostModal] = useState(false);
 
   const [buttonText, setButtonText] = useState("");
+
+  const location = useGetUserLocation();
 
   const router = useRouter();
 
@@ -78,6 +75,10 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
   const { data: userRole } = useQuery({
     queryKey: ["user-role"],
     queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) return null;
 
       try {
@@ -87,9 +88,24 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
         if (Array.isArray(res.role)) {
           return res.role;
         }
+
+        return null;
       } catch (error) {
         console.error("Error fetching user role:", error);
       }
+    },
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ["sidebar-user"],
+    queryFn: async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return null;
+
+      return user;
     },
   });
 
@@ -123,7 +139,10 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
         >
           {user ? (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-3">
-              <Link href="/events" className="flex gap-1 items-center">
+              <Link
+                href={`/events/location/${location}`}
+                className="flex gap-1 items-center"
+              >
                 <GoHome className="text-2xl" />
                 Home
               </Link>

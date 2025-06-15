@@ -16,11 +16,13 @@ export default async function page() {
 
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
-  const defaultAvatar = "AnonymousProfile_rn6qez";
+  const defaultPublicId = "AnonymousProfile_rn6qez";
+
+  const defaulfVersion = "1743533914";
 
   const avatarUrl = userDetails.avatar_public_id
     ? `${cloudinaryBaseUrl}v${userDetails.avatar_version}/${userDetails.avatar_public_id}.jpg`
-    : defaultAvatar;
+    : `${cloudinaryBaseUrl}v${defaulfVersion}/${defaultPublicId}.jpg`;
 
   return (
     <div className="w-full flex flex-col gap-10">

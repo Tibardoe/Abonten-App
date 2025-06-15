@@ -9,6 +9,7 @@ import { getUserCurrency } from "@/utils/getUserCurrency";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
@@ -113,6 +114,8 @@ closePopupModalType) {
 
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
 
+  const router = useRouter();
+
   // At the top of EventUploadMobileModal
   const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
     resolver: zodResolver(receivingAccountSchema),
@@ -164,6 +167,8 @@ closePopupModalType) {
 
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
     try {
+      setIsUploading(true);
+
       if (!selectedFile) {
         setNotification("Please select a file first!");
         return;
@@ -181,23 +186,7 @@ closePopupModalType) {
         return;
       }
 
-      console.log(coords);
-
       let eventDates: EventDates;
-
-      // if (dateType === "single" && !Array.isArray(dateAndTime)) {
-      //   eventDates = {
-      //     starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
-      //     ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
-      //   };
-      // } else if (Array.isArray(dateAndTime)) {
-      //   eventDates = {
-      //     specific_dates: dateAndTime, // Array of dates
-      //   };
-      // } else {
-      //   setNotification("Invalid date selection");
-      //   return;
-      // }
 
       if (dateType === "single") {
         eventDates = {
@@ -210,6 +199,7 @@ closePopupModalType) {
         };
       } else {
         setNotification("Invalid date selection");
+
         return;
       }
 
@@ -242,12 +232,16 @@ closePopupModalType) {
 
       if (response.status === 200) {
         setNotification("✅ Event posted successfully!");
+        router.refresh();
         handleClosePopup(false);
       } else {
         setNotification(`❌ ${response.message}`);
       }
     } catch (error) {
       setNotification("Location unknown! Try again with different location");
+      setIsUploading(false);
+    } finally {
+      setIsUploading(false);
     }
   };
 

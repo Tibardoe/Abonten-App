@@ -8,7 +8,7 @@ export default async function getTicketCheckout(checkoutSessionId: string) {
   const { data: checkoutData, error: checkoutDataError } = await supabase
     .from("ticket_checkout")
     .select(
-      "*, event:event_id(title, starts_at, ends_at, event_dates), ticket_type:ticket_type_id(type)",
+      "*, event:event_id(title, starts_at, ends_at, event_dates), ticket_type:ticket_type_id(type, currency)",
     )
     .eq("checkout_session_id", checkoutSessionId);
 

@@ -1,5 +1,6 @@
 import type { Ticket } from "@/types/ticketType";
 import { getUserCurrency } from "@/utils/getUserCurrency";
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useEffect, useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -25,8 +26,6 @@ export default function TicketInputs({
   handleSingleTicketQuantity,
   handleMultipleTickets,
 }: TicketInputProp) {
-  const [currency, setCurrency] = useState("");
-
   const [date, setDate] = React.useState<Date | undefined>(undefined);
 
   const [endDate, setEndDate] = React.useState<Date | undefined>(undefined);
@@ -47,14 +46,13 @@ export default function TicketInputs({
     }[]
   >([]);
 
-  useEffect(() => {
-    const fetchCurrency = async () => {
+  const { data: currency } = useQuery({
+    queryKey: ["currency"],
+    queryFn: async () => {
       const userCurrency = await getUserCurrency();
-      setCurrency(userCurrency);
-    };
-
-    fetchCurrency();
-  }, []);
+      return userCurrency;
+    },
+  });
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();

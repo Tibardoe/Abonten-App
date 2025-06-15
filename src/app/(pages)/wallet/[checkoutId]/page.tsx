@@ -45,6 +45,7 @@ export default async function page({
         quantity: ticket.quantity,
         discount: ticket.discount,
         amount: ticket.total_price,
+        currency: ticket.ticket_type.currency,
       }));
       totalAmount = orderSummary.reduce(
         (sum, ticket) => sum + ticket.total_price,
@@ -74,8 +75,6 @@ export default async function page({
       totalAmount = data[0].total_price;
     }
   }
-
-  console.log(eventDateAndTime.date);
 
   return (
     <div className="flex flex-col justify-center gap-5">

@@ -83,6 +83,7 @@ export type TicketSummaryItem = {
   discount: number;
   amount: number;
   unitPrice: string;
+  currency: string;
 };
 
 export type TicketSummaryProps = {

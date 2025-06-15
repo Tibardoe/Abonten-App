@@ -24,7 +24,10 @@ import MobileAuthPopup from "./MobileAuthPopup";
 import SideBar from "./SideBar";
 
 const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/abonten/image/upload/";
-const DEFAULT_AVATAR = "AnonymousProfile_rn6qez";
+
+const defaultPublicId = "AnonymousProfile_rn6qez";
+
+const defaulfVersion = "1743533914";
 
 export default function Header() {
   const [authType, setAuthType] = useState<"Sign Up" | "Sign In" | "">("");
@@ -77,7 +80,7 @@ export default function Header() {
 
   const avatarUrl = profile.avatar_public_id
     ? `${CLOUDINARY_BASE_URL}v${profile.avatar_version}/${profile.avatar_public_id}.jpg`
-    : DEFAULT_AVATAR;
+    : `${CLOUDINARY_BASE_URL}v${defaulfVersion}/${defaultPublicId}.jpg`;
 
   const isUserAccount = pathname === `/user/${profile.username}/posts`;
   const isOrganizer = userRole?.role?.includes("organizer");

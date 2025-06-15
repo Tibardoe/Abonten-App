@@ -26,7 +26,7 @@ export default function EventCardMenuModal({
   const shareUrl = getEventShareUrl(eventCode, address);
 
   const { data: userData } = useQuery({
-    queryKey: ["user"],
+    queryKey: ["user-auth"],
     queryFn: async () => {
       const {
         data: { user },

@@ -130,22 +130,30 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
             </div>
             <div className="flex justify-between text-xs mt-1 text-gray-500">
               <p>Actual Price:</p>
-              <p>₵{ticket.unitPrice}</p>
+              <p>
+                {ticket.currency} {ticket.unitPrice}
+              </p>
             </div>
             <div className="flex justify-between text-xs text-gray-500">
               <p>Discount:</p>
-              <p>₵{ticket.discount}</p>
+              <p>
+                {ticket.currency} {ticket.discount}
+              </p>
             </div>
             <div className="flex justify-between text-xs text-gray-500">
               <p>Subtotal:</p>
-              <p>₵{ticket.amount}</p>
+              <p>
+                {ticket.currency} {ticket.amount}
+              </p>
             </div>
           </div>
         ))}
 
         <div className="flex justify-between pt-2 border-t font-bold text-gray-800">
           <p>Total Amount</p>
-          <p>₵{totalAmount}</p>
+          <p>
+            {ticketSummary[0].currency} {totalAmount}
+          </p>
         </div>
       </div>
     );

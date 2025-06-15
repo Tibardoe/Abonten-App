@@ -1,6 +1,4 @@
-"use client";
-
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
 
 type AvatarUrlProp = {
   avatarUrl: string;
@@ -14,12 +12,18 @@ export default function UserAvatar({
   height,
 }: AvatarUrlProp) {
   return (
-    <CldImage
-      src={avatarUrl}
-      alt="Profile picture"
-      width={width}
-      height={height}
-      className="rounded-full"
-    />
+    <div
+      className="relative rounded-full overflow-hidden flex flex-shrink-0"
+      style={{ width: `${width}px`, height: `${height}px` }}
+    >
+      <Image
+        src={avatarUrl}
+        alt="User Avatar"
+        fill
+        className="object-cover object-center"
+        sizes={`${width}px`}
+        priority
+      />
+    </div>
   );
 }

@@ -58,7 +58,7 @@ export default function CheckoutModal({
 
   const {
     data: ticketData,
-    // isLoading: isTicketsLoading,
+    isLoading: isTicketsLoading,
     isError: isTicketsError,
     error: ticketsError,
   } = useQuery({
@@ -199,90 +199,103 @@ export default function CheckoutModal({
           </div>
 
           {/* Display tickets */}
-          {ticketData?.tickets.map((ticket) => (
-            <div
-              key={ticket.type}
-              className={`border-2 border-black rounded-md py-4 space-y-4 ${
-                quantities[ticket.type] > 0
-                  ? "border-opacity-100"
-                  : "border-opacity-40"
-              }`}
-            >
-              <div className="flex items-center justify-between px-4">
-                <p>{ticket.type}</p>
+          {isTicketsLoading ? (
+            <p className="font-bold">Loading Tickets...</p>
+          ) : (
+            <>
+              {" "}
+              {ticketData?.tickets.map((ticket) => (
+                <div
+                  key={ticket.type}
+                  className={`border-2 border-black rounded-md py-4 space-y-4 ${
+                    quantities[ticket.type] > 0
+                      ? "border-opacity-100"
+                      : "border-opacity-40"
+                  }`}
+                >
+                  <div className="flex items-center justify-between px-4">
+                    <p>{ticket.type}</p>
 
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    disabled={(quantities[ticket.id] || 0) <= 0}
-                    onClick={() =>
-                      setQuantities((prev) => ({
-                        ...prev,
-                        [ticket.id]: Math.max((prev[ticket.id] || 0) - 1, 0),
-                      }))
-                    }
-                    className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <TfiMinus />
-                  </button>
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        disabled={(quantities[ticket.id] || 0) <= 0}
+                        onClick={() =>
+                          setQuantities((prev) => ({
+                            ...prev,
+                            [ticket.id]: Math.max(
+                              (prev[ticket.id] || 0) - 1,
+                              0,
+                            ),
+                          }))
+                        }
+                        className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <TfiMinus />
+                      </button>
 
-                  <span>{quantities[ticket.id] ?? 0}</span>
+                      <span>{quantities[ticket.id] ?? 0}</span>
 
-                  <button
-                    type="button"
-                    disabled={
-                      (quantities[ticket.id] || 0) >= (ticket.quantity ?? 0)
-                    }
-                    onClick={() =>
-                      setQuantities((prev) => ({
-                        ...prev,
-                        [ticket.id]: (prev[ticket.id] || 0) + 1,
-                      }))
-                    }
-                    className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md disabled:bg-opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <IoAddSharp />
-                  </button>
-                </div>
-              </div>
-
-              <hr />
-
-              <div className="flex flex-col items-start gap-2 px-4">
-                <div className="flex justify-between items-center w-full font-bold">
-                  <div className="flex flex-col">
-                    <p className="flex items-center gap-2">
-                      {ticket.currency} {""}
-                      {discountAmount ? (
-                        <span className="flex justify-center items-center gap-1">
-                          {ticket.price - discountAmount * ticket.price}{" "}
-                          <MdDiscount className="text-lg" />
-                        </span>
-                      ) : (
-                        ticket.price
-                      )}
-                    </p>
+                      <button
+                        type="button"
+                        disabled={
+                          (quantities[ticket.id] || 0) >= (ticket.quantity ?? 0)
+                        }
+                        onClick={() =>
+                          setQuantities((prev) => ({
+                            ...prev,
+                            [ticket.id]: (prev[ticket.id] || 0) + 1,
+                          }))
+                        }
+                        className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md disabled:bg-opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <IoAddSharp />
+                      </button>
+                    </div>
                   </div>
 
-                  <p>Quantity left: {ticket.quantity}</p>
-                </div>
+                  <hr />
 
-                {ticket.type !== "SINGLE TICKET" && ticket.available_until && (
-                  <p className="text-sm">
-                    Sales end on{" "}
-                    {formatSingleDateTime(ticket.available_until).date}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
+                  <div className="flex flex-col items-start gap-2 px-4">
+                    <div className="flex justify-between items-center w-full font-bold">
+                      <div className="flex flex-col">
+                        <p className="flex items-center gap-2">
+                          {ticket.currency} {""}
+                          {discountAmount ? (
+                            <span className="flex justify-center items-center gap-1">
+                              {ticket.price - discountAmount * ticket.price}{" "}
+                              <MdDiscount className="text-lg" />
+                            </span>
+                          ) : (
+                            ticket.price
+                          )}
+                        </p>
+                      </div>
+
+                      <p>Quantity left: {ticket.quantity}</p>
+                    </div>
+
+                    {ticket.type !== "SINGLE TICKET" &&
+                      ticket.available_until && (
+                        <p className="text-sm">
+                          Sales end on{" "}
+                          {formatSingleDateTime(ticket.available_until).date}
+                        </p>
+                      )}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
 
           <div className="rounded-2xl mt-5">
             {/* Subtotal */}
             <div className="flex justify-between items-center text-sm text-gray-700 mb-2">
               <p>Subtotal</p>
               <p>
-                <span className="font-medium">GHS</span>
+                <span className="font-medium">
+                  {ticketData?.tickets[0].currency}
+                </span>
                 {typeof subTotal === "number" ? subTotal.toFixed(2) : "0.00"}
               </p>
             </div>
@@ -293,7 +306,9 @@ export default function CheckoutModal({
                 Fee <span className="text-xs text-gray-500">(2%)</span>
               </p>
               <p>
-                <span className="font-medium">GHS</span>{" "}
+                <span className="font-medium">
+                  {ticketData?.tickets[0].currency}
+                </span>{" "}
                 {typeof fee === "number" ? fee.toFixed(2) : "0.00"}
               </p>
             </div>
@@ -305,7 +320,9 @@ export default function CheckoutModal({
             <div className="flex justify-between items-center text-base font-bold text-gray-900">
               <p>Total</p>
               <p>
-                <span className="text-green-600">GHS</span>{" "}
+                <span className="text-green-600">
+                  {ticketData?.tickets[0].currency}
+                </span>{" "}
                 {typeof total === "number" ? total.toFixed(2) : "0.00"}
               </p>
             </div>
