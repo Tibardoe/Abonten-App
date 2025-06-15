@@ -76,7 +76,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
           </div>
 
           <div className="w-full">
-            <p>It is working well</p>
+            <p>{userDetails.data.bio}</p>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
             </span>
 
             <div>
-              <p>It is working</p>
+              <p>{userDetails.data.bio}</p>
             </div>
           </div>
         </div>
