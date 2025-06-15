@@ -1,9 +1,9 @@
 import useUserLocation, { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { LiaTimesSolid } from "react-icons/lia";
 import GoogleAuthButton from "../atoms/GoogleAuthButton";
 import PhoneInput from "../molecules/PhoneInput";
 import { Button } from "../ui/button";
@@ -109,16 +109,10 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
     <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-dvh z-30 fixed left-0 items-center">
       <div className="w-[90%] text-black h-screen relative">
         <button type="button" className="ml-auto mb-10" onClick={onClose}>
-          <Image
-            src="/assets/images/cancel.svg"
-            alt="Exit logo"
-            width={40}
-            height={40}
-            className="w-[20px] md:w-[30px] lg:w-[40px] h-[20px] md:h-[30px] lg:h-[35px]"
-          />
+          <LiaTimesSolid className="text-2xl" />
         </button>
 
-        <h1 className="font-bold text-5xl mb-20 text-black text-center">
+        <h1 className="font-bold text-4xl mb-20 text-black text-center">
           Abonten
         </h1>
 
@@ -151,13 +145,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
     <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-screen z-30 absolute items-center">
       <div className="w-[90%] text-black h-full relative flex flex-col items-center">
         <button type="button" className="mr-auto mb-10" onClick={onClose}>
-          <Image
-            src="/assets/images/cancel.svg"
-            alt="Exit logo"
-            width={40}
-            height={40}
-            className="w-[20px] md:w-[30px] lg:w-[40px] h-[20px] md:h-[30px] lg:h-[35px]"
-          />
+          <LiaTimesSolid className="text-2xl" />
         </button>
 
         <h1 className="font-bold text-4xl mb-2 text-black">Enter Code</h1>
@@ -197,7 +185,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
             )}
           </div>
 
-          <Button className="w-full rounded-full text-xl font-bold py-7 absolute bottom-0">
+          <Button className="w-full rounded-md text-xl font-bold py-7 absolute bottom-0">
             Continue
           </Button>
         </form>

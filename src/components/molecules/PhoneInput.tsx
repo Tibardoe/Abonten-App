@@ -26,7 +26,7 @@ export default function PhoneInput({
 
   return (
     <div className="flex w-full gap-2 relative">
-      <div className="bg-black bg-opacity-5 rounded-lg p-2 md:p-4 md:text-lg flex items-center gap-2 md:min-w-28 border">
+      <div className="bg-black bg-opacity-5 rounded-md p-2 md:p-4 md:text-lg flex items-center gap-2 md:min-w-28 border">
         <span>{selectedCountry}</span>
         <button type="button" onClick={handleRotate}>
           <Image
@@ -66,7 +66,7 @@ export default function PhoneInput({
         </div>
       )}
 
-      <div className="bg-black bg-opacity-5 rounded-lg p-2 md:p-4 flex-1 min-w-[28] flex items-center border">
+      <div className="bg-black bg-opacity-5 rounded-md p-2 md:p-3 flex-1 min-w-[28] flex items-center border">
         <input
           type="tel"
           onChange={(event) => onChange(event.target.value)}

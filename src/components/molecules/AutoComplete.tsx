@@ -545,6 +545,7 @@
 
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
+import { generateSlug } from "@/utils/geerateSlug";
 import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import { useRouter } from "next/navigation";
@@ -696,7 +697,9 @@ export default function PostAutoComplete({
 
       onSelectCoordinates?.({ ...coords, address: mainText });
 
-      router.push(`/events/${encodeURIComponent(pathSegment)}`);
+      router.push(
+        `/events/location/${generateSlug(encodeURIComponent(pathSegment))}`,
+      );
     } catch (error) {
       console.error(error);
       alert("Failed to fetch place details.");

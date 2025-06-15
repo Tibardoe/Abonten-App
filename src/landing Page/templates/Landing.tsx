@@ -8,6 +8,7 @@ import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { FiArrowRightCircle } from "react-icons/fi";
 
 export default function Landing() {
   const [selectedAddress, setSelectedAddress] = useState("");
@@ -40,23 +41,23 @@ export default function Landing() {
 
       {/* Header */}
       <nav className="w-full bg-black bg-opacity-30 flex justify-center z-10">
-        <div className="flex justify-between py-5 w-[90%] md:w-[80%]">
+        <div className="flex justify-between py-5 w-[90%]">
           <div>
             <Link href="/">
               <h1 className="text-2xl md:text-4xl font-bold">Abonten</h1>
             </Link>
           </div>
-          <div className="space-x-5">
+          <div className="space-x-3">
             <Button
               variant="outline"
-              className="bg-transparent rounded-full font-bold"
+              className="bg-transparent rounded-md font-bold"
               onClick={handleClick}
             >
               Sign Up
             </Button>
             <Button
               variant="outline"
-              className="bg-transparent rounded-full font-bold"
+              className="bg-transparent rounded-md font-bold"
               onClick={handleClick}
             >
               Sign In
@@ -68,7 +69,7 @@ export default function Landing() {
       {/* overlay */}
       <div className="absolute flex justify-center items-center w-full h-dvh bg-black bg-opacity-30">
         {/* Hero */}
-        <div className="w-[90%] md:w-[80%] space-y-12">
+        <div className="w-[90%] space-y-12">
           <h1 className="font-bold text-5xl text-center lg:text-6xl lg:text-left">
             Explore, post and attend <br /> events near you
           </h1>
@@ -81,14 +82,8 @@ export default function Landing() {
               address={{ address: setSelectedAddress }}
             />
 
-            <Link href={`/events/${generateSlug(selectedAddress)}`}>
-              <Image
-                className="w-[50px] h-[50px] md:w-[70px] md:h-[70px]"
-                src="/assets/images/go.svg"
-                alt="Next image"
-                width={50}
-                height={50}
-              />
+            <Link href={`/events/location/${generateSlug(selectedAddress)}`}>
+              <FiArrowRightCircle className="text-5xl" />
             </Link>
           </div>
         </div>

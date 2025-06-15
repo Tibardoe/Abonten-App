@@ -4,6 +4,7 @@
 import { getUserEventRole } from "@/actions/getUserEventRole";
 import { useAuth } from "@/context/authContext";
 import { signOut } from "@/services/authService";
+import { useQuery } from "@tanstack/react-query";
 // import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -33,10 +34,6 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
   const [showPostModal, setShowPostModal] = useState(false);
 
   const [buttonText, setButtonText] = useState("");
-
-  const [userRole, setUserRole] = useState<
-    ("organizer" | "attendee" | "none")[]
-  >([]);
 
   const router = useRouter();
 
@@ -78,26 +75,23 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
     }
   };
 
-  useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!user) return;
+  const { data: userRole } = useQuery({
+    queryKey: ["user-role"],
+    queryFn: async () => {
+      if (!user) return null;
 
       try {
         const res = await getUserEventRole(user.id);
 
         // ✅ Validate the role value before setting state
         if (Array.isArray(res.role)) {
-          setUserRole(res.role); // e.g. ["organizer", "attendee"]
-        } else {
-          setUserRole([]);
+          return res.role;
         }
       } catch (error) {
         console.error("Error fetching user role:", error);
       }
-    };
-
-    fetchUserRole();
-  }, [user]);
+    },
+  });
 
   return showAuthPopup ? (
     <>
@@ -134,7 +128,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 Home
               </Link>
 
-              {userRole.includes("organizer") && (
+              {userRole?.includes("organizer") && (
                 <Link
                   href="/manage/attendance/event-list"
                   className="flex gap-1 items-center"
@@ -144,7 +138,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 </Link>
               )}
 
-              {userRole.includes("attendee") && (
+              {userRole?.includes("attendee") && (
                 <Link
                   href="/manage/my-events"
                   className="flex gap-1 items-center"
@@ -181,7 +175,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
               </button>
             </div>
           ) : (
-            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-3 text-lg font-bold">
+            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
               <button type="button" onClick={handleClick}>
                 Login
               </button>

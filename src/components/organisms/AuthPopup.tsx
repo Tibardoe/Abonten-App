@@ -4,6 +4,7 @@ import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { MdOutlineCancel } from "react-icons/md";
 import GoogleAuthButton from "../atoms/GoogleAuthButton";
 import PhoneInput from "../molecules/PhoneInput";
 import { Button } from "../ui/button";
@@ -113,18 +114,12 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
     <div className="bg-black left-0 top-0 w-full h-screen fixed bg-opacity-50 justify-center items-center hidden md:flex z-20">
       {step === 1 ? (
         // Popup
-        <div className="md:w-[60%] lg:w-[40%] bg-white text-black px-10 py-5 flex-col items-center gap-5 rounded-xl hidden md:flex">
+        <div className="md:w-[60%] lg:w-[38%] bg-white text-black px-10 py-5 flex-col items-center gap-5 rounded-xl hidden md:flex">
           <button type="button" className="ml-auto" onClick={onClose}>
-            <Image
-              src="/assets/images/authExit.svg"
-              alt="Exit logo"
-              width={40}
-              height={40}
-              className="w-[20px] md:w-[30px] lg:w-[40px] h-[20px] md:h-[30px] lg:h-[35px]"
-            />
+            <MdOutlineCancel className="text-2xl" />
           </button>
 
-          <h1 className="font-bold text-5xl mb-20">Abonten</h1>
+          <h1 className="font-bold text-4xl mb-16">Abonten</h1>
 
           <GoogleAuthButton buttonText={buttonText} location={location} />
 
@@ -143,7 +138,7 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
               onChange={handleChange}
             />
 
-            <Button className="w-full rounded-full text-xl font-bold py-10 mt-20">
+            <Button className="w-full rounded-md text-lg font-bold py-6 mt-16 mb-5">
               Continue
             </Button>
           </form>
@@ -175,9 +170,8 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
               <div className="flex gap-3" onPaste={handlePaste}>
                 {otpArray.map((digit, index) => (
                   <div
-                    // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                    key={index}
-                    className="w-[80px] h-[70px] flex justify-center items-center rounded-2xl bg-black bg-opacity-10 text-xl"
+                    key={index.toString()}
+                    className="w-[80px] h-[70px] flex justify-center items-center rounded-md bg-black bg-opacity-10 text-xl"
                   >
                     <input
                       type="text"
@@ -199,7 +193,7 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
               )}
             </div>
 
-            <Button className="w-full rounded-full text-xl font-bold py-10 mt-20">
+            <Button className="w-full rounded-md text-lg font-bold py-10 mt-16 mb-5">
               Continue
             </Button>
           </form>

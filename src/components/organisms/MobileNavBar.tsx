@@ -44,7 +44,9 @@ export default function MobileNavBar() {
       <div className="flex md:hidden justify-center w-full fixed bottom-0 border-t border-black-500 py-4 bg-white z-20">
         <div className="flex justify-between w-[90%]">
           <MobileNavButton
-            href={`/events/${generateSlug(location || "default-location")}`}
+            href={`/events/location/${generateSlug(
+              location || "default-location",
+            )}`}
             text="Home"
             imgUrl="/assets/images/home.svg"
           />

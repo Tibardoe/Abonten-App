@@ -61,87 +61,85 @@ export default async function page({
   const selected = await getDailyEvent(events, safeLocation);
 
   return (
-    <AuthenticatedUserWrapper>
-      <section className="space-y-5 min-h-dvh">
-        <LocationAndFilterSection />
+    <section className="space-y-5 min-h-dvh">
+      <LocationAndFilterSection />
 
-        {eventsWithinLocation.data?.length ? (
-          <>
-            <Banner event={selected} />
+      {eventsWithinLocation.data?.length ? (
+        <>
+          <Banner event={selected} />
 
-            <EventsSlider
-              heading="Around-You"
-              events={aroundYou || []}
-              urlPath={`${safeLocation}/explore/around-you`}
-            />
+          <EventsSlider
+            heading="Around-You"
+            events={aroundYou || []}
+            urlPath={`${safeLocation}/explore/around-you`}
+          />
 
-            <EventsSlider
-              heading="Top-rated Organizers"
-              events={topRatedOrganizers}
-              urlPath={`${safeLocation}/explore/top-rated-organizers`}
-            />
+          <EventsSlider
+            heading="Top-rated Organizers"
+            events={topRatedOrganizers}
+            urlPath={`${safeLocation}/explore/top-rated-organizers`}
+          />
 
-            <EventsSlider
-              heading="Happening Today"
-              events={happeningToday}
-              urlPath={`${safeLocation}/explore/happening-today`}
-            />
+          <EventsSlider
+            heading="Happening Today"
+            events={happeningToday}
+            urlPath={`${safeLocation}/explore/happening-today`}
+          />
 
-            <EventsSlider
-              heading="Happening This Week"
-              events={happeningThisWeek}
-              urlPath={`${safeLocation}/explore/happening-this-week`}
-            />
+          <EventsSlider
+            heading="Happening This Week"
+            events={happeningThisWeek}
+            urlPath={`${safeLocation}/explore/happening-this-week`}
+          />
 
-            <EventsSlider
-              heading="Happening This Month"
-              events={happeningThisMonth}
-              urlPath={`${safeLocation}/explore/happening-this-month`}
-            />
+          <EventsSlider
+            heading="Happening This Month"
+            events={happeningThisMonth}
+            urlPath={`${safeLocation}/explore/happening-this-month`}
+          />
 
-            <div className="mb-5">
-              <h2 className="text-2xl font-bold mb-2">All Events</h2>
+          <div className="mb-5">
+            <h2 className="text-2xl font-bold mb-2">All Events</h2>
 
-              <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
-                {events.map((post) => (
-                  <EventCard
-                    key={post.title}
-                    id={post.id}
-                    title={post.title}
-                    flyer_public_id={post.flyer_public_id}
-                    flyer_version={post.flyer_version}
-                    address={post.address}
-                    event_code={post.event_code}
-                    starts_at={post.starts_at}
-                    ends_at={post.ends_at}
-                    organizer_id={post.organizer_id}
-                    event_dates={post.event_dates}
-                    minTicket={post.minTicket}
-                    created_at={post.created_at}
-                    capacity={post.capacity}
-                    min_price={post.min_price}
-                    currency={post.currency}
-                    attendanceCount={post.attendanceCount}
-                    status={post.status}
-                  />
-                ))}
-              </ul>
-            </div>
-          </>
-        ) : (
-          <div className="h-[50%] flex flex-col gap-5 items-center justify-center">
-            <div>
-              <h2 className="font-bold">
-                Sorry, no events available in this location
-              </h2>
-              <p>
-                Change your location to explore other places events or post an
-                event
-              </p>
-            </div>
+            <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
+              {events.map((post) => (
+                <EventCard
+                  key={post.title}
+                  id={post.id}
+                  title={post.title}
+                  flyer_public_id={post.flyer_public_id}
+                  flyer_version={post.flyer_version}
+                  address={post.address}
+                  event_code={post.event_code}
+                  starts_at={post.starts_at}
+                  ends_at={post.ends_at}
+                  organizer_id={post.organizer_id}
+                  event_dates={post.event_dates}
+                  minTicket={post.minTicket}
+                  created_at={post.created_at}
+                  capacity={post.capacity}
+                  min_price={post.min_price}
+                  currency={post.currency}
+                  attendanceCount={post.attendanceCount}
+                  status={post.status}
+                />
+              ))}
+            </ul>
           </div>
-        )}
-      </section>
-    </AuthenticatedUserWrapper>
+        </>
+      ) : (
+        <div className="h-[50%] flex flex-col gap-5 items-center justify-center">
+          <div>
+            <h2 className="font-bold">
+              Sorry, no events available in this location
+            </h2>
+            <p>
+              Change your location to explore other places events or post an
+              event
+            </p>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

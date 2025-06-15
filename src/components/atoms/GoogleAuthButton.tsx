@@ -1,7 +1,7 @@
 import { signInWithGoogle } from "@/services/authService";
 import { generateSlug } from "@/utils/geerateSlug";
-import Image from "next/image";
 import { useState } from "react";
+import { FcGoogle } from "react-icons/fc";
 import Notification from "./Notification";
 
 type GoogleTextProp = {
@@ -30,16 +30,11 @@ export default function GoogleAuthButton({
       <button
         type="button"
         onClick={handleSignin}
-        className="flex items-center w-full bg-black bg-opacity-5 px-20 py-4 md:p-4 md:text-lg lg:text-xl rounded-xl"
+        className="flex items-center w-full bg-black bg-opacity-5 p-3 md:p-4 md:text-lg rounded-md"
       >
-        <Image
-          src="/assets/images/google.svg"
-          alt="Google logo"
-          width={40}
-          height={40}
-          className="w-[25px] md:w-[30px] lg:w-[40px] h-[25px] md:h-[30px] lg:h-[35px]"
-        />
-        <p className="mx-auto text-lg">{buttonText} with Google</p>
+        <FcGoogle className="text-2xl md:text-4xl" />
+
+        <p className="mx-auto">{buttonText} with Google</p>
       </button>
       <Notification notification={notification} />
     </>
