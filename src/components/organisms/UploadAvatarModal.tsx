@@ -2,9 +2,12 @@ import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { MdOutlineCancel } from "react-icons/md";
 import Notification from "../atoms/Notification";
 import { Button } from "../ui/button";
+import ImageCropper from "./ImageCropper";
 
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;
@@ -16,6 +19,10 @@ export default function UploadAvatarModal({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const [cropped, setCropped] = useState<File | null>(null);
+
+  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
 
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -42,21 +49,22 @@ export default function UploadAvatarModal({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
-      if (!selectedFile) {
+      if (!cropped || !selectedFile) {
         setNotification("Please select a photo!");
         return;
       }
 
-      if (selectedFile.size > 5 * 1024 * 1024) {
+      if (cropped.size > 5 * 1024 * 1024) {
         setNotification("File is too large. Please upload an image under 5MB.");
         return;
       }
 
       try {
-        await saveAvatarToCloudinary(selectedFile);
+        await saveAvatarToCloudinary(cropped);
         setNotification("Upload successful!");
         handleClosePopup(false);
         router.refresh();
+        return "success";
       } catch (error) {
         console.error("Error uploading image:", error);
         setNotification("Upload failed. Please try again.");
@@ -69,6 +77,27 @@ export default function UploadAvatarModal({
     },
   });
 
+  // Cleanup imagePreview URL when it changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
+  // Cleanup croppedPreview URL when it changes or on unmount
+  useEffect(() => {
+    return () => {
+      if (croppedPreview) URL.revokeObjectURL(croppedPreview);
+    };
+  }, [croppedPreview]);
+
+  const handleCropped = (croppedFile: File) => {
+    setCropped(croppedFile);
+    const preview = URL.createObjectURL(croppedFile);
+    setCroppedPreview(preview);
+    setStep(3);
+  };
+
   return (
     <>
       <div className="w-full h-dvh fixed left-0 top-0 bg-black bg-opacity-50 justify-center items-center z-30 hidden md:flex">
@@ -78,18 +107,12 @@ export default function UploadAvatarModal({
           className="absolute top-5 right-5"
           onClick={() => handleClosePopup(false)}
         >
-          <Image
-            src="/assets/images/circularCancel.svg"
-            alt="Cancel"
-            width={40}
-            height={40}
-            className="filter invert"
-          />
+          <MdOutlineCancel className="text-3xl text-white" />
         </button>
 
         {/* Inner popup */}
 
-        <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[75%] rounded-2xl py-3">
+        <div className="flex flex-col items-center justify-start bg-white w-[45%] min-h-[75%] rounded-2xl py-3">
           <div className="w-full">
             {step === 1 && (
               <div>
@@ -100,18 +123,30 @@ export default function UploadAvatarModal({
             )}
 
             {step === 2 && (
-              <div className="flex justify-between w-[90%] mx-auto">
+              <div className="flex items-center w-[95%] mx-auto">
                 {step === 2 && (
                   <button
                     type="button"
                     onClick={() => setStep((prevStep) => prevStep - 1)}
                   >
-                    <Image
-                      src="/assets/images/moveBack.svg"
-                      alt="Back"
-                      width={30}
-                      height={30}
-                    />
+                    <IoIosArrowRoundBack className="text-4xl" />
+                  </button>
+                )}
+
+                <h1 className="text-gray-500 font-bold text-center mx-auto pb-1 text-lg">
+                  Upload Avatar
+                </h1>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="flex justify-between w-[95%] mx-auto">
+                {step === 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep((prevStep) => prevStep - 1)}
+                  >
+                    <IoIosArrowRoundBack className="text-4xl" />
                   </button>
                 )}
 
@@ -119,7 +154,7 @@ export default function UploadAvatarModal({
                   Upload Avatar
                 </h1>
 
-                {step === 2 && (
+                {step === 3 && (
                   <button
                     type="button"
                     className="font-bold"
@@ -135,18 +170,7 @@ export default function UploadAvatarModal({
             <hr />
           </div>
 
-          {step === 2 && imagePreview ? (
-            <div className="flex flex-col items-center gap-5 mt-5 w-[90%]">
-              <div>
-                <Image
-                  src={imagePreview}
-                  alt="Selected Avatar"
-                  width={300}
-                  height={300}
-                />
-              </div>
-            </div>
-          ) : (
+          {step === 1 && (
             <div className="flex flex-col items-center gap-5 my-auto">
               <div className="flex flex-col items-center">
                 <Image
@@ -172,6 +196,31 @@ export default function UploadAvatarModal({
               >
                 Upload avatar
               </Button>
+            </div>
+          )}
+
+          {step === 2 && imagePreview && (
+            <ImageCropper
+              imagePreview={imagePreview}
+              handleCropped={handleCropped}
+              handleCancel={() => {
+                setImagePreview(null);
+                setSelectedFile(null);
+                setStep(1);
+              }}
+            />
+          )}
+
+          {step === 3 && croppedPreview && (
+            <div className="flex flex-col items-center gap-5 mt-5 w-[90%]">
+              <div>
+                <Image
+                  src={croppedPreview}
+                  alt="Selected Avatar"
+                  width={300}
+                  height={300}
+                />
+              </div>
             </div>
           )}
         </div>
