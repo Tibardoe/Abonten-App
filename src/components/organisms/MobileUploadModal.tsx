@@ -77,7 +77,7 @@ export default function MobileUploadModal({
   return (
     <>
       {step === 1 && (
-        <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden">
+        <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden overflow-y-scroll">
           <div className="w-[90%] flex justify-between mt-5">
             <button type="button" onClick={() => handleClosePopup(false)}>
               <LiaTimesSolid className="text-2xl" />
