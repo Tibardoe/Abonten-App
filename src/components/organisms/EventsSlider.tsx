@@ -66,7 +66,7 @@ export default function EventsSlider({
   const viewAllLink = urlPath
     ? `/events/${urlPath}`
     : eventCategory
-      ? `/events/${location}/explore/similar-events?category=${generateSlug(
+      ? `/events/location/${location}/explore/similar-events?category=${generateSlug(
           eventCategory,
         )}`
       : "#";

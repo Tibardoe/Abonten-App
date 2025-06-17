@@ -88,15 +88,13 @@ export default function MobileUploadModal({
 
           {imgUrl && (
             <div className="w-[90%]">
-              <div className="w-[70%] mx-auto">
-                <ImageCropper
-                  imagePreview={imgUrl}
-                  handleCropped={handleCropped}
-                  handleCancel={() => {
-                    setStep(1);
-                  }}
-                />
-              </div>
+              <ImageCropper
+                imagePreview={imgUrl}
+                handleCropped={handleCropped}
+                handleCancel={() => {
+                  handleClosePopup(false);
+                }}
+              />
             </div>
           )}
         </div>

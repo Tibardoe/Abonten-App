@@ -112,7 +112,7 @@ export default function UploadAvatarModal({
 
         {/* Inner popup */}
 
-        <div className="flex flex-col items-center justify-start bg-white w-[45%] min-h-[75%] rounded-2xl py-3">
+        <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[85%] rounded-2xl py-3">
           <div className="w-full">
             {step === 1 && (
               <div>

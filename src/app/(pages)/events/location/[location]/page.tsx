@@ -4,7 +4,6 @@ import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
-import AuthenticatedUserWrapper from "@/context/AuthenticatedUserWrapper";
 import type { UserPostType } from "@/types/postsType";
 import { getDailyEvent } from "@/utils/dailyEventCache";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
@@ -71,31 +70,31 @@ export default async function page({
           <EventsSlider
             heading="Around-You"
             events={aroundYou || []}
-            urlPath={`${safeLocation}/explore/around-you`}
+            urlPath={`/location${safeLocation}/explore/around-you`}
           />
 
           <EventsSlider
             heading="Top-rated Organizers"
             events={topRatedOrganizers}
-            urlPath={`${safeLocation}/explore/top-rated-organizers`}
+            urlPath={`/location/${safeLocation}/explore/top-rated-organizers`}
           />
 
           <EventsSlider
             heading="Happening Today"
             events={happeningToday}
-            urlPath={`${safeLocation}/explore/happening-today`}
+            urlPath={`/location/${safeLocation}/explore/happening-today`}
           />
 
           <EventsSlider
             heading="Happening This Week"
             events={happeningThisWeek}
-            urlPath={`${safeLocation}/explore/happening-this-week`}
+            urlPath={`/location/${safeLocation}/explore/happening-this-week`}
           />
 
           <EventsSlider
             heading="Happening This Month"
             events={happeningThisMonth}
-            urlPath={`${safeLocation}/explore/happening-this-month`}
+            urlPath={`/location/${safeLocation}/explore/happening-this-month`}
           />
 
           <div className="mb-5">
