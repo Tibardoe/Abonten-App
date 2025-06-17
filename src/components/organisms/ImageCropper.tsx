@@ -382,7 +382,7 @@ export default function ImageCropper({
   ];
 
   return (
-    <div className="space-y-4 md:p-4 w-full overflow-y-scroll">
+    <div className="space-y-4 md:p-4 w-full md:overflow-y-scroll mb-5">
       {!!imagePreview && (
         <>
           <div className="flex justify-between items-center mb-2">

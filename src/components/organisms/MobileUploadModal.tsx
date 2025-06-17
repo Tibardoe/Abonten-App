@@ -121,15 +121,13 @@ export default function MobileUploadModal({
 
           {croppedPreview && (
             <div className="w-[90%]">
-              <div className="w-[70%] mx-auto">
-                <Image
-                  src={croppedPreview}
-                  alt="Selected Avatar"
-                  width={200}
-                  height={200}
-                  className="w-full h-full"
-                />
-              </div>
+              <Image
+                src={croppedPreview}
+                alt="Selected Avatar"
+                width={200}
+                height={200}
+                className="w-full h-full"
+              />
             </div>
           )}
         </div>
