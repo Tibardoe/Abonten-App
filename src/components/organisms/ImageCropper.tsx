@@ -224,7 +224,7 @@ export default function ImageCropper({
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t mb-7 md:mb-0">
+          <div className="flex justify-end gap-3 pt-4 border-t mr-5 md:ml-0">
             <Button
               variant="outline"
               onClick={handleCancel}
