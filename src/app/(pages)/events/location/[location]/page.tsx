@@ -146,9 +146,6 @@ export default async function page({
               We couldn’t find any events in this location. Try changing your
               location or be the first to post one.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <PostButton />
-            </div>
           </div>
         </div>
       )}
