@@ -1,5 +1,6 @@
 import { getFilteredEvents } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
+import PostButton from "@/components/atoms/PostButton";
 import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
@@ -127,15 +128,27 @@ export default async function page({
           </div>
         </>
       ) : (
-        <div className="h-[50%] flex flex-col gap-5 items-center justify-center">
-          <div>
-            <h2 className="font-bold">
-              Sorry, no events available in this location
+        <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="relative w-64 h-64 mx-auto mb-8">
+              <img
+                src="/assets/images/notFound.jpg"
+                alt="No events found"
+                className="w-full h-full object-contain opacity-90"
+              />
+            </div>
+
+            <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-opacity-30">
+              No Events Found
             </h2>
-            <p>
-              Change your location to explore other places events or post an
-              event
+
+            <p className="text-gray-600 mb-6 max-w-md text-opacity-30">
+              We couldn’t find any events in this location. Try changing your
+              location or be the first to post one.
             </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <PostButton />
+            </div>
           </div>
         </div>
       )}

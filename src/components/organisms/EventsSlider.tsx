@@ -92,8 +92,37 @@ export default function EventsSlider({
       <div className="relative">
         {/* Overlay */}
         {events.length === 0 && (
-          <div className="text-gray-200 font-semibold md:text-xl rounded-xl w-full h-56 bg-black bg-opacity-60 flex justify-center items-center">
-            Events unavailable in this category
+          <div className="relative w-full h-72 rounded-2xl overflow-hidden isolate">
+            {/* Dark Background */}
+            <div className="absolute inset-0 z-0 bg-black bg-opacity-95" />
+
+            {/* Glowing Animated Blobs */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+              {/* <div className="absolute left-10 top-10 w-44 h-44 bg-lime-700 opacity-30 rounded-full blur-3xl animate-floatFast" /> */}
+              <div className="absolute right-10 bottom-10 w-36 h-36 bg-emerald-400 opacity-30 rounded-full blur-3xl animate-floatFastReverse" />
+              {/* <div className="absolute left-1/3 top-1/2 w-28 h-28 bg-cyan-400 opacity-30 rounded-full blur-3xl animate-floatMid" /> */}
+              <div className="absolute left-1/3 top-1/2 w-28 h-28 bg-white opacity-90 rounded-full blur-3xl animate-floatMid" />
+            </div>
+
+            {/* Glassy Overlay */}
+            <div className="absolute inset-0 z-10 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-inner" />
+
+            {/* Content */}
+            <div className="relative z-20 flex flex-col items-center justify-center h-full text-center px-6">
+              <h3 className="text-lg md:text-xl font-bold text-white mb-2 drop-shadow-[0_0_6px_rgba(255,255,255,0.4)]">
+                No Events in this Category
+              </h3>
+              <p className="text-sm text-gray-300 max-w-md drop-shadow-[0_0_3px_rgba(255,255,255,0.2)]">
+                Looks like there are no events here yet. Check back soon or
+                explore other categories!
+              </p>
+              <Link
+                href={`/events/location/${location}`}
+                className="mt-4 inline-block bg-white text-black font-medium text-sm px-4 py-2 rounded-md transition-all drop-shadow"
+              >
+                Browse All Events
+              </Link>
+            </div>
           </div>
         )}
 

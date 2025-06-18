@@ -8,6 +8,7 @@ import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -27,6 +28,7 @@ import ReceivingAccountForms from "../molecules/ReceivingAccountForms";
 import TicketInputs from "../molecules/TicketInputs";
 import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
+import ImageCropper from "./ImageCropper";
 
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;
@@ -38,10 +40,14 @@ type closePopupModalType = {
 export default function EventUploadMobileModal({
   handleClosePopup,
   imgUrl,
-  selectedFile,
-}: // className,
+}: // selectedFile,
+// className,
 closePopupModalType) {
   const [isUploading, setIsUploading] = useState(false);
+
+  const [cropped, setCropped] = useState<File | null>(null);
+
+  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
 
@@ -75,7 +81,7 @@ closePopupModalType) {
 
   const [selectedAddress, setSelectedAddress] = useState("");
 
-  const [currency, setCurrency] = useState("");
+  // const [currency, setCurrency] = useState("");
 
   const [promoCodes, setPromoCodes] = useState<
     {
@@ -121,14 +127,27 @@ closePopupModalType) {
     resolver: zodResolver(receivingAccountSchema),
   });
 
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      const userCurrency = await getUserCurrency();
-      setCurrency(userCurrency);
-    };
+  // useEffect(() => {
+  //   const fetchCurrency = async () => {
+  //     const userCurrency = await getUserCurrency();
+  //     setCurrency(userCurrency);
+  //   };
 
-    fetchCurrency();
-  }, []);
+  //   fetchCurrency();
+  // }, []);
+
+  const { data: userCurrency } = useQuery({
+    queryKey: ["user-currency"],
+    queryFn: async () => {
+      const userCurrency = await getUserCurrency();
+
+      if (userCurrency) {
+        return userCurrency;
+      }
+
+      return null;
+    },
+  });
 
   const handleCategory = (categoryName: string) => {
     setCategory(categoryName);
@@ -169,12 +188,12 @@ closePopupModalType) {
     try {
       setIsUploading(true);
 
-      if (!selectedFile) {
+      if (!cropped) {
         setNotification("Please select a file first!");
         return;
       }
 
-      if (!selectedAddress) {
+      if (!cropped) {
         setNotification("Please enter a location");
         return;
       }
@@ -212,13 +231,13 @@ closePopupModalType) {
         longitude: coords.lng,
         category,
         types,
-        selectedFile,
+        selectedFile: cropped,
         promoCodes,
         freeEvents: ticket,
         singleTicket,
         singleTicketQuantity,
         multipleTickets,
-        currency,
+        currency: userCurrency,
         checked,
         paymentOption,
         receivingAccountDetails,
@@ -287,8 +306,15 @@ closePopupModalType) {
     setShowNetworkDropdown((prevState) => !prevState);
   };
 
+  const handleCropped = (croppedFile: File) => {
+    setCropped(croppedFile);
+    const preview = URL.createObjectURL(croppedFile);
+    setCroppedPreview(preview);
+    setStep(2);
+  };
+
   return (
-    <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden">
+    <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden overflow-y-scroll">
       {step === 1 && imgUrl && (
         <>
           <div className="w-full space-y-5">
@@ -304,28 +330,26 @@ closePopupModalType) {
 
               <h1 className="font-bold text-lg">New Post</h1>
 
-              <button
+              {/* <button
                 type="button"
                 className="font-bold"
                 onClick={() => setStep((prevValue) => prevValue + 1)}
               >
                 Next
-              </button>
+              </button> */}
             </div>
 
             <hr />
           </div>
 
-          <div className="w-[70%]">
-            <div className="w-full">
-              <Image
-                src={imgUrl}
-                alt="Selected Avatar"
-                width={200}
-                height={200}
-                className="w-full"
-              />
-            </div>
+          <div className="w-full">
+            <ImageCropper
+              imagePreview={imgUrl}
+              handleCropped={handleCropped}
+              handleCancel={() => {
+                handleClosePopup(false);
+              }}
+            />
           </div>
         </>
       )}
@@ -366,7 +390,7 @@ closePopupModalType) {
             <div className="w-[70%] mx-auto">
               <div className="w-full">
                 <Image
-                  src={imgUrl}
+                  src={croppedPreview ?? imgUrl}
                   alt="Selected Avatar"
                   width={200}
                   height={200}

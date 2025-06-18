@@ -83,11 +83,11 @@ export default function MobileUploadModal({
               <LiaTimesSolid className="text-2xl" />
             </button>
 
-            <h1 className="font-bold text-lg mx-auto">New Post</h1>
+            <h1 className="font-bold text-lg ml-auto">New Post</h1>
           </div>
 
           {imgUrl && (
-            <div className="w-[90%]">
+            <div className="w-full">
               <ImageCropper
                 imagePreview={imgUrl}
                 handleCropped={handleCropped}

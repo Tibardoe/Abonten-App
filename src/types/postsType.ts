@@ -44,7 +44,7 @@ export type PostsType = {
   price?: number | undefined;
   capacity?: number | undefined;
   selectedFile: File;
-  currency: string;
+  currency: string | null | undefined;
   paymentOption?: string | null;
   selectedNetwork?: string | null;
   receivingAccountDetails?: {

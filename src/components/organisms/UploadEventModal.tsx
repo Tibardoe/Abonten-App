@@ -6,6 +6,7 @@ import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { getUserCurrency } from "@/utils/getUserCurrency";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -26,6 +27,7 @@ import TicketInputs from "../molecules/TicketInputs";
 import TicketType from "../molecules/TicketType";
 import TypeFilter from "../molecules/TypeFilter";
 import { Button } from "../ui/button";
+import ImageCropper from "./ImageCropper";
 
 type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;
@@ -35,6 +37,10 @@ export default function UploadEventModal({
   handleClosePopup,
 }: closePopupModalType) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const [cropped, setCropped] = useState<File | null>(null);
+
+  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
 
   const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(false);
 
@@ -60,7 +66,7 @@ export default function UploadEventModal({
     }[]
   >([]);
 
-  const [currency, setCurrency] = useState("");
+  // const [currency, setCurrency] = useState("");
 
   const [singleTicket, setSingleTicket] = useState<number | null>(null);
 
@@ -109,14 +115,27 @@ export default function UploadEventModal({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      const userCurrency = await getUserCurrency();
-      setCurrency(userCurrency);
-    };
+  // useEffect(() => {
+  //   const fetchCurrency = async () => {
+  //     const userCurrency = await getUserCurrency();
+  //     setCurrency(userCurrency);
+  //   };
 
-    fetchCurrency();
-  }, []);
+  //   fetchCurrency();
+  // }, []);
+
+  const { data: userCurrency } = useQuery({
+    queryKey: ["user-currency"],
+    queryFn: async () => {
+      const userCurrency = await getUserCurrency();
+
+      if (userCurrency) {
+        return userCurrency;
+      }
+
+      return null;
+    },
+  });
 
   const handleUploadButton = () => {
     fileInputRef.current?.click();
@@ -168,7 +187,7 @@ export default function UploadEventModal({
     try {
       setIsUploading(true);
 
-      if (!selectedFile) {
+      if (!cropped) {
         setNotification("Please select a file first!");
         return;
       }
@@ -210,13 +229,13 @@ export default function UploadEventModal({
         longitude: coords.lng,
         category,
         types,
-        selectedFile,
+        selectedFile: cropped,
         promoCodes,
         freeEvents: ticket,
         singleTicket,
         singleTicketQuantity,
         multipleTickets,
-        currency,
+        currency: userCurrency,
         checked,
         paymentOption,
         receivingAccountDetails,
@@ -284,6 +303,13 @@ export default function UploadEventModal({
 
   const handleNetworkDropdown = () => {
     setShowNetworkDropdown((prevState) => !prevState);
+  };
+
+  const handleCropped = (croppedFile: File) => {
+    setCropped(croppedFile);
+    const preview = URL.createObjectURL(croppedFile);
+    setCroppedPreview(preview);
+    setStep(3);
   };
 
   return (
@@ -364,27 +390,26 @@ export default function UploadEventModal({
                   Crop
                 </h1>
 
-                <button
+                {/* <button
                   type="button"
                   className="font-bold"
                   onClick={() => setStep((prevStep) => prevStep + 1)}
                   disabled={isUploading}
                 >
                   Next
-                </button>
+                </button> */}
               </div>
 
               <hr />
             </div>
-            <div className="flex flex-col items-center gap-5 mt-5 w-[90%]">
-              <div>
-                <Image
-                  src={imagePreview}
-                  alt="Selected Avatar"
-                  width={300}
-                  height={300}
-                />
-              </div>
+            <div className="flex flex-col items-center gap-5 mt-5 w-[90%] h-[90%]">
+              <ImageCropper
+                imagePreview={imagePreview}
+                handleCropped={handleCropped}
+                handleCancel={() => {
+                  handleClosePopup(false);
+                }}
+              />
             </div>
           </>
         )}
@@ -425,7 +450,7 @@ export default function UploadEventModal({
             <div className="flex justify-start w-full h-[90%] gap-3">
               <div className="w-1/2 h-full rounded-bl-2xl ">
                 <Image
-                  src={imagePreview}
+                  src={croppedPreview ?? imagePreview}
                   alt="Selected Avatar"
                   width={0}
                   height={0}

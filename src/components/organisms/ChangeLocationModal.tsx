@@ -83,7 +83,7 @@ export default function ChangeLocationModal({
                 text: "Enter your address",
                 svgUrl: "/assets/images/search.svg",
               }}
-              classname="bg-black bg-opacity-5"
+              classname="bg-slate-100"
               address={{ address: setSelectedAddress }}
             />
 

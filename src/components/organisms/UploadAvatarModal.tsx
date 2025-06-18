@@ -133,8 +133,8 @@ export default function UploadAvatarModal({
                   </button>
                 )}
 
-                <h1 className="text-gray-500 font-bold text-center mx-auto pb-1 text-lg">
-                  Upload Avatar
+                <h1 className="text-gray-500 font-bold ml-auto pb-1 text-lg">
+                  Crop
                 </h1>
               </div>
             )}
