@@ -587,10 +587,14 @@ export default function HighlightModal({
 
   const handleCancelOrBack = () => {
     if (isCropping || showVideoTrimmer) {
-      handleCancelCrop(); // Handles resetting crop state, does NOT revoke current image URL
-      setShowVideoTrimmer(false); // Hides trimmer
+      handleCancelCrop(); // Reset cropping state
+      setShowVideoTrimmer(false); // Hide trimmer
     } else {
-      step === 1 ? handleShowHighlightModal(false) : setStep(step - 1);
+      if (step === 1) {
+        handleShowHighlightModal(false);
+      } else {
+        setStep(step - 1);
+      }
     }
   };
 
