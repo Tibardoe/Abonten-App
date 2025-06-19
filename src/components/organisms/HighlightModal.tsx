@@ -234,6 +234,7 @@ export default function HighlightModal({
     }
 
     const updated = mediaItems.filter((_, i) => i !== index);
+
     setMediaItems(updated);
 
     // Adjust currentIndex if necessary
@@ -443,8 +444,6 @@ export default function HighlightModal({
           }
         };
 
-        // Listen for the 'canplay' event, which fires when the browser believes it can play the media
-        // If 'canplay' isn't sufficient, 'loadeddata' is another option (when the first frame is loaded)
         videoRef.current.addEventListener("canplay", playAfterLoad);
         // Fallback for some browsers or scenarios
         videoRef.current.addEventListener("loadeddata", playAfterLoad);
@@ -496,16 +495,24 @@ export default function HighlightModal({
     }
   };
 
+  const mediaItemsRef = useRef<MediaItem[]>([]);
+
+  useEffect(() => {
+    mediaItemsRef.current = mediaItems;
+  }, [mediaItems]);
+
   // Cleanup object URLs when component unmounts
   useEffect(() => {
     return () => {
-      // Revoke all URLs when the modal unmounts
-
-      for (const item of mediaItems) {
-        URL.revokeObjectURL(item.url);
+      for (const item of mediaItemsRef.current) {
+        try {
+          URL.revokeObjectURL(item.url);
+        } catch (e) {
+          console.warn("Error revoking URL:", item.url, e);
+        }
       }
     };
-  }, [mediaItems]); // Empty dependency array means this runs only on mount and unmount
+  }, []);
 
   // Effect to manage current media item when currentIndex changes
   useEffect(() => {
