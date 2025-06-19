@@ -636,7 +636,7 @@ export default function HighlightModal({
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="text-blue-500 font-semibold"
+              className="text-white font-semibold"
             >
               Next
             </button>
@@ -650,7 +650,7 @@ export default function HighlightModal({
               onClick={() => {
                 /* Handle upload */
               }}
-              className="text-blue-500 font-semibold"
+              className="text-white font-semibold"
               disabled={isUploading}
             >
               {isUploading ? "Uploading..." : "Upload"}
@@ -860,7 +860,7 @@ export default function HighlightModal({
                 <video
                   ref={videoTrimmerRef}
                   src={currentMedia.url}
-                  className="w-full"
+                  className="w-full h-50%"
                   controls={false} // Disable default controls to manage manually
                   onLoadedMetadata={(e) => {
                     // Always set current time to trimStart when metadata loads
@@ -1008,7 +1008,7 @@ export default function HighlightModal({
                   <button
                     type="button"
                     onClick={applyTrim}
-                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    className="px-4 py-2 bg-white text-black rounded-md"
                   >
                     Apply
                   </button>
