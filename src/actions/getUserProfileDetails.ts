@@ -12,7 +12,7 @@ export async function getUserProfileDetails(username: string) {
       .eq("username", username)
       .single();
 
-    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const { data: authData } = await supabase.auth.getUser();
 
     let ownUsername = null;
 

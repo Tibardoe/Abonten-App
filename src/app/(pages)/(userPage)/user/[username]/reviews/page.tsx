@@ -1,7 +1,6 @@
 import { getUserReviews } from "@/actions/getUserReviews";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
 import Rating from "@/components/atoms/Rating";
-import { Button } from "@/components/ui/button";
 import { getRelativeTime } from "@/utils/dateFormatter";
 import { ClockIcon, UserIcon } from "lucide-react"; // Assuming you're using Lucide
 

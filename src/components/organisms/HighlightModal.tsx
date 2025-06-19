@@ -585,20 +585,22 @@ export default function HighlightModal({
     }
   }, [showVideoTrimmer, trimStart, trimEnd, currentMedia]);
 
+  const handleCancelOrBack = () => {
+    if (isCropping || showVideoTrimmer) {
+      handleCancelCrop(); // Handles resetting crop state, does NOT revoke current image URL
+      setShowVideoTrimmer(false); // Hides trimmer
+    } else {
+      step === 1 ? handleShowHighlightModal(false) : setStep(step - 1);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
       {/* Header */}
       <div className="w-full flex justify-between items-center p-4 absolute top-0 z-10">
         <button
           type="button"
-          onClick={() => {
-            if (isCropping || showVideoTrimmer) {
-              handleCancelCrop(); // Handles resetting crop state, does NOT revoke current image URL
-              setShowVideoTrimmer(false); // Hides trimmer
-            } else {
-              step === 1 ? handleShowHighlightModal(false) : setStep(step - 1);
-            }
-          }}
+          onClick={handleCancelOrBack}
           className="text-white p-2"
         >
           {step === 1 && !isCropping && !showVideoTrimmer ? (
@@ -643,8 +645,6 @@ export default function HighlightModal({
               {isUploading ? "Uploading..." : "Upload"}
             </button>
           )}
-        {/* Apply button for video trimmer (now in the trimmer overlay) */}
-        {/* No header apply button needed anymore for trimmer */}
       </div>
 
       {/* Main Content */}

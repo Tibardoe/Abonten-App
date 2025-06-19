@@ -1,6 +1,5 @@
 import { getFilteredEvents } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
-import PostButton from "@/components/atoms/PostButton";
 import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
