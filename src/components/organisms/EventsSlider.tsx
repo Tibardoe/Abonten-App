@@ -73,18 +73,16 @@ export default function EventsSlider({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between font-bold">
-        <h2 className="text-primary md:text-lg">{heading}</h2>
+      <div className="flex justify-between font-bold text-xl">
+        <h2>{heading}</h2>
 
         {events.length > 0 && (
           <Link
             href={viewAllLink}
             className="flex items-center gap-1 group transition-all"
           >
-            <span className="text-primary md:text-lg font-bold hover:underline">
-              View all
-            </span>
-            <MdKeyboardArrowRight className="text-2xl transition-transform group-hover:translate-x-1" />
+            <span className="hover:underline">View all</span>
+            <MdKeyboardArrowRight className="text-3xl transition-transform group-hover:translate-x-1" />
           </Link>
         )}
       </div>
@@ -131,7 +129,7 @@ export default function EventsSlider({
           <button
             type="button"
             onClick={() => scroll("left")}
-            className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
+            className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition-all hover:scale-110"
             aria-label="Scroll left"
           >
             <FaArrowLeftLong className="text-xl text-gray-700" />
@@ -141,7 +139,7 @@ export default function EventsSlider({
         {/* slider container and element */}
         <ul
           ref={scrollRef}
-          className="grid grid-flow-col auto-cols-[90%] sm:auto-cols-[45%] md:auto-cols-[35%] lg:auto-cols-[28%] xl:auto-cols-[25%] gap-2 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-2 py-3"
+          className="grid grid-flow-col auto-cols-[90%] sm:auto-cols-[45%] md:auto-cols-[35%] lg:auto-cols-[28%] xl:auto-cols-[25%] gap-1 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-3"
           // className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4 relative"
         >
           {events.map((event) => (

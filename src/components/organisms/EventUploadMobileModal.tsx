@@ -205,24 +205,113 @@ closePopupModalType) {
         return;
       }
 
+      // let eventDates: EventDates;
+
+      // if (dateType === "single") {
+      //   eventDates = {
+      //     starts_at: singleDateRange.from,
+      //     ends_at: singleDateRange.to,
+      //   };
+      // } else if (dateType === "multiple") {
+      //   eventDates = {
+      //     specific_dates: multipleDates,
+      //   };
+      // } else {
+      //   setNotification("Invalid date selection");
+
+      //   return;
+      // }
+
       let eventDates: EventDates;
 
+      const now = new Date();
+      const bufferMs = 5 * 60 * 60 * 1000; // 5 hours
+      const bufferedNow = new Date(now.getTime() + bufferMs);
+
       if (dateType === "single") {
+        const start = singleDateRange?.from
+          ? new Date(singleDateRange.from)
+          : undefined;
+        const end = singleDateRange?.to
+          ? new Date(singleDateRange.to)
+          : undefined;
+
+        if (!start || !end) {
+          setNotification("Please select both start and end date");
+          return;
+        }
+
+        if (start <= bufferedNow || end <= bufferedNow) {
+          setNotification(
+            "Start or end time must be at least 5 hours from now",
+          );
+          return;
+        }
+
+        if (start >= end) {
+          setNotification("Start time must be earlier than end time");
+          return;
+        }
+
         eventDates = {
-          starts_at: singleDateRange.from,
-          ends_at: singleDateRange.to,
+          starts_at: start,
+          ends_at: end,
         };
       } else if (dateType === "multiple") {
+        if (!multipleDates || multipleDates.length === 0) {
+          setNotification("Please select at least one date");
+          return;
+        }
+
+        const invalid = multipleDates.some(
+          (date) => new Date(date) <= bufferedNow,
+        );
+        if (invalid) {
+          setNotification(
+            "All selected dates must be at least 5 hours from now",
+          );
+          return;
+        }
+
         eventDates = {
           specific_dates: multipleDates,
         };
       } else {
         setNotification("Invalid date selection");
+        return;
+      }
 
+      if (!category || !types) {
+        setNotification("Categories and types must be set");
+        return;
+      }
+
+      const noTicketingSet =
+        !ticket &&
+        (!singleTicket || !singleTicketQuantity) &&
+        (!multipleTickets || multipleTickets.length === 0);
+
+      if (noTicketingSet) {
+        setNotification("Event ticketing must be set");
         return;
       }
 
       const receivingAccountDetails = receivingAccountForm.getValues();
+
+      const isReceivingAccountEmpty = Object.values(
+        receivingAccountDetails,
+      ).some((value) => !value);
+
+      const isPaidTicketing =
+        (singleTicket && singleTicketQuantity) ||
+        (multipleTickets && multipleTickets.length > 0);
+
+      if (isPaidTicketing && ticket !== "free" && isReceivingAccountEmpty) {
+        setNotification(
+          "Set up receiving account to receive payment after successfull event!",
+        );
+        return;
+      }
 
       const finalData = {
         ...formData,

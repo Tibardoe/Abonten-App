@@ -3,7 +3,7 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { cn } from "../lib/utils";
 
 type TicketProp = {
-  ticket: string;
+  ticket: string | null;
   handleTicket: (categoryName: string) => void;
   checked: boolean;
   handleChecked: (state: boolean) => void;

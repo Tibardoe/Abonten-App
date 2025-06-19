@@ -138,7 +138,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
           )}
         >
           {user ? (
-            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-3">
+            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5 text-lg">
               <Link
                 href={`/events/location/${location}`}
                 className="flex gap-1 items-center"
@@ -146,6 +146,15 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 <GoHome className="text-2xl" />
                 Home
               </Link>
+
+              <button
+                type="button"
+                className="flex gap-1 items-center"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <IoCreateOutline className="text-2xl" />
+                Post
+              </button>
 
               {userRole?.includes("organizer") && (
                 <Link
@@ -174,15 +183,6 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 ref={fileInputRef}
                 onChange={handleFileChange}
               />
-
-              <button
-                type="button"
-                className="flex gap-1 items-center"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <IoCreateOutline className="text-2xl" />
-                Post
-              </button>
 
               <button
                 type="button"

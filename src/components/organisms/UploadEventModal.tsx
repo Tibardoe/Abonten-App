@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
+import { MdOutlineCancel } from "react-icons/md";
 import { TbWorld } from "react-icons/tb";
 import type { z } from "zod";
 import Notification from "../atoms/Notification";
@@ -66,8 +67,6 @@ export default function UploadEventModal({
     }[]
   >([]);
 
-  // const [currency, setCurrency] = useState("");
-
   const [singleTicket, setSingleTicket] = useState<number | null>(null);
 
   const [singleTicketQuantity, setSingleTicketQuantity] = useState<
@@ -80,7 +79,7 @@ export default function UploadEventModal({
 
   const [category, setCategory] = useState("");
 
-  const [ticket, setTicket] = useState("");
+  const [ticket, setTicket] = useState<string | null>(null);
 
   const [types, setTypes] = useState<string[]>([]);
 
@@ -114,15 +113,6 @@ export default function UploadEventModal({
   } = form;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // useEffect(() => {
-  //   const fetchCurrency = async () => {
-  //     const userCurrency = await getUserCurrency();
-  //     setCurrency(userCurrency);
-  //   };
-
-  //   fetchCurrency();
-  // }, []);
 
   const { data: userCurrency } = useQuery({
     queryKey: ["user-currency"],
@@ -177,7 +167,7 @@ export default function UploadEventModal({
     if (notification) {
       const timer = setTimeout(() => {
         setNotification(null);
-      }, 3000); // 3 seconds
+      }, 5000); // 5 seconds
 
       return () => clearTimeout(timer); // Cleanup
     }
@@ -206,21 +196,82 @@ export default function UploadEventModal({
 
       let eventDates: EventDates;
 
+      const now = new Date();
+      const bufferMs = 5 * 60 * 60 * 1000; // 5 hours
+      const bufferedNow = new Date(now.getTime() + bufferMs);
+
       if (dateType === "single" && !Array.isArray(dateAndTime)) {
+        const start = dateAndTime?.from
+          ? new Date(dateAndTime.from)
+          : undefined;
+        const end = dateAndTime?.to ? new Date(dateAndTime.to) : undefined;
+
+        if ((start && start <= bufferedNow) || (end && end <= bufferedNow)) {
+          setNotification(
+            "Start or end time must be at least 5 hours from now",
+          );
+          return;
+        }
+
+        if (start && end && start >= end) {
+          setNotification("Start time must be earlier than end time");
+          return;
+        }
+
         eventDates = {
-          starts_at: dateAndTime?.from || undefined, // Ensure undefined is set if no value
-          ends_at: dateAndTime?.to || undefined, // Ensure undefined is set if no value
+          starts_at: start,
+          ends_at: end,
         };
       } else if (Array.isArray(dateAndTime)) {
+        const invalid = dateAndTime.some(
+          (date) => new Date(date) <= bufferedNow,
+        );
+        if (invalid) {
+          setNotification(
+            "All selected dates must be at least 5 minutes from now",
+          );
+          return;
+        }
+
         eventDates = {
-          specific_dates: dateAndTime, // Array of dates
+          specific_dates: dateAndTime,
         };
       } else {
         setNotification("Invalid date selection");
         return;
       }
 
+      if (!category || !types) {
+        setNotification("Categories and types must be set");
+        return;
+      }
+
+      const noTicketingSet =
+        !ticket &&
+        (!singleTicket || !singleTicketQuantity) &&
+        (!multipleTickets || multipleTickets.length === 0);
+
+      if (noTicketingSet) {
+        setNotification("Event ticketing must be set");
+        return;
+      }
+
       const receivingAccountDetails = receivingAccountForm.getValues();
+
+      const isReceivingAccountEmpty = Object.values(
+        receivingAccountDetails,
+      ).some((value) => !value);
+
+      const isPaidTicketing =
+        (singleTicket && singleTicketQuantity) ||
+        (multipleTickets && multipleTickets.length > 0);
+
+      if (isPaidTicketing && ticket !== "free" && isReceivingAccountEmpty) {
+        setNotification(
+          "Set up receiving account to receive payment after successfull event!",
+        );
+        return;
+      }
 
       const finalData = {
         ...formData,
@@ -320,13 +371,7 @@ export default function UploadEventModal({
         className="absolute top-5 right-5"
         onClick={() => handleClosePopup(false)}
       >
-        <Image
-          src="/assets/images/circularCancel.svg"
-          alt="Cancel"
-          width={40}
-          height={40}
-          className="filter invert"
-        />
+        <MdOutlineCancel className="text-3xl text-white" />
       </button>
 
       {/* Inner popup */}
@@ -467,9 +512,7 @@ export default function UploadEventModal({
                   {...register("title")}
                 />
                 {errors.title && (
-                  <p className="text-red-500 text-sm pl-3">
-                    {errors.title.message}
-                  </p>
+                  <p className="text-red-500 text-sm">{errors.title.message}</p>
                 )}
 
                 <PostInput
@@ -478,7 +521,7 @@ export default function UploadEventModal({
                   {...register("description")}
                 />
                 {errors.description && (
-                  <p className="text-red-500 text-sm pl-3">
+                  <p className="text-red-500 text-sm">
                     {errors.description.message}
                   </p>
                 )}

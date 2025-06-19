@@ -55,7 +55,7 @@ export type PostsType = {
     branch?: string;
     bankAccountNumber: string;
   };
-  freeEvents: string;
+  freeEvents: string | null;
   singleTicket: number | null;
   singleTicketQuantity: number | null;
   multipleTickets: Ticket[];

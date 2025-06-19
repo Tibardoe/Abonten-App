@@ -84,8 +84,8 @@ export default function EventCard({
         {/* Event Metadata */}
         <div className="space-y-2.5">
           {/* Location */}
-          <div className="flex items-start gap-2 text-gray-600">
-            <IoLocationOutline className="mt-0.5 flex-shrink-0 text-lg text-gray-400" />
+          <div className="flex items-start gap-2 text-gray-800">
+            <IoLocationOutline className="mt-0.5 flex-shrink-0 text-lg text-gray-600" />
             <p className="text-sm line-clamp-2">
               {address?.full_address || "Location not specified"}
             </p>
@@ -93,15 +93,15 @@ export default function EventCard({
 
           {/* Date & Time */}
           <div className="flex flex-wrap gap-x-4 gap-y-2">
-            <div className="flex items-center gap-2 text-gray-600">
-              <MdOutlineDateRange className="text-lg text-gray-400" />
+            <div className="flex items-center gap-2 text-gray-800">
+              <MdOutlineDateRange className="text-lg text-gray-600" />
               <span className="text-sm">
                 {dateTime?.date || "Date not available"}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-gray-600">
-              <IoTimeOutline className="text-lg text-gray-400" />
+            <div className="flex items-center gap-2 text-gray-800">
+              <IoTimeOutline className="text-lg text-gray-600" />
               <span className="text-sm">
                 {dateTime?.time || "Time not available"}
               </span>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 type PromoCodeProp = {
-  ticket: string;
+  ticket: string | null;
   handlePromoCodeFormPopup: (state: boolean) => void;
 };
 
