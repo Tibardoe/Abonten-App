@@ -11,7 +11,7 @@ export default async function layout({ children, params }: LayoutProps) {
   const username = (await params).username;
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-5">
       <ProfileDetails username={username} />
 
       <section className="flex flex-col w-full gap-10 min-h-dvh">

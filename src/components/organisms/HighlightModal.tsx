@@ -113,42 +113,19 @@ export default function HighlightModal({
     }
   };
 
-  // const getVideoDuration = (url: string): Promise<number> => {
-  //   return new Promise((resolve, reject) => {
-  //     const video = document.createElement("video");
-  //     video.src = url;
-  //     video.onloadedmetadata = () => {
-  //       resolve(video.duration);
-  //     };
-  //     video.onerror = () => {
-  //       console.error("Error loading video metadata for:", url);
-  //       reject(new Error("Failed to load video metadata."));
-  //     };
-  //     // For some browsers, play() might be needed to load metadata immediately
-  //     // video.play().catch(() => {}); // Play and catch error if not allowed
-  //   });
-  // };
   const getVideoDuration = (url: string): Promise<number> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
       video.src = url;
-      video.preload = "metadata";
-      video.muted = true;
-      video.playsInline = true;
-      video.style.display = "none";
-
-      document.body.appendChild(video);
-
       video.onloadedmetadata = () => {
-        const duration = video.duration;
-        document.body.removeChild(video);
-        resolve(duration);
+        resolve(video.duration);
       };
-
       video.onerror = () => {
-        document.body.removeChild(video);
+        console.error("Error loading video metadata for:", url);
         reject(new Error("Failed to load video metadata."));
       };
+      // For some browsers, play() might be needed to load metadata immediately
+      // video.play().catch(() => {}); // Play and catch error if not allowed
     });
   };
 
@@ -803,13 +780,28 @@ export default function HighlightModal({
               {/* Media display */}
               <div className="w-full flex items-center justify-center relative overflow-hidden">
                 {currentMedia.type === "image" ? (
-                  <Image
-                    src={currentMedia.url}
-                    alt="Selected media"
-                    fill
-                    className="object-contain"
-                    unoptimized
-                  />
+                  <>
+                    <div className="relative w-full h-screen">
+                      <Image
+                        src={currentMedia.url}
+                        alt="Selected media"
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
+                        setIsCropping(true); // Open the cropper
+                      }}
+                      className="absolute top-20 right-4 bg-black bg-opacity-50 p-2 rounded-full"
+                    >
+                      <ScissorsIcon className="w-5 h-5 text-white" />
+                    </button>
+                  </>
                 ) : (
                   <div className="relative flex items-center justify-center w-full">
                     <video
@@ -885,20 +877,6 @@ export default function HighlightModal({
                       </button>
                     </div>
                   </div>
-                )}
-
-                {/* Crop button for images, visible only if not currently cropping */}
-                {currentMedia?.type === "image" && !isCropping && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
-                      setIsCropping(true); // Open the cropper
-                    }}
-                    className="absolute top-4 right-4 bg-black bg-opacity-50 p-2 rounded-full"
-                  >
-                    <ScissorsIcon className="w-5 h-5 text-white" />
-                  </button>
                 )}
               </div>
 
