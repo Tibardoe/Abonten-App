@@ -550,7 +550,7 @@ export default function HighlightModal({
         <button
           type="button"
           onClick={handleCancelOrBack}
-          className="text-white p-2"
+          className="text-white p-2 rounded-full backdrop-blur-md border border-white/20 bg-black/10"
         >
           {step === 1 && !isCropping && !showVideoTrimmer ? (
             <MdOutlineCancel className="w-6 h-6" />
@@ -559,7 +559,7 @@ export default function HighlightModal({
           )}
         </button>
 
-        <h2 className="text-white font-semibold text-lg">
+        <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md">
           {isCropping || showVideoTrimmer
             ? "Edit Media"
             : step === 1
@@ -574,7 +574,7 @@ export default function HighlightModal({
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="text-white font-semibold"
+              className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md"
             >
               Next
             </button>
