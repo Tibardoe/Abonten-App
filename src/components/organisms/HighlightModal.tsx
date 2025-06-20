@@ -733,7 +733,7 @@ export default function HighlightModal({
                     className="object-contain"
                   />
                 ) : (
-                  <div className="relative flex items-center justify-center w-full h-full aspect-video">
+                  <div className="relative flex items-center justify-center w-full h-full">
                     <video
                       ref={videoTrimmerRef}
                       src={currentMedia.url}
