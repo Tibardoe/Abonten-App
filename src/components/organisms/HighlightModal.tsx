@@ -808,7 +808,7 @@ export default function HighlightModal({
                     </div>
 
                     {/* Track editor */}
-                    <div className="absolute self-start w-full md:w-[50%] mt-48 space-y-2 md:mt-20">
+                    <div className="absolute self-start w-full md:w-[50%] mt- space-y-2 mt-20">
                       <div className="px-2">
                         <div className="flex justify-between text-white text-sm mb-2">
                           <span>Start: {formatDuration(trimStart)}</span>
