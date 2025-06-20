@@ -165,7 +165,7 @@ export default function HighlightModal({
       if (file.type.startsWith("video")) {
         let duration = 0;
 
-        let thumbnail = "";
+        // let thumbnail = "";
 
         try {
           duration = await getVideoDuration(url);
@@ -174,7 +174,7 @@ export default function HighlightModal({
             throw new Error("Invalid video duration");
           }
 
-          thumbnail = await generateVideoThumbnail(file);
+          // thumbnail = await generateVideoThumbnail(file);
         } catch (e) {
           console.error("Skipping video due to metadata error:", file.name, e);
           URL.revokeObjectURL(url); // Clean up the URL if metadata failed
@@ -194,7 +194,7 @@ export default function HighlightModal({
             duration, // Keep original duration for reference
             startTime: 0,
             endTime: maxVideoUploadDuration, // Cap at maxVideoUploadDuration
-            thumbnail,
+            // thumbnail,
           });
         } else {
           newMediaItems.push({
@@ -204,7 +204,7 @@ export default function HighlightModal({
             duration,
             startTime: 0,
             endTime: duration, // Full duration if within limit
-            thumbnail,
+            // thumbnail,
           });
         }
       } else {
