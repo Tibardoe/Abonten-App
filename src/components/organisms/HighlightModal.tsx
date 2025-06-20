@@ -787,7 +787,7 @@ export default function HighlightModal({
                         setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
                         setIsCropping(true); // Open the cropper
                       }}
-                      className="absolute top-20 right-4 bg-black bg-opacity-50 p-2 rounded-full"
+                      className="absolute top-28 md:top-20 right-4 bg-black bg-opacity-50 p-2 rounded-full z-10"
                     >
                       <ScissorsIcon className="w-5 h-5 text-white" />
                     </button>
