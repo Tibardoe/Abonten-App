@@ -504,21 +504,6 @@ export default function HighlightModal({
   }, [isDragging, handleDragMove, handleDragEnd]);
 
   // Effect to handle video playback within trim range for main video
-  // useEffect(() => {
-  //   if (videoRef.current && currentMedia?.type === "video" && isPlaying) {
-  //     const interval = setInterval(() => {
-  //       if (videoRef.current && currentMedia.endTime !== undefined) {
-  //         if (videoRef.current.currentTime >= currentMedia.endTime) {
-  //           videoRef.current.pause();
-  //           videoRef.current.currentTime = currentMedia.startTime || 0;
-  //           setIsPlaying(false);
-  //         }
-  //       }
-  //     }, 100); // Check every 100ms
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [isPlaying, currentMedia]);
-  // In the main useEffect for videoRef
   useEffect(() => {
     if (!videoRef.current || !currentMedia) return;
 
@@ -679,7 +664,7 @@ export default function HighlightModal({
 
               {/* Track editor */}
               {currentMedia.type === "video" && (
-                <div className="absolute self-start w-full md:w-[50%] space-y-2 mt-20">
+                <div className="absolute self-start w-full md:w-[50%] space-y-2 mt-20 z-20">
                   <div className="px-2">
                     <div className="flex justify-between text-white text-sm mb-2">
                       <span>Start: {formatDuration(trimStart)}</span>
