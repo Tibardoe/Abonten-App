@@ -780,17 +780,7 @@ export default function HighlightModal({
               {/* Media display */}
               <div className="w-full flex items-center justify-center relative overflow-hidden">
                 {currentMedia.type === "image" ? (
-                  <>
-                    <div className="relative w-full h-screen">
-                      <Image
-                        src={currentMedia.url}
-                        alt="Selected media"
-                        fill
-                        className="object-contain"
-                        unoptimized
-                      />
-                    </div>
-
+                  <div className="relative w-full h-screen">
                     <button
                       type="button"
                       onClick={() => {
@@ -801,7 +791,15 @@ export default function HighlightModal({
                     >
                       <ScissorsIcon className="w-5 h-5 text-white" />
                     </button>
-                  </>
+
+                    <Image
+                      src={currentMedia.url}
+                      alt="Selected media"
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div className="relative flex items-center justify-center w-full">
                     <video
