@@ -603,7 +603,7 @@ export default function HighlightModal({
         <div className="w-full h-full flex flex-col items-center justify-center relative">
           {/* Conditional rendering for ImageCropper or main steps */}
           {isCropping && imageToCrop ? (
-            <div className="w-full h-[80%] md:w-[60%] bg-white overflow-y-scroll md:overflow-y-auto">
+            <div className="w-full md:h-[90%] md:w-[60%] bg-white overflow-y-scroll md:overflow-y-auto">
               <ImageCropper
                 imagePreview={imageToCrop}
                 handleCropped={handleCropped}
