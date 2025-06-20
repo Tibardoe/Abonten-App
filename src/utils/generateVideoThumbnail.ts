@@ -25,7 +25,7 @@ export const generateVideoThumbnail = (file: File): Promise<string> => {
         return;
       }
 
-      const seekTo = Math.min(1, duration / 2); // Seek to 1s or middle of video
+      const seekTo = Math.min(3, video.duration - 0.1); // Seek to 3s or middle of video
 
       // Listen for seek completion
       video.currentTime = seekTo;
