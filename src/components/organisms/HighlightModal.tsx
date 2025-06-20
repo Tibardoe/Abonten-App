@@ -403,54 +403,54 @@ export default function HighlightModal({
     }
   }, [trimStart]);
 
-  const applyTrim = () => {
-    if (currentMedia?.type === "video") {
-      const updatedMediaItems = [...mediaItems];
-      updatedMediaItems[currentIndex] = {
-        ...updatedMediaItems[currentIndex],
-        startTime: trimStart,
-        endTime: trimEnd,
-      } as MediaItem;
+  // const applyTrim = () => {
+  //   if (currentMedia?.type === "video") {
+  //     const updatedMediaItems = [...mediaItems];
+  //     updatedMediaItems[currentIndex] = {
+  //       ...updatedMediaItems[currentIndex],
+  //       startTime: trimStart,
+  //       endTime: trimEnd,
+  //     } as MediaItem;
 
-      setMediaItems(updatedMediaItems);
-      setShowVideoTrimmer(false);
+  //     setMediaItems(updatedMediaItems);
+  //     setShowVideoTrimmer(false);
 
-      if (videoRef.current) {
-        // Stop any current playback
-        videoRef.current.pause();
-        setIsPlaying(false);
+  //     if (videoRef.current) {
+  //       // Stop any current playback
+  //       videoRef.current.pause();
+  //       setIsPlaying(false);
 
-        // Set the current time immediately
-        videoRef.current.currentTime = trimStart;
+  //       // Set the current time immediately
+  //       videoRef.current.currentTime = trimStart;
 
-        // IMPORTANT: Call load() and then wait for 'canplay' or 'loadeddata'
-        // before attempting to play to avoid the "interrupted by new load" error.
-        // We ensure the video is ready to play from the new start time.
-        videoRef.current.load();
+  //       // IMPORTANT: Call load() and then wait for 'canplay' or 'loadeddata'
+  //       // before attempting to play to avoid the "interrupted by new load" error.
+  //       // We ensure the video is ready to play from the new start time.
+  //       videoRef.current.load();
 
-        const playAfterLoad = () => {
-          if (videoRef.current) {
-            videoRef.current
-              .play()
-              .then(() => {
-                setIsPlaying(true);
-              })
-              .catch((error) => {
-                console.error("Error playing video after trim:", error);
-                // Handle cases where play() fails (e.g., autoplay policies)
-                // Maybe show a play button to the user instead
-              });
-            videoRef.current.removeEventListener("canplay", playAfterLoad);
-            videoRef.current.removeEventListener("loadeddata", playAfterLoad);
-          }
-        };
+  //       const playAfterLoad = () => {
+  //         if (videoRef.current) {
+  //           videoRef.current
+  //             .play()
+  //             .then(() => {
+  //               setIsPlaying(true);
+  //             })
+  //             .catch((error) => {
+  //               console.error("Error playing video after trim:", error);
+  //               // Handle cases where play() fails (e.g., autoplay policies)
+  //               // Maybe show a play button to the user instead
+  //             });
+  //           videoRef.current.removeEventListener("canplay", playAfterLoad);
+  //           videoRef.current.removeEventListener("loadeddata", playAfterLoad);
+  //         }
+  //       };
 
-        videoRef.current.addEventListener("canplay", playAfterLoad);
-        // Fallback for some browsers or scenarios
-        videoRef.current.addEventListener("loadeddata", playAfterLoad);
-      }
-    }
-  };
+  //       videoRef.current.addEventListener("canplay", playAfterLoad);
+  //       // Fallback for some browsers or scenarios
+  //       videoRef.current.addEventListener("loadeddata", playAfterLoad);
+  //     }
+  //   }
+  // };
 
   const handleCropped = (croppedFile: File) => {
     const updatedMediaItems = [...mediaItems];
@@ -516,13 +516,28 @@ export default function HighlightModal({
   }, []);
 
   // Effect to manage current media item when currentIndex changes
+  // useEffect(() => {
+  //   setIsPlaying(false);
+  //   setShowVideoTrimmer(false);
+  //   // Ensure video is loaded with correct start time when switching items
+  //   if (videoRef.current && currentMedia?.type === "video") {
+  //     videoRef.current.currentTime = currentMedia.startTime || 0;
+  //     videoRef.current.load(); // Explicitly load to ensure correct segment is ready
+  //   }
+  // }, [currentMedia]);
   useEffect(() => {
     setIsPlaying(false);
     setShowVideoTrimmer(false);
-    // Ensure video is loaded with correct start time when switching items
+
     if (videoRef.current && currentMedia?.type === "video") {
       videoRef.current.currentTime = currentMedia.startTime || 0;
-      videoRef.current.load(); // Explicitly load to ensure correct segment is ready
+      videoRef.current.load();
+
+      // Add this to ensure the new video is ready
+      const handleCanPlay = () => {
+        videoRef.current?.removeEventListener("canplay", handleCanPlay);
+      };
+      videoRef.current.addEventListener("canplay", handleCanPlay);
     }
   }, [currentMedia]);
 
