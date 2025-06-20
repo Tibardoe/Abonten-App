@@ -723,6 +723,123 @@ export default function HighlightModal({
                 <ChevronLeftIcon className="w-8 h-8" />
               </button>
 
+              {/* Track editor */}
+              {currentMedia.type === "video" && (
+                <div className="absolute self-start w-full md:w-[50%] space-y-2 mt-20">
+                  <div className="px-2">
+                    <div className="flex justify-between text-white text-sm mb-2">
+                      <span>Start: {formatDuration(trimStart)}</span>
+                      <span>End: {formatDuration(trimEnd)}</span>
+                      <span>
+                        Duration: {formatDuration(trimEnd - trimStart)}
+                      </span>
+                    </div>
+
+                    {/* WhatsApp-like track editor */}
+                    <div
+                      ref={trackEditorRef}
+                      className="relative h-16 bg-gray-800 rounded-md cursor-pointer"
+                      onClick={handleTrackEditorClick}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleTrackEditorClick(
+                            e as unknown as React.MouseEvent,
+                          ); // Cast to reuse the same function
+                        }
+                      }}
+                      style={
+                        {
+                          "--playhead-position": "0%",
+                        } as React.CSSProperties
+                      } // Initialize custom CSS variable
+                    >
+                      {/* Preview thumbnails would go here in a real implementation */}
+                      <div className="absolute inset-0 bg-gray-600 opacity-50">
+                        Preview thumbnail
+                      </div>
+
+                      {/* Trim handles */}
+                      <button
+                        type="button"
+                        className="absolute top-0 bottom-0 bg-black cursor-ew-resize z-20" // Increased z-index
+                        style={{
+                          left: `${
+                            (trimStart / (currentMedia.duration || 1)) * 100
+                          }%`,
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleDragStart("start", e);
+                        }}
+                      >
+                        <FaChevronLeft className="text-2xl text-white" />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="absolute top-0 bottom-0 bg-black cursor-ew-resize z-20" // Increased z-index
+                        style={{
+                          right: `${
+                            100 - (trimEnd / (currentMedia.duration || 1)) * 100
+                          }%`,
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleDragStart("end", e);
+                        }}
+                      >
+                        <FaChevronRight className="text-2xl text-white" />
+                      </button>
+
+                      {/* Selected range - Middle draggable part */}
+                      <div
+                        className="absolute top-0 bottom-0 border-2 border-black bg-white bg-opacity-90 opacity-30 cursor-grab z-10" // Lower z-index than handles
+                        style={{
+                          left: `${
+                            (trimStart / (currentMedia.duration || 1)) * 100
+                          }%`,
+                          right: `${
+                            100 - (trimEnd / (currentMedia.duration || 1)) * 100
+                          }%`,
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleDragStart("middle", e);
+                        }}
+                      />
+                      {/* Playhead for trimmer */}
+                      <div
+                        className="absolute top-0 bottom-0 w-1 bg-white z-20" // Increased z-index
+                        style={{
+                          left: "var(--playhead-position)", // Use custom CSS variable
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center px-2 gap-2">
+                    {/* Mute button */}
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      className="bg-black bg-opacity-50 p-2 rounded-full"
+                    >
+                      {isMuted ? (
+                        <VolumeXIcon className="w-5 h-5 text-white" />
+                      ) : (
+                        <Volume2Icon className="w-5 h-5 text-white" />
+                      )}
+                    </button>
+
+                    {/* Video duration indicator */}
+                    <div className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                      {formatDuration(trimEnd - trimStart)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Media display */}
               <div className="w-full flex items-center justify-center relative overflow-hidden">
                 {currentMedia.type === "image" ? (
@@ -733,7 +850,7 @@ export default function HighlightModal({
                     className="object-contain"
                   />
                 ) : (
-                  <div className="relative flex items-center justify-center w-full h-full">
+                  <div className="relative flex items-center justify-center w-full">
                     <video
                       ref={videoTrimmerRef}
                       src={currentMedia.url}
@@ -805,123 +922,6 @@ export default function HighlightModal({
                           <PlayIcon className="w-10 h-10 text-white" />
                         )}
                       </button>
-                    </div>
-
-                    {/* Track editor */}
-                    <div className="absolute self-start w-full md:w-[50%] mt- space-y-2 mt-20">
-                      <div className="px-2">
-                        <div className="flex justify-between text-white text-sm mb-2">
-                          <span>Start: {formatDuration(trimStart)}</span>
-                          <span>End: {formatDuration(trimEnd)}</span>
-                          <span>
-                            Duration: {formatDuration(trimEnd - trimStart)}
-                          </span>
-                        </div>
-
-                        {/* WhatsApp-like track editor */}
-                        <div
-                          ref={trackEditorRef}
-                          className="relative h-16 bg-gray-800 rounded-md cursor-pointer"
-                          onClick={handleTrackEditorClick}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              handleTrackEditorClick(
-                                e as unknown as React.MouseEvent,
-                              ); // Cast to reuse the same function
-                            }
-                          }}
-                          style={
-                            {
-                              "--playhead-position": "0%",
-                            } as React.CSSProperties
-                          } // Initialize custom CSS variable
-                        >
-                          {/* Preview thumbnails would go here in a real implementation */}
-                          <div className="absolute inset-0 bg-gray-600 opacity-50">
-                            Preview thumbnail
-                          </div>
-
-                          {/* Trim handles */}
-                          <button
-                            type="button"
-                            className="absolute top-0 bottom-0 bg-black cursor-ew-resize z-20" // Increased z-index
-                            style={{
-                              left: `${
-                                (trimStart / (currentMedia.duration || 1)) * 100
-                              }%`,
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleDragStart("start", e);
-                            }}
-                          >
-                            <FaChevronLeft className="text-2xl text-white" />
-                          </button>
-
-                          <button
-                            type="button"
-                            className="absolute top-0 bottom-0 bg-black cursor-ew-resize z-20" // Increased z-index
-                            style={{
-                              right: `${
-                                100 -
-                                (trimEnd / (currentMedia.duration || 1)) * 100
-                              }%`,
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleDragStart("end", e);
-                            }}
-                          >
-                            <FaChevronRight className="text-2xl text-white" />
-                          </button>
-
-                          {/* Selected range - Middle draggable part */}
-                          <div
-                            className="absolute top-0 bottom-0 border-2 border-black bg-white bg-opacity-90 opacity-30 cursor-grab z-10" // Lower z-index than handles
-                            style={{
-                              left: `${
-                                (trimStart / (currentMedia.duration || 1)) * 100
-                              }%`,
-                              right: `${
-                                100 -
-                                (trimEnd / (currentMedia.duration || 1)) * 100
-                              }%`,
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleDragStart("middle", e);
-                            }}
-                          />
-                          {/* Playhead for trimmer */}
-                          <div
-                            className="absolute top-0 bottom-0 w-1 bg-white z-20" // Increased z-index
-                            style={{
-                              left: "var(--playhead-position)", // Use custom CSS variable
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center px-2 gap-2">
-                        {/* Mute button */}
-                        <button
-                          type="button"
-                          onClick={toggleMute}
-                          className="bg-black bg-opacity-50 p-2 rounded-full"
-                        >
-                          {isMuted ? (
-                            <VolumeXIcon className="w-5 h-5 text-white" />
-                          ) : (
-                            <Volume2Icon className="w-5 h-5 text-white" />
-                          )}
-                        </button>
-
-                        {/* Video duration indicator */}
-                        <div className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                          {formatDuration(trimEnd - trimStart)}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 )}
