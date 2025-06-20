@@ -129,6 +129,81 @@ export default function HighlightModal({
     });
   };
 
+  // const handleFileChange = async (
+  //   event: React.ChangeEvent<HTMLInputElement>,
+  // ) => {
+  //   const files = event.target.files;
+  //   if (!files || files.length === 0) return;
+
+  //   const newMediaItems: MediaItem[] = [];
+  //   const filesToProcess = Array.from(files);
+
+  //   // Revoke old URLs from previous mediaItems before setting new ones
+  //   // Only revoke if we are replacing all media (e.g., going from empty to having media)
+  //   if (mediaItems.length > 0) {
+  //     for (const item of mediaItems) {
+  //       URL.revokeObjectURL(item.url);
+  //     }
+  //   }
+
+  //   for (const file of filesToProcess) {
+  //     const url = URL.createObjectURL(file);
+
+  //     if (file.type.startsWith("video")) {
+  //       let duration = 0;
+  //       let thumbnail = "";
+
+  //       try {
+  //         duration = await getVideoDuration(url);
+  //         thumbnail = await generateVideoThumbnail(file);
+  //       } catch (e) {
+  //         console.error("Skipping video due to metadata error:", file.name, e);
+  //         URL.revokeObjectURL(url); // Clean up the URL if metadata failed
+  //         continue; // Skip to next file
+  //       }
+
+  //       // Enforce 1-minute upload limit here
+  //       if (duration > maxVideoUploadDuration) {
+  //         alert(
+  //           `Video "${file.name}" is longer than ${maxVideoUploadDuration} seconds and will be trimmed to the first ${maxVideoUploadDuration} seconds.`,
+  //         );
+  //         // Automatically trim to the first 1 minute if it's too long
+  //         newMediaItems.push({
+  //           url,
+  //           file,
+  //           type: "video",
+  //           duration, // Keep original duration for reference
+  //           startTime: 0,
+  //           endTime: maxVideoUploadDuration, // Cap at maxVideoUploadDuration
+  //           thumbnail,
+  //         });
+  //       } else {
+  //         newMediaItems.push({
+  //           url,
+  //           file,
+  //           type: "video",
+  //           duration,
+  //           startTime: 0,
+  //           endTime: duration, // Full duration if within limit
+  //           thumbnail,
+  //         });
+  //       }
+  //     } else {
+  //       newMediaItems.push({ url, file, type: "image" });
+  //     }
+  //   }
+
+  //   if (newMediaItems.length > 0) {
+  //     setMediaItems(newMediaItems);
+  //     setCurrentIndex(0); // Reset to first item
+  //     setStep(2);
+  //   }
+  //   // Clear the file input to allow selecting the same files again
+  //   if (fileInputRef.current) {
+  //     fileInputRef.current.value = "";
+  //   }
+  // };
+
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -138,12 +213,9 @@ export default function HighlightModal({
     const newMediaItems: MediaItem[] = [];
     const filesToProcess = Array.from(files);
 
-    // Revoke old URLs from previous mediaItems before setting new ones
-    // Only revoke if we are replacing all media (e.g., going from empty to having media)
-    if (mediaItems.length > 0) {
-      for (const item of mediaItems) {
-        URL.revokeObjectURL(item.url);
-      }
+    // Revoke old URLs
+    for (const item of mediaItems) {
+      URL.revokeObjectURL(item.url);
     }
 
     for (const file of filesToProcess) {
@@ -158,36 +230,22 @@ export default function HighlightModal({
           thumbnail = await generateVideoThumbnail(file);
         } catch (e) {
           console.error("Skipping video due to metadata error:", file.name, e);
-          URL.revokeObjectURL(url); // Clean up the URL if metadata failed
-          continue; // Skip to next file
+          URL.revokeObjectURL(url);
+          continue;
         }
 
-        // Enforce 1-minute upload limit here
-        if (duration > maxVideoUploadDuration) {
-          alert(
-            `Video "${file.name}" is longer than ${maxVideoUploadDuration} seconds and will be trimmed to the first ${maxVideoUploadDuration} seconds.`,
-          );
-          // Automatically trim to the first 1 minute if it's too long
-          newMediaItems.push({
-            url,
-            file,
-            type: "video",
-            duration, // Keep original duration for reference
-            startTime: 0,
-            endTime: maxVideoUploadDuration, // Cap at maxVideoUploadDuration
-            thumbnail,
-          });
-        } else {
-          newMediaItems.push({
-            url,
-            file,
-            type: "video",
-            duration,
-            startTime: 0,
-            endTime: duration, // Full duration if within limit
-            thumbnail,
-          });
-        }
+        const endTime =
+          duration > maxVideoUploadDuration ? maxVideoUploadDuration : duration;
+
+        newMediaItems.push({
+          url,
+          file,
+          type: "video",
+          duration,
+          startTime: 0,
+          endTime,
+          thumbnail,
+        });
       } else {
         newMediaItems.push({ url, file, type: "image" });
       }
@@ -195,10 +253,10 @@ export default function HighlightModal({
 
     if (newMediaItems.length > 0) {
       setMediaItems(newMediaItems);
-      setCurrentIndex(0); // Reset to first item
+      setCurrentIndex(0);
       setStep(2);
     }
-    // Clear the file input to allow selecting the same files again
+
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
