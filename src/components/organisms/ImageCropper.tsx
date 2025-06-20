@@ -129,7 +129,7 @@ export default function ImageCropper({
     <div className="space-y-4 md:p-4 w-full md:overflow-y-scroll mb-5">
       {!!imagePreview && (
         <>
-          <div className="flex justify-between items-center mt-16 md:mt-0">
+          <div className="flex justify-between items-center px-5 md:mt-0">
             <div className="flex justify-between gap-3">
               <Button
                 variant="outline"

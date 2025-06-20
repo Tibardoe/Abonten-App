@@ -440,7 +440,7 @@ closePopupModalType) {
                 imagePreview={imgUrl}
                 handleCropped={handleCropped}
                 handleCancel={() => {
-                  setStep((prevStep) => prevStep - 1);
+                  handleClosePopup(false);
                 }}
               />
             ) : (
