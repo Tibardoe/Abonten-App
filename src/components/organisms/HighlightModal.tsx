@@ -33,7 +33,6 @@ export default function HighlightModal({
   const [step, setStep] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [showVideoTrimmer, setShowVideoTrimmer] = useState(false);
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -42,7 +41,6 @@ export default function HighlightModal({
   >(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const videoTrimmerRef = useRef<HTMLVideoElement>(null);
   const trackEditorRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -62,9 +60,14 @@ export default function HighlightModal({
   };
 
   const handleTouchEnd = () => {
-    if (touchStartX.current - touchEndX.current > 50) {
+    const threshold = 50;
+    const diff = touchStartX.current - touchEndX.current;
+
+    if (Math.abs(diff) < threshold) return;
+
+    if (diff > threshold) {
       handleNext();
-    } else if (touchEndX.current - touchStartX.current > 50) {
+    } else if (diff < -threshold) {
       handlePrevious();
     }
   };
@@ -117,11 +120,21 @@ export default function HighlightModal({
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
       video.src = url;
+
+      const cleanup = () => {
+        video.onloadedmetadata = null;
+        video.onerror = null;
+        video.src = ""; // Release video resource
+      };
+
       video.onloadedmetadata = () => {
         resolve(video.duration);
+        cleanup();
       };
+
       video.onerror = () => {
         console.error("Error loading video metadata for:", url);
+        cleanup();
         reject(new Error("Failed to load video metadata."));
       };
       // For some browsers, play() might be needed to load metadata immediately
@@ -151,10 +164,16 @@ export default function HighlightModal({
 
       if (file.type.startsWith("video")) {
         let duration = 0;
+
         let thumbnail = "";
 
         try {
           duration = await getVideoDuration(url);
+
+          if (Number.isNaN(duration)) {
+            throw new Error("Invalid video duration");
+          }
+
           thumbnail = await generateVideoThumbnail(file);
         } catch (e) {
           console.error("Skipping video due to metadata error:", file.name, e);
@@ -209,7 +228,6 @@ export default function HighlightModal({
     if (currentIndex < mediaItems.length - 1) {
       setCurrentIndex(currentIndex + 1);
       setIsPlaying(false);
-      setShowVideoTrimmer(false); // Hide trimmer when navigating
     }
   };
 
@@ -217,7 +235,6 @@ export default function HighlightModal({
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
       setIsPlaying(false);
-      setShowVideoTrimmer(false); // Hide trimmer when navigating
     }
   };
 
@@ -247,7 +264,6 @@ export default function HighlightModal({
 
     setCurrentIndex(newIndex);
     setIsPlaying(false);
-    setShowVideoTrimmer(false);
   };
 
   const handleTrackEditorClick = (e: React.MouseEvent) => {
@@ -255,7 +271,7 @@ export default function HighlightModal({
       !trackEditorRef.current ||
       !currentMedia ||
       currentMedia.type !== "video" ||
-      !videoTrimmerRef.current
+      !videoRef.current
     )
       return;
 
@@ -265,10 +281,7 @@ export default function HighlightModal({
     const totalVideoDuration = currentMedia.duration || 0;
     const seekTime = percentage * totalVideoDuration;
 
-    videoTrimmerRef.current.currentTime = Math.min(
-      seekTime,
-      totalVideoDuration,
-    );
+    videoRef.current.currentTime = Math.min(seekTime, totalVideoDuration);
   };
 
   const handleDragStart = (
@@ -325,8 +338,8 @@ export default function HighlightModal({
           setTrimEnd(newStart + maxTrimSegmentDuration);
         }
 
-        if (videoTrimmerRef.current) {
-          videoTrimmerRef.current.currentTime = newStart;
+        if (videoRef.current) {
+          videoRef.current.currentTime = newStart;
         }
       } else if (dragHandle === "end") {
         let newEnd = (newPositionX / rect.width) * totalVideoDuration;
@@ -340,8 +353,8 @@ export default function HighlightModal({
           setTrimStart(newEnd - maxTrimSegmentDuration);
         }
 
-        if (videoTrimmerRef.current) {
-          videoTrimmerRef.current.currentTime = newEnd;
+        if (videoRef.current) {
+          videoRef.current.currentTime = newEnd;
         }
       } else if (dragHandle === "middle") {
         const currentSelectionLength = trimEnd - trimStart;
@@ -364,8 +377,8 @@ export default function HighlightModal({
         setTrimStart(potentialNewStart);
         setTrimEnd(potentialNewEnd);
 
-        if (videoTrimmerRef.current) {
-          videoTrimmerRef.current.currentTime = potentialNewStart;
+        if (videoRef.current) {
+          videoRef.current.currentTime = potentialNewStart;
         }
       }
     },
@@ -377,9 +390,9 @@ export default function HighlightModal({
     setDragHandle(null);
     dragOffset.current = 0;
 
-    if (videoTrimmerRef.current) {
-      videoTrimmerRef.current.currentTime = trimStart;
-      videoTrimmerRef.current.pause();
+    if (videoRef.current) {
+      videoRef.current.currentTime = trimStart;
+      videoRef.current.pause();
     }
   }, [trimStart]);
 
@@ -449,7 +462,6 @@ export default function HighlightModal({
   // Effect to manage current media item when currentIndex changes
   useEffect(() => {
     setIsPlaying(false);
-    setShowVideoTrimmer(false);
 
     if (videoRef.current && currentMedia?.type === "video") {
       videoRef.current.currentTime = currentMedia.startTime || 0;
@@ -473,8 +485,8 @@ export default function HighlightModal({
           currentMedia.duration || maxTrimSegmentDuration, // Ensure end doesn't exceed actual duration if it's shorter than maxTrimSegmentDuration
         ),
       );
-      if (videoTrimmerRef.current) {
-        videoTrimmerRef.current.currentTime = currentMedia.startTime || 0;
+      if (videoRef.current) {
+        videoRef.current.currentTime = currentMedia.startTime || 0;
       }
     }
   }, [currentMedia]);
@@ -492,48 +504,57 @@ export default function HighlightModal({
   }, [isDragging, handleDragMove, handleDragEnd]);
 
   // Effect to handle video playback within trim range for main video
+  // useEffect(() => {
+  //   if (videoRef.current && currentMedia?.type === "video" && isPlaying) {
+  //     const interval = setInterval(() => {
+  //       if (videoRef.current && currentMedia.endTime !== undefined) {
+  //         if (videoRef.current.currentTime >= currentMedia.endTime) {
+  //           videoRef.current.pause();
+  //           videoRef.current.currentTime = currentMedia.startTime || 0;
+  //           setIsPlaying(false);
+  //         }
+  //       }
+  //     }, 100); // Check every 100ms
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [isPlaying, currentMedia]);
+  // In the main useEffect for videoRef
   useEffect(() => {
-    if (videoRef.current && currentMedia?.type === "video" && isPlaying) {
-      const interval = setInterval(() => {
-        if (videoRef.current && currentMedia.endTime !== undefined) {
-          if (videoRef.current.currentTime >= currentMedia.endTime) {
-            videoRef.current.pause();
-            videoRef.current.currentTime = currentMedia.startTime || 0;
-            setIsPlaying(false);
-          }
-        }
-      }, 100); // Check every 100ms
-      return () => clearInterval(interval);
-    }
-  }, [isPlaying, currentMedia]);
+    if (!videoRef.current || !currentMedia) return;
+
+    const video = videoRef.current;
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+
+    return () => {
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+    };
+  }, [currentMedia]);
 
   // Effect to handle video playback within trim range for trimmer video
   useEffect(() => {
-    if (
-      videoTrimmerRef.current &&
-      currentMedia?.type === "video" &&
-      showVideoTrimmer
-    ) {
-      const updateTrimmerPlayhead = () => {
-        if (videoTrimmerRef.current) {
-          // If playing and goes past end trim, loop back to start trim
-          if (
-            !videoTrimmerRef.current.paused &&
-            videoTrimmerRef.current.currentTime >= trimEnd
-          ) {
-            videoTrimmerRef.current.currentTime = trimStart;
-          }
+    const updateTrimmerPlayhead = () => {
+      if (videoRef.current) {
+        // If playing and goes past end trim, loop back to start trim
+        if (
+          !videoRef.current.paused &&
+          videoRef.current.currentTime >= trimEnd
+        ) {
+          videoRef.current.currentTime = trimStart;
         }
-      };
-      const interval = setInterval(updateTrimmerPlayhead, 50); // Update frequently for smooth playhead
-      return () => clearInterval(interval);
-    }
-  }, [showVideoTrimmer, trimStart, trimEnd, currentMedia]);
+      }
+    };
+    const interval = setInterval(updateTrimmerPlayhead, 50); // Update frequently for smooth playhead
+    return () => clearInterval(interval);
+  }, [trimStart, trimEnd]);
 
   const handleCancelOrBack = () => {
-    if (isCropping || showVideoTrimmer) {
+    if (isCropping) {
       handleCancelCrop(); // Reset cropping state
-      setShowVideoTrimmer(false); // Hide trimmer
     } else {
       if (step === 1) {
         handleShowHighlightModal(false);
@@ -552,7 +573,7 @@ export default function HighlightModal({
           onClick={handleCancelOrBack}
           className="text-white p-2 rounded-full backdrop-blur-md border border-white/20 bg-black/10"
         >
-          {step === 1 && !isCropping && !showVideoTrimmer ? (
+          {step === 1 && !isCropping ? (
             <MdOutlineCancel className="w-6 h-6" />
           ) : (
             <ChevronLeftIcon className="w-6 h-6" />
@@ -560,7 +581,7 @@ export default function HighlightModal({
         </button>
 
         <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md">
-          {isCropping || showVideoTrimmer
+          {isCropping
             ? "Edit Media"
             : step === 1
               ? "New Highlight"
@@ -568,32 +589,28 @@ export default function HighlightModal({
         </h2>
 
         {/* Next/Upload button */}
-        {!(isCropping || showVideoTrimmer) &&
-          step === 2 &&
-          mediaItems.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md"
-            >
-              Next
-            </button>
-          )}
+        {!isCropping && step === 2 && mediaItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setStep(3)}
+            className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md"
+          >
+            Next
+          </button>
+        )}
 
-        {!(isCropping || showVideoTrimmer) &&
-          step === 3 &&
-          mediaItems.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                /* Handle upload */
-              }}
-              className="text-white font-semibold"
-              disabled={isUploading}
-            >
-              {isUploading ? "Uploading..." : "Upload"}
-            </button>
-          )}
+        {!isCropping && step === 3 && mediaItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              /* Handle upload */
+            }}
+            className="text-white font-semibold"
+            disabled={isUploading}
+          >
+            {isUploading ? "Uploading..." : "Upload"}
+          </button>
+        )}
       </div>
 
       {/* Main Content */}
@@ -650,9 +667,9 @@ export default function HighlightModal({
               <button
                 type="button"
                 onClick={handlePrevious}
-                disabled={currentIndex === 0 || isCropping || showVideoTrimmer}
+                disabled={currentIndex === 0 || isCropping}
                 className={`hidden md:flex absolute h-24 my-auto inset-y-0 left-0 items-center justify-start pl-4 z-20 p-2 rounded-full bg-black bg-opacity-50 text-white ${
-                  currentIndex === 0 || isCropping || showVideoTrimmer
+                  currentIndex === 0 || isCropping
                     ? "opacity-50"
                     : "hover:bg-opacity-70"
                 }`}
@@ -803,7 +820,7 @@ export default function HighlightModal({
                 ) : (
                   <div className="relative flex items-center justify-center w-full">
                     <video
-                      ref={videoTrimmerRef}
+                      ref={videoRef}
                       src={currentMedia.url}
                       className="max-w-full max-h-full"
                       onClick={togglePlayPause}
@@ -827,11 +844,11 @@ export default function HighlightModal({
                         // Update playhead position on the track editor
                         if (
                           trackEditorRef.current &&
-                          videoTrimmerRef.current &&
+                          videoRef.current &&
                           currentMedia?.duration
                         ) {
                           const playheadPercentage =
-                            (videoTrimmerRef.current.currentTime /
+                            (videoRef.current.currentTime /
                               currentMedia.duration) *
                             100;
                           trackEditorRef.current.style.setProperty(
@@ -842,10 +859,10 @@ export default function HighlightModal({
 
                         // Loop playback within trim range
                         if (
-                          videoTrimmerRef.current &&
-                          videoTrimmerRef.current.currentTime >= trimEnd
+                          videoRef.current &&
+                          videoRef.current.currentTime >= trimEnd
                         ) {
-                          videoTrimmerRef.current.currentTime = trimStart;
+                          videoRef.current.currentTime = trimStart;
                         }
                       }}
                     />
@@ -855,13 +872,13 @@ export default function HighlightModal({
                       <button
                         type="button"
                         onClick={() => {
-                          if (videoTrimmerRef.current) {
-                            if (videoTrimmerRef.current.paused) {
+                          if (videoRef.current) {
+                            if (videoRef.current.paused) {
                               setIsPlaying(true);
-                              videoTrimmerRef.current.play();
+                              videoRef.current.play();
                             } else {
                               setIsPlaying(false);
-                              videoTrimmerRef.current.pause();
+                              videoRef.current.pause();
                             }
                           }
                         }}
@@ -882,15 +899,9 @@ export default function HighlightModal({
               <button
                 type="button"
                 onClick={handleNext}
-                disabled={
-                  currentIndex === mediaItems.length - 1 ||
-                  isCropping ||
-                  showVideoTrimmer
-                }
+                disabled={currentIndex === mediaItems.length - 1 || isCropping}
                 className={`hidden md:flex absolute h-24 my-auto inset-y-0 right-0 items-center justify-end pr-4 z-20 p-2 rounded-full bg-black bg-opacity-50 text-white ${
-                  currentIndex === mediaItems.length - 1 ||
-                  isCropping ||
-                  showVideoTrimmer
+                  currentIndex === mediaItems.length - 1 || isCropping
                     ? "opacity-50"
                     : "hover:bg-opacity-70"
                 }`}
