@@ -129,81 +129,6 @@ export default function HighlightModal({
     });
   };
 
-  // const handleFileChange = async (
-  //   event: React.ChangeEvent<HTMLInputElement>,
-  // ) => {
-  //   const files = event.target.files;
-  //   if (!files || files.length === 0) return;
-
-  //   const newMediaItems: MediaItem[] = [];
-  //   const filesToProcess = Array.from(files);
-
-  //   // Revoke old URLs from previous mediaItems before setting new ones
-  //   // Only revoke if we are replacing all media (e.g., going from empty to having media)
-  //   if (mediaItems.length > 0) {
-  //     for (const item of mediaItems) {
-  //       URL.revokeObjectURL(item.url);
-  //     }
-  //   }
-
-  //   for (const file of filesToProcess) {
-  //     const url = URL.createObjectURL(file);
-
-  //     if (file.type.startsWith("video")) {
-  //       let duration = 0;
-  //       let thumbnail = "";
-
-  //       try {
-  //         duration = await getVideoDuration(url);
-  //         thumbnail = await generateVideoThumbnail(file);
-  //       } catch (e) {
-  //         console.error("Skipping video due to metadata error:", file.name, e);
-  //         URL.revokeObjectURL(url); // Clean up the URL if metadata failed
-  //         continue; // Skip to next file
-  //       }
-
-  //       // Enforce 1-minute upload limit here
-  //       if (duration > maxVideoUploadDuration) {
-  //         alert(
-  //           `Video "${file.name}" is longer than ${maxVideoUploadDuration} seconds and will be trimmed to the first ${maxVideoUploadDuration} seconds.`,
-  //         );
-  //         // Automatically trim to the first 1 minute if it's too long
-  //         newMediaItems.push({
-  //           url,
-  //           file,
-  //           type: "video",
-  //           duration, // Keep original duration for reference
-  //           startTime: 0,
-  //           endTime: maxVideoUploadDuration, // Cap at maxVideoUploadDuration
-  //           thumbnail,
-  //         });
-  //       } else {
-  //         newMediaItems.push({
-  //           url,
-  //           file,
-  //           type: "video",
-  //           duration,
-  //           startTime: 0,
-  //           endTime: duration, // Full duration if within limit
-  //           thumbnail,
-  //         });
-  //       }
-  //     } else {
-  //       newMediaItems.push({ url, file, type: "image" });
-  //     }
-  //   }
-
-  //   if (newMediaItems.length > 0) {
-  //     setMediaItems(newMediaItems);
-  //     setCurrentIndex(0); // Reset to first item
-  //     setStep(2);
-  //   }
-  //   // Clear the file input to allow selecting the same files again
-  //   if (fileInputRef.current) {
-  //     fileInputRef.current.value = "";
-  //   }
-  // };
-
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -213,9 +138,12 @@ export default function HighlightModal({
     const newMediaItems: MediaItem[] = [];
     const filesToProcess = Array.from(files);
 
-    // Revoke old URLs
-    for (const item of mediaItems) {
-      URL.revokeObjectURL(item.url);
+    // Revoke old URLs from previous mediaItems before setting new ones
+    // Only revoke if we are replacing all media (e.g., going from empty to having media)
+    if (mediaItems.length > 0) {
+      for (const item of mediaItems) {
+        URL.revokeObjectURL(item.url);
+      }
     }
 
     for (const file of filesToProcess) {
@@ -230,22 +158,36 @@ export default function HighlightModal({
           thumbnail = await generateVideoThumbnail(file);
         } catch (e) {
           console.error("Skipping video due to metadata error:", file.name, e);
-          URL.revokeObjectURL(url);
-          continue;
+          URL.revokeObjectURL(url); // Clean up the URL if metadata failed
+          continue; // Skip to next file
         }
 
-        const endTime =
-          duration > maxVideoUploadDuration ? maxVideoUploadDuration : duration;
-
-        newMediaItems.push({
-          url,
-          file,
-          type: "video",
-          duration,
-          startTime: 0,
-          endTime,
-          thumbnail,
-        });
+        // Enforce 1-minute upload limit here
+        if (duration > maxVideoUploadDuration) {
+          alert(
+            `Video "${file.name}" is longer than ${maxVideoUploadDuration} seconds and will be trimmed to the first ${maxVideoUploadDuration} seconds.`,
+          );
+          // Automatically trim to the first 1 minute if it's too long
+          newMediaItems.push({
+            url,
+            file,
+            type: "video",
+            duration, // Keep original duration for reference
+            startTime: 0,
+            endTime: maxVideoUploadDuration, // Cap at maxVideoUploadDuration
+            thumbnail,
+          });
+        } else {
+          newMediaItems.push({
+            url,
+            file,
+            type: "video",
+            duration,
+            startTime: 0,
+            endTime: duration, // Full duration if within limit
+            thumbnail,
+          });
+        }
       } else {
         newMediaItems.push({ url, file, type: "image" });
       }
@@ -253,10 +195,10 @@ export default function HighlightModal({
 
     if (newMediaItems.length > 0) {
       setMediaItems(newMediaItems);
-      setCurrentIndex(0);
+      setCurrentIndex(0); // Reset to first item
       setStep(2);
     }
-
+    // Clear the file input to allow selecting the same files again
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -307,25 +249,6 @@ export default function HighlightModal({
     setIsPlaying(false);
     setShowVideoTrimmer(false);
   };
-
-  // // Video trimming functions
-  // const toggleVideoTrimmer = () => {
-  //   if (currentMedia?.type === "video" && videoRef.current) {
-  //     setShowVideoTrimmer(!showVideoTrimmer);
-  //     if (!showVideoTrimmer) {
-  //       // If opening trimmer
-  //       // Initialize trim values based on current media's saved trim or full duration
-  //       setTrimStart(currentMedia.startTime || 0);
-  //       setTrimEnd(currentMedia.endTime || currentMedia.duration || 0);
-
-  //       if (videoTrimmerRef.current) {
-  //         videoTrimmerRef.current.currentTime = currentMedia.startTime || 0;
-  //         videoTrimmerRef.current.pause(); // Ensure trimmer video is paused when opened
-  //       }
-  //     }
-  //     setIsPlaying(false); // Pause main video when opening trimmer
-  //   }
-  // };
 
   const handleTrackEditorClick = (e: React.MouseEvent) => {
     if (
@@ -459,55 +382,6 @@ export default function HighlightModal({
       videoTrimmerRef.current.pause();
     }
   }, [trimStart]);
-
-  // const applyTrim = () => {
-  //   if (currentMedia?.type === "video") {
-  //     const updatedMediaItems = [...mediaItems];
-  //     updatedMediaItems[currentIndex] = {
-  //       ...updatedMediaItems[currentIndex],
-  //       startTime: trimStart,
-  //       endTime: trimEnd,
-  //     } as MediaItem;
-
-  //     setMediaItems(updatedMediaItems);
-  //     setShowVideoTrimmer(false);
-
-  //     if (videoRef.current) {
-  //       // Stop any current playback
-  //       videoRef.current.pause();
-  //       setIsPlaying(false);
-
-  //       // Set the current time immediately
-  //       videoRef.current.currentTime = trimStart;
-
-  //       // IMPORTANT: Call load() and then wait for 'canplay' or 'loadeddata'
-  //       // before attempting to play to avoid the "interrupted by new load" error.
-  //       // We ensure the video is ready to play from the new start time.
-  //       videoRef.current.load();
-
-  //       const playAfterLoad = () => {
-  //         if (videoRef.current) {
-  //           videoRef.current
-  //             .play()
-  //             .then(() => {
-  //               setIsPlaying(true);
-  //             })
-  //             .catch((error) => {
-  //               console.error("Error playing video after trim:", error);
-  //               // Handle cases where play() fails (e.g., autoplay policies)
-  //               // Maybe show a play button to the user instead
-  //             });
-  //           videoRef.current.removeEventListener("canplay", playAfterLoad);
-  //           videoRef.current.removeEventListener("loadeddata", playAfterLoad);
-  //         }
-  //       };
-
-  //       videoRef.current.addEventListener("canplay", playAfterLoad);
-  //       // Fallback for some browsers or scenarios
-  //       videoRef.current.addEventListener("loadeddata", playAfterLoad);
-  //     }
-  //   }
-  // };
 
   const handleCropped = (croppedFile: File) => {
     const updatedMediaItems = [...mediaItems];
@@ -911,6 +785,7 @@ export default function HighlightModal({
                     alt="Selected media"
                     fill
                     className="object-contain"
+                    unoptimized
                   />
                 ) : (
                   <div className="relative flex items-center justify-center w-full">
