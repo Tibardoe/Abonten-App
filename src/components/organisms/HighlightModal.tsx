@@ -113,19 +113,42 @@ export default function HighlightModal({
     }
   };
 
+  // const getVideoDuration = (url: string): Promise<number> => {
+  //   return new Promise((resolve, reject) => {
+  //     const video = document.createElement("video");
+  //     video.src = url;
+  //     video.onloadedmetadata = () => {
+  //       resolve(video.duration);
+  //     };
+  //     video.onerror = () => {
+  //       console.error("Error loading video metadata for:", url);
+  //       reject(new Error("Failed to load video metadata."));
+  //     };
+  //     // For some browsers, play() might be needed to load metadata immediately
+  //     // video.play().catch(() => {}); // Play and catch error if not allowed
+  //   });
+  // };
   const getVideoDuration = (url: string): Promise<number> => {
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
       video.src = url;
+      video.preload = "metadata";
+      video.muted = true;
+      video.playsInline = true;
+      video.style.display = "none";
+
+      document.body.appendChild(video);
+
       video.onloadedmetadata = () => {
-        resolve(video.duration);
+        const duration = video.duration;
+        document.body.removeChild(video);
+        resolve(duration);
       };
+
       video.onerror = () => {
-        console.error("Error loading video metadata for:", url);
+        document.body.removeChild(video);
         reject(new Error("Failed to load video metadata."));
       };
-      // For some browsers, play() might be needed to load metadata immediately
-      // video.play().catch(() => {}); // Play and catch error if not allowed
     });
   };
 
