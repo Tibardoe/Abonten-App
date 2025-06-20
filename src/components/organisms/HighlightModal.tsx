@@ -1,10 +1,12 @@
+import type { MediaItem } from "@/types/mediaItemType";
+import formatDuration from "@/utils/formatVideoDuration";
+import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   PauseIcon,
   PlayIcon,
   ScissorsIcon,
-  Trash2Icon,
   Volume2Icon,
   VolumeXIcon,
 } from "lucide-react";
@@ -12,20 +14,12 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineCancel } from "react-icons/md";
+import ThumbnailStrip from "../molecules/ThumbnailStrip";
 import { Button } from "../ui/button";
 import ImageCropper from "./ImageCropper";
 
 type ClosePopupModalType = {
   handleShowHighlightModal: (state: boolean) => void;
-};
-
-type MediaItem = {
-  url: string;
-  file: File;
-  type: "image" | "video";
-  duration?: number; // Original full duration for videos
-  startTime?: number; // Trimmed start time
-  endTime?: number; // Trimmed end time
 };
 
 export default function HighlightModal({
@@ -157,8 +151,11 @@ export default function HighlightModal({
 
       if (file.type.startsWith("video")) {
         let duration = 0;
+        let thumbnail = "";
+
         try {
           duration = await getVideoDuration(url);
+          thumbnail = await generateVideoThumbnail(file);
         } catch (e) {
           console.error("Skipping video due to metadata error:", file.name, e);
           URL.revokeObjectURL(url); // Clean up the URL if metadata failed
@@ -178,6 +175,7 @@ export default function HighlightModal({
             duration, // Keep original duration for reference
             startTime: 0,
             endTime: maxVideoUploadDuration, // Cap at maxVideoUploadDuration
+            thumbnail,
           });
         } else {
           newMediaItems.push({
@@ -187,6 +185,7 @@ export default function HighlightModal({
             duration,
             startTime: 0,
             endTime: duration, // Full duration if within limit
+            thumbnail,
           });
         }
       } else {
@@ -516,15 +515,6 @@ export default function HighlightModal({
   }, []);
 
   // Effect to manage current media item when currentIndex changes
-  // useEffect(() => {
-  //   setIsPlaying(false);
-  //   setShowVideoTrimmer(false);
-  //   // Ensure video is loaded with correct start time when switching items
-  //   if (videoRef.current && currentMedia?.type === "video") {
-  //     videoRef.current.currentTime = currentMedia.startTime || 0;
-  //     videoRef.current.load(); // Explicitly load to ensure correct segment is ready
-  //   }
-  // }, [currentMedia]);
   useEffect(() => {
     setIsPlaying(false);
     setShowVideoTrimmer(false);
@@ -979,80 +969,14 @@ export default function HighlightModal({
           ) : null}
 
           {/* Thumbnail strip */}
-          {(step === 2 || step === 3) &&
-            mediaItems.length > 0 &&
-            !isCropping &&
-            !showVideoTrimmer && (
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center px-4">
-                <div className="flex gap-2 overflow-x-auto py-2">
-                  {mediaItems.map((item, index) => (
-                    <div
-                      key={item.url} // Using item.url as key for better stability if order changes
-                      className={`relative w-16 h-16 rounded-md overflow-hidden ${
-                        currentIndex === index
-                          ? "ring-2 ring-black"
-                          : "opacity-70"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setCurrentIndex(index)}
-                        className="w-full h-full"
-                      >
-                        {item.type === "image" ? (
-                          <Image
-                            src={item.url}
-                            alt="Thumbnail"
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <>
-                            <video
-                              src={item.url}
-                              className="w-full h-full object-cover"
-                            >
-                              <track
-                                kind="captions"
-                                srcLang="en"
-                                label="No captions"
-                              />
-                            </video>
-
-                            <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
-                              {/* Display trimmed duration for thumbnails */}
-                              {item.startTime !== undefined &&
-                              item.endTime !== undefined
-                                ? formatDuration(item.endTime - item.startTime)
-                                : formatDuration(item.duration || 0)}
-                            </div>
-                          </>
-                        )}
-                      </button>
-
-                      {currentIndex === index && (
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(index)}
-                          className="absolute top-[50%] right-[50%] bg-black bg-opacity-50 text-white rounded-md transform translate-x-1/2 -translate-y-1/2"
-                        >
-                          <Trash2Icon className="text-5xl" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <ThumbnailStrip
+            currentIndex={currentIndex}
+            mediaItems={mediaItems}
+            setCurrentIndex={setCurrentIndex}
+            handleDelete={handleDelete}
+          />
         </div>
       </div>
     </div>
   );
-}
-
-// Helper function to format duration (seconds to MM:SS)
-function formatDuration(duration: number): string {
-  const minutes = Math.floor(duration / 60);
-  const seconds = Math.floor(duration % 60);
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
