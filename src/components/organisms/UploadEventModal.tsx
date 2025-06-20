@@ -7,6 +7,7 @@ import { getUserCurrency } from "@/utils/getUserCurrency";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
+import { ScissorsIcon } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -78,6 +79,8 @@ export default function UploadEventModal({
   const [selectedAddress, setSelectedAddress] = useState("");
 
   const [category, setCategory] = useState("");
+
+  const [showCrop, setShowCrop] = useState(false);
 
   const [ticket, setTicket] = useState<string | null>(null);
 
@@ -431,30 +434,46 @@ export default function UploadEventModal({
                   />
                 </button>
 
-                <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
-                  Crop
-                </h1>
-
-                {/* <button
+                <button
                   type="button"
                   className="font-bold"
                   onClick={() => setStep((prevStep) => prevStep + 1)}
                   disabled={isUploading}
                 >
                   Next
-                </button> */}
+                </button>
               </div>
 
               <hr />
             </div>
-            <div className="flex flex-col items-center gap-5 mt-5 w-[90%] h-[90%]">
-              <ImageCropper
-                imagePreview={imagePreview}
-                handleCropped={handleCropped}
-                handleCancel={() => {
-                  handleClosePopup(false);
-                }}
-              />
+            <div className="relative flex flex-col items-center gap-5 mt-5 w-[90%] h-[90%]">
+              {showCrop ? (
+                <ImageCropper
+                  imagePreview={imagePreview}
+                  handleCropped={handleCropped}
+                  handleCancel={() => {
+                    handleClosePopup(false);
+                  }}
+                />
+              ) : (
+                <div>
+                  <button
+                    type="button"
+                    className="bg-black bg-opacity-50 p-2 rounded-full absolute top-0 right-4"
+                    onClick={() => setShowCrop((prevState) => !prevState)}
+                  >
+                    <ScissorsIcon className="w-5 h-5 text-black" />
+                  </button>
+
+                  <Image
+                    src={croppedPreview ?? imagePreview}
+                    alt="Selected Avatar"
+                    width={0}
+                    height={0}
+                    className="w-full md:w-[50%] object-contain mx-auto"
+                  />
+                </div>
+              )}
             </div>
           </>
         )}

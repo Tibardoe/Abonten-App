@@ -50,7 +50,7 @@ export default function ImageCropper({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [scale, setScale] = useState(1);
   const [rotate, setRotate] = useState(0);
-  const [aspect, setAspect] = useState<number | undefined>(16 / 9);
+  const [aspect, setAspect] = useState<number | undefined>(undefined);
   const [showControls, setShowControls] = useState(true);
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
@@ -129,14 +129,29 @@ export default function ImageCropper({
     <div className="space-y-4 md:p-4 w-full md:overflow-y-scroll mb-5">
       {!!imagePreview && (
         <>
-          <div className="flex justify-between items-center mb-2 ml-7">
-            <button
-              type="button"
-              onClick={() => setShowControls(!showControls)}
-              className="text-sm text-gray-600 hover:text-gray-900"
-            >
-              {showControls ? "Hide Controls" : "Show Controls"}
-            </button>
+          <div className="flex justify-between items-center mt-16 md:mt-0">
+            <div className="flex justify-between gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="min-w-[100px]"
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCropSave} className="min-w-[100px]">
+                Save Changes
+              </Button>
+            </div>
+
+            <div className="flex justify-between items-center mb-2 ml-7">
+              <button
+                type="button"
+                onClick={() => setShowControls(!showControls)}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                {showControls ? "Hide Controls" : "Show Controls"}
+              </button>
+            </div>
           </div>
 
           <div className="relative flex flex-col w-[75%] mx-auto">
@@ -223,19 +238,6 @@ export default function ImageCropper({
               </div>
             </div>
           )}
-
-          <div className="flex justify-end gap-3 pt-4 border-t mr-5 md:ml-0">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              className="min-w-[100px]"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCropSave} className="min-w-[100px]">
-              Save Changes
-            </Button>
-          </div>
         </>
       )}
     </div>
