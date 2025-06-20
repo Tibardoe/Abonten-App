@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineCancel } from "react-icons/md";
 import { Button } from "../ui/button";
 import ImageCropper from "./ImageCropper";
@@ -250,24 +251,24 @@ export default function HighlightModal({
     setShowVideoTrimmer(false);
   };
 
-  // Video trimming functions
-  const toggleVideoTrimmer = () => {
-    if (currentMedia?.type === "video" && videoRef.current) {
-      setShowVideoTrimmer(!showVideoTrimmer);
-      if (!showVideoTrimmer) {
-        // If opening trimmer
-        // Initialize trim values based on current media's saved trim or full duration
-        setTrimStart(currentMedia.startTime || 0);
-        setTrimEnd(currentMedia.endTime || currentMedia.duration || 0);
+  // // Video trimming functions
+  // const toggleVideoTrimmer = () => {
+  //   if (currentMedia?.type === "video" && videoRef.current) {
+  //     setShowVideoTrimmer(!showVideoTrimmer);
+  //     if (!showVideoTrimmer) {
+  //       // If opening trimmer
+  //       // Initialize trim values based on current media's saved trim or full duration
+  //       setTrimStart(currentMedia.startTime || 0);
+  //       setTrimEnd(currentMedia.endTime || currentMedia.duration || 0);
 
-        if (videoTrimmerRef.current) {
-          videoTrimmerRef.current.currentTime = currentMedia.startTime || 0;
-          videoTrimmerRef.current.pause(); // Ensure trimmer video is paused when opened
-        }
-      }
-      setIsPlaying(false); // Pause main video when opening trimmer
-    }
-  };
+  //       if (videoTrimmerRef.current) {
+  //         videoTrimmerRef.current.currentTime = currentMedia.startTime || 0;
+  //         videoTrimmerRef.current.pause(); // Ensure trimmer video is paused when opened
+  //       }
+  //     }
+  //     setIsPlaying(false); // Pause main video when opening trimmer
+  //   }
+  // };
 
   const handleTrackEditorClick = (e: React.MouseEvent) => {
     if (
@@ -723,7 +724,7 @@ export default function HighlightModal({
               </button>
 
               {/* Media display */}
-              <div className="w-[95%] h-[70%] flex items-center justify-center relative overflow-hidden">
+              <div className="w-full flex items-center justify-center relative overflow-hidden">
                 {currentMedia.type === "image" ? (
                   <Image
                     src={currentMedia.url}
@@ -732,9 +733,9 @@ export default function HighlightModal({
                     className="object-contain"
                   />
                 ) : (
-                  <div className="relative flex items-center justify-center w-full h-full">
+                  <div className="relative flex items-center justify-center w-full h-full aspect-video">
                     <video
-                      ref={videoRef}
+                      ref={videoTrimmerRef}
                       src={currentMedia.url}
                       className="max-w-full max-h-full"
                       onClick={togglePlayPause}
@@ -747,20 +748,36 @@ export default function HighlightModal({
                       tabIndex={0} // Makes the video focusable by keyboard
                       onEnded={handleVideoEnded}
                       muted={isMuted}
+                      // controls={false} // Disable default controls to manage manually
+                      playsInline
+                      webkit-playsinline="true"
                       onLoadedMetadata={(e) => {
-                        e.currentTarget.currentTime =
-                          currentMedia.startTime || 0;
+                        // Always set current time to trimStart when metadata loads
+                        e.currentTarget.currentTime = trimStart;
                       }}
-                      onTimeUpdate={(e) => {
-                        if (isPlaying && currentMedia.endTime !== undefined) {
-                          if (
-                            e.currentTarget.currentTime >= currentMedia.endTime
-                          ) {
-                            e.currentTarget.pause();
-                            e.currentTarget.currentTime =
-                              currentMedia.startTime || 0;
-                            setIsPlaying(false);
-                          }
+                      onTimeUpdate={() => {
+                        // Update playhead position on the track editor
+                        if (
+                          trackEditorRef.current &&
+                          videoTrimmerRef.current &&
+                          currentMedia?.duration
+                        ) {
+                          const playheadPercentage =
+                            (videoTrimmerRef.current.currentTime /
+                              currentMedia.duration) *
+                            100;
+                          trackEditorRef.current.style.setProperty(
+                            "--playhead-position",
+                            `${playheadPercentage}%`,
+                          );
+                        }
+
+                        // Loop playback within trim range
+                        if (
+                          videoTrimmerRef.current &&
+                          videoTrimmerRef.current.currentTime >= trimEnd
+                        ) {
+                          videoTrimmerRef.current.currentTime = trimStart;
                         }
                       }}
                     />
@@ -769,7 +786,17 @@ export default function HighlightModal({
                     <div className="absolute inset-0 flex items-center justify-center">
                       <button
                         type="button"
-                        onClick={togglePlayPause}
+                        onClick={() => {
+                          if (videoTrimmerRef.current) {
+                            if (videoTrimmerRef.current.paused) {
+                              setIsPlaying(true);
+                              videoTrimmerRef.current.play();
+                            } else {
+                              setIsPlaying(false);
+                              videoTrimmerRef.current.pause();
+                            }
+                          }
+                        }}
                         className="p-4 bg-black bg-opacity-50 rounded-full"
                       >
                         {isPlaying ? (
@@ -780,42 +807,125 @@ export default function HighlightModal({
                       </button>
                     </div>
 
-                    {/* Video duration indicator */}
-                    <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
-                      {/* Display trimmed duration if applicable, otherwise full duration */}
-                      {currentMedia.startTime !== undefined &&
-                      currentMedia.endTime !== undefined
-                        ? formatDuration(
-                            currentMedia.endTime - currentMedia.startTime,
-                          )
-                        : formatDuration(currentMedia.duration || 0)}
+                    {/* Track editor */}
+                    <div className="absolute self-start w-full md:w-[50%] mt-48 space-y-2 md:mt-20">
+                      <div className="px-2">
+                        <div className="flex justify-between text-white text-sm mb-2">
+                          <span>Start: {formatDuration(trimStart)}</span>
+                          <span>End: {formatDuration(trimEnd)}</span>
+                          <span>
+                            Duration: {formatDuration(trimEnd - trimStart)}
+                          </span>
+                        </div>
+
+                        {/* WhatsApp-like track editor */}
+                        <div
+                          ref={trackEditorRef}
+                          className="relative h-16 bg-gray-800 rounded-md cursor-pointer"
+                          onClick={handleTrackEditorClick}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleTrackEditorClick(
+                                e as unknown as React.MouseEvent,
+                              ); // Cast to reuse the same function
+                            }
+                          }}
+                          style={
+                            {
+                              "--playhead-position": "0%",
+                            } as React.CSSProperties
+                          } // Initialize custom CSS variable
+                        >
+                          {/* Preview thumbnails would go here in a real implementation */}
+                          <div className="absolute inset-0 bg-gray-600 opacity-50">
+                            Preview thumbnail
+                          </div>
+
+                          {/* Trim handles */}
+                          <button
+                            type="button"
+                            className="absolute top-0 bottom-0 bg-black cursor-ew-resize z-20" // Increased z-index
+                            style={{
+                              left: `${
+                                (trimStart / (currentMedia.duration || 1)) * 100
+                              }%`,
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleDragStart("start", e);
+                            }}
+                          >
+                            <FaChevronLeft className="text-2xl text-white" />
+                          </button>
+
+                          <button
+                            type="button"
+                            className="absolute top-0 bottom-0 bg-black cursor-ew-resize z-20" // Increased z-index
+                            style={{
+                              right: `${
+                                100 -
+                                (trimEnd / (currentMedia.duration || 1)) * 100
+                              }%`,
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleDragStart("end", e);
+                            }}
+                          >
+                            <FaChevronRight className="text-2xl text-white" />
+                          </button>
+
+                          {/* Selected range - Middle draggable part */}
+                          <div
+                            className="absolute top-0 bottom-0 border-2 border-black bg-white bg-opacity-90 opacity-30 cursor-grab z-10" // Lower z-index than handles
+                            style={{
+                              left: `${
+                                (trimStart / (currentMedia.duration || 1)) * 100
+                              }%`,
+                              right: `${
+                                100 -
+                                (trimEnd / (currentMedia.duration || 1)) * 100
+                              }%`,
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleDragStart("middle", e);
+                            }}
+                          />
+                          {/* Playhead for trimmer */}
+                          <div
+                            className="absolute top-0 bottom-0 w-1 bg-white z-20" // Increased z-index
+                            style={{
+                              left: "var(--playhead-position)", // Use custom CSS variable
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center px-2 gap-2">
+                        {/* Mute button */}
+                        <button
+                          type="button"
+                          onClick={toggleMute}
+                          className="bg-black bg-opacity-50 p-2 rounded-full"
+                        >
+                          {isMuted ? (
+                            <VolumeXIcon className="w-5 h-5 text-white" />
+                          ) : (
+                            <Volume2Icon className="w-5 h-5 text-white" />
+                          )}
+                        </button>
+
+                        {/* Video duration indicator */}
+                        <div className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                          {formatDuration(trimEnd - trimStart)}
+                        </div>
+                      </div>
                     </div>
-
-                    {/* Mute button */}
-                    <button
-                      type="button"
-                      onClick={toggleMute}
-                      className="absolute top-4 right-16 bg-black bg-opacity-50 p-2 rounded-full"
-                    >
-                      {isMuted ? (
-                        <VolumeXIcon className="w-5 h-5 text-white" />
-                      ) : (
-                        <Volume2Icon className="w-5 h-5 text-white" />
-                      )}
-                    </button>
-
-                    {/* Trim button */}
-                    {currentMedia.type === "video" && (
-                      <button
-                        type="button"
-                        onClick={toggleVideoTrimmer}
-                        className="absolute top-4 right-4 bg-black bg-opacity-50 p-2 rounded-full"
-                      >
-                        <ScissorsIcon className="w-5 h-5 text-white" />
-                      </button>
-                    )}
                   </div>
                 )}
+
                 {/* Crop button for images, visible only if not currently cropping */}
                 {currentMedia?.type === "image" && !isCropping && (
                   <button
@@ -852,170 +962,6 @@ export default function HighlightModal({
               </button>
             </div>
           ) : null}
-
-          {/* Video Trimmer Overlay */}
-          {showVideoTrimmer && currentMedia?.type === "video" && (
-            <div className="absolute inset-0 bg-black bg-opacity-90 z-30 flex flex-col items-center justify-center p-4">
-              <div className="w-full max-w-2xl">
-                <video
-                  ref={videoTrimmerRef}
-                  src={currentMedia.url}
-                  className="w-full h-50%"
-                  controls={false} // Disable default controls to manage manually
-                  onLoadedMetadata={(e) => {
-                    // Always set current time to trimStart when metadata loads
-                    e.currentTarget.currentTime = trimStart;
-                  }}
-                  onTimeUpdate={() => {
-                    // Update playhead position on the track editor
-                    if (
-                      trackEditorRef.current &&
-                      videoTrimmerRef.current &&
-                      currentMedia?.duration
-                    ) {
-                      const playheadPercentage =
-                        (videoTrimmerRef.current.currentTime /
-                          currentMedia.duration) *
-                        100;
-                      trackEditorRef.current.style.setProperty(
-                        "--playhead-position",
-                        `${playheadPercentage}%`,
-                      );
-                    }
-
-                    // Loop playback within trim range
-                    if (
-                      videoTrimmerRef.current &&
-                      videoTrimmerRef.current.currentTime >= trimEnd
-                    ) {
-                      videoTrimmerRef.current.currentTime = trimStart;
-                    }
-                  }}
-                >
-                  <track kind="captions" srcLang="en" label="No captions" />
-                </video>
-
-                <div className="mt-4">
-                  <div className="flex justify-between text-white text-sm mb-2">
-                    <span>Start: {formatDuration(trimStart)}</span>
-                    <span>End: {formatDuration(trimEnd)}</span>
-                    <span>Duration: {formatDuration(trimEnd - trimStart)}</span>
-                  </div>
-
-                  {/* WhatsApp-like track editor */}
-                  <div
-                    ref={trackEditorRef}
-                    className="relative h-16 bg-gray-700 rounded-md cursor-pointer"
-                    onClick={handleTrackEditorClick}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        handleTrackEditorClick(
-                          e as unknown as React.MouseEvent,
-                        ); // Cast to reuse the same function
-                      }
-                    }}
-                    style={
-                      { "--playhead-position": "0%" } as React.CSSProperties
-                    } // Initialize custom CSS variable
-                  >
-                    {/* Preview thumbnails would go here in a real implementation */}
-                    <div className="absolute inset-0 bg-gray-600 opacity-50">
-                      Preview thumbnail
-                    </div>
-
-                    {/* Trim handles */}
-                    <div
-                      className="absolute top-0 bottom-0 w-2 bg-blue-500 cursor-ew-resize z-20" // Increased z-index
-                      style={{
-                        left: `${
-                          (trimStart / (currentMedia.duration || 1)) * 100
-                        }%`,
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        handleDragStart("start", e);
-                      }}
-                    />
-                    <div
-                      className="absolute top-0 bottom-0 w-2 bg-blue-500 cursor-ew-resize z-20" // Increased z-index
-                      style={{
-                        right: `${
-                          100 - (trimEnd / (currentMedia.duration || 1)) * 100
-                        }%`,
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        handleDragStart("end", e);
-                      }}
-                    />
-
-                    {/* Selected range - Middle draggable part */}
-                    <div
-                      className="absolute top-0 bottom-0 bg-blue-500 opacity-30 cursor-grab z-10" // Lower z-index than handles
-                      style={{
-                        left: `${
-                          (trimStart / (currentMedia.duration || 1)) * 100
-                        }%`,
-                        right: `${
-                          100 - (trimEnd / (currentMedia.duration || 1)) * 100
-                        }%`,
-                      }}
-                      onMouseDown={(e) => {
-                        e.stopPropagation();
-                        handleDragStart("middle", e);
-                      }}
-                    />
-                    {/* Playhead for trimmer */}
-                    <div
-                      className="absolute top-0 bottom-0 w-1 bg-white z-20" // Increased z-index
-                      style={{
-                        left: "var(--playhead-position)", // Use custom CSS variable
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-center mt-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (videoTrimmerRef.current) {
-                          if (videoTrimmerRef.current.paused) {
-                            videoTrimmerRef.current.play();
-                          } else {
-                            videoTrimmerRef.current.pause();
-                          }
-                        }
-                      }}
-                      className="p-2 bg-gray-800 rounded-full text-white"
-                    >
-                      {videoTrimmerRef.current?.paused ? (
-                        <PlayIcon className="w-5 h-5" />
-                      ) : (
-                        <PauseIcon className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-4 mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowVideoTrimmer(false)}
-                    className="px-4 py-2 text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={applyTrim}
-                    className="px-4 py-2 bg-white text-black rounded-md"
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* Thumbnail strip */}
           {(step === 2 || step === 3) &&
