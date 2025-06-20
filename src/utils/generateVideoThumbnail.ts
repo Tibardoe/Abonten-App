@@ -2,35 +2,52 @@ export const generateVideoThumbnail = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
     const canvas = document.createElement("canvas");
+    const url = URL.createObjectURL(file);
 
     video.preload = "metadata";
-    video.src = URL.createObjectURL(file);
+    video.src = url;
     video.muted = true;
     video.playsInline = true;
 
-    video.addEventListener("loadeddata", () => {
-      // Seek to 1 second or 0.1 if too short
-      video.currentTime = Math.min(1, video.duration - 0.1);
-    });
+    // Handle error loading video
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject("Error loading video for thumbnail generation.");
+    };
 
-    video.addEventListener("seeked", () => {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+    // When metadata is loaded, we can seek
+    video.onloadedmetadata = () => {
+      const duration = video.duration;
 
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const thumbnail = canvas.toDataURL("image/png");
-        resolve(thumbnail);
-      } else {
-        reject("Canvas context is null");
+      if (!duration || Number.isNaN(duration)) {
+        URL.revokeObjectURL(url);
+        reject("Invalid video duration.");
+        return;
       }
 
-      URL.revokeObjectURL(video.src); // cleanup
-    });
+      const seekTo = Math.min(1, duration / 2); // Seek to 1s or middle of video
 
-    video.addEventListener("error", (e) => {
-      reject("Error generating video thumbnail");
-    });
+      // Listen for seek completion
+      video.currentTime = seekTo;
+
+      video.onseeked = () => {
+        try {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Failed to get canvas context.");
+
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const thumbnail = canvas.toDataURL("image/png");
+
+          resolve(thumbnail);
+        } catch (err) {
+          reject("Thumbnail generation failed.");
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      };
+    };
   });
 };
