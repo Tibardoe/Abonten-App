@@ -19,6 +19,7 @@ export default function Higlight() {
 
       <button
         type="button"
+        className="shrink-0"
         onClick={() => {
           handleShowHighlightModal(true);
         }}

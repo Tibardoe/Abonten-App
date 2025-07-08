@@ -13,7 +13,7 @@ export async function userSubscription() {
 
   const { data: subscription, error } = await supabase
     .from("subscription")
-    .select("id, subscription_plan:plan_id(name)")
+    .select("*, subscription_plan:plan_id(name)")
     .eq("user_id", user.user.id)
     .maybeSingle(); // Works because each user has at most one subscription
 
@@ -26,6 +26,12 @@ export async function userSubscription() {
 
   if (!subscription) {
     return { status: 404, message: "No active subscription found" };
+  }
+
+  const now: Date = new Date();
+
+  if (subscription.end_date < now) {
+    return { status: 401, message: "Your subscription has expired!" };
   }
 
   return { status: 200, data: subscription };

@@ -19,10 +19,15 @@ export default {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-100%)" },
         },
+        progressFill: {
+          "0%": { width: "0" },
+          "100%": { width: "100%" },
+        },
       },
       animation: {
         slideIn: "slideIn 0.5s ease-in-out forwards",
         slideOut: "slideOut 0.5s ease-in-out forwards",
+        story: "progressFill 3s linear forwards",
       },
       backgroundImage: {
         landing: "url('/assets/images/landingpageBackgroound.jpg')",

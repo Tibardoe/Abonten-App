@@ -2,6 +2,7 @@ import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import { getUserRating } from "@/actions/getUserRating";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
+import UserHighlights from "@/components/molecules/UserHighlights";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import SettingsButton from "../atoms/SettingsButton";
@@ -91,7 +92,11 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
         <div className="flex flex-col gap-3">
           <h2 className="font-semibold">Highlights</h2>
 
-          {isCurrentUser && <Higlight />}
+          <div className="flex items-center gap-2 overflow-hidden">
+            {isCurrentUser && <Higlight />}
+
+            <UserHighlights avatarUrl={avatarUrl} username={username} />
+          </div>
         </div>
 
         <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
@@ -147,7 +152,11 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
         <div className="flex flex-col gap-3">
           <h2 className="font-semibold">Highlights</h2>
 
-          {isCurrentUser && <Higlight />}
+          <div className="flex items-center gap-2">
+            {isCurrentUser && <Higlight />}
+
+            <UserHighlights avatarUrl={avatarUrl} username={username} />
+          </div>
         </div>
 
         <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
