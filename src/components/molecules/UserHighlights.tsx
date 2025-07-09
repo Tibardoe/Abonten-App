@@ -1,5 +1,7 @@
 "use client";
 
+import getUserHighlight from "@/actions/getUserHighlights";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IoMdArrowBack } from "react-icons/io";
@@ -14,52 +16,6 @@ type HighlightProps = {
 
 const slideDuration = 3000;
 
-const media = [
-  {
-    posts: [
-      "/assets/eventFlyers/flyer1.jpg",
-      "/assets/eventFlyers/flyer2.jpg",
-      "/assets/eventFlyers/flyer3.jpg",
-      "/assets/eventFlyers/flyer4.jpg",
-      "/assets/eventFlyers/flyer5.jpg",
-      "/assets/eventFlyers/flyer6.jpg",
-      "/assets/eventFlyers/flyer7.jpg",
-      "/assets/eventFlyers/flyer8.jpg",
-      "/assets/eventFlyers/flyer9.jpg",
-      "/assets/eventFlyers/flyer10.jpg",
-    ],
-  },
-  {
-    posts: [
-      "/assets/eventFlyers/flyer11.jpg",
-      "/assets/eventFlyers/flyer12.jpg",
-      "/assets/eventFlyers/flyer13.jpg",
-      "/assets/eventFlyers/flyer14.jpg",
-      "/assets/eventFlyers/flyer15.jpg",
-      "/assets/eventFlyers/flyer16.jpg",
-      "/assets/eventFlyers/flyer17.jpg",
-      "/assets/eventFlyers/flyer18.jpg",
-      "/assets/eventFlyers/flyer19.jpg",
-      "/assets/eventFlyers/flyer20.jpg",
-    ],
-  },
-  {
-    posts: [
-      "/assets/eventFlyers/flyer21.jpg",
-      "/assets/eventFlyers/flyer22.jpg",
-      "/assets/eventFlyers/flyer23.jpg",
-      "/assets/eventFlyers/flyer24.jpg",
-      "/assets/eventFlyers/flyer25.jpg",
-      "/assets/eventFlyers/flyer26.jpg",
-      "/assets/eventFlyers/flyer27.jpg",
-      "/assets/eventFlyers/flyer28.jpg",
-      "/assets/eventFlyers/flyer29.jpg",
-      "/assets/eventFlyers/flyer30.jpg",
-    ],
-  },
-  { posts: ["/assets/eventFlyers/flyer31.jpg"] },
-];
-
 export default function UserHighlights({
   avatarUrl,
   username,
@@ -67,6 +23,8 @@ export default function UserHighlights({
   const [showHighlight, setShowHighlight] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const [highlightError, setHighlightError] = useState<string | null>(null);
 
   const [currentHighlightIndex, setCurrentHighlightIndex] = useState<
     number | null
@@ -76,7 +34,11 @@ export default function UserHighlights({
 
   const [showRightArrow, setShowRightArrow] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const [isPaused, setIsPaused] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -84,11 +46,22 @@ export default function UserHighlights({
 
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const startTimeRef = useRef<number>(0);
+  const mediaStartTimeRef = useRef<number>(0);
 
-  const timeElapsedOnPauseRef = useRef<number>(0);
+  const mediaTimeElapsedOnPauseRef = useRef<number>(0);
 
-  const type = "image";
+  const { data: highlights } = useQuery({
+    queryKey: ["higlights"],
+    queryFn: async () => {
+      const response = await getUserHighlight(username);
+
+      if (response.status !== 200 && response.message) {
+        setHighlightError(response.message);
+      }
+
+      return response.data;
+    },
+  });
 
   useEffect(() => {
     return () => {
@@ -97,6 +70,91 @@ export default function UserHighlights({
       }
     };
   }, []);
+
+  //   useEffect(() => {
+  //     if (timeoutRef.current) {
+  //       clearTimeout(timeoutRef.current);
+  //       timeoutRef.current = null;
+  //     }
+
+  //     // if (
+  //     //   !showHighlight ||
+  //     //   typeof currentHighlightIndex !== "number" ||
+  //     //   isPaused ||
+  //     //   !highlights
+  //     // ) {
+  //     //   return;
+  //     // }
+
+  //     if (
+  //       !showHighlight ||
+  //       typeof currentHighlightIndex !== "number" ||
+  //       !highlights ||
+  //       highlights.length === 0 ||
+  //       !highlights[currentHighlightIndex]
+  //     ) {
+  //       // If highlights data isn't loaded yet or highlight is hidden, etc.
+  //       return;
+  //     }
+
+  //     const currentMedia = highlights[currentHighlightIndex][currentIndex];
+
+  //     if (!currentMedia) {
+  //       // Handle case where currentMedia might be undefined (e.g., index out of bounds)
+  //       setShowHighlight(false);
+  //       setCurrentIndex(0);
+  //       mediaTimeElapsedOnPauseRef.current = 0;
+  //       return;
+  //     }
+
+  //     const mediaType = currentMedia.media_type;
+
+  //     const currentMediaDuration =
+  //       mediaType === "video"
+  //         ? currentMedia.media_duration * 1000
+  //         : slideDuration;
+
+  //     const posts = highlights[currentHighlightIndex];
+
+  //     if (currentIndex >= posts.length) {
+  //       setShowHighlight(false);
+  //       setCurrentIndex(0);
+  //       timeElapsedOnPauseRef.current = 0;
+  //       return;
+  //     }
+
+  //     const remainingTime =
+  //       mediaType === "image"
+  //         ? slideDuration
+  //         : videoDuration - timeElapsedOnPauseRef.current;
+
+  //     startTimeRef.current = Date.now() - timeElapsedOnPauseRef.current;
+
+  //     timeoutRef.current = setTimeout(() => {
+  //       setCurrentIndex((prev) => {
+  //         timeElapsedOnPauseRef.current = 0;
+
+  //         if (prev >= posts.length - 1) {
+  //           setShowHighlight(false);
+  //           return 0;
+  //         }
+  //         return prev + 1;
+  //       });
+  //     }, remainingTime);
+
+  //     return () => {
+  //       if (timeoutRef.current) {
+  //         clearTimeout(timeoutRef.current);
+  //         timeoutRef.current = null;
+  //       }
+  //     };
+  //   }, [
+  //     showHighlight,
+  //     currentHighlightIndex,
+  //     currentIndex,
+  //     isPaused,
+  //     highlights,
+  //   ]);
 
   useEffect(() => {
     if (timeoutRef.current) {
@@ -107,35 +165,66 @@ export default function UserHighlights({
     if (
       !showHighlight ||
       typeof currentHighlightIndex !== "number" ||
-      isPaused
+      !highlights ||
+      highlights.length === 0 ||
+      !highlights[currentHighlightIndex]
     ) {
+      // If highlights data isn't loaded yet or highlight is hidden, etc.
       return;
     }
 
-    const posts = media[currentHighlightIndex].posts;
+    const currentMedia = highlights[currentHighlightIndex][currentIndex];
 
-    if (currentIndex >= posts.length) {
+    if (!currentMedia) {
+      // Handle case where currentMedia might be undefined (e.g., index out of bounds)
       setShowHighlight(false);
       setCurrentIndex(0);
-      timeElapsedOnPauseRef.current = 0;
+      mediaTimeElapsedOnPauseRef.current = 0;
       return;
     }
 
-    const remainingTime = slideDuration - timeElapsedOnPauseRef.current;
+    const mediaType = currentMedia.media_type;
+    const currentMediaDuration =
+      mediaType === "video"
+        ? currentMedia.media_duration * 1000
+        : slideDuration;
 
-    startTimeRef.current = Date.now() - timeElapsedOnPauseRef.current;
+    // Logic for playing/pausing video
+    if (videoRef.current) {
+      if (isPaused) {
+        videoRef.current.pause();
+      } else {
+        // Only play if not paused and video is loaded/ready
+        // This will be handled by the video's onLoadedMetadata or when it renders
+      }
+    }
 
-    timeoutRef.current = setTimeout(() => {
-      setCurrentIndex((prev) => {
-        timeElapsedOnPauseRef.current = 0;
+    if (isPaused) {
+      // If paused, don't set any timeout
+      return;
+    }
 
-        if (prev >= posts.length - 1) {
-          setShowHighlight(false);
-          return 0;
-        }
-        return prev + 1;
-      });
-    }, remainingTime);
+    // Calculate remaining time for the current media
+    const remainingTime =
+      currentMediaDuration - mediaTimeElapsedOnPauseRef.current;
+    mediaStartTimeRef.current = Date.now() - mediaTimeElapsedOnPauseRef.current;
+
+    // Set a new timeout to advance the slide for images or for videos if they complete naturally
+    // For videos, the onEnded event will handle progression, this timeout is a fallback or for images
+    if (mediaType === "image") {
+      timeoutRef.current = setTimeout(() => {
+        setCurrentIndex((prev) => {
+          mediaTimeElapsedOnPauseRef.current = 0; // Reset for the next slide
+          if (prev >= highlights[currentHighlightIndex].length - 1) {
+            setShowHighlight(false);
+            return 0;
+          }
+          return prev + 1;
+        });
+      }, remainingTime);
+    }
+    // If it's a video, the video's 'onEnded' event will trigger the next slide
+    // We don't set a timeout here for videos to avoid double progression.
 
     return () => {
       if (timeoutRef.current) {
@@ -143,7 +232,13 @@ export default function UserHighlights({
         timeoutRef.current = null;
       }
     };
-  }, [showHighlight, currentHighlightIndex, currentIndex, isPaused]);
+  }, [
+    showHighlight,
+    currentHighlightIndex,
+    currentIndex,
+    isPaused,
+    highlights,
+  ]);
 
   const scroll = (direction: "left" | "right") => {
     const container = scrollRef.current;
@@ -184,11 +279,9 @@ export default function UserHighlights({
   }, [checkScrollPosition]);
 
   const handleNextSlide = () => {
-    if (typeof currentHighlightIndex === "number") {
-      const posts = media[currentHighlightIndex].posts;
-
-      timeElapsedOnPauseRef.current = 0;
-
+    if (typeof currentHighlightIndex === "number" && highlights) {
+      const posts = highlights[currentHighlightIndex];
+      mediaTimeElapsedOnPauseRef.current = 0;
       if (currentIndex >= posts.length - 1) {
         setShowHighlight(false);
         setCurrentIndex(0);
@@ -200,7 +293,7 @@ export default function UserHighlights({
 
   const handlePreviousSlide = () => {
     if (typeof currentHighlightIndex === "number") {
-      timeElapsedOnPauseRef.current = 0;
+      mediaTimeElapsedOnPauseRef.current = 0;
       if (currentIndex <= 0) {
         setShowHighlight(false);
         setCurrentIndex(0);
@@ -210,23 +303,48 @@ export default function UserHighlights({
     }
   };
 
-  // Function to toggle pause state and manage timeout
+  // Function to toggle pause state and manage media playback
   const togglePause = () => {
     setIsPaused((prev) => {
-      if (prev) {
-        timeElapsedOnPauseRef.current = 0;
+      const newPausedState = !prev;
+
+      if (!newPausedState) {
+        mediaTimeElapsedOnPauseRef.current = 0;
+
+        if (
+          videoRef.current &&
+          highlights &&
+          typeof currentHighlightIndex === "number" &&
+          highlights[currentHighlightIndex][currentIndex].media_type === "video"
+        ) {
+          videoRef.current
+            .play()
+            .catch((error) => console.error("Video play failed:", error));
+        }
       } else {
-        if (startTimeRef.current !== 0) {
-          timeElapsedOnPauseRef.current = Date.now() - startTimeRef.current;
-          timeElapsedOnPauseRef.current = Math.max(
+        if (
+          videoRef.current &&
+          highlights &&
+          typeof currentHighlightIndex === "number" &&
+          highlights[currentHighlightIndex][currentIndex].media_type === "video"
+        ) {
+          // Store the current time of the video when paused
+          mediaTimeElapsedOnPauseRef.current =
+            videoRef.current.currentTime * 1000;
+          videoRef.current.pause();
+        } else if (mediaStartTimeRef.current !== 0) {
+          // For images, calculate elapsed time
+          mediaTimeElapsedOnPauseRef.current =
+            Date.now() - mediaStartTimeRef.current;
+          mediaTimeElapsedOnPauseRef.current = Math.max(
             0,
-            Math.min(slideDuration, timeElapsedOnPauseRef.current),
+            Math.min(slideDuration, mediaTimeElapsedOnPauseRef.current),
           );
         } else {
-          timeElapsedOnPauseRef.current = 0;
+          mediaTimeElapsedOnPauseRef.current = 0;
         }
       }
-      return !prev;
+      return newPausedState;
     });
   };
 
@@ -248,19 +366,28 @@ export default function UserHighlights({
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
     }
-    // Set a timeout to pause if held for 500ms
     longPressTimeout.current = setTimeout(() => {
-      // Only pause if not already paused
       if (!isPaused) {
         setIsPaused(true);
-        if (startTimeRef.current !== 0) {
-          timeElapsedOnPauseRef.current = Date.now() - startTimeRef.current;
-          timeElapsedOnPauseRef.current = Math.max(
+        // Record current time for video when long-pressing to pause
+        if (
+          videoRef.current &&
+          highlights &&
+          typeof currentHighlightIndex === "number" &&
+          highlights[currentHighlightIndex][currentIndex].media_type === "video"
+        ) {
+          mediaTimeElapsedOnPauseRef.current =
+            videoRef.current.currentTime * 1000;
+          videoRef.current.pause();
+        } else if (mediaStartTimeRef.current !== 0) {
+          mediaTimeElapsedOnPauseRef.current =
+            Date.now() - mediaStartTimeRef.current;
+          mediaTimeElapsedOnPauseRef.current = Math.max(
             0,
-            Math.min(slideDuration, timeElapsedOnPauseRef.current),
+            Math.min(slideDuration, mediaTimeElapsedOnPauseRef.current),
           );
         } else {
-          timeElapsedOnPauseRef.current = 0;
+          mediaTimeElapsedOnPauseRef.current = 0;
         }
       }
     }, 500);
@@ -283,12 +410,50 @@ export default function UserHighlights({
       }
     } else {
       setIsPaused(false);
-      timeElapsedOnPauseRef.current = 0;
+      mediaTimeElapsedOnPauseRef.current = 0;
     }
   };
 
+  // Handle video metadata loaded to set current time and play
+  const handleVideoLoadedMetadata = useCallback(() => {
+    if (videoRef.current && !isPaused) {
+      // Set video's current time to where it was paused
+      videoRef.current.currentTime = mediaTimeElapsedOnPauseRef.current / 1000;
+      videoRef.current
+        .play()
+        .catch((error) => console.error("Video play failed on load:", error));
+    }
+  }, [isPaused]);
+
+  // Effect to ensure video plays/pauses on current index change or pause state change
+  useEffect(() => {
+    if (
+      videoRef.current &&
+      highlights &&
+      typeof currentHighlightIndex === "number"
+    ) {
+      const currentMedia = highlights[currentHighlightIndex][currentIndex];
+      if (currentMedia && currentMedia.media_type === "video") {
+        if (isPaused) {
+          videoRef.current.pause();
+        } else {
+          // Attempt to play if not paused. onLoadedMetadata will handle initial play.
+          videoRef.current
+            .play()
+            .catch((error) =>
+              console.error("Video play failed in useEffect:", error),
+            );
+        }
+      }
+    }
+  }, [currentIndex, isPaused, highlights, currentHighlightIndex]);
+
+  if (highlightError) {
+    return <div className="text-red-500">Error: {highlightError}</div>;
+  }
+
   return (
-    media && (
+    highlights && (
       <>
         <div className="relative">
           {/* Desktop scroll left */}
@@ -318,8 +483,8 @@ export default function UserHighlights({
             ref={scrollRef}
             className="flex items-center overflow-x-auto scrollbar-hide"
           >
-            {media.map((item, index) => {
-              const lastPost = item.posts.length - 1;
+            {highlights.map((item, index) => {
+              const lastPost = item.length - 1;
 
               return (
                 <li key={index.toString()} className="shrink-0">
@@ -331,12 +496,16 @@ export default function UserHighlights({
                       setCurrentHighlightIndex(index);
                       setCurrentIndex(0);
                       setIsPaused(false);
-                      timeElapsedOnPauseRef.current = 0;
-                      startTimeRef.current = Date.now();
+                      mediaTimeElapsedOnPauseRef.current = 0;
+                      mediaStartTimeRef.current = Date.now();
                     }}
                   >
                     <Image
-                      src={item.posts[lastPost]}
+                      src={
+                        item[lastPost].media_type === "video"
+                          ? item[lastPost].thumbnail_url
+                          : item[lastPost].media_url
+                      }
                       alt="Highlight"
                       width={70}
                       height={70}
@@ -360,7 +529,11 @@ export default function UserHighlights({
                     setShowHighlight(false);
                     setCurrentIndex(0);
                     setIsPaused(false);
-                    timeElapsedOnPauseRef.current = 0;
+                    mediaTimeElapsedOnPauseRef.current = 0;
+                    if (videoRef.current) {
+                      videoRef.current.pause();
+                      videoRef.current.currentTime = 0;
+                    }
                   }}
                 >
                   <IoMdArrowBack className="text-xl text-white" />
@@ -378,9 +551,9 @@ export default function UserHighlights({
               <div className="w-full md:w-[90%] lg:w-[60%] md:space-y-3 mx-auto">
                 <ul className="flex items-center gap-1">
                   {typeof currentHighlightIndex === "number" &&
-                    media[currentHighlightIndex].posts.map((item, index) => (
+                    highlights[currentHighlightIndex].map((item, index) => (
                       <li
-                        key={item}
+                        key={item.id}
                         className="w-full flex items-center h-1 rounded-full bg-white bg-opacity-50 shadow-md"
                       >
                         {index === currentIndex ? (
@@ -474,16 +647,39 @@ export default function UserHighlights({
                     onTouchEnd={(e) => handleTouchEnd(e, "next")}
                   />
 
-                  {type === "image" ? (
-                    <Image
-                      src={media[currentHighlightIndex].posts[currentIndex]}
-                      alt="Highlight"
-                      width={700}
-                      height={700}
-                      className="object-contain cursor-pointer max-w-full max-h-full"
-                    />
+                  {isLoading ? (
+                    <div className="text-white">Loading highlights...</div>
                   ) : (
-                    "Video component"
+                    <>
+                      {highlights[currentHighlightIndex][currentIndex]
+                        .media_type === "image" ? (
+                        <Image
+                          src={
+                            highlights[currentHighlightIndex][currentIndex]
+                              .media_url
+                          }
+                          alt="Highlight"
+                          width={700}
+                          height={700}
+                          className="object-contain cursor-pointer max-w-full max-h-full"
+                        />
+                      ) : (
+                        <video
+                          ref={videoRef}
+                          src={
+                            highlights[currentHighlightIndex][currentIndex]
+                              .media_url
+                          }
+                          className="max-w-full max-h-full"
+                          controls={false}
+                          playsInline
+                          autoPlay
+                          onEnded={handleNextSlide}
+                          onLoadedMetadata={handleVideoLoadedMetadata}
+                          muted={false}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               </div>

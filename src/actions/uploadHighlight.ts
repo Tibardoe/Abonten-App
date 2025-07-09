@@ -68,7 +68,7 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
           item.type === "video"
             ? (result.eager?.[1]?.secure_url ?? null)
             : null,
-        duration: item.type === "video" ? result.duration : null,
+        media_duration: item.type === "video" ? result.duration : null,
         group_id: groupId,
       });
 
@@ -77,7 +77,13 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
   );
 
   const failed = results.filter((r) => r.status === "rejected");
+
   if (failed.length > 0) {
+    console.error(
+      "Upload failed for some media:",
+      failed.map((f) => f.reason),
+    );
+
     return {
       status: 500,
       message: `Uploaded ${mediaItems.length - failed.length}, failed ${
@@ -86,7 +92,7 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
     };
   }
 
-  return { status: 200, message: "All highlights uploaded successfully." };
+  return { status: 200, message: "Highlight uploaded successfully." };
 }
 
 // export default async function uploadHighlight(mediaItems: MediaItem[]) {

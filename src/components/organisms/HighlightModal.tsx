@@ -1,3 +1,4 @@
+import uploadHighlight from "@/actions/uploadHighlight";
 import type { MediaItem } from "@/types/mediaItemType";
 import formatDuration from "@/utils/formatVideoDuration";
 import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
@@ -14,6 +15,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineCancel } from "react-icons/md";
+import Notification from "../atoms/Notification";
 import ThumbnailStrip from "../molecules/ThumbnailStrip";
 import { Button } from "../ui/button";
 import ImageCropper from "./ImageCropper";
@@ -29,6 +31,9 @@ export default function HighlightModal({
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [highlightNotification, setHighlightNotification] = useState<
+    string | null
+  >(null);
   const [isUploading, setIsUploading] = useState(false);
   const [step, setStep] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -549,6 +554,17 @@ export default function HighlightModal({
     }
   };
 
+  const handleHighlightUpload = async () => {
+    const response = await uploadHighlight(mediaItems);
+
+    if (response.status !== 200) {
+      setHighlightNotification(response.message);
+    }
+
+    setHighlightNotification(response.message);
+    handleShowHighlightModal(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
       {/* Header */}
@@ -577,20 +593,8 @@ export default function HighlightModal({
         {!isCropping && step === 2 && mediaItems.length > 0 && (
           <button
             type="button"
-            onClick={() => setStep(3)}
+            onClick={handleHighlightUpload}
             className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md"
-          >
-            Next
-          </button>
-        )}
-
-        {!isCropping && step === 3 && mediaItems.length > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              /* Handle upload */
-            }}
-            className="text-white font-semibold"
             disabled={isUploading}
           >
             {isUploading ? "Uploading..." : "Upload"}
@@ -640,7 +644,7 @@ export default function HighlightModal({
                 Select from Gallery
               </Button>
             </div>
-          ) : (step === 2 || step === 3) && mediaItems.length > 0 ? (
+          ) : step === 2 && mediaItems.length > 0 ? (
             // Your existing step 2/3 content
             <div
               className="w-full h-full flex items-center justify-center relative"
@@ -907,6 +911,10 @@ export default function HighlightModal({
           )}
         </div>
       </div>
+
+      {highlightNotification && (
+        <Notification notification={highlightNotification} />
+      )}
     </div>
   );
 }
