@@ -42,6 +42,7 @@ type closePopupModalType = {
 export default function EventUploadMobileModal({
   handleClosePopup,
   imgUrl,
+  selectedFile,
 }: // selectedFile,
 // className,
 closePopupModalType) {
@@ -84,8 +85,6 @@ closePopupModalType) {
   const [multipleDates, setMultipleDates] = useState<Date[]>([]);
 
   const [selectedAddress, setSelectedAddress] = useState("");
-
-  // const [currency, setCurrency] = useState("");
 
   const [promoCodes, setPromoCodes] = useState<
     {
@@ -130,15 +129,6 @@ closePopupModalType) {
   const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
     resolver: zodResolver(receivingAccountSchema),
   });
-
-  // useEffect(() => {
-  //   const fetchCurrency = async () => {
-  //     const userCurrency = await getUserCurrency();
-  //     setCurrency(userCurrency);
-  //   };
-
-  //   fetchCurrency();
-  // }, []);
 
   const { data: userCurrency } = useQuery({
     queryKey: ["user-currency"],
@@ -192,12 +182,12 @@ closePopupModalType) {
     try {
       setIsUploading(true);
 
-      if (!cropped) {
+      if (!cropped && !selectedFile) {
         setNotification("Please select a file first!");
         return;
       }
 
-      if (!cropped) {
+      if (!selectedAddress) {
         setNotification("Please enter a location");
         return;
       }
@@ -317,6 +307,8 @@ closePopupModalType) {
         return;
       }
 
+      const fileToUpload = (cropped ?? selectedFile) as File;
+
       const finalData = {
         ...formData,
         address: selectedAddress,
@@ -324,7 +316,7 @@ closePopupModalType) {
         longitude: coords.lng,
         category,
         types,
-        selectedFile: cropped,
+        selectedFile: fileToUpload,
         promoCodes,
         freeEvents: ticket,
         singleTicket,

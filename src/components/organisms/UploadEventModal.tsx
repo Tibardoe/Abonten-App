@@ -180,7 +180,7 @@ export default function UploadEventModal({
     try {
       setIsUploading(true);
 
-      if (!cropped) {
+      if (!cropped && !selectedFile) {
         setNotification("Please select a file first!");
         return;
       }
@@ -276,6 +276,8 @@ export default function UploadEventModal({
         return;
       }
 
+      const fileToUpload = (cropped ?? selectedFile) as File;
+
       const finalData = {
         ...formData,
         address: selectedAddress,
@@ -283,7 +285,7 @@ export default function UploadEventModal({
         longitude: coords.lng,
         category,
         types,
-        selectedFile: cropped,
+        selectedFile: fileToUpload,
         promoCodes,
         freeEvents: ticket,
         singleTicket,
@@ -379,7 +381,7 @@ export default function UploadEventModal({
 
       {/* Inner popup */}
 
-      <div className="flex flex-col items-center justify-start bg-white w-[50%] h-[80%] rounded-2xl py-3">
+      <div className="flex flex-col items-center justify-start bg-white w-[50%] h-[85%] rounded-2xl py-3">
         {step === 1 && (
           <>
             <div className="w-full space-y-3">
@@ -458,10 +460,10 @@ export default function UploadEventModal({
                 />
               </div>
             ) : (
-              <div className="w-full">
+              <div className="w-full relative">
                 <button
                   type="button"
-                  className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-0 right-4"
+                  className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-1 left-5"
                   onClick={() => setShowCrop((prevState) => !prevState)}
                 >
                   <ScissorsIcon className="w-5 h-5 text-white" />
