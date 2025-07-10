@@ -520,7 +520,7 @@ export default function UserHighlights({
 
         {showHighlight && (
           <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-black flex items-center justify-center">
-            <div className="w-[95%] absolute top-5 flex flex-col-reverse md:flex-row items-center gap-3">
+            <div className="w-[95%] absolute top-5 flex flex-col-reverse md:flex-row items-center gap-3 z-10">
               {/* Mobile story tracker bar and user profile */}
               <div className="self-start flex items-center gap-2">
                 <button
@@ -626,7 +626,7 @@ export default function UserHighlights({
 
                 {/* Media */}
                 <div
-                  className="h-full flex items-center justify-center"
+                  className="h-full flex items-center justify-center relative"
                   onClick={handleMediaClick}
                   onKeyDown={handleMediaKeyDown}
                   tabIndex={0}
