@@ -446,35 +446,36 @@ export default function UploadEventModal({
 
               <hr />
             </div>
-            <div className="relative flex flex-col items-center gap-5 mt-5 w-[90%] h-[90%]">
-              {showCrop ? (
+
+            {showCrop ? (
+              <div className="relative flex flex-col items-center w-[90%] h-[90%]">
                 <ImageCropper
                   imagePreview={imagePreview}
                   handleCropped={handleCropped}
                   handleCancel={() => {
-                    handleClosePopup(false);
+                    setStep((prevStep) => prevStep - 1);
                   }}
                 />
-              ) : (
-                <div>
-                  <button
-                    type="button"
-                    className="bg-black bg-opacity-50 p-2 rounded-full absolute top-0 right-4"
-                    onClick={() => setShowCrop((prevState) => !prevState)}
-                  >
-                    <ScissorsIcon className="w-5 h-5 text-black" />
-                  </button>
+              </div>
+            ) : (
+              <div className="w-full">
+                <button
+                  type="button"
+                  className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-0 right-4"
+                  onClick={() => setShowCrop((prevState) => !prevState)}
+                >
+                  <ScissorsIcon className="w-5 h-5 text-white" />
+                </button>
 
-                  <Image
-                    src={croppedPreview ?? imagePreview}
-                    alt="Selected Avatar"
-                    width={0}
-                    height={0}
-                    className="w-full md:w-[50%] object-contain mx-auto"
-                  />
-                </div>
-              )}
-            </div>
+                <Image
+                  src={croppedPreview ?? imagePreview}
+                  alt="Selected Avatar"
+                  width={0}
+                  height={0}
+                  className="w-full h-[95%] md:w-[50%] object-contain mx-auto"
+                />
+              </div>
+            )}
           </>
         )}
 

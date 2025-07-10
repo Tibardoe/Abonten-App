@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
+import { CiCrop } from "react-icons/ci";
 import { TbWorld } from "react-icons/tb";
 import type { z } from "zod";
 import Notification from "../atoms/Notification";
@@ -406,7 +407,7 @@ closePopupModalType) {
   };
 
   return (
-    <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden overflow-y-scroll">
+    <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-white flex flex-col items-center md:hidden overflow-y-scroll">
       {step === 1 && imgUrl && (
         <>
           <div className="w-full space-y-5">
@@ -425,7 +426,7 @@ closePopupModalType) {
               <button
                 type="button"
                 className="font-bold"
-                onClick={() => setStep(1)}
+                onClick={() => setStep((prevStep) => prevStep + 1)}
               >
                 Next
               </button>
@@ -434,35 +435,35 @@ closePopupModalType) {
             <hr />
           </div>
 
-          <div className="w-full relative">
-            {showCrop ? (
+          {showCrop ? (
+            <div className="w-full h-full absolute pt-5 bg-white">
               <ImageCropper
                 imagePreview={imgUrl}
                 handleCropped={handleCropped}
                 handleCancel={() => {
-                  handleClosePopup(false);
+                  setShowCrop(!showCrop);
                 }}
               />
-            ) : (
-              <div>
-                <button
-                  type="button"
-                  className="bg-black bg-opacity-50 p-2 rounded-full absolute top-0 right-2"
-                  onClick={() => setShowCrop((prevState) => !prevState)}
-                >
-                  <ScissorsIcon className="w-5 h-5 text-black" />
-                </button>
+            </div>
+          ) : (
+            <div className="relative w-full h-full flex justify-center items-center">
+              <button
+                type="button"
+                className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-5 left-2"
+                onClick={() => setShowCrop((prevState) => !prevState)}
+              >
+                <CiCrop className="w-5 h-5 text-white" />
+              </button>
 
-                <Image
-                  src={croppedPreview ?? imgUrl}
-                  alt="Selected Avatar"
-                  width={0}
-                  height={0}
-                  className="w-[80%] object-contain mx-auto"
-                />
-              </div>
-            )}
-          </div>
+              <Image
+                src={croppedPreview ?? imgUrl}
+                alt="Selected Avatar"
+                width={0}
+                height={0}
+                className="w-full h-fit object-contain mx-auto"
+              />
+            </div>
+          )}
         </>
       )}
 

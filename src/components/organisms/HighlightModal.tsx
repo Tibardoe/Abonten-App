@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CiCrop } from "react-icons/ci";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineCancel } from "react-icons/md";
 import Notification from "../atoms/Notification";
@@ -572,7 +573,7 @@ export default function HighlightModal({
         <button
           type="button"
           onClick={handleCancelOrBack}
-          className="text-white p-2 rounded-full backdrop-blur-md border border-white/20 bg-black/10"
+          className="text-white p-2 rounded-full backdrop-blur-md border border-white/20 bg-black bg-opacity-75"
         >
           {step === 1 && !isCropping ? (
             <MdOutlineCancel className="w-6 h-6" />
@@ -581,20 +582,16 @@ export default function HighlightModal({
           )}
         </button>
 
-        <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md">
-          {isCropping
-            ? "Edit Media"
-            : step === 1
-              ? "New Highlight"
-              : "Upload Highlight"}
+        <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md">
+          {isCropping ? "Edit Media" : step === 1 && "New Highlight"}
         </h2>
 
-        {/* Next/Upload button */}
+        {/* Upload button */}
         {!isCropping && step === 2 && mediaItems.length > 0 && (
           <button
             type="button"
             onClick={handleHighlightUpload}
-            className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black/10 p-2 rounded-md"
+            className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md"
             disabled={isUploading}
           >
             {isUploading ? "Uploading..." : "Upload"}
@@ -607,7 +604,7 @@ export default function HighlightModal({
         <div className="w-full h-full flex flex-col items-center justify-center relative">
           {/* Conditional rendering for ImageCropper or main steps */}
           {isCropping && imageToCrop ? (
-            <div className="w-full md:h-[80%] md:w-[50%] bg-white overflow-y-scroll md:overflow-y-auto pt-20 md:pt-0">
+            <div className="w-full h-full md:h-[80%] md:w-[50%] bg-white overflow-y-scroll md:overflow-y-auto pt-2 md:pt-0 z-20">
               <ImageCropper
                 imagePreview={imageToCrop}
                 handleCropped={handleCropped}
@@ -786,16 +783,16 @@ export default function HighlightModal({
               {/* Media display */}
               <div className="w-full flex items-center justify-center relative overflow-hidden">
                 {currentMedia.type === "image" ? (
-                  <div className="relative w-full h-screen">
+                  <div className="w-full h-screen">
                     <button
                       type="button"
                       onClick={() => {
                         setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
                         setIsCropping(true); // Open the cropper
                       }}
-                      className="absolute top-36 md:top-20 right-4 bg-black bg-opacity-50 p-2 rounded-full z-10"
+                      className="absolute top-5 right-24 backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full z-10"
                     >
-                      <ScissorsIcon className="w-5 h-5 text-white" />
+                      <CiCrop className="w-5 h-5 text-white" />
                     </button>
 
                     <Image

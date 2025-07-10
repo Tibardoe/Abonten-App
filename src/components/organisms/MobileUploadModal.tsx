@@ -87,9 +87,10 @@ export default function MobileUploadModal({
           </div>
 
           {imgUrl && (
-            <div className="w-full">
+            <div className="w-full absolute bg-white pt-5">
               <ImageCropper
                 imagePreview={imgUrl}
+                aspectRatio={1}
                 handleCropped={handleCropped}
                 handleCancel={() => {
                   handleClosePopup(false);

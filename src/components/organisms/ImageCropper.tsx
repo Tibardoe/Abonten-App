@@ -37,12 +37,14 @@ type ImageCropType = {
   imagePreview: string;
   handleCropped: (croppedFile: File) => void;
   handleCancel: () => void;
+  aspectRatio?: number;
 };
 
 export default function ImageCropper({
   imagePreview,
   handleCropped,
   handleCancel,
+  aspectRatio,
 }: ImageCropType) {
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -50,7 +52,9 @@ export default function ImageCropper({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [scale, setScale] = useState(1);
   const [rotate, setRotate] = useState(0);
-  const [aspect, setAspect] = useState<number | undefined>(undefined);
+  const [aspect, setAspect] = useState<number | undefined>(
+    aspectRatio ?? undefined,
+  );
   const [showControls, setShowControls] = useState(true);
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
@@ -154,7 +158,7 @@ export default function ImageCropper({
             </div>
           </div>
 
-          <div className="relative flex flex-col w-[75%] mx-auto">
+          <div className="relative flex flex-col w-[80%] mx-auto">
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
