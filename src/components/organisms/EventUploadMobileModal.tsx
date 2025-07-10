@@ -537,22 +537,24 @@ closePopupModalType) {
               )}
 
               <div className="space-y-4 px-3">
-                <PostAutoComplete
-                  address={{ address: setSelectedAddress }}
-                  placeholderText={{
-                    text: "Location",
-                    svgUrl: "/assets/images/location.svg",
-                  }}
-                />
-                {selectedAddress === "" && (
-                  <p className="text-red-500 text-sm">Location required</p>
-                )}
+                <div>
+                  <PostAutoComplete
+                    address={{ address: setSelectedAddress }}
+                    placeholderText={{
+                      text: "Location",
+                      svgUrl: "/assets/images/location.svg",
+                    }}
+                  />
+                  {selectedAddress === "" && (
+                    <p className="text-red-500 text-sm">Location required</p>
+                  )}
+                </div>
 
                 {/* Date and time */}
                 <div className="space-y-2 text-sm">
                   <h2 className="font-bold text-slate-700">Date</h2>
 
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <div>
                       <button
                         type="button"
@@ -673,26 +675,32 @@ closePopupModalType) {
                   )}
                 </div>
 
-                <CategoryFilter
-                  handleCategory={handleCategory}
-                  category={category}
-                  classname="md:text-lg font-semibold text-slate-700"
-                />
-                {category === "" && (
-                  <p className="text-red-500 text-sm">Select event category</p>
-                )}
+                <div>
+                  <CategoryFilter
+                    handleCategory={handleCategory}
+                    category={category}
+                    classname="md:text-lg font-semibold text-slate-700"
+                  />
+                  {category === "" && (
+                    <p className="text-red-500 text-sm">
+                      Select event category
+                    </p>
+                  )}
+                </div>
 
-                <TypeFilter
-                  selectedTypes={types}
-                  selectedCategory={category}
-                  handleType={handleType}
-                  classname="md:text-lg font-semibold text-slate-700"
-                />
-                {types.length === 0 && (
-                  <p className="text-red-500 text-sm">
-                    Select at least one type for event
-                  </p>
-                )}
+                <div>
+                  <TypeFilter
+                    selectedTypes={types}
+                    selectedCategory={category}
+                    handleType={handleType}
+                    classname="md:text-lg font-semibold text-slate-700"
+                  />
+                  {types.length === 0 && (
+                    <p className="text-red-500 text-sm">
+                      Select at least one type for event
+                    </p>
+                  )}
+                </div>
 
                 <div className="flex justify-between items-center">
                   <div className="bg-white border rounded-md">
