@@ -560,7 +560,7 @@ export default function UploadEventModal({
                 <div className="space-y-2 text-sm">
                   <h2 className="font-bold text-slate-700">Date</h2>
 
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <div>
                       <button
                         type="button"
@@ -592,7 +592,7 @@ export default function UploadEventModal({
                     <div>
                       <button
                         type="button"
-                        className="space-y-1 border rounded-md p-2 shadow-md"
+                        className="space-y-1 border rounded-md p-2 shadow-md w-full"
                         onClick={() => setDateType("specific")}
                       >
                         <span className="flex justify-between items-center w-full text-slate-700">
