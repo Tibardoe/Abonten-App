@@ -71,91 +71,6 @@ export default function UserHighlights({
     };
   }, []);
 
-  //   useEffect(() => {
-  //     if (timeoutRef.current) {
-  //       clearTimeout(timeoutRef.current);
-  //       timeoutRef.current = null;
-  //     }
-
-  //     // if (
-  //     //   !showHighlight ||
-  //     //   typeof currentHighlightIndex !== "number" ||
-  //     //   isPaused ||
-  //     //   !highlights
-  //     // ) {
-  //     //   return;
-  //     // }
-
-  //     if (
-  //       !showHighlight ||
-  //       typeof currentHighlightIndex !== "number" ||
-  //       !highlights ||
-  //       highlights.length === 0 ||
-  //       !highlights[currentHighlightIndex]
-  //     ) {
-  //       // If highlights data isn't loaded yet or highlight is hidden, etc.
-  //       return;
-  //     }
-
-  //     const currentMedia = highlights[currentHighlightIndex][currentIndex];
-
-  //     if (!currentMedia) {
-  //       // Handle case where currentMedia might be undefined (e.g., index out of bounds)
-  //       setShowHighlight(false);
-  //       setCurrentIndex(0);
-  //       mediaTimeElapsedOnPauseRef.current = 0;
-  //       return;
-  //     }
-
-  //     const mediaType = currentMedia.media_type;
-
-  //     const currentMediaDuration =
-  //       mediaType === "video"
-  //         ? currentMedia.media_duration * 1000
-  //         : slideDuration;
-
-  //     const posts = highlights[currentHighlightIndex];
-
-  //     if (currentIndex >= posts.length) {
-  //       setShowHighlight(false);
-  //       setCurrentIndex(0);
-  //       timeElapsedOnPauseRef.current = 0;
-  //       return;
-  //     }
-
-  //     const remainingTime =
-  //       mediaType === "image"
-  //         ? slideDuration
-  //         : videoDuration - timeElapsedOnPauseRef.current;
-
-  //     startTimeRef.current = Date.now() - timeElapsedOnPauseRef.current;
-
-  //     timeoutRef.current = setTimeout(() => {
-  //       setCurrentIndex((prev) => {
-  //         timeElapsedOnPauseRef.current = 0;
-
-  //         if (prev >= posts.length - 1) {
-  //           setShowHighlight(false);
-  //           return 0;
-  //         }
-  //         return prev + 1;
-  //       });
-  //     }, remainingTime);
-
-  //     return () => {
-  //       if (timeoutRef.current) {
-  //         clearTimeout(timeoutRef.current);
-  //         timeoutRef.current = null;
-  //       }
-  //     };
-  //   }, [
-  //     showHighlight,
-  //     currentHighlightIndex,
-  //     currentIndex,
-  //     isPaused,
-  //     highlights,
-  //   ]);
-
   useEffect(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -363,6 +278,7 @@ export default function UserHighlights({
   // Handlers for mobile long press pause/resume
   const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     e.stopPropagation();
+    e.preventDefault();
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
     }
@@ -398,6 +314,7 @@ export default function UserHighlights({
     action: "next" | "prev",
   ) => {
     e.stopPropagation();
+    e.preventDefault();
     if (longPressTimeout.current) {
       clearTimeout(longPressTimeout.current);
       longPressTimeout.current = null;
