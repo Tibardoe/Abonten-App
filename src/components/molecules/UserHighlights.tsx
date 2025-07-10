@@ -552,14 +552,14 @@ export default function UserHighlights({
                 >
                   {/* Moble gesture for left tap zone */}
                   <div
-                    className="absolute left-0 top-0 w-1/2 h-full lg:hidden"
+                    className="absolute touch-manipulation select-none left-0 top-0 w-1/2 h-full lg:hidden"
                     onTouchStart={handleTouchStart}
                     onTouchEnd={(e) => handleTouchEnd(e, "prev")}
                   />
 
                   {/* Moble gesture for right tap zone */}
                   <div
-                    className="absolute right-0 top-0 w-1/2 h-full lg:hidden"
+                    className="absolute touch-manipulation select-none right-0 top-0 w-1/2 h-full lg:hidden"
                     onTouchStart={handleTouchStart}
                     onTouchEnd={(e) => handleTouchEnd(e, "next")}
                   />
