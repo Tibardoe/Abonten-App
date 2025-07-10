@@ -79,13 +79,21 @@ export default function PromoCodeInputs({
   return (
     <div className="space-y-2">
       <div className="flex flex-col gap-2">
-        <div className="flex justify-between items-center">
+        <input
+          type="text"
+          placeholder="Promo code"
+          value={promoCode}
+          onChange={(e) => setPromoCode(e.target.value)}
+          className="w-full border p-2 rounded-md"
+        />
+
+        <div className="flex justify-between items-center gap-2">
           <input
-            type="text"
-            placeholder="Promo code"
-            value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value)}
-            className="outline-black border border-black w-48 p-2 rounded-md"
+            type="number"
+            placeholder="Max use"
+            value={maximumUse ?? ""}
+            onChange={(e) => setMaximumUse(Number(e.target.value))}
+            className="border w-full p-2 rounded-md"
           />
 
           <input
@@ -93,51 +101,45 @@ export default function PromoCodeInputs({
             placeholder="discount"
             value={discount ?? ""}
             onChange={(e) => setDiscount(Number(e.target.value))}
-            className="outline-black border border-black w-24 p-2 rounded-md"
-          />
-        </div>
-
-        <div className="flex justify-between items-center">
-          <p>Maximum Use</p>
-
-          <input
-            type="number"
-            placeholder="Max use"
-            value={maximumUse ?? ""}
-            onChange={(e) => setMaximumUse(Number(e.target.value))}
-            className="outline-black border border-black w-24 p-2 rounded-md"
+            className="border w-full p-2 rounded-md"
           />
         </div>
 
         {/* Expiry date */}
-        <Popover>
-          <PopoverTrigger className="flex items-center gap-1">
-            <MdDateRange className="text-2xl" />{" "}
-            {expiryDate ? expiryDate.toLocaleDateString() : "Expiry date"}
-          </PopoverTrigger>
+        <div className="flex justify-between items-center">
+          <Popover>
+            <PopoverTrigger className="flex items-center gap-1">
+              <MdDateRange className="text-2xl" />{" "}
+              {expiryDate ? (
+                expiryDate.toLocaleDateString()
+              ) : (
+                <p className="text-sm font-bold text-gray-600">Expiry date</p>
+              )}
+            </PopoverTrigger>
 
-          <PopoverContent className="space-y-4">
-            <Calendar
-              initialFocus
-              mode="single"
-              selected={expiryDate}
-              onSelect={setExpiryDate}
-            />
-          </PopoverContent>
-        </Popover>
+            <PopoverContent className="space-y-4">
+              <Calendar
+                initialFocus
+                mode="single"
+                selected={expiryDate}
+                onSelect={setExpiryDate}
+              />
+            </PopoverContent>
+          </Popover>
 
-        <Button
-          className="self-end"
-          onClick={handleClick}
-          disabled={
-            !promoCode ||
-            maximumUse === null ||
-            !expiryDate ||
-            discount === null
-          }
-        >
-          Add
-        </Button>
+          <Button
+            className="self-end"
+            onClick={handleClick}
+            disabled={
+              !promoCode ||
+              maximumUse === null ||
+              !expiryDate ||
+              discount === null
+            }
+          >
+            Add
+          </Button>
+        </div>
       </div>
 
       {multiplePromoCodes.length > 0 && (

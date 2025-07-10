@@ -695,11 +695,11 @@ closePopupModalType) {
                 )}
 
                 <div className="flex justify-between items-center">
-                  <div className="bg-white border border-black rounded-md">
+                  <div className="bg-white border rounded-md">
                     <input
                       type="text"
                       placeholder="Website"
-                      className="bg-transparent outline-black rounded-md p-2"
+                      className="rounded-md p-2 font-semibold text-slate-700"
                       {...register("website_url")}
                     />
                   </div>
@@ -712,13 +712,13 @@ closePopupModalType) {
                   </p>
                 )}
 
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center font-semibold text-slate-700">
                   <span>Capacity</span>
 
                   <input
                     type="number"
                     placeholder="0 if any"
-                    className="outline-none bg-black bg-opacity-5 w-24 p-2 rounded-md"
+                    className="border w-28 p-2 rounded-md"
                     {...register("capacity", { valueAsNumber: true })}
                   />
                 </div>

@@ -706,11 +706,11 @@ export default function UploadEventModal({
                   )}
 
                   <div className="flex justify-between items-center">
-                    <div className="bg-white border border-black rounded-md">
+                    <div className="bg-white border rounded-md">
                       <input
                         type="text"
                         placeholder="Website"
-                        className="bg-transparent outline-black rounded-md p-2"
+                        className="rounded-md p-2 font-semibold text-slate-700"
                         {...register("website_url")}
                       />
                     </div>
@@ -730,7 +730,7 @@ export default function UploadEventModal({
                       type="number"
                       placeholder="0 if any"
                       {...register("capacity", { valueAsNumber: true })}
-                      className="outline-none bg-black bg-opacity-5 w-20 p-2 rounded-md"
+                      className="border w-28 p-2 rounded-md"
                     />
                   </div>
                   {errors.capacity && (

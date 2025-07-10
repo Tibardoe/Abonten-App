@@ -101,61 +101,63 @@ export default function TicketInputs({
   return (
     <>
       {ticketType === "Single Ticket Type" && (
-        <div className="flex justify-between items-start">
-          <div className="flex flex-col w-24 gap-2">
+        <div className="flex justify-between items-center gap-2">
+          <div className="flex items-center justify-center gap-2 border rounded-md p-2">
+            <span className="text-green-600 text-sm">{currency}</span>
+
             <input
               type="number"
               placeholder="Fee"
               value={singleTicketPrice ?? ""}
               onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
-              className="border border-black w-full p-2 rounded-md text-sm"
-            />
-
-            <input
-              type="number"
-              placeholder="Quantity"
-              value={singleTicketQuantity ?? ""}
-              onChange={(e) =>
-                handleSingleTicketQuantity?.(Number(e.target.value))
-              }
-              className="border border-black w-full p-2 rounded-md text-sm"
+              className="outline-none text-sm"
             />
           </div>
 
-          <span>{currency}</span>
+          <input
+            type="number"
+            placeholder="Quantity"
+            value={singleTicketQuantity ?? ""}
+            onChange={(e) =>
+              handleSingleTicketQuantity?.(Number(e.target.value))
+            }
+            className="border w-full p-2 rounded-md text-sm"
+          />
         </div>
       )}
 
       {ticketType === "Multiple Ticket Types" && (
         <div className="space-y-2">
           <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center">
+            <div className="w-full">
               <input
                 type="text"
                 placeholder="Category name"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="border border-black w-48 p-2 rounded-md text-sm"
-              />
-
-              <input
-                type="number"
-                placeholder="Fee"
-                value={newPrice ?? ""}
-                onChange={(e) => setNewPrice(Number(e.target.value))}
-                className="border border-black w-24 p-2 rounded-md text-sm"
+                className="border w-full p-2 rounded-md text-sm"
               />
             </div>
 
-            <div className="flex justify-between items-center">
-              <p>Ticket Quantity</p>
+            <div className="flex justify-between items-center gap-2">
+              <div className="w-full flex items-center justify-center gap-2 border rounded-md p-2">
+                <span className="text-green-600 text-sm">{currency}</span>
+
+                <input
+                  type="number"
+                  placeholder="Fee"
+                  value={newPrice ?? ""}
+                  onChange={(e) => setNewPrice(Number(e.target.value))}
+                  className="outline-none text-sm"
+                />
+              </div>
 
               <input
                 type="number"
                 placeholder="Quantity"
                 value={quantity ?? ""}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="border border-black w-24 p-2 rounded-md text-sm"
+                className="border p-2 rounded-md text-sm w-full"
               />
             </div>
 
@@ -164,7 +166,13 @@ export default function TicketInputs({
               <Popover>
                 <PopoverTrigger className="flex items-center gap-1">
                   <MdDateRange className="text-2xl" />{" "}
-                  {date ? date.toLocaleDateString() : "Available From"}
+                  {date ? (
+                    date.toLocaleDateString()
+                  ) : (
+                    <p className="text-sm font-bold text-gray-600">
+                      Available From
+                    </p>
+                  )}
                 </PopoverTrigger>
 
                 <PopoverContent className="space-y-4">
@@ -176,12 +184,19 @@ export default function TicketInputs({
                   />
                 </PopoverContent>
               </Popover>
-              To
+              <p className="text-sm font-bold text-gray-600">To</p>
+
               {/* End date */}
               <Popover>
                 <PopoverTrigger className="flex items-center gap-1">
                   <MdDateRange className="text-2xl" />{" "}
-                  {endDate ? endDate.toLocaleDateString() : "Available Until"}
+                  {endDate ? (
+                    endDate.toLocaleDateString()
+                  ) : (
+                    <p className="text-sm font-bold text-gray-600">
+                      Available Until
+                    </p>
+                  )}
                 </PopoverTrigger>
 
                 <PopoverContent className="space-y-4">
