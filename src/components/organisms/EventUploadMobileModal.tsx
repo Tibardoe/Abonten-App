@@ -460,7 +460,7 @@ closePopupModalType) {
                 alt="Selected Avatar"
                 width={0}
                 height={0}
-                className="w-full h-fit object-contain mx-auto"
+                className="w-full h-[100%] object-contain mx-auto"
               />
             </div>
           )}

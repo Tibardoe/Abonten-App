@@ -790,7 +790,7 @@ export default function HighlightModal({
                         setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
                         setIsCropping(true); // Open the cropper
                       }}
-                      className="absolute top-5 right-24 backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full z-10"
+                      className="fixed top-5 right-24 backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full z-10"
                     >
                       <CiCrop className="w-5 h-5 text-white" />
                     </button>
