@@ -17,22 +17,22 @@ export default async function page() {
           {subscription.status === 200 ? (
             <div>
               <h2 className="font-bold text-lg md:text-xl">
-                {subscription.data?.subscription_plan[0].name}
+                {subscription.data?.subscription_plan.name}
               </h2>
 
-              {subscription.data?.subscription_plan[0].name === "Daily" && (
+              {subscription.data?.subscription_plan.name === "Daily" && (
                 <p>Post 2 flyers and unlimited stories</p>
               )}
 
-              {subscription.data?.subscription_plan[0].name === "Weekly" && (
+              {subscription.data?.subscription_plan.name === "Weekly" && (
                 <p>Post 5 flyers and unlimited stories</p>
               )}
 
-              {subscription.data?.subscription_plan[0].name === "Monthly" && (
+              {subscription.data?.subscription_plan.name === "Monthly" && (
                 <p>Post 10 flyers and unlimited stories</p>
               )}
 
-              {subscription.data?.subscription_plan[0].name === "Unlimited" && (
+              {subscription.data?.subscription_plan.name === "Unlimited" && (
                 <p>Post unlimited flyers and stories</p>
               )}
             </div>

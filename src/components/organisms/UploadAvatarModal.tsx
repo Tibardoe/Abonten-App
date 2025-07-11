@@ -203,7 +203,6 @@ export default function UploadAvatarModal({
             <ImageCropper
               imagePreview={imagePreview}
               handleCropped={handleCropped}
-              aspectRatio={1}
               handleCancel={() => {
                 setImagePreview(null);
                 setSelectedFile(null);

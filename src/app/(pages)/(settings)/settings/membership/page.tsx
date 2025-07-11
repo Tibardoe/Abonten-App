@@ -1,11 +1,11 @@
-// import { userSubscription } from "@/actions/getUserSubscription";
+import { userSubscription } from "@/actions/getUserSubscription";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import Image from "next/image";
 import Link from "next/link";
 
 export default async function page() {
-  // const subscription = await userSubscription();
+  const subscription = await userSubscription();
 
   return (
     <div className="w-full flex flex-col gap-10">
@@ -14,10 +14,43 @@ export default async function page() {
       <div className="space-y-2">
         <h1>Plan Details</h1>
         <DetailsContainer>
-          <div>
-            <h2 className="font-bold text-lg md:text-xl">Premium Plan</h2>
+          {/* <div>
+            <h2 className="font-bold text-lg md:text-xl">{subscription.data?.subscription_plan.name}</h2>
             <p>Post unlimited flyers and stories</p>
-          </div>
+          </div> */}
+          {subscription.status === 200 ? (
+            <div>
+              <h2 className="font-bold text-lg md:text-xl">
+                {subscription.data?.subscription_plan.name}
+              </h2>
+
+              {subscription.data?.subscription_plan.name === "Daily" && (
+                <p>Post 2 flyers and unlimited stories</p>
+              )}
+
+              {subscription.data?.subscription_plan.name === "Weekly" && (
+                <p>Post 5 flyers and unlimited stories</p>
+              )}
+
+              {subscription.data?.subscription_plan.name === "Monthly" && (
+                <p>Post 10 flyers and unlimited stories</p>
+              )}
+
+              {subscription.data?.subscription_plan.name === "Unlimited" && (
+                <p>Post unlimited flyers and stories</p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <h2 className="font-bold text-lg md:text-xl">
+                No active subscription found
+              </h2>
+
+              <p>
+                Purchase a subscription to post flyers, stories and highlight
+              </p>
+            </div>
+          )}
 
           <hr />
 
