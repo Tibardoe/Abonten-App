@@ -16,6 +16,7 @@ type EventDateSelectorProps = {
     currency: string;
   } | null;
   time: string;
+  requireRegistration?: boolean;
 };
 
 export default function EventDateSelector({
@@ -24,34 +25,37 @@ export default function EventDateSelector({
   minTicket,
   eventTitle,
   time,
+  requireRegistration,
 }: EventDateSelectorProps) {
   const [selectedDate, setSelectedDate] = useState(eventDates[0]);
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="mb-3">
-        <h2 className="font-bold mb-2">Dates</h2>
-        <div className="flex overflow-x-auto gap-3">
-          {eventDates.map((dateString: string) => {
-            const { day, month, date, time } = getDateParts(dateString);
+      {eventDates.length > 0 && (
+        <div className="mb-3 p-2">
+          <h2 className="font-bold mb-2">Dates</h2>
+          <div className="flex overflow-x-auto gap-3">
+            {eventDates.map((dateString: string) => {
+              const { day, month, date, time } = getDateParts(dateString);
 
-            const isActive = selectedDate === dateString;
+              const isActive = selectedDate === dateString;
 
-            return (
-              <DateBtn
-                dateString={dateString}
-                onClick={() => setSelectedDate(dateString)}
-                key={dateString}
-                day={day}
-                month={month}
-                date={date}
-                isActive={isActive}
-                time={time}
-              />
-            );
-          })}
+              return (
+                <DateBtn
+                  dateString={dateString}
+                  onClick={() => setSelectedDate(dateString)}
+                  key={dateString}
+                  day={day}
+                  month={month}
+                  date={date}
+                  isActive={isActive}
+                  time={time}
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Buy ticket btn */}
       <CheckoutBtn
@@ -64,6 +68,7 @@ export default function EventDateSelector({
         eventTitle={eventTitle}
         date={formatSingleDateTime(selectedDate).date}
         time={time}
+        requireRegistration={requireRegistration}
       />
     </div>
   );

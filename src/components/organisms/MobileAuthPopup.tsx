@@ -134,7 +134,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
               onChange={handleChange}
             />
 
-            <Button className="w-full rounded-full text-xl font-bold py-7 absolute bottom-0">
+            <Button className="w-full rounded-md text-xl font-bold py-7 absolute bottom-0">
               Continue
             </Button>
           </form>

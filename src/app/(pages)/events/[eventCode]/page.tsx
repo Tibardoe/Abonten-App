@@ -117,7 +117,7 @@ export default async function page({
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-2 lg:px-8 py-8 md:py-12">
-        <div className="md:grid lg:grid-cols-3 gap-6 md:gap-8 flex flex-col">
+        <div className="md:grid lg:grid-cols-3 gap-6 md:gap-8 flex flex-col mb-5">
           {/* Event Details */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
             {/* Organizer Card */}
@@ -248,29 +248,15 @@ export default async function page({
             </div>
 
             {/* Ticket CTA */}
-            <div className="bg-white rounded-xl p-1 shadow-lg hover:shadow-xl transition-all">
-              {event.event_dates?.length > 0 ? (
-                <EventDateSelector
-                  eventDates={event.event_dates}
-                  eventId={event.id}
-                  time={eventDateAndTime.time}
-                  eventTitle={event.title}
-                  minTicket={minTicket}
-                />
-              ) : (
-                <BuyTicketBtn
-                  eventId={event.id}
-                  btnText={
-                    minTicket?.price === 0 || minTicket === null
-                      ? "Register"
-                      : "Buy Ticket"
-                  }
-                  eventTitle={event.title}
-                  date={eventDateAndTime.date}
-                  time={eventDateAndTime.time}
-                  requireRegistration={event.require_registration}
-                />
-              )}
+            <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <EventDateSelector
+                eventDates={event.event_dates}
+                eventId={event.id}
+                time={eventDateAndTime.time}
+                eventTitle={event.title}
+                minTicket={minTicket}
+                requireRegistration={event.require_registration}
+              />
             </div>
           </div>
 

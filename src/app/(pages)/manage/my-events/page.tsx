@@ -94,7 +94,9 @@ export default async function page() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500">No events here!</p>
+          <p className="text-center text-gray-500">
+            No event ticket purchased!
+          </p>
         )}
       </div>
     </>
