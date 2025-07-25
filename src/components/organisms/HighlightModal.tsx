@@ -295,7 +295,7 @@ export default function HighlightModal({
 
   const handleDragStart = (
     handleType: "start" | "end" | "middle",
-    e: React.MouseEvent,
+    e: React.MouseEvent | React.TouchEvent,
   ) => {
     if (
       !currentMedia ||
@@ -307,9 +307,12 @@ export default function HighlightModal({
     setIsDragging(true);
     setDragHandle(handleType);
 
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+
+    const rect = trackEditorRef.current.getBoundingClientRect();
+    const clickX = clientX - rect.left;
+
     if (handleType === "middle") {
-      const rect = trackEditorRef.current.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
       const startPixel =
         (trimStart / (currentMedia.duration || 1)) * rect.width;
       dragOffset.current = clickX - startPixel; // Offset from click to the start of the selection
@@ -318,6 +321,10 @@ export default function HighlightModal({
 
   const handleDragMove = useCallback(
     (e: MouseEvent | TouchEvent) => {
+      if ("touches" in e) {
+        e.preventDefault(); // Prevent scrolling on touch devices
+      }
+
       if (
         !isDragging ||
         !trackEditorRef.current ||
@@ -501,12 +508,18 @@ export default function HighlightModal({
     if (isDragging) {
       window.addEventListener("mousemove", handleDragMove);
       window.addEventListener("mouseup", handleDragEnd);
-      window.addEventListener("touchmove", handleDragMove);
+      window.addEventListener("touchmove", handleDragMove as EventListener, {
+        passive: false,
+      });
       window.addEventListener("touchend", handleDragEnd);
+
       return () => {
         window.removeEventListener("mousemove", handleDragMove);
         window.removeEventListener("mouseup", handleDragEnd);
-        window.removeEventListener("touchmove", handleDragMove);
+        window.removeEventListener(
+          "touchmove",
+          handleDragMove as EventListener,
+        );
         window.removeEventListener("touchend", handleDragEnd);
       };
     }
@@ -739,10 +752,7 @@ export default function HighlightModal({
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
-                          handleDragStart(
-                            "start",
-                            e as unknown as React.MouseEvent,
-                          );
+                          handleDragStart("start", e);
                         }}
                       >
                         <FaChevronLeft className="text-2xl text-white" />
@@ -762,10 +772,7 @@ export default function HighlightModal({
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
-                          handleDragStart(
-                            "end",
-                            e as unknown as React.MouseEvent,
-                          );
+                          handleDragStart("end", e);
                         }}
                       >
                         <FaChevronRight className="text-2xl text-white" />
@@ -788,10 +795,7 @@ export default function HighlightModal({
                         }}
                         onTouchStart={(e) => {
                           e.stopPropagation();
-                          handleDragStart(
-                            "middle",
-                            e as unknown as React.MouseEvent,
-                          );
+                          handleDragStart("middle", e);
                         }}
                       />
                       {/* Playhead for trimmer */}
