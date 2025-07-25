@@ -163,7 +163,7 @@ closePopupModalType) {
   const handleDateAndTime = (date: DateRange | Date[]) => {
     if (dateType === "single" && !Array.isArray(date)) {
       setSingleDateRange(date);
-    } else if (dateType === "multiple" && Array.isArray(date)) {
+    } else if (dateType === "specific" && Array.isArray(date)) {
       setMultipleDates(date);
     }
   };
@@ -198,23 +198,6 @@ closePopupModalType) {
         setNotification("Could not fetch coordinates");
         return;
       }
-
-      // let eventDates: EventDates;
-
-      // if (dateType === "single") {
-      //   eventDates = {
-      //     starts_at: singleDateRange.from,
-      //     ends_at: singleDateRange.to,
-      //   };
-      // } else if (dateType === "multiple") {
-      //   eventDates = {
-      //     specific_dates: multipleDates,
-      //   };
-      // } else {
-      //   setNotification("Invalid date selection");
-
-      //   return;
-      // }
 
       let eventDates: EventDates;
 
@@ -251,7 +234,7 @@ closePopupModalType) {
           starts_at: start,
           ends_at: end,
         };
-      } else if (dateType === "multiple") {
+      } else if (dateType === "specific") {
         if (!multipleDates || multipleDates.length === 0) {
           setNotification("Please select at least one date");
           return;

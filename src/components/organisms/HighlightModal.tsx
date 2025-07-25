@@ -272,7 +272,7 @@ export default function HighlightModal({
     setIsPlaying(false);
   };
 
-  const handleTrackEditorClick = (e: React.MouseEvent) => {
+  const handleTrackEditorClick = (e: React.MouseEvent | React.TouchEvent) => {
     if (
       !trackEditorRef.current ||
       !currentMedia ||
@@ -281,8 +281,11 @@ export default function HighlightModal({
     )
       return;
 
+    // Get clientX from either mouse or touch event
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+
     const rect = trackEditorRef.current.getBoundingClientRect();
-    const clickPosition = e.clientX - rect.left;
+    const clickPosition = clientX - rect.left;
     const percentage = clickPosition / rect.width;
     const totalVideoDuration = currentMedia.duration || 0;
     const seekTime = percentage * totalVideoDuration;
@@ -314,7 +317,7 @@ export default function HighlightModal({
   };
 
   const handleDragMove = useCallback(
-    (e: MouseEvent) => {
+    (e: MouseEvent | TouchEvent) => {
       if (
         !isDragging ||
         !trackEditorRef.current ||
@@ -325,21 +328,22 @@ export default function HighlightModal({
       )
         return;
 
+      // Get clientX from either mouse or touch event
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+
       const rect = trackEditorRef.current.getBoundingClientRect();
       const newPositionX = Math.min(
-        Math.max(e.clientX - rect.left, 0),
+        Math.max(clientX - rect.left, 0),
         rect.width,
       );
       const totalVideoDuration = currentMedia.duration;
-      const minTrimDuration = 0.1; // Minimum duration for the trimmed segment
+      const minTrimDuration = 0.1;
 
       if (dragHandle === "start") {
         let newStart = (newPositionX / rect.width) * totalVideoDuration;
-        // Ensure newStart is within bounds and doesn't make segment too small
         newStart = Math.max(0, Math.min(newStart, trimEnd - minTrimDuration));
         setTrimStart(newStart);
 
-        // Adjust trimEnd if current selection length exceeds maxTrimSegmentDuration
         if (trimEnd - newStart > maxTrimSegmentDuration) {
           setTrimEnd(newStart + maxTrimSegmentDuration);
         }
@@ -349,12 +353,10 @@ export default function HighlightModal({
         }
       } else if (dragHandle === "end") {
         let newEnd = (newPositionX / rect.width) * totalVideoDuration;
-        // Ensure newEnd is within bounds and doesn't make segment too small
         newEnd = Math.min(newEnd, totalVideoDuration);
-        newEnd = Math.max(newEnd, trimStart + minTrimDuration); // End cannot be before start + min duration
+        newEnd = Math.max(newEnd, trimStart + minTrimDuration);
         setTrimEnd(newEnd);
 
-        // Adjust trimStart if current selection length exceeds maxTrimSegmentDuration
         if (newEnd - trimStart > maxTrimSegmentDuration) {
           setTrimStart(newEnd - maxTrimSegmentDuration);
         }
@@ -368,16 +370,13 @@ export default function HighlightModal({
         let potentialNewStart =
           (newStartPixel / rect.width) * totalVideoDuration;
 
-        // Clamp potentialNewStart to prevent selection going below 0
         potentialNewStart = Math.max(0, potentialNewStart);
-
         let potentialNewEnd = potentialNewStart + currentSelectionLength;
 
-        // Clamp potentialNewEnd to prevent selection going beyond totalVideoDuration
         if (potentialNewEnd > totalVideoDuration) {
           potentialNewEnd = totalVideoDuration;
-          potentialNewStart = potentialNewEnd - currentSelectionLength; // Adjust start to maintain length
-          potentialNewStart = Math.max(0, potentialNewStart); // Re-clamp start
+          potentialNewStart = potentialNewEnd - currentSelectionLength;
+          potentialNewStart = Math.max(0, potentialNewStart);
         }
 
         setTrimStart(potentialNewStart);
@@ -502,9 +501,13 @@ export default function HighlightModal({
     if (isDragging) {
       window.addEventListener("mousemove", handleDragMove);
       window.addEventListener("mouseup", handleDragEnd);
+      window.addEventListener("touchmove", handleDragMove);
+      window.addEventListener("touchend", handleDragEnd);
       return () => {
         window.removeEventListener("mousemove", handleDragMove);
         window.removeEventListener("mouseup", handleDragEnd);
+        window.removeEventListener("touchmove", handleDragMove);
+        window.removeEventListener("touchend", handleDragEnd);
       };
     }
   }, [isDragging, handleDragMove, handleDragEnd]);
@@ -556,13 +559,17 @@ export default function HighlightModal({
   };
 
   const handleHighlightUpload = async () => {
+    setIsUploading(true);
+
     const response = await uploadHighlight(mediaItems);
 
     if (response.status !== 200) {
       setHighlightNotification(response.message);
+      setIsUploading(false);
     }
 
     setHighlightNotification(response.message);
+    setIsUploading(false);
     handleShowHighlightModal(false);
   };
 
@@ -582,20 +589,37 @@ export default function HighlightModal({
           )}
         </button>
 
-        <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md">
-          {isCropping ? "Edit Media" : step === 1 && "New Highlight"}
-        </h2>
+        {step === 1 && (
+          <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md">
+            New Highlight
+          </h2>
+        )}
 
         {/* Upload button */}
         {!isCropping && step === 2 && mediaItems.length > 0 && (
-          <button
-            type="button"
-            onClick={handleHighlightUpload}
-            className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md"
-            disabled={isUploading}
-          >
-            {isUploading ? "Uploading..." : "Upload"}
-          </button>
+          <div className="flex items-center gap-2">
+            {currentMedia.type === "image" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
+                  setIsCropping(true); // Open the cropper
+                }}
+                className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full"
+              >
+                <CiCrop className="w-5 h-5 text-white" />
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleHighlightUpload}
+              className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md"
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Upload"}
+            </button>
+          </div>
         )}
       </div>
 
@@ -680,12 +704,13 @@ export default function HighlightModal({
                       ref={trackEditorRef}
                       className="relative h-16 bg-gray-800 rounded-md cursor-pointer"
                       onClick={handleTrackEditorClick}
+                      onTouchStart={handleTrackEditorClick}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           handleTrackEditorClick(
                             e as unknown as React.MouseEvent,
-                          ); // Cast to reuse the same function
+                          );
                         }
                       }}
                       style={
@@ -712,6 +737,13 @@ export default function HighlightModal({
                           e.stopPropagation();
                           handleDragStart("start", e);
                         }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(
+                            "start",
+                            e as unknown as React.MouseEvent,
+                          );
+                        }}
                       >
                         <FaChevronLeft className="text-2xl text-white" />
                       </button>
@@ -727,6 +759,13 @@ export default function HighlightModal({
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           handleDragStart("end", e);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(
+                            "end",
+                            e as unknown as React.MouseEvent,
+                          );
                         }}
                       >
                         <FaChevronRight className="text-2xl text-white" />
@@ -746,6 +785,13 @@ export default function HighlightModal({
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           handleDragStart("middle", e);
+                        }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          handleDragStart(
+                            "middle",
+                            e as unknown as React.MouseEvent,
+                          );
                         }}
                       />
                       {/* Playhead for trimmer */}
@@ -784,17 +830,6 @@ export default function HighlightModal({
               <div className="w-full flex items-center justify-center relative overflow-hidden">
                 {currentMedia.type === "image" ? (
                   <div className="w-full h-screen">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageToCrop(currentMedia.url); // Set the URL of the current image to crop
-                        setIsCropping(true); // Open the cropper
-                      }}
-                      className="fixed top-5 right-24 backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full z-10"
-                    >
-                      <CiCrop className="w-5 h-5 text-white" />
-                    </button>
-
                     <Image
                       src={currentMedia.url}
                       alt="Selected media"
