@@ -18,6 +18,7 @@ import { useForm } from "react-hook-form";
 import { CiCrop } from "react-icons/ci";
 import { TbWorld } from "react-icons/tb";
 import type { z } from "zod";
+import DateTimeSelectorBtn from "../atoms/DateTimeSelectorBtn";
 import Notification from "../atoms/Notification";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
@@ -527,65 +528,24 @@ closePopupModalType) {
                 </div>
 
                 {/* Date and time */}
-                <div className="space-y-2 text-sm">
-                  <h2 className="font-bold text-slate-700">Date</h2>
+                <div className="space-y-4 text-sm">
+                  <h2 className="font-bold text-slate-700">Date & Time</h2>
+                  <div className="grid grid-cols-2 gap-4">
+                    <DateTimeSelectorBtn
+                      dateType="single"
+                      currentType={dateType}
+                      title="Single/Range"
+                      text="One date or continuous range"
+                      onClick={setDateType}
+                    />
 
-                  <div className="space-y-2">
-                    <div>
-                      <button
-                        type="button"
-                        className="space-y-1 border rounded-md p-2 shadow-md w-full"
-                        onClick={() => setDateType("single")}
-                      >
-                        <span className="flex justify-between items-center w-full text-slate-700">
-                          <p className="font-bold">Single or Range</p>
-                          <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-black">
-                            <span
-                              className={cn(
-                                "bg-black w-[10px] h-[10px] rounded-full",
-                                {
-                                  hidden: dateType !== "single",
-                                  flex: dateType === "single",
-                                },
-                              )}
-                            />
-                          </span>
-                        </span>
-
-                        <p className="text-start text-[13px] text-slate-700">
-                          Choose one date or a continuous range (e.g., Feb 21 –
-                          Feb 25).
-                        </p>
-                      </button>
-                    </div>
-
-                    <div>
-                      <button
-                        type="button"
-                        className="space-y-1 border rounded-md p-2 shadow-md w-full"
-                        onClick={() => setDateType("specific")}
-                      >
-                        <span className="flex justify-between items-center w-full text-slate-700">
-                          <p className="font-bold">Custom Dates</p>
-                          <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-black">
-                            <span
-                              className={cn(
-                                "bg-black w-[10px] h-[10px] rounded-full",
-                                {
-                                  hidden: dateType !== "specific",
-                                  flex: dateType === "specific",
-                                },
-                              )}
-                            />
-                          </span>
-                        </span>
-
-                        <p className="text-start text-[13px] text-slate-700">
-                          Set multiple specific dates (e.g., Jan 20, Mar 6, Feb
-                          5).
-                        </p>
-                      </button>
-                    </div>
+                    <DateTimeSelectorBtn
+                      dateType="specific"
+                      currentType={dateType}
+                      title="Multiple Dates"
+                      text="Set specific non-consecutive dates"
+                      onClick={setDateType}
+                    />
                   </div>
 
                   <DateTimePicker
@@ -593,8 +553,8 @@ closePopupModalType) {
                     dateType={dateType}
                   />
                   {/* {dateAndTime === undefined && (
-                    <p className="text-red-500 text-sm pl-3">
-                      Set date and time
+                    <p className="text-sm text-red-600">
+                      Please select date(s) and time(s)
                     </p>
                   )} */}
                 </div>

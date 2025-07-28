@@ -27,7 +27,8 @@ export default {
       animation: {
         slideIn: "slideIn 0.5s ease-in-out forwards",
         slideOut: "slideOut 0.5s ease-in-out forwards",
-        story: "progressFill 3s linear forwards",
+        // story: "progressFill 3s linear forwards",
+        story: "progressFill var(--animation-duration, 3s) linear forwards",
       },
       backgroundImage: {
         landing: "url('/assets/images/landingpageBackgroound.jpg')",
