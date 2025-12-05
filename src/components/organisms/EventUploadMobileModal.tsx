@@ -16,6 +16,14 @@ import { useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { CiCrop } from "react-icons/ci";
+import { LiaTimesSolid } from "react-icons/lia";
+import {
+  MdArrowBackIos,
+  MdArrowForwardIos,
+  MdCancel,
+  MdNavigateNext,
+  MdOutlineNavigateNext,
+} from "react-icons/md";
 import { TbWorld } from "react-icons/tb";
 import type { z } from "zod";
 import DateTimeSelectorBtn from "../atoms/DateTimeSelectorBtn";
@@ -383,64 +391,60 @@ closePopupModalType) {
   };
 
   return (
-    <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-white flex flex-col items-center md:hidden overflow-y-scroll">
-      {step === 1 && imgUrl && (
-        <>
-          <div className="w-full space-y-5">
-            <div className="w-[90%] flex justify-between mt-5 mx-auto">
-              <button type="button" onClick={() => handleClosePopup(false)}>
-                <Image
-                  src="/assets/images/cancel.svg"
-                  alt="Cancel"
-                  width={15}
-                  height={15}
-                />
-              </button>
+    <div className="fixed left-0 top-0 z-20 w-full h-full bg-white flex flex-col items-center md:hidden">
+      {step === 1 && imgUrl && !showCrop && (
+        <div className="relative w-full h-full flex justify-center items-center">
+          {/* Top Controls */}
+          <div className="absolute top-3 left-0 w-full flex justify-between px-3 z-20">
+            <button
+              type="button"
+              onClick={() => handleClosePopup(false)}
+              className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full"
+              aria-label="Close popup"
+            >
+              <LiaTimesSolid className="text-white text-xl font-bold" />
+            </button>
 
-              <h1 className="font-bold text-lg">New Post</h1>
-
-              <button
-                type="button"
-                className="font-bold"
-                onClick={() => setStep((prevStep) => prevStep + 1)}
-              >
-                Next
-              </button>
-            </div>
-
-            <hr />
+            <button
+              type="button"
+              onClick={() => setStep((prevStep) => prevStep + 1)}
+              className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full"
+              aria-label="Next step"
+            >
+              <MdArrowForwardIos className="text-white text-xl" />
+            </button>
           </div>
 
-          {showCrop ? (
-            <div className="w-full h-full absolute pt-5 bg-white">
-              <ImageCropper
-                imagePreview={imgUrl}
-                handleCropped={handleCropped}
-                handleCancel={() => {
-                  setShowCrop(!showCrop);
-                }}
-              />
-            </div>
-          ) : (
-            <div className="relative w-full h-full flex justify-center items-center">
-              <button
-                type="button"
-                className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-5 left-2"
-                onClick={() => setShowCrop((prevState) => !prevState)}
-              >
-                <CiCrop className="w-5 h-5 text-white" />
-              </button>
+          {/* Crop Button */}
+          <button
+            type="button"
+            className="absolute z-20 backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full top-14 right-3"
+            onClick={() => setShowCrop((prev) => !prev)}
+            aria-label="Crop image"
+          >
+            <CiCrop className="w-5 h-5 text-white" />
+          </button>
 
-              <Image
-                src={croppedPreview ?? imgUrl}
-                alt="Selected Avatar"
-                width={0}
-                height={0}
-                className="w-full h-[100%] object-contain mx-auto"
-              />
-            </div>
-          )}
-        </>
+          {/* Image */}
+          <div className="relative w-full h-full">
+            <Image
+              src={croppedPreview ?? imgUrl}
+              alt="Selected Avatar"
+              fill
+              className="object-contain w-full mx-auto"
+            />
+          </div>
+        </div>
+      )}
+
+      {step === 1 && imgUrl && showCrop && (
+        <div className="absolute inset-0 z-30 w-full h-full bg-white pt-5">
+          <ImageCropper
+            imagePreview={imgUrl}
+            handleCropped={handleCropped}
+            handleCancel={() => setShowCrop(false)}
+          />
+        </div>
       )}
 
       {step === 2 && imgUrl && (
@@ -451,15 +455,8 @@ closePopupModalType) {
                 type="button"
                 onClick={() => setStep((prevValue) => prevValue - 1)}
               >
-                <Image
-                  src="/assets/images/moveBack.svg"
-                  alt="Cancel"
-                  width={30}
-                  height={30}
-                />
+                <MdArrowBackIos className="text-xl" />
               </button>
-
-              <h1 className="font-bold text-lg">New Post</h1>
 
               <button
                 type="button"

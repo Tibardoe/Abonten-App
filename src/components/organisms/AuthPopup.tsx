@@ -29,6 +29,11 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
 
   const [otpArray, setOtpArray] = useState(["", "", "", "", "", ""]);
 
+  const [hubtelResponseData, setHubtelResponseData] = useState<{
+    requestId: string;
+    prefix: string;
+  } | null>(null);
+
   const [otpErrorMessageShown, setOtpErrorMessageShown] = useState(false);
 
   const router = useRouter();
@@ -53,7 +58,17 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
     try {
       const formattedPhone = phoneNumberFormatter(phone);
       setPhone(formattedPhone);
-      await signInWithPhone(`${countryCode}${formattedPhone}`);
+
+      const response = await signInWithPhone(`${countryCode}${formattedPhone}`);
+
+      if (response?.status !== 200) {
+        console.log(response?.message);
+      }
+
+      setHubtelResponseData({
+        requestId: response?.data.data.requestId,
+        prefix: response?.data.data.prefix,
+      });
 
       setStep(2);
     } catch (error) {
@@ -64,13 +79,29 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
   const handleOtpsubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    try {
-      await verifyOtp(fullPhoneNumber, otp);
-      router.push(`/events?location=${location}`);
-    } catch (error) {
-      console.error("OTP Verification Error:", error);
-      setOtpErrorMessageShown(true);
+    if (!hubtelResponseData?.requestId || !hubtelResponseData?.prefix) {
+      return;
     }
+
+    const response = await verifyOtp(
+      hubtelResponseData?.requestId,
+      hubtelResponseData?.prefix,
+      otp,
+    );
+
+    if (response?.status !== 200) {
+      console.log(response?.message);
+    }
+
+    router.push(`/events?location=${location}`);
+
+    // try {
+    //   await verifyOtp(fullPhoneNumber, otp);
+    //   router.push(`/events?location=${location}`);
+    // } catch (error) {
+    //   console.error("OTP Verification Error:", error);
+    //   setOtpErrorMessageShown(true);
+    // }
   };
 
   const handleOtpChange = (index: number, value: string) => {

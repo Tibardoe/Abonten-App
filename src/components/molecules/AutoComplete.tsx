@@ -760,7 +760,7 @@ export default function PostAutoComplete({
         onChange={handleInputChange}
         value={inputValue}
         placeholder={placeholderText.text}
-        className="text-black outline-none w-full bg-transparent"
+        className="text-black outline-none w-full bg-transparent text-lg"
       />
 
       {searchResults.length > 0 && (

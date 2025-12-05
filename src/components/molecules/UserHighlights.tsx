@@ -377,7 +377,7 @@ export default function UserHighlights({
   return (
     highlights && (
       <>
-        <div className="relative">
+        <div>
           {/* Desktop scroll left */}
           {showLeftArrow && (
             <button

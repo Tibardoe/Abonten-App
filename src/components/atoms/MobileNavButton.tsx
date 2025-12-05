@@ -29,8 +29,8 @@ export default function MobileNavButton({
         "opacity-100 font-semibold": pathname === href,
       })}
     >
-      <Image src={imgUrl} alt="text" height={30} width={30} />
-      <p className="text-sm">{text}</p>
+      <Image src={imgUrl} alt="text" height={25} width={25} />
+      <p className="text-xs">{text}</p>
     </Link>
   );
 }

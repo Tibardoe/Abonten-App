@@ -60,7 +60,7 @@ export default async function page({
   const selected = await getDailyEvent(events, safeLocation);
 
   return (
-    <section className="space-y-5 min-h-dvh">
+    <section className="space-y-5">
       <LocationAndFilterSection />
 
       {eventsWithinLocation.data?.length ? (
@@ -127,7 +127,7 @@ export default async function page({
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] py-5 px-4 text-center">
           <div className="max-w-md mx-auto">
             <div className="relative w-64 h-64 mx-auto mb-8">
               <img

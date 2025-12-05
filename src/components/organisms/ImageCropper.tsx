@@ -126,24 +126,15 @@ export default function ImageCropper({
   ];
 
   return (
-    <div className="space-y-4 md:p-4 w-full md:overflow-y-scroll mb-5">
+    <div className="space-y-4 md:p-4 w-full mb-5">
       {!!imagePreview && (
         <>
-          <div className="flex justify-between items-center px-5 md:mt-0">
-            <div className="flex justify-between gap-3">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="min-w-[100px]"
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleCropSave} className="min-w-[100px]">
-                Save Changes
-              </Button>
-            </div>
+          <div className="flex justify-between items-center px-5 text-white">
+            <Button onClick={handleCancel}>Cancel</Button>
 
-            <div className="flex justify-between items-center mb-2 ml-7">
+            <Button onClick={handleCropSave}>Done</Button>
+
+            {/* <div className="flex justify-between items-center mb-2 ml-7">
               <button
                 type="button"
                 onClick={() => setShowControls(!showControls)}
@@ -151,7 +142,7 @@ export default function ImageCropper({
               >
                 {showControls ? "Hide Controls" : "Show Controls"}
               </button>
-            </div>
+            </div> */}
           </div>
 
           <div className="relative flex flex-col w-[80%] mx-auto">

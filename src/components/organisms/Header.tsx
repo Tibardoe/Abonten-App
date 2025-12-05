@@ -104,7 +104,7 @@ export default function Header() {
   };
 
   return (
-    <nav className="w-full flex justify-center fixed bg-white z-30">
+    <>
       {showAuthPopup && (
         <>
           <AuthPopup
@@ -120,92 +120,94 @@ export default function Header() {
 
       {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
 
-      <div className="flex justify-between py-5 w-[95%] border-b border-black-500 items-center">
-        <div className="mx-auto lg:mx-0 flex items-center w-full">
-          {/* Menu toggle button */}
-          <button
-            type="button"
-            onClick={toggleMenu}
-            className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
-          >
-            {isMenuClicked ? (
-              <LiaTimesSolid className="text-2xl" />
-            ) : (
-              <IoMenuOutline className="text-2xl" />
-            )}
-          </button>
-
-          <Link
-            href={`/events/location/${generateSlug(location ?? "")}`}
-            className="absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0"
-          >
-            <h1 className="text-2xl md:text-4xl font-bold">Abonten</h1>
-          </Link>
-        </div>
-
-        {userSession ? (
-          <div className="hidden lg:flex items-center gap-7 min-w-fit">
-            {isOrganizer && (
-              <Link
-                href="/manage/attendance/event-list"
-                className="flex gap-1 items-center"
-              >
-                <MdOutlineManageHistory className="text-2xl" />
-                Manage Attendance
-              </Link>
-            )}
-            {isAttendee && (
-              <Link
-                href="/manage/my-events"
-                className="flex gap-1 items-center"
-              >
-                <GiPartyFlags className="text-2xl" />
-                My Events
-              </Link>
-            )}
-
-            <EventUploadButton />
-
+      <nav className="w-full flex justify-center fixed bg-white">
+        <div className="flex justify-between py-5 w-[95%] border-b border-black-500 items-center">
+          <div className="mx-auto lg:mx-0 flex items-center w-full">
+            {/* Menu toggle button */}
             <button
               type="button"
-              onClick={handleSignOut}
-              className="flex gap-1 items-center"
+              onClick={toggleMenu}
+              className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px]"
             >
-              <HiOutlineLogin className="text-3xl opacity-70" />
-              SignOut
+              {isMenuClicked ? (
+                <LiaTimesSolid className="text-2xl" />
+              ) : (
+                <IoMenuOutline className="text-2xl" />
+              )}
             </button>
 
-            {profile.username && (
-              <Link
-                href={`/user/${profile.username}/posts`}
-                className={cn(
-                  "bg-transparent rounded-full font-bold border-black",
-                  { hidden: isUserAccount },
-                )}
+            <Link
+              href={`/events/location/${generateSlug(location ?? "")}`}
+              className="absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0"
+            >
+              <h1 className="text-2xl md:text-4xl font-bold">Abonten</h1>
+            </Link>
+          </div>
+
+          {userSession ? (
+            <div className="hidden lg:flex items-center gap-7 min-w-fit">
+              {isOrganizer && (
+                <Link
+                  href="/manage/attendance/event-list"
+                  className="flex gap-1 items-center"
+                >
+                  <MdOutlineManageHistory className="text-2xl" />
+                  Manage Attendance
+                </Link>
+              )}
+              {isAttendee && (
+                <Link
+                  href="/manage/my-events"
+                  className="flex gap-1 items-center"
+                >
+                  <GiPartyFlags className="text-2xl" />
+                  My Events
+                </Link>
+              )}
+
+              <EventUploadButton />
+
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex gap-1 items-center"
               >
-                <UserAvatar avatarUrl={avatarUrl} width={60} height={60} />
-              </Link>
-            )}
-          </div>
-        ) : (
-          <div className="space-x-3 hidden lg:flex">
-            <Button
-              variant="outline"
-              className="bg-transparent rounded-md font-bold border-black"
-              onClick={() => handleClick("Sign Up")}
-            >
-              Sign Up
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-transparent rounded-md font-bold border-black"
-              onClick={() => handleClick("Sign In")}
-            >
-              Sign In
-            </Button>
-          </div>
-        )}
-      </div>
-    </nav>
+                <HiOutlineLogin className="text-3xl opacity-70" />
+                SignOut
+              </button>
+
+              {profile.username && (
+                <Link
+                  href={`/user/${profile.username}/posts`}
+                  className={cn(
+                    "bg-transparent rounded-full font-bold border-black",
+                    { hidden: isUserAccount },
+                  )}
+                >
+                  <UserAvatar avatarUrl={avatarUrl} width={60} height={60} />
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-x-3 hidden lg:flex">
+              <Button
+                variant="outline"
+                className="bg-transparent rounded-md font-bold border-black"
+                onClick={() => handleClick("Sign Up")}
+              >
+                Sign Up
+              </Button>
+              <Button
+                variant="outline"
+                className="bg-transparent rounded-md font-bold border-black"
+                onClick={() => handleClick("Sign In")}
+              >
+                Sign In
+              </Button>
+            </div>
+          )}
+        </div>
+      </nav>
+    </>
   );
 }

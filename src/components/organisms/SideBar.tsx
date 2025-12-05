@@ -130,7 +130,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
         />
       )}
 
-      <div className="bg-black bg-opacity-50 w-full flex lg:hidden fixed left-0 top-[71px] h-[100%]">
+      <div className="bg-black bg-opacity-50 w-full flex lg:hidden fixed z-10 left-0 top-[71px] h-[100%]">
         <div
           className={cn(
             "bg-white w-[80%]",
