@@ -19,7 +19,7 @@ export async function updateSession(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: { name: string; value: string }[]) {
         for (const { name, value } of cookiesToSet) {
           request.cookies.set(name, value);
         }
