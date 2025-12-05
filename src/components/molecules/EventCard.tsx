@@ -31,7 +31,7 @@ export default function EventCard({
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, event_dates);
 
   return (
-    <li className="relative group overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 bg-white border border-gray-100 hover:border-gray-200">
+    <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-white border border-gray-100 hover:border-gray-200">
       {/* Status Overlays */}
       {(status === "canceled" || overlayMessage) && (
         <div

@@ -120,7 +120,7 @@ export default function Header() {
 
       {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
 
-      <nav className="w-full flex justify-center fixed bg-white">
+      <nav className="w-full flex justify-center fixed bg-white z-10">
         <div className="flex justify-between py-5 w-[95%] border-b border-black-500 items-center">
           <div className="mx-auto lg:mx-0 flex items-center w-full">
             {/* Menu toggle button */}

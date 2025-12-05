@@ -72,8 +72,8 @@ export default function EventsSlider({
       : "#";
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between font-bold text-xl">
+    <div>
+      <div className="flex justify-between font-bold md:text-lg">
         <h2>{heading}</h2>
 
         {events.length > 0 && (
@@ -90,7 +90,7 @@ export default function EventsSlider({
       <div className="relative">
         {/* Overlay */}
         {events.length === 0 && (
-          <div className="relative w-full h-72 rounded-2xl overflow-hidden isolate">
+          <div className="relative w-full h-72 rounded-xl overflow-hidden isolate">
             {/* Dark Background */}
             <div className="absolute inset-0 z-0 bg-black bg-opacity-95" />
 
