@@ -1,6 +1,6 @@
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
-import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
+// import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
