@@ -73,7 +73,7 @@ export default function EventsSlider({
 
   return (
     <div>
-      <div className="flex justify-between font-bold md:text-lg">
+      <div className="flex justify-between font-bold text-lg">
         <h2>{heading}</h2>
 
         {events.length > 0 && (

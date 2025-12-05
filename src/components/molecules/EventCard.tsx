@@ -66,7 +66,7 @@ export default function EventCard({
         <div className="flex justify-between items-start gap-3">
           <Link
             href={`/events/${event_code.toLowerCase()}`}
-            className="text-xl font-bold text-gray-900 hover:text-primary transition-colors line-clamp-2"
+            className="text-lg font-medium text-gray-900 hover:text-primary transition-colors line-clamp-2"
             title={title}
           >
             {title}

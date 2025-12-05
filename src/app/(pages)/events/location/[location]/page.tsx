@@ -98,7 +98,7 @@ export default async function page({
           />
 
           <div className="mb-5">
-            <h2 className="md:text-lg font-bold mb-2">All Events</h2>
+            <h2 className="text-lg font-bold">All Events</h2>
 
             <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
               {events.map((post) => (
