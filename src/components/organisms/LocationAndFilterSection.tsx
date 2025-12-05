@@ -34,10 +34,10 @@ export default function LocationAndFilterSection() {
       <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
         <button
           type="button"
-          className="flex gap-3 items-center text-lg md:text-xl"
+          className="flex gap-1 items-center text-lg md:text-xl"
           onClick={() => handleShowChangeLocationModal(true)}
         >
-          <IoLocationOutline className="text-3xl md:text-4xl lg:text-4xl" />
+          <IoLocationOutline className="text-2xl md:text-3xl" />
 
           <p>{location}</p>
         </button>
