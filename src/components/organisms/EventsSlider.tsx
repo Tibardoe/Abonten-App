@@ -116,7 +116,7 @@ export default function EventsSlider({
               </p>
               <Link
                 href={`/events/location/${location}`}
-                className="mt-4 inline-block bg-white text-black font-medium text-sm px-4 py-2 rounded-md transition-all drop-shadow"
+                className="mt-4 inline-block bg-mint text-white font-medium text-sm px-4 py-2 rounded-md transition-all drop-shadow"
               >
                 Browse All Events
               </Link>
