@@ -23,7 +23,7 @@ export default function OutlinedShareBtn({
       type="button"
       onClick={() => handleShare({ title, url })}
       // className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
-      className="w-full flex items-center justify-center gap-2 bg-black text-white py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors"
+      className="w-full flex items-center justify-center gap-2 bg-black text-mint py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors"
     >
       <FiShare2 className="md:text-lg" />
       Share

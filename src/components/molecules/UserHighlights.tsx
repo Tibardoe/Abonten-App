@@ -412,7 +412,7 @@ export default function UserHighlights({
                 <li key={index.toString()} className="shrink-0">
                   <button
                     type="button"
-                    className="m-1 rounded-full border-4 border-black flex items-center justify-center"
+                    className="m-1 rounded-full border-4 border-mint flex items-center justify-center"
                     onClick={() => {
                       setShowHighlight(true);
                       setCurrentHighlightIndex(index);

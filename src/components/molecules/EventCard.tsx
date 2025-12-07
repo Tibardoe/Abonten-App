@@ -37,7 +37,7 @@ export default function EventCard({
         <div
           className={`absolute inset-0 z-10 flex items-center justify-center 
           ${status === "canceled" ? "bg-red-900/80" : "bg-black/70"} 
-          backdrop-blur-sm text-white font-bold text-lg md:text-xl p-4 text-center`}
+          backdrop-blur-sm text-mint font-bold text-lg md:text-xl p-4 text-center`}
         >
           {status === "canceled" ? "Event Canceled" : overlayMessage}
         </div>
@@ -123,8 +123,8 @@ export default function EventCard({
             <span
               className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
                 min_price === 0 || min_price === null
-                  ? "bg-green-100 text-green-800"
-                  : "bg-blue-100 text-blue-800"
+                  ? "bg-black text-mint"
+                  : "bg-black text-mint"
               }`}
             >
               {min_price === 0 || min_price === null

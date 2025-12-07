@@ -8,6 +8,7 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { generateSlug } from "@/utils/geerateSlug";
 import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -120,7 +121,7 @@ export default function Header() {
 
       {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
 
-      <nav className="w-full flex justify-center fixed bg-white z-10">
+      <nav className="w-full flex justify-center fixed bg-white z-20">
         <div className="flex justify-between py-5 w-[95%] border-b border-black-500 items-center">
           <div className="mx-auto lg:mx-0 flex items-center w-full">
             {/* Menu toggle button */}
@@ -138,9 +139,13 @@ export default function Header() {
 
             <Link
               href={`/events/location/${generateSlug(location ?? "")}`}
-              className="absolute left-1/2 transform -translate-x-1/2 lg:static lg:translate-x-0"
+              className="absolute right-4 transform lg:static lg:translate-x-0 w-12 h-12 md:w-16 md:h-16"
             >
-              <h1 className="text-2xl md:text-4xl font-bold">Abonten</h1>
+              <Image
+                src="/assets/images/abonten-logo-black.svg"
+                alt="Abonten Logo Black"
+                fill
+              />
             </Link>
           </div>
 

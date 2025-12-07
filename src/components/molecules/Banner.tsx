@@ -46,8 +46,8 @@ export default function Banner({ event }: BannerProps) {
       {/* Content */}
       <div className="relative h-full flex flex-col justify-end p-3 xs:p-4 sm:p-5 md:p-6 lg:p-8 text-white">
         {/* Badge - Responsive positioning and size */}
-        <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4 md:top-5 md:right-5 lg:top-6 lg:right-6 bg-black text-white px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 rounded-full text-xs xs:text-sm font-medium flex items-center gap-1">
-          <PiTicketBold className="text-white text-xs xs:text-sm" />
+        <div className="absolute top-2 right-2 xs:top-3 xs:right-3 sm:top-4 sm:right-4 md:top-5 md:right-5 lg:top-6 lg:right-6 bg-black text-mint px-2 py-0.5 xs:px-2.5 xs:py-1 sm:px-3 sm:py-1 rounded-full text-xs xs:text-sm font-medium flex items-center gap-1">
+          <PiTicketBold className="text-xs xs:text-sm" />
           <span className="xs:inline">FEATURED</span>
         </div>
 
@@ -103,10 +103,10 @@ export default function Banner({ event }: BannerProps) {
 
             <Link
               href={`/events/${event.event_code}`}
-              className="px-3 py-1.5 md:px-4 md:py-2 bg-black hover:bg-gray-400 text-white rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
+              className="px-3 py-1.5 md:px-4 md:py-2 bg-black hover:bg-gray-400 text-mint rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
               View Details
-              <FaArrowRightLong />
+              <FaArrowRightLong className="text-mint" />
             </Link>
           </div>
         </div>

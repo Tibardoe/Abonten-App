@@ -79,10 +79,10 @@ export default function EventsSlider({
         {events.length > 0 && (
           <Link
             href={viewAllLink}
-            className="flex items-center gap-1 group transition-all"
+            className="flex items-center group transition-all"
           >
             <span className="hover:underline">View all</span>
-            <MdKeyboardArrowRight className="text-3xl transition-transform group-hover:translate-x-1" />
+            <MdKeyboardArrowRight className="text-2xl md:text-3xl transition-transform group-hover:translate-x-1" />
           </Link>
         )}
       </div>

@@ -40,24 +40,28 @@ export default function Landing() {
       )}
 
       {/* Header */}
-      <nav className="w-full bg-black bg-opacity-30 flex justify-center z-10">
+      <nav className="fixed w-full bg-black bg-opacity-30 flex justify-center z-10">
         <div className="flex justify-between py-5 w-[90%]">
-          <div>
-            <Link href="/">
-              <h1 className="text-2xl md:text-4xl font-bold">Abonten</h1>
-            </Link>
-          </div>
+          <Link href="/" className="w-12 h-12 md:w-16 md:h-16">
+            <Image
+              src="/assets/images/abonten-logo-white.svg"
+              alt="Abonten Logo White"
+              width={100}
+              height={100}
+              className="object-contain"
+            />
+          </Link>
+
           <div className="space-x-3">
             <Button
-              variant="outline"
-              className="bg-transparent rounded-md font-bold"
+              className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint"
               onClick={handleClick}
             >
               Sign Up
             </Button>
             <Button
               variant="outline"
-              className="bg-transparent rounded-md font-bold"
+              className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint"
               onClick={handleClick}
             >
               Sign In
@@ -83,7 +87,7 @@ export default function Landing() {
             />
 
             <Link href={`/events/location/${generateSlug(selectedAddress)}`}>
-              <FiArrowRightCircle className="text-5xl" />
+              <FiArrowRightCircle className="text-5xl text-mint" />
             </Link>
           </div>
         </div>
