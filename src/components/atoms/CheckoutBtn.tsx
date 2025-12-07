@@ -130,7 +130,7 @@ export default function CheckoutBtn({
       actionButton = (
         <>
           <Button
-            className="font-bold rounded-lg w-full p-6 text-lg"
+            className="font-bold rounded-lg w-full p-6 text-lg bg-mint"
             onClick={() => handleCheckoutModal(true)}
           >
             {btnText}
@@ -152,7 +152,7 @@ export default function CheckoutBtn({
     case "Register":
       actionButton = requireRegistration && (
         <Button
-          className="font-bold rounded-md w-full p-6 text-lg"
+          className="font-bold rounded-md w-full p-6 text-lg text-mint"
           onClick={() => handleRegistration([{ type: "Free", quantity: 1 }])}
           disabled={loading}
         >

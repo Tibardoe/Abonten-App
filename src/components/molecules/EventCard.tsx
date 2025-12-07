@@ -123,8 +123,8 @@ export default function EventCard({
             <span
               className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
                 min_price === 0 || min_price === null
-                  ? "bg-black text-mint"
-                  : "bg-black text-mint"
+                  ? "bg-mint text-white"
+                  : "bg-mint text-white"
               }`}
             >
               {min_price === 0 || min_price === null

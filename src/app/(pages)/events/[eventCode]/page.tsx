@@ -178,7 +178,7 @@ export default async function page({
 
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 bg-black text-mint py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors"
               >
                 <FiMail /> Contact
               </button>
@@ -231,7 +231,7 @@ export default async function page({
 
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 bg-black text-mint py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
               >
                 <FiMail className="text-lg" /> Contact Organizer
               </button>
@@ -240,7 +240,7 @@ export default async function page({
                   href={`https://${event.website_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-black text-mint py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Website <FiArrowUpRight className="text-lg" />
                 </a>
@@ -298,7 +298,7 @@ export default async function page({
                   href={`https://${event.website_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-black text-mint py-3 rounded-lg text-sm hover:bg-gray-800"
+                  className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg text-sm hover:bg-gray-800"
                 >
                   Visit Website <FiArrowUpRight />
                 </a>
@@ -312,7 +312,7 @@ export default async function page({
 
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-2 bg-black text-mint py-3 rounded-lg text-sm hover:bg-gray-800"
+                className="w-full flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg text-sm hover:bg-gray-800"
               >
                 <FiMail /> Contact Organizer
               </button>
