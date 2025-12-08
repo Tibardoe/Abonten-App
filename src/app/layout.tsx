@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/context/authProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import localFont from "next/font/local";
 // import { NextIntlClientProvider, hasLocale } from "next-intl";
 // import { notFound } from "next/navigation";
 // import { routing } from "@/i18n/routing";
@@ -18,6 +19,32 @@ import ReactQueryProvider from "@/providers/ReactQueryProvider";
 //   variable: "--font-geist-mono",
 //   subsets: ["latin"],
 // });
+
+const euclid = localFont({
+  src: [
+    {
+      path: "../../public/fonts/EuclidCircularB-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/EuclidCircularB-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/EuclidCircularB-Semibold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/EuclidCircularB-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-euclidCircular",
+});
 
 export const metadata: Metadata = {
   title:
@@ -39,7 +66,7 @@ export default async function RootLayout({
   // }
 
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+    <html lang="en" className={`${euclid.variable}`}>
       <body
       // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

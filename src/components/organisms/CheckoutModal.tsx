@@ -332,7 +332,7 @@ export default function CheckoutModal({
             type="button"
             onClick={handleProceed}
             disabled={isProceeding}
-            className="rounded-md p-4 font-bold text-white bg-black text-center mt-5"
+            className="rounded-md p-4 font-bold text-white bg-mint text-center mt-5"
           >
             {isProceeding ? "Loading..." : "Proceed to Payment"}
           </button>
