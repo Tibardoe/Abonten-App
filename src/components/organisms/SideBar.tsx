@@ -138,12 +138,12 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
           )}
         >
           {user ? (
-            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5 text-lg">
+            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
               <Link
                 href={`/events/location/${location}`}
                 className="flex gap-1 items-center"
               >
-                <GoHome className="text-2xl" />
+                <GoHome className="text-xl" />
                 Home
               </Link>
 
@@ -152,7 +152,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 className="flex gap-1 items-center"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <IoCreateOutline className="text-2xl" />
+                <IoCreateOutline className="text-xl" />
                 Post
               </button>
 
@@ -161,7 +161,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                   href="/manage/attendance/event-list"
                   className="flex gap-1 items-center"
                 >
-                  <MdOutlineManageHistory className="text-2xl" />
+                  <MdOutlineManageHistory className="text-xl" />
                   Manage Attendance
                 </Link>
               )}
@@ -171,7 +171,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                   href="/manage/my-events"
                   className="flex gap-1 items-center"
                 >
-                  <GiPartyFlags className="text-2xl" />
+                  <GiPartyFlags className="text-xl" />
                   My Events
                 </Link>
               )}
@@ -189,8 +189,8 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 onClick={handleSignOut}
                 className="flex gap-1 items-center"
               >
-                <HiOutlineLogin className="text-3xl opacity-70" />
-                SignOut
+                <HiOutlineLogin className="text-2xl opacity-70" />
+                Sign Out
               </button>
             </div>
           ) : (

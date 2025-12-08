@@ -145,7 +145,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
           )}
         </div>
 
-        <Button className="font-semibold md:self-end rounded-full md:rounded-md py-6 text-lg md:text-sm mt-64 md:mt-0">
+        <Button className="font-semibold md:self-end bg-mint rounded-md py-6 text-lg md:text-sm mt-64 md:mt-0">
           Save This Wallet
         </Button>
       </form>

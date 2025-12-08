@@ -1,6 +1,7 @@
 import useUserLocation, { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -108,13 +109,17 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
   return step === 1 ? (
     <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-dvh z-30 fixed left-0 items-center">
       <div className="w-[90%] text-black h-screen relative">
-        <button type="button" className="ml-auto mb-10" onClick={onClose}>
+        <button type="button" className="ml-auto mb-5" onClick={onClose}>
           <LiaTimesSolid className="text-2xl" />
         </button>
 
-        <h1 className="font-bold text-4xl mb-20 text-black text-center">
-          Abonten
-        </h1>
+        <Image
+          src="/assets/images/abonten-logo-black.svg"
+          alt="Abonten Logo Black"
+          width={100}
+          height={100}
+          className="object-contain w-20 h-20 mx-auto mb-5"
+        />
 
         <div className="space-y-5">
           <GoogleAuthButton buttonText={buttonText} location={location} />
@@ -134,7 +139,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
               onChange={handleChange}
             />
 
-            <Button className="w-full rounded-md text-xl font-bold py-7 absolute bottom-0">
+            <Button className="w-full rounded-md text-lg font-bold py-6 absolute bottom-0 bg-mint">
               Continue
             </Button>
           </form>
@@ -185,7 +190,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
             )}
           </div>
 
-          <Button className="w-full rounded-md text-xl font-bold py-7 absolute bottom-0">
+          <Button className="w-full rounded-md text-xl font-bold py-7 absolute bottom-0 bg-mint">
             Continue
           </Button>
         </form>

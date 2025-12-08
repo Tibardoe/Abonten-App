@@ -5,6 +5,11 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { BiWallet } from "react-icons/bi";
+import { GoHome } from "react-icons/go";
+import { MdOutlineReceipt } from "react-icons/md";
+import { RiSearchLine } from "react-icons/ri";
+import { VscAccount } from "react-icons/vsc";
 import MobileNavButton from "../atoms/MobileNavButton";
 import MobileAuthPopup from "./MobileAuthPopup";
 
@@ -48,27 +53,19 @@ export default function MobileNavBar() {
               location || "default-location",
             )}`}
             text="Home"
-            imgUrl="/assets/images/home.svg"
+            Icon={GoHome}
           />
-          <MobileNavButton
-            href="/search"
-            text="Search"
-            imgUrl="/assets/images/search.svg"
-          />
+          <MobileNavButton href="/search" text="Search" Icon={RiSearchLine} />
           <MobileNavButton
             href="/transactions"
             text="Transactions"
-            imgUrl="/assets/images/transactions.svg"
+            Icon={MdOutlineReceipt}
           />
-          <MobileNavButton
-            href="/wallet"
-            text="Wallets"
-            imgUrl="/assets/images/wallet.svg"
-          />
+          <MobileNavButton href="/wallet" text="Wallets" Icon={BiWallet} />
           <MobileNavButton
             href={userData ? `/user/${userData}/posts` : "#"}
             text="Account"
-            imgUrl="/assets/images/account.svg"
+            Icon={VscAccount}
             onClick={handleAccountClick}
           />
         </div>

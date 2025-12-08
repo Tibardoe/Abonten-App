@@ -150,7 +150,13 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
             <MdOutlineCancel className="text-2xl" />
           </button>
 
-          <h1 className="font-bold text-4xl mb-16">Abonten</h1>
+          <Image
+            src="/assets/images/abonten-logo-black.svg"
+            alt="Abonten Logo Black"
+            width={100}
+            height={100}
+            className="object-contain w-20 h-20 mx-auto mb-5"
+          />
 
           <GoogleAuthButton buttonText={buttonText} location={location} />
 
@@ -169,7 +175,7 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
               onChange={handleChange}
             />
 
-            <Button className="w-full rounded-md text-lg font-bold py-6 mt-16 mb-5">
+            <Button className="w-full rounded-md text-lg font-bold py-6 mt-16 mb-5 bg-mint">
               Continue
             </Button>
           </form>
@@ -224,7 +230,7 @@ export default function AuthPopup({ buttonText, onClose }: PopupProp) {
               )}
             </div>
 
-            <Button className="w-full rounded-md text-lg font-bold py-10 mt-16 mb-5">
+            <Button className="w-full rounded-md text-lg font-bold py-10 mt-16 mb-5 bg-mint">
               Continue
             </Button>
           </form>

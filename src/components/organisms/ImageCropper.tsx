@@ -130,9 +130,13 @@ export default function ImageCropper({
       {!!imagePreview && (
         <>
           <div className="flex justify-between items-center px-5 text-white">
-            <Button onClick={handleCancel}>Cancel</Button>
+            <Button onClick={handleCancel} className="bg-mint">
+              Cancel
+            </Button>
 
-            <Button onClick={handleCropSave}>Done</Button>
+            <Button onClick={handleCropSave} className="bg-mint">
+              Done
+            </Button>
 
             {/* <div className="flex justify-between items-center mb-2 ml-7">
               <button

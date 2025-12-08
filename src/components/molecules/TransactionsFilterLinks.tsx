@@ -35,7 +35,7 @@ export default function TransactionsFilterLinks() {
   const baseLinkClass = "shrink-0";
   const getLinkClass = (href: string) =>
     `${baseLinkClass} ${
-      isActive(href) ? "font-bold text-black" : "text-gray-500"
+      isActive(href) ? "font-bold text-mint" : "text-gray-500"
     }`;
 
   return (

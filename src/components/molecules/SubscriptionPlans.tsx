@@ -68,7 +68,7 @@ export default function SubscriptionPlans() {
         <div className="flex gap-5 self-center mb-10">
           <button
             type="button"
-            className="font-bold border border-black rounded-md text-lg py-1 px-5"
+            className="font-bold border border-mint rounded-md text-lg py-1 px-5"
             onClick={() => window.history.back()}
           >
             Back
@@ -78,7 +78,7 @@ export default function SubscriptionPlans() {
             type="button"
             onClick={handleSubscriptionCheckout}
             disabled={loading}
-            className="font-bold bg-black rounded-md text-lg py-1 px-5 text-white"
+            className="font-bold bg-mint rounded-md text-lg py-1 px-5 text-white"
           >
             {loading ? "Please wait" : "Continue"}
           </button>

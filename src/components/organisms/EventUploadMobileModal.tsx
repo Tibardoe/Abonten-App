@@ -391,7 +391,7 @@ closePopupModalType) {
   };
 
   return (
-    <div className="fixed left-0 top-0 z-20 w-full h-full bg-white flex flex-col items-center md:hidden">
+    <div className="fixed left-0 top-0 z-30 w-full h-full bg-white flex flex-col items-center md:hidden">
       {step === 1 && imgUrl && !showCrop && (
         <div className="relative w-full h-full flex justify-center items-center">
           {/* Top Controls */}

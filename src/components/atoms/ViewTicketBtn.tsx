@@ -30,7 +30,7 @@ export default function ViewTicketBtn({ event }: ViewTicketBtnProps) {
       <button
         type="button"
         onClick={() => handleShowTicket(true)}
-        className="bg-black text-white border border-black text-sm px-4 py-2 rounded-lg"
+        className="bg-mint text-white text-sm px-4 py-2 rounded-lg"
       >
         View Ticket
       </button>

@@ -149,14 +149,14 @@ export default function TicketModal({
                 </div>
               </div>
 
-              <p className="text-xs text-right mt-5">www.abonten.com</p>
+              <p className="text-xs text-right mt-5">www.abontenhub.com</p>
             </div>
           </div>
         </div>
 
         <Button
           onClick={handleDOwnloadPdf}
-          className="w-full rounded-lg p-6 font-bold"
+          className="w-full rounded-lg p-6 font-bold bg-mint"
         >
           Download As PDF
         </Button>
