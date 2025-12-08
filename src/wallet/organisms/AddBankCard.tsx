@@ -116,7 +116,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
           </p>
         </span>
 
-        <Button className="font-semibold md:self-end rounded-full md:rounded-md py-6 text-lg md:text-sm mt-52 md:mt-0">
+        <Button className="bg-mint font-semibold md:self-end rounded-md py-6 text-lg md:text-sm mt-52 md:mt-0">
           Save This Wallet
         </Button>
       </form>

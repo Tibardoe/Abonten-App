@@ -289,13 +289,13 @@ export default function FilterModalPopup({
           <div className="gap-2 justify-end pb-3 hidden md:flex">
             <Button
               onClick={handleReset}
-              className="text-lg py-5 px-7 rounded-md"
+              className="text-lg py-5 px-7 rounded-md bg-mint"
             >
               Reset
             </Button>
             <Button
               onClick={handleFilter}
-              className="text-lg py-5 px-7 rounded-md"
+              className="text-lg py-5 px-7 rounded-md bg-mint"
             >
               Filter
             </Button>
@@ -303,7 +303,7 @@ export default function FilterModalPopup({
 
           <Button
             onClick={handleFilter}
-            className="font-bold w-full rounded-full text-lg md:hidden p-6"
+            className="font-bold w-full rounded-md bg-mint text-lg md:hidden p-6"
           >
             Filter
           </Button>

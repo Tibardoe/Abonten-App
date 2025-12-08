@@ -51,7 +51,7 @@ export default function MobileUploadButton() {
       />
 
       <Button
-        className="font-bold flex md:hidden"
+        className="font-bold bg-mint flex md:hidden"
         onClick={() => fileInputRef.current?.click()}
       >
         Change Photo

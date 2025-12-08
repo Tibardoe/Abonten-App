@@ -73,7 +73,7 @@ export default function EditProfileInputFields({
         <Input title="Bio" inputPlaceholder="Bio" {...register("bio")} />
 
         <Button
-          className="self-end font-bold mb-5 md:mb-0"
+          className="self-end font-bold mb-5 md:mb-0 bg-mint"
           disabled={isPending}
         >
           {isPending ? "Submitting..." : "Submit"}
