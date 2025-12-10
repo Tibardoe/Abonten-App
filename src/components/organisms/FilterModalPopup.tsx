@@ -110,7 +110,7 @@ export default function FilterModalPopup({
       <div className="w-full h-[95%] md:w-[40%] bg-white py-5 rounded-t-2xl md:rounded-xl">
         {/* Top elements */}
         <div>
-          <div className="flex justify-between items-center w-[90%] md:w-full mx-auto font-bold md:px-5">
+          <div className="flex justify-between items-center w-[90%] md:w-full mx-auto font-semibold md:px-5">
             <button
               type="button"
               className="flex md:hidden"
@@ -148,7 +148,7 @@ export default function FilterModalPopup({
 
         {/* Content */}
         <div className="mt-5 w-[90%] md:w-full mx-auto md:px-5 space-y-5 overflow-y-scroll h-[90%]">
-          <h2 className="font-bold md:text-lg">Sort by</h2>
+          <h2 className="font-semibold md:text-lg">Sort by</h2>
 
           <div className="space-y-5">
             <div>
@@ -203,7 +203,7 @@ export default function FilterModalPopup({
               <CategoryFilter
                 handleCategory={handleCategory}
                 category={category}
-                classname="font-bold md:text-lg"
+                classname="font-semibold md:text-lg"
               />
 
               <hr className="mt-5" />
@@ -215,7 +215,7 @@ export default function FilterModalPopup({
                 selectedTypes={types}
                 selectedCategory={category}
                 handleType={handleType}
-                classname="font-bold md:text-lg"
+                classname="font-semibold md:text-lg"
               />
 
               <hr className="mt-5" />
@@ -223,7 +223,7 @@ export default function FilterModalPopup({
 
             {/* date */}
             <div>
-              <h2 className="font-bold md:text-lg mb-5">Date</h2>
+              <h2 className="font-semibold md:text-lg mb-5">Date</h2>
 
               <div className={cn("grid gap-2 border", className)}>
                 <Calendar
@@ -242,7 +242,7 @@ export default function FilterModalPopup({
 
           {/* Rating */}
           <div>
-            <h2 className="font-bold md:text-lg mb-5">Rating</h2>
+            <h2 className="font-semibold md:text-lg mb-5">Rating</h2>
 
             <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
               {rating.map((r) => (
@@ -265,7 +265,7 @@ export default function FilterModalPopup({
 
           {/* Distance */}
           <div>
-            <h2 className="font-bold md:text-lg mb-5">Distance</h2>
+            <h2 className="font-semibold md:text-lg mb-5">Distance</h2>
 
             <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
               {distances.map((d) => (

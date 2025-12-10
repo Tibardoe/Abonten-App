@@ -138,7 +138,7 @@ export default async function page({
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/user/${event.user_info.username}/posts`}
-                    className="text-lg font-semibold text-gray-800 truncate"
+                    className="text-lg font-medium text-gray-800 truncate"
                   >
                     {event.user_info.username}
                   </Link>
@@ -187,9 +187,9 @@ export default async function page({
             {/* Event Info Grid */}
             <div className="grid md:grid-cols-2 gap-3 md:gap-4">
               <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
                   <IoLocationOutline className="text-xl md:text-2xl text-gray-800" />
-                  <h3 className="text-lg font-semibold">Location</h3>
+                  <h3 className="text-lg font-medium">Location</h3>
                 </div>
                 <p className="text-gray-600 mb-4 text-sm md:text-base">
                   {event.address.full_address}
@@ -198,9 +198,9 @@ export default async function page({
               </div>
 
               <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
-                <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
                   <MdOutlineDateRange className="text-xl md:text-2xl text-gray-800" />
-                  <h3 className="text-lg font-semibold">Date & Time</h3>
+                  <h3 className="text-lg font-medium">Date & Time</h3>
                 </div>
                 <p className="text-gray-600 text-sm md:text-base">
                   {eventDateAndTime.date}
@@ -213,7 +213,7 @@ export default async function page({
 
             {/* Description */}
             <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-semibold mb-3 md:mb-4 text-gray-800">
+              <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-gray-800">
                 About the Event
               </h2>
               <p className="text-gray-600 leading-relaxed text-sm md:text-base">
@@ -264,7 +264,7 @@ export default async function page({
           <div className="space-y-4 md:space-y-6">
             {/* Event Category */}
             <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h3 className="text-lg font-semibold mb-3 md:mb-4 text-gray-800">
+              <h3 className="text-lg font-medium mb-3 md:mb-4 text-gray-800">
                 Event Category
               </h3>
               <div className="flex">
@@ -276,7 +276,7 @@ export default async function page({
 
             {/* Event Tags */}
             <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h3 className="text-lg font-semibold mb-3 md:mb-4 text-gray-800">
+              <h3 className="text-lg font-medium mb-3 md:mb-4 text-gray-800">
                 Event Tags
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -321,7 +321,7 @@ export default async function page({
             {/* Capacity */}
             {event.capacity && (
               <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-                <h3 className="text-lg font-semibold mb-3 md:mb-4 text-gray-800">
+                <h3 className="text-lg font-medium mb-3 md:mb-4 text-gray-800">
                   Event Capacity
                 </h3>
                 <div className="space-y-2">

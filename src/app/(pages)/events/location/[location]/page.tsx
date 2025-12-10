@@ -137,11 +137,11 @@ export default async function page({
               />
             </div>
 
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-opacity-30">
+            <h2 className="text-2xl font-medium text-black mb-1 text-opacity-30">
               No Events Found
             </h2>
 
-            <p className="text-gray-600 mb-6 max-w-md text-opacity-30">
+            <p className="text-gray-600 text-sm mb-6 max-w-md text-opacity-30">
               We couldn’t find any events in this location. Try changing your
               location or be the first to post one.
             </p>
