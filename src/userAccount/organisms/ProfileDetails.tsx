@@ -37,7 +37,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
       {/* On mobile */}
       <div className="md:hidden flex flex-col gap-7">
         <div className="flex w-full justify-between">
-          <h2 className="font-bold">{data?.username}</h2>
+          <h2 className="font-medium">{data?.username}</h2>
 
           {isCurrentUser ? (
             <SettingsButton />
@@ -50,7 +50,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
             <UserAvatar avatarUrl={avatarUrl} width={110} height={110} />
 
             <div className="flex flex-col justify-start w-full gap-2">
-              <h2>{data?.full_name}</h2>
+              <h2 className="font-medium">{data?.full_name}</h2>
 
               <div className="flex justify-between">
                 <span>
@@ -84,7 +84,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
         </div>
 
         {isCurrentUser && (
-          <Button className="bg-mint hover:bg-gray-800 font-bold">
+          <Button className="bg-mint hover:bg-black hover:bg-opacity-50 font-medium">
             <Link href="/settings/edit-profile">Edit Profile</Link>
           </Button>
         )}
@@ -107,10 +107,10 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
         <div className="hidden md:flex gap-10 items-start w-[50%]">
           <UserAvatar avatarUrl={avatarUrl} width={150} height={150} />
           <div className="grid grid-cols-3 gap-3 justify-start items-center">
-            <h2>{data?.username}</h2>
+            <h2 className="font-medium">{data?.username}</h2>
 
             {isCurrentUser && (
-              <Button className="bg-mint font-bold hover:bg-gray-800">
+              <Button className="bg-mint font-medium hover:bg-black hover:bg-opacity-50">
                 <Link href="/settings/edit-profile">Edit Profile</Link>
               </Button>
             )}

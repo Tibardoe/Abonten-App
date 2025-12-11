@@ -33,7 +33,7 @@ export default async function page() {
           <div className="flex gap-3 items-center">
             <UserAvatar avatarUrl={avatarUrl} width={80} height={80} />
             <div className="min-w-fit">
-              <h1 className="font-bold">{userDetails.username}</h1>
+              <h1 className="font-semibold">{userDetails.username}</h1>
               <p className="text-sm md:text-lg">{userDetails.full_name}</p>
             </div>
           </div>

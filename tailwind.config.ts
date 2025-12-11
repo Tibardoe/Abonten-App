@@ -61,6 +61,7 @@ export default {
           foreground: "hsl(var(--accent-foreground))",
         },
         mint: "#4FD9C4",
+        iconGray: "#544F4F",
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",

@@ -20,7 +20,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
 
     return (
       <div className="space-y-2">
-        <label htmlFor={title} className="font-bold md:text-lg">
+        <label htmlFor={title} className="font-medium md:text-lg">
           {title}
         </label>
 
@@ -55,7 +55,11 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
           <button
             type="button"
             onClick={handleClick}
-            className={title === "Bio" ? "hidden" : "flex font-bold"}
+            className={
+              title === "Bio"
+                ? "hidden"
+                : "flex font-semibold text-black text-opacity-70"
+            }
           >
             Edit
           </button>

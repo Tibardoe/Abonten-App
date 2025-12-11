@@ -52,7 +52,7 @@ export default function SubscriptionPlans() {
 
   return (
     <div className="space-y-3">
-      <h1 className="font-semibold text-xl md:text-2xl">Change plan</h1>
+      <h1 className="font-medium text-xl md:text-2xl">Change plan</h1>
       <div className="flex flex-col gap-5">
         {plans.map((plan) => (
           <PlanContainer
@@ -68,7 +68,7 @@ export default function SubscriptionPlans() {
         <div className="flex gap-5 self-center mb-10">
           <button
             type="button"
-            className="font-bold border border-mint rounded-md text-lg py-1 px-5"
+            className="font-medium border border-mint rounded-md md:text-lg py-1 px-5"
             onClick={() => window.history.back()}
           >
             Back
@@ -78,7 +78,7 @@ export default function SubscriptionPlans() {
             type="button"
             onClick={handleSubscriptionCheckout}
             disabled={loading}
-            className="font-bold bg-mint rounded-md text-lg py-1 px-5 text-white"
+            className="font-medium bg-mint rounded-md md:text-lg py-1 px-5 text-white"
           >
             {loading ? "Please wait" : "Continue"}
           </button>

@@ -24,7 +24,7 @@ export default function TicketType({
         onClick={() => setShowTicketDropdown((prevState) => !prevState)}
         className="flex gap-2 justify-between w-full items-center"
       >
-        <h2 className="font-semibold text-slate-700">Ticketing</h2>
+        <h2>Ticketing</h2>
 
         {showTicketDropdown ? (
           <IoIosArrowUp className="text-2xl" />

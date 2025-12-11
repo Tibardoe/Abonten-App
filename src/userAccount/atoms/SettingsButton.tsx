@@ -4,7 +4,7 @@ import { MdOutlineSettings } from "react-icons/md";
 export default function SettingsButton() {
   return (
     <Link href="/settings">
-      <MdOutlineSettings className="text-3xl md:text-4xl" />
+      <MdOutlineSettings className="text-3xl md:text-4xl text-iconGray" />
     </Link>
   );
 }

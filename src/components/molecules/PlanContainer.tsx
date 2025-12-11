@@ -31,8 +31,8 @@ export default function PlanContainer({
       )}
     >
       {isActive && (
-        <span className="h-9 w-9 bg-black rounded-full grid place-items-center absolute -left-5 top-1/2 -translate-y-1/2">
-          <div className="border-r-[3px] border-b-[3px] border-white w-[11px] h-5 rotate-45 -translate-y-1" />
+        <span className="bg-mint rounded-full grid place-items-center absolute top-1/2 -translate-y-1/2 -left-4 h-6 w-6 md:h-9 md:w-9 md:-left-5">
+          <div className="border-r-[2.5px] border-b-[2.5px] border-white w-[8px] h-4 rotate-45 -translate-y-[2px] md:-translate-y-1 md:border-r-[3px] md:border-b-[3px] md:w-[11px] md:h-5" />
         </span>
       )}
 

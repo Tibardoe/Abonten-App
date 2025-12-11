@@ -39,8 +39,8 @@ export default function ReceivingAccountForms({
     );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
-      <h2 className="font-bold text-gray-800">Receiving Account Details</h2>
+    <div className="max-w-3xl mx-auto space-y-3">
+      <h2>Receiving Account Details</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -63,9 +63,7 @@ export default function ReceivingAccountForms({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="font-medium text-sm text-gray-700">
-            Select Payment Option
-          </p>
+          <p className="font-medium text-sm">Select Payment Option</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -77,7 +75,7 @@ export default function ReceivingAccountForms({
               className={cn(
                 "py-2 px-4 rounded-md border text-sm font-semibold",
                 paymentOption === option
-                  ? "bg-black text-white border-black"
+                  ? "bg-mint text-white"
                   : "bg-white text-gray-700 border-gray-300",
               )}
             >

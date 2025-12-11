@@ -109,11 +109,11 @@ export default function PromoCodeInputs({
         <div className="flex justify-between items-center">
           <Popover>
             <PopoverTrigger className="flex items-center gap-1">
-              <MdDateRange className="text-2xl" />{" "}
+              <MdDateRange className="text-2xl text-iconGray" />{" "}
               {expiryDate ? (
                 expiryDate.toLocaleDateString()
               ) : (
-                <p className="text-sm font-bold text-gray-600">Expiry date</p>
+                <p className="text-sm">Expiry date</p>
               )}
             </PopoverTrigger>
 
@@ -128,7 +128,7 @@ export default function PromoCodeInputs({
           </Popover>
 
           <Button
-            className="self-end"
+            className="self-end bg-mint"
             onClick={handleClick}
             disabled={
               !promoCode ||

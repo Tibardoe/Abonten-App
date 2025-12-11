@@ -412,7 +412,7 @@ export default function UploadEventModal({
               />
 
               <Button
-                className="p-6 text-lg rounded-xl"
+                className="p-6 text-lg rounded-xl bg-mint"
                 onClick={handleUploadButton}
               >
                 Upload flyer
@@ -451,7 +451,7 @@ export default function UploadEventModal({
             </div>
 
             {showCrop ? (
-              <div className="relative flex flex-col items-center w-[90%] h-[90%]">
+              <div className="relative flex flex-col items-center w-[90%] h-[90%] overflow-y-scroll">
                 <ImageCropper
                   imagePreview={imagePreview}
                   handleCropped={handleCropped}
@@ -461,7 +461,7 @@ export default function UploadEventModal({
                 />
               </div>
             ) : (
-              <div className="w-full relative">
+              <div className="w-[40%] relative">
                 <button
                   type="button"
                   className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-1 left-5"
@@ -475,7 +475,7 @@ export default function UploadEventModal({
                   alt="Selected Avatar"
                   width={0}
                   height={0}
-                  className="w-full h-[95%] md:w-[50%] object-contain mx-auto"
+                  className="w-full object-contain mx-auto"
                 />
               </div>
             )}
@@ -562,7 +562,7 @@ export default function UploadEventModal({
 
                 {/* Date and time */}
                 <div className="space-y-4 text-sm">
-                  <h2 className="font-bold text-slate-700">Date & Time</h2>
+                  <h2>Date & Time</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <DateTimeSelectorBtn
                       dateType="single"
@@ -646,7 +646,6 @@ export default function UploadEventModal({
                   </div>
 
                   <CategoryFilter
-                    classname="font-semibold text-slate-700"
                     handleCategory={handleCategory}
                     category={category}
                   />
@@ -659,7 +658,6 @@ export default function UploadEventModal({
                   <TypeFilter
                     selectedTypes={types}
                     selectedCategory={category}
-                    classname="font-semibold text-slate-700"
                     handleType={handleType}
                   />
                   {types.length === 0 && (
@@ -673,7 +671,7 @@ export default function UploadEventModal({
                       <input
                         type="text"
                         placeholder="Website"
-                        className="rounded-md p-2 font-semibold text-slate-700"
+                        className="rounded-md p-2"
                         {...register("website_url")}
                       />
                     </div>

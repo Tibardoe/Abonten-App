@@ -16,7 +16,7 @@ export default async function page() {
         <DetailsContainer>
           {subscription.status === 200 ? (
             <div>
-              <h2 className="font-bold text-lg md:text-xl">
+              <h2 className="font-medium text-lg md:text-xl">
                 {subscription.data?.subscription_plan.name}
               </h2>
 
@@ -51,7 +51,7 @@ export default async function page() {
           <hr />
 
           <div className="flex justify-between items-center">
-            <p className="font-bold">Manage plan</p>
+            <p className="font-medium">Manage plan</p>
             <Link href="/settings/membership">
               <Image
                 src="/assets/images/arrowRight.svg"
@@ -70,7 +70,7 @@ export default async function page() {
 
         <DetailsContainer>
           <div className="flex justify-between items-center">
-            <p className="font-bold md:text-lg">Change plan</p>
+            <p className="font-medium md:text-lg">Change plan</p>
             <Link href="/plans">
               <Image
                 src="/assets/images/arrowRight.svg"
@@ -85,7 +85,7 @@ export default async function page() {
           <hr />
 
           <div className="flex justify-between items-center">
-            <p className="font-bold md:text-lg">Manage payment method</p>
+            <p className="font-medium md:text-lg">Manage payment method</p>
             <Link href="/wallet">
               <Image
                 src="/assets/images/arrowRight.svg"
@@ -100,7 +100,7 @@ export default async function page() {
           <hr />
 
           <div className="flex justify-between items-center">
-            <p className="font-bold md:text-lg">View transaction history</p>
+            <p className="font-medium md:text-lg">View transaction history</p>
             <Link href="/transactions">
               <Image
                 src="/assets/images/arrowRight.svg"

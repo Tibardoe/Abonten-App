@@ -17,7 +17,7 @@ export default function PromoCodeBtn({
       type="button"
       onClick={() => handlePromoCodeFormPopup(true)}
       disabled={ticket === "Free"}
-      className="flex justify-between items-center w-full font-semibold text-slate-700"
+      className="flex justify-between items-center w-full"
     >
       Add Promo Code
       {showPromoCodeFormPopup ? (

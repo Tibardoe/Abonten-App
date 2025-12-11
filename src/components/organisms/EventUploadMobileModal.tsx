@@ -408,7 +408,7 @@ closePopupModalType) {
             <button
               type="button"
               onClick={() => setStep((prevStep) => prevStep + 1)}
-              className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full"
+              className="backdrop-blur-md border bg-mint p-2 rounded-full"
               aria-label="Next step"
             >
               <MdArrowForwardIos className="text-white text-xl" />
@@ -460,7 +460,7 @@ closePopupModalType) {
 
               <button
                 type="button"
-                className="font-bold"
+                className="font-bold text-mint"
                 onClick={handleSubmit(onSubmit)}
                 disabled={isUploading}
               >
@@ -525,8 +525,8 @@ closePopupModalType) {
                 </div>
 
                 {/* Date and time */}
-                <div className="space-y-4 text-sm">
-                  <h2 className="font-bold text-slate-700">Date & Time</h2>
+                <div className="space-y-4">
+                  <h2>Date & Time</h2>
                   <div className="grid grid-cols-2 gap-4">
                     <DateTimeSelectorBtn
                       dateType="single"
@@ -612,7 +612,7 @@ closePopupModalType) {
                   <CategoryFilter
                     handleCategory={handleCategory}
                     category={category}
-                    classname="md:text-lg font-semibold text-slate-700"
+                    classname="md:text-lg"
                   />
                   {category === "" && (
                     <p className="text-red-500 text-sm">
@@ -626,7 +626,7 @@ closePopupModalType) {
                     selectedTypes={types}
                     selectedCategory={category}
                     handleType={handleType}
-                    classname="md:text-lg font-semibold text-slate-700"
+                    classname="md:text-lg"
                   />
                   {types.length === 0 && (
                     <p className="text-red-500 text-sm">
@@ -653,7 +653,7 @@ closePopupModalType) {
                   </p>
                 )}
 
-                <div className="flex justify-between items-center font-semibold text-slate-700">
+                <div className="flex justify-between items-center">
                   <span>Capacity</span>
 
                   <input

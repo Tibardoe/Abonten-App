@@ -149,12 +149,16 @@ export default function SecurityInputFields() {
       {step === 1 && (
         <form className="flex flex-col gap-5">
           <div className="space-y-2">
-            <span className="font-bold md:text-lg">Phone</span>
+            <span className="font-medium md:text-lg">Phone</span>
 
             <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-black border-opacity-30">
               <span className="opacity-50">Eg. +233 24 000 0000</span>
 
-              <button type="button" onClick={increaseStep}>
+              <button
+                type="button"
+                className="font-semibold text-black text-opacity-70"
+                onClick={increaseStep}
+              >
                 Edit
               </button>
             </div>
@@ -182,7 +186,7 @@ export default function SecurityInputFields() {
               Delete account
             </button>
 
-            <Button className="self-end font-bold">Update</Button>
+            <Button className="self-end font-medium bg-mint">Update</Button>
           </div>
         </form>
       )}
