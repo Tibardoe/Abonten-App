@@ -6,6 +6,11 @@ import ReactQueryProvider from "@/providers/ReactQueryProvider";
 export const metadata: Metadata = {
   title: "Abonten Hub | Connecting people to experiences",
   description: "Explore and attend real-time events",
+  icons: {
+    icon: "/assets/images/abonten-logo-black.svg",
+    shortcut: "/assets/images/abonten-logo-only-white.svg",
+    apple: "/assets/images/abonten-logo-black.svg",
+  },
 };
 
 export default async function RootLayout({
