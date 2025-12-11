@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   title: "Abonten Hub | Connecting people to experiences",
   description: "Explore and attend real-time events",
   icons: {
-    icon: "/assets/images/abonten-logo-black.svg",
+    icon: "/assets/images/abonten-logo-only-white.svg",
     shortcut: "/assets/images/abonten-logo-only-white.svg",
-    apple: "/assets/images/abonten-logo-black.svg",
+    apple: "/assets/images/abonten-logo-only-white.svg",
   },
 };
 
