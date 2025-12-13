@@ -1,26 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import MobileAuthPopup from "./AuthModal";
-import AuthPopup from "./AuthPopup";
+import AuthModal from "./AuthModal";
 
 export default function UserAccountLogin() {
   // const [buttonText, setButtonText] = useState("");
   const [showAuthPopup, setShowAuthPopup] = useState(true);
 
   return (
-    showAuthPopup && (
-      <>
-        <AuthPopup
-          buttonText="Sign In"
-          onClose={() => setShowAuthPopup(false)}
-        />
-        <MobileAuthPopup
-          buttonText="Sign In"
-          onClose={() => setShowAuthPopup(false)}
-        />
-      </>
-    )
+    showAuthPopup && <AuthModal buttonText="Sign In" />
     // <div>
     //   <p className="flex md:hidden font-bold">
     //     Click on the side menu to select Sign up/Login from the sidebar to view
