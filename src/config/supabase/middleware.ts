@@ -46,7 +46,8 @@ export async function updateSession(request: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/events") ||
     pathname.startsWith("/user") ||
-    pathname.startsWith("/reviews");
+    pathname.startsWith("/reviews") ||
+    pathname.startsWith("/search");
 
   const {
     data: { user },
