@@ -603,7 +603,7 @@ export default function HighlightModal({
         </button>
 
         {step === 1 && (
-          <h2 className="text-white font-semibold text-lg backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md">
+          <h2 className="text-white font-medium text-lg backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md">
             New Highlight
           </h2>
         )}
@@ -627,7 +627,7 @@ export default function HighlightModal({
             <button
               type="button"
               onClick={handleHighlightUpload}
-              className="text-white font-semibold backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-md"
+              className="text-white font-medium backdrop-blur-md bg-mint p-2 rounded-md"
               disabled={isUploading}
             >
               {isUploading ? "Uploading..." : "Upload"}
@@ -651,7 +651,7 @@ export default function HighlightModal({
           ) : step === 1 ? (
             // Your existing step 1 content
             <div className="flex flex-col items-center gap-8 p-6 text-center">
-              <div className="bg-gray-800 p-6 rounded-full">
+              <div className="bg-iconGray p-6 rounded-full">
                 <Image
                   src="/assets/images/gallery.svg"
                   alt="Gallery"
@@ -672,7 +672,7 @@ export default function HighlightModal({
                 onChange={handleFileChange}
               />
               <Button
-                className="px-8 py-6 md:text-lg rounded-md bg-black font-bold"
+                className="px-8 py-6 md:text-lg rounded-md bg-mint font-medium hover:bg-white hover:bg-opacity-50"
                 onClick={() => fileInputRef.current?.click()}
               >
                 Select from Gallery

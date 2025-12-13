@@ -57,14 +57,16 @@ export default async function page() {
       })}
     </ul>
   ) : (
-    <div className="flex flex-col items-center gap-3">
-      <h1 className="font-bold text-2xl">No Favorites added yet</h1>
+    <div className="flex flex-col items-center">
+      <h1 className="font-medium text-2xl">No Favorites added yet</h1>
 
-      <p>Explore and save all your favorite events in one place</p>
+      <p className="text-iconGray text-sm">
+        Explore and save all your favorite events in one place
+      </p>
 
       <Link
         href="/events"
-        className="font-bold md:text-lg text-white bg-black py-1 px-5 rounded-md"
+        className="font-medium bg-mint text-white py-1 px-5 rounded-md mt-5"
       >
         Explore events
       </Link>

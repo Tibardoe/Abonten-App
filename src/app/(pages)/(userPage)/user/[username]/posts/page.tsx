@@ -60,10 +60,10 @@ export default async function page({
       })}
     </ul>
   ) : (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex flex-col items-center">
       <h1 className="font-bold text-2xl">No posts yet</h1>
 
-      <p>Post events for others to attend</p>
+      <p className="text-sm text-iconGray">Post events for others to attend</p>
 
       <PostButton />
     </div>
