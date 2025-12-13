@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import MobileAuthPopup from "./AuthModal";
 import AuthPopup from "./AuthPopup";
-import MobileAuthPopup from "./MobileAuthPopup";
 
 export default function UserAccountLogin() {
   // const [buttonText, setButtonText] = useState("");

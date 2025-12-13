@@ -1,9 +1,6 @@
 "use client";
 
 import AutoComplete from "@/components/molecules/AutoComplete";
-import AuthPopup from "@/components/organisms/AuthPopup";
-import MobileAuthPopup from "@/components/organisms/MobileAuthPopup";
-import { Button } from "@/components/ui/button";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,35 +10,11 @@ import { FiArrowRightCircle } from "react-icons/fi";
 export default function Landing() {
   const [selectedAddress, setSelectedAddress] = useState("");
 
-  const [buttonText, setButtonText] = useState("");
-
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const text = (event.target as HTMLButtonElement).innerText;
-    setButtonText(text);
-
-    setShowAuthPopup((prevState) => !prevState);
-  };
-
   return (
     <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-dvh relative text-white flex flex-col items-center">
-      {showAuthPopup && (
-        <>
-          <AuthPopup
-            buttonText={buttonText}
-            onClose={() => setShowAuthPopup(false)}
-          />
-          <MobileAuthPopup
-            buttonText={buttonText}
-            onClose={() => setShowAuthPopup(false)}
-          />
-        </>
-      )}
-
       {/* Header */}
       <nav className="fixed w-full bg-black bg-opacity-30 flex justify-center z-10">
-        <div className="flex justify-between py-5 w-[90%]">
+        <div className="flex justify-between items-center py-5 w-[90%]">
           <Link href="/" className="w-12 h-12 md:w-16 md:h-16">
             <Image
               src="/assets/images/abonten-logo-white.svg"
@@ -53,19 +26,18 @@ export default function Landing() {
           </Link>
 
           <div className="space-x-3">
-            <Button
-              className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint"
-              onClick={handleClick}
+            <Link
+              href="/auth/signin"
+              className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
             >
               Sign Up
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint"
-              onClick={handleClick}
+            </Link>
+            <Link
+              href="/auth/signin"
+              className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
             >
               Sign In
-            </Button>
+            </Link>
           </div>
         </div>
       </nav>

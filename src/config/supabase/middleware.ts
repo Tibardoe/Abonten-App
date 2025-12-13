@@ -47,7 +47,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/events") ||
     pathname.startsWith("/user") ||
     pathname.startsWith("/reviews") ||
-    pathname.startsWith("/search");
+    pathname.startsWith("/search") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/auth");
 
   const {
     data: { user },
@@ -55,7 +57,8 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/events";
+    url.pathname = "/auth/signin";
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 

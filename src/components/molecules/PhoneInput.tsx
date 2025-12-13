@@ -3,6 +3,7 @@
 import { useCountries } from "@/hooks/useCountries";
 import Image from "next/image";
 import { useState } from "react";
+import { IoIosArrowDown } from "react-icons/io";
 import { cn } from "../lib/utils";
 
 type Props = {
@@ -26,19 +27,11 @@ export default function PhoneInput({
 
   return (
     <div className="flex w-full gap-2 relative">
-      <div className="bg-black bg-opacity-5 rounded-md p-2 md:p-4 md:text-lg flex items-center gap-2 md:min-w-28 border">
+      <div className="bg-black bg-opacity-5 rounded-md p-2 flex items-center justify-center gap-1 md:gap-2 md:min-w-28 border">
         <span>{selectedCountry}</span>
+
         <button type="button" onClick={handleRotate}>
-          <Image
-            className={cn(
-              "w-[30px] h-[30px] lg:w-[35px] lg:h-[35px]",
-              showDropdown && "rotate-180",
-            )}
-            src="/assets/images/options.svg"
-            alt="Options logo"
-            width={40}
-            height={40}
-          />
+          <IoIosArrowDown className="text-iconGray text-xl" />
         </button>
       </div>
 
@@ -46,7 +39,7 @@ export default function PhoneInput({
         <div className="absolute top-12 left-0 w-full z-10 bg-white shadow-md max-h-60 overflow-y-scroll flex flex-col">
           {countries.map((country) => (
             <button
-              className="p-2 hover:bg-gray-200 cursor-pointer flex items-center gap-5"
+              className="px-2 hover:bg-gray-200 cursor-pointer flex items-center gap-5"
               type="button"
               key={country.name}
               onClick={() => {
@@ -66,12 +59,12 @@ export default function PhoneInput({
         </div>
       )}
 
-      <div className="bg-black bg-opacity-5 rounded-md p-2 md:p-3 flex-1 min-w-[28] flex items-center border">
+      <div className="bg-black bg-opacity-5 rounded-md px-2 flex-1 flex items-center border">
         <input
           type="tel"
           onChange={(event) => onChange(event.target.value)}
           placeholder="Phone number"
-          className="bg-transparent outline-none md:text-xl"
+          className="bg-transparent outline-none"
         />
       </div>
     </div>

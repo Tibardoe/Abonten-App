@@ -9,14 +9,12 @@ type MobileNavButtonProp = {
   text: string;
   href: string;
   Icon: IconType;
-  onClick?: (e: React.MouseEvent) => void;
 };
 
 export default function MobileNavButton({
   text,
   href,
   Icon,
-  onClick,
 }: MobileNavButtonProp) {
   const pathname = usePathname();
 
@@ -24,7 +22,6 @@ export default function MobileNavButton({
     <Link
       href={href}
       type="button"
-      onClick={onClick}
       className={cn("flex flex-col items-center opacity-50", {
         "opacity-100 font-bold text-mint": pathname === href,
       })}

@@ -30,7 +30,7 @@ export default function GoogleAuthButton({
       <button
         type="button"
         onClick={handleSignin}
-        className="flex items-center w-full bg-black bg-opacity-5 p-3 md:p-4 md:text-lg rounded-md"
+        className="flex items-center w-full bg-black bg-opacity-5 p-3 rounded-md"
       >
         <FcGoogle className="text-2xl md:text-4xl" />
 

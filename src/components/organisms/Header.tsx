@@ -20,8 +20,6 @@ import { MdOutlineManageHistory } from "react-icons/md";
 import EventUploadButton from "../atoms/EventUploadButton";
 import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
-import AuthPopup from "./AuthPopup";
-import MobileAuthPopup from "./MobileAuthPopup";
 import SideBar from "./SideBar";
 
 const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/abonten/image/upload/";
@@ -31,8 +29,6 @@ const defaultPublicId = "AnonymousProfile_rn6qez";
 const defaulfVersion = "1743533914";
 
 export default function Header() {
-  const [authType, setAuthType] = useState<"Sign Up" | "Sign In" | "">("");
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [isMenuClicked, setIsMenuClicked] = useState(false);
 
   const pathname = usePathname();
@@ -87,11 +83,6 @@ export default function Header() {
   const isOrganizer = userRole?.role?.includes("organizer");
   const isAttendee = userRole?.role?.includes("attendee");
 
-  const handleClick = (type: "Sign Up" | "Sign In") => {
-    setAuthType(type);
-    setShowAuthPopup(true);
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -106,19 +97,6 @@ export default function Header() {
 
   return (
     <>
-      {showAuthPopup && (
-        <>
-          <AuthPopup
-            buttonText={authType}
-            onClose={() => setShowAuthPopup(false)}
-          />
-          <MobileAuthPopup
-            buttonText={authType}
-            onClose={() => setShowAuthPopup(false)}
-          />
-        </>
-      )}
-
       {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
 
       <nav className="w-full flex justify-center fixed bg-white z-20">
@@ -195,20 +173,23 @@ export default function Header() {
             </div>
           ) : (
             <div className="space-x-3 hidden lg:flex">
-              <Button
-                variant="outline"
-                className="bg-transparent rounded-md font-bold border-black"
-                onClick={() => handleClick("Sign Up")}
-              >
-                Sign Up
-              </Button>
-              <Button
-                variant="outline"
-                className="bg-transparent rounded-md font-bold border-black"
-                onClick={() => handleClick("Sign In")}
-              >
-                Sign In
-              </Button>
+              <Link href="/auth/signin">
+                <Button
+                  variant="outline"
+                  className="bg-transparent rounded-md font-bold border-black"
+                >
+                  Sign Up
+                </Button>
+              </Link>
+
+              <Link href="/auth/signin">
+                <Button
+                  variant="outline"
+                  className="bg-transparent rounded-md font-bold border-black"
+                >
+                  Sign In
+                </Button>
+              </Link>
             </div>
           )}
         </div>

@@ -14,9 +14,7 @@ import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
 import { MdOutlineManageHistory } from "react-icons/md";
 import { cn } from "../lib/utils";
-import AuthPopup from "./AuthPopup";
 import EventUploadMobileModal from "./EventUploadMobileModal";
-import MobileAuthPopup from "./MobileAuthPopup";
 import MobileFooter from "./MobileFooter";
 
 type menuClickedProp = {
@@ -24,22 +22,11 @@ type menuClickedProp = {
 };
 
 export default function SideBar({ menuClicked }: menuClickedProp) {
-  const [showAuthPopup, setShowAuthPopup] = useState(false);
-
   const [showPostModal, setShowPostModal] = useState(false);
-
-  const [buttonText, setButtonText] = useState("");
 
   const location = useGetUserLocation();
 
   const router = useRouter();
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const text = (event.target as HTMLButtonElement).innerText;
-    setButtonText(text);
-
-    setShowAuthPopup((prevState) => !prevState);
-  };
 
   const handleSignOut = async () => {
     try {
@@ -109,18 +96,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
     },
   });
 
-  return showAuthPopup ? (
-    <>
-      <AuthPopup
-        buttonText={buttonText}
-        onClose={() => setShowAuthPopup(false)}
-      />
-      <MobileAuthPopup
-        buttonText={buttonText}
-        onClose={() => setShowAuthPopup(false)}
-      />
-    </>
-  ) : (
+  return (
     <>
       {showPostModal && (
         <EventUploadMobileModal
@@ -195,13 +171,9 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
             </div>
           ) : (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
-              <button type="button" onClick={handleClick}>
-                Login
-              </button>
+              <Link href="/auth/signin">Login</Link>
 
-              <button type="button" onClick={handleClick}>
-                Sign up
-              </button>
+              <Link href="/auth/signin">Sign up</Link>
             </div>
           )}
 

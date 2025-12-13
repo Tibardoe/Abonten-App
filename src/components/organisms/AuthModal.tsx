@@ -1,9 +1,12 @@
+"use client";
+
 import useUserLocation, { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { IoChevronBack } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import GoogleAuthButton from "../atoms/GoogleAuthButton";
 import PhoneInput from "../molecules/PhoneInput";
@@ -11,10 +14,9 @@ import { Button } from "../ui/button";
 
 type PopupProp = {
   buttonText: string;
-  onClose: () => void;
 };
 
-export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
+export default function AuthModal({ buttonText }: PopupProp) {
   const country = useUserLocation();
 
   const location = useGetUserLocation();
@@ -107,31 +109,27 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
   };
 
   return step === 1 ? (
-    <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-dvh z-30 fixed left-0 items-center">
-      <div className="w-[90%] text-black h-screen relative">
-        <button type="button" className="ml-auto mb-5" onClick={onClose}>
-          <LiaTimesSolid className="text-2xl" />
-        </button>
-
+    <div className="w-full py-10 flex flex-col bg-white top-0 h-dvh z-30 fixed left-0 items-center">
+      <div className="w-[90%] md:w-[70%] lg:w-[30%] text-black h-screen relative">
         <Image
           src="/assets/images/abonten-logo-black.svg"
           alt="Abonten Logo Black"
           width={100}
           height={100}
-          className="object-contain w-20 h-20 mx-auto mb-5"
+          className="object-contain w-20 h-20 md:w-32 md:h-32 mx-auto mb-5 md:mb-10"
         />
 
         <div className="space-y-5">
           <GoogleAuthButton buttonText={buttonText} location={location} />
 
           {/* Or section */}
-          <div className="flex gap-2 items-center w-full">
+          <div className="flex gap-2 items-center w-full text-iconGray">
             <span className="border border-black border-opacity-30 w-full" />
-            <p className="text-xl opacity-50">Or</p>
+            <p>Or</p>
             <span className="border border-black border-opacity-30 w-full" />
           </div>
 
-          <form onSubmit={handlePhoneSubmit} className="w-full">
+          <form onSubmit={handlePhoneSubmit} className="w-full space-y-5">
             {/* Phone number option */}
             <PhoneInput
               selectedCountry={countryCode}
@@ -139,7 +137,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
               onChange={handleChange}
             />
 
-            <Button className="w-full rounded-md text-lg font-bold py-6 absolute bottom-0 bg-mint">
+            <Button className="w-full rounded-md text-lg font-medium py-6 bg-mint absolute bottom-0 md:relative">
               Continue
             </Button>
           </form>
@@ -147,10 +145,16 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
       </div>
     </div>
   ) : (
-    <div className="w-full py-10 flex flex-col md:hidden bg-white top-0 h-screen z-30 absolute items-center">
-      <div className="w-[90%] text-black h-full relative flex flex-col items-center">
-        <button type="button" className="mr-auto mb-10" onClick={onClose}>
-          <LiaTimesSolid className="text-2xl" />
+    <div className="w-full py-10 bg-white top-0 left-0 h-screen z-30 absolute">
+      <div className="w-[90%] md:w-[70%] lg:w-[30%] mx-auto text-black h-full relative flex flex-col items-center">
+        <button
+          type="button"
+          className="mr-auto mb-10 flex items-center"
+          onClick={() => setStep((prev) => Math.max(1, prev - 1))}
+        >
+          <IoChevronBack className="text-2xl" />
+
+          <p>Back</p>
         </button>
 
         <h1 className="font-bold text-4xl mb-2 text-black">Enter Code</h1>
@@ -161,7 +165,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
           </p>
         </div>
 
-        <form onSubmit={handleOtpsubmit} className="w-full">
+        <form onSubmit={handleOtpsubmit} className="w-full space-y-5">
           <div className="flex flex-col gap-3 items-center">
             <div className="flex gap-3 w-full" onPaste={handlePaste}>
               {otpArray.map((digit, index) => (
@@ -190,7 +194,7 @@ export default function MobileAuthPopup({ buttonText, onClose }: PopupProp) {
             )}
           </div>
 
-          <Button className="w-full rounded-md text-xl font-bold py-7 absolute bottom-0 bg-mint">
+          <Button className="w-full rounded-md text-xl font-bold py-7 bg-mint">
             Continue
           </Button>
         </form>
