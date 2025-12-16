@@ -1,5 +1,5 @@
 // import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
-import UserAccountLogin from "@/components/organisms/UserAccountLogin";
+// import UserAccountLogin from "@/components/organisms/UserAccountLogin";
 import { createClient } from "@/config/supabase/server";
 // import Higlight from "@/userAccount/molecules/Highlight";
 // import ContentArea from "@/userAccount/organisms/ContentArea";
@@ -11,7 +11,7 @@ export default async function page() {
   const { data: user, error } = await supabase.auth.getUser();
 
   if (error || !user.user) {
-    return <UserAccountLogin />;
+    // return <UserAccountLogin />;
   }
 
   return (
