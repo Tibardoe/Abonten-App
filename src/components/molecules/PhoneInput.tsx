@@ -4,7 +4,6 @@ import { useCountries } from "@/hooks/useCountries";
 import Image from "next/image";
 import { useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import { cn } from "../lib/utils";
 
 type Props = {
   selectedCountry: string;

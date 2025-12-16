@@ -1,6 +1,6 @@
 "use client";
 
-import { getUserEventRole } from "@/actions/getUserEventRole";
+// import { getUserEventRole } from "@/actions/getUserEventRole";
 import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
@@ -59,29 +59,29 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
     }
   };
 
-  const { data: userRole } = useQuery({
-    queryKey: ["user-role"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  // const { data: userRole } = useQuery({
+  //   queryKey: ["user-role"],
+  //   queryFn: async () => {
+  //     const {
+  //       data: { user },
+  //     } = await supabase.auth.getUser();
 
-      if (!user) return null;
+  //     if (!user) return null;
 
-      try {
-        const res = await getUserEventRole(user.id);
+  //     try {
+  //       const res = await getUserEventRole(user.id);
 
-        // ✅ Validate the role value before setting state
-        if (Array.isArray(res.role)) {
-          return res.role;
-        }
+  //       // ✅ Validate the role value before setting state
+  //       if (Array.isArray(res.role)) {
+  //         return res.role;
+  //       }
 
-        return null;
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-      }
-    },
-  });
+  //       return null;
+  //     } catch (error) {
+  //       console.error("Error fetching user role:", error);
+  //     }
+  //   },
+  // });
 
   const { data: user } = useQuery({
     queryKey: ["sidebar-user"],
@@ -132,25 +132,21 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
                 Post
               </button>
 
-              {userRole?.includes("organizer") && (
-                <Link
-                  href="/manage/attendance/event-list"
-                  className="flex gap-1 items-center"
-                >
-                  <MdOutlineManageHistory className="text-xl" />
-                  Manage Attendance
-                </Link>
-              )}
+              <Link
+                href="/manage/attendance/event-list"
+                className="flex gap-1 items-center"
+              >
+                <MdOutlineManageHistory className="text-xl" />
+                Manage Attendance
+              </Link>
 
-              {userRole?.includes("attendee") && (
-                <Link
-                  href="/manage/my-events"
-                  className="flex gap-1 items-center"
-                >
-                  <GiPartyFlags className="text-xl" />
-                  My Events
-                </Link>
-              )}
+              <Link
+                href="/manage/my-events"
+                className="flex gap-1 items-center"
+              >
+                <GiPartyFlags className="text-xl" />
+                My Events
+              </Link>
 
               <input
                 type="file"

@@ -57,9 +57,15 @@ export default function ReceivingAccountForms({
             placeholder="Email"
             className="w-full border rounded-md px-4 py-2 text-sm"
           />
+
           {renderError(errors.email)}
         </div>
       </div>
+
+      <p className="text-xs text-iconGray">
+        NB: Full name should be the same as your bank or mobile money account
+        name
+      </p>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">

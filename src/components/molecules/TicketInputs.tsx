@@ -1,8 +1,8 @@
+import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import type { Ticket } from "@/types/ticketType";
-import { getUserCurrency } from "@/utils/getUserCurrency";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
 import { MdDateRange } from "react-icons/md";
 import { Button } from "../ui/button";
@@ -49,8 +49,8 @@ export default function TicketInputs({
   const { data: currency } = useQuery({
     queryKey: ["currency"],
     queryFn: async () => {
-      const userCurrency = await getUserCurrency();
-      return userCurrency;
+      const userCurrency = await fetchCountryMetadata();
+      return userCurrency?.currency;
     },
   });
 

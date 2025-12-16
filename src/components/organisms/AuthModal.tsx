@@ -1,6 +1,6 @@
 "use client";
 
-import useUserLocation, { useGetUserLocation } from "@/hooks/useUserLocation";
+import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
 import Image from "next/image";
@@ -14,11 +14,10 @@ import { Button } from "../ui/button";
 
 type PopupProp = {
   buttonText: string;
+  callingCode?: string;
 };
 
-export default function AuthModal({ buttonText }: PopupProp) {
-  const country = useUserLocation();
-
+export default function AuthModal({ buttonText, callingCode }: PopupProp) {
   const location = useGetUserLocation();
 
   const [countryCode, setCountryCode] = useState("");
@@ -44,10 +43,10 @@ export default function AuthModal({ buttonText }: PopupProp) {
   const fullPhoneNumber = `${countryCode}${phone}`;
 
   useEffect(() => {
-    if (country) {
-      setCountryCode(country);
+    if (callingCode) {
+      setCountryCode(callingCode);
     }
-  }, [country]);
+  }, [callingCode]);
 
   const handlePhoneSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

@@ -10,6 +10,25 @@ export async function middleware(request: NextRequest) {
 
   const response = await updateSession(request);
 
+  // Get stored country from cookies
+  const storedCountry = request.cookies.get("country")?.value;
+
+  // Determine current country
+  const currentCountry = (
+    request.headers.get("x-vercel-ip-country") ??
+    request.headers.get("x-country-code") ??
+    "GH"
+  ).toUpperCase();
+
+  if (!storedCountry || storedCountry !== currentCountry) {
+    response.cookies.set("country", currentCountry, {
+      path: "/",
+      httpOnly: false, // allow client access if needed
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
+  }
+
   return response;
 }
 

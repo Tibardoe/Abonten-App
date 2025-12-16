@@ -1,7 +1,7 @@
 "use client";
 
 import { getUserDetails } from "@/actions/getUserDetails";
-import { getUserEventRole } from "@/actions/getUserEventRole";
+// import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
@@ -62,13 +62,6 @@ export default function Header() {
     },
   });
 
-  // Query for user role
-  const { data: userRole } = useQuery({
-    queryKey: ["user-role", userSession?.id],
-    enabled: !!userSession?.id,
-    queryFn: () => getUserEventRole(userSession?.id ?? ""),
-  });
-
   const profile = {
     username: userDetails?.username ?? "",
     avatar_public_id: userDetails?.avatar_public_id ?? "",
@@ -80,8 +73,6 @@ export default function Header() {
     : `${CLOUDINARY_BASE_URL}v${defaulfVersion}/${defaultPublicId}.jpg`;
 
   const isUserAccount = pathname === `/user/${profile.username}/posts`;
-  const isOrganizer = userRole?.role?.includes("organizer");
-  const isAttendee = userRole?.role?.includes("attendee");
 
   const handleSignOut = async () => {
     try {
@@ -129,24 +120,21 @@ export default function Header() {
 
           {userSession ? (
             <div className="hidden lg:flex items-center gap-7 min-w-fit">
-              {isOrganizer && (
-                <Link
-                  href="/manage/attendance/event-list"
-                  className="flex gap-1 items-center"
-                >
-                  <MdOutlineManageHistory className="text-2xl" />
-                  Manage Attendance
-                </Link>
-              )}
-              {isAttendee && (
-                <Link
-                  href="/manage/my-events"
-                  className="flex gap-1 items-center"
-                >
-                  <GiPartyFlags className="text-2xl" />
-                  My Events
-                </Link>
-              )}
+              <Link
+                href="/manage/attendance/event-list"
+                className="flex gap-1 items-center"
+              >
+                <MdOutlineManageHistory className="text-2xl" />
+                Manage Attendance
+              </Link>
+
+              <Link
+                href="/manage/my-events"
+                className="flex gap-1 items-center"
+              >
+                <GiPartyFlags className="text-2xl" />
+                My Events
+              </Link>
 
               <EventUploadButton />
 
