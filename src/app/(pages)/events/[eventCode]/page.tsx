@@ -1,5 +1,6 @@
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getUserRating } from "@/actions/getUserRating";
+import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 // import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
@@ -24,6 +25,8 @@ export default async function page({
   const supabase = await createClient();
 
   const { eventCode } = await params;
+
+  await ticketPurchaseNotification();
 
   const { data: event } = await supabase
     .from("event")

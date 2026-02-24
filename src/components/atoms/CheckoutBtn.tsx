@@ -2,6 +2,7 @@
 
 import deleteCheckout from "@/actions/deleteCheckout";
 import generateTicket from "@/actions/generateTicket";
+import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import type { TicketData } from "@/types/ticketType";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -96,6 +97,7 @@ export default function CheckoutBtn({
 
     if (response.status === 200 && response.message) {
       setNotification(response.message);
+      await ticketPurchaseNotification();
 
       if (checkoutId && checkoutType) {
         const deleteCheckoutResponse = await deleteCheckout(

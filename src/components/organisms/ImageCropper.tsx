@@ -164,7 +164,6 @@ export default function ImageCropper({
                 src={imagePreview}
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
                 onLoad={onImageLoad}
-                className="max-h-[70vh] object-contain w-full"
               />
             </ReactCrop>
           </div>
