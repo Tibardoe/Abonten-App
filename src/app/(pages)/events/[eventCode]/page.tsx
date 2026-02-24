@@ -26,7 +26,7 @@ export default async function page({
 
   const { eventCode } = await params;
 
-  await ticketPurchaseNotification();
+  // await ticketPurchaseNotification();
 
   const { data: event } = await supabase
     .from("event")
