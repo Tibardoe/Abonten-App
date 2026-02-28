@@ -48,6 +48,8 @@ type closePopupModalType = {
   className?: React.HTMLAttributes<HTMLDivElement>;
 };
 
+type Entry = { start: Date; end: Date };
+
 export default function EventUploadMobileModal({
   handleClosePopup,
   imgUrl,
@@ -91,7 +93,7 @@ closePopupModalType) {
     to: new Date(),
   });
 
-  const [multipleDates, setMultipleDates] = useState<Date[]>([]);
+  const [multipleDates, setMultipleDates] = useState<Entry[]>([]);
 
   const [selectedAddress, setSelectedAddress] = useState("");
 
@@ -169,7 +171,7 @@ closePopupModalType) {
   //   setDateAndTime(date);
   // };
 
-  const handleDateAndTime = (date: DateRange | Date[]) => {
+  const handleDateAndTime = (date: DateRange | Entry[]) => {
     if (dateType === "single" && !Array.isArray(date)) {
       setSingleDateRange(date);
     } else if (dateType === "specific" && Array.isArray(date)) {
@@ -250,7 +252,9 @@ closePopupModalType) {
         }
 
         const invalid = multipleDates.some(
-          (date) => new Date(date) <= bufferedNow,
+          (entry) =>
+            new Date(entry.start) <= bufferedNow ||
+            new Date(entry.end) <= bufferedNow,
         );
         if (invalid) {
           setNotification(
