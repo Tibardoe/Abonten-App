@@ -1,6 +1,7 @@
 import { getFilteredEvents } from "@/actions/getFilteredEvents";
 import EventCard from "@/components/molecules/EventCard";
 import type { UserPostType } from "@/types/postsType";
+import { geocodeAddress } from "@/utils/geocodeServerSide";
 
 export default async function page({
   params,
@@ -26,18 +27,23 @@ export default async function page({
 
   const safeLocation = location ?? "";
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(
-    `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
-  );
+  // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
-  if (!res.ok) {
-    const errorText = await res.text(); // Get the HTML error to see what happened
-    console.error("Geocode API failed:", res.status, errorText);
-    throw new Error(`Failed to fetch geocode: ${res.status}`);
-  }
+  // const res = await fetch(
+  //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
+  // );
 
-  const { lat, lng } = await res.json();
+  // if (!res.ok) {
+  //   const errorText = await res.text(); // Get the HTML error to see what happened
+  //   console.error("Geocode API failed:", res.status, errorText);
+  //   throw new Error(`Failed to fetch geocode: ${res.status}`);
+  // }
+
+  // const { lat, lng } = await res.json();
+
+  const res = await geocodeAddress(safeLocation);
+
+  const { lat, lng } = res;
 
   const urlPath = type
     .split("-")

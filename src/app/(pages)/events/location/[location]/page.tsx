@@ -70,7 +70,7 @@ export default async function page({
           <EventsSlider
             heading="Around-You"
             events={aroundYou || []}
-            urlPath={`location${safeLocation}/explore/around-you`}
+            urlPath={`location/${safeLocation}/explore/around-you`}
           />
 
           <EventsSlider

@@ -317,8 +317,6 @@ export function getFormattedEventDate(
         new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
     )[0]; // Note: sorted by latest first
 
-    console.log("lastOccurrence", lastOccurrence);
-
     return formatFullDateTimeRange(
       lastOccurrence.starts_at,
       lastOccurrence.ends_at,
