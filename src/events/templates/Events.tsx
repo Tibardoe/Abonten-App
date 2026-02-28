@@ -114,7 +114,7 @@ export default async function page({
                   event_code={post.event_code}
                   starts_at={post.starts_at}
                   ends_at={post.ends_at}
-                  event_dates={post.event_dates}
+                  occurrences={post.occurrences}
                   minTicket={post.minTicket}
                   created_at={post.created_at}
                   capacity={post.capacity}
