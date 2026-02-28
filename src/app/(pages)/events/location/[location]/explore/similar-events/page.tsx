@@ -57,7 +57,7 @@ export default async function page({
                 flyer_version={event.flyer_version}
                 address={event.address}
                 starts_at={event.starts_at}
-                event_dates={event.event_dates}
+                occurrences={event.occurrences}
                 ends_at={event.ends_at}
                 organizer_id={event.organizer_id}
                 min_price={event.ticket_price}
