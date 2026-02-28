@@ -31,6 +31,12 @@ export default async function page({
     `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
   );
 
+  if (!res.ok) {
+    const errorText = await res.text(); // Get the HTML error to see what happened
+    console.error("Geocode API failed:", res.status, errorText);
+    throw new Error(`Failed to fetch geocode: ${res.status}`);
+  }
+
   const { lat, lng } = await res.json();
 
   const urlPath = type
@@ -61,7 +67,7 @@ export default async function page({
               event_code={event.event_code}
               address={event.address}
               starts_at={event.starts_at}
-              event_dates={event.event_dates}
+              occurrences={event.occurrences}
               ends_at={event.ends_at}
               organizer_id={event.organizer_id}
               min_price={event.min_price}
