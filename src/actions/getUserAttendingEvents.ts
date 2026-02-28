@@ -20,7 +20,7 @@ export default async function getUserAttendingEvents() {
 
     const { data: tickets, error: ticketsError } = await supabase
       .from("ticket")
-      .select("*, ticket_type:ticket_type_id(*)")
+      .select("*, ticket_type:ticket_type_id(*, event_occurrence (*))")
       .eq("user_id", userId);
 
     if (ticketsError) {

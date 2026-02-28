@@ -133,7 +133,7 @@ export default function TicketModal({
                   getFormattedEventDate(
                     event.event.starts_at,
                     event.event.ends_at,
-                    event.event.event_dates,
+                    event.event.occurrences,
                   ).date
                 }
               </p>

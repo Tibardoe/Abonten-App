@@ -1,3 +1,5 @@
+import type { Occurrence } from "./occurrenceType";
+
 export type Ticket = {
   category?: string;
   price: number;
@@ -67,6 +69,7 @@ export type UserTicketType = {
     created_at: string;
     event_code: string;
     event_dates: Date[]; // You can specify a better type if you know it
+    occurrences: Occurrence[];
   };
 };
 
