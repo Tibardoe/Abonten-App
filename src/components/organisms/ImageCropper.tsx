@@ -149,20 +149,21 @@ export default function ImageCropper({
             </div> */}
           </div>
 
-          <div className="relative flex flex-col w-[80%] mx-auto">
+          <div className="relative flex flex-col mx-auto">
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
               onComplete={(c) => setCompletedCrop(c)}
               aspect={aspect}
               minHeight={100}
-              className="border rounded-md overflow-hidden w-full md:w-[50%] self-center"
+              className="border rounded-md overflow-hidden w-full md:w-[35%] self-center"
             >
               <img
                 ref={imgRef}
                 alt="Crop me"
                 src={imagePreview}
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
+                className="w-full"
                 onLoad={onImageLoad}
               />
             </ReactCrop>

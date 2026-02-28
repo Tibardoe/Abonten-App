@@ -28,7 +28,9 @@ export async function getUserPosts(username: string) {
 
   const { data, error } = await supabase
     .from("event")
-    .select("*, ticket_type(price, currency)")
+    .select(
+      "*, ticket_type(price, currency), event_occurrence(id, starts_at, ends_at)",
+    )
     .eq("organizer_id", user.id);
 
   if (error) {

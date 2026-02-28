@@ -24,7 +24,7 @@ export default function Banner({ event }: BannerProps) {
   const dateTime = getFormattedEventDate(
     event.starts_at,
     event.ends_at,
-    event.event_dates,
+    event.occurrences,
   );
 
   return (

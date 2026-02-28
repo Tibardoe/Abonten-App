@@ -1,3 +1,4 @@
+import type { Occurrence } from "@/types/occurrenceType";
 import { formatDistanceToNow } from "date-fns";
 
 export function formatDateWithSuffix(date: string | Date): string {
@@ -203,23 +204,134 @@ export function getDateParts(dateInput: string | Date) {
   };
 }
 
+// export function getFormattedEventDate(
+//   startsAt: string | Date | null | undefined,
+//   endsAt: string | Date | null | undefined,
+//   fallbackOccurrences?: Occurrence[] | null,
+// ): { date: string; time: string } {
+//   // ✅ Try single/range event first
+//   const formatted = formatFullDateTimeRange(startsAt, endsAt);
+
+//   const hasValidDates =
+//     formatted.date !== "N/A - N/A" && formatted.time !== "N/A - N/A";
+
+//   if (hasValidDates) {
+//     return formatted;
+//   }
+
+//   // ✅ If multi-date event (event_occurrence)
+//   if (fallbackOccurrences && fallbackOccurrences.length > 0) {
+//     const first = fallbackOccurrences.sort(
+//       (a, b) =>
+//         new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+//     )[0];
+
+//     return formatFullDateTimeRange(first.starts_at, first.ends_at);
+//   }
+
+//   return {
+//     date: "Date not available",
+//     time: "Time not available",
+//   };
+// }
+
+// export function getFormattedEventDate(
+//   startsAt: string | Date | null | undefined,
+//   endsAt: string | Date | null | undefined,
+//   fallbackOccurrences?: Occurrence[] | null,
+// ): { date: string; time: string } {
+//   const now = new Date().getTime();
+
+//   // 1. Check the main event dates first
+//   // We only return these if the event is still "active" (hasn't ended)
+//   if (startsAt && endsAt) {
+//     const eventEndTime = new Date(endsAt).getTime();
+//     if (eventEndTime > now) {
+//       return formatFullDateTimeRange(startsAt, endsAt);
+//     }
+//   }
+
+//   // 2. If the main date is past OR missing, look at occurrences
+//   if (fallbackOccurrences && fallbackOccurrences.length > 0) {
+//     // Find the first occurrence that ends in the future
+//     const nextOccurrence = fallbackOccurrences
+//       .filter((occ) => new Date(occ.ends_at).getTime() > now) // Keep only future/current
+//       .sort(
+//         (a, b) =>
+//           new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+//       )[0]; // Get the soonest one
+
+//     if (nextOccurrence) {
+//       return formatFullDateTimeRange(
+//         nextOccurrence.starts_at,
+//         nextOccurrence.ends_at,
+//       );
+//     }
+
+//     // Optional: If ALL occurrences are past, show the very last one
+//     // so the card isn't empty, or keep your "Date not available" logic.
+//   }
+
+//   return {
+//     date: "Date not available",
+//     time: "Time not available",
+//   };
+// }
+
 export function getFormattedEventDate(
   startsAt: string | Date | null | undefined,
   endsAt: string | Date | null | undefined,
-  fallbackDates?: [] | Date[] | undefined | string,
+  fallbackOccurrences?: Occurrence[] | null,
 ): { date: string; time: string } {
-  const formatted = formatFullDateTimeRange(startsAt, endsAt);
+  const now = new Date().getTime();
 
-  const hasValidDates =
-    formatted.date !== "N/A - N/A" && formatted.time !== "N/A - N/A";
+  // 1. Try to find a FUTURE or CURRENT occurrence
+  if (fallbackOccurrences && fallbackOccurrences.length > 0) {
+    const nextOccurrence = fallbackOccurrences
+      .filter((occ) => new Date(occ.ends_at).getTime() > now)
+      .sort(
+        (a, b) =>
+          new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+      )[0];
 
-  if (hasValidDates) {
-    return formatted;
+    if (nextOccurrence) {
+      return formatFullDateTimeRange(
+        nextOccurrence.starts_at,
+        nextOccurrence.ends_at,
+      );
+    }
   }
 
-  if (fallbackDates?.[0]) {
-    return formatSingleDateTime(fallbackDates[0]);
+  // 2. If no future occurrences, try the main startsAt (if it's in the future)
+  if (startsAt && endsAt) {
+    if (new Date(endsAt).getTime() > now) {
+      return formatFullDateTimeRange(startsAt, endsAt);
+    }
   }
 
-  return { date: "Date not available", time: "Time not available" };
+  // 3. FALLBACK: If EVERYTHING is in the past, show the very last occurrence
+  // so the card still shows the date it happened.
+  if (fallbackOccurrences && fallbackOccurrences.length > 0) {
+    const lastOccurrence = fallbackOccurrences.sort(
+      (a, b) =>
+        new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
+    )[0]; // Note: sorted by latest first
+
+    console.log("lastOccurrence", lastOccurrence);
+
+    return formatFullDateTimeRange(
+      lastOccurrence.starts_at,
+      lastOccurrence.ends_at,
+    );
+  }
+
+  // 4. Final Fallback for single events that are past
+  if (startsAt && endsAt) {
+    return formatFullDateTimeRange(startsAt, endsAt);
+  }
+
+  return {
+    date: "Date not available",
+    time: "Time not available",
+  };
 }

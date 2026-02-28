@@ -16,7 +16,7 @@ export default function EventCard({
   address,
   starts_at,
   ends_at,
-  event_dates,
+  occurrences,
   min_price,
   attendanceCount,
   currency,
@@ -26,9 +26,9 @@ export default function EventCard({
   status,
   organizer_id,
 }: UserPostType) {
-  const dateTime = getFormattedEventDate(starts_at, ends_at, event_dates);
+  const dateTime = getFormattedEventDate(starts_at, ends_at, occurrences);
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-  const overlayMessage = getEventStatusOverlay(starts_at, ends_at, event_dates);
+  const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
 
   return (
     <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-white border border-gray-100 hover:border-gray-200">

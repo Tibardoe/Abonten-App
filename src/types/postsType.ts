@@ -1,3 +1,4 @@
+import type { Occurrence } from "./occurrenceType";
 import type { Ticket } from "./ticketType";
 
 // export type PostsType = {
@@ -36,7 +37,10 @@ export type PostsType = {
   types: string[];
   starts_at?: Date | undefined;
   ends_at?: Date | undefined;
-  specific_dates?: Date[];
+  specific_dates?: {
+    start: Date;
+    end: Date;
+  }[];
   title: string;
   checked: boolean;
   description: string;
@@ -70,7 +74,10 @@ export type PostsType = {
 export type EventDates = {
   starts_at?: Date;
   ends_at?: Date;
-  specific_dates?: Date[];
+  specific_dates?: {
+    start: Date;
+    end: Date;
+  }[];
 };
 
 export type UserPostType = {
@@ -85,7 +92,8 @@ export type UserPostType = {
   starts_at?: Date | undefined;
   ends_at?: Date | undefined;
   event_code: string;
-  event_dates?: Date[] | [];
+  occurrences?: Occurrence[];
+  event_occurrence?: Occurrence[];
   title: string;
   capacity?: number | undefined;
   min_price?: number | undefined;

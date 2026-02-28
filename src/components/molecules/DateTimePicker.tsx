@@ -19,10 +19,12 @@ import { Button } from "../ui/button";
 
 type DateAndTimeType = {
   dateType: string;
-  handleDateAndTime: (dateAndTime: DateRange | Date[]) => void;
+  handleDateAndTime: (dateAndTime: DateRange | Entry[]) => void;
 };
 
-type Entry = { date: Date; from: Date; to: Date };
+// type Entry = { date: Date; from: Date; to: Date };
+
+type Entry = { start: Date; end: Date };
 
 export default function DateTimePicker({
   handleDateAndTime,
@@ -49,9 +51,25 @@ export default function DateTimePicker({
 
   const addEntry = () => {
     if (!tempDate || !tempFrom || !tempTo) return;
-    const next = [...entries, { date: tempDate, from: tempFrom, to: tempTo }];
+
+    // Start datetime
+    const start = new Date(tempDate);
+    start.setHours(tempFrom.getHours(), tempFrom.getMinutes(), 0, 0);
+
+    // End datetime
+    const end = new Date(tempDate);
+    end.setHours(tempTo.getHours(), tempTo.getMinutes(), 0, 0);
+
+    const next = [...entries, { start, end }];
     setEntries(next);
-    handleDateAndTime(next.map((e) => e.date));
+
+    handleDateAndTime(next);
+
+    // const next = [...entries, { date: tempDate, from: tempFrom, to: tempTo }];
+    // setEntries(next);
+
+    // handleDateAndTime(next.map((e) => e.date));
+
     setTempDate(undefined);
     setTempFrom(undefined);
     setTempTo(undefined);
@@ -60,7 +78,7 @@ export default function DateTimePicker({
   const removeAt = (idx: number) => {
     const next = entries.filter((_, i) => i !== idx);
     setEntries(next);
-    handleDateAndTime(next.map((e) => e.date));
+    handleDateAndTime(next);
   };
 
   return (
@@ -190,23 +208,24 @@ export default function DateTimePicker({
       {dateType === "specific" && entries.length > 0 && (
         <ul className="mt-4 space-y-2">
           {entries.map((e, i) => {
-            const { date: ds } = formatSingleDateTime(e.date);
-            const time = `${e.from.toLocaleTimeString([], {
+            const { date } = formatSingleDateTime(e.start);
+
+            const time = `${e.start.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
               hour12: true,
-            })} - ${e.to.toLocaleTimeString([], {
+            })} - ${e.end.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
               hour12: true,
             })}`;
             return (
               <li
-                key={e.date.toISOString()}
+                key={e.start.toISOString()}
                 className="flex justify-between items-center bg-gray-100 rounded px-3 py-2"
               >
                 <div>
-                  <p className="text-sm">{ds}</p>
+                  <p className="text-sm">{date}</p>
                   <p className="text-xs text-gray-600">{time}</p>
                 </div>
                 <Button

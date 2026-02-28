@@ -74,8 +74,10 @@ export async function postEvent(formData: PostsType) {
   const { public_id, version } = flyerUpload;
 
   // Handle specific dates or start and end times
-  const eventStartDate = starts_at;
-  const eventEndDate = ends_at;
+  const isSpecificEvent = specific_dates && specific_dates.length > 0;
+
+  const eventStartDate = isSpecificEvent ? null : starts_at;
+  const eventEndDate = isSpecificEvent ? null : ends_at;
   let eventDates = specific_dates || [];
 
   // If specific_dates is not provided, use the provided start and end date
@@ -101,7 +103,6 @@ export async function postEvent(formData: PostsType) {
       flyer_version: version,
       starts_at: eventStartDate ?? null,
       ends_at: eventEndDate ?? null,
-      event_dates: eventDates ?? null,
       status: "published",
       event_category: category,
       event_type: types,
@@ -118,6 +119,26 @@ export async function postEvent(formData: PostsType) {
   }
 
   const eventId = insertedEvent.id;
+
+  // ✅ Insert multiple specific dates (if any)
+  if (specific_dates && specific_dates.length > 0) {
+    const occurrencePayload = specific_dates.map((entry) => ({
+      event_id: eventId,
+      starts_at: entry.start, // must be full Date object or ISO string
+      ends_at: entry.end,
+    }));
+
+    const { error: occurrenceError } = await supabase
+      .from("event_occurrence")
+      .insert(occurrencePayload);
+
+    if (occurrenceError) {
+      return {
+        status: 500,
+        message: `Error inserting event occurrences: ${occurrenceError.message}`,
+      };
+    }
+  }
 
   // isert receiving account if event is not free
   if (paymentOption && paymentOption === "Mobile Money") {

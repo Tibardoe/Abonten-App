@@ -36,6 +36,8 @@ type closePopupModalType = {
   handleClosePopup: (state: boolean) => void;
 };
 
+type Entry = { start: Date; end: Date };
+
 export default function UploadEventModal({
   handleClosePopup,
 }: closePopupModalType) {
@@ -54,7 +56,7 @@ export default function UploadEventModal({
   const [step, setStep] = useState(1);
 
   const [dateAndTime, setDateAndTime] = useState<
-    DateRange | Date[] | undefined
+    DateRange | Entry[] | undefined
   >({
     from: new Date(),
     to: new Date(),
@@ -163,7 +165,7 @@ export default function UploadEventModal({
     );
   };
 
-  const handleDateAndTime = (date: DateRange | Date[]) => {
+  const handleDateAndTime = (date: DateRange | Entry[]) => {
     setDateAndTime(date);
   };
 
@@ -180,55 +182,45 @@ export default function UploadEventModal({
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
     try {
       setIsUploading(true);
-
       if (!cropped && !selectedFile) {
         setNotification("Please select a file first!");
         return;
       }
-
       if (!selectedAddress) {
         setNotification("Please enter a location");
         return;
       }
-
       const coords = await getCoordinatesFromAddress(selectedAddress);
-
       if (!coords) {
         setNotification("Could not fetch coordinates");
         return;
       }
-
       let eventDates: EventDates;
-
       const now = new Date();
       const bufferMs = 5 * 60 * 60 * 1000; // 5 hours
       const bufferedNow = new Date(now.getTime() + bufferMs);
-
       if (dateType === "single" && !Array.isArray(dateAndTime)) {
         const start = dateAndTime?.from
           ? new Date(dateAndTime.from)
           : undefined;
         const end = dateAndTime?.to ? new Date(dateAndTime.to) : undefined;
-
         if ((start && start <= bufferedNow) || (end && end <= bufferedNow)) {
           setNotification(
             "Start or end time must be at least 5 hours from now",
           );
           return;
         }
-
         if (start && end && start >= end) {
           setNotification("Start time must be earlier than end time");
           return;
         }
-
         eventDates = {
           starts_at: start,
           ends_at: end,
         };
       } else if (Array.isArray(dateAndTime)) {
         const invalid = dateAndTime.some(
-          (date) => new Date(date) <= bufferedNow,
+          (entry) => entry.start <= bufferedNow || entry.end <= bufferedNow,
         );
         if (invalid) {
           setNotification(
@@ -236,7 +228,6 @@ export default function UploadEventModal({
           );
           return;
         }
-
         eventDates = {
           specific_dates: dateAndTime,
         };
@@ -244,41 +235,32 @@ export default function UploadEventModal({
         setNotification("Invalid date selection");
         return;
       }
-
       if (!category || !types) {
         setNotification("Categories and types must be set");
         return;
       }
-
       const noTicketingSet =
         !ticket &&
         (!singleTicket || !singleTicketQuantity) &&
         (!multipleTickets || multipleTickets.length === 0);
-
       if (noTicketingSet) {
         setNotification("Event ticketing must be set");
         return;
       }
-
       const receivingAccountDetails = receivingAccountForm.getValues();
-
       const isReceivingAccountEmpty = Object.values(
         receivingAccountDetails,
       ).some((value) => !value);
-
       const isPaidTicketing =
         (singleTicket && singleTicketQuantity) ||
         (multipleTickets && multipleTickets.length > 0);
-
       if (isPaidTicketing && ticket !== "free" && isReceivingAccountEmpty) {
         setNotification(
           "Set up receiving account to receive payment after successfull event!",
         );
         return;
       }
-
       const fileToUpload = (cropped ?? selectedFile) as File;
-
       const finalData = {
         ...formData,
         address: selectedAddress,
@@ -299,15 +281,12 @@ export default function UploadEventModal({
         selectedNetwork,
         ...eventDates, // Merge the eventDates
       };
-
       setIsUploading(true);
       const response = await postEvent(finalData);
       setIsUploading(false);
-
       if (response.status === 200) {
         setNotification("✅ Event posted successfully!");
         router.refresh();
-
         handleClosePopup(false);
       } else {
         setNotification(`❌ ${response.message}`);

@@ -31,7 +31,27 @@ export default async function page({
   const { data: event } = await supabase
     .from("event")
     .select(
-      "*, user_info!organizer_id(avatar_public_id, avatar_version, username), ticket_type(id, type, price, currency, available_from, available_until)",
+      `
+      *,
+  user_info!organizer_id(
+    avatar_public_id,
+    avatar_version,
+    username
+  ),
+  ticket_type(
+    id,
+    type,
+    price,
+    currency,
+    available_from,
+    available_until
+  ),
+  event_occurrence(
+    id,
+    starts_at,
+    ends_at
+  )
+    `,
     )
     .eq("event_code", eventCode.toUpperCase())
     .single();
@@ -70,7 +90,7 @@ export default async function page({
   const eventDateAndTime = getFormattedEventDate(
     event.starts_at,
     event.ends_at,
-    event.event_dates,
+    event.event_occurrence,
   );
 
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
@@ -253,7 +273,7 @@ export default async function page({
             {/* Ticket CTA */}
             <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all">
               <EventDateSelector
-                eventDates={event.event_dates}
+                eventDates={event.event_occurrence}
                 eventId={event.id}
                 time={eventDateAndTime.time}
                 eventTitle={event.title}

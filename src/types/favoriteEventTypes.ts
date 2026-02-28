@@ -1,3 +1,5 @@
+import type { Occurrence } from "./occurrenceType";
+
 export type FavoriteEvents = {
   user_id: string;
   event_id: string;
@@ -24,7 +26,8 @@ export type FavoriteEvents = {
     starts_at?: Date;
     event_code: string;
     ends_at?: Date;
-    event_dates?: Date[];
+    occurrences?: Occurrence[];
+    event_occurrence?: Occurrence[];
     timezone: string;
     status: string;
     ticket_type?: { price: number; currency: string }[];

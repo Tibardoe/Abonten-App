@@ -1,12 +1,13 @@
 "use client";
 
-import { formatSingleDateTime, getDateParts } from "@/utils/dateFormatter";
+import type { Occurrence } from "@/types/occurrenceType";
+import { formatFullDateTimeRange, getDateParts } from "@/utils/dateFormatter";
 import React, { useState } from "react";
 import CheckoutBtn from "../atoms/CheckoutBtn";
 import DateBtn from "../atoms/DateBtn";
 
 type EventDateSelectorProps = {
-  eventDates: string[];
+  eventDates: Occurrence[];
   eventId: string;
   eventTitle: string;
   minTicket: {
@@ -27,7 +28,15 @@ export default function EventDateSelector({
   time,
   requireRegistration,
 }: EventDateSelectorProps) {
-  const [selectedDate, setSelectedDate] = useState(eventDates[0]);
+  const [selectedOccurrence, setSelectedOccurrence] =
+    useState<Occurrence | null>(eventDates.length > 0 ? eventDates[0] : null);
+
+  const selectedDateTime = selectedOccurrence
+    ? formatFullDateTimeRange(
+        selectedOccurrence.starts_at,
+        selectedOccurrence.ends_at,
+      )
+    : null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -35,16 +44,18 @@ export default function EventDateSelector({
         <div className="mb-3 p-2">
           <h2 className="font-bold mb-2">Dates</h2>
           <div className="flex overflow-x-auto gap-3">
-            {eventDates.map((dateString: string) => {
-              const { day, month, date, time } = getDateParts(dateString);
+            {eventDates.map((occurrence) => {
+              const dateValue = occurrence.starts_at;
 
-              const isActive = selectedDate === dateString;
+              const { day, month, date, time } = getDateParts(dateValue);
+
+              const isActive = selectedOccurrence?.starts_at === dateValue;
 
               return (
                 <DateBtn
-                  dateString={dateString}
-                  onClick={() => setSelectedDate(dateString)}
-                  key={dateString}
+                  dateString={occurrence.starts_at.toString()}
+                  onClick={() => setSelectedOccurrence(occurrence)}
+                  key={occurrence.id}
                   day={day}
                   month={month}
                   date={date}
@@ -58,18 +69,20 @@ export default function EventDateSelector({
       )}
 
       {/* Buy ticket btn */}
-      <CheckoutBtn
-        eventId={eventId}
-        btnText={
-          minTicket?.price === 0 || minTicket === null
-            ? "Register"
-            : "Buy Ticket"
-        }
-        eventTitle={eventTitle}
-        date={formatSingleDateTime(selectedDate).date}
-        time={time}
-        requireRegistration={requireRegistration}
-      />
+      {selectedDateTime && (
+        <CheckoutBtn
+          eventId={eventId}
+          btnText={
+            minTicket?.price === 0 || minTicket === null
+              ? "Register"
+              : "Buy Ticket"
+          }
+          eventTitle={eventTitle}
+          date={selectedDateTime.date}
+          time={selectedDateTime.time}
+          requireRegistration={requireRegistration}
+        />
+      )}
     </div>
   );
 }

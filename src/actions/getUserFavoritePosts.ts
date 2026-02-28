@@ -22,7 +22,9 @@ export async function getUserFavoritePosts() {
 
   const { data, error } = await supabase
     .from("favorite")
-    .select("*, event (*, ticket_type(price, currency))")
+    .select(
+      "*, event (*, ticket_type(price, currency), event_occurrence(id, starts_at, ends_at))",
+    )
     .eq("user_id", user.user.id);
 
   if (error) {
