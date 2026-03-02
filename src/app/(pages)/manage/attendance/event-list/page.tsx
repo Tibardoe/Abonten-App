@@ -5,8 +5,6 @@ import { FaChevronRight } from "react-icons/fa";
 import { IoTimeOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 
-export const dynamic = "force-dynamic";
-
 export default async function page() {
   let events = [];
   try {
