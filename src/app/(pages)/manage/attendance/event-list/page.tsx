@@ -27,7 +27,7 @@ export default async function page() {
             const dateTime = getFormattedEventDate(
               event.starts_at,
               event.ends_at,
-              event.event_dates,
+              event.occurrences,
             );
 
             return (

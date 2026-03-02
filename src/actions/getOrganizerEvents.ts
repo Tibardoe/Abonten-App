@@ -19,7 +19,7 @@ export default async function getOrganizerEvents() {
 
   const { data: events, error: eventsError } = await supabase
     .from("event")
-    .select("*")
+    .select("*, occurrences:event_occurrence(*)")
     .eq("organizer_id", userId);
 
   if (eventsError) {
