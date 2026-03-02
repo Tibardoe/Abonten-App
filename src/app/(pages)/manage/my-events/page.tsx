@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
 import CancelUserTicketBtn from "@/components/atoms/CancelUserTicketBtn";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
