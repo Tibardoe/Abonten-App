@@ -6,7 +6,8 @@ type DateBtnProp = {
   day: string;
   month: string;
   date: number;
-  time: string;
+  start_at: string;
+  is_past: boolean;
   isActive: boolean;
   onClick: () => void;
 };
@@ -15,19 +16,26 @@ export default function DateBtn({
   day,
   month,
   date,
-  time,
+  start_at,
+  is_past,
   dateString,
   onClick,
   isActive,
 }: DateBtnProp) {
+  const now = new Date();
+
   return (
     <button
       type="button"
       key={dateString}
+      disabled={is_past}
       onClick={onClick}
       className={cn(
         "rounded-md border px-4 py-2 flex-shrink-0 space-y-2 shadow-md text-sm min-w-32",
-        { "border-black": isActive },
+        {
+          "border-black": isActive,
+          "cursor-not-allowed text-gray-400": is_past,
+        },
       )}
     >
       <p className="font-bold">{day}</p>
@@ -45,7 +53,7 @@ export default function DateBtn({
         {date}
       </p>
 
-      <p>{time}</p>
+      <p>{start_at}</p>
     </button>
   );
 }

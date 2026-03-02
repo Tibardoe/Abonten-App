@@ -28,8 +28,13 @@ export default function EventDateSelector({
   time,
   requireRegistration,
 }: EventDateSelectorProps) {
+  const now = new Date();
+
+  const firstFutureOccurrence =
+    eventDates.find((occ) => new Date(occ.ends_at) >= now) ?? null;
+
   const [selectedOccurrence, setSelectedOccurrence] =
-    useState<Occurrence | null>(eventDates.length > 0 ? eventDates[0] : null);
+    useState<Occurrence | null>(firstFutureOccurrence);
 
   const selectedDateTime = selectedOccurrence
     ? formatFullDateTimeRange(
@@ -49,18 +54,26 @@ export default function EventDateSelector({
 
               const { day, month, date, time } = getDateParts(dateValue);
 
-              const isActive = selectedOccurrence?.starts_at === dateValue;
+              const isPast = new Date(occurrence.ends_at) < new Date();
+
+              const isActive =
+                !isPast && selectedOccurrence?.starts_at === dateValue;
 
               return (
                 <DateBtn
-                  dateString={occurrence.starts_at.toString()}
-                  onClick={() => setSelectedOccurrence(occurrence)}
                   key={occurrence.id}
+                  dateString={occurrence.starts_at.toString()}
+                  onClick={() => {
+                    if (!isPast) {
+                      setSelectedOccurrence(occurrence);
+                    }
+                  }}
                   day={day}
                   month={month}
                   date={date}
                   isActive={isActive}
-                  time={time}
+                  start_at={time}
+                  is_past={isPast}
                 />
               );
             })}
