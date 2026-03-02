@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import getOrganizerEvents from "@/actions/getOrganizerEvents";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import Link from "next/link";
