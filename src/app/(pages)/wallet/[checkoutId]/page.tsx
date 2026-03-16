@@ -32,14 +32,17 @@ export default async function page({
       orderSummary = res.data;
 
       const event = orderSummary[0].event;
+
       eventTitle = event.title;
       eventId = orderSummary[0].event_id;
       eventDateAndTime = getFormattedEventDate(
         event.starts_at,
         event.ends_at,
-        event.event_dates,
+        event.event_occurrence,
       );
+
       ticketSummary = orderSummary.map((ticket) => ({
+        ticketCheckoutId: ticket.id,
         type: ticket.ticket_type.type,
         unitPrice: ticket.unit_price,
         quantity: ticket.quantity,
@@ -84,7 +87,6 @@ export default async function page({
         </div>
       ) : (
         <>
-          {" "}
           <div>
             <h1 className="font-bold text-xl md:text-2xl">Wallets</h1>
             <p className="opacity-60 text-sm">

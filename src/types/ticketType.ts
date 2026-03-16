@@ -87,6 +87,7 @@ export type TicketSummaryItem = {
   amount: number;
   unitPrice: string;
   currency: string;
+  ticketCheckoutId: string;
 };
 
 export type TicketSummaryProps = {
