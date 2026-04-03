@@ -25,7 +25,6 @@ export default function EventDateSelector({
   eventId,
   minTicket,
   eventTitle,
-  time,
   requireRegistration,
 }: EventDateSelectorProps) {
   const now = new Date();

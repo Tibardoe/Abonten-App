@@ -56,6 +56,11 @@ export default async function page({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
+  const event_dates =
+    event?.event_occurrence.length > 0
+      ? event.event_occurrence
+      : [{ starts_at: event?.starts_at, ends_at: event?.ends_at }];
+
   if (!event) return <p className="p-8 text-center">No event found</p>;
 
   const { count: attendanceCount } = await supabase
@@ -273,7 +278,7 @@ export default async function page({
             {/* Ticket CTA */}
             <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all">
               <EventDateSelector
-                eventDates={event.event_occurrence}
+                eventDates={event_dates}
                 eventId={event.id}
                 time={eventDateAndTime.time}
                 eventTitle={event.title}

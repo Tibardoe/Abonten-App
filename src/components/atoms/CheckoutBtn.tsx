@@ -154,7 +154,7 @@ export default function CheckoutBtn({
     case "Register":
       actionButton = requireRegistration && (
         <Button
-          className="font-bold rounded-md w-full p-6 text-lg text-mint"
+          className="font-bold rounded-md w-full p-6 text-lg bg-mint"
           onClick={() => handleRegistration([{ type: "Free", quantity: 1 }])}
           disabled={loading}
         >
