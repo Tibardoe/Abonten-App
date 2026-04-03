@@ -89,7 +89,7 @@ export default function ChangeLocationModal({
 
             {selectedAddress !== "" && (
               <Link
-                className="bg-black rounded-lg p-3 md:p-5 w-24 h-full text-white grid place-items-center font-bold"
+                className="bg-mint rounded-lg p-3 md:p-5 w-24 h-full text-white grid place-items-center font-bold"
                 href={`/events/${generateSlug(selectedAddress)}`}
               >
                 Set

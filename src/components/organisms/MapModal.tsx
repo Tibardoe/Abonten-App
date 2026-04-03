@@ -95,7 +95,7 @@ const MapModal: React.FC<MapModalProps> = ({
             href={`/events/${generateSlug(currentLocation?.address ?? "")}`}
             type="button"
             onClick={handleConfirm}
-            className="bg-black w-full rounded-full text-white font-bold px-4 py-2 text-center"
+            className="bg-mint w-full rounded-full text-white font-bold px-4 py-2 text-center"
           >
             Set address
           </Link>
