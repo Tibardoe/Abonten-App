@@ -3,6 +3,10 @@ import PostButton from "@/components/atoms/PostButton";
 import EventCard from "@/components/molecules/EventCard";
 import type { UserPostType } from "@/types/postsType";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// export const instant = false;
+
 export default async function page({
   params,
 }: {

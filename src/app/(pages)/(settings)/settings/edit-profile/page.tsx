@@ -5,6 +5,10 @@ import UserAvatar from "@/components/atoms/UserAvatar";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export default async function page() {
   const userProfile = await getUserDetails();
 

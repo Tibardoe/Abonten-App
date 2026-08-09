@@ -7,6 +7,10 @@ import { getFormattedEventDate } from "@/utils/dateFormatter";
 import ContinueButton from "@/wallet/atoms/ContinueButton";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+export const instant = false;
+
 export default async function page({
   params,
   searchParams,
