@@ -14,16 +14,27 @@ import { geocodeAddress } from "@/utils/geocodeServerSide";
 
 export default async function page({
   params,
+  searchParams,
 }: {
   params: Promise<{ location: string }>;
+  searchParams: Promise<{ lat?: string; lng?: string }>;
 }) {
   const { location } = await params;
+  const { lat: latParam, lng: lngParam } = await searchParams;
 
   const safeLocation = location ?? "";
 
-  const res = await geocodeAddress(safeLocation);
+  // When the browser already gave us coordinates (e.g. the landing page's
+  // "use my current location" flow), skip re-geocoding the slug text.
+  const coordsFromQuery =
+    latParam &&
+    lngParam &&
+    Number.isFinite(Number(latParam)) &&
+    Number.isFinite(Number(lngParam))
+      ? { lat: Number(latParam), lng: Number(lngParam) }
+      : null;
 
-  const { lat, lng } = res;
+  const { lat, lng } = coordsFromQuery ?? (await geocodeAddress(safeLocation));
 
   const eventsWithinLocation = await getNearByEvents(lat, lng, 10000);
 

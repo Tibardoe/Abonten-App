@@ -167,6 +167,7 @@
 
 "use client";
 
+import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
 // import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
@@ -470,6 +471,9 @@ export default function PostAutoComplete({
     useRef<google.maps.places.AutocompleteService | null>(null);
   const sessionTokenRef =
     useRef<google.maps.places.AutocompleteSessionToken | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useClickOutside([containerRef], () => setSearchResults([]));
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -634,7 +638,10 @@ export default function PostAutoComplete({
     return <div className="text-gray-500">Loading Google Maps...</div>;
 
   return (
-    <div className="bg-white rounded-lg flex justify-between items-center py-3 md:py-2 gap-2 relative w-full">
+    <div
+      ref={containerRef}
+      className="bg-white rounded-lg flex justify-between items-center py-3 md:py-2 gap-2 relative w-full"
+    >
       <input
         type="text"
         onChange={handleInputChange}

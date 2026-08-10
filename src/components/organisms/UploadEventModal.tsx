@@ -1,9 +1,9 @@
+import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
 import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { eventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
-import { getUserCurrency } from "@/utils/getUserCurrency";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -123,13 +123,8 @@ export default function UploadEventModal({
   const { data: userCurrency } = useQuery({
     queryKey: ["user-currency"],
     queryFn: async () => {
-      const userCurrency = await getUserCurrency();
-
-      if (userCurrency) {
-        return userCurrency;
-      }
-
-      return null;
+      const countryMetadata = await fetchCountryMetadata();
+      return countryMetadata?.currency ?? "GHS";
     },
   });
 
