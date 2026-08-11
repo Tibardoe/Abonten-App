@@ -343,51 +343,60 @@ export function useHighlightViewer({
   // Owner-only slide deletion: removes the row locally and moves to the
   // next/previous slide, an adjacent group, or closes the viewer, matching
   // the current slide's neighbors rather than waiting on a server refetch.
+  //
+  // The new groups are computed from the current `localGroups` value up
+  // front, then applied with plain, sequential setState calls (never a
+  // setState *updater* function) so `onClose` — which sets state on the
+  // parent `UserHighlights` component — is only ever called from this plain
+  // event-handler-triggered function body, matching how `goToAdjacentGroup`
+  // above already calls it safely. Calling it from inside a
+  // `setLocalGroups((prev) => ...)` updater is unsafe: React can invoke that
+  // updater while rendering this component, so updating a *different*
+  // component's state from within it triggers React's
+  // "Cannot update a component while rendering a different component" error.
   const removeSlide = useCallback(
     (slideId: string) => {
       mediaTimeElapsedOnPauseRef.current = 0;
       setIsPaused(false);
 
-      setLocalGroups((prevGroups) => {
-        const group = prevGroups[currentGroupIndex];
-        if (!group) return prevGroups;
+      const group = localGroups[currentGroupIndex];
+      if (!group) return;
 
-        const slideIdx = group.findIndex((s) => s.id === slideId);
-        if (slideIdx === -1) return prevGroups;
+      const slideIdx = group.findIndex((s) => s.id === slideId);
+      if (slideIdx === -1) return;
 
-        const originalLength = group.length;
-        const newGroup = group.filter((s) => s.id !== slideId);
-        const newGroups = [...prevGroups];
+      const originalLength = group.length;
+      const newGroup = group.filter((s) => s.id !== slideId);
+      const newGroups = [...localGroups];
 
-        if (newGroup.length === 0) {
-          newGroups.splice(currentGroupIndex, 1);
+      if (newGroup.length === 0) {
+        newGroups.splice(currentGroupIndex, 1);
+        setLocalGroups(newGroups);
 
-          if (newGroups.length === 0) {
-            onClose();
-            return newGroups;
-          }
-
-          if (currentGroupIndex >= newGroups.length) {
-            const newIdx = newGroups.length - 1;
-            setCurrentGroupIndex(newIdx);
-            setCurrentIndex(newGroups[newIdx].length - 1);
-          } else {
-            setCurrentIndex(0);
-          }
-          return newGroups;
+        if (newGroups.length === 0) {
+          onClose();
+          return;
         }
 
-        newGroups[currentGroupIndex] = newGroup;
-
-        if (slideIdx >= originalLength - 1) {
-          setCurrentIndex(newGroup.length - 1);
+        if (currentGroupIndex >= newGroups.length) {
+          const newIdx = newGroups.length - 1;
+          setCurrentGroupIndex(newIdx);
+          setCurrentIndex(newGroups[newIdx].length - 1);
+        } else {
+          setCurrentIndex(0);
         }
-        // else: the next slide now occupies this same index already.
+        return;
+      }
 
-        return newGroups;
-      });
+      newGroups[currentGroupIndex] = newGroup;
+      setLocalGroups(newGroups);
+
+      if (slideIdx >= originalLength - 1) {
+        setCurrentIndex(newGroup.length - 1);
+      }
+      // else: the next slide now occupies this same index already.
     },
-    [currentGroupIndex, onClose],
+    [currentGroupIndex, localGroups, onClose],
   );
 
   const progressBars = useMemo(() => currentGroup ?? [], [currentGroup]);
@@ -413,5 +422,7 @@ export function useHighlightViewer({
     handleVideoLoadedMetadata,
     handleVideoCanPlay,
     removeSlide,
+    pause: pauseNow,
+    resume: resumeNow,
   };
 }

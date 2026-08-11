@@ -24,7 +24,7 @@ export default async function page({
     <div className="flex flex-col gap-7">
       <ProfileDetails username={username} />
 
-      {data.username === username && <Higlight />}
+      {data.username === username && <Higlight username={username} />}
 
       {/* <ContentArea /> */}
     </div>

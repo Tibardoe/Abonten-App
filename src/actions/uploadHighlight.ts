@@ -35,17 +35,16 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
       const arrayBuffer = await item.file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
+      // No `eager` transformations here. Without `eager_async: true`,
+      // Cloudinary runs eager transformations synchronously before this
+      // call resolves — for videos that meant a full re-encode (whose
+      // result was never even read) plus a thumbnail crop job blocking
+      // every upload. The thumbnail is built below as a plain Cloudinary
+      // delivery URL instead: Cloudinary generates it on first request and
+      // caches it, so no pre-processing is needed at upload time.
       const uploadOptions = {
         resource_type: item.type,
         folder: "highlight_media",
-        eager:
-          item.type === "video"
-            ? [
-                { quality: "auto", fetch_format: "auto" },
-                { width: 300, height: 300, crop: "thumb", format: "jpg" },
-              ]
-            : undefined,
-        // transformation: buildTransformations(item.transformations),
       };
 
       const result = await new Promise<UploadApiResponse>((resolve, reject) => {
@@ -60,14 +59,25 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
         stream.end(buffer);
       });
 
+      // Deterministic thumbnail URL, built locally (no extra upload or
+      // network round trip) from the same public_id/version — matches the
+      // c_thumb,h_300,w_300 shape already used for existing highlights.
+      const thumbnailUrl =
+        item.type === "video"
+          ? cloudinary.url(result.public_id, {
+              resource_type: "video",
+              format: "jpg",
+              version: result.version,
+              transformation: [{ width: 300, height: 300, crop: "thumb" }],
+              secure: true,
+            })
+          : null;
+
       const { error: dbError } = await supabase.from("highlight").insert({
         user_id: user.id,
         media_url: result.secure_url,
         media_type: item.type,
-        thumbnail_url:
-          item.type === "video"
-            ? (result.eager?.[1]?.secure_url ?? null)
-            : null,
+        thumbnail_url: thumbnailUrl,
         media_duration: item.type === "video" ? result.duration : null,
         group_id: groupId,
         public_id: result.public_id,

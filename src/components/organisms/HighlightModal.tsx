@@ -1,4 +1,3 @@
-import uploadHighlight from "@/actions/uploadHighlight";
 import type { MediaItem } from "@/types/mediaItemType";
 import formatDuration from "@/utils/formatVideoDuration";
 import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
@@ -16,26 +15,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CiCrop } from "react-icons/ci";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineCancel } from "react-icons/md";
-import Notification from "../atoms/Notification";
 import ThumbnailStrip from "../molecules/ThumbnailStrip";
 import { Button } from "../ui/button";
 import ImageCropper from "./ImageCropper";
 
 type ClosePopupModalType = {
   handleShowHighlightModal: (state: boolean) => void;
+  onUpload: (mediaItems: MediaItem[]) => void;
 };
 
 export default function HighlightModal({
   handleShowHighlightModal,
+  onUpload,
 }: ClosePopupModalType) {
   const [isCropping, setIsCropping] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [highlightNotification, setHighlightNotification] = useState<
-    string | null
-  >(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [step, setStep] = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -571,18 +567,12 @@ export default function HighlightModal({
     }
   };
 
-  const handleHighlightUpload = async () => {
-    setIsUploading(true);
-
-    const response = await uploadHighlight(mediaItems);
-
-    if (response.status !== 200) {
-      setHighlightNotification(response.message);
-      setIsUploading(false);
-    }
-
-    setHighlightNotification(response.message);
-    setIsUploading(false);
+  // Hands the media off to the parent and closes immediately — the user
+  // shouldn't have to sit on this screen waiting for the upload/processing
+  // to finish. The parent (which outlives this modal) performs the actual
+  // upload and reports success/failure once it's done.
+  const handleHighlightUpload = () => {
+    onUpload(mediaItems);
     handleShowHighlightModal(false);
   };
 
@@ -628,9 +618,8 @@ export default function HighlightModal({
               type="button"
               onClick={handleHighlightUpload}
               className="text-white font-medium backdrop-blur-md bg-mint p-2 rounded-md"
-              disabled={isUploading}
             >
-              {isUploading ? "Uploading..." : "Upload"}
+              Upload
             </button>
           </div>
         )}
@@ -947,10 +936,6 @@ export default function HighlightModal({
           )}
         </div>
       </div>
-
-      {highlightNotification && (
-        <Notification notification={highlightNotification} />
-      )}
     </div>
   );
 }

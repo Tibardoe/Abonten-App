@@ -4,24 +4,25 @@ import HighlightMenu, {
   type HighlightMenuAction,
 } from "@/components/molecules/HighlightMenu";
 import Image from "next/image";
-import { useState } from "react";
 
 type HighlightMenuButtonProps = {
   actions: HighlightMenuAction[];
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
 export default function HighlightMenuButton({
   actions,
+  isOpen,
+  onOpenChange,
 }: HighlightMenuButtonProps) {
-  const [showMenu, setShowMenu] = useState(false);
-
   return (
     <div className="relative flex-shrink-0">
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          setShowMenu((prev) => !prev);
+          onOpenChange(!isOpen);
         }}
       >
         <Image
@@ -33,10 +34,10 @@ export default function HighlightMenuButton({
         />
       </button>
 
-      {showMenu && (
+      {isOpen && (
         <HighlightMenu
           actions={actions}
-          onClose={() => setShowMenu(false)}
+          onClose={() => onOpenChange(false)}
           className="absolute right-0 top-full mt-1"
         />
       )}

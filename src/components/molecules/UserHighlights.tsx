@@ -89,6 +89,14 @@ export default function UserHighlights({
 
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
+  // Captured at the moment "Delete Highlight" is selected, independently of
+  // menuGroupIndex — the menu (and menuGroupIndex) closes immediately on
+  // selection, before the confirm dialog's "Yes" is ever clicked, so
+  // handleDeleteHighlight must not depend on menuGroupIndex still being set.
+  const [pendingDeleteGroupId, setPendingDeleteGroupId] = useState<
+    string | null
+  >(null);
+
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -157,13 +165,10 @@ export default function UserHighlights({
   };
 
   const handleDeleteHighlight = async () => {
-    if (menuGroupIndex === null || !highlights) return;
-
-    const groupId = highlights[menuGroupIndex]?.[0]?.group_id;
-    if (!groupId) return;
+    if (!pendingDeleteGroupId) return;
 
     setIsDeleting(true);
-    const response = await deleteHighlight(groupId);
+    const response = await deleteHighlight(pendingDeleteGroupId);
     setIsDeleting(false);
 
     if (response.status !== 200) {
@@ -173,10 +178,13 @@ export default function UserHighlights({
     }
 
     setShowConfirmDelete(false);
-    if (openGroupIndex === menuGroupIndex) {
+    if (
+      openGroupIndex !== null &&
+      highlights?.[openGroupIndex]?.[0]?.group_id === pendingDeleteGroupId
+    ) {
       setOpenGroupIndex(null);
     }
-    closeMenu();
+    setPendingDeleteGroupId(null);
     queryClient.invalidateQueries({ queryKey: ["highlights", username] });
   };
 
@@ -241,7 +249,10 @@ export default function UserHighlights({
                         {
                           label: "Delete Highlight",
                           destructive: true,
-                          onSelect: () => setShowConfirmDelete(true),
+                          onSelect: () => {
+                            setPendingDeleteGroupId(lastItem.group_id);
+                            setShowConfirmDelete(true);
+                          },
                         },
                       ]}
                       onClose={closeMenu}
@@ -283,7 +294,10 @@ export default function UserHighlights({
             message="Are you sure you want to delete this highlight? This will delete all photos and videos in it."
             isLoading={isDeleting}
             onConfirm={handleDeleteHighlight}
-            onCancel={() => setShowConfirmDelete(false)}
+            onCancel={() => {
+              setShowConfirmDelete(false);
+              setPendingDeleteGroupId(null);
+            }}
           />
         )}
 

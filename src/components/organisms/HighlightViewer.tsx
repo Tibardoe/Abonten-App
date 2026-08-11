@@ -8,7 +8,7 @@ import { useHighlightViewer } from "@/hooks/useHighlightViewer";
 import type { HighlightGroup } from "@/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoMdArrowBack } from "react-icons/io";
 import { IoChevronBack, IoChevronForward, IoPlay } from "react-icons/io5";
 import { SlControlPause } from "react-icons/sl";
@@ -32,6 +32,7 @@ export default function HighlightViewer({
 }: HighlightViewerProps) {
   const queryClient = useQueryClient();
 
+  const [showMenu, setShowMenu] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -56,7 +57,39 @@ export default function HighlightViewer({
     handleVideoLoadedMetadata,
     handleVideoCanPlay,
     removeSlide,
+    pause,
+    resume,
   } = useHighlightViewer({ groups, initialGroupIndex, onClose });
+
+  // Holds playback paused for as long as the 3-dot menu or its confirmation
+  // dialog is open, and restores the exact prior state (playing or already
+  // paused) once both are closed — reuses the hook's own pause/resume
+  // bookkeeping rather than a separate timer system.
+  const isHeldRef = useRef(false);
+  const wasPausedBeforeHoldRef = useRef(false);
+
+  // Only reacts to the menu/confirm-dialog visibility changing — not to
+  // `isPaused` itself, which this effect also sets, or to `pause`/`resume`
+  // identity (already stable) — including them would re-run this on every
+  // pause toggle and fight with independent pause actions (e.g. tapping
+  // the media directly) while the menu/dialog are closed.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: see comment above
+  useEffect(() => {
+    const shouldHold = showMenu || showConfirmDelete;
+
+    if (shouldHold && !isHeldRef.current) {
+      wasPausedBeforeHoldRef.current = isPaused;
+      isHeldRef.current = true;
+      if (!isPaused) {
+        pause();
+      }
+    } else if (!shouldHold && isHeldRef.current) {
+      isHeldRef.current = false;
+      if (!wasPausedBeforeHoldRef.current) {
+        resume();
+      }
+    }
+  }, [showMenu, showConfirmDelete]);
 
   if (!currentGroup || !currentSlide) {
     return null;
@@ -176,6 +209,8 @@ export default function HighlightViewer({
 
               {isOwner && (
                 <HighlightMenuButton
+                  isOpen={showMenu}
+                  onOpenChange={setShowMenu}
                   actions={[
                     {
                       label:
