@@ -3,6 +3,7 @@
 import { deleteHighlightSlide } from "@/actions/deleteHighlightSlide";
 import HighlightMenuButton from "@/components/atoms/HighlightMenuButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
+import type { HighlightMenuAction } from "@/components/molecules/HighlightMenu";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
 import type { HighlightGroup } from "@/types/highlightType";
@@ -45,6 +46,7 @@ export default function HighlightViewer({
     isPaused,
     isLoading,
     setIsLoading,
+    isLongPressHolding,
     currentAnimationDuration,
     videoRef,
     handleNextSlide,
@@ -116,6 +118,21 @@ export default function HighlightViewer({
       ? currentSlide.thumbnail_url
       : currentSlide.media_url;
 
+  // Defined once and reused by both the mobile and desktop header rows below
+  // (two separate elements, per this file's existing responsive-duplication
+  // pattern — see the mobile/desktop avatar split) so the delete action
+  // isn't duplicated.
+  const menuActions: HighlightMenuAction[] = [
+    {
+      label:
+        currentSlide.media_type === "video"
+          ? "Delete this video"
+          : "Delete this photo",
+      onSelect: () => setShowConfirmDelete(true),
+      destructive: true,
+    },
+  ];
+
   return (
     <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-black flex items-center justify-center overflow-hidden">
       {/*
@@ -144,23 +161,37 @@ export default function HighlightViewer({
         </div>
       )}
 
-      <div className="w-[95%] absolute top-5 flex flex-col-reverse md:flex-row items-center gap-3 z-20">
-        {/* Mobile story tracker bar and user profile */}
-        <div className="self-start flex items-center gap-2">
-          <button type="button" onClick={onClose}>
-            <IoMdArrowBack className="text-xl text-white" />
-          </button>
+      {/*
+        `absolute` removes this from the parent flex container's layout, so
+        the parent's `justify-center` (which already centers the media layer
+        below) can't center this too — it falls back to its left-anchored
+        static position instead. `left-1/2 -translate-x-1/2` is the standard
+        fix for centering a fixed-width absolutely-positioned element.
+        Desktop-only (`md:`) so mobile's existing left-anchored position is
+        untouched.
+      */}
+      <div className="w-[95%] absolute top-5 md:left-1/2 md:-translate-x-1/2 flex flex-col md:flex-row items-center gap-3 z-20">
+        {/* Desktop-only back arrow, its own column beside the header block
+            (unchanged from before — kept as a separate element rather than
+            reused inside the mobile row below so desktop's layout/position
+            is untouched). */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="hidden md:block shrink-0"
+        >
+          <IoMdArrowBack className="text-xl text-white" />
+        </button>
 
-          <div className="flex items-start gap-2 md:hidden">
-            <UserAvatar avatarUrl={avatarUrl} width={50} height={50} />
-
-            <div className="text-white text-sm font-bold">
-              <p>{username}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full md:w-[90%] lg:w-[60%] md:space-y-3 mx-auto">
+        {/*
+          `md:mx-auto` centers this column in the space left over after the
+          back-arrow button above (its flex sibling) — without it, the
+          column (only 60% width at `lg`) sits flush-left right after the
+          arrow, so even though the outer header box is now centered on the
+          viewport, the actual visible content (progress bar, avatar,
+          username, menu) still hugs its left side.
+        */}
+        <div className="w-full md:w-[90%] lg:w-[60%] space-y-2 md:space-y-3 md:mx-auto">
           <ul className="flex items-center gap-1">
             {progressBars.map((item, index) => (
               <li
@@ -187,9 +218,40 @@ export default function HighlightViewer({
             ))}
           </ul>
 
-          {/* Desktop user profile */}
-          <div className="w-full flex justify-between items-center">
-            <div className="items-start gap-2 hidden md:flex">
+          {/* Mobile WhatsApp-Status-style header row: back arrow, avatar,
+              username and the 3-dot menu all on one line, right below the
+              progress bars. Temporarily hidden (opacity only, still laid
+              out) while a long-press hold is active, and restored the
+              instant the finger lifts. */}
+          <div
+            className={`w-full flex md:hidden items-center gap-2 transition-opacity duration-150 ${
+              isLongPressHolding
+                ? "opacity-0 pointer-events-none"
+                : "opacity-100"
+            }`}
+          >
+            <button type="button" onClick={onClose} className="shrink-0">
+              <IoMdArrowBack className="text-xl text-white" />
+            </button>
+
+            <UserAvatar avatarUrl={avatarUrl} width={50} height={50} />
+
+            <p className="text-white text-sm font-bold flex-1 min-w-0 truncate">
+              {username}
+            </p>
+
+            {isOwner && (
+              <HighlightMenuButton
+                isOpen={showMenu}
+                onOpenChange={setShowMenu}
+                actions={menuActions}
+              />
+            )}
+          </div>
+
+          {/* Desktop user profile row (unchanged layout) */}
+          <div className="hidden md:flex w-full justify-between items-center">
+            <div className="flex items-start gap-2">
               <UserAvatar avatarUrl={avatarUrl} width={50} height={50} />
 
               <div className="text-white text-sm font-bold">
@@ -199,7 +261,7 @@ export default function HighlightViewer({
 
             <div className="flex items-center gap-3">
               {/* Indicator for pause and play */}
-              <div className="hidden md:flex">
+              <div className="flex">
                 {isPaused ? (
                   <SlControlPause className="text-white text-2xl" />
                 ) : (
@@ -211,16 +273,7 @@ export default function HighlightViewer({
                 <HighlightMenuButton
                   isOpen={showMenu}
                   onOpenChange={setShowMenu}
-                  actions={[
-                    {
-                      label:
-                        currentSlide.media_type === "video"
-                          ? "Delete this video"
-                          : "Delete this photo",
-                      onSelect: () => setShowConfirmDelete(true),
-                      destructive: true,
-                    },
-                  ]}
+                  actions={menuActions}
                 />
               )}
             </div>
@@ -259,6 +312,8 @@ export default function HighlightViewer({
           className="h-full flex items-center justify-center relative"
           onClick={handleMediaClick}
           onKeyDown={handleMediaKeyDown}
+          onContextMenu={(e) => e.preventDefault()}
+          style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
           tabIndex={0}
           // biome-ignore lint/a11y/useSemanticElements: <explanation>
           role="button"
@@ -292,6 +347,7 @@ export default function HighlightViewer({
               alt="Highlight"
               width={700}
               height={700}
+              draggable={false}
               className={`object-contain cursor-pointer max-w-full max-h-full transition-opacity duration-200 ${
                 isLoading ? "opacity-0" : "opacity-100"
               }`}

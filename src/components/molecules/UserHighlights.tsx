@@ -44,24 +44,28 @@ function HighlightAvatar({
     <button
       type="button"
       className="m-1 rounded-full border-4 border-mint flex items-center justify-center"
+      style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
       onClick={isOwner ? longPress.onClick : onOpen}
       onTouchStart={isOwner ? longPress.onTouchStart : undefined}
       onTouchMove={isOwner ? longPress.onTouchMove : undefined}
       onTouchEnd={isOwner ? longPress.onTouchEnd : undefined}
-      onContextMenu={
-        isOwner
-          ? (e) => {
-              e.preventDefault();
-              onContextMenu({ x: e.clientX, y: e.clientY });
-            }
-          : undefined
-      }
+      onContextMenu={(e) => {
+        // Always block the native "Save/Share image" menu, for every
+        // viewer — only escalate to the app's own delete menu for the
+        // owner (desktop right-click path; mobile long-press goes through
+        // useLongPress's onLongPress instead).
+        e.preventDefault();
+        if (isOwner) {
+          onContextMenu({ x: e.clientX, y: e.clientY });
+        }
+      }}
     >
       <Image
         src={thumbnailUrl}
         alt="Highlight"
         width={70}
         height={70}
+        draggable={false}
         className="object-cover w-[70px] h-[70px] rounded-full m-[2px] border border-black"
       />
     </button>

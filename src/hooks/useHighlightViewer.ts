@@ -24,6 +24,11 @@ export function useHighlightViewer({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // Tracks only the "finger currently down past the long-press threshold"
+  // window on mobile — distinct from `isPaused`, which is also true for
+  // desktop click-pause and while the 3-dot menu is open, neither of which
+  // should hide the header.
+  const [isLongPressHolding, setIsLongPressHolding] = useState(false);
   const [currentAnimationDuration, setCurrentAnimationDuration] =
     useState("3s");
 
@@ -163,7 +168,12 @@ export function useHighlightViewer({
   }, [currentSlide]);
 
   const resumeNow = useCallback(() => {
-    mediaTimeElapsedOnPauseRef.current = 0;
+    // Deliberately does NOT reset `mediaTimeElapsedOnPauseRef` — pauseNow()
+    // just captured how far into the slide we were, and the auto-advance
+    // effect below reads that value to compute the correct remaining time.
+    // Zeroing it here would silently restart the slide's timer from full
+    // duration on every resume, even though the visual progress bar (a CSS
+    // animation) correctly continues from its paused position.
     if (
       videoRef.current &&
       currentSlide &&
@@ -207,6 +217,7 @@ export function useHighlightViewer({
       touchStartPos.current = { x: touch.clientX, y: touch.clientY };
       lastTouchPos.current = { x: touch.clientX, y: touch.clientY };
       gestureTypeRef.current = "pending";
+      setIsLongPressHolding(false);
 
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
@@ -215,6 +226,7 @@ export function useHighlightViewer({
         if (gestureTypeRef.current === "pending" && !isPaused) {
           gestureTypeRef.current = "longpress";
           pauseNow();
+          setIsLongPressHolding(true);
         }
       }, LONG_PRESS_DELAY);
     },
@@ -247,6 +259,14 @@ export function useHighlightViewer({
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent<HTMLDivElement>, zone: SwipeZone) => {
       e.stopPropagation();
+      // Without this, mobile browsers still fire a synthetic `click` event
+      // shortly after touchend for any stationary touch (tap OR long-press-
+      // then-release) since there was no meaningful finger movement. That
+      // click bubbles past these tap-zone divs (which have no onClick) up to
+      // the media wrapper's onClick={handleMediaClick}, re-toggling pause a
+      // moment after this handler already resolved it correctly — the actual
+      // cause of "release sometimes stays paused" and "tap also pauses".
+      e.preventDefault();
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
         longPressTimeout.current = null;
@@ -257,6 +277,7 @@ export function useHighlightViewer({
 
       if (gesture === "longpress") {
         resumeNow();
+        setIsLongPressHolding(false);
         touchStartPos.current = null;
         return;
       }
@@ -410,6 +431,7 @@ export function useHighlightViewer({
     isPaused,
     isLoading,
     setIsLoading,
+    isLongPressHolding,
     currentAnimationDuration,
     videoRef,
     handleNextSlide,
