@@ -17,6 +17,10 @@ export default function Higlight({ username }: HighlightProps) {
 
   const [showHighlighModal, setShowHighlightModal] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState<
+    string | null
+  >(null);
 
   const handleShowHighlightModal = (state: boolean) => {
     setShowHighlightModal(state);
@@ -24,16 +28,27 @@ export default function Higlight({ username }: HighlightProps) {
 
   // Owned here (not in HighlightModal) because the modal closes immediately
   // on submit — this component stays mounted for as long as the profile
-  // page is open, so it can report success/failure after the modal is gone.
+  // page is open, so it can report progress/success/failure after the
+  // modal is gone.
   const handleUpload = (mediaItems: MediaItem[]) => {
+    setIsUploading(true);
+
     uploadHighlight(mediaItems).then((response) => {
+      setIsUploading(false);
+
+      // Invalidate regardless of status: a partial failure can still mean
+      // some slides uploaded successfully, and those must not stay hidden
+      // just because the batch as a whole didn't fully succeed.
+      queryClient.invalidateQueries({ queryKey: ["highlights", username] });
+
       if (response.status !== 200) {
         setUploadError(response.message ?? "Failed to upload highlight.");
         setTimeout(() => setUploadError(null), 4000);
         return;
       }
 
-      queryClient.invalidateQueries({ queryKey: ["highlights", username] });
+      setUploadSuccessMessage("Highlight uploaded");
+      setTimeout(() => setUploadSuccessMessage(null), 2500);
     });
   };
 
@@ -48,7 +63,8 @@ export default function Higlight({ username }: HighlightProps) {
 
       <button
         type="button"
-        className="shrink-0"
+        className="shrink-0 disabled:opacity-50"
+        disabled={isUploading}
         onClick={() => {
           handleShowHighlightModal(true);
         }}
@@ -60,6 +76,19 @@ export default function Higlight({ username }: HighlightProps) {
           height={80}
         />
       </button>
+
+      {isUploading && (
+        <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] bg-black text-white p-4 rounded-lg shadow-lg flex items-center gap-3 w-80">
+          <div className="border-2 border-white border-t-transparent animate-spin rounded-full w-4 h-4 shrink-0" />
+          Uploading highlight...
+        </div>
+      )}
+
+      {uploadSuccessMessage && (
+        <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] bg-black text-white p-4 rounded-lg shadow-lg flex items-center justify-center w-80">
+          ✅ {uploadSuccessMessage}
+        </div>
+      )}
 
       {uploadError && <Notification notification={uploadError} />}
     </>

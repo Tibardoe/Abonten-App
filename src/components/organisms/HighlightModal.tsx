@@ -38,6 +38,10 @@ export default function HighlightModal({
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  // Whether the currently-displayed item's actual preview (not just its
+  // object URL) has rendered a frame — gates the Upload button so it can't
+  // be pressed while the preview still looks blank/frozen.
+  const [isPreviewReady, setIsPreviewReady] = useState(false);
   const [dragHandle, setDragHandle] = useState<
     "start" | "end" | "middle" | null
   >(null);
@@ -470,6 +474,7 @@ export default function HighlightModal({
   // Effect to manage current media item when currentIndex changes
   useEffect(() => {
     setIsPlaying(false);
+    setIsPreviewReady(false);
 
     if (videoRef.current && currentMedia?.type === "video") {
       videoRef.current.currentTime = currentMedia.startTime || 0;
@@ -617,7 +622,10 @@ export default function HighlightModal({
             <button
               type="button"
               onClick={handleHighlightUpload}
-              className="text-white font-medium backdrop-blur-md bg-mint p-2 rounded-md"
+              disabled={!isPreviewReady}
+              className={`text-white font-medium backdrop-blur-md bg-mint p-2 rounded-md ${
+                isPreviewReady ? "" : "opacity-50 cursor-not-allowed"
+              }`}
             >
               Upload
             </button>
@@ -821,6 +829,11 @@ export default function HighlightModal({
 
               {/* Media display */}
               <div className="w-full flex items-center justify-center relative overflow-hidden">
+                {!isPreviewReady && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <div className="border-4 border-white border-t-transparent animate-spin rounded-full w-12 h-12" />
+                  </div>
+                )}
                 {currentMedia.type === "image" ? (
                   <div className="w-full h-screen">
                     <Image
@@ -829,6 +842,7 @@ export default function HighlightModal({
                       fill
                       className="object-contain"
                       unoptimized
+                      onLoad={() => setIsPreviewReady(true)}
                     />
                   </div>
                 ) : (
@@ -853,6 +867,7 @@ export default function HighlightModal({
                       onLoadedMetadata={(e) => {
                         // Always set current time to trimStart when metadata loads
                         e.currentTarget.currentTime = trimStart;
+                        setIsPreviewReady(true);
                       }}
                       onTimeUpdate={() => {
                         // Update playhead position on the track editor

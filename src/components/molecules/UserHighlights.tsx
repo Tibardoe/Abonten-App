@@ -26,7 +26,7 @@ type HighlightAvatarProps = {
   onOpen: () => void;
   onLongPress: (buttonEl: HTMLButtonElement | null) => void;
   onContextMenu: (
-    position: MenuPosition,
+    position: MenuPosition | null,
     buttonEl: HTMLButtonElement | null,
   ) => void;
 };
@@ -41,16 +41,19 @@ function HighlightAvatar({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Some mobile browsers (Android Chrome in particular) fire a native
-  // `contextmenu` event as part of recognizing a long-press gesture,
-  // independently of — and shortly after — our own useLongPress JS timer
-  // below, which already opens the menu reliably (clean CSS-relative
-  // position). That native event's clientX/clientY come from a touch-
-  // emulated mouse event and are known to be unreliable; letting
-  // onContextMenu also escalate would silently overwrite the already-
-  // correct menu position with a bad one. This flag lets onContextMenu
-  // recognize "this is the tail of a touch gesture, not a real desktop
-  // right-click" and skip escalating (it still calls preventDefault so
-  // the native menu itself stays suppressed either way).
+  // `contextmenu` event as part of recognizing a long-press gesture, using
+  // essentially the same ~500ms threshold as our own useLongPress JS timer
+  // below. When the native gesture wins that race, the browser dispatches a
+  // real touchend as part of handing off to contextmenu — which cancels our
+  // JS timer (useLongPress.onTouchEnd unconditionally clears it) — so
+  // *this* contextmenu event ends up being the only thing that can still
+  // open the menu. It must therefore always be allowed to open the menu
+  // (calling openMenuForGroup twice, once from each path, is harmless and
+  // idempotent). What it must NOT do is trust this event's clientX/clientY
+  // for positioning — those come from a touch-emulated mouse event and are
+  // unreliable — so this flag is used only to pick a safe anchored position
+  // for touch-originated opens instead of the (possibly bad) cursor
+  // coordinates; real desktop right-clicks still position at the cursor.
   const touchActiveRef = useRef(false);
   const touchActiveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -95,12 +98,15 @@ function HighlightAvatar({
       }
       onContextMenu={(e) => {
         // Always block the native "Save/Share image" menu, for every
-        // viewer — only escalate to the app's own delete menu for a real
-        // desktop right-click. A touch-originated long-press already
-        // opened (or is opening) the menu via useLongPress's onLongPress.
+        // viewer. Always allowed to open the app's own menu too (see the
+        // touchActiveRef comment above for why touch-originated opens
+        // can't be skipped) — only the position differs by origin.
         e.preventDefault();
-        if (isOwner && !touchActiveRef.current) {
-          onContextMenu({ x: e.clientX, y: e.clientY }, buttonRef.current);
+        if (isOwner) {
+          onContextMenu(
+            touchActiveRef.current ? null : { x: e.clientX, y: e.clientY },
+            buttonRef.current,
+          );
         }
       }}
     >
@@ -211,7 +217,7 @@ export default function UserHighlights({
 
   const openMenuForGroup = (
     index: number,
-    position?: MenuPosition,
+    position?: MenuPosition | null,
     buttonEl?: HTMLButtonElement | null,
   ) => {
     activeAvatarButtonRef.current = buttonEl ?? null;

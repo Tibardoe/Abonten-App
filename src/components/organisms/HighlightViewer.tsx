@@ -9,7 +9,7 @@ import { useHighlightViewer } from "@/hooks/useHighlightViewer";
 import type { HighlightGroup } from "@/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { IoMdArrowBack } from "react-icons/io";
 import { IoChevronBack, IoChevronForward, IoPlay } from "react-icons/io5";
 import { SlControlPause } from "react-icons/sl";
@@ -83,26 +83,34 @@ export default function HighlightViewer({
 
   // useClickOutside (behind the 3-dot menu) closes on mousedown/touchstart —
   // before the SAME physical tap's concluding click/touchend fires. That
-  // means the media's click/touch handlers are already un-gated (and
-  // playback already resumed, below) by the time that concluding event
-  // arrives, so it lands on the now-active media handler and immediately
-  // re-toggles pause (or navigates) within the very gesture that was only
-  // meant to dismiss the menu. This flag lets the next media interaction
-  // recognize "I'm the tail end of the gesture that just closed the
-  // menu/dialog" and consume itself once instead of acting. The fallback
-  // timeout covers closes that never reach the media at all (e.g. the
-  // confirm dialog's own Yes/Cancel buttons), so a later, genuinely new tap
-  // is never left incorrectly suppressed.
+  // means the media's click/touch handlers are already un-gated by the time
+  // that concluding event arrives, so it lands on the now-active media
+  // handler and immediately re-toggles pause (or navigates) within the very
+  // gesture that was only meant to dismiss the menu. This flag lets the
+  // next media interaction recognize "I'm the tail end of the gesture that
+  // just closed the menu/dialog" and consume itself once instead of acting.
+  // The fallback timeout covers closes that never reach the media at all
+  // (e.g. the confirm dialog's own Yes/Cancel buttons), so a later,
+  // genuinely new tap is never left incorrectly suppressed.
   const suppressNextMediaInteractionRef = useRef(false);
   const suppressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Only reacts to the menu/confirm-dialog visibility changing — not to
+  // This must be armed with useLayoutEffect, not useEffect: useEffect runs
+  // after the browser paints, but the SAME physical gesture's trailing
+  // click/touchend typically fires within a millisecond or two of the
+  // mousedown/touchstart that closed the menu — almost always before the
+  // next paint. A plain useEffect here regularly loses that race, letting
+  // the trailing event slip through unsuppressed. useLayoutEffect runs
+  // synchronously as part of the same commit, before the browser gets a
+  // chance to dispatch that trailing event.
+  //
+  // Also only reacts to the menu/confirm-dialog visibility changing — not to
   // `isPaused` itself, which this effect also sets, or to `pause`/`resume`
   // identity (already stable) — including them would re-run this on every
   // pause toggle and fight with independent pause actions (e.g. tapping
   // the media directly) while the menu/dialog are closed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: see comment above
-  useEffect(() => {
+  useLayoutEffect(() => {
     const shouldHold = showMenu || showConfirmDelete;
 
     if (shouldHold && !isHeldRef.current) {
@@ -146,7 +154,15 @@ export default function HighlightViewer({
     e: React.TouchEvent<HTMLDivElement>,
     zone: "prev" | "next",
   ) => {
-    if (consumeMediaSuppression()) return;
+    if (consumeMediaSuppression()) {
+      // Mirrors handleTouchEnd's own preventDefault below: without this,
+      // the browser still fires a synthetic click for this tap shortly
+      // after touchend, which bubbles up to the media wrapper's separate
+      // onClick handler and performs a second, unwanted toggle right after
+      // this dismiss tap was already (correctly) suppressed here.
+      e.preventDefault();
+      return;
+    }
     handleTouchEnd(e, zone);
   };
 
