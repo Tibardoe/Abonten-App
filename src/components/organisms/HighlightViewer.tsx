@@ -81,6 +81,21 @@ export default function HighlightViewer({
   const isHeldRef = useRef(false);
   const wasPausedBeforeHoldRef = useRef(false);
 
+  // useClickOutside (behind the 3-dot menu) closes on mousedown/touchstart —
+  // before the SAME physical tap's concluding click/touchend fires. That
+  // means the media's click/touch handlers are already un-gated (and
+  // playback already resumed, below) by the time that concluding event
+  // arrives, so it lands on the now-active media handler and immediately
+  // re-toggles pause (or navigates) within the very gesture that was only
+  // meant to dismiss the menu. This flag lets the next media interaction
+  // recognize "I'm the tail end of the gesture that just closed the
+  // menu/dialog" and consume itself once instead of acting. The fallback
+  // timeout covers closes that never reach the media at all (e.g. the
+  // confirm dialog's own Yes/Cancel buttons), so a later, genuinely new tap
+  // is never left incorrectly suppressed.
+  const suppressNextMediaInteractionRef = useRef(false);
+  const suppressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Only reacts to the menu/confirm-dialog visibility changing — not to
   // `isPaused` itself, which this effect also sets, or to `pause`/`resume`
   // identity (already stable) — including them would re-run this on every
@@ -98,11 +113,42 @@ export default function HighlightViewer({
       }
     } else if (!shouldHold && isHeldRef.current) {
       isHeldRef.current = false;
+      suppressNextMediaInteractionRef.current = true;
+      if (suppressTimeoutRef.current) {
+        clearTimeout(suppressTimeoutRef.current);
+      }
+      suppressTimeoutRef.current = setTimeout(() => {
+        suppressNextMediaInteractionRef.current = false;
+        suppressTimeoutRef.current = null;
+      }, 300);
       if (!wasPausedBeforeHoldRef.current) {
         resume();
       }
     }
   }, [showMenu, showConfirmDelete]);
+
+  const consumeMediaSuppression = () => {
+    if (!suppressNextMediaInteractionRef.current) return false;
+    suppressNextMediaInteractionRef.current = false;
+    if (suppressTimeoutRef.current) {
+      clearTimeout(suppressTimeoutRef.current);
+      suppressTimeoutRef.current = null;
+    }
+    return true;
+  };
+
+  const guardedMediaClick = () => {
+    if (consumeMediaSuppression()) return;
+    handleMediaClick();
+  };
+
+  const guardedTouchEnd = (
+    e: React.TouchEvent<HTMLDivElement>,
+    zone: "prev" | "next",
+  ) => {
+    if (consumeMediaSuppression()) return;
+    handleTouchEnd(e, zone);
+  };
 
   if (!currentGroup || !currentSlide) {
     return null;
@@ -332,7 +378,7 @@ export default function HighlightViewer({
         {/* Media */}
         <div
           className="h-full flex items-center justify-center relative"
-          onClick={isMenuOrDialogOpen ? undefined : handleMediaClick}
+          onClick={isMenuOrDialogOpen ? undefined : guardedMediaClick}
           onKeyDown={isMenuOrDialogOpen ? undefined : handleMediaKeyDown}
           onContextMenu={(e) => e.preventDefault()}
           style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
@@ -353,7 +399,7 @@ export default function HighlightViewer({
             onTouchStart={isMenuOrDialogOpen ? undefined : handleTouchStart}
             onTouchMove={isMenuOrDialogOpen ? undefined : handleTouchMove}
             onTouchEnd={
-              isMenuOrDialogOpen ? undefined : (e) => handleTouchEnd(e, "prev")
+              isMenuOrDialogOpen ? undefined : (e) => guardedTouchEnd(e, "prev")
             }
           />
 
@@ -363,7 +409,7 @@ export default function HighlightViewer({
             onTouchStart={isMenuOrDialogOpen ? undefined : handleTouchStart}
             onTouchMove={isMenuOrDialogOpen ? undefined : handleTouchMove}
             onTouchEnd={
-              isMenuOrDialogOpen ? undefined : (e) => handleTouchEnd(e, "next")
+              isMenuOrDialogOpen ? undefined : (e) => guardedTouchEnd(e, "next")
             }
           />
 

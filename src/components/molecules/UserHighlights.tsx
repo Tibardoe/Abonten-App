@@ -40,6 +40,20 @@ function HighlightAvatar({
 }: HighlightAvatarProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
+  // Some mobile browsers (Android Chrome in particular) fire a native
+  // `contextmenu` event as part of recognizing a long-press gesture,
+  // independently of — and shortly after — our own useLongPress JS timer
+  // below, which already opens the menu reliably (clean CSS-relative
+  // position). That native event's clientX/clientY come from a touch-
+  // emulated mouse event and are known to be unreliable; letting
+  // onContextMenu also escalate would silently overwrite the already-
+  // correct menu position with a bad one. This flag lets onContextMenu
+  // recognize "this is the tail of a touch gesture, not a real desktop
+  // right-click" and skip escalating (it still calls preventDefault so
+  // the native menu itself stays suppressed either way).
+  const touchActiveRef = useRef(false);
+  const touchActiveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const longPress = useLongPress({
     onTap: onOpen,
     onLongPress: () => onLongPress(buttonRef.current),
@@ -52,16 +66,40 @@ function HighlightAvatar({
       className="m-1 rounded-full border-4 border-mint flex items-center justify-center"
       style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
       onClick={isOwner ? longPress.onClick : onOpen}
-      onTouchStart={isOwner ? longPress.onTouchStart : undefined}
+      onTouchStart={
+        isOwner
+          ? (e) => {
+              touchActiveRef.current = true;
+              if (touchActiveTimeoutRef.current) {
+                clearTimeout(touchActiveTimeoutRef.current);
+                touchActiveTimeoutRef.current = null;
+              }
+              longPress.onTouchStart(e);
+            }
+          : undefined
+      }
       onTouchMove={isOwner ? longPress.onTouchMove : undefined}
-      onTouchEnd={isOwner ? longPress.onTouchEnd : undefined}
+      onTouchEnd={
+        isOwner
+          ? () => {
+              longPress.onTouchEnd();
+              // contextmenu (if it fires at all) follows touchend almost
+              // immediately as part of the same gesture — keep the guard
+              // up briefly rather than clearing it synchronously here.
+              touchActiveTimeoutRef.current = setTimeout(() => {
+                touchActiveRef.current = false;
+                touchActiveTimeoutRef.current = null;
+              }, 500);
+            }
+          : undefined
+      }
       onContextMenu={(e) => {
         // Always block the native "Save/Share image" menu, for every
-        // viewer — only escalate to the app's own delete menu for the
-        // owner (desktop right-click path; mobile long-press goes through
-        // useLongPress's onLongPress instead).
+        // viewer — only escalate to the app's own delete menu for a real
+        // desktop right-click. A touch-originated long-press already
+        // opened (or is opening) the menu via useLongPress's onLongPress.
         e.preventDefault();
-        if (isOwner) {
+        if (isOwner && !touchActiveRef.current) {
           onContextMenu({ x: e.clientX, y: e.clientY }, buttonRef.current);
         }
       }}
