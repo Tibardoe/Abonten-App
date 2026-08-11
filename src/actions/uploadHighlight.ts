@@ -70,6 +70,7 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
             : null,
         media_duration: item.type === "video" ? result.duration : null,
         group_id: groupId,
+        public_id: result.public_id,
       });
 
       if (dbError) throw new Error(dbError.message);

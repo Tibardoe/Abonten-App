@@ -1,10 +1,21 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { v2 as cloudinary } from "cloudinary";
 
-// Cloudinary assets are not deleted here: uploadHighlight.ts never stores the
-// Cloudinary public_id (only the secure_url), so there is no reliable id to
-// destroy. This leaves an orphaned Cloudinary asset, a pre-existing gap.
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+// Cloudinary has no "audio" resource type — audio assets are stored (and
+// must be destroyed) under "video", same as uploadHighlight.ts's upload options.
+function toCloudinaryResourceType(mediaType: string): "image" | "video" {
+  return mediaType === "image" ? "image" : "video";
+}
+
 export async function deleteHighlightSlide(slideId: string) {
   const supabase = await createClient();
 
@@ -19,7 +30,7 @@ export async function deleteHighlightSlide(slideId: string) {
 
   const { data: row, error: fetchError } = await supabase
     .from("highlight")
-    .select("id")
+    .select("id, public_id, media_type")
     .eq("id", slideId)
     .eq("user_id", user.id)
     .single();
@@ -29,6 +40,31 @@ export async function deleteHighlightSlide(slideId: string) {
       status: 404,
       message: "Slide not found or unauthorized",
     };
+  }
+
+  // Rows created before public_id was tracked have no reliable Cloudinary
+  // handle — their media can't be identified, so cleanup is skipped and the
+  // row is still allowed to be deleted rather than becoming undeletable.
+  if (row.public_id) {
+    try {
+      const result = await cloudinary.uploader.destroy(row.public_id, {
+        resource_type: toCloudinaryResourceType(row.media_type),
+      });
+
+      if (result.result !== "ok" && result.result !== "not found") {
+        console.error("Cloudinary destroy returned unexpected result:", result);
+        return {
+          status: 500,
+          message: "Failed to delete slide media. Please try again.",
+        };
+      }
+    } catch (cloudError) {
+      console.error("Cloudinary deletion failed:", cloudError);
+      return {
+        status: 500,
+        message: "Failed to delete slide media. Please try again.",
+      };
+    }
   }
 
   const { error: deleteError } = await supabase

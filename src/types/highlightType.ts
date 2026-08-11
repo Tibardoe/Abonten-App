@@ -10,6 +10,7 @@ export type HighlightRow = {
   thumbnail_url: string | null;
   media_duration: number | null;
   group_id: string;
+  public_id: string | null;
 };
 
 export type HighlightGroup = HighlightRow[];
