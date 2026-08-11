@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { HighlightGroup, HighlightRow } from "@/types/highlightType";
 
 export default async function getUserHighlight(username: string) {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function getUserHighlight(username: string) {
   }
 
   // Group by group_id
-  const grouped = highlights.reduce<Record<string, typeof highlights>>(
+  const grouped = highlights.reduce<Record<string, HighlightRow[]>>(
     (acc, highlight) => {
       const groupId = highlight.group_id;
       if (!acc[groupId]) acc[groupId] = [];
@@ -39,7 +40,7 @@ export default async function getUserHighlight(username: string) {
   );
 
   // Return grouped highlights as an array of groups
-  const groupedHighlights = Object.values(grouped);
+  const groupedHighlights: HighlightGroup[] = Object.values(grouped);
 
   return {
     status: 200,

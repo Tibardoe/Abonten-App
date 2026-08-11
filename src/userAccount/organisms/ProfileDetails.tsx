@@ -95,7 +95,11 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
           <div className="flex items-center gap-2 overflow-hidden">
             {isCurrentUser && <Higlight />}
 
-            <UserHighlights avatarUrl={avatarUrl} username={username} />
+            <UserHighlights
+              avatarUrl={avatarUrl}
+              username={username}
+              isOwner={isCurrentUser}
+            />
           </div>
         </div>
 
@@ -155,7 +159,11 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
           <div className="flex items-center gap-2">
             {isCurrentUser && <Higlight />}
 
-            <UserHighlights avatarUrl={avatarUrl} username={username} />
+            <UserHighlights
+              avatarUrl={avatarUrl}
+              username={username}
+              isOwner={isCurrentUser}
+            />
           </div>
         </div>
 
