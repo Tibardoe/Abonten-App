@@ -38,6 +38,17 @@ export default function HighlightViewer({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // The mobile and desktop header rows below each render their own
+  // HighlightMenuButton (same `showMenu` state, different DOM position, per
+  // this file's responsive-duplication pattern) — CSS only hides the
+  // inactive one, it stays mounted. Without these, the hidden instance's own
+  // click-outside check sees clicks inside the *visible* instance's dropdown
+  // as "outside" (different DOM subtree) and closes the shared state before
+  // the click can reach an action button. Passing each instance's root as
+  // the other's excludeRefs makes both treat "inside either" as inside.
+  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
+  const desktopMenuRef = useRef<HTMLDivElement | null>(null);
+
   const {
     currentGroup,
     currentIndex,
@@ -132,6 +143,13 @@ export default function HighlightViewer({
       destructive: true,
     },
   ];
+
+  // While the 3-dot menu or the confirm dialog is open, the underlying
+  // media's own gestures must be inert — otherwise a tap meant to dismiss
+  // the menu (which only covers a small area) can also land on the
+  // full-height prev/next tap zones underneath and immediately navigate, or
+  // on desktop toggle pause again right after the hold-effect resumed it.
+  const isMenuOrDialogOpen = showMenu || showConfirmDelete;
 
   return (
     <div className="fixed left-0 top-0 z-30 w-full h-dvh bg-black flex items-center justify-center overflow-hidden">
@@ -245,6 +263,8 @@ export default function HighlightViewer({
                 isOpen={showMenu}
                 onOpenChange={setShowMenu}
                 actions={menuActions}
+                menuRef={mobileMenuRef}
+                excludeRefs={[desktopMenuRef]}
               />
             )}
           </div>
@@ -274,6 +294,8 @@ export default function HighlightViewer({
                   isOpen={showMenu}
                   onOpenChange={setShowMenu}
                   actions={menuActions}
+                  menuRef={desktopMenuRef}
+                  excludeRefs={[mobileMenuRef]}
                 />
               )}
             </div>
@@ -310,28 +332,39 @@ export default function HighlightViewer({
         {/* Media */}
         <div
           className="h-full flex items-center justify-center relative"
-          onClick={handleMediaClick}
-          onKeyDown={handleMediaKeyDown}
+          onClick={isMenuOrDialogOpen ? undefined : handleMediaClick}
+          onKeyDown={isMenuOrDialogOpen ? undefined : handleMediaKeyDown}
           onContextMenu={(e) => e.preventDefault()}
           style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
           tabIndex={0}
           // biome-ignore lint/a11y/useSemanticElements: <explanation>
           role="button"
         >
+          {/*
+            Gated while the menu/dialog is open: these tap zones span the
+            full height of the media area, underneath the header, so a tap
+            meant to dismiss the (small) menu can also land here — without
+            this guard it would both close the menu (via click-outside) and
+            navigate to the next/previous slide from the very same tap.
+          */}
           {/* Mobile gesture for left tap zone: tap = previous slide, hold = pause, swipe = highlight/close */}
           <div
             className="absolute touch-manipulation select-none left-0 top-0 w-1/2 h-full lg:hidden"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={(e) => handleTouchEnd(e, "prev")}
+            onTouchStart={isMenuOrDialogOpen ? undefined : handleTouchStart}
+            onTouchMove={isMenuOrDialogOpen ? undefined : handleTouchMove}
+            onTouchEnd={
+              isMenuOrDialogOpen ? undefined : (e) => handleTouchEnd(e, "prev")
+            }
           />
 
           {/* Mobile gesture for right tap zone: tap = next slide, hold = pause, swipe = highlight/close */}
           <div
             className="absolute touch-manipulation select-none right-0 top-0 w-1/2 h-full lg:hidden"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={(e) => handleTouchEnd(e, "next")}
+            onTouchStart={isMenuOrDialogOpen ? undefined : handleTouchStart}
+            onTouchMove={isMenuOrDialogOpen ? undefined : handleTouchMove}
+            onTouchEnd={
+              isMenuOrDialogOpen ? undefined : (e) => handleTouchEnd(e, "next")
+            }
           />
 
           {/*

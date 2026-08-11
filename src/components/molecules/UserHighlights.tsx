@@ -24,8 +24,11 @@ type HighlightAvatarProps = {
   thumbnailUrl: string;
   isOwner: boolean;
   onOpen: () => void;
-  onLongPress: () => void;
-  onContextMenu: (position: MenuPosition) => void;
+  onLongPress: (buttonEl: HTMLButtonElement | null) => void;
+  onContextMenu: (
+    position: MenuPosition,
+    buttonEl: HTMLButtonElement | null,
+  ) => void;
 };
 
 function HighlightAvatar({
@@ -35,13 +38,16 @@ function HighlightAvatar({
   onLongPress,
   onContextMenu,
 }: HighlightAvatarProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   const longPress = useLongPress({
     onTap: onOpen,
-    onLongPress,
+    onLongPress: () => onLongPress(buttonRef.current),
   });
 
   return (
     <button
+      ref={buttonRef}
       type="button"
       className="m-1 rounded-full border-4 border-mint flex items-center justify-center"
       style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
@@ -56,7 +62,7 @@ function HighlightAvatar({
         // useLongPress's onLongPress instead).
         e.preventDefault();
         if (isOwner) {
-          onContextMenu({ x: e.clientX, y: e.clientY });
+          onContextMenu({ x: e.clientX, y: e.clientY }, buttonRef.current);
         }
       }}
     >
@@ -106,6 +112,13 @@ export default function UserHighlights({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLUListElement>(null);
+
+  // The avatar button that triggered the currently-open menu. A long-press
+  // opens the menu while the finger is still down, so the release's
+  // synthetic mousedown targets that button (a sibling of the menu, not a
+  // DOM descendant) — without excluding it, useClickOutside sees that as
+  // "outside" and closes the menu within the very same gesture.
+  const activeAvatarButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const { data: highlights } = useQuery({
     queryKey: ["highlights", username],
@@ -158,7 +171,12 @@ export default function UserHighlights({
     };
   }, [checkScrollPosition]);
 
-  const openMenuForGroup = (index: number, position?: MenuPosition) => {
+  const openMenuForGroup = (
+    index: number,
+    position?: MenuPosition,
+    buttonEl?: HTMLButtonElement | null,
+  ) => {
+    activeAvatarButtonRef.current = buttonEl ?? null;
     setMenuGroupIndex(index);
     setMenuPosition(position ?? null);
   };
@@ -166,6 +184,7 @@ export default function UserHighlights({
   const closeMenu = () => {
     setMenuGroupIndex(null);
     setMenuPosition(null);
+    activeAvatarButtonRef.current = null;
   };
 
   const handleDeleteHighlight = async () => {
@@ -241,9 +260,11 @@ export default function UserHighlights({
                     thumbnailUrl={thumbnailUrl}
                     isOwner={isOwner}
                     onOpen={() => setOpenGroupIndex(index)}
-                    onLongPress={() => openMenuForGroup(index)}
-                    onContextMenu={(position) =>
-                      openMenuForGroup(index, position)
+                    onLongPress={(buttonEl) =>
+                      openMenuForGroup(index, undefined, buttonEl)
+                    }
+                    onContextMenu={(position, buttonEl) =>
+                      openMenuForGroup(index, position, buttonEl)
                     }
                   />
 
@@ -260,6 +281,7 @@ export default function UserHighlights({
                         },
                       ]}
                       onClose={closeMenu}
+                      excludeRefs={[activeAvatarButtonRef]}
                       style={
                         menuPosition
                           ? {
