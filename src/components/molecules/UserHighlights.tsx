@@ -9,7 +9,14 @@ import { useLongPress } from "@/hooks/useLongPress";
 import type { HighlightGroup } from "@/types/highlightType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { IoChevronBack, IoChevronForward } from "react-icons/io5";
 
 type HighlightProps = {
@@ -141,6 +148,22 @@ export default function UserHighlights({
 
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
 
+  // Set only for touch-originated opens (see openMenuForGroup) — a snapshot
+  // of the pressed avatar's own on-screen rect, taken because touch-event
+  // coordinates are unreliable (see HighlightAvatar's onContextMenu
+  // comment). Used to compute a viewport-fixed position below/above the
+  // avatar, the same way menuPosition already does for desktop's
+  // cursor-based open — see the useLayoutEffect below.
+  const [menuAnchorRect, setMenuAnchorRect] = useState<DOMRect | null>(null);
+
+  // The menu's own root element, so its real rendered size can be measured
+  // once mounted (needed to decide whether it fits below the avatar or must
+  // flip above, and to clamp it horizontally within the viewport).
+  const anchoredMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const [anchoredMenuStyle, setAnchoredMenuStyle] =
+    useState<CSSProperties | null>(null);
+
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   // Captured at the moment "Delete Highlight" is selected, independently of
@@ -223,13 +246,55 @@ export default function UserHighlights({
     activeAvatarButtonRef.current = buttonEl ?? null;
     setMenuGroupIndex(index);
     setMenuPosition(position ?? null);
+    // No cursor position means this open is touch-originated (see
+    // HighlightAvatar's onContextMenu) — anchor to the avatar's own
+    // measured rect instead, so the menu can be viewport-fixed like
+    // desktop's is rather than falling back to a position that's
+    // constrained by the scrollable Highlights list.
+    setAnchoredMenuStyle(null);
+    setMenuAnchorRect(
+      !position && buttonEl ? buttonEl.getBoundingClientRect() : null,
+    );
   };
 
   const closeMenu = () => {
     setMenuGroupIndex(null);
     setMenuPosition(null);
+    setMenuAnchorRect(null);
+    setAnchoredMenuStyle(null);
     activeAvatarButtonRef.current = null;
   };
+
+  // Runs synchronously after the menu mounts (with menuAnchorRect set but
+  // anchoredMenuStyle still null, so it renders once — invisibly clipped by
+  // the list, same as before — purely to be measurable) and before the
+  // browser paints, so the corrected fixed position is what the user
+  // actually sees; there's no visible flash of the wrong position.
+  useLayoutEffect(() => {
+    if (!menuAnchorRect) return;
+
+    const GAP = 8;
+    const VIEWPORT_MARGIN = 8;
+    const menuEl = anchoredMenuRef.current;
+    const menuHeight = menuEl?.offsetHeight ?? 0;
+    const menuWidth = menuEl?.offsetWidth ?? 192; // matches HighlightMenu's min-w-48
+
+    const spaceBelow = window.innerHeight - menuAnchorRect.bottom;
+    const fitsBelow = spaceBelow >= menuHeight + GAP + VIEWPORT_MARGIN;
+
+    const top = fitsBelow
+      ? menuAnchorRect.bottom + GAP
+      : Math.max(VIEWPORT_MARGIN, menuAnchorRect.top - GAP - menuHeight);
+
+    const idealLeft =
+      menuAnchorRect.left + menuAnchorRect.width / 2 - menuWidth / 2;
+    const left = Math.min(
+      Math.max(idealLeft, VIEWPORT_MARGIN),
+      window.innerWidth - menuWidth - VIEWPORT_MARGIN,
+    );
+
+    setAnchoredMenuStyle({ position: "fixed", top, left });
+  }, [menuAnchorRect]);
 
   const handleDeleteHighlight = async () => {
     if (!pendingDeleteGroupId) return;
@@ -326,6 +391,7 @@ export default function UserHighlights({
                       ]}
                       onClose={closeMenu}
                       excludeRefs={[activeAvatarButtonRef]}
+                      menuRef={menuAnchorRect ? anchoredMenuRef : undefined}
                       style={
                         menuPosition
                           ? {
@@ -333,10 +399,22 @@ export default function UserHighlights({
                               top: menuPosition.y,
                               left: menuPosition.x,
                             }
-                          : undefined
+                          : menuAnchorRect
+                            ? (anchoredMenuStyle ?? {
+                                position: "fixed",
+                                top: menuAnchorRect.bottom + 8,
+                                left: menuAnchorRect.left,
+                                // Hidden until the layout effect above has
+                                // measured this first render and computed
+                                // the final, viewport-clamped position —
+                                // avoids a visible flash at a provisional
+                                // (possibly clipped or off-screen) spot.
+                                visibility: "hidden",
+                              })
+                            : undefined
                       }
                       className={
-                        menuPosition
+                        menuPosition || menuAnchorRect
                           ? ""
                           : "absolute left-1/2 -translate-x-1/2 top-full mt-2"
                       }
