@@ -1,5 +1,6 @@
 "use client";
 
+import { isImageFile } from "@/utils/isImageFile";
 import { useRef, useState } from "react";
 import MobileUploadModal from "../organisms/MobileUploadModal";
 import { Button } from "../ui/button";
@@ -23,13 +24,19 @@ export default function MobileUploadButton() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      setSelectedFile(file);
-      setShowPopup(true);
+    if (!file) return;
+
+    if (!isImageFile(file)) {
+      alert("Please select an image file for your profile picture.");
+      return;
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setSelectedFile(file);
+    setShowPopup(true);
   };
 
   return (
@@ -44,7 +51,7 @@ export default function MobileUploadButton() {
 
       <input
         type="file"
-        accept="image/*, video/*"
+        accept="image/*"
         hidden
         ref={fileInputRef}
         onChange={handleFileChange}

@@ -15,6 +15,10 @@ cloudinary.config({
 export async function saveEventFlyerToCloudinary(selectedFile: File) {
   if (!selectedFile) return { error: "No file selected" };
 
+  if (!selectedFile.type.startsWith("image/")) {
+    return { error: "Only image files are allowed for event flyers" };
+  }
+
   try {
     const fileBuffer = Buffer.from(await selectedFile.arrayBuffer());
 

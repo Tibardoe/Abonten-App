@@ -1,5 +1,6 @@
 "use client";
 
+import { isImageFile } from "@/utils/isImageFile";
 import type React from "react";
 import { useRef, useState } from "react";
 import EventUploadMobileModal from "../organisms/EventUploadMobileModal";
@@ -21,13 +22,19 @@ export default function PostButton() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      setSelectedFile(file);
-      setShowPostModal(true);
+    if (!file) return;
+
+    if (!isImageFile(file)) {
+      alert("Please select an image file for your event flyer.");
+      return;
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setSelectedFile(file);
+    setShowPostModal(true);
   };
 
   const closePopup = (state: boolean) => {
@@ -45,7 +52,7 @@ export default function PostButton() {
 
       <input
         type="file"
-        accept="image/*, video/*"
+        accept="image/*"
         hidden
         ref={fileInputRef}
         onChange={handleFileChange}

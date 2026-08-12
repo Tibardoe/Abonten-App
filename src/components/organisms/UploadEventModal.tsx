@@ -5,6 +5,7 @@ import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { eventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
+import { isImageFile } from "@/utils/isImageFile";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -45,6 +46,11 @@ export default function UploadEventModal({
   useBodyScrollLock(true);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Gates the flyer preview screen so a spinner shows while a newly-selected
+  // image decodes, instead of leaving the user staring at a blank frame —
+  // mirrors the isPreviewReady pattern used in HighlightModal.
+  const [isFlyerPreviewReady, setIsFlyerPreviewReady] = useState(false);
 
   const [cropped, setCropped] = useState<File | null>(null);
 
@@ -137,13 +143,20 @@ export default function UploadEventModal({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      setSelectedFile(file);
-      setStep((prevStep) => prevStep + 1);
+    if (!file) return;
+
+    if (!isImageFile(file)) {
+      setNotification("Please select an image file for your event flyer.");
+      return;
     }
+
+    setIsFlyerPreviewReady(false);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setSelectedFile(file);
+    setStep((prevStep) => prevStep + 1);
   };
 
   const handleCategory = (categoryName: string) => {
@@ -343,6 +356,7 @@ export default function UploadEventModal({
     setCropped(croppedFile);
     const preview = URL.createObjectURL(croppedFile);
     setCroppedPreview(preview);
+    setIsFlyerPreviewReady(false);
     setStep(3);
   };
 
@@ -447,12 +461,19 @@ export default function UploadEventModal({
                   <ScissorsIcon className="w-5 h-5 text-white" />
                 </button>
 
+                {!isFlyerPreviewReady && (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="border-4 border-mint border-t-transparent animate-spin rounded-full w-10 h-10" />
+                  </div>
+                )}
+
                 <Image
                   src={croppedPreview ?? imagePreview}
-                  alt="Selected Avatar"
+                  alt="Selected flyer"
                   width={0}
                   height={0}
-                  className="w-full object-contain mx-auto"
+                  className={`w-full object-contain mx-auto ${isFlyerPreviewReady ? "" : "hidden"}`}
+                  onLoad={() => setIsFlyerPreviewReady(true)}
                 />
               </div>
             )}

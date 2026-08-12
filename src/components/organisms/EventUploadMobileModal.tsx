@@ -62,6 +62,10 @@ closePopupModalType) {
 
   const [isUploading, setIsUploading] = useState(false);
 
+  // Mirrors HighlightModal's isPreviewReady pattern: gates the flyer preview
+  // behind a spinner while a newly-selected/cropped image decodes.
+  const [isFlyerPreviewReady, setIsFlyerPreviewReady] = useState(false);
+
   const [cropped, setCropped] = useState<File | null>(null);
 
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
@@ -389,6 +393,7 @@ closePopupModalType) {
     setCropped(croppedFile);
     const preview = URL.createObjectURL(croppedFile);
     setCroppedPreview(preview);
+    setIsFlyerPreviewReady(false);
     setStep(2);
   };
 
@@ -429,18 +434,24 @@ closePopupModalType) {
 
           {/* Image */}
           <div className="relative w-full h-full">
+            {!isFlyerPreviewReady && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="border-4 border-mint border-t-transparent animate-spin rounded-full w-12 h-12" />
+              </div>
+            )}
             <Image
               src={croppedPreview ?? imgUrl}
-              alt="Selected Avatar"
+              alt="Selected flyer"
               fill
               className="object-contain w-full mx-auto"
+              onLoad={() => setIsFlyerPreviewReady(true)}
             />
           </div>
         </div>
       )}
 
       {step === 1 && imgUrl && showCrop && (
-        <div className="absolute inset-0 z-30 w-full h-full bg-white pt-5">
+        <div className="absolute inset-0 z-30 w-full h-full bg-white pt-5 overflow-y-auto">
           <ImageCropper
             imagePreview={imgUrl}
             handleCropped={handleCropped}

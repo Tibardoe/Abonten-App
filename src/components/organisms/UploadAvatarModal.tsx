@@ -1,5 +1,6 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { isImageFile } from "@/utils/isImageFile";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -41,13 +42,19 @@ export default function UploadAvatarModal({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      setSelectedFile(file);
-      setStep((prevStep) => prevStep + 1);
+    if (!file) return;
+
+    if (!isImageFile(file)) {
+      setNotification("Please select an image file for your profile picture.");
+      return;
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setSelectedFile(file);
+    setStep((prevStep) => prevStep + 1);
   };
 
   const { mutate, isPending } = useMutation({
@@ -115,7 +122,7 @@ export default function UploadAvatarModal({
 
         {/* Inner popup */}
 
-        <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[85%] rounded-2xl py-3">
+        <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[85%] rounded-2xl py-3 overflow-y-auto">
           <div className="w-full">
             {step === 1 && (
               <div>

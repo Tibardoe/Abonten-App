@@ -60,7 +60,9 @@ export async function postEvent(formData: PostsType) {
   if (!flyerUpload?.public_id || !flyerUpload?.version) {
     return {
       status: 500,
-      message: "Flyer upload to Cloudinary failed.",
+      message:
+        (flyerUpload as { error?: string })?.error ??
+        "Flyer upload to Cloudinary failed.",
     };
   }
 

@@ -1,5 +1,4 @@
 import { canvasPreview } from "@/utils/canvasPreview";
-import { useDebounceEffect } from "@/utils/useDebounceEffect";
 import type React from "react";
 import { useRef, useState } from "react";
 import ReactCrop, {
@@ -44,7 +43,6 @@ export default function ImageCropper({
   handleCropped,
   handleCancel,
 }: ImageCropType) {
-  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
@@ -62,30 +60,16 @@ export default function ImageCropper({
 
   async function handleCropSave() {
     const image = imgRef.current;
-    const canvas = document.createElement("canvas");
 
     if (!image || !completedCrop?.width || !completedCrop?.height) return;
 
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
+    const canvas = document.createElement("canvas");
 
-    canvas.width = completedCrop.width;
-    canvas.height = completedCrop.height;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.drawImage(
-      image,
-      completedCrop.x * scaleX,
-      completedCrop.y * scaleY,
-      completedCrop.width * scaleX,
-      completedCrop.height * scaleY,
-      0,
-      0,
-      completedCrop.width,
-      completedCrop.height,
-    );
+    // canvasPreview replays the same scale/rotate transform used for the
+    // on-screen crop preview, so the uploaded file matches what the user saw
+    // — drawing straight from the <img> here would silently ignore rotation
+    // and zoom, since CSS transforms don't affect canvas pixel sampling.
+    await canvasPreview(image, canvas, completedCrop, scale, rotate);
 
     canvas.toBlob((blob) => {
       if (!blob) return;
@@ -95,27 +79,6 @@ export default function ImageCropper({
       handleCropped(croppedFile);
     }, "image/png");
   }
-
-  useDebounceEffect(
-    async () => {
-      if (
-        completedCrop?.width &&
-        completedCrop?.height &&
-        imgRef.current &&
-        previewCanvasRef.current
-      ) {
-        canvasPreview(
-          imgRef.current,
-          previewCanvasRef.current,
-          completedCrop,
-          scale,
-          rotate,
-        );
-      }
-    },
-    100,
-    [completedCrop, scale, rotate],
-  );
 
   const aspectOptions = [
     { label: "Free", value: undefined },
@@ -149,21 +112,24 @@ export default function ImageCropper({
             </div> */}
           </div>
 
-          <div className="relative flex flex-col mx-auto">
+          <div className="relative flex flex-col items-center justify-center mx-auto w-full">
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
               onComplete={(c) => setCompletedCrop(c)}
               aspect={aspect}
               minHeight={100}
-              className="border rounded-md overflow-hidden w-full md:w-[35%] self-center"
+              className="border rounded-md overflow-hidden max-w-full"
             >
               <img
                 ref={imgRef}
                 alt="Crop me"
                 src={imagePreview}
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
-                className="w-full"
+                // Bounding by max-height (rather than forcing w-full) lets large/tall
+                // flyers shrink to fit the available modal space, WhatsApp-style,
+                // instead of pushing crop controls off-screen.
+                className="block max-h-[40dvh] sm:max-h-[45dvh] md:max-h-[55dvh] max-w-full w-auto h-auto mx-auto"
                 onLoad={onImageLoad}
               />
             </ReactCrop>

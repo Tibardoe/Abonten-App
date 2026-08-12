@@ -4,6 +4,7 @@
 import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
+import { isImageFile } from "@/utils/isImageFile";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -50,13 +51,19 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
-    if (file) {
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      setSelectedFile(file);
-      setShowPostModal(true);
+    if (!file) return;
+
+    if (!isImageFile(file)) {
+      alert("Please select an image file for your event flyer.");
+      return;
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setSelectedFile(file);
+    setShowPostModal(true);
   };
 
   // const { data: userRole } = useQuery({
@@ -150,7 +157,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
 
               <input
                 type="file"
-                accept="image/*, video/*"
+                accept="image/*"
                 hidden
                 ref={fileInputRef}
                 onChange={handleFileChange}
