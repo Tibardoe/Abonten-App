@@ -442,7 +442,7 @@ export default function UploadEventModal({
             </div>
 
             {showCrop ? (
-              <div className="relative flex flex-col items-center w-[90%] h-[90%] overflow-y-scroll">
+              <div className="relative flex flex-col items-center w-[90%] flex-1 min-h-0 overflow-y-auto">
                 <ImageCropper
                   imagePreview={imagePreview}
                   handleCropped={handleCropped}

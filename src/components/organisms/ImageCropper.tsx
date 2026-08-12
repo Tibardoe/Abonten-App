@@ -89,10 +89,16 @@ export default function ImageCropper({
   ];
 
   return (
-    <div className="space-y-4 md:p-4 w-full mb-5">
+    // A bounded-height flex column, not an auto-growing block: the header and
+    // controls are fixed-size (shrink-0) and the image area is the only
+    // flexible piece (flex-1 min-h-0), so the image always gets exactly
+    // "whatever's left" after the rest of the UI, on any screen — instead of
+    // guessing a viewport percentage that may not leave room for controls.
+    // Requires the parent to be a bounded-height flex column itself.
+    <div className="flex flex-col flex-1 min-h-0 w-full md:p-4">
       {!!imagePreview && (
         <>
-          <div className="flex justify-between items-center px-5 text-white">
+          <div className="flex justify-between items-center px-5 pb-3 text-white shrink-0">
             <Button onClick={handleCancel} className="bg-mint">
               Cancel
             </Button>
@@ -112,31 +118,35 @@ export default function ImageCropper({
             </div> */}
           </div>
 
-          <div className="relative flex flex-col items-center justify-center mx-auto w-full">
+          <div className="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden">
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
               onComplete={(c) => setCompletedCrop(c)}
               aspect={aspect}
               minHeight={100}
-              className="border rounded-md overflow-hidden max-w-full"
+              className="border rounded-md overflow-hidden"
+              // react-image-crop's own CSS cascades max-height down to the
+              // <img> via `max-height: inherit` on its internal wrapper —
+              // setting max-height directly on the <img> instead gets beaten
+              // by that (more specific) rule and silently has no effect.
+              // Setting it here, on the element the library actually reads,
+              // lets it shrink the image to fit whatever height flexbox gave
+              // this container above.
+              style={{ maxHeight: "100%", maxWidth: "100%" }}
             >
               <img
                 ref={imgRef}
                 alt="Crop me"
                 src={imagePreview}
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
-                // Bounding by max-height (rather than forcing w-full) lets large/tall
-                // flyers shrink to fit the available modal space, WhatsApp-style,
-                // instead of pushing crop controls off-screen.
-                className="block max-h-[40dvh] sm:max-h-[45dvh] md:max-h-[55dvh] max-w-full w-auto h-auto mx-auto"
                 onLoad={onImageLoad}
               />
             </ReactCrop>
           </div>
 
           {showControls && (
-            <div className="mt-4 space-y-4 w-[95%] mx-auto">
+            <div className="pt-4 space-y-4 w-[95%] mx-auto shrink-0">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="block text-sm font-medium text-gray-700 mb-1">

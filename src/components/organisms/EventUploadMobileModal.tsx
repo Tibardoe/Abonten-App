@@ -451,7 +451,7 @@ closePopupModalType) {
       )}
 
       {step === 1 && imgUrl && showCrop && (
-        <div className="absolute inset-0 z-30 w-full h-full bg-white pt-5 overflow-y-auto">
+        <div className="absolute inset-0 z-30 w-full h-full bg-white pt-5 flex flex-col overflow-y-auto">
           <ImageCropper
             imagePreview={imgUrl}
             handleCropped={handleCropped}

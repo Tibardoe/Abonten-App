@@ -90,7 +90,7 @@ export default function MobileUploadModal({
           </div>
 
           {imgUrl && (
-            <div className="w-full absolute bg-white pt-5">
+            <div className="absolute inset-0 bg-white pt-5 flex flex-col overflow-y-auto">
               <ImageCropper
                 imagePreview={imgUrl}
                 handleCropped={handleCropped}
