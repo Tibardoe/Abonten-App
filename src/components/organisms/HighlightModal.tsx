@@ -1,3 +1,4 @@
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { MediaItem } from "@/types/mediaItemType";
 import formatDuration from "@/utils/formatVideoDuration";
 import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
@@ -28,6 +29,8 @@ export default function HighlightModal({
   handleShowHighlightModal,
   onUpload,
 }: ClosePopupModalType) {
+  useBodyScrollLock(true);
+
   const [isCropping, setIsCropping] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);

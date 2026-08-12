@@ -1,6 +1,7 @@
 "use client";
 
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,8 @@ export default function MobileUploadModal({
   imgUrl,
   selectedFile,
 }: closePopupModalType) {
+  useBodyScrollLock(true);
+
   const [cropped, setCropped] = useState<File | null>(null);
 
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);

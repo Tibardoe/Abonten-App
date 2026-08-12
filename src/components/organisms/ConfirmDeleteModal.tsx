@@ -1,3 +1,5 @@
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+
 type ConfirmDeleteModalProps = {
   message: string;
   isLoading: boolean;
@@ -11,6 +13,8 @@ export default function ConfirmDeleteModal({
   onConfirm,
   onCancel,
 }: ConfirmDeleteModalProps) {
+  useBodyScrollLock(true);
+
   return (
     <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-40">
       <div className="w-[70%] md:w-[30%] p-3 bg-white rounded-xl">

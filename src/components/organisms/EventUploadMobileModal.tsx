@@ -2,6 +2,7 @@
 
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { eventSchema } from "@/utils/eventSchema";
@@ -57,6 +58,8 @@ export default function EventUploadMobileModal({
 }: // selectedFile,
 // className,
 closePopupModalType) {
+  useBodyScrollLock(true);
+
   const [isUploading, setIsUploading] = useState(false);
 
   const [cropped, setCropped] = useState<File | null>(null);

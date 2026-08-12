@@ -1,4 +1,5 @@
 import { deleteEvent } from "@/actions/deleteEvent";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Notification from "../atoms/Notification";
@@ -21,6 +22,8 @@ export default function DeletePopupModal({
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+
+  useBodyScrollLock(true);
 
   const handleDeleteEvent = async () => {
     if (!eventId) return;

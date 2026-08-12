@@ -1,6 +1,7 @@
 import getPromoCode from "@/actions/getPromoCode";
 import { getTickets } from "@/actions/getTickets";
 import validateCheckout from "@/actions/validateCheckout";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { TicketType } from "@/types/ticketType";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import { useQuery } from "@tanstack/react-query";
@@ -28,6 +29,8 @@ export default function CheckoutModal({
   time,
   date,
 }: CheckoutProp) {
+  useBodyScrollLock(true);
+
   // const [tickets, setTickets] = useState<TicketType[]>([]);
 
   const [promoCode, setPromoCode] = useState<string | null>(null);

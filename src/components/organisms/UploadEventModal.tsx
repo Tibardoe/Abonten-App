@@ -1,5 +1,6 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import { eventSchema } from "@/utils/eventSchema";
@@ -41,6 +42,8 @@ type Entry = { start: Date; end: Date };
 export default function UploadEventModal({
   handleClosePopup,
 }: closePopupModalType) {
+  useBodyScrollLock(true);
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [cropped, setCropped] = useState<File | null>(null);

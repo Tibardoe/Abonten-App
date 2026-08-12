@@ -1,4 +1,5 @@
 import { transactionsDummyData } from "@/data/transactionsDummyData";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import Image from "next/image";
 import { IoChevronBackSharp } from "react-icons/io5";
 import { Button } from "../ui/button";
@@ -15,6 +16,8 @@ export default function RecieptModal({
   const transactionSlip = transactionsDummyData.find(
     (transaction) => transactionId === transaction.transactionId,
   );
+
+  useBodyScrollLock(true);
 
   return (
     <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-10">

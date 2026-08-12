@@ -1,3 +1,4 @@
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { UserTicketType } from "@/types/ticketType";
 import {
   formatDateWithSuffix,
@@ -25,6 +26,8 @@ export default function TicketModal({
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
   const pdfRef = useRef<HTMLDivElement>(null); // This ref will now point to the printable area
+
+  useBodyScrollLock(true);
 
   const handleDOwnloadPdf = async () => {
     if (!pdfRef.current) return;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import dynamic from "next/dynamic";
@@ -20,6 +21,8 @@ const MapModal = dynamic(() => import("@/components/organisms/MapModal"), {
 export default function ChangeLocationModal({
   handleShowChangeLocationModal,
 }: ChangeLocationModalProp) {
+  useBodyScrollLock(true);
+
   const [selectedAddress, setSelectedAddress] = useState("");
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(

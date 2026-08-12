@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 //   PopoverTrigger,
 // } from "@/components/ui/popover";
 import { distances, rating } from "@/data/distanceAndRating";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 // Date moodules
 // import { addDays, format } from "date-fns";
@@ -33,6 +34,8 @@ export default function FilterModalPopup({
   handlePopup,
   className,
 }: FilterModalPopupProp) {
+  useBodyScrollLock(true);
+
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),

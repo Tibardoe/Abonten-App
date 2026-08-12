@@ -5,6 +5,7 @@ import HighlightMenuButton from "@/components/atoms/HighlightMenuButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import type { HighlightMenuAction } from "@/components/molecules/HighlightMenu";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
 import type { HighlightGroup } from "@/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,8 @@ export default function HighlightViewer({
   onClose,
 }: HighlightViewerProps) {
   const queryClient = useQueryClient();
+
+  useBodyScrollLock(true);
 
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);

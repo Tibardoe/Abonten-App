@@ -1,5 +1,6 @@
 import { postReview } from "@/actions/postReview";
 import { supabase } from "@/config/supabase/client";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
@@ -28,6 +29,8 @@ export default function ReviewModal({
   handleShowReviewModal,
   username,
 }: ShowReviewModalProp) {
+  useBodyScrollLock(true);
+
   const [rating, setRating] = useState(0);
 
   const [notification, setNotification] = useState<string | null>(null);

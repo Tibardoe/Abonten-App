@@ -1,5 +1,6 @@
 "use client";
 
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { generateSlug } from "@/utils/geerateSlug";
 // import Image from "next/image";
 import Link from "next/link";
@@ -41,6 +42,8 @@ const MapModal: React.FC<MapModalProps> = ({
   };
 
   const [_selectedAddress, setSelectedAddress] = useState("");
+
+  useBodyScrollLock(isOpen);
 
   const handleConfirm = () => {
     if (currentLocation) {

@@ -1,4 +1,5 @@
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -16,6 +17,8 @@ type closePopupModalType = {
 export default function UploadAvatarModal({
   handleClosePopup,
 }: closePopupModalType) {
+  useBodyScrollLock(true);
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
