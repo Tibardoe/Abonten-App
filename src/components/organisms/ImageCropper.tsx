@@ -1,6 +1,6 @@
 import { canvasPreview } from "@/utils/canvasPreview";
 import type React from "react";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -44,12 +44,37 @@ export default function ImageCropper({
   handleCancel,
 }: ImageCropType) {
   const imgRef = useRef<HTMLImageElement>(null);
+  const cropAreaRef = useRef<HTMLDivElement>(null);
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [scale, setScale] = useState(1);
   const [rotate, setRotate] = useState(0);
   const [aspect, setAspect] = useState<number | undefined>(1);
   const [showControls, setShowControls] = useState(true);
+  // Measured in actual pixels rather than trusting a CSS percentage
+  // max-height: .ReactCrop is `display:inline-block` sitting inside a flex
+  // item, and percentage-height resolution through that combination is
+  // unreliable enough in practice that a tall image can end up
+  // unconstrained and get silently clipped by the surrounding
+  // `overflow:hidden` instead of shrinking to fit it.
+  const [cropAreaSize, setCropAreaSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = cropAreaRef.current;
+    if (!el) return;
+
+    const updateSize = () =>
+      setCropAreaSize({ width: el.clientWidth, height: el.clientHeight });
+
+    updateSize();
+
+    const resizeObserver = new ResizeObserver(updateSize);
+    resizeObserver.observe(el);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     if (aspect) {
@@ -118,7 +143,10 @@ export default function ImageCropper({
             </div> */}
           </div>
 
-          <div className="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <div
+            ref={cropAreaRef}
+            className="relative flex-1 min-h-0 flex items-center justify-center overflow-hidden"
+          >
             <ReactCrop
               crop={crop}
               onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -131,9 +159,16 @@ export default function ImageCropper({
               // setting max-height directly on the <img> instead gets beaten
               // by that (more specific) rule and silently has no effect.
               // Setting it here, on the element the library actually reads,
-              // lets it shrink the image to fit whatever height flexbox gave
-              // this container above.
-              style={{ maxHeight: "100%", maxWidth: "100%" }}
+              // with the measured pixel size of the box above (not a CSS
+              // percentage) lets it reliably shrink the image to fit.
+              style={
+                cropAreaSize
+                  ? {
+                      maxHeight: cropAreaSize.height,
+                      maxWidth: cropAreaSize.width,
+                    }
+                  : undefined
+              }
             >
               <img
                 ref={imgRef}

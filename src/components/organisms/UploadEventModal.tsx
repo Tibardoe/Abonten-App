@@ -152,6 +152,18 @@ export default function UploadEventModal({
       return;
     }
 
+    // A brand new file starts a fresh editing session — any crop/edit state
+    // left over from a previously-selected flyer must not carry into it.
+    // Without this, a stale `cropped` file from an earlier selection could
+    // silently be the one that actually gets uploaded (onSubmit falls back
+    // to `cropped ?? selectedFile`), and/or the crop tool could reopen
+    // unexpectedly for an image the user never chose to crop.
+    setShowCrop(false);
+    setCropped(null);
+    setCroppedPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setIsFlyerPreviewReady(false);
     const previewUrl = URL.createObjectURL(file);
     setImagePreview(previewUrl);
@@ -357,6 +369,9 @@ export default function UploadEventModal({
     const preview = URL.createObjectURL(croppedFile);
     setCroppedPreview(preview);
     setIsFlyerPreviewReady(false);
+    // Leave the crop tool now that a crop is done — otherwise navigating
+    // Back later would silently reopen it instead of showing the result.
+    setShowCrop(false);
     setStep(3);
   };
 
@@ -447,22 +462,33 @@ export default function UploadEventModal({
                   imagePreview={imagePreview}
                   handleCropped={handleCropped}
                   handleCancel={() => {
+                    // Leave the crop tool itself, not just the step —
+                    // otherwise the next time step 2 renders (e.g. after
+                    // picking a different flyer) it would reopen the
+                    // cropper instead of showing the plain preview.
+                    setShowCrop(false);
                     setStep((prevStep) => prevStep - 1);
                   }}
                 />
               </div>
             ) : (
-              <div className="w-[40%] relative">
+              // Bounded by flex-1/min-h-0 (remaining modal height after the
+              // nav bar above) rather than sized off image width alone —
+              // otherwise a tall flyer (e.g. a phone screenshot) scales to
+              // the container's width and its height runs off the bottom of
+              // the modal, uncontained. `fill` + object-contain then shrinks
+              // the image to fit fully inside that bounded box either way.
+              <div className="relative w-[40%] flex-1 min-h-0 mx-auto">
                 <button
                   type="button"
-                  className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-1 left-5"
+                  className="backdrop-blur-md border border-white/20 bg-black bg-opacity-75 p-2 rounded-full absolute top-1 left-5 z-10"
                   onClick={() => setShowCrop((prevState) => !prevState)}
                 >
                   <ScissorsIcon className="w-5 h-5 text-white" />
                 </button>
 
                 {!isFlyerPreviewReady && (
-                  <div className="flex items-center justify-center py-20">
+                  <div className="absolute inset-0 flex items-center justify-center">
                     <div className="border-4 border-mint border-t-transparent animate-spin rounded-full w-10 h-10" />
                   </div>
                 )}
@@ -470,9 +496,8 @@ export default function UploadEventModal({
                 <Image
                   src={croppedPreview ?? imagePreview}
                   alt="Selected flyer"
-                  width={0}
-                  height={0}
-                  className={`w-full object-contain mx-auto ${isFlyerPreviewReady ? "" : "hidden"}`}
+                  fill
+                  className={`object-contain ${isFlyerPreviewReady ? "" : "hidden"}`}
                   onLoad={() => setIsFlyerPreviewReady(true)}
                 />
               </div>
@@ -514,13 +539,16 @@ export default function UploadEventModal({
             </div>
 
             <div className="flex justify-start w-full h-[90%] gap-3">
-              <div className="w-1/2 h-full rounded-bl-2xl ">
+              <div className="relative w-1/2 h-full rounded-bl-2xl overflow-hidden">
                 <Image
                   src={croppedPreview ?? imagePreview}
-                  alt="Selected Avatar"
-                  width={0}
-                  height={0}
-                  className="w-full h-full object-cover"
+                  alt="Selected flyer"
+                  fill
+                  // object-contain, not object-cover: this is still the same
+                  // flyer the user selected/cropped, not a decorative
+                  // thumbnail — it must show the complete image, not a
+                  // portion cropped to fill the box.
+                  className="object-contain"
                 />
               </div>
 

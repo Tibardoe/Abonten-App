@@ -394,6 +394,11 @@ closePopupModalType) {
     const preview = URL.createObjectURL(croppedFile);
     setCroppedPreview(preview);
     setIsFlyerPreviewReady(false);
+    // Leave the crop tool now that a crop is done — otherwise navigating
+    // Back later would silently reopen it instead of showing the result
+    // (its own Cancel handler already resets this; completing a crop
+    // didn't).
+    setShowCrop(false);
     setStep(2);
   };
 
