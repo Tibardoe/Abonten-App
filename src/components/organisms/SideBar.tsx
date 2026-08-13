@@ -20,9 +20,15 @@ import MobileFooter from "./MobileFooter";
 
 type menuClickedProp = {
   menuClicked: boolean;
+  onCloseAnimationEnd?: () => void;
+  onPostSuccess?: () => void;
 };
 
-export default function SideBar({ menuClicked }: menuClickedProp) {
+export default function SideBar({
+  menuClicked,
+  onCloseAnimationEnd,
+  onPostSuccess,
+}: menuClickedProp) {
   const [showPostModal, setShowPostModal] = useState(false);
 
   const location = useGetUserLocation();
@@ -110,6 +116,7 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
           handleClosePopup={closePopup}
           imgUrl={imagePreview}
           selectedFile={selectedFile}
+          onUploadSuccess={onPostSuccess}
         />
       )}
 
@@ -119,6 +126,9 @@ export default function SideBar({ menuClicked }: menuClickedProp) {
             "bg-white w-[80%]",
             menuClicked ? "animate-slideIn" : "animate-slideOut",
           )}
+          onAnimationEnd={() => {
+            if (!menuClicked) onCloseAnimationEnd?.();
+          }}
         >
           {user ? (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">

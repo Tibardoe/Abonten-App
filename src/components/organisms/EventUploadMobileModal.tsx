@@ -47,6 +47,7 @@ type closePopupModalType = {
   imgUrl: string | null;
   selectedFile: File | null;
   className?: React.HTMLAttributes<HTMLDivElement>;
+  onUploadSuccess?: () => void;
 };
 
 type Entry = { start: Date; end: Date };
@@ -55,6 +56,7 @@ export default function EventUploadMobileModal({
   handleClosePopup,
   imgUrl,
   selectedFile,
+  onUploadSuccess,
 }: // selectedFile,
 // className,
 closePopupModalType) {
@@ -336,6 +338,7 @@ closePopupModalType) {
         setNotification("✅ Event posted successfully!");
         router.refresh();
         handleClosePopup(false);
+        onUploadSuccess?.();
       } else {
         setNotification(`❌ ${response.message}`);
       }

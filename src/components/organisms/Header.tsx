@@ -30,6 +30,9 @@ const defaulfVersion = "1743533914";
 
 export default function Header() {
   const [isMenuClicked, setIsMenuClicked] = useState(false);
+  // Kept mounted through the close animation so `animate-slideOut` gets a
+  // chance to play; unmounted only once `onAnimationEnd` confirms it finished.
+  const [isSidebarMounted, setIsSidebarMounted] = useState(false);
 
   const pathname = usePathname();
 
@@ -83,12 +86,27 @@ export default function Header() {
   };
 
   const toggleMenu = () => {
-    setIsMenuClicked((prev) => !prev);
+    if (isMenuClicked) {
+      setIsMenuClicked(false);
+    } else {
+      setIsSidebarMounted(true);
+      setIsMenuClicked(true);
+    }
+  };
+
+  const closeSidebar = () => {
+    setIsMenuClicked(false);
   };
 
   return (
     <>
-      {isMenuClicked && <SideBar menuClicked={isMenuClicked} />}
+      {isSidebarMounted && (
+        <SideBar
+          menuClicked={isMenuClicked}
+          onCloseAnimationEnd={() => setIsSidebarMounted(false)}
+          onPostSuccess={closeSidebar}
+        />
+      )}
 
       <nav className="w-full flex justify-center fixed bg-white z-20">
         <div className="flex justify-between py-5 w-[95%] border-b border-black-500 items-center">
