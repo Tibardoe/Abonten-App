@@ -1,0 +1,18 @@
+{
+  "buttons": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "yes": "Ja",
+    "continue": "Weiter",
+    "back": "Zurück"
+  },
+  "status": {
+    "deleting": "Wird gelöscht",
+    "loading": "Wird geladen"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen.",
+    "genericRetry": "Etwas ist schiefgelaufen. Bitte versuche es später erneut."
+  },
+  "warning": "Warnung"
+}

@@ -1,34 +1,43 @@
+import type { useTranslations } from "next-intl";
 import { z } from "zod";
 
-export const eventSchema = z.object({
-  title: z
-    .string()
-    .min(1, { message: "Title is required" })
-    .max(150, { message: "Title must be less than 150 characters" }),
+export const getEventSchema = (
+  t: ReturnType<typeof useTranslations<"events">>,
+) =>
+  z.object({
+    title: z
+      .string()
+      .min(1, { message: t("validation.titleRequired") })
+      .max(150, { message: t("validation.titleTooLong") }),
 
-  description: z.string().min(1, { message: "Description is required" }),
+    description: z
+      .string()
+      .min(1, { message: t("validation.descriptionRequired") }),
 
-  website_url: z
-    .string()
-    .refine(
-      (val) =>
-        val === "" ||
-        /^((https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-z]{2,})(\/\S*)?$/.test(val),
-      {
-        message:
-          "Enter a valid URL (e.g., www.example.com or https://example.com)",
-      },
-    )
-    .optional(),
+    website_url: z
+      .string()
+      .refine(
+        (val) =>
+          val === "" ||
+          /^((https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-z]{2,})(\/\S*)?$/.test(
+            val,
+          ),
+        {
+          message: t("validation.invalidUrl"),
+        },
+      )
+      .optional(),
 
-  price: z
-    .number({ invalid_type_error: "Price must be a number" })
-    .min(0, { message: "Price cannot be negative" })
-    .optional(),
+    price: z
+      .number({ invalid_type_error: t("validation.priceNotNumber") })
+      .min(0, { message: t("validation.priceNegative") })
+      .optional(),
 
-  capacity: z
-    .number({ invalid_type_error: "Capacity must be a number" })
-    .int({ message: "Capacity must be a whole number" })
-    .positive({ message: "Capacity must be greater than 0" })
-    .optional(),
-});
+    capacity: z
+      .number({ invalid_type_error: t("validation.capacityNotNumber") })
+      .int({ message: t("validation.capacityNotWhole") })
+      .positive({ message: t("validation.capacityMustBePositive") })
+      .optional(),
+  });
+
+export type EventSchema = z.infer<ReturnType<typeof getEventSchema>>;

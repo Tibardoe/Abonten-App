@@ -1,0 +1,13 @@
+{
+  "validation": {
+    "titleRequired": "Titel ist erforderlich",
+    "titleTooLong": "Der Titel darf höchstens 150 Zeichen lang sein",
+    "descriptionRequired": "Beschreibung ist erforderlich",
+    "invalidUrl": "Gib eine gültige URL ein (z. B. www.example.com oder https://example.com)",
+    "priceNotNumber": "Preis muss eine Zahl sein",
+    "priceNegative": "Preis darf nicht negativ sein",
+    "capacityNotNumber": "Kapazität muss eine Zahl sein",
+    "capacityNotWhole": "Kapazität muss eine ganze Zahl sein",
+    "capacityMustBePositive": "Kapazität muss größer als 0 sein"
+  }
+}

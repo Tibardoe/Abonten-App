@@ -3,6 +3,7 @@
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -23,6 +24,8 @@ export default function AuthModal({
   callingCode,
   next,
 }: PopupProp) {
+  const t = useTranslations("auth");
+
   const location = useGetUserLocation();
 
   const [countryCode, setCountryCode] = useState("");
@@ -133,7 +136,7 @@ export default function AuthModal({
           {/* Or section */}
           <div className="flex gap-2 items-center w-full text-iconGray">
             <span className="border border-black border-opacity-30 w-full" />
-            <p>Or</p>
+            <p>{t("or")}</p>
             <span className="border border-black border-opacity-30 w-full" />
           </div>
 
@@ -146,7 +149,7 @@ export default function AuthModal({
             />
 
             <Button className="w-full rounded-md text-lg font-medium py-6 bg-mint absolute bottom-0 md:relative">
-              Continue
+              {t("continue")}
             </Button>
           </form>
         </div>
@@ -162,14 +165,14 @@ export default function AuthModal({
         >
           <IoChevronBack className="text-2xl" />
 
-          <p>Back</p>
+          <p>{t("back")}</p>
         </button>
 
-        <h1 className="font-bold text-4xl mb-2 text-black">Enter Code</h1>
+        <h1 className="font-bold text-4xl mb-2 text-black">{t("enterCode")}</h1>
 
         <div className="text-opacity-50 text-lg mb-20">
           <p>
-            We&apos;ve sent it to <br /> {fullPhoneNumber}
+            {t("codeSentTo")} <br /> {fullPhoneNumber}
           </p>
         </div>
 
@@ -196,14 +199,12 @@ export default function AuthModal({
             </div>
 
             {otpErrorMessageShown && (
-              <p className="text-red-700 text-lg">
-                Verfication code incorrect!
-              </p>
+              <p className="text-red-700 text-lg">{t("otpIncorrect")}</p>
             )}
           </div>
 
           <Button className="w-full rounded-md text-xl font-bold py-7 bg-mint">
-            Continue
+            {t("continue")}
           </Button>
         </form>
       </div>

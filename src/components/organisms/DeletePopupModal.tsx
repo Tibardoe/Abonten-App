@@ -1,5 +1,6 @@
 import { deleteEvent } from "@/actions/deleteEvent";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Notification from "../atoms/Notification";
@@ -15,6 +16,8 @@ export default function DeletePopupModal({
   message,
   eventId,
 }: DeletePopupProp) {
+  const t = useTranslations("common");
+
   const [success, setSuccess] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +42,10 @@ export default function DeletePopupModal({
           router.refresh(); // This will reload the page
         }, 1000); // Optional delay before refreshing
       } else {
-        setError(response.message || "Something went wrong.");
+        setError(response.message || t("errors.generic"));
       }
     } catch (error) {
-      setError("Something went wrong. Please try again later.");
+      setError(t("errors.genericRetry"));
       console.log(error);
     } finally {
       setLoading(false);
@@ -53,7 +56,7 @@ export default function DeletePopupModal({
     <>
       <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
         <div className="w-[70%] md:w-[30%] p-3 bg-white rounded-xl">
-          <h1 className="text-md font-bold text-center pb-3">Warning</h1>
+          <h1 className="text-md font-bold text-center pb-3">{t("warning")}</h1>
 
           <hr />
 
@@ -67,14 +70,14 @@ export default function DeletePopupModal({
                 onClick={handleDeleteEvent}
                 disabled={loading}
               >
-                {loading ? "Deleting" : "Yes"}
+                {loading ? t("status.deleting") : t("buttons.yes")}
               </button>
               <button
                 type="button"
                 className="rounded-md bg-black text-white px-3 py-1"
                 onClick={() => handleShowDeletePopup(false)}
               >
-                Cancel
+                {t("buttons.cancel")}
               </button>
             </div>
           </div>

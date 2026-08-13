@@ -3,16 +3,17 @@ import { postEvent } from "@/actions/postEvent";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
-import { eventSchema } from "@/utils/eventSchema";
+import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { isImageFile } from "@/utils/isImageFile";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { ScissorsIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { MdOutlineCancel } from "react-icons/md";
@@ -44,6 +45,10 @@ export default function UploadEventModal({
   handleClosePopup,
 }: closePopupModalType) {
   useBodyScrollLock(true);
+
+  const t = useTranslations("events");
+
+  const eventSchema = useMemo(() => getEventSchema(t), [t]);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -117,7 +122,7 @@ export default function UploadEventModal({
     resolver: zodResolver(receivingAccountSchema),
   });
 
-  const form = useForm<z.infer<typeof eventSchema>>({
+  const form = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),
   });
 
@@ -202,7 +207,7 @@ export default function UploadEventModal({
     }
   }, [notification]);
 
-  const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
+  const onSubmit = async (formData: EventSchema) => {
     try {
       setIsUploading(true);
       if (!cropped && !selectedFile) {

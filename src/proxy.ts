@@ -1,13 +1,9 @@
 import type { NextRequest } from "next/server";
 import { updateSession } from "./config/supabase/middleware";
-// import createMiddleware from "next-intl/middleware";
-// import { routing } from "./i18n/routing";
-
-// const intlMiddleware = createMiddleware(routing);
+import { LOCALE_COOKIE_MAX_AGE, LOCALE_COOKIE_NAME } from "./i18n/config";
+import { getPreferredLocale } from "./i18n/negotiateLocale";
 
 export async function proxy(request: NextRequest) {
-  // const intlResponse = intlMiddleware(request);
-
   const response = await updateSession(request);
 
   // Get stored country from cookies
@@ -26,6 +22,24 @@ export async function proxy(request: NextRequest) {
       httpOnly: false, // allow client access if needed
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
+    });
+  }
+
+  // Only set the locale cookie on first visit — never overwrite an
+  // explicit choice the user already made via Language Settings.
+  const storedLocale = request.cookies.get(LOCALE_COOKIE_NAME)?.value;
+
+  if (!storedLocale) {
+    const preferredLocale = getPreferredLocale(
+      request.headers.get("accept-language"),
+    );
+
+    response.cookies.set(LOCALE_COOKIE_NAME, preferredLocale, {
+      path: "/",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: LOCALE_COOKIE_MAX_AGE,
     });
   }
 

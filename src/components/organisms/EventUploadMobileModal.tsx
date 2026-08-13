@@ -5,15 +5,16 @@ import { postEvent } from "@/actions/postEvent";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { EventDates } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
-import { eventSchema } from "@/utils/eventSchema";
+import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { ScissorsIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { CiCrop } from "react-icons/ci";
@@ -62,6 +63,10 @@ export default function EventUploadMobileModal({
 closePopupModalType) {
   useBodyScrollLock(true);
 
+  const t = useTranslations("events");
+
+  const eventSchema = useMemo(() => getEventSchema(t), [t]);
+
   const [isUploading, setIsUploading] = useState(false);
 
   // Mirrors HighlightModal's isPreviewReady pattern: gates the flyer preview
@@ -80,7 +85,7 @@ closePopupModalType) {
 
   const [types, setTypes] = useState<string[]>([]);
 
-  const form = useForm<z.infer<typeof eventSchema>>({
+  const form = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),
   });
 
@@ -193,7 +198,7 @@ closePopupModalType) {
     }
   }, [notification]);
 
-  const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
+  const onSubmit = async (formData: EventSchema) => {
     try {
       setIsUploading(true);
 

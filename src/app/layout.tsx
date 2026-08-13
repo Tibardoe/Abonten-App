@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/context/authProvider";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -19,29 +21,26 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: // params,
-{
+}: {
   children: React.ReactNode;
-  // params: Promise<{ locale: string }>;
 }) {
-  // // Ensure that the incoming `locale` is valid
-  // const { locale } = await params;
-  // if (!hasLocale(routing.locales, locale)) {
-  //   notFound();
-  // }
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
     <html
-      lang="en"
+      lang={locale}
       className="antialiased"
       style={{ fontFamily: "EuclidCircular, sans-serif" }}
     >
       <body>
-        <ReactQueryProvider>
-          <Providers>
-            <main>{children}</main>
-          </Providers>
-        </ReactQueryProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ReactQueryProvider>
+            <Providers>
+              <main>{children}</main>
+            </Providers>
+          </ReactQueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 import { userSubscription } from "@/actions/getUserSubscription";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,11 +10,14 @@ import Link from "next/link";
 // export const instant = false;
 
 export default async function page() {
-  const subscription = await userSubscription();
+  const [subscription, t] = await Promise.all([
+    userSubscription(),
+    getTranslations("settings"),
+  ]);
 
   return (
     <div className="w-full flex flex-col gap-10">
-      <MobileSettingsHeaderNav title="Overview" />
+      <MobileSettingsHeaderNav title={t("nav.overview")} />
 
       <div className="space-y-2">
         <h1>Plan Details</h1>

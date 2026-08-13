@@ -8,6 +8,7 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { generateSlug } from "@/utils/geerateSlug";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,6 +30,8 @@ const defaultPublicId = "AnonymousProfile_rn6qez";
 const defaulfVersion = "1743533914";
 
 export default function Header() {
+  const t = useTranslations("navigation");
+
   const [isMenuClicked, setIsMenuClicked] = useState(false);
   // Kept mounted through the close animation so `animate-slideOut` gets a
   // chance to play; unmounted only once `onAnimationEnd` confirms it finished.
@@ -143,7 +146,7 @@ export default function Header() {
                 className="flex gap-1 items-center"
               >
                 <MdOutlineManageHistory className="text-2xl" />
-                Manage Attendance
+                {t("manageAttendance")}
               </Link>
 
               <Link
@@ -151,7 +154,7 @@ export default function Header() {
                 className="flex gap-1 items-center"
               >
                 <GiPartyFlags className="text-2xl" />
-                My Events
+                {t("myEvents")}
               </Link>
 
               <EventUploadButton />
@@ -162,7 +165,7 @@ export default function Header() {
                 className="flex gap-1 items-center"
               >
                 <HiOutlineLogin className="text-3xl opacity-70" />
-                SignOut
+                {t("signOut")}
               </button>
 
               {profile.username && (
@@ -184,7 +187,7 @@ export default function Header() {
                   variant="outline"
                   className="bg-transparent rounded-md font-bold border-black"
                 >
-                  Sign Up
+                  {t("signUp")}
                 </Button>
               </Link>
 
@@ -193,7 +196,7 @@ export default function Header() {
                   variant="outline"
                   className="bg-transparent rounded-md font-bold border-black"
                 >
-                  Sign In
+                  {t("signIn")}
                 </Button>
               </Link>
             </div>

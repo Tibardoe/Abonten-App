@@ -4,13 +4,17 @@ import MobileUploadButton from "@/components/atoms/MobileUploadButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
+import { getTranslations } from "next-intl/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
 export default async function page() {
-  const userProfile = await getUserDetails();
+  const [userProfile, t] = await Promise.all([
+    getUserDetails(),
+    getTranslations("settings"),
+  ]);
 
   if (userProfile.status !== 200) {
     return <p className="text-red-500">{userProfile.message}</p>;
@@ -30,7 +34,7 @@ export default async function page() {
 
   return (
     <div className="w-full flex flex-col gap-10">
-      <MobileSettingsHeaderNav title="Edit Profile" />
+      <MobileSettingsHeaderNav title={t("nav.editProfile")} />
 
       <div className="space-y-10 md:space-y-16">
         <div className="flex justify-between items-center bg-black bg-opacity-5 rounded-xl p-3 md:p-5">

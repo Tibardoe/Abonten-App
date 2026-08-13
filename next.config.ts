@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-// import createNextIntlPlugin from "next-intl/plugin";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   // Docker (self-hosted) needs the standalone server bundle (see Dockerfile).
@@ -35,6 +35,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-// const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin();
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

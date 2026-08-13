@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "overview": "Resumen",
+    "editProfile": "Editar perfil",
+    "membership": "Membresía",
+    "security": "Seguridad",
+    "switchAppearance": "Apariencia",
+    "language": "Idioma"
+  },
+  "updateSuccess": "Perfil actualizado correctamente.",
+  "errors": {
+    "notAuthenticated": "Usuario no autenticado",
+    "fetchUserFailed": "Error al obtener el usuario",
+    "updateFailed": "Error al actualizar los datos del usuario"
+  }
+}

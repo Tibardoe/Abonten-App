@@ -2,21 +2,23 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { UserDetailsFormType } from "@/types/userProfileType";
+import { getTranslations } from "next-intl/server";
 
 export async function updateUserDetails(formData: UserDetailsFormType) {
   const supabase = await createClient();
+  const t = await getTranslations("settings");
 
   const { data: user, error: userError } = await supabase.auth.getUser();
 
   if (userError) {
     return {
       status: 500,
-      message: `Error fetching user: ${userError.message} `,
+      message: `${t("errors.fetchUserFailed")}: ${userError.message} `,
     };
   }
 
   if (!user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401, message: t("errors.notAuthenticated") };
   }
 
   const { error } = await supabase
@@ -27,9 +29,9 @@ export async function updateUserDetails(formData: UserDetailsFormType) {
   if (error) {
     return {
       status: 500,
-      message: `Failed to update user details: :${error.message}`,
+      message: `${t("errors.updateFailed")}: ${error.message}`,
     };
   }
 
-  return { status: 500, message: "User details updated successfully" };
+  return { status: 200, message: t("updateSuccess") };
 }

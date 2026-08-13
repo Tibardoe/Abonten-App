@@ -1,0 +1,18 @@
+{
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "yes": "Sí",
+    "continue": "Continuar",
+    "back": "Atrás"
+  },
+  "status": {
+    "deleting": "Eliminando",
+    "loading": "Cargando"
+  },
+  "errors": {
+    "generic": "Algo salió mal.",
+    "genericRetry": "Algo salió mal. Inténtalo de nuevo más tarde."
+  },
+  "warning": "Advertencia"
+}

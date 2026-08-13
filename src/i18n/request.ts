@@ -1,16 +1,25 @@
-import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
-import { routing } from "./routing";
+import { getUserLocale } from "./locale";
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  // Typically corresponds to the `[locale]` segment
-  const requested = await requestLocale;
-  const locale = hasLocale(routing.locales, requested)
-    ? requested
-    : routing.defaultLocale;
+const namespaces = [
+  "common",
+  "navigation",
+  "auth",
+  "settings",
+  "events",
+] as const;
 
-  return {
-    locale,
-    messages: (await import(`../../messages/${locale}.json`)).default,
-  };
+export default getRequestConfig(async () => {
+  const locale = await getUserLocale();
+
+  const messages = Object.fromEntries(
+    await Promise.all(
+      namespaces.map(async (namespace) => [
+        namespace,
+        (await import(`../../messages/${locale}/${namespace}.json`)).default,
+      ]),
+    ),
+  );
+
+  return { locale, messages };
 });

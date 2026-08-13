@@ -1,0 +1,18 @@
+{
+  "buttons": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "yes": "Oui",
+    "continue": "Continuer",
+    "back": "Retour"
+  },
+  "status": {
+    "deleting": "Suppression",
+    "loading": "Chargement"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite.",
+    "genericRetry": "Une erreur s'est produite. Veuillez réessayer plus tard."
+  },
+  "warning": "Attention"
+}

@@ -1,0 +1,18 @@
+{
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "yes": "Yes",
+    "continue": "Continue",
+    "back": "Back"
+  },
+  "status": {
+    "deleting": "Deleting",
+    "loading": "Loading"
+  },
+  "errors": {
+    "generic": "Something went wrong.",
+    "genericRetry": "Something went wrong. Please try again later."
+  },
+  "warning": "Warning"
+}
