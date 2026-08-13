@@ -1,0 +1,13 @@
+{
+  "validation": {
+    "titleRequired": "Ɛho hia sɛ wode din",
+    "titleTooLong": "Din no ware dodo",
+    "descriptionRequired": "Ɛho hia sɛ wokyerɛkyerɛ mu",
+    "invalidUrl": "Fa URL a ɛteɛ (sɛ nhwɛso, www.example.com anaa https://example.com)",
+    "priceNotNumber": "Bo no gyina sɛ ɛyɛ akontaabu",
+    "priceNegative": "Bo no rentumi nyɛ kakraa sen hwee",
+    "capacityNotNumber": "Dodow no gyina sɛ ɛyɛ akontaabu",
+    "capacityNotWhole": "Dodow no gyina sɛ ɛyɛ akontaabu a emu nka",
+    "capacityMustBePositive": "Dodow no gyina sɛ ɛboro 0"
+  }
+}

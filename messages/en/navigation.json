@@ -3,5 +3,11 @@
   "myEvents": "My Events",
   "signOut": "Sign Out",
   "signIn": "Sign In",
-  "signUp": "Sign Up"
+  "signUp": "Sign Up",
+  "home": "Home",
+  "post": "Post",
+  "search": "Search",
+  "transactions": "Transactions",
+  "wallets": "Wallets",
+  "account": "Account"
 }

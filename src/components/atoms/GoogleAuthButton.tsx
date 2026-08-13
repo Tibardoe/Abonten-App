@@ -1,20 +1,17 @@
 import { signInWithGoogle } from "@/services/authService";
 import { generateSlug } from "@/utils/geerateSlug";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import Notification from "./Notification";
 
 type GoogleTextProp = {
-  buttonText: string;
   location: string | null;
   next?: string | null;
 };
 
-export default function GoogleAuthButton({
-  buttonText,
-  location,
-  next,
-}: GoogleTextProp) {
+export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
+  const t = useTranslations("auth");
   const [notification, setNotification] = useState<string | null>(null);
 
   const handleSignin = async () => {
@@ -23,7 +20,7 @@ export default function GoogleAuthButton({
     } catch (error) {
       console.error("Google Sign-In Error:", error);
 
-      setNotification("Failed to sign in with Google. Try again.");
+      setNotification(t("googleSignInFailed"));
     }
   };
 
@@ -36,7 +33,7 @@ export default function GoogleAuthButton({
       >
         <FcGoogle className="text-2xl md:text-4xl" />
 
-        <p className="mx-auto">{buttonText} with Google</p>
+        <p className="mx-auto">{t("continueWithGoogle")}</p>
       </button>
       <Notification notification={notification} />
     </>

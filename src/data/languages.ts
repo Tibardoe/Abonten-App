@@ -6,4 +6,5 @@ export const languages: { name: string; code: Locale }[] = [
   { name: "Español", code: "es" },
   { name: "Deutsch", code: "de" },
   { name: "Português", code: "pt" },
+  { name: "Twi", code: "ak" },
 ];

@@ -14,16 +14,11 @@ import PhoneInput from "../molecules/PhoneInput";
 import { Button } from "../ui/button";
 
 type PopupProp = {
-  buttonText: string;
   callingCode?: string;
   next?: string | null;
 };
 
-export default function AuthModal({
-  buttonText,
-  callingCode,
-  next,
-}: PopupProp) {
+export default function AuthModal({ callingCode, next }: PopupProp) {
   const t = useTranslations("auth");
 
   const location = useGetUserLocation();
@@ -127,11 +122,7 @@ export default function AuthModal({
         />
 
         <div className="space-y-5">
-          <GoogleAuthButton
-            buttonText={buttonText}
-            location={location}
-            next={next}
-          />
+          <GoogleAuthButton location={location} next={next} />
 
           {/* Or section */}
           <div className="flex gap-2 items-center w-full text-iconGray">

@@ -6,6 +6,7 @@ import AutoComplete, {
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ import { useRef, useState } from "react";
 import { FiArrowRightCircle } from "react-icons/fi";
 
 export default function Landing() {
+  const t = useTranslations("navigation");
   const router = useRouter();
   const autoCompleteRef = useRef<AutoCompleteHandle>(null);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -75,13 +77,13 @@ export default function Landing() {
               href="/auth/signin"
               className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
             >
-              Sign Up
+              {t("signUp")}
             </Link>
             <Link
               href="/auth/signin"
               className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
             >
-              Sign In
+              {t("signIn")}
             </Link>
           </div>
         </div>

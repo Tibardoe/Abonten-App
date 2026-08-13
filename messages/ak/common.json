@@ -1,0 +1,18 @@
+{
+  "buttons": {
+    "save": "Kora",
+    "cancel": "Gyae",
+    "yes": "Aane",
+    "continue": "Kɔ so",
+    "back": "San"
+  },
+  "status": {
+    "deleting": "Ɛreyi",
+    "loading": "Ɛrekɔ so..."
+  },
+  "errors": {
+    "generic": "Biribi ankɔ yie.",
+    "genericRetry": "Biribi ankɔ yie. Yɛsrɛ wo sɔ hwɛ bio akyiri yi."
+  },
+  "warning": "Kɔkɔbɔ"
+}

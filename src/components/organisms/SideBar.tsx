@@ -6,6 +6,7 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { isImageFile } from "@/utils/isImageFile";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -29,6 +30,8 @@ export default function SideBar({
   onCloseAnimationEnd,
   onPostSuccess,
 }: menuClickedProp) {
+  const t = useTranslations("navigation");
+
   const [showPostModal, setShowPostModal] = useState(false);
 
   const location = useGetUserLocation();
@@ -139,7 +142,7 @@ export default function SideBar({
                 className="flex gap-1 items-center"
               >
                 <GoHome className="text-xl" />
-                Home
+                {t("home")}
               </Link>
 
               <button
@@ -148,7 +151,7 @@ export default function SideBar({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <IoCreateOutline className="text-xl" />
-                Post
+                {t("post")}
               </button>
 
               <Link
@@ -156,7 +159,7 @@ export default function SideBar({
                 className="flex gap-1 items-center"
               >
                 <MdOutlineManageHistory className="text-xl" />
-                Manage Attendance
+                {t("manageAttendance")}
               </Link>
 
               <Link
@@ -164,7 +167,7 @@ export default function SideBar({
                 className="flex gap-1 items-center"
               >
                 <GiPartyFlags className="text-xl" />
-                My Events
+                {t("myEvents")}
               </Link>
 
               <input
@@ -181,17 +184,17 @@ export default function SideBar({
                 className="flex gap-1 items-center"
               >
                 <HiOutlineLogin className="text-2xl opacity-70" />
-                Sign Out
+                {t("signOut")}
               </button>
             </div>
           ) : (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
               <Link href={`/auth/signin?next=${encodeURIComponent(pathname)}`}>
-                Login
+                {t("signIn")}
               </Link>
 
               <Link href={`/auth/signin?next=${encodeURIComponent(pathname)}`}>
-                Sign up
+                {t("signUp")}
               </Link>
             </div>
           )}

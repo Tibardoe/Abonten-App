@@ -4,6 +4,7 @@ import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +17,8 @@ import MobileNavButton from "../atoms/MobileNavButton";
 import MobileAuthPopup from "./AuthModal";
 
 export default function MobileNavBar() {
+  const t = useTranslations("navigation");
+
   const location = useGetUserLocation();
 
   const pathname = usePathname();
@@ -47,16 +50,20 @@ export default function MobileNavBar() {
             href={`/events/location/${generateSlug(
               location || "default-location",
             )}`}
-            text="Home"
+            text={t("home")}
             Icon={GoHome}
           />
-          <MobileNavButton href="/search" text="Search" Icon={RiSearchLine} />
+          <MobileNavButton
+            href="/search"
+            text={t("search")}
+            Icon={RiSearchLine}
+          />
           <MobileNavButton
             href="/transactions"
-            text="Transactions"
+            text={t("transactions")}
             Icon={MdOutlineReceipt}
           />
-          <MobileNavButton href="/wallet" text="Wallets" Icon={BiWallet} />
+          <MobileNavButton href="/wallet" text={t("wallets")} Icon={BiWallet} />
 
           <MobileNavButton
             href={
@@ -64,7 +71,7 @@ export default function MobileNavBar() {
                 ? `/user/${userData}/posts`
                 : `/auth/signin?next=${encodeURIComponent(pathname)}`
             }
-            text="Account"
+            text={t("account")}
             Icon={VscAccount}
           />
         </div>

@@ -3,5 +3,11 @@
   "myEvents": "Mes événements",
   "signOut": "Déconnexion",
   "signIn": "Connexion",
-  "signUp": "S'inscrire"
+  "signUp": "S'inscrire",
+  "home": "Accueil",
+  "post": "Publier",
+  "search": "Rechercher",
+  "transactions": "Transactions",
+  "wallets": "Portefeuilles",
+  "account": "Compte"
 }

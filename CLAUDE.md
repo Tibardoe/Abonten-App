@@ -103,3 +103,13 @@ After finishing a task, summarize:
 - Why the changes were made.
 - What verification was performed (and what, if anything, couldn't be verified).
 - Any remaining warnings, risks, or open issues — including if the task surfaced one of the known discrepancies in PROJECT.md §7.6/§16 that wasn't fixed because it was out of scope.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

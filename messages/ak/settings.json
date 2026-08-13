@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "overview": "Nsɛm Titiriw",
+    "editProfile": "Sesa Wo Ho Nsɛm",
+    "membership": "Ɛkuo Mu",
+    "security": "Bammɔ",
+    "switchAppearance": "Sesa Sɛnea Ɛteɛ",
+    "language": "Kasa"
+  },
+  "updateSuccess": "Wo ho nsɛm asesa yie.",
+  "errors": {
+    "notAuthenticated": "Wonhyɛɛ wo din.",
+    "fetchUserFailed": "Yɛantumi annya wo nsɛm",
+    "updateFailed": "Sesa no anyɛ yie"
+  }
+}
