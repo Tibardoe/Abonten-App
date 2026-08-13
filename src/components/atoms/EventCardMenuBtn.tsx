@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { useState } from "react";
 import EventCardMenuModal from "../molecules/EventCardMenuModal";
+import MaskIcon from "./MaskIcon";
 
 type EventProp = {
   eventId?: string;
@@ -25,11 +25,10 @@ export default function EventCardMenuBtn({
   return (
     <div className="relative flex-shrink-0">
       <button type="button" onClick={handleShowMenu}>
-        <Image
+        <MaskIcon
           src="/assets/images/menuDots.svg"
-          alt="Event flyer"
-          width={20}
-          height={20}
+          alt="Event options"
+          className="w-5 h-5"
         />
       </button>
       {showMenu && (

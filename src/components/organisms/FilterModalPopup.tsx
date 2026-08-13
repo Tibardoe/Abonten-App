@@ -1,7 +1,7 @@
 "use client";
 
 // import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
-import Image from "next/image";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import React from "react";
 import { useState } from "react";
 import RangeSlider from "react-range-slider-input";
@@ -137,11 +137,10 @@ export default function FilterModalPopup({
               className="hidden md:flex"
               onClick={() => handlePopup(false)}
             >
-              <Image
+              <MaskIcon
                 src="/assets/images/circularCancel.svg"
                 alt="Cancel"
-                width={30}
-                height={30}
+                className="w-[30px] h-[30px] bg-foreground"
               />
             </button>
           </div>

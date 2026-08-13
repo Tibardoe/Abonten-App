@@ -17,7 +17,7 @@ export default function DeleteEventButton({ eventId }: EventProp) {
     <>
       <button
         type="button"
-        className="flex items-center gap-1 p-1 text-red-800"
+        className="flex items-center gap-1 p-1 text-destructive"
         onClick={() => handleShowDeletePopup(true)}
       >
         <MdDeleteOutline className="text-xl" />

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { MdOutlineCancel } from "react-icons/md";
+import MaskIcon from "../atoms/MaskIcon";
 import Notification from "../atoms/Notification";
 import { Button } from "../ui/button";
 import ImageCropper from "./ImageCropper";
@@ -183,11 +184,10 @@ export default function UploadAvatarModal({
           {step === 1 && (
             <div className="flex flex-col items-center gap-5 my-auto">
               <div className="flex flex-col items-center">
-                <Image
+                <MaskIcon
                   src="/assets/images/gallery.svg"
                   alt="Gallery"
-                  width={100}
-                  height={100}
+                  className="w-[100px] h-[100px]"
                 />
                 <p className="text-lg">Upload avatar here</p>
               </div>

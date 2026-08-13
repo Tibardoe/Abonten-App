@@ -67,7 +67,9 @@ export default async function page({
     <div className="flex flex-col items-center">
       <h1 className="font-bold text-2xl">No posts yet</h1>
 
-      <p className="text-sm text-iconGray">Post events for others to attend</p>
+      <p className="text-sm text-muted-foreground">
+        Post events for others to attend
+      </p>
 
       <PostButton />
     </div>

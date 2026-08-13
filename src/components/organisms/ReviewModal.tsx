@@ -1,9 +1,9 @@
 import { postReview } from "@/actions/postReview";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import { supabase } from "@/config/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -129,11 +129,10 @@ export default function ReviewModal({
               className="hidden md:flex"
               onClick={() => handleShowReviewModal(false)}
             >
-              <Image
+              <MaskIcon
                 src="/assets/images/circularCancel.svg"
                 alt="Cancel"
-                width={25}
-                height={25}
+                className="w-[25px] h-[25px] bg-foreground"
               />
             </button>
           </div>

@@ -1,8 +1,8 @@
 import { userSubscription } from "@/actions/getUserSubscription";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import { getTranslations } from "next-intl/server";
-import Image from "next/image";
 import Link from "next/link";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -61,11 +61,9 @@ export default async function page() {
           <div className="flex justify-between items-center">
             <p className="font-medium">Manage plan</p>
             <Link href="/settings/membership">
-              <Image
+              <MaskIcon
                 src="/assets/images/arrowRight.svg"
                 alt="Arrow right"
-                width={30}
-                height={30}
                 className="w-6 h-6 md:w-8 md:h-8"
               />
             </Link>
@@ -80,11 +78,9 @@ export default async function page() {
           <div className="flex justify-between items-center">
             <p className="font-medium md:text-lg">Change plan</p>
             <Link href="/plans">
-              <Image
+              <MaskIcon
                 src="/assets/images/arrowRight.svg"
                 alt="Arrow right"
-                width={30}
-                height={30}
                 className="w-6 h-6 md:w-8 md:h-8"
               />
             </Link>
@@ -95,11 +91,9 @@ export default async function page() {
           <div className="flex justify-between items-center">
             <p className="font-medium md:text-lg">Manage payment method</p>
             <Link href="/wallet">
-              <Image
+              <MaskIcon
                 src="/assets/images/arrowRight.svg"
                 alt="Arrow right"
-                width={30}
-                height={30}
                 className="w-6 h-6 md:w-8 md:h-8"
               />
             </Link>
@@ -110,11 +104,9 @@ export default async function page() {
           <div className="flex justify-between items-center">
             <p className="font-medium md:text-lg">View transaction history</p>
             <Link href="/transactions">
-              <Image
+              <MaskIcon
                 src="/assets/images/arrowRight.svg"
                 alt="Arrow right"
-                width={30}
-                height={30}
                 className="w-6 h-6 md:w-8 md:h-8"
               />
             </Link>

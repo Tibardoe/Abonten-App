@@ -6,11 +6,11 @@ import sendOtpForPhoneUpdate from "@/actions/sendOtpForPhoneUpdate";
 import verifyPhoneUpdateOtp from "@/actions/verifyOtpAndUpdatePhone";
 import useUserLocation from "@/hooks/useUserLocation";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
-import Image from "next/image";
 // import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
+import MaskIcon from "../atoms/MaskIcon";
 import Notification from "../atoms/Notification";
 import PhoneInput from "../molecules/PhoneInput";
 import { Button } from "../ui/button";
@@ -178,12 +178,10 @@ export default function SecurityInputFields() {
               onClick={handleDeleteUser}
               className="text-destructive flex items-center gap-1 font-bold md:text-lg"
             >
-              <Image
+              <MaskIcon
                 src="/assets/images/delete.svg"
                 alt="Delete icon"
-                width={40}
-                height={40}
-                className="w-6 h-6 md:w-8 md:h-8"
+                className="w-6 h-6 md:w-8 md:h-8 bg-destructive"
               />
               Delete account
             </button>

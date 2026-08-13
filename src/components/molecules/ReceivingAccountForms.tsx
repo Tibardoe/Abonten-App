@@ -1,6 +1,7 @@
+// import { zodResolver } from "@hookform/resolvers/zod";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import { networks } from "@/utils/networkProviderData";
 import type { receivingAccountSchema } from "@/utils/receivingAcountSchema";
-// import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 // import { useState } from "react";
 import type { useForm } from "react-hook-form";
@@ -62,7 +63,7 @@ export default function ReceivingAccountForms({
         </div>
       </div>
 
-      <p className="text-xs text-iconGray">
+      <p className="text-xs text-muted-foreground">
         NB: Full name should be the same as your bank or mobile money account
         name
       </p>
@@ -98,11 +99,10 @@ export default function ReceivingAccountForms({
               className="w-full border border-input px-4 py-2 rounded-md flex justify-between items-center text-sm text-foreground"
             >
               {selectedNetwork || "Select Mobile Network"}
-              <Image
+              <MaskIcon
                 src="/assets/images/arrowDown.svg"
                 alt="Dropdown"
-                width={20}
-                height={20}
+                className="w-5 h-5"
               />
             </button>
             {showNetworkDropdown && (

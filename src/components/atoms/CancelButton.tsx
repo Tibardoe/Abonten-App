@@ -44,7 +44,7 @@ export default function CancelButton({ eventId }: CancelProp) {
         onClick={handleCancel}
         disabled={loading}
         type="button"
-        className="flex items-center gap-1 p-1 text-red-800 disabled:opacity-50"
+        className="flex items-center gap-1 p-1 text-destructive disabled:opacity-50"
       >
         <MdOutlineCancel className="text-xl " />
         {loading ? "Cancelling event..." : "Cancel Event"}

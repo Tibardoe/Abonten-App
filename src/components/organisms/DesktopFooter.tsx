@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import MaskIcon from "../atoms/MaskIcon";
 
 export default function DesktopFooter() {
   return (
@@ -8,52 +8,42 @@ export default function DesktopFooter() {
       {/* Socials */}
       <div className="flex gap-3 items-center">
         <Link href="#">
-          <Image
+          <MaskIcon
             className="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
             src="/assets/images/facebook.svg"
             alt="Facebook"
-            width={40}
-            height={40}
           />
         </Link>
 
         <Link href="#">
-          <Image
+          <MaskIcon
             className="w-[20px] h-[20px] lg:w-[30px] lg:h-[30px]"
             src="/assets/images/twitter.svg"
             alt="Twitter"
-            width={30}
-            height={30}
           />
         </Link>
 
         <Link href="#">
-          <Image
+          <MaskIcon
             className="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
             src="/assets/images/instagram.svg"
             alt="Instagram"
-            width={40}
-            height={40}
           />
         </Link>
 
         <Link href="#">
-          <Image
+          <MaskIcon
             className="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
             src="/assets/images/linkedin.svg"
             alt="LinkedIn"
-            width={40}
-            height={40}
           />
         </Link>
 
         <Link href="#">
-          <Image
+          <MaskIcon
             className="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
             src="/assets/images/tiktok.svg"
             alt="TikTok"
-            width={40}
-            height={40}
           />
         </Link>
       </div>
@@ -62,11 +52,10 @@ export default function DesktopFooter() {
 
       <div className="flex justify-between">
         <div className="flex gap-2">
-          <Image
+          <MaskIcon
             src="/assets/images/copyright.svg"
-            alt="TikTok"
-            width={20}
-            height={20}
+            alt="Copyright"
+            className="w-5 h-5"
           />
           <p>2025 Abonten App</p>
         </div>

@@ -20,6 +20,7 @@ import { MdOutlineCancel } from "react-icons/md";
 import { TbWorld } from "react-icons/tb";
 import type { z } from "zod";
 import DateTimeSelectorBtn from "../atoms/DateTimeSelectorBtn";
+import MaskIcon from "../atoms/MaskIcon";
 import Notification from "../atoms/Notification";
 import PostAutoComplete from "../atoms/PostAutoComplete";
 import PostInput from "../atoms/PostInput";
@@ -405,11 +406,10 @@ export default function UploadEventModal({
             </div>
             <div className="flex flex-col items-center gap-5 my-auto">
               <div className="flex flex-col items-center">
-                <Image
+                <MaskIcon
                   src="/assets/images/gallery.svg"
                   alt="Gallery"
-                  width={100}
-                  height={100}
+                  className="w-[100px] h-[100px]"
                 />
                 <p className="text-lg">Upload avatar here</p>
               </div>
@@ -440,11 +440,10 @@ export default function UploadEventModal({
                   type="button"
                   onClick={() => setStep((prevStep) => prevStep - 1)}
                 >
-                  <Image
+                  <MaskIcon
                     src="/assets/images/moveBack.svg"
                     alt="Back"
-                    width={30}
-                    height={30}
+                    className="w-[30px] h-[30px]"
                   />
                 </button>
 
@@ -518,11 +517,10 @@ export default function UploadEventModal({
                   type="button"
                   onClick={() => setStep((prevStep) => prevStep - 1)}
                 >
-                  <Image
+                  <MaskIcon
                     src="/assets/images/moveBack.svg"
                     alt="Back"
-                    width={30}
-                    height={30}
+                    className="w-[30px] h-[30px]"
                   />
                 </button>
 

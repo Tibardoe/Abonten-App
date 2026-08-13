@@ -1,9 +1,9 @@
 "use client";
 
 import { isImageFile } from "@/utils/isImageFile";
-import Image from "next/image";
 import { useRef, useState } from "react";
 import EventUploadMobileModal from "../organisms/EventUploadMobileModal";
+import MaskIcon from "./MaskIcon";
 // import { Button } from "../ui/button";
 
 export default function MobileUploadButton() {
@@ -63,11 +63,10 @@ export default function MobileUploadButton() {
         className="flex gap-1 items-center"
         onClick={() => fileInputRef.current?.click()}
       >
-        <Image
+        <MaskIcon
           src="/assets/images/post.svg"
           alt="Post"
-          width={30}
-          height={30}
+          className="w-[30px] h-[30px]"
         />
         Post
       </button>

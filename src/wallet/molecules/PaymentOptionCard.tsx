@@ -1,4 +1,4 @@
-import Image from "next/image";
+import MaskIcon from "@/components/atoms/MaskIcon";
 
 type PaymentOptionCardProp = {
   imgUrl: string;
@@ -19,7 +19,7 @@ export default function PaymentOptionCard({
       onClick={() => handleStep(optionTitle)}
       className="rounded-lg flex gap-3 border border-border w-full p-3"
     >
-      <Image src={imgUrl} alt="option icon" width={40} height={40} />
+      <MaskIcon src={imgUrl} alt="option icon" className="w-10 h-10" />
 
       <div className="flex flex-col items-start">
         <h2 className="font-bold">{optionTitle}</h2>

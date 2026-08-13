@@ -134,7 +134,7 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
           <GoogleAuthButton location={location} next={next} />
 
           {/* Or section */}
-          <div className="flex gap-2 items-center w-full text-iconGray">
+          <div className="flex gap-2 items-center w-full text-muted-foreground">
             <span className="border border-border w-full" />
             <p>{t("or")}</p>
             <span className="border border-border w-full" />

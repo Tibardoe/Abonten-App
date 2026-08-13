@@ -4,9 +4,9 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import MaskIcon from "../atoms/MaskIcon";
 import AutoComplete from "../molecules/AutoComplete";
 
 type ChangeLocationModalProp = {
@@ -70,11 +70,10 @@ export default function ChangeLocationModal({
             type="button"
             onClick={() => handleShowChangeLocationModal(false)}
           >
-            <Image
+            <MaskIcon
               src="/assets/images/circularCancel.svg"
               alt="Cancel"
-              width={30}
-              height={30}
+              className="w-[30px] h-[30px] bg-foreground"
             />
           </button>
         </div>
@@ -106,11 +105,10 @@ export default function ChangeLocationModal({
               className="flex items-center gap-2 font-bold"
               onClick={handleOpenMap}
             >
-              <Image
+              <MaskIcon
                 src="/assets/images/onMap.svg"
                 alt="Choose on map"
-                width={30}
-                height={30}
+                className="w-[30px] h-[30px]"
               />
               Choose on map
             </button>

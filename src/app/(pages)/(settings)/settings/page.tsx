@@ -1,8 +1,8 @@
 import { userSubscription } from "@/actions/getUserSubscription";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import SettingsDesktopSideBar from "@/settings/organisms/SettingsDesktopSidebar";
 
-import Image from "next/image";
 import Link from "next/link";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -61,11 +61,10 @@ export default async function page() {
             <div className="flex justify-between items-center">
               <p className="font-medium">Manage plan</p>
               <Link href="/settings/membership">
-                <Image
+                <MaskIcon
                   src="/assets/images/arrowRight.svg"
                   alt="Arrow right"
-                  width={30}
-                  height={30}
+                  className="w-[30px] h-[30px]"
                 />
               </Link>
             </div>
@@ -79,11 +78,10 @@ export default async function page() {
             <div className="flex justify-between items-center">
               <p className="font-medium text-lg">Change plan</p>
               <Link href="/plans">
-                <Image
+                <MaskIcon
                   src="/assets/images/arrowRight.svg"
                   alt="Arrow right"
-                  width={30}
-                  height={30}
+                  className="w-[30px] h-[30px]"
                 />
               </Link>
             </div>
@@ -93,11 +91,10 @@ export default async function page() {
             <div className="flex justify-between items-center">
               <p className="font-medium text-lg">Manage payment method</p>
               <Link href="/wallet">
-                <Image
+                <MaskIcon
                   src="/assets/images/arrowRight.svg"
                   alt="Arrow right"
-                  width={30}
-                  height={30}
+                  className="w-[30px] h-[30px]"
                 />
               </Link>
             </div>

@@ -30,7 +30,7 @@ export default function PhoneInput({
         <span>{selectedCountry}</span>
 
         <button type="button" onClick={handleRotate}>
-          <IoIosArrowDown className="text-iconGray text-xl" />
+          <IoIosArrowDown className="text-muted-foreground text-xl" />
         </button>
       </div>
 

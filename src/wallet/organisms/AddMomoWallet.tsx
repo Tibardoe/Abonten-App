@@ -1,3 +1,4 @@
+import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
 import { networks } from "@/utils/networkProviderData";
 import Image from "next/image";
@@ -29,11 +30,10 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
         <h1 className="font-bold text-lg">Add Mobile Money Wallet</h1>
 
         <button type="button" onClick={onclick}>
-          <Image
+          <MaskIcon
             src="/assets/images/circularCancel.svg"
             alt="Close"
-            width={25}
-            height={25}
+            className="w-[25px] h-[25px] bg-foreground"
           />
         </button>
       </div>
@@ -42,12 +42,10 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
       <div className="flex flex-col gap-2 md:hidden pb-10">
         <div className="flex items-center w-full">
           <button type="button" onClick={onclick}>
-            <Image
+            <MaskIcon
               src="/assets/images/arrowLeft.svg"
               alt="Close"
-              width={30}
-              height={30}
-              className="self-start"
+              className="self-start w-[30px] h-[30px]"
             />
           </button>
           <h1 className="font-bold text-xl m-auto">Add Mobile Money Wallet</h1>
@@ -84,11 +82,10 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
             className="border border-input rounded-md px-4 py-2 bg-transparent flex justify-between items-center"
           >
             <p>Select mobile network</p>
-            <Image
+            <MaskIcon
               src="/assets/images/arrowDown.svg"
               alt="Dropdown icon"
-              width={30}
-              height={30}
+              className="w-[30px] h-[30px]"
             />
           </button>
 

@@ -64,7 +64,7 @@ export default async function page() {
     <div className="flex flex-col items-center">
       <h1 className="font-medium text-2xl">No Favorites added yet</h1>
 
-      <p className="text-iconGray text-sm">
+      <p className="text-muted-foreground text-sm">
         Explore and save all your favorite events in one place
       </p>
 

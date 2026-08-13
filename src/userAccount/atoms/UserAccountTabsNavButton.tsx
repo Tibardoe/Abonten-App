@@ -1,7 +1,7 @@
 "use client";
 
+import MaskIcon from "@/components/atoms/MaskIcon";
 import { cn } from "@/components/lib/utils";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -30,7 +30,7 @@ export default function UserAccountTabsNavButton({
         isActive ? "border-t-2 border-primary font-bold" : "border-transparent",
       )}
     >
-      <Image src={imgUrl} alt="text" height={30} width={30} />
+      <MaskIcon src={imgUrl} alt={text} className="w-[30px] h-[30px]" />
       <p className="md:text-md lg:text-lg">{text}</p>
     </Link>
   );

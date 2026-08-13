@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import { useState } from "react";
 import PaymentOptionCard from "../molecules/PaymentOptionCard";
 import AddBankCard from "./AddBankCard";
@@ -40,11 +40,10 @@ export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
             <h1 className="font-bold text-lg">Add wallet</h1>
 
             <button type="button" onClick={onclick}>
-              <Image
+              <MaskIcon
                 src="/assets/images/circularCancel.svg"
                 alt="Close"
-                width={25}
-                height={25}
+                className="w-[25px] h-[25px] bg-foreground"
               />
             </button>
           </div>

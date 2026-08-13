@@ -1,11 +1,11 @@
 "use client";
 
 import uploadHighlight from "@/actions/uploadHighlight";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import Notification from "@/components/atoms/Notification";
 import HighlightModal from "@/components/organisms/HighlightModal";
 import type { MediaItem } from "@/types/mediaItemType";
 import { useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
 import { useState } from "react";
 
 type HighlightProps = {
@@ -69,11 +69,10 @@ export default function Higlight({ username }: HighlightProps) {
           handleShowHighlightModal(true);
         }}
       >
-        <Image
+        <MaskIcon
           src="/assets/images/highlight.svg"
           alt="Highlight button"
-          width={80}
-          height={80}
+          className="w-20 h-20"
         />
       </button>
 

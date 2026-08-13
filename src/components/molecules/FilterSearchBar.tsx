@@ -20,7 +20,7 @@ export default function FilterSearchBar() {
     <div className="w-full md:w-fit bg-muted rounded-lg flex justify-between p-3">
       <div className="flex items-center gap-2">
         <Link href={`/search/${generateSlug(searchText) ?? ""}`}>
-          <IoSearch className="text-2xl text-iconGray" />
+          <IoSearch className="text-2xl text-muted-foreground" />
         </Link>
 
         <input
@@ -33,7 +33,7 @@ export default function FilterSearchBar() {
       </div>
 
       <button type="button" onClick={() => handleShowPopup(true)}>
-        <VscSettings className="text-3xl md:text-4xl text-iconGray" />
+        <VscSettings className="text-3xl md:text-4xl text-muted-foreground" />
       </button>
 
       {showPopup && <FilterModalPopup handlePopup={handleShowPopup} />}

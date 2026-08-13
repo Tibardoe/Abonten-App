@@ -87,7 +87,7 @@ export default function DateTimePicker({
         <PopoverTrigger className="flex w-full justify-between items-center md:px-0 md:text-sm">
           <p>Click to set date & time</p>
 
-          <MdOutlineDateRange className="text-2xl text-iconGray" />
+          <MdOutlineDateRange className="text-2xl text-muted-foreground" />
         </PopoverTrigger>
 
         <PopoverContent className="space-y-4">
