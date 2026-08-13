@@ -7,6 +7,8 @@ import {
 } from "@/utils/generateTicketCode";
 import insertPromoCodeUsage from "./InsertPromoCodeUsage";
 import insertUserAttendance from "./insertUserAttendance";
+import releaseTicketQuantity from "./releaseTicketQuantity";
+import reserveTicketQuantity from "./reserveTicketQuantity";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
 type TicketInput = {
@@ -85,6 +87,17 @@ export default async function generateTicket(
       };
     }
 
+    const reservationResponse = await reserveTicketQuantity(
+      ticketType.id,
+      input.quantity,
+    );
+
+    if (reservationResponse.status !== 200) {
+      return reservationResponse;
+    }
+
+    let ticketsCreated = 0;
+
     for (let i = 0; i < input.quantity; i++) {
       const ticketCode = generateTicketCode();
 
@@ -98,6 +111,11 @@ export default async function generateTicket(
       if (uploadResponse.error) {
         console.log(
           `Error saving QR code to cloudinary:${uploadResponse.error}`,
+        );
+
+        await releaseTicketQuantity(
+          ticketType.id,
+          input.quantity - ticketsCreated,
         );
 
         return { status: 500, message: "Something went wrong!" };
@@ -126,6 +144,11 @@ export default async function generateTicket(
       if (insertTicketError) {
         console.log(`Error inserting ticket: ${insertTicketError.message}`);
 
+        await releaseTicketQuantity(
+          ticketType.id,
+          input.quantity - ticketsCreated,
+        );
+
         return {
           status: 500,
           message: "Something went wrong!",
@@ -133,11 +156,18 @@ export default async function generateTicket(
       }
 
       if (!insertedTicket) {
+        await releaseTicketQuantity(
+          ticketType.id,
+          input.quantity - ticketsCreated,
+        );
+
         return {
           status: 500,
           message: "Ticket insertion failed — no ID returned",
         };
       }
+
+      ticketsCreated++;
     }
 
     if (promoCode) {

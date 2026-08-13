@@ -21,6 +21,7 @@ type EventSlugPageProp = {
   checkoutId?: string;
   checkoutType?: "ticket" | "subscription";
   requireRegistration?: boolean;
+  soldOut?: boolean;
 };
 
 export default function CheckoutBtn({
@@ -34,6 +35,7 @@ export default function CheckoutBtn({
   checkoutId,
   checkoutType,
   requireRegistration,
+  soldOut,
 }: EventSlugPageProp) {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
@@ -129,7 +131,14 @@ export default function CheckoutBtn({
 
   switch (btnText) {
     case "Buy Ticket":
-      actionButton = (
+      actionButton = soldOut ? (
+        <Button
+          className="font-bold rounded-lg w-full p-6 text-lg bg-gray-400 cursor-not-allowed"
+          disabled
+        >
+          Sold Out
+        </Button>
+      ) : (
         <>
           <Button
             className="font-bold rounded-lg w-full p-6 text-lg bg-mint"
@@ -152,15 +161,27 @@ export default function CheckoutBtn({
       break;
 
     case "Register":
-      actionButton = requireRegistration && (
-        <Button
-          className="font-bold rounded-md w-full p-6 text-lg bg-mint"
-          onClick={() => handleRegistration([{ type: "Free", quantity: 1 }])}
-          disabled={loading}
-        >
-          {loading ? "Registering..." : btnText}
-        </Button>
-      );
+      actionButton =
+        requireRegistration && soldOut ? (
+          <Button
+            className="font-bold rounded-md w-full p-6 text-lg bg-gray-400 cursor-not-allowed"
+            disabled
+          >
+            Sold Out
+          </Button>
+        ) : (
+          requireRegistration && (
+            <Button
+              className="font-bold rounded-md w-full p-6 text-lg bg-mint"
+              onClick={() =>
+                handleRegistration([{ type: "Free", quantity: 1 }])
+              }
+              disabled={loading}
+            >
+              {loading ? "Registering..." : btnText}
+            </Button>
+          )
+        );
       break;
 
     case "Make Payment":

@@ -78,6 +78,8 @@ export default function CheckoutModal({
     return acc + price * qty;
   }, 0);
 
+  const hasSelectedTickets = Object.values(quantities).some((qty) => qty > 0);
+
   const fee = subTotal > 0 ? subTotal * 0.02 : 0;
 
   const total = subTotal + fee;
@@ -242,6 +244,7 @@ export default function CheckoutModal({
                       <button
                         type="button"
                         disabled={
+                          ticket.quantity !== null &&
                           (quantities[ticket.id] || 0) >= (ticket.quantity ?? 0)
                         }
                         onClick={() =>
@@ -275,7 +278,17 @@ export default function CheckoutModal({
                         </p>
                       </div>
 
-                      <p>Quantity left: {ticket.quantity}</p>
+                      <p
+                        className={
+                          ticket.quantity === 0 ? "text-red-600 font-bold" : ""
+                        }
+                      >
+                        {ticket.quantity === null
+                          ? "Unlimited"
+                          : ticket.quantity === 0
+                            ? "Sold out"
+                            : `Quantity left: ${ticket.quantity}`}
+                      </p>
                     </div>
 
                     {ticket.type !== "SINGLE TICKET" &&
@@ -334,8 +347,8 @@ export default function CheckoutModal({
           <button
             type="button"
             onClick={handleProceed}
-            disabled={isProceeding}
-            className="rounded-md p-4 font-bold text-white bg-mint text-center mt-5"
+            disabled={isProceeding || !hasSelectedTickets}
+            className="rounded-md p-4 font-bold text-white bg-mint text-center mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProceeding ? "Loading..." : "Proceed to Payment"}
           </button>

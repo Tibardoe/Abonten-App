@@ -47,6 +47,7 @@ export default async function page({
     type,
     price,
     currency,
+    quantity,
     available_from,
     available_until
   ),
@@ -71,6 +72,20 @@ export default async function page({
     .from("attendance")
     .select("*", { count: "exact", head: true })
     .eq("event_id", event.id);
+
+  const capacityReached =
+    !!event.capacity &&
+    event.capacity > 0 &&
+    (attendanceCount ?? 0) >= event.capacity;
+
+  const allTicketTypesDepleted =
+    event.ticket_type.length > 0 &&
+    event.ticket_type.every(
+      (t: { quantity: number | null }) =>
+        t.quantity !== null && t.quantity <= 0,
+    );
+
+  const soldOut = capacityReached || allTicketTypesDepleted;
 
   const { data: minTicket } = await supabase
     .from("ticket_type")
@@ -143,6 +158,11 @@ export default async function page({
             <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
               🎉 {attendanceCount} Attendees
             </span>
+            {soldOut && (
+              <span className="px-3 py-1.5 md:px-4 md:py-2 bg-red-600 rounded-full text-white font-bold text-sm md:text-base">
+                Sold Out
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -288,6 +308,7 @@ export default async function page({
                 eventTitle={event.title}
                 minTicket={minTicket}
                 requireRegistration={event.require_registration}
+                soldOut={soldOut}
               />
             </div>
           </div>

@@ -138,10 +138,13 @@ export default async function validateCheckout({
           };
         }
 
-        if (quantity > ticketType.quantity) {
+        if (ticketType.quantity !== null && quantity > ticketType.quantity) {
           return {
             status: 300,
-            message: "Your ticket puchase quantity exceed ticket quantity",
+            message:
+              ticketType.quantity === 0
+                ? "This ticket type is sold out."
+                : `Only ${ticketType.quantity} ticket(s) left for this ticket type.`,
           };
         }
 

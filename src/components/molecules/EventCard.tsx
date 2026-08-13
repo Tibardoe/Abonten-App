@@ -19,6 +19,7 @@ export default function EventCard({
   occurrences,
   min_price,
   attendanceCount,
+  attendance_count,
   currency,
   capacity,
   id,
@@ -29,17 +30,23 @@ export default function EventCard({
   const dateTime = getFormattedEventDate(starts_at, ends_at, occurrences);
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
+  const attendees = attendanceCount ?? attendance_count ?? 0;
+  const soldOut = !!capacity && capacity > 0 && attendees >= capacity;
 
   return (
     <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-white border border-gray-100 hover:border-gray-200">
       {/* Status Overlays */}
-      {(status === "canceled" || overlayMessage) && (
+      {(status === "canceled" || soldOut || overlayMessage) && (
         <div
-          className={`absolute inset-0 z-10 flex items-center justify-center 
-          ${status === "canceled" ? "bg-red-900/80" : "bg-black/70"} 
+          className={`absolute inset-0 z-10 flex items-center justify-center
+          ${status === "canceled" ? "bg-red-900/80" : "bg-black/70"}
           backdrop-blur-sm text-mint font-bold text-lg md:text-xl p-4 text-center`}
         >
-          {status === "canceled" ? "Event Canceled" : overlayMessage}
+          {status === "canceled"
+            ? "Event Canceled"
+            : soldOut
+              ? "Sold Out"
+              : overlayMessage}
         </div>
       )}
 
@@ -115,7 +122,7 @@ export default function EventCard({
                 {capacity && capacity > 0 ? `${capacity} spots` : "Unlimited"}
               </span>
               <span className="px-2 py-1 bg-gray-100 rounded-full">
-                {attendanceCount} attending
+                {attendees} attending
               </span>
             </div>
 

@@ -3,7 +3,7 @@ import type { Occurrence } from "./occurrenceType";
 export type Ticket = {
   category?: string;
   price: number;
-  quantity?: number;
+  quantity?: number | null;
   availableFrom?: Date;
   availableUntil?: Date;
   currency?: string;
@@ -15,7 +15,7 @@ export type Ticket = {
 export type TicketType = {
   id: string;
   price: number;
-  quantity?: number;
+  quantity?: number | null;
   currency?: string;
   type: string;
   available_from?: Date;

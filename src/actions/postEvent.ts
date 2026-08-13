@@ -197,7 +197,7 @@ export async function postEvent(formData: PostsType) {
         type: "FREE",
         price: 0,
         currency,
-        quantity: 0,
+        quantity: capacity ?? null,
         available_from: null,
         available_until: null,
       });

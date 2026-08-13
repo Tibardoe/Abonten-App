@@ -18,6 +18,7 @@ type EventDateSelectorProps = {
   } | null;
   time: string;
   requireRegistration?: boolean;
+  soldOut?: boolean;
 };
 
 export default function EventDateSelector({
@@ -26,6 +27,7 @@ export default function EventDateSelector({
   minTicket,
   eventTitle,
   requireRegistration,
+  soldOut,
 }: EventDateSelectorProps) {
   const now = new Date();
 
@@ -97,6 +99,7 @@ export default function EventDateSelector({
           date={selectedDateTime.date}
           time={selectedDateTime.time}
           requireRegistration={requireRegistration}
+          soldOut={soldOut}
         />
       )}
     </div>
