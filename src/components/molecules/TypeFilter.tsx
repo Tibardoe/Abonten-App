@@ -44,10 +44,10 @@ export default function TypeFilter({
                 >
                   {typeItem}
 
-                  <span className="w-[20px] h-[20px] rounded grid place-items-center border border-black">
+                  <span className="w-[20px] h-[20px] rounded grid place-items-center border border-border">
                     {selectedTypes.includes(typeItem) && (
-                      <span className="w-full h-full bg-black rounded-sm relative">
-                        <span className="w-[7px] h-[12px] border-r-2 border-b-[3px] border-white rotate-45 absolute top-[10%] left-1/2 -translate-x-1/2" />
+                      <span className="w-full h-full bg-primary rounded-sm relative">
+                        <span className="w-[7px] h-[12px] border-r-2 border-b-[3px] border-primary-foreground rotate-45 absolute top-[10%] left-1/2 -translate-x-1/2" />
                       </span>
                     )}
                   </span>

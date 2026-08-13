@@ -110,7 +110,7 @@ export default function UploadAvatarModal({
 
   return (
     <>
-      <div className="w-full h-dvh fixed left-0 top-0 bg-black bg-opacity-50 justify-center items-center z-30 hidden md:flex">
+      <div className="w-full h-dvh fixed left-0 top-0 bg-overlay/50 justify-center items-center z-30 hidden md:flex">
         {/* cancel button */}
         <button
           type="button"
@@ -122,11 +122,11 @@ export default function UploadAvatarModal({
 
         {/* Inner popup */}
 
-        <div className="flex flex-col items-center justify-start bg-white w-[45%] h-[85%] rounded-2xl py-3 overflow-y-auto">
+        <div className="flex flex-col items-center justify-start bg-card text-card-foreground w-[45%] h-[85%] rounded-2xl py-3 overflow-y-auto">
           <div className="w-full shrink-0">
             {step === 1 && (
               <div>
-                <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
+                <h1 className="text-muted-foreground font-bold text-center pb-1 text-lg">
                   Upload Avatar
                 </h1>
               </div>
@@ -143,7 +143,7 @@ export default function UploadAvatarModal({
                   </button>
                 )}
 
-                <h1 className="text-gray-500 font-bold ml-auto pb-1 text-lg">
+                <h1 className="text-muted-foreground font-bold ml-auto pb-1 text-lg">
                   Crop
                 </h1>
               </div>
@@ -160,7 +160,7 @@ export default function UploadAvatarModal({
                   </button>
                 )}
 
-                <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
+                <h1 className="text-muted-foreground font-bold text-center pb-1 text-lg">
                   Upload Avatar
                 </h1>
 
@@ -177,7 +177,7 @@ export default function UploadAvatarModal({
               </div>
             )}
 
-            <hr />
+            <hr className="border-border" />
           </div>
 
           {step === 1 && (

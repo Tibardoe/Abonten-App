@@ -254,44 +254,46 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
     const { eventTitle, ticketSummary, totalAmount } = data;
 
     return (
-      <div className="border rounded-2xl shadow-lg p-6 space-y-4 bg-white">
+      <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
         <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-lg text-gray-800">Order Summary</h2>
-          <span className="text-sm text-gray-500">
+          <h2 className="font-semibold text-lg text-card-foreground">
+            Order Summary
+          </h2>
+          <span className="text-sm text-muted-foreground">
             #{ticketSummary.length} Tickets
           </span>
         </div>
 
-        <div className="flex justify-between text-sm border-b pb-2">
-          <p className="text-gray-600 font-medium">Event</p>
-          <p className="text-gray-900 font-semibold">{eventTitle}</p>
+        <div className="flex justify-between text-sm border-b border-border pb-2">
+          <p className="text-muted-foreground font-medium">Event</p>
+          <p className="text-card-foreground font-semibold">{eventTitle}</p>
         </div>
 
         {ticketSummary.map((ticket) => (
           <div
             key={ticket.ticketCheckoutId}
-            className="border rounded-md px-4 py-3 bg-gray-50 shadow-sm"
+            className="border border-border rounded-md px-4 py-3 bg-muted shadow-sm"
           >
-            <div className="flex justify-between text-sm font-semibold text-gray-700">
+            <div className="flex justify-between text-sm font-semibold text-foreground">
               <p>Type: {ticket.type}</p>
               <p>Qty: {ticket.quantity}</p>
             </div>
 
-            <div className="flex justify-between text-xs mt-1 text-gray-500">
+            <div className="flex justify-between text-xs mt-1 text-muted-foreground">
               <p>Actual Price:</p>
               <p>
                 {ticket.currency} {ticket.unitPrice}
               </p>
             </div>
 
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <p>Discount:</p>
               <p>
                 {ticket.currency} {ticket.discount}
               </p>
             </div>
 
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-muted-foreground">
               <p>Subtotal:</p>
               <p>
                 {ticket.currency} {ticket.amount}
@@ -305,13 +307,13 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
                 className="mt-2 hover:opacity-70 transition-opacity disabled:opacity-40"
                 onClick={() => mutate(ticket.ticketCheckoutId)}
               >
-                <RiDeleteBin6Line className="text-red-500" />
+                <RiDeleteBin6Line className="text-destructive" />
               </button>
             </div>
           </div>
         ))}
 
-        <div className="flex justify-between pt-2 border-t font-bold text-gray-800">
+        <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
           <p>Total Amount</p>
           <p>
             {ticketSummary[0]?.currency ?? ""} {totalAmount}
@@ -326,19 +328,19 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
     const { planName, totalAmount } = data;
 
     return (
-      <div className="border rounded-2xl shadow-lg p-6 space-y-4 bg-white">
+      <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
         <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-lg text-gray-800">
+          <h2 className="font-semibold text-lg text-card-foreground">
             Subscription Summary
           </h2>
         </div>
 
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-muted-foreground">
           <p className="font-medium">Plan:</p>
-          <p className="text-gray-900 font-semibold">{planName}</p>
+          <p className="text-card-foreground font-semibold">{planName}</p>
         </div>
 
-        <div className="flex justify-between pt-2 border-t font-bold text-gray-800">
+        <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">
           <p>Total Amount</p>
           <p>₵{totalAmount}</p>
         </div>

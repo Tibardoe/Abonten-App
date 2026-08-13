@@ -36,7 +36,7 @@ export default async function page() {
             {events.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200"
+                className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border"
               >
                 <div className="relative h-48 w-full">
                   <Image
@@ -58,21 +58,21 @@ export default async function page() {
                       {event.event.title}
                     </Link>
 
-                    <p className="text-sm text-gray-600 mb-2 font-bold">
+                    <p className="text-sm text-muted-foreground mb-2 font-bold">
                       Ticket Type:{" "}
-                      <span className="font-mono text-gray-800">
+                      <span className="font-mono text-foreground">
                         {event.ticket_type.type}
                       </span>
                     </p>
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-muted-foreground mb-2">
                     Ticket Code:{" "}
-                    <span className="font-mono text-gray-800">
+                    <span className="font-mono text-foreground">
                       {event.ticket_code}
                     </span>
                   </p>
-                  <p className="text-sm text-gray-500 mb-4">
+                  <p className="text-sm text-muted-foreground mb-4">
                     Status:{" "}
                     {event.status === "active" ? (
                       <span className="font-semibold text-green-600">
@@ -100,7 +100,7 @@ export default async function page() {
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500">
+          <p className="text-center text-muted-foreground">
             No event ticket purchased!
           </p>
         )}

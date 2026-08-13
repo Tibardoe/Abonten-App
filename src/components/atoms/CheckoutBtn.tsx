@@ -133,7 +133,7 @@ export default function CheckoutBtn({
     case "Buy Ticket":
       actionButton = soldOut ? (
         <Button
-          className="font-bold rounded-lg w-full p-6 text-lg bg-gray-400 cursor-not-allowed"
+          className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
           disabled
         >
           Sold Out
@@ -141,7 +141,7 @@ export default function CheckoutBtn({
       ) : (
         <>
           <Button
-            className="font-bold rounded-lg w-full p-6 text-lg bg-mint"
+            className="font-bold rounded-lg w-full p-6 text-lg"
             onClick={() => handleCheckoutModal(true)}
           >
             {btnText}
@@ -164,7 +164,7 @@ export default function CheckoutBtn({
       actionButton =
         requireRegistration && soldOut ? (
           <Button
-            className="font-bold rounded-md w-full p-6 text-lg bg-gray-400 cursor-not-allowed"
+            className="font-bold rounded-md w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
             disabled
           >
             Sold Out
@@ -172,7 +172,7 @@ export default function CheckoutBtn({
         ) : (
           requireRegistration && (
             <Button
-              className="font-bold rounded-md w-full p-6 text-lg bg-mint"
+              className="font-bold rounded-md w-full p-6 text-lg"
               onClick={() =>
                 handleRegistration([{ type: "Free", quantity: 1 }])
               }

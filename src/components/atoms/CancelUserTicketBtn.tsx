@@ -56,7 +56,7 @@ export default function CancelUserTicketBtn({
     <>
       <button
         type="button"
-        className="bg-none text-red-500 border border-black text-sm px-4 py-2 rounded-lg"
+        className="bg-none text-destructive border border-border text-sm px-4 py-2 rounded-lg"
         disabled={loading}
         onClick={handleCancelTicket}
       >

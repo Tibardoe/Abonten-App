@@ -17,7 +17,7 @@ export default function PaymentOptionCard({
     <button
       type="button"
       onClick={() => handleStep(optionTitle)}
-      className="rounded-lg flex gap-3 border border-black border-opacity-40 w-full p-3"
+      className="rounded-lg flex gap-3 border border-border w-full p-3"
     >
       <Image src={imgUrl} alt="option icon" width={40} height={40} />
 

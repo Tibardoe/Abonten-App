@@ -7,6 +7,16 @@
     "switchAppearance": "Sesa Sɛnea Ɛteɛ",
     "language": "Kasa"
   },
+  "appearance": {
+    "title": "Sɛnea Ɛteɛ",
+    "description": "Paw sɛnea Abonten Hub bɛyɛ wɔ wo mfiri yi so.",
+    "light": "Hann",
+    "dark": "Sum",
+    "system": "Mfiri No Nhyehyɛe",
+    "lightDescription": "Ahosuo a ɛhyerɛn ma mmeae a hann wɔ mu.",
+    "darkDescription": "Ahosuo a esum, ɛyɛ mmerɛw ma w'ani anadwo.",
+    "systemDescription": "Di wo mfiri nhyehyɛe akyi."
+  },
   "updateSuccess": "Wo ho nsɛm asesa yie.",
   "errors": {
     "notAuthenticated": "Wonhyɛɛ wo din.",

@@ -60,7 +60,7 @@ export default function Language({ currentLocale }: LanguageProps) {
                 value={code}
                 checked={selectedLocale === code}
                 readOnly
-                className="accent-green-500 w-5 h-5"
+                className="accent-primary w-5 h-5"
               />
             </button>
           </li>

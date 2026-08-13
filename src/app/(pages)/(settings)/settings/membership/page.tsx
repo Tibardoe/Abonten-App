@@ -115,7 +115,7 @@ export default async function page() {
 
         <button
           type="button"
-          className="w-full text-red-700 font-bold p-3 border border-black rounded-md"
+          className="w-full text-destructive font-bold p-3 border border-border rounded-md"
         >
           Cancel Membership
         </button>

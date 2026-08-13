@@ -123,14 +123,10 @@ export default function ImageCropper({
     <div className="flex flex-col flex-1 min-h-0 w-full md:p-4">
       {!!imagePreview && (
         <>
-          <div className="flex justify-between items-center px-5 pb-3 text-white shrink-0">
-            <Button onClick={handleCancel} className="bg-mint">
-              Cancel
-            </Button>
+          <div className="flex justify-between items-center px-5 pb-3 text-foreground shrink-0">
+            <Button onClick={handleCancel}>Cancel</Button>
 
-            <Button onClick={handleCropSave} className="bg-mint">
-              Done
-            </Button>
+            <Button onClick={handleCropSave}>Done</Button>
 
             {/* <div className="flex justify-between items-center mb-2 ml-7">
               <button
@@ -184,7 +180,7 @@ export default function ImageCropper({
             <div className="pt-4 space-y-4 w-[95%] mx-auto shrink-0">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="block text-sm font-medium text-gray-700 mb-1">
+                  <span className="block text-sm font-medium text-muted-foreground mb-1">
                     Zoom: {scale.toFixed(1)}x
                   </span>
                   <Slider
@@ -197,7 +193,7 @@ export default function ImageCropper({
                   />
                 </div>
                 <div>
-                  <span className="block text-sm font-medium text-gray-700 mb-1">
+                  <span className="block text-sm font-medium text-muted-foreground mb-1">
                     Rotation: {rotate}°
                   </span>
                   <Slider
@@ -212,7 +208,7 @@ export default function ImageCropper({
               </div>
 
               <div className="space-y-2">
-                <span className="block text-sm font-medium text-gray-700">
+                <span className="block text-sm font-medium text-muted-foreground">
                   Aspect Ratio
                 </span>
                 <div className="flex flex-wrap gap-2">

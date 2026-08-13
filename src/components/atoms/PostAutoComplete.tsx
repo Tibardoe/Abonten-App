@@ -627,7 +627,7 @@ export default function PostAutoComplete({
   // Render warning inside JSX — NOT as a return block that bypasses hooks
   if (!googleMapsApiKey) {
     return (
-      <div className="text-red-500">
+      <div className="text-destructive">
         Google Maps API key is missing. Please add it to your environment
         variables.
       </div>
@@ -635,29 +635,29 @@ export default function PostAutoComplete({
   }
 
   if (!isLoaded)
-    return <div className="text-gray-500">Loading Google Maps...</div>;
+    return <div className="text-muted-foreground">Loading Google Maps...</div>;
 
   return (
     <div
       ref={containerRef}
-      className="bg-white rounded-lg flex justify-between items-center py-3 md:py-2 gap-2 relative w-full"
+      className="bg-muted rounded-lg flex justify-between items-center py-3 md:py-2 gap-2 relative w-full"
     >
       <input
         type="text"
         onChange={handleInputChange}
         value={inputValue}
         placeholder={placeholderText.text}
-        className="text-black outline-none w-full bg-transparent"
+        className="text-foreground outline-none w-full bg-transparent"
       />
 
       <IoLocationOutline className="text-2xl" />
 
       {searchResults.length > 0 && (
-        <ul className="absolute top-full left-0 w-full max-h-60 bg-white text-black text-lg border rounded shadow-md mt-1 z-10 overflow-y-auto">
+        <ul className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground text-lg border border-border rounded shadow-md mt-1 z-10 overflow-y-auto">
           <button
             type="button"
             onClick={handleSelectCurrentLocation}
-            className="p-2 w-full text-start font-semibold hover:bg-gray-100 border-b"
+            className="p-2 w-full text-start font-semibold hover:bg-accent border-b border-border"
           >
             📍 Use my current location
           </button>
@@ -673,12 +673,12 @@ export default function PostAutoComplete({
                   result.place_id,
                 )
               }
-              className="p-2 w-full text-start hover:bg-gray-100 cursor-pointer border-b border-black border-opacity-30"
+              className="p-2 w-full text-start hover:bg-accent cursor-pointer border-b border-border"
             >
-              <div className="font-semibold text-sm text-black">
+              <div className="font-semibold text-sm text-popover-foreground">
                 {result.structured_formatting.main_text}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 {result.structured_formatting.secondary_text}
               </div>
             </button>

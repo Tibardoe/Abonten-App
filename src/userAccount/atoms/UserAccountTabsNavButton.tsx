@@ -27,7 +27,7 @@ export default function UserAccountTabsNavButton({
       type="button"
       className={cn(
         "flex gap-3 items-center p-3",
-        isActive ? "border-t-2 border-black font-bold" : "border-transparent",
+        isActive ? "border-t-2 border-primary font-bold" : "border-transparent",
       )}
     >
       <Image src={imgUrl} alt="text" height={30} width={30} />

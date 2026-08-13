@@ -84,7 +84,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
         </div>
 
         {isCurrentUser && (
-          <Button className="bg-mint hover:bg-black hover:bg-opacity-50 font-medium">
+          <Button className="hover:bg-primary/90 font-medium">
             <Link href="/settings/edit-profile">Edit Profile</Link>
           </Button>
         )}
@@ -114,7 +114,7 @@ export default async function ProfileDetails({ username }: LayoutUserProp) {
             <h2 className="font-medium">{data?.username}</h2>
 
             {isCurrentUser && (
-              <Button className="bg-mint font-medium hover:bg-black hover:bg-opacity-50">
+              <Button className="font-medium hover:bg-primary/90">
                 <Link href="/settings/edit-profile">Edit Profile</Link>
               </Button>
             )}

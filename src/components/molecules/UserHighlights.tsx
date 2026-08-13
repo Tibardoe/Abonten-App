@@ -123,7 +123,7 @@ function HighlightAvatar({
         width={70}
         height={70}
         draggable={false}
-        className="object-cover w-[70px] h-[70px] rounded-full m-[2px] border border-black"
+        className="object-cover w-[70px] h-[70px] rounded-full m-[2px] border border-border"
       />
     </button>
   );
@@ -321,7 +321,7 @@ export default function UserHighlights({
   };
 
   if (highlightError) {
-    return <div className="text-red-500">Error: {highlightError}</div>;
+    return <div className="text-destructive">Error: {highlightError}</div>;
   }
 
   return (
@@ -333,9 +333,9 @@ export default function UserHighlights({
             <button
               type="button"
               onClick={() => scroll("left")}
-              className="bg-black hidden lg:flex items-center justify-center w-10 h-10 rounded-full shadow-md absolute left-1 top-1/2 -translate-y-1/2"
+              className="bg-popover hidden lg:flex items-center justify-center w-10 h-10 rounded-full shadow-md absolute left-1 top-1/2 -translate-y-1/2"
             >
-              <IoChevronBack className="text-2xl text-white" />
+              <IoChevronBack className="text-2xl text-popover-foreground" />
             </button>
           )}
 
@@ -344,9 +344,9 @@ export default function UserHighlights({
             <button
               type="button"
               onClick={() => scroll("right")}
-              className="bg-black hidden lg:flex items-center justify-center w-10 h-10 rounded-full shadow-md absolute right-1 top-1/2 -translate-y-1/2"
+              className="bg-popover hidden lg:flex items-center justify-center w-10 h-10 rounded-full shadow-md absolute right-1 top-1/2 -translate-y-1/2"
             >
-              <IoChevronForward className="text-2xl text-white" />
+              <IoChevronForward className="text-2xl text-popover-foreground" />
             </button>
           )}
 
@@ -450,7 +450,7 @@ export default function UserHighlights({
         )}
 
         {deleteError && (
-          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 bg-black text-white text-sm px-4 py-2 rounded-lg shadow-lg">
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 bg-popover text-popover-foreground border border-border text-sm px-4 py-2 rounded-lg shadow-lg">
             {deleteError}
           </div>
         )}

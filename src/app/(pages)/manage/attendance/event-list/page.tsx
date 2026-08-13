@@ -39,7 +39,7 @@ export default async function page() {
             return (
               <li
                 key={event.title}
-                className="border rounded-md shadow-md p-4 space-y-2"
+                className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"
               >
                 <div className="flex justify-between items-center">
                   <Link
@@ -57,14 +57,14 @@ export default async function page() {
 
                 <div className="flex items-center gap-2">
                   <MdOutlineDateRange className="text-xl shrink-0" />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {dateTime ? dateTime.date : "Date not available"}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <IoTimeOutline className="text-xl shrink-0" />
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {dateTime ? dateTime.time : "Date not available"}
                   </p>
                 </div>

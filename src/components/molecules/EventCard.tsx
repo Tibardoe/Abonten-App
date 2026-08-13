@@ -34,7 +34,7 @@ export default function EventCard({
   const soldOut = !!capacity && capacity > 0 && attendees >= capacity;
 
   return (
-    <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-white border border-gray-100 hover:border-gray-200">
+    <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
       {/* Status Overlays */}
       {(status === "canceled" || soldOut || overlayMessage) && (
         <div
@@ -73,7 +73,7 @@ export default function EventCard({
         <div className="flex justify-between items-start gap-3">
           <Link
             href={`/events/${event_code.toLowerCase()}`}
-            className="text-lg font-medium text-gray-900 hover:text-primary transition-colors line-clamp-2"
+            className="text-lg font-medium text-card-foreground hover:text-primary transition-colors line-clamp-2"
             title={title}
           >
             {title}
@@ -91,8 +91,8 @@ export default function EventCard({
         {/* Event Metadata */}
         <div className="space-y-2.5">
           {/* Location */}
-          <div className="flex items-start gap-2 text-gray-800">
-            <IoLocationOutline className="mt-0.5 flex-shrink-0 text-lg text-gray-600" />
+          <div className="flex items-start gap-2 text-foreground">
+            <IoLocationOutline className="mt-0.5 flex-shrink-0 text-lg text-muted-foreground" />
             <p className="text-sm line-clamp-2">
               {address?.full_address || "Location not specified"}
             </p>
@@ -100,15 +100,15 @@ export default function EventCard({
 
           {/* Date & Time */}
           <div className="flex flex-wrap gap-x-4 gap-y-2">
-            <div className="flex items-center gap-2 text-gray-800">
-              <MdOutlineDateRange className="text-lg text-gray-600" />
+            <div className="flex items-center gap-2 text-foreground">
+              <MdOutlineDateRange className="text-lg text-muted-foreground" />
               <span className="text-sm">
                 {dateTime?.date || "Date not available"}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 text-gray-800">
-              <IoTimeOutline className="text-lg text-gray-600" />
+            <div className="flex items-center gap-2 text-foreground">
+              <IoTimeOutline className="text-lg text-muted-foreground" />
               <span className="text-sm">
                 {dateTime?.time || "Time not available"}
               </span>
@@ -117,23 +117,17 @@ export default function EventCard({
 
           {/* Capacity & Attendance */}
           <div className="flex flex-wrap justify-between gap-2 pt-1">
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span className="px-2 py-1 bg-gray-100 rounded-full">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="px-2 py-1 bg-muted rounded-full">
                 {capacity && capacity > 0 ? `${capacity} spots` : "Unlimited"}
               </span>
-              <span className="px-2 py-1 bg-gray-100 rounded-full">
+              <span className="px-2 py-1 bg-muted rounded-full">
                 {attendees} attending
               </span>
             </div>
 
             {/* Price Badge */}
-            <span
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-                min_price === 0 || min_price === null
-                  ? "bg-mint text-white"
-                  : "bg-mint text-white"
-              }`}
-            >
+            <span className="px-3 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground">
               {min_price === 0 || min_price === null
                 ? "Free Entry"
                 : `${currency} ${min_price?.toLocaleString()}`}

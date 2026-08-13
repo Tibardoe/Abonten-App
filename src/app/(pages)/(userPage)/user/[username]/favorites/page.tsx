@@ -20,7 +20,7 @@ export default async function page() {
       userFavoritedEvents = response.favoritesWithMinPriceAndAttendance;
     } else {
       return (
-        <div className="text-center mt-5 text-red-500">
+        <div className="text-center mt-5 text-destructive">
           Failed to load favorited posts: {response.message}
         </div>
       );
@@ -29,7 +29,7 @@ export default async function page() {
     console.log(error);
 
     return (
-      <div className="text-center mt-5 text-red-500">
+      <div className="text-center mt-5 text-destructive">
         An error occurred while fetching favorited posts.
       </div>
     );
@@ -70,7 +70,7 @@ export default async function page() {
 
       <Link
         href="/events"
-        className="font-medium bg-mint text-white py-1 px-5 rounded-md mt-5"
+        className="font-medium bg-primary text-primary-foreground py-1 px-5 rounded-md mt-5"
       >
         Explore events
       </Link>

@@ -17,7 +17,7 @@ export default async function page() {
   ]);
 
   if (userProfile.status !== 200) {
-    return <p className="text-red-500">{userProfile.message}</p>;
+    return <p className="text-destructive">{userProfile.message}</p>;
   }
 
   const { userDetails } = userProfile;
@@ -37,7 +37,7 @@ export default async function page() {
       <MobileSettingsHeaderNav title={t("nav.editProfile")} />
 
       <div className="space-y-10 md:space-y-16">
-        <div className="flex justify-between items-center bg-black bg-opacity-5 rounded-xl p-3 md:p-5">
+        <div className="flex justify-between items-center bg-muted rounded-xl p-3 md:p-5">
           <div className="flex gap-3 items-center">
             <UserAvatar avatarUrl={avatarUrl} width={80} height={80} />
             <div className="min-w-fit">

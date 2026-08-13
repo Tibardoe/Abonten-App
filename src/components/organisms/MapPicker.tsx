@@ -137,7 +137,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       <button
         type="button"
         onClick={locateUser}
-        className="absolute z-10 bottom-3 left-3 bg-black grid place-items-center rounded-full p-3 text-white font-bold text-xl shadow"
+        className="absolute z-10 bottom-3 left-3 bg-popover grid place-items-center rounded-full p-3 text-popover-foreground font-bold text-xl shadow"
       >
         <TbLocation />
       </button>

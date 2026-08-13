@@ -26,7 +26,7 @@ export default function PhoneInput({
 
   return (
     <div className="flex w-full gap-2 relative">
-      <div className="bg-black bg-opacity-5 rounded-md p-2 flex items-center justify-center gap-1 md:gap-2 md:min-w-28 border">
+      <div className="bg-muted rounded-md p-2 flex items-center justify-center gap-1 md:gap-2 md:min-w-28 border border-input">
         <span>{selectedCountry}</span>
 
         <button type="button" onClick={handleRotate}>
@@ -35,10 +35,10 @@ export default function PhoneInput({
       </div>
 
       {showDropdown && (
-        <div className="absolute top-12 left-0 w-full z-10 bg-white shadow-md max-h-60 overflow-y-scroll flex flex-col">
+        <div className="absolute top-12 left-0 w-full z-10 bg-popover text-popover-foreground shadow-md max-h-60 overflow-y-scroll flex flex-col">
           {countries.map((country) => (
             <button
-              className="px-2 hover:bg-gray-200 cursor-pointer flex items-center gap-5"
+              className="px-2 hover:bg-accent cursor-pointer flex items-center gap-5"
               type="button"
               key={country.name}
               onClick={() => {
@@ -58,7 +58,7 @@ export default function PhoneInput({
         </div>
       )}
 
-      <div className="bg-black bg-opacity-5 rounded-md px-2 flex-1 flex items-center border">
+      <div className="bg-muted rounded-md px-2 flex-1 flex items-center border border-input">
         <input
           type="tel"
           onChange={(event) => onChange(event.target.value)}

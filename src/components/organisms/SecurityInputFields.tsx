@@ -151,12 +151,14 @@ export default function SecurityInputFields() {
           <div className="space-y-2">
             <span className="font-medium md:text-lg">Phone</span>
 
-            <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-black border-opacity-30">
-              <span className="opacity-50">Eg. +233 24 000 0000</span>
+            <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
+              <span className="text-muted-foreground">
+                Eg. +233 24 000 0000
+              </span>
 
               <button
                 type="button"
-                className="font-semibold text-black text-opacity-70"
+                className="font-semibold text-foreground/70"
                 onClick={increaseStep}
               >
                 Edit
@@ -174,7 +176,7 @@ export default function SecurityInputFields() {
             <button
               type="button"
               onClick={handleDeleteUser}
-              className="text-red-700 flex items-center gap-1 font-bold md:text-lg"
+              className="text-destructive flex items-center gap-1 font-bold md:text-lg"
             >
               <Image
                 src="/assets/images/delete.svg"
@@ -186,18 +188,18 @@ export default function SecurityInputFields() {
               Delete account
             </button>
 
-            <Button className="self-end font-medium bg-mint">Update</Button>
+            <Button className="self-end font-medium">Update</Button>
           </div>
         </form>
       )}
 
       {step === 2 && (
         // Popup
-        <div className="md:w-[70%] mx-auto bg-white text-black p-5 flex-col items-center gap-5 rounded-lg flex">
+        <div className="md:w-[70%] mx-auto bg-card text-card-foreground p-5 flex-col items-center gap-5 rounded-lg flex shadow-lg">
           <div className="mb-5">
             <h1 className="font-bold text-3xl">Update phone number</h1>
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               We&apos;ll send an SMS code for verification
             </p>
           </div>
@@ -231,7 +233,7 @@ export default function SecurityInputFields() {
 
       {/*   Otp popup */}
       {step === 3 && (
-        <div className="w-full md:w-[80%] mx-auto bg-white text-black px-10 py-5 flex-col items-center gap-5 rounded-xl flex">
+        <div className="w-full md:w-[80%] mx-auto bg-card text-card-foreground px-10 py-5 flex-col items-center gap-5 rounded-xl flex shadow-lg">
           <div className="flex flex-col items-center">
             <h1 className="font-bold text-3xl">Enter Code</h1>
 
@@ -247,7 +249,7 @@ export default function SecurityInputFields() {
                 {otpArray.map((digit, index) => (
                   <div
                     key={index.toString()}
-                    className="w-12 h-12 text-2xl text-center border rounded-md focus:ring-2 ring-black"
+                    className="w-12 h-12 text-2xl text-center border border-input rounded-md focus:ring-2 ring-ring"
                     // className="w-12 h-12 md:w-[70px] md:h-[60px] flex justify-center items-center rounded-xl bg-black bg-opacity-10 text-xl"
                   >
                     <input
@@ -264,7 +266,7 @@ export default function SecurityInputFields() {
               </div>
 
               {otpErrorMessageShown && (
-                <p className="text-red-700 md:text-lg self-start">
+                <p className="text-destructive md:text-lg self-start">
                   Verfication code incorrect!
                 </p>
               )}

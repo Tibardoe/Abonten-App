@@ -55,8 +55,8 @@ const MapModal: React.FC<MapModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white md:rounded-xl w-full h-full md:w-[60%] md:h-[80%] lg:w-[40%] relative shadow-lg space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50">
+      <div className="bg-card text-card-foreground md:rounded-xl w-full h-full md:w-[60%] md:h-[80%] lg:w-[40%] relative shadow-lg space-y-4">
         <MapPicker
           defaultCenter={defaultCenter}
           onLocationSelect={handleMapChange}
@@ -78,7 +78,7 @@ const MapModal: React.FC<MapModalProps> = ({
                 text: "Enter your address",
                 svgUrl: "/assets/images/search.svg",
               }}
-              classname="bg-black bg-opacity-5"
+              classname="bg-muted"
               address={{ address: setSelectedAddress }}
               value={currentLocation?.address}
               onSelectCoordinates={(loc) => {
@@ -86,7 +86,7 @@ const MapModal: React.FC<MapModalProps> = ({
               }}
             />
 
-            <p className="text-gray-400">
+            <p className="text-muted-foreground">
               Move the pin to your preferred location
             </p>
           </div>
@@ -98,7 +98,7 @@ const MapModal: React.FC<MapModalProps> = ({
             href={`/events/${generateSlug(currentLocation?.address ?? "")}`}
             type="button"
             onClick={handleConfirm}
-            className="bg-mint w-full rounded-full text-white font-bold px-4 py-2 text-center"
+            className="bg-primary w-full rounded-full text-primary-foreground font-bold px-4 py-2 text-center"
           >
             Set address
           </Link>

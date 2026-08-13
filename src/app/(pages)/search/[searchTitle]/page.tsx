@@ -26,7 +26,7 @@ export default async function page({
       <div className="flex flex-wrap gap-3">
         {/* Render Price */}
         {formattedSearchTitle && (
-          <span className="bg-slate-100 rounded-lg p-3 flex justify-center items-center">
+          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
             {formattedSearchTitle}
           </span>
         )}
@@ -67,11 +67,11 @@ export default async function page({
               />
             </div>
 
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-opacity-30">
+            <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
               No results for {formattedSearchTitle}
             </h2>
 
-            <p className="text-gray-600 mb-6 max-w-md text-opacity-30">
+            <p className="text-muted-foreground mb-6 max-w-md">
               We couldn’t find any events for {formattedSearchTitle}. Try
               adjusting your search input.
             </p>

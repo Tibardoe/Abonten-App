@@ -7,6 +7,16 @@
     "switchAppearance": "Erscheinungsbild",
     "language": "Sprache"
   },
+  "appearance": {
+    "title": "Erscheinungsbild",
+    "description": "Wähle, wie Abonten Hub auf diesem Gerät aussieht.",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System",
+    "lightDescription": "Helles Design für gut beleuchtete Umgebungen.",
+    "darkDescription": "Dunkles Design, schonend für die Augen bei Nacht.",
+    "systemDescription": "Folgt der Erscheinungsbild-Einstellung deines Geräts."
+  },
   "updateSuccess": "Profil erfolgreich aktualisiert.",
   "errors": {
     "notAuthenticated": "Benutzer nicht authentifiziert",

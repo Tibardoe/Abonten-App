@@ -143,12 +143,12 @@ export default function CheckoutModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
-      <div className="w-full h-full bg-white md:w-[60%] md:h-[90%] lg:w-[40%] md:rounded-xl py-5 space-y-5">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
+      <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[40%] md:rounded-xl py-5 space-y-5">
         {/* Header */}
         <div className="space-y-5">
           <div className="flex justify-between px-5">
-            <div className="text-gray-500 flex flex-col items-center md:gap-2 w-full">
+            <div className="text-muted-foreground flex flex-col items-center md:gap-2 w-full">
               <h1 className="text-xl md:text-2xl">
                 {eventTitle.toUpperCase()}
               </h1>
@@ -166,7 +166,7 @@ export default function CheckoutModal({
             </button>
           </div>
 
-          <hr />
+          <hr className="border-border" />
         </div>
 
         <div className="flex flex-col gap-5 overflow-y-scroll h-[80%] px-5">
@@ -174,10 +174,10 @@ export default function CheckoutModal({
             <span>Promo Code</span>
 
             <div className="space-y-2 flex flex-col">
-              <div className="flex gap-5 justify-between items-center border p-4 rounded-md">
+              <div className="flex gap-5 justify-between items-center border border-border p-4 rounded-md">
                 <input
                   type="text"
-                  className="outline-none w-full h-full"
+                  className="outline-none w-full h-full bg-transparent"
                   placeholder="Enter code"
                   value={promoCode ?? ""}
                   onChange={(e) => setPromoCode(e.target.value)}
@@ -196,7 +196,7 @@ export default function CheckoutModal({
               <button
                 type="button"
                 onClick={removePromoCode}
-                className="self-end font-bold border border-black rounded-md p-2"
+                className="self-end font-bold border border-border rounded-md p-2"
               >
                 Remove
               </button>
@@ -212,10 +212,10 @@ export default function CheckoutModal({
               {ticketData?.tickets.map((ticket) => (
                 <div
                   key={ticket.type}
-                  className={`border-2 border-black rounded-md py-4 space-y-4 ${
+                  className={`border-2 rounded-md py-4 space-y-4 ${
                     quantities[ticket.type] > 0
-                      ? "border-opacity-100"
-                      : "border-opacity-40"
+                      ? "border-primary"
+                      : "border-border"
                   }`}
                 >
                   <div className="flex items-center justify-between px-4">
@@ -234,7 +234,7 @@ export default function CheckoutModal({
                             ),
                           }))
                         }
-                        className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black bg-opacity-5 border text-black rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-muted border border-border text-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <TfiMinus />
                       </button>
@@ -253,14 +253,14 @@ export default function CheckoutModal({
                             [ticket.id]: (prev[ticket.id] || 0) + 1,
                           }))
                         }
-                        className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-black text-white rounded-md disabled:bg-opacity-50 disabled:cursor-not-allowed"
+                        className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <IoAddSharp />
                       </button>
                     </div>
                   </div>
 
-                  <hr />
+                  <hr className="border-border" />
 
                   <div className="flex flex-col items-start gap-2 px-4">
                     <div className="flex justify-between items-center w-full font-bold">
@@ -280,7 +280,9 @@ export default function CheckoutModal({
 
                       <p
                         className={
-                          ticket.quantity === 0 ? "text-red-600 font-bold" : ""
+                          ticket.quantity === 0
+                            ? "text-destructive font-bold"
+                            : ""
                         }
                       >
                         {ticket.quantity === null
@@ -306,7 +308,7 @@ export default function CheckoutModal({
 
           <div className="rounded-2xl mt-5">
             {/* Subtotal */}
-            <div className="flex justify-between items-center text-sm text-gray-700 mb-2">
+            <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
               <p>Subtotal</p>
               <p>
                 <span className="font-medium">
@@ -317,9 +319,9 @@ export default function CheckoutModal({
             </div>
 
             {/* Fee (2%) */}
-            <div className="flex justify-between items-center text-sm text-gray-700 mb-2">
+            <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
               <p>
-                Fee <span className="text-xs text-gray-500">(2%)</span>
+                Fee <span className="text-xs text-muted-foreground">(2%)</span>
               </p>
               <p>
                 <span className="font-medium">
@@ -330,13 +332,13 @@ export default function CheckoutModal({
             </div>
 
             {/* Divider */}
-            <hr className="my-3" />
+            <hr className="my-3 border-border" />
 
             {/* Total */}
-            <div className="flex justify-between items-center text-base font-bold text-gray-900">
+            <div className="flex justify-between items-center text-base font-bold text-foreground">
               <p>Total</p>
               <p>
-                <span className="text-green-600">
+                <span className="text-primary">
                   {ticketData?.tickets[0].currency}
                 </span>{" "}
                 {typeof total === "number" ? total.toFixed(2) : "0.00"}
@@ -348,7 +350,7 @@ export default function CheckoutModal({
             type="button"
             onClick={handleProceed}
             disabled={isProceeding || !hasSelectedTickets}
-            className="rounded-md p-4 font-bold text-white bg-mint text-center mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-md p-4 font-bold text-primary-foreground bg-primary text-center mt-5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProceeding ? "Loading..." : "Proceed to Payment"}
           </button>

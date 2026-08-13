@@ -25,7 +25,7 @@ export default function UserAccountTabsNavigation({
   // ];
 
   return (
-    <div className="w-full flex justify-center items-center flex-col border-t border-black-500">
+    <div className="w-full flex justify-center items-center flex-col border-t border-border">
       <div className="flex gap-5">
         <UserAccountTabsNavButton
           imgUrl="/assets/images/posts.svg"

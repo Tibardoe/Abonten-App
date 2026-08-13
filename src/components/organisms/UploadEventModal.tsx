@@ -381,7 +381,7 @@ export default function UploadEventModal({
   };
 
   return (
-    <div className="w-full h-dvh fixed left-0 top-0 bg-black bg-opacity-50 justify-center items-center z-30 hidden md:flex">
+    <div className="w-full h-dvh fixed left-0 top-0 bg-overlay/50 justify-center items-center z-30 hidden md:flex">
       {/* cancel button */}
       <button
         type="button"
@@ -393,15 +393,15 @@ export default function UploadEventModal({
 
       {/* Inner popup */}
 
-      <div className="flex flex-col items-center justify-start bg-white w-[70%] h-[95%] rounded-2xl py-3">
+      <div className="flex flex-col items-center justify-start bg-card text-card-foreground w-[70%] h-[95%] rounded-2xl py-3">
         {step === 1 && (
           <>
             <div className="w-full space-y-3">
-              <h1 className="text-gray-500 font-bold text-center pb-1 text-lg">
+              <h1 className="text-muted-foreground font-bold text-center pb-1 text-lg">
                 Create new post
               </h1>
 
-              <hr />
+              <hr className="border-border" />
             </div>
             <div className="flex flex-col items-center gap-5 my-auto">
               <div className="flex flex-col items-center">
@@ -458,7 +458,7 @@ export default function UploadEventModal({
                 </button>
               </div>
 
-              <hr />
+              <hr className="border-border" />
             </div>
 
             {showCrop ? (
@@ -526,7 +526,7 @@ export default function UploadEventModal({
                   />
                 </button>
 
-                <h1 className="text-gray-500 font-bold text-center text-lg">
+                <h1 className="text-muted-foreground font-bold text-center text-lg">
                   Create new post
                 </h1>
 
@@ -540,7 +540,7 @@ export default function UploadEventModal({
                 </button>
               </div>
 
-              <hr />
+              <hr className="border-border" />
             </div>
 
             <div className="flex justify-start w-full h-[90%] gap-3">
@@ -566,7 +566,9 @@ export default function UploadEventModal({
                   {...register("title")}
                 />
                 {errors.title && (
-                  <p className="text-red-500 text-sm">{errors.title.message}</p>
+                  <p className="text-destructive text-sm">
+                    {errors.title.message}
+                  </p>
                 )}
 
                 <PostInput
@@ -575,7 +577,7 @@ export default function UploadEventModal({
                   {...register("description")}
                 />
                 {errors.description && (
-                  <p className="text-red-500 text-sm">
+                  <p className="text-destructive text-sm">
                     {errors.description.message}
                   </p>
                 )}
@@ -588,7 +590,7 @@ export default function UploadEventModal({
                   }}
                 />
                 {selectedAddress === "" && (
-                  <p className="text-red-500 text-sm">Location required</p>
+                  <p className="text-destructive text-sm">Location required</p>
                 )}
 
                 {/* Date and time */}
@@ -681,7 +683,7 @@ export default function UploadEventModal({
                     category={category}
                   />
                   {category === "" && (
-                    <p className="text-red-500 text-sm">
+                    <p className="text-destructive text-sm">
                       Select event category
                     </p>
                   )}
@@ -692,17 +694,17 @@ export default function UploadEventModal({
                     handleType={handleType}
                   />
                   {types.length === 0 && (
-                    <p className="text-red-500 text-sm">
+                    <p className="text-destructive text-sm">
                       Select at least one type for event
                     </p>
                   )}
 
                   <div className="flex justify-between items-center">
-                    <div className="bg-white border rounded-md">
+                    <div className="bg-background border border-input rounded-md">
                       <input
                         type="text"
                         placeholder="Website"
-                        className="rounded-md p-2"
+                        className="rounded-md p-2 bg-transparent"
                         {...register("website_url")}
                       />
                     </div>
@@ -710,28 +712,28 @@ export default function UploadEventModal({
                     <TbWorld className="text-2xl" />
                   </div>
                   {errors.website_url && (
-                    <p className="text-red-500 text-sm">
+                    <p className="text-destructive text-sm">
                       {errors.website_url.message}
                     </p>
                   )}
 
-                  <div className="flex justify-between items-center font-semibold text-slate-700">
+                  <div className="flex justify-between items-center font-semibold text-foreground">
                     <span>Capacity</span>
 
                     <input
                       type="number"
                       placeholder="0 if any"
                       {...register("capacity", { valueAsNumber: true })}
-                      className="border w-28 p-2 rounded-md"
+                      className="border border-input bg-background w-28 p-2 rounded-md"
                     />
                   </div>
                   {errors.capacity && (
-                    <p className="text-red-500 text-sm">
+                    <p className="text-destructive text-sm">
                       {errors.capacity.message}
                     </p>
                   )}
 
-                  <hr />
+                  <hr className="border-border" />
                 </div>
               </form>
             </div>

@@ -152,7 +152,7 @@ export default function DateTimePicker({
                   }
                 />
                 <div className="flex items-center ml-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </>
@@ -174,7 +174,7 @@ export default function DateTimePicker({
                 <span className="mx-2">—</span>
                 <TimePicker date={tempTo} setDate={(d) => d && setTempTo(d)} />
                 <div className="flex items-center ml-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <Button
@@ -198,7 +198,7 @@ export default function DateTimePicker({
       )} */}
 
       {dateType === "single" && dateRange.from && dateRange.to && (
-        <p className="mt-3 text-sm text-gray-700">
+        <p className="mt-3 text-sm text-muted-foreground">
           {formatFullDateTimeRange(dateRange.from, dateRange.to).date},{" "}
           {formatFullDateTimeRange(dateRange.from, dateRange.to).time}
         </p>
@@ -222,11 +222,11 @@ export default function DateTimePicker({
             return (
               <li
                 key={e.start.toISOString()}
-                className="flex justify-between items-center bg-gray-100 rounded px-3 py-2"
+                className="flex justify-between items-center bg-muted rounded px-3 py-2"
               >
                 <div>
                   <p className="text-sm">{date}</p>
-                  <p className="text-xs text-gray-600">{time}</p>
+                  <p className="text-xs text-muted-foreground">{time}</p>
                 </div>
                 <Button
                   size="sm"

@@ -38,9 +38,9 @@ export default function CategoryFilter({
                 className="flex justify-between items-center w-full text-sm"
               >
                 {categories.category}
-                <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-black">
+                <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                   <span
-                    className={cn("bg-black w-[10px] h-[10px] rounded-full", {
+                    className={cn("bg-primary w-[10px] h-[10px] rounded-full", {
                       hidden: categories.category !== category,
                       flex: categories.category === category,
                     })}

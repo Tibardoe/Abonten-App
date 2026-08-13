@@ -80,7 +80,7 @@ export default function MobileUploadModal({
   return (
     <>
       {step === 1 && (
-        <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden overflow-y-scroll">
+        <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-background text-foreground flex flex-col items-center gap-5 md:hidden overflow-y-scroll">
           <div className="w-[90%] flex justify-between mt-5">
             <button type="button" onClick={() => handleClosePopup(false)}>
               <LiaTimesSolid className="text-2xl" />
@@ -90,7 +90,7 @@ export default function MobileUploadModal({
           </div>
 
           {imgUrl && (
-            <div className="absolute inset-0 bg-white pt-5 flex flex-col overflow-y-auto">
+            <div className="absolute inset-0 bg-background pt-5 flex flex-col overflow-y-auto">
               <ImageCropper
                 imagePreview={imgUrl}
                 handleCropped={handleCropped}
@@ -104,7 +104,7 @@ export default function MobileUploadModal({
       )}
 
       {step === 2 && (
-        <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-white flex flex-col items-center gap-5 md:hidden">
+        <div className="fixed top-0 left-0 z-30 w-full h-dvh bg-background text-foreground flex flex-col items-center gap-5 md:hidden">
           <div className="w-[90%] flex justify-between mt-5">
             <button type="button" onClick={() => handleClosePopup(false)}>
               <LiaTimesSolid className="text-2xl" />

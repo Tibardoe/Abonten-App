@@ -46,14 +46,14 @@ export default function HighlightMenu({
     <div
       ref={menuRef}
       style={style}
-      className={`bg-white rounded-md border shadow-lg p-2 min-w-48 font-medium flex flex-col text-iconGray z-50 ${className}`}
+      className={`bg-popover rounded-md border border-border shadow-lg p-2 min-w-48 font-medium flex flex-col text-popover-foreground z-50 ${className}`}
     >
       {actions.map((action) => (
         <button
           key={action.label}
           type="button"
-          className={`text-left px-3 py-2 rounded hover:bg-gray-100 ${
-            action.destructive ? "text-red-700" : ""
+          className={`text-left px-3 py-2 rounded hover:bg-accent ${
+            action.destructive ? "text-destructive" : ""
           }`}
           onClick={(e) => {
             e.stopPropagation();

@@ -22,22 +22,22 @@ export default function DateTimeSelectorBtn({
       type="button"
       className={`p-3 border rounded-lg text-left transition-colors ${
         isSelected
-          ? "border-black bg-slate-100"
-          : "border-gray-300 hover:border-gray-400"
+          ? "border-primary bg-accent"
+          : "border-border hover:border-input"
       }`}
       onClick={() => onClick(dateType)}
     >
       <div className="flex items-center justify-between">
-        <span className="font-medium text-gray-800">{title}</span>
+        <span className="font-medium text-foreground">{title}</span>
         <span
           className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-            isSelected ? "border-black bg-white" : "border-gray-400"
+            isSelected ? "border-primary bg-background" : "border-border"
           }`}
         >
-          {isSelected && <span className="w-2 h-2 bg-black rounded-full" />}
+          {isSelected && <span className="w-2 h-2 bg-primary rounded-full" />}
         </span>
       </div>
-      <p className="text-xs md:text-sm text-gray-500 mt-1">{text}</p>
+      <p className="text-xs md:text-sm text-muted-foreground mt-1">{text}</p>
     </button>
   );
 }

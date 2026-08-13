@@ -23,7 +23,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
     // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
     <div
       onClick={(e) => e.stopPropagation()}
-      className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-white md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
+      className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-card text-card-foreground md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
     >
       <div className="hidden md:flex justify-between items-center">
         <div>
@@ -68,7 +68,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
           <label htmlFor="phone" className="text-sm">
             Card number
           </label>
-          <div className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-white">
+          <div className="border border-input rounded-md px-4 py-2 bg-background">
             <input
               type="tel"
               inputMode="numeric"
@@ -84,7 +84,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
             <label htmlFor="phone" className="text-sm">
               Card Expiry
             </label>
-            <div className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-white">
+            <div className="border border-input rounded-md px-4 py-2 bg-background">
               <input
                 type="tel"
                 className="outline-none w-full"
@@ -98,7 +98,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
             <label htmlFor="phone" className="text-sm">
               CVV
             </label>
-            <div className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-white">
+            <div className="border border-input rounded-md px-4 py-2 bg-background">
               <input
                 type="password"
                 className="outline-none w-full"
@@ -109,14 +109,14 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
           </div>
         </div>
 
-        <span className="p-3 rounded-md bg-black bg-opacity-5 text-center font-semibold text-sm">
+        <span className="p-3 rounded-md bg-muted text-center font-semibold text-sm">
           <p>
             Note: Only bank cards registered in your name can be added to your
             account
           </p>
         </span>
 
-        <Button className="bg-mint font-semibold md:self-end rounded-md py-6 text-lg md:text-sm mt-52 md:mt-0">
+        <Button className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm mt-52 md:mt-0">
           Save This Wallet
         </Button>
       </form>

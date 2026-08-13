@@ -25,9 +25,10 @@ export default function SettingsNavLinks({
   return (
     <div
       className={cn(
-        "flex w-full justify-between items-center p-2 rounded-l-full",
+        "flex w-full justify-between items-center p-2 rounded-l-full transition-colors hover:bg-accent",
         {
-          "font-bold": isActive,
+          "font-bold bg-accent text-accent-foreground": isActive,
+          "text-foreground": !isActive,
         },
       )}
     >

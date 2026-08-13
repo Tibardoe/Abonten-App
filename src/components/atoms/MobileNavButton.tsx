@@ -22,9 +22,12 @@ export default function MobileNavButton({
     <Link
       href={href}
       type="button"
-      className={cn("flex flex-col items-center opacity-50", {
-        "opacity-100 font-bold text-mint": pathname === href,
-      })}
+      className={cn(
+        "flex flex-col items-center text-sidebar-foreground opacity-50",
+        {
+          "opacity-100 font-bold text-primary": pathname === href,
+        },
+      )}
     >
       <Icon className="text-xl" />
       <p className="text-xs">{text}</p>

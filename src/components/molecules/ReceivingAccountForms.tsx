@@ -35,7 +35,7 @@ export default function ReceivingAccountForms({
 
   const renderError = (error?: { message?: string }) =>
     error && (
-      <p className="text-red-500 text-xs italic mt-1">{error.message}</p>
+      <p className="text-destructive text-xs italic mt-1">{error.message}</p>
     );
 
   return (
@@ -81,8 +81,8 @@ export default function ReceivingAccountForms({
               className={cn(
                 "py-2 px-4 rounded-md border text-sm font-semibold",
                 paymentOption === option
-                  ? "bg-mint text-white"
-                  : "bg-white text-gray-700 border-gray-300",
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-foreground border-input",
               )}
             >
               {option}
@@ -95,7 +95,7 @@ export default function ReceivingAccountForms({
             <button
               type="button"
               onClick={() => setShowNetworkDropdown(!selectedNetwork)}
-              className="w-full border px-4 py-2 rounded-md flex justify-between items-center text-sm text-gray-700"
+              className="w-full border border-input px-4 py-2 rounded-md flex justify-between items-center text-sm text-foreground"
             >
               {selectedNetwork || "Select Mobile Network"}
               <Image
@@ -106,13 +106,13 @@ export default function ReceivingAccountForms({
               />
             </button>
             {showNetworkDropdown && (
-              <ul className="max-h-60 overflow-y-auto border rounded-md shadow bg-white divide-y">
+              <ul className="max-h-60 overflow-y-auto border border-border rounded-md shadow bg-popover text-popover-foreground divide-y divide-border">
                 {networks.map((network) => (
                   <li key={network.network}>
                     <button
                       type="button"
                       onClick={() => handleSelectedNetwork(network.network)}
-                      className="w-full flex items-center px-4 py-2 hover:bg-gray-100 text-sm"
+                      className="w-full flex items-center px-4 py-2 hover:bg-accent text-sm"
                     >
                       <Image
                         src={network.logo}

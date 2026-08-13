@@ -129,10 +129,10 @@ export default function EventsSlider({
           <button
             type="button"
             onClick={() => scroll("left")}
-            className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-white transition-all hover:scale-110"
+            className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-popover transition-all hover:scale-110"
             aria-label="Scroll left"
           >
-            <FaArrowLeftLong className="text-xl text-gray-700" />
+            <FaArrowLeftLong className="text-xl text-popover-foreground" />
           </button>
         )}
 
@@ -170,10 +170,10 @@ export default function EventsSlider({
           <button
             type="button"
             onClick={() => scroll("right")}
-            className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-white transition-all hover:scale-110"
+            className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-popover transition-all hover:scale-110"
             aria-label="Scroll right"
           >
-            <FaArrowRightLong className="text-xl text-gray-700" />
+            <FaArrowRightLong className="text-xl text-popover-foreground" />
           </button>
         )}
       </div>

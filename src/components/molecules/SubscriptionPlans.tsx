@@ -78,7 +78,7 @@ export default function SubscriptionPlans() {
             type="button"
             onClick={handleSubscriptionCheckout}
             disabled={loading}
-            className="font-medium bg-mint rounded-md md:text-lg py-1 px-5 text-white"
+            className="font-medium bg-primary rounded-md md:text-lg py-1 px-5 text-primary-foreground"
           >
             {loading ? "Please wait" : "Continue"}
           </button>

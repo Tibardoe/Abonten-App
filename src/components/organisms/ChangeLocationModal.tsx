@@ -61,8 +61,8 @@ export default function ChangeLocationModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
-      <div className="w-full h-full bg-white md:w-[60%] md:h-[80%] lg:w-[40%] md:rounded-xl p-5 space-y-10">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
+      <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[80%] lg:w-[40%] md:rounded-xl p-5 space-y-10">
         <div className="flex justify-between">
           <h1 className="text-2xl font-bold mx-auto">Set your location</h1>
 
@@ -86,13 +86,13 @@ export default function ChangeLocationModal({
                 text: "Enter your address",
                 svgUrl: "/assets/images/search.svg",
               }}
-              classname="bg-slate-100"
+              classname="bg-muted"
               address={{ address: setSelectedAddress }}
             />
 
             {selectedAddress !== "" && (
               <Link
-                className="bg-mint rounded-lg p-3 md:p-5 w-24 h-full text-white grid place-items-center font-bold"
+                className="bg-primary rounded-lg p-3 md:p-5 w-24 h-full text-primary-foreground grid place-items-center font-bold"
                 href={`/events/${generateSlug(selectedAddress)}`}
               >
                 Set
@@ -115,7 +115,7 @@ export default function ChangeLocationModal({
               Choose on map
             </button>
 
-            <hr />
+            <hr className="border-border" />
           </div>
         </div>
       </div>

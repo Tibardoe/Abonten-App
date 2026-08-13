@@ -31,7 +31,7 @@ export default function GetDirectionBtn({ location }: EventDetailsType) {
     <button
       type="button"
       onClick={handleGetDirection}
-      className="w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-800 hover:bg-gray-200 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
+      className="w-full flex items-center justify-center gap-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 py-2 md:py-3 rounded-lg transition-colors text-sm md:text-base"
     >
       <IoLocationOutline /> Get Directions
     </button>

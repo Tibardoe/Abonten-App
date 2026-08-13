@@ -44,7 +44,7 @@ export default function PostButton() {
   return (
     <>
       <Button
-        className="px-10 hidden md:flex font-medium bg-mint text-white text-sm mt-5"
+        className="px-10 hidden md:flex font-medium text-sm mt-5"
         onClick={() => handlePostModal(true)}
       >
         Post
@@ -59,7 +59,7 @@ export default function PostButton() {
       />
 
       <Button
-        className="font-medium bg-mint text-white px-10 md:hidden mt-5"
+        className="font-medium px-10 md:hidden mt-5"
         onClick={() => fileInputRef.current?.click()}
       >
         Post

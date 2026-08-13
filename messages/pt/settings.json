@@ -7,6 +7,16 @@
     "switchAppearance": "Aparência",
     "language": "Idioma"
   },
+  "appearance": {
+    "title": "Aparência",
+    "description": "Escolha a aparência do Abonten Hub neste dispositivo.",
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema",
+    "lightDescription": "Tema claro para ambientes bem iluminados.",
+    "darkDescription": "Tema escuro, mais confortável para os olhos à noite.",
+    "systemDescription": "Acompanha a aparência do seu dispositivo."
+  },
   "updateSuccess": "Perfil atualizado com sucesso.",
   "errors": {
     "notAuthenticated": "Usuário não autenticado",

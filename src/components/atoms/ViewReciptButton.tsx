@@ -27,7 +27,7 @@ export default function ViewReciptButton() {
       <Button
         variant={"outline"}
         onClick={() => handleShowReceipt(true)}
-        className="text-sm font-bold rounded-full border border-black w-full md:w-fit p-6"
+        className="text-sm font-bold rounded-full w-full md:w-fit p-6"
       >
         View Receipt
       </Button>

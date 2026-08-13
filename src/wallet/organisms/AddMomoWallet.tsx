@@ -23,7 +23,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
     // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
     <div
       onClick={(e) => e.stopPropagation()}
-      className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-white md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
+      className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-card text-card-foreground md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
     >
       <div className="hidden md:flex justify-between items-center">
         <h1 className="font-bold text-lg">Add Mobile Money Wallet</h1>
@@ -63,7 +63,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
           <label htmlFor="phone" className="text-sm">
             Mobile Money Number
           </label>
-          <div className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-white">
+          <div className="border border-input rounded-md px-4 py-2 bg-background">
             <input
               type="tel"
               className="outline-none w-full"
@@ -81,7 +81,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
           <button
             type="button"
             onClick={handleDropdown}
-            className="border border-black rounded-md border-opacity-30 px-4 py-2 bg-transparent flex justify-between items-center"
+            className="border border-input rounded-md px-4 py-2 bg-transparent flex justify-between items-center"
           >
             <p>Select mobile network</p>
             <Image
@@ -98,18 +98,18 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
               {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
               <div
                 onClick={() => setShowDropdown(false)}
-                className="flex items-end md:hidden fixed top-0 left-0 w-full bg-black bg-opacity-70 h-dvh"
+                className="flex items-end md:hidden fixed top-0 left-0 w-full bg-overlay/70 h-dvh"
               >
                 {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
                 <ul
                   onClick={(e) => e.stopPropagation()}
-                  className="w-full bg-white rounded-t-xl p-4"
+                  className="w-full bg-popover text-popover-foreground rounded-t-xl p-4"
                 >
                   {networks.map((network) => (
                     <button
                       type="button"
                       key={network.network}
-                      className="flex w-full gap-2 justify-start items-center border-b border-black border-opacity-30 py-3"
+                      className="flex w-full gap-2 justify-start items-center border-b border-border py-3"
                     >
                       <Image
                         src={network.logo}
@@ -129,7 +129,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
                   <button
                     type="button"
                     key={network.network}
-                    className="flex gap-2 justify-start items-center border-b border-black border-opacity-30 py-3"
+                    className="flex gap-2 justify-start items-center border-b border-border py-3"
                   >
                     <Image
                       src={network.logo}
@@ -145,7 +145,7 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
           )}
         </div>
 
-        <Button className="font-semibold md:self-end bg-mint rounded-md py-6 text-lg md:text-sm mt-64 md:mt-0">
+        <Button className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm mt-64 md:mt-0">
           Save This Wallet
         </Button>
       </form>

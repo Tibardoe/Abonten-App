@@ -35,7 +35,7 @@ export default function TransactionsFilterLinks() {
   const baseLinkClass = "shrink-0";
   const getLinkClass = (href: string) =>
     `${baseLinkClass} ${
-      isActive(href) ? "font-bold text-mint" : "text-gray-500"
+      isActive(href) ? "font-bold text-primary" : "text-muted-foreground"
     }`;
 
   return (
@@ -84,7 +84,7 @@ export default function TransactionsFilterLinks() {
 
           <Link
             href={`/transactions/date/${formattedDateStr}`}
-            className="bg-black p-2 px-4 rounded-md text-white"
+            className="bg-primary p-2 px-4 rounded-md text-primary-foreground"
           >
             Set
           </Link>

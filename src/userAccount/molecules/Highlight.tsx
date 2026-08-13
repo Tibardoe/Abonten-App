@@ -78,14 +78,14 @@ export default function Higlight({ username }: HighlightProps) {
       </button>
 
       {isUploading && (
-        <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] bg-black text-white p-4 rounded-lg shadow-lg flex items-center gap-3 w-80">
-          <div className="border-2 border-white border-t-transparent animate-spin rounded-full w-4 h-4 shrink-0" />
+        <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] bg-popover text-popover-foreground border border-border p-4 rounded-lg shadow-lg flex items-center gap-3 w-80">
+          <div className="border-2 border-primary border-t-transparent animate-spin rounded-full w-4 h-4 shrink-0" />
           Uploading highlight...
         </div>
       )}
 
       {uploadSuccessMessage && (
-        <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] bg-black text-white p-4 rounded-lg shadow-lg flex items-center justify-center w-80">
+        <div className="fixed bottom-24 md:bottom-10 right-[5%] z-30 md:right-[10%] bg-popover text-popover-foreground border border-border p-4 rounded-lg shadow-lg flex items-center justify-center w-80">
           ✅ {uploadSuccessMessage}
         </div>
       )}

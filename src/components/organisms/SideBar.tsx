@@ -125,10 +125,10 @@ export default function SideBar({
         />
       )}
 
-      <div className="bg-black bg-opacity-50 w-full flex lg:hidden fixed z-20 left-0 top-[71px] h-[100%]">
+      <div className="bg-overlay/50 w-full flex lg:hidden fixed z-20 left-0 top-[71px] h-[100%]">
         <div
           className={cn(
-            "bg-white w-[80%]",
+            "bg-sidebar text-sidebar-foreground w-[80%]",
             menuClicked ? "animate-slideIn" : "animate-slideOut",
           )}
           onAnimationEnd={() => {
@@ -139,7 +139,7 @@ export default function SideBar({
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
               <Link
                 href={`/events/location/${location}`}
-                className="flex gap-1 items-center"
+                className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <GoHome className="text-xl" />
                 {t("home")}
@@ -147,7 +147,7 @@ export default function SideBar({
 
               <button
                 type="button"
-                className="flex gap-1 items-center"
+                className="flex gap-1 items-center hover:text-primary transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <IoCreateOutline className="text-xl" />
@@ -156,7 +156,7 @@ export default function SideBar({
 
               <Link
                 href="/manage/attendance/event-list"
-                className="flex gap-1 items-center"
+                className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <MdOutlineManageHistory className="text-xl" />
                 {t("manageAttendance")}
@@ -164,7 +164,7 @@ export default function SideBar({
 
               <Link
                 href="/manage/my-events"
-                className="flex gap-1 items-center"
+                className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <GiPartyFlags className="text-xl" />
                 {t("myEvents")}
@@ -181,7 +181,7 @@ export default function SideBar({
               <button
                 type="button"
                 onClick={handleSignOut}
-                className="flex gap-1 items-center"
+                className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <HiOutlineLogin className="text-2xl opacity-70" />
                 {t("signOut")}

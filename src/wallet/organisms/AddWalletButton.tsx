@@ -20,9 +20,9 @@ export default function AddWalletButton() {
       <button
         type="button"
         onClick={handlePopupClick}
-        className="text-[0.8rem] md:text-[1rem] flex flex-col gap-2 items-center justify-center w-44 h-44 md:w-52 md:h-52 rounded-2xl border border-black bg-black bg-opacity-5"
+        className="text-[0.8rem] md:text-[1rem] flex flex-col gap-2 items-center justify-center w-44 h-44 md:w-52 md:h-52 rounded-2xl border border-border bg-muted"
       >
-        <IoMdAddCircle className="text-mint text-3xl md:text-4xl" />
+        <IoMdAddCircle className="text-primary text-3xl md:text-4xl" />
         <p className="opacity-60">
           Add a new mobile money wallet or a bank card
         </p>

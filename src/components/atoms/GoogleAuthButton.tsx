@@ -29,7 +29,7 @@ export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
       <button
         type="button"
         onClick={handleSignin}
-        className="flex items-center w-full bg-black bg-opacity-5 p-3 rounded-md"
+        className="flex items-center w-full bg-muted p-3 rounded-md"
       >
         <FcGoogle className="text-2xl md:text-4xl" />
 

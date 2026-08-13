@@ -20,8 +20,8 @@ export default function RecieptModal({
   useBodyScrollLock(true);
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-10">
-      <div className="w-full h-full bg-white md:w-[60%] md:h-fit lg:w-[40%] md:rounded-xl p-5 space-y-5">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-10">
+      <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-fit lg:w-[40%] md:rounded-xl p-5 space-y-5">
         <button
           type="button"
           onClick={() => handleShowReceipt(false)}
@@ -36,36 +36,36 @@ export default function RecieptModal({
 
         <h2 className="font-bold text-2xl">Abonten</h2>
 
-        <div className="flex justify-between items-center font-bold text-gray-500">
+        <div className="flex justify-between items-center font-bold text-muted-foreground">
           <p>Customer Name:</p>
 
           <p>{transactionSlip?.name}</p>
         </div>
 
-        <div className="flex justify-between items-center font-bold text-gray-500">
+        <div className="flex justify-between items-center font-bold text-muted-foreground">
           <p>Transaction Id:</p>
 
           <p>{transactionSlip?.transactionId}</p>
         </div>
 
-        <div className="flex justify-between items-center font-bold text-gray-500">
+        <div className="flex justify-between items-center font-bold text-muted-foreground">
           <div>
             <p>Payment Method</p>
-            <p className="text-gray-700">{transactionSlip?.paymentOption}</p>
+            <p className="text-foreground">{transactionSlip?.paymentOption}</p>
           </div>
 
           <div>
             <p className="text-end">Date and Time</p>
-            <p className="text-gray-700">{transactionSlip?.date}</p>
+            <p className="text-foreground">{transactionSlip?.date}</p>
           </div>
         </div>
 
-        <div className="flex justify-between items-center font-bold text-gray-500 bg-black bg-opacity-5 py-4">
+        <div className="flex justify-between items-center font-bold text-muted-foreground bg-muted py-4">
           <p>Description</p>
-          <p className="text-gray-700">Amount</p>
+          <p className="text-foreground">Amount</p>
         </div>
 
-        <div className="font-bold text-gray-500 space-y-3">
+        <div className="font-bold text-muted-foreground space-y-3">
           <p>{transactionSlip?.reason}</p>
 
           <div className="space-y-3">
@@ -76,18 +76,18 @@ export default function RecieptModal({
                 <p>{`Event Id: ${"event id"}`}</p>
               )}
 
-              <p className="text-gray-700">
+              <p className="text-foreground">
                 {transactionSlip?.currency} {transactionSlip?.amount}
               </p>
             </div>
 
-            <hr />
+            <hr className="border-border" />
           </div>
 
           <div className="flex justify-between items-center">
-            <p className="text-gray-700">Total Amount</p>
+            <p className="text-foreground">Total Amount</p>
 
-            <p className="text-gray-700">
+            <p className="text-foreground">
               {transactionSlip?.currency} {transactionSlip?.amount}
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function RecieptModal({
           {transactionSlip?.reason === "Ticket Purchase" &&
             transactionSlip.qrCodeUrl &&
             transactionSlip.status === "Successful" && (
-              <div className="font-bold text-gray-500 space-y-2">
+              <div className="font-bold text-muted-foreground space-y-2">
                 <p>Event Pass:</p>
                 <Image
                   src={transactionSlip.qrCodeUrl}
@@ -111,7 +111,7 @@ export default function RecieptModal({
           <Button
             variant={"outline"}
             onClick={() => handleShowReceipt(false)}
-            className="border border-black hidden md:flex font-bold"
+            className="border border-border hidden md:flex font-bold"
           >
             Cancel
           </Button>

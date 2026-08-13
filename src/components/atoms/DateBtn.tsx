@@ -33,8 +33,8 @@ export default function DateBtn({
       className={cn(
         "rounded-md border px-4 py-2 flex-shrink-0 space-y-2 shadow-md text-sm min-w-32",
         {
-          "border-black": isActive,
-          "cursor-not-allowed text-gray-400": is_past,
+          "border-primary": isActive,
+          "cursor-not-allowed text-muted-foreground": is_past,
         },
       )}
     >
@@ -46,8 +46,8 @@ export default function DateBtn({
 
       <p
         className={cn(
-          "rounded-full w-16 h-16 grid place-items-center text-2xl bg-gray-200 mx-auto",
-          { "bg-black text-white": isActive },
+          "rounded-full w-16 h-16 grid place-items-center text-2xl bg-muted mx-auto",
+          { "bg-primary text-primary-foreground": isActive },
         )}
       >
         {date}

@@ -1,44 +1,71 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
-import Image from "next/image";
-import { useState } from "react";
+import { Laptop, Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+
+const OPTIONS = [
+  { value: "light", icon: Sun },
+  { value: "dark", icon: Moon },
+  { value: "system", icon: Laptop },
+] as const;
 
 export default function SwitchAppearance() {
-  const [toggle, setToggle] = useState(false);
+  const t = useTranslations("settings.appearance");
+  const { theme, setTheme } = useTheme();
 
-  const handleToggle = () => {
-    setToggle((prevstate) => !prevstate);
-  };
+  // next-themes only knows the resolved theme after mount, so render a
+  // neutral state on the server to avoid a hydration mismatch.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
-    <div className="flex justify-between items-start w-full">
-      <div className="flex gap-5 items-center">
-        <p className="text-xl">Dark mode</p>
-        <Image
-          src={
-            toggle
-              ? "/assets/images/lightMode.svg"
-              : "/assets/images/darkMode.svg"
-          }
-          alt={"Dark mode icon"}
-          width={30}
-          height={30}
-        />
+    <div className="flex flex-col gap-5 w-full">
+      <div>
+        <p className="text-xl font-medium text-foreground">{t("title")}</p>
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
       </div>
 
-      <button
-        type="button"
-        className="w-14 h-6 relative bg-black bg-opacity-45 rounded-full grid justify-items-start items-center p-1"
-        onClick={handleToggle}
-      >
-        <span
-          className={cn(
-            "w-5 h-5 rounded-full absolute bg-white transition-all duration-200 ease-in-out transform",
-            toggle ? "translate-x-9" : "translate-x-0",
-          )}
-        />
-      </button>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {OPTIONS.map(({ value, icon: Icon }) => {
+          const isActive = mounted && theme === value;
+
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => setTheme(value)}
+              className={cn(
+                "flex flex-col items-start gap-3 rounded-xl border p-4 text-left transition-colors",
+                isActive
+                  ? "border-primary bg-accent"
+                  : "border-border bg-card hover:bg-accent/50",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+
+              <span>
+                <p className="font-medium text-card-foreground">{t(value)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t(`${value}Description`)}
+                </p>
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

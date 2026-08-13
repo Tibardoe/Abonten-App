@@ -24,7 +24,7 @@ export default async function page({
       userReviews = response.data;
     } else {
       return (
-        <div className="text-center mt-5 text-red-500">
+        <div className="text-center mt-5 text-destructive">
           Failed to load reviews: {response.message}
         </div>
       );
@@ -32,7 +32,7 @@ export default async function page({
   } catch (error) {
     console.log(error);
     return (
-      <div className="text-center mt-5 text-red-500">
+      <div className="text-center mt-5 text-destructive">
         An error occurred while fetching reviews.
       </div>
     );
@@ -43,20 +43,20 @@ export default async function page({
       {userReviews.map((review) => (
         <li
           key={review.title + review.created_at}
-          className="w-full bg-white shadow-sm hover:shadow-md transition rounded-xl p-5 flex flex-col gap-3 border border-gray-200"
+          className="w-full bg-card text-card-foreground shadow-sm hover:shadow-md transition rounded-xl p-5 flex flex-col gap-3 border border-border"
         >
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">
+            <h2 className="text-xl font-semibold text-card-foreground">
               {review.title}
             </h2>
             <Rating rating={review.rating} />
           </div>
 
-          <p className="text-gray-700 text-justify leading-relaxed">
+          <p className="text-foreground text-justify leading-relaxed">
             {review.comment}
           </p>
 
-          <div className="flex flex-wrap items-center text-sm gap-4 text-gray-500">
+          <div className="flex flex-wrap items-center text-sm gap-4 text-muted-foreground">
             <div className="flex items-center gap-1">
               <UserIcon size={16} />
               <span>{review.user_info.username}</span>
@@ -71,8 +71,8 @@ export default async function page({
     </ul>
   ) : (
     <div className="flex flex-col items-center justify-center mt-10 gap-4 text-center">
-      <h1 className="text-2xl font-bold text-gray-800">No reviews yet</h1>
-      <p className="text-gray-600">
+      <h1 className="text-2xl font-bold text-foreground">No reviews yet</h1>
+      <p className="text-muted-foreground">
         Be the first to leave a review and rating.
       </p>
       <AddReviewButton username={username} />

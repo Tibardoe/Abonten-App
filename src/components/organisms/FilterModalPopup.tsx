@@ -108,9 +108,9 @@ export default function FilterModalPopup({
   };
 
   return (
-    <div className="fixed top-0 left-0 bg-black bg-opacity-40 h-dvh w-full z-30 flex justify-center items-end md:items-center">
+    <div className="fixed top-0 left-0 bg-overlay/40 h-dvh w-full z-30 flex justify-center items-end md:items-center">
       {/* Popup */}
-      <div className="w-full h-[95%] md:w-[40%] bg-white py-5 rounded-t-2xl md:rounded-xl">
+      <div className="w-full h-[95%] md:w-[40%] bg-card text-card-foreground py-5 rounded-t-2xl md:rounded-xl">
         {/* Top elements */}
         <div>
           <div className="flex justify-between items-center w-[90%] md:w-full mx-auto font-semibold md:px-5">
@@ -146,7 +146,7 @@ export default function FilterModalPopup({
             </button>
           </div>
 
-          <hr className="mt-3" />
+          <hr className="mt-3 border-border" />
         </div>
 
         {/* Content */}
@@ -167,7 +167,7 @@ export default function FilterModalPopup({
                       min={0}
                       max={minMax[1]}
                       onChange={(e) => handleInputChange(0, e.target.value)}
-                      className="w-20 h-8 text-center outline-none bg-gray-200 rounded-lg"
+                      className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
                     />
                     <span>-</span>
                     <input
@@ -176,7 +176,7 @@ export default function FilterModalPopup({
                       min={minMax[0]}
                       max={99999}
                       onChange={(e) => handleInputChange(1, e.target.value)}
-                      className="w-20 h-8 text-center outline-none bg-gray-200 rounded-lg"
+                      className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
                     />
                   </div>
                 </div>
@@ -198,7 +198,7 @@ export default function FilterModalPopup({
                 </div>
               </div>
 
-              <hr className="mt-5" />
+              <hr className="mt-5 border-border" />
             </div>
 
             {/* category */}
@@ -209,7 +209,7 @@ export default function FilterModalPopup({
                 classname="font-semibold md:text-lg"
               />
 
-              <hr className="mt-5" />
+              <hr className="mt-5 border-border" />
             </div>
 
             {/* types */}
@@ -221,7 +221,7 @@ export default function FilterModalPopup({
                 classname="font-semibold md:text-lg"
               />
 
-              <hr className="mt-5" />
+              <hr className="mt-5 border-border" />
             </div>
 
             {/* date */}
@@ -239,7 +239,7 @@ export default function FilterModalPopup({
                 />
               </div>
 
-              <hr className="mt-5" />
+              <hr className="mt-5 border-border" />
             </div>
           </div>
 
@@ -254,8 +254,8 @@ export default function FilterModalPopup({
                   type="button"
                   onClick={() => setRating(r)}
                   className={cn(
-                    "p-2 bg-slate-200 rounded-md text-sm",
-                    r === ratingg && "bg-black text-white",
+                    "p-2 bg-muted rounded-md text-sm",
+                    r === ratingg && "bg-primary text-primary-foreground",
                   )}
                 >
                   {r}
@@ -263,7 +263,7 @@ export default function FilterModalPopup({
               ))}
             </div>
 
-            <hr className="mt-5" />
+            <hr className="mt-5 border-border" />
           </div>
 
           {/* Distance */}
@@ -277,8 +277,8 @@ export default function FilterModalPopup({
                   key={d}
                   onClick={() => setDistance(d)}
                   className={cn(
-                    "p-2 bg-slate-200 rounded-md text-sm",
-                    distance === d && "bg-black text-white",
+                    "p-2 bg-muted rounded-md text-sm",
+                    distance === d && "bg-primary text-primary-foreground",
                   )}
                 >
                   {d}
@@ -286,19 +286,19 @@ export default function FilterModalPopup({
               ))}
             </div>
 
-            <hr className="mt-5" />
+            <hr className="mt-5 border-border" />
           </div>
 
           <div className="gap-2 justify-end pb-3 hidden md:flex">
             <Button
               onClick={handleReset}
-              className="text-lg py-5 px-7 rounded-md bg-mint"
+              className="text-lg py-5 px-7 rounded-md"
             >
               Reset
             </Button>
             <Button
               onClick={handleFilter}
-              className="text-lg py-5 px-7 rounded-md bg-mint"
+              className="text-lg py-5 px-7 rounded-md"
             >
               Filter
             </Button>
@@ -306,7 +306,7 @@ export default function FilterModalPopup({
 
           <Button
             onClick={handleFilter}
-            className="font-bold w-full rounded-md bg-mint text-lg md:hidden p-6"
+            className="font-bold w-full rounded-md text-lg md:hidden p-6"
           >
             Filter
           </Button>

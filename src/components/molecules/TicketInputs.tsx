@@ -169,7 +169,7 @@ export default function TicketInputs({
                   {date ? (
                     date.toLocaleDateString()
                   ) : (
-                    <p className="text-sm font-bold text-gray-600">
+                    <p className="text-sm font-bold text-muted-foreground">
                       Available From
                     </p>
                   )}
@@ -184,7 +184,7 @@ export default function TicketInputs({
                   />
                 </PopoverContent>
               </Popover>
-              <p className="text-sm font-bold text-gray-600">To</p>
+              <p className="text-sm font-bold text-muted-foreground">To</p>
 
               {/* End date */}
               <Popover>
@@ -193,7 +193,7 @@ export default function TicketInputs({
                   {endDate ? (
                     endDate.toLocaleDateString()
                   ) : (
-                    <p className="text-sm font-bold text-gray-600">
+                    <p className="text-sm font-bold text-muted-foreground">
                       Available Until
                     </p>
                   )}
@@ -230,7 +230,7 @@ export default function TicketInputs({
               {multipleTickets.map((ticket) => (
                 <li
                   key={ticket.category}
-                  className="border rounded-md p-3 shadow-md bg-white flex flex-col gap-2"
+                  className="border border-border rounded-md p-3 shadow-md bg-card text-card-foreground flex flex-col gap-2"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex flex-col">

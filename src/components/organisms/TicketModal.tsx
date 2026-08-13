@@ -58,12 +58,12 @@ export default function TicketModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-black bg-opacity-50 flex justify-center items-center z-30">
-      <div className="w-full h-full bg-white md:w-[60%] md:h-[90%] lg:w-[35%] md:rounded-xl p-3 space-y-5 overflow-y-scroll">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
+      <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[35%] md:rounded-xl p-3 space-y-5 overflow-y-scroll">
         <button
           type="button"
           onClick={() => handleShowTicket(false)}
-          className="flex items-center gap-1 text-gray-600 font-medium hover:text-black transition mb-6"
+          className="flex items-center gap-1 text-muted-foreground font-medium hover:text-foreground transition mb-6"
         >
           <IoChevronBackSharp className="text-2xl" />
           Back
@@ -73,12 +73,12 @@ export default function TicketModal({
         <div ref={pdfRef} className="pdf-content p-2">
           <div className="text-center mb-6">
             <h1 className="text-4xl font-bold tracking-wide mb-1">Receipt</h1>
-            <p className="text-gray-500 text-sm">
+            <p className="text-muted-foreground text-sm">
               Issued on: {formatDateWithSuffix(event.issued_at)}
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl overflow-hidden border border-gray-200">
+          <div className="bg-muted rounded-2xl overflow-hidden border border-border">
             <div className="relative h-56 w-full">
               <Image
                 src={`${cloudinaryBaseUrl}v${event.event.flyer_version}/${event.event.flyer_public_id}.jpg`}
@@ -99,21 +99,21 @@ export default function TicketModal({
                   {event.event.title}
                 </Link>
 
-                <p className="text-sm text-gray-600 mb-2 font-bold">
+                <p className="text-sm text-muted-foreground mb-2 font-bold">
                   Ticket Type:{" "}
-                  <span className="font-mono text-gray-800">
+                  <span className="font-mono text-foreground">
                     {event.ticket_type.type}
                   </span>
                 </p>
               </div>
 
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 Ticket Code:{" "}
-                <span className="font-mono text-gray-800">
+                <span className="font-mono text-foreground">
                   {event.ticket_code}
                 </span>
               </p>
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-sm text-muted-foreground mb-2">
                 Status:{" "}
                 {event.status === "active" ? (
                   <span className="font-semibold text-green-600">
@@ -126,11 +126,11 @@ export default function TicketModal({
                 )}
               </p>
 
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Location: {event.event.address.full_address}
               </p>
 
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Date:{" "}
                 {
                   getFormattedEventDate(
@@ -142,7 +142,7 @@ export default function TicketModal({
               </p>
 
               <div className="mt-4 flex justify-center">
-                <div className="relative h-56 w-56 border">
+                <div className="relative h-56 w-56 border border-border">
                   <Image
                     src={`${cloudinaryBaseUrl}v${event.qr_version}/${event.qr_public_id}.jpg`}
                     alt={event.event.title}
@@ -159,7 +159,7 @@ export default function TicketModal({
 
         <Button
           onClick={handleDOwnloadPdf}
-          className="w-full rounded-lg p-6 font-bold bg-mint"
+          className="w-full rounded-lg p-6 font-bold"
         >
           Download As PDF
         </Button>

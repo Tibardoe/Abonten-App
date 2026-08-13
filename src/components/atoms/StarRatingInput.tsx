@@ -32,8 +32,8 @@ const StarRatingInput: React.FC<Props> = ({ onChange, totalStars = 5 }) => {
             <IoIosStar
               className={`text-xl md:text-2xl transition-colors ${
                 (hoveredStar ?? selectedRating) >= starIndex
-                  ? "text-black"
-                  : "text-gray-400"
+                  ? "text-primary"
+                  : "text-muted-foreground"
               }`}
             />
           </button>

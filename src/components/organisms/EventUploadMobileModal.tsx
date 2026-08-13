@@ -411,7 +411,7 @@ closePopupModalType) {
   };
 
   return (
-    <div className="fixed left-0 top-0 z-30 w-full h-full bg-white flex flex-col items-center md:hidden">
+    <div className="fixed left-0 top-0 z-30 w-full h-full bg-background text-foreground flex flex-col items-center md:hidden">
       {step === 1 && imgUrl && !showCrop && (
         <div className="relative w-full h-full flex justify-center items-center">
           {/* Top Controls */}
@@ -464,7 +464,7 @@ closePopupModalType) {
       )}
 
       {step === 1 && imgUrl && showCrop && (
-        <div className="absolute inset-0 z-30 w-full h-full bg-white pt-5 flex flex-col overflow-y-auto">
+        <div className="absolute inset-0 z-30 w-full h-full bg-background pt-5 flex flex-col overflow-y-auto">
           <ImageCropper
             imagePreview={imgUrl}
             handleCropped={handleCropped}
@@ -486,7 +486,7 @@ closePopupModalType) {
 
               <button
                 type="button"
-                className="font-bold text-mint"
+                className="font-bold text-primary"
                 onClick={handleSubmit(onSubmit)}
                 disabled={isUploading}
               >
@@ -494,7 +494,7 @@ closePopupModalType) {
               </button>
             </div>
 
-            <hr />
+            <hr className="border-border" />
           </div>
 
           <div className="overflow-y-scroll space-y-5 w-full">
@@ -520,7 +520,7 @@ closePopupModalType) {
                 {...register("title")}
               />
               {errors.title && (
-                <p className="text-red-500 text-sm pl-3">
+                <p className="text-destructive text-sm pl-3">
                   {errors.title.message}
                 </p>
               )}
@@ -531,7 +531,7 @@ closePopupModalType) {
                 {...register("description")}
               />
               {errors.description && (
-                <p className="text-red-500 text-sm pl-3">
+                <p className="text-destructive text-sm pl-3">
                   {errors.description.message}
                 </p>
               )}
@@ -546,7 +546,9 @@ closePopupModalType) {
                     }}
                   />
                   {selectedAddress === "" && (
-                    <p className="text-red-500 text-sm">Location required</p>
+                    <p className="text-destructive text-sm">
+                      Location required
+                    </p>
                   )}
                 </div>
 
@@ -641,7 +643,7 @@ closePopupModalType) {
                     classname="md:text-lg"
                   />
                   {category === "" && (
-                    <p className="text-red-500 text-sm">
+                    <p className="text-destructive text-sm">
                       Select event category
                     </p>
                   )}
@@ -655,18 +657,18 @@ closePopupModalType) {
                     classname="md:text-lg"
                   />
                   {types.length === 0 && (
-                    <p className="text-red-500 text-sm">
+                    <p className="text-destructive text-sm">
                       Select at least one type for event
                     </p>
                   )}
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <div className="bg-white border rounded-md">
+                  <div className="bg-background border border-input rounded-md">
                     <input
                       type="text"
                       placeholder="Website"
-                      className="rounded-md p-2 font-semibold text-slate-700"
+                      className="rounded-md p-2 font-semibold text-foreground bg-transparent"
                       {...register("website_url")}
                     />
                   </div>
@@ -674,7 +676,7 @@ closePopupModalType) {
                   <TbWorld className="text-2xl" />
                 </div>
                 {errors.website_url && (
-                  <p className="text-red-500 text-sm">
+                  <p className="text-destructive text-sm">
                     {errors.website_url.message}
                   </p>
                 )}
@@ -685,17 +687,17 @@ closePopupModalType) {
                   <input
                     type="number"
                     placeholder="0 if any"
-                    className="border w-28 p-2 rounded-md"
+                    className="border border-input bg-background w-28 p-2 rounded-md"
                     {...register("capacity", { valueAsNumber: true })}
                   />
                 </div>
                 {errors.capacity && (
-                  <p className="text-red-500 text-sm">
+                  <p className="text-destructive text-sm">
                     {errors.capacity.message}
                   </p>
                 )}
 
-                <hr />
+                <hr className="border-border" />
               </div>
             </form>
           </div>

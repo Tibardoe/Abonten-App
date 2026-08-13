@@ -127,9 +127,9 @@ export default async function page({
   const averageRating = await getUserRating(event.organizer_id);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <div className="relative h-72 md:h-[500px] bg-gray-200">
+      <div className="relative h-72 md:h-[500px] bg-muted">
         <Image
           src={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
           alt={event.title}
@@ -173,7 +173,7 @@ export default async function page({
           {/* Event Details */}
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
             {/* Organizer Card */}
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
+            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
               <div className="flex items-center gap-3 md:gap-4">
                 <Link
                   href={`/user/${event.user_info.username}/posts`}
@@ -184,13 +184,13 @@ export default async function page({
                     alt={event.user_info.username}
                     width={56}
                     height={56}
-                    className="rounded-full border-2 border-black"
+                    className="rounded-full border-2 border-border"
                   />
                 </Link>
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/user/${event.user_info.username}/posts`}
-                    className="text-lg font-medium text-gray-800 truncate"
+                    className="text-lg font-medium text-card-foreground truncate"
                   >
                     {event.user_info.username}
                   </Link>
@@ -201,20 +201,20 @@ export default async function page({
                           key={`star-${i.toLocaleString()}`}
                           className={`text-sm ${
                             i < Math.floor(averageRating.averageRating)
-                              ? "text-gray-800"
-                              : "text-gray-300"
+                              ? "text-foreground"
+                              : "text-muted-foreground/40"
                           }`}
                         >
                           ★
                         </span>
                       ))}
                     </div>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted-foreground">
                       ({averageRating.averageRating.toFixed(1)})
                     </span>
                   </div>
                 </div>
-                <span className="text-sm text-gray-500 shrink-0">
+                <span className="text-sm text-muted-foreground shrink-0">
                   Posted {postedAt}
                 </span>
               </div>
@@ -230,7 +230,7 @@ export default async function page({
 
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90 transition-colors"
               >
                 <FiMail /> Contact
               </button>
@@ -238,37 +238,37 @@ export default async function page({
 
             {/* Event Info Grid */}
             <div className="grid md:grid-cols-2 gap-3 md:gap-4">
-              <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+              <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
                 <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
-                  <IoLocationOutline className="text-xl md:text-2xl text-gray-800" />
+                  <IoLocationOutline className="text-xl md:text-2xl text-foreground" />
                   <h3 className="text-lg font-medium">Location</h3>
                 </div>
-                <p className="text-gray-600 mb-4 text-sm md:text-base">
+                <p className="text-muted-foreground mb-4 text-sm md:text-base">
                   {event.address.full_address}
                 </p>
                 <GetDirectionBtn location={event.location} />
               </div>
 
-              <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm">
+              <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
                 <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
-                  <MdOutlineDateRange className="text-xl md:text-2xl text-gray-800" />
+                  <MdOutlineDateRange className="text-xl md:text-2xl text-foreground" />
                   <h3 className="text-lg font-medium">Date & Time</h3>
                 </div>
-                <p className="text-gray-600 text-sm md:text-base">
+                <p className="text-muted-foreground text-sm md:text-base">
                   {eventDateAndTime.date}
                 </p>
-                <p className="text-gray-600 text-sm md:text-base">
+                <p className="text-muted-foreground text-sm md:text-base">
                   {eventDateAndTime.time}
                 </p>
               </div>
             </div>
 
             {/* Description */}
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-gray-800">
+            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+              <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
                 About the Event
               </h2>
-              <p className="text-gray-600 leading-relaxed text-sm md:text-base">
+              <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                 {event.description}
               </p>
             </div>
@@ -283,7 +283,7 @@ export default async function page({
 
               <button
                 type="button"
-                className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <FiMail className="text-lg" /> Contact Organizer
               </button>
@@ -292,7 +292,7 @@ export default async function page({
                   href={`https://${event.website_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Website <FiArrowUpRight className="text-lg" />
                 </a>
@@ -300,7 +300,7 @@ export default async function page({
             </div>
 
             {/* Ticket CTA */}
-            <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all">
+            <div className="bg-card rounded-xl shadow-lg hover:shadow-xl transition-all">
               <EventDateSelector
                 eventDates={event_dates}
                 eventId={event.id}
@@ -316,27 +316,27 @@ export default async function page({
           {/* Sidebar */}
           <div className="space-y-4 md:space-y-6">
             {/* Event Category */}
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h3 className="text-lg font-medium mb-3 md:mb-4 text-gray-800">
+            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+              <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
                 Event Category
               </h3>
               <div className="flex">
-                <span className="p-2 text-center border border-black w-full bg-gray-100 text-gray-600 rounded-full text-xs md:text-sm">
+                <span className="p-2 text-center border border-border w-full bg-muted text-muted-foreground rounded-full text-xs md:text-sm">
                   {event.event_category}
                 </span>
               </div>
             </div>
 
             {/* Event Tags */}
-            <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-              <h3 className="text-lg font-medium mb-3 md:mb-4 text-gray-800">
+            <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+              <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
                 Event Tags
               </h3>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag: string) => (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs md:text-sm"
+                    className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs md:text-sm"
                   >
                     #{tag}
                   </span>
@@ -351,7 +351,7 @@ export default async function page({
                   href={`https://${event.website_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg text-sm hover:bg-gray-800"
+                  className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90"
                 >
                   Visit Website <FiArrowUpRight />
                 </a>
@@ -365,7 +365,7 @@ export default async function page({
 
               <button
                 type="button"
-                className="w-full flex items-center justify-center gap-2 bg-mint text-white py-3 rounded-lg text-sm hover:bg-gray-800"
+                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90"
               >
                 <FiMail /> Contact Organizer
               </button>
@@ -373,21 +373,21 @@ export default async function page({
 
             {/* Capacity */}
             {event.capacity && (
-              <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm">
-                <h3 className="text-lg font-medium mb-3 md:mb-4 text-gray-800">
+              <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
+                <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
                   Event Capacity
                 </h3>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Available</span>
                     <span>
                       {event.capacity - (attendanceCount ?? 0)} remaining
                     </span>
                   </div>
                   <div className="relative pt-1">
-                    <div className="overflow-hidden h-2 bg-gray-200 rounded-full">
+                    <div className="overflow-hidden h-2 bg-muted rounded-full">
                       <div
-                        className="h-2 bg-gray-800 rounded-full transition-all duration-500"
+                        className="h-2 bg-primary rounded-full transition-all duration-500"
                         style={{
                           width: `${
                             ((attendanceCount ?? 0) / event.capacity) * 100

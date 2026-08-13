@@ -100,8 +100,8 @@ export default function ReviewModal({
 
   return (
     <>
-      <div className="fixed top-0 left-0 h-dvh w-full bg-black bg-opacity-50 z-30 flex justify-center items-center">
-        <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-white md:p-4 rounded-lg space-y-5">
+      <div className="fixed top-0 left-0 h-dvh w-full bg-overlay/50 z-30 flex justify-center items-center">
+        <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
           {/* header */}
           <div className="flex justify-between items-center">
             <button
@@ -146,7 +146,7 @@ export default function ReviewModal({
               <StarRatingInput onChange={handleRatingChange} />
             </div>
             {rating <= 0 && (
-              <p className="text-red-500 text-sm">Rating required</p>
+              <p className="text-destructive text-sm">Rating required</p>
             )}
 
             <form
@@ -156,21 +156,25 @@ export default function ReviewModal({
               <input
                 type="text"
                 placeholder="Title"
-                className="border border-black rounded-lg py-4 px-2 font-normal"
+                className="border border-input bg-background rounded-lg py-4 px-2 font-normal"
                 {...register("title")}
               />
               {errors.title && (
-                <p className="text-red-500 text-sm">{errors.title.message}</p>
+                <p className="text-destructive text-sm">
+                  {errors.title.message}
+                </p>
               )}
 
               <textarea
                 rows={10}
                 placeholder="Review"
-                className="border border-black rounded-lg py-4 px-2 font-normal"
+                className="border border-input bg-background rounded-lg py-4 px-2 font-normal"
                 {...register("review")}
               />
               {errors.review && (
-                <p className="text-red-500 text-sm">{errors.review.message}</p>
+                <p className="text-destructive text-sm">
+                  {errors.review.message}
+                </p>
               )}
 
               <Button

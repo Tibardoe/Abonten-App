@@ -24,14 +24,14 @@ export default async function page({
 
   return (
     <div className="space-y-10 text-sm mb-5 md:mb-0 w-full">
-      <div className="font-bold text-gray-500 flex justify-between items-center bg-black bg-opacity-5 rounded-md p-5">
+      <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
         <p>Payment Amount</p>
         <p>
           {transactionSlip?.currency} {transactionSlip?.amount}
         </p>
       </div>
 
-      <div className="font-semibold text-gray-500 bg-black bg-opacity-5 rounded-md p-5 space-y-5">
+      <div className="font-semibold text-muted-foreground bg-muted rounded-md p-5 space-y-5">
         <div className="flex justify-between items-center">
           <p>Payment Wallet</p>
           <p>{transactionSlip?.paymentOption}</p>
@@ -92,13 +92,15 @@ export default async function page({
           <div className="space-y-2">
             <p className="font-bold">{transactionSlip?.status}</p>
             <p className="font-bold">Created Request</p>
-            <p className="font-bold text-gray-500">
+            <p className="font-bold text-muted-foreground">
               Customer Phone: {transactionSlip?.phone}
             </p>
-            <p className="font-bold text-gray-500">
+            <p className="font-bold text-muted-foreground">
               Customer Email: {transactionSlip?.email}
             </p>
-            <p className="font-bold text-gray-500">{transactionSlip?.date}</p>
+            <p className="font-bold text-muted-foreground">
+              {transactionSlip?.date}
+            </p>
           </div>
         </div>
 
@@ -118,10 +120,12 @@ export default async function page({
           <div className="space-y-2">
             <p className="font-bold">{transactionSlip?.status}</p>
             <p className="font-bold">Debit Account</p>
-            <p className="font-bold text-gray-500">
+            <p className="font-bold text-muted-foreground">
               Payment Method: {transactionSlip?.paymentOption}
             </p>
-            <p className="font-bold text-gray-500">{transactionSlip?.date}</p>
+            <p className="font-bold text-muted-foreground">
+              {transactionSlip?.date}
+            </p>
           </div>
         </div>
 
@@ -141,13 +145,13 @@ export default async function page({
           <div className="space-y-2">
             <p className="font-bold">{transactionSlip?.status}</p>
             <p className="font-bold">Top Up</p>
-            <p className="font-bold text-gray-500">
+            <p className="font-bold text-muted-foreground">
               Customer Name: {transactionSlip?.name}
             </p>
             {transactionSlip?.reason === "Ticket Purchase" &&
               transactionSlip.qrCodeUrl &&
               transactionSlip.status === "Successful" && (
-                <div className="font-bold text-gray-500 space-y-2">
+                <div className="font-bold text-muted-foreground space-y-2">
                   <p>Event Pass:</p>
                   <Image
                     src={transactionSlip.qrCodeUrl}
@@ -157,10 +161,12 @@ export default async function page({
                   />
                 </div>
               )}
-            <p className="font-bold text-gray-500">
+            <p className="font-bold text-muted-foreground">
               Customer Email: {transactionSlip?.email}
             </p>
-            <p className="font-bold text-gray-500">{transactionSlip?.date}</p>
+            <p className="font-bold text-muted-foreground">
+              {transactionSlip?.date}
+            </p>
           </div>
         </div>
       </div>

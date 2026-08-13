@@ -24,7 +24,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
           {title}
         </label>
 
-        <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-black border-opacity-30">
+        <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
           {title === "Bio" ? (
             <textarea
               ref={ref as React.Ref<HTMLTextAreaElement>}
@@ -58,7 +58,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
             className={
               title === "Bio"
                 ? "hidden"
-                : "flex font-semibold text-black text-opacity-70"
+                : "flex font-semibold text-foreground/70"
             }
           >
             Edit

@@ -58,14 +58,14 @@ export default async function page({
       <div className="flex flex-wrap gap-3">
         {/* Render Price */}
         {queryParams.price && (
-          <span className="bg-slate-100 rounded-lg p-3 flex justify-center items-center">
+          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
             {queryParams.price}
           </span>
         )}
 
         {/* Render Category */}
         {queryParams.category && (
-          <span className="bg-slate-100 rounded-lg p-3 flex justify-center items-center">
+          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
             {queryParams.category}
           </span>
         )}
@@ -77,7 +77,7 @@ export default async function page({
           .map((type: string, _index: number) => (
             <span
               key={`type-${type}`}
-              className="bg-slate-100 rounded-lg p-3 flex justify-center items-center"
+              className="bg-muted rounded-lg p-3 flex justify-center items-center"
             >
               {type}
             </span>
@@ -85,7 +85,7 @@ export default async function page({
 
         {/* Render Combined From and To Dates */}
         {queryParams.from && queryParams.to && (
-          <span className="bg-slate-100 rounded-lg p-3 flex justify-center items-center">
+          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
             {`${formatDate(queryParams.from.toString())} - ${formatDate(
               queryParams.to.toString(),
             )}`}
@@ -94,14 +94,14 @@ export default async function page({
 
         {/* Render Rating */}
         {queryParams.rating && (
-          <span className="bg-slate-100 rounded-lg p-3 flex justify-center items-center">
+          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
             {queryParams.rating}
           </span>
         )}
 
         {/* Render Distance */}
         {queryParams.distance && (
-          <span className="bg-slate-100 rounded-lg p-3 flex justify-center items-center">
+          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
             {queryParams.distance}
           </span>
         )}
@@ -142,11 +142,11 @@ export default async function page({
               />
             </div>
 
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-opacity-30">
+            <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
               No results
             </h2>
 
-            <p className="text-gray-600 mb-6 max-w-md text-opacity-30">
+            <p className="text-muted-foreground mb-6 max-w-md">
               We couldn’t find any events for your queried data. Try adjusting
               your search queries.
             </p>

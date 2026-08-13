@@ -18,15 +18,17 @@ export default async function page() {
         <Link
           href={`/transactions/${transactionSlip.transactionId}`}
           key={transactionSlip.transactionId}
-          className="flex justify-between border-b border-b-black py-5"
+          className="flex justify-between border-b border-border py-5"
         >
           <div className="space-y-1">
             <h2 className="font-bold">{transactionSlip.name}</h2>
-            <p className="text-sm font-bold text-gray-500">
+            <p className="text-sm font-bold text-muted-foreground">
               {transactionSlip.reason}
             </p>
 
-            <p className="text-sm text-gray-500">{transactionSlip.date}</p>
+            <p className="text-sm text-muted-foreground">
+              {transactionSlip.date}
+            </p>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3 font-bold">
