@@ -15,9 +15,14 @@ import { Button } from "../ui/button";
 type PopupProp = {
   buttonText: string;
   callingCode?: string;
+  next?: string | null;
 };
 
-export default function AuthModal({ buttonText, callingCode }: PopupProp) {
+export default function AuthModal({
+  buttonText,
+  callingCode,
+  next,
+}: PopupProp) {
   const location = useGetUserLocation();
 
   const [countryCode, setCountryCode] = useState("");
@@ -64,7 +69,7 @@ export default function AuthModal({ buttonText, callingCode }: PopupProp) {
 
     try {
       // await verifyOtp(fullPhoneNumber, otp);
-      router.push("/events");
+      router.push(next || "/events");
     } catch (error) {
       console.error("OTP Verification Error:", error);
       setOtpErrorMessageShown(true);
@@ -119,7 +124,11 @@ export default function AuthModal({ buttonText, callingCode }: PopupProp) {
         />
 
         <div className="space-y-5">
-          <GoogleAuthButton buttonText={buttonText} location={location} />
+          <GoogleAuthButton
+            buttonText={buttonText}
+            location={location}
+            next={next}
+          />
 
           {/* Or section */}
           <div className="flex gap-2 items-center w-full text-iconGray">

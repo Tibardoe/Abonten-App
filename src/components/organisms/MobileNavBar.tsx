@@ -5,6 +5,7 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BiWallet } from "react-icons/bi";
 import { GoHome } from "react-icons/go";
@@ -16,6 +17,8 @@ import MobileAuthPopup from "./AuthModal";
 
 export default function MobileNavBar() {
   const location = useGetUserLocation();
+
+  const pathname = usePathname();
 
   const { data: userData } = useQuery({
     queryKey: ["username"],
@@ -56,7 +59,11 @@ export default function MobileNavBar() {
           <MobileNavButton href="/wallet" text="Wallets" Icon={BiWallet} />
 
           <MobileNavButton
-            href={userData ? `/user/${userData}/posts` : "/auth/signin"}
+            href={
+              userData
+                ? `/user/${userData}/posts`
+                : `/auth/signin?next=${encodeURIComponent(pathname)}`
+            }
             text="Account"
             Icon={VscAccount}
           />

@@ -179,7 +179,7 @@ export default function Header() {
             </div>
           ) : (
             <div className="space-x-3 hidden lg:flex">
-              <Link href="/auth/signin">
+              <Link href={`/auth/signin?next=${encodeURIComponent(pathname)}`}>
                 <Button
                   variant="outline"
                   className="bg-transparent rounded-md font-bold border-black"
@@ -188,7 +188,7 @@ export default function Header() {
                 </Button>
               </Link>
 
-              <Link href="/auth/signin">
+              <Link href={`/auth/signin?next=${encodeURIComponent(pathname)}`}>
                 <Button
                   variant="outline"
                   className="bg-transparent rounded-md font-bold border-black"

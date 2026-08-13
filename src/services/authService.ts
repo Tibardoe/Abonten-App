@@ -4,12 +4,15 @@ const hubtelApiUsername = process.env.NEXT_PUBLIC_HUBTEL_API_USERNAME;
 
 const hubtelApiPassword = process.env.NEXT_PUBLIC_HUBTEL_API_PASSWORD;
 
-export const signInWithGoogle = async (location: string | null) => {
+export const signInWithGoogle = async (
+  location: string | null,
+  next?: string | null,
+) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/events/location/${
-        location || "unknown"
+      redirectTo: `${window.location.origin}${
+        next || `/events/location/${location || "unknown"}`
       }`,
     },
   });

@@ -7,17 +7,19 @@ import Notification from "./Notification";
 type GoogleTextProp = {
   buttonText: string;
   location: string | null;
+  next?: string | null;
 };
 
 export default function GoogleAuthButton({
   buttonText,
   location,
+  next,
 }: GoogleTextProp) {
   const [notification, setNotification] = useState<string | null>(null);
 
   const handleSignin = async () => {
     try {
-      await signInWithGoogle(generateSlug(location ?? ""));
+      await signInWithGoogle(generateSlug(location ?? ""), next);
     } catch (error) {
       console.error("Google Sign-In Error:", error);
 
