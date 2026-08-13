@@ -29,11 +29,15 @@ export default function EventDateSelector({
 }: EventDateSelectorProps) {
   const now = new Date();
 
-  const firstFutureOccurrence =
-    eventDates.find((occ) => new Date(occ.ends_at) >= now) ?? null;
+  const sortedEventDates = [...eventDates].sort(
+    (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+  );
+
+  const nearestUpcomingOccurrence =
+    sortedEventDates.find((occ) => new Date(occ.ends_at) >= now) ?? null;
 
   const [selectedOccurrence, setSelectedOccurrence] =
-    useState<Occurrence | null>(firstFutureOccurrence);
+    useState<Occurrence | null>(nearestUpcomingOccurrence);
 
   const selectedDateTime = selectedOccurrence
     ? formatFullDateTimeRange(
@@ -44,11 +48,11 @@ export default function EventDateSelector({
 
   return (
     <div className="flex flex-col gap-3">
-      {eventDates.length > 0 && (
+      {sortedEventDates.length > 0 && (
         <div className="mb-3 p-2">
           <h2 className="font-bold mb-2">Dates</h2>
           <div className="flex overflow-x-auto gap-3">
-            {eventDates.map((occurrence) => {
+            {sortedEventDates.map((occurrence) => {
               const dateValue = occurrence.starts_at;
 
               const { day, month, date, time } = getDateParts(dateValue);
