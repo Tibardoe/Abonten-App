@@ -9,7 +9,7 @@ import { signOut } from "@/services/authService";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
@@ -38,8 +38,6 @@ export default function SideBar({
   const location = useGetUserLocation();
 
   const router = useRouter();
-
-  const pathname = usePathname();
 
   const handleSignOut = async () => {
     try {
@@ -179,13 +177,9 @@ export default function SideBar({
             </div>
           ) : (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
-              <Link href={`/auth/signin?next=${encodeURIComponent(pathname)}`}>
-                {t("signIn")}
-              </Link>
+              <Link href="/auth/signin">{t("signIn")}</Link>
 
-              <Link href={`/auth/signin?next=${encodeURIComponent(pathname)}`}>
-                {t("signUp")}
-              </Link>
+              <Link href="/auth/signin">{t("signUp")}</Link>
             </div>
           )}
 

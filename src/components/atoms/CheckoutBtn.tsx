@@ -4,6 +4,7 @@ import deleteCheckout from "@/actions/deleteCheckout";
 import generateTicket from "@/actions/generateTicket";
 import { getTickets } from "@/actions/getTickets";
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import type { TicketData } from "@/types/ticketType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -45,6 +46,8 @@ export default function CheckoutBtn({
 
   const [loading, setLoading] = useState(false);
 
+  const requireAuth = useRequireAuth();
+
   const handleCheckoutModal = (state: boolean) => {
     setShowCheckoutModal(state);
   };
@@ -65,6 +68,8 @@ export default function CheckoutBtn({
   };
 
   const handleRegistration = async (ticketQuantityAndType: TicketData[]) => {
+    if (!(await requireAuth())) return;
+
     setLoading(true);
 
     const rawDate = date;
@@ -157,7 +162,9 @@ export default function CheckoutBtn({
         <>
           <Button
             className="font-bold rounded-lg w-full p-6 text-lg"
-            onClick={() => handleCheckoutModal(true)}
+            onClick={async () => {
+              if (await requireAuth()) handleCheckoutModal(true);
+            }}
             onPointerEnter={prefetchTickets}
             onFocus={prefetchTickets}
           >

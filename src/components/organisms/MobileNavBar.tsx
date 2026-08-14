@@ -3,6 +3,7 @@
 import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
+import { getSignInUrl } from "@/utils/getSignInUrl";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -71,7 +72,7 @@ export default function MobileNavBar() {
                 ? pathname
                 : userData
                   ? `/user/${userData}/posts`
-                  : `/auth/signin?next=${encodeURIComponent(pathname)}`
+                  : getSignInUrl(pathname)
             }
             text={t("account")}
             Icon={VscAccount}

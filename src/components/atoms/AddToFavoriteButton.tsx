@@ -1,6 +1,7 @@
 import { addEventToFavorite } from "@/actions/addEventToFavorite";
 import { checkIfEventIsFavorited } from "@/actions/checkIfEventIsFavorited";
 import { removeEventFromFavorite } from "@/actions/removeEventFromFavorite";
+import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
@@ -12,6 +13,8 @@ type EventProp = {
 
 export default function AddToFavoriteButton({ eventId }: EventProp) {
   const [error, setError] = useState<string | null>(null);
+
+  const requireAuth = useRequireAuth();
 
   const queryClient = useQueryClient();
 
@@ -73,12 +76,16 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
 
   const buttonText = isFavorite ? "Remove Favorited" : "Add to Favorite";
 
+  const handleClick = async () => {
+    if (await requireAuth()) mutate();
+  };
+
   return (
     <>
       <button
         type="button"
         className="flex items-center gap-1 p-1"
-        onClick={() => mutate()}
+        onClick={handleClick}
         disabled={isPending}
       >
         {isFavorite ? (

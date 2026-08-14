@@ -8,12 +8,12 @@ export const signInWithGoogle = async (
   location: string | null,
   next?: string | null,
 ) => {
+  const target = next || `/events/location/${location || "unknown"}`;
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}${
-        next || `/events/location/${location || "unknown"}`
-      }`,
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}`,
     },
   });
 
