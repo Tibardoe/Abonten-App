@@ -7,6 +7,7 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import HighlightViewer from "@/components/organisms/HighlightViewer";
 import { useLongPress } from "@/hooks/useLongPress";
 import type { HighlightGroup } from "@/types/highlightType";
+import HighlightsRowSkeleton from "@/userAccount/molecules/HighlightsRowSkeleton";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import {
@@ -187,7 +188,7 @@ export default function UserHighlights({
   // "outside" and closes the menu within the very same gesture.
   const activeAvatarButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const { data: highlights } = useQuery({
+  const { data: highlights, isLoading } = useQuery({
     queryKey: ["highlights", username],
     queryFn: async () => {
       const response = await getUserHighlight(username);
@@ -322,6 +323,10 @@ export default function UserHighlights({
 
   if (highlightError) {
     return <div className="text-destructive">Error: {highlightError}</div>;
+  }
+
+  if (isLoading) {
+    return <HighlightsRowSkeleton />;
   }
 
   return (

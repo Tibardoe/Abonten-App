@@ -1,6 +1,7 @@
 "use client";
 
 // import { getUserEventRole } from "@/actions/getUserEventRole";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
@@ -101,7 +102,7 @@ export default function SideBar({
   //   },
   // });
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["sidebar-user"],
     queryFn: async () => {
       const {
@@ -135,7 +136,13 @@ export default function SideBar({
             if (!menuClicked) onCloseAnimationEnd?.();
           }}
         >
-          {user ? (
+          {userLoading ? (
+            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
+              {Array.from({ length: 4 }, (_, i) => (
+                <Skeleton key={i.toLocaleString()} className="h-5 w-28" />
+              ))}
+            </div>
+          ) : user ? (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
               <Link
                 href={`/events/location/${location}`}

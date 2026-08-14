@@ -3,6 +3,7 @@
 import { getUserDetails } from "@/actions/getUserDetails";
 // import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/config/supabase/client";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
@@ -53,7 +54,7 @@ export default function Header() {
   // Query for user session
   const {
     data: userSession,
-    // isLoading: sessionLoading,
+    isLoading: sessionLoading,
     // error: sessionError,
   } = useQuery({
     queryKey: ["session"],
@@ -144,7 +145,14 @@ export default function Header() {
             </Link>
           </div>
 
-          {userSession ? (
+          {sessionLoading ? (
+            <div className="hidden lg:flex items-center gap-7 min-w-fit">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <Skeleton className="h-[60px] w-[60px] rounded-full" />
+            </div>
+          ) : userSession ? (
             <div className="hidden lg:flex items-center gap-7 min-w-fit text-sidebar-foreground">
               <Link
                 href="/manage/attendance/event-list"

@@ -1,5 +1,6 @@
 import { getUserTransactions } from "@/actions/getUserTransactions";
-import { transactionsDummyData } from "@/data/transactionsDummyData";
+import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { humanizeTransactionReason } from "@/utils/humanizeTransactionReason";
 import Link from "next/link";
 import { BsFillDashCircleFill } from "react-icons/bs";
 import { IoMdCheckmarkCircle } from "react-icons/io";
@@ -14,37 +15,37 @@ export default async function page() {
 
   return transactions.data?.length ? (
     <ul>
-      {transactionsDummyData.map((transactionSlip) => (
+      {transactions.data.map((transaction) => (
         <Link
-          href={`/transactions/${transactionSlip.transactionId}`}
-          key={transactionSlip.transactionId}
+          href={`/transactions/${transaction.id}`}
+          key={transaction.id}
           className="flex justify-between border-b border-border py-5"
         >
           <div className="space-y-1">
-            <h2 className="font-bold">{transactionSlip.name}</h2>
+            <h2 className="font-bold">{transaction.full_name}</h2>
             <p className="text-sm font-bold text-muted-foreground">
-              {transactionSlip.reason}
+              {humanizeTransactionReason(transaction.reason)}
             </p>
 
             <p className="text-sm text-muted-foreground">
-              {transactionSlip.date}
+              {formatSingleDateTime(transaction.transaction_date).date}
             </p>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3 font-bold">
             <p>
-              {transactionSlip.currency} {transactionSlip.amount}
+              {transaction.currency} {transaction.amount}
             </p>
 
-            {transactionSlip?.status === "Successful" && (
+            {transaction.status?.toLowerCase() === "successful" && (
               <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />
             )}
 
-            {transactionSlip?.status === "Pending" && (
+            {transaction.status?.toLowerCase() === "pending" && (
               <BsFillDashCircleFill className="text-xl md:text-2xl" />
             )}
 
-            {transactionSlip?.status === "Failed" && (
+            {transaction.status?.toLowerCase() === "failed" && (
               <MdCancel className="text-2xl md:text-3xl" />
             )}
           </div>

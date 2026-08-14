@@ -24,9 +24,42 @@ export default async function page({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-5">
       <h1 className="font-bold md:text-xl">List of Attendance</h1>
-      <p>{attendanceList}</p>
+
+      {attendanceList.length > 0 ? (
+        <ul className="flex flex-col gap-2 mb-5">
+          {attendanceList.map((attendee) => (
+            <li
+              key={attendee.id}
+              className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"
+            >
+              <div className="flex justify-between items-center">
+                <h2 className="font-bold">
+                  {attendee.user_info?.full_name ??
+                    attendee.user_info?.username}
+                </h2>
+
+                <span className="text-sm text-muted-foreground">
+                  {attendee.ticket_type?.type}
+                </span>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                {attendee.auth?.email}
+              </p>
+
+              {attendee.auth?.phone && (
+                <p className="text-sm text-muted-foreground">
+                  {attendee.auth.phone}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        "None"
+      )}
     </div>
   );
 }

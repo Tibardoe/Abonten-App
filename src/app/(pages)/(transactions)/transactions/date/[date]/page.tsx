@@ -1,4 +1,6 @@
 import { getUserTransactions } from "@/actions/getUserTransactions";
+import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { humanizeTransactionReason } from "@/utils/humanizeTransactionReason";
 import Link from "next/link";
 import { IoMdCheckmarkCircle } from "react-icons/io";
 
@@ -9,38 +11,40 @@ import { IoMdCheckmarkCircle } from "react-icons/io";
 export default async function page({
   params,
 }: {
-  params: Promise<{ date: Date }>;
+  params: Promise<{ date: string }>;
 }) {
   const { date } = await params;
 
   const transactions = await getUserTransactions();
 
-  const filteredEvents = transactions.data?.filter(
-    (transactionSlips) => transactionSlips.date === date.toString(),
+  const filteredTransactions = transactions.data?.filter(
+    (transaction) =>
+      new Date(transaction.transaction_date).toISOString().split("T")[0] ===
+      date,
   );
 
-  return filteredEvents?.length ? (
+  return filteredTransactions?.length ? (
     <ul>
-      {filteredEvents.map((transactionSlip) => (
+      {filteredTransactions.map((transaction) => (
         <Link
-          href={`/transactions/${transactionSlip.transactionId}`}
-          key={transactionSlip.transactionId}
+          href={`/transactions/${transaction.id}`}
+          key={transaction.id}
           className="flex justify-between border-b border-border py-5"
         >
           <div className="space-y-1">
-            <h2 className="font-bold">{transactionSlip.name}</h2>
+            <h2 className="font-bold">{transaction.full_name}</h2>
             <p className="text-sm font-bold text-muted-foreground">
-              {transactionSlip.reason}
+              {humanizeTransactionReason(transaction.reason)}
             </p>
 
             <p className="text-sm text-muted-foreground">
-              {transactionSlip.date}
+              {formatSingleDateTime(transaction.transaction_date).date}
             </p>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3 font-bold">
             <p>
-              {transactionSlip.currency} {transactionSlip.amount}
+              {transaction.currency} {transaction.amount}
             </p>
 
             <IoMdCheckmarkCircle className="text-2xl md:text-3xl" />

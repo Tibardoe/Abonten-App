@@ -23,7 +23,7 @@ export default function MobileNavBar() {
 
   const pathname = usePathname();
 
-  const { data: userData } = useQuery({
+  const { data: userData, isLoading: userDataLoading } = useQuery({
     queryKey: ["username"],
     queryFn: async () => {
       const {
@@ -67,9 +67,11 @@ export default function MobileNavBar() {
 
           <MobileNavButton
             href={
-              userData
-                ? `/user/${userData}/posts`
-                : `/auth/signin?next=${encodeURIComponent(pathname)}`
+              userDataLoading
+                ? pathname
+                : userData
+                  ? `/user/${userData}/posts`
+                  : `/auth/signin?next=${encodeURIComponent(pathname)}`
             }
             text={t("account")}
             Icon={VscAccount}
