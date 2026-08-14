@@ -2,8 +2,10 @@
 
 import deleteCheckout from "@/actions/deleteCheckout";
 import generateTicket from "@/actions/generateTicket";
+import { getTickets } from "@/actions/getTickets";
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import type { TicketData } from "@/types/ticketType";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import CheckoutModal from "../organisms/CheckoutModal";
@@ -48,6 +50,19 @@ export default function CheckoutBtn({
   };
 
   const router = useRouter();
+
+  const queryClient = useQueryClient();
+
+  // Warm the same query CheckoutModal uses, so by the time a user actually
+  // clicks "Buy Ticket" the modal usually opens with data already cached
+  // instead of showing a loading state.
+  const prefetchTickets = () => {
+    queryClient.prefetchQuery({
+      queryKey: ["eventTickets", eventId],
+      queryFn: () => getTickets(eventId),
+      staleTime: 30_000,
+    });
+  };
 
   const handleRegistration = async (ticketQuantityAndType: TicketData[]) => {
     setLoading(true);
@@ -143,6 +158,8 @@ export default function CheckoutBtn({
           <Button
             className="font-bold rounded-lg w-full p-6 text-lg"
             onClick={() => handleCheckoutModal(true)}
+            onPointerEnter={prefetchTickets}
+            onFocus={prefetchTickets}
           >
             {btnText}
           </Button>

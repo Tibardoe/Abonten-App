@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 
-export default async function getPromoCode(code: string) {
+export default async function getPromoCode(code: string, eventId: string) {
   const supabase = await createClient();
 
   const {
@@ -16,7 +16,7 @@ export default async function getPromoCode(code: string) {
 
   const { data: promoCode, error: promoCodeError } = await supabase
     .from("promo_code")
-    .select("*, event:event_id(id)")
+    .select("*")
     .eq("promo_code", code)
     .maybeSingle();
 
@@ -33,17 +33,24 @@ export default async function getPromoCode(code: string) {
     return { status: 404, message: "Promo code is invalid!" };
   }
 
-  if (promoCode.is_active === false) {
-    return { status: 401, message: "Promo code expired!" };
+  if (promoCode.event_id !== eventId) {
+    return {
+      status: 404,
+      message: "This promo code is not valid for this event.",
+    };
   }
 
-  if (promoCode.times_used >= promoCode.max_uses) {
-    return { status: 401, message: "Promo code exceeded maximum usage!" };
+  if (promoCode.is_active === false) {
+    return { status: 401, message: "Promo code is no longer active!" };
+  }
+
+  if (promoCode.expires_at && new Date(promoCode.expires_at) < new Date()) {
+    return { status: 401, message: "Promo code has expired!" };
   }
 
   const { data: promoCodeUsage, error: promoCodeUsageError } = await supabase
     .from("promo_code_usage")
-    .select("*, promo_code(*)")
+    .select("promo_code_id")
     .eq("promo_code_id", promoCode.id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -58,8 +65,23 @@ export default async function getPromoCode(code: string) {
   }
 
   if (promoCodeUsage) {
-    return { status: 400, message: "Promo code has already been used by user" };
+    return { status: 400, message: "You have already used this promo code" };
   }
 
-  return { status: 200, discountPercentage: promoCode.discount_percentage };
+  // max_uses is nullable and means "unlimited" — remainingUses stays null in that case
+  // so callers never treat an unlimited code as exhausted.
+  const remainingUses =
+    promoCode.max_uses === null
+      ? null
+      : Math.max(0, promoCode.max_uses - promoCode.times_used);
+
+  if (remainingUses !== null && remainingUses <= 0) {
+    return { status: 401, message: "Promo code has reached its usage limit!" };
+  }
+
+  return {
+    status: 200,
+    discountPercentage: promoCode.discount_percentage,
+    remainingUses,
+  };
 }

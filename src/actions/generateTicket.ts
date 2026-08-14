@@ -6,6 +6,7 @@ import {
   generateTicketCode,
 } from "@/utils/generateTicketCode";
 import insertPromoCodeUsage from "./InsertPromoCodeUsage";
+import getPromoCode from "./getPromoCode";
 import insertUserAttendance from "./insertUserAttendance";
 import releaseTicketQuantity from "./releaseTicketQuantity";
 import reserveTicketQuantity from "./reserveTicketQuantity";
@@ -70,6 +71,41 @@ export default async function generateTicket(
   if (alreadyBought) {
     return { status: 300, message: "Ticket for this event already bought" };
   }
+
+  // Re-read the promo code's remaining eligible units right before issuing
+  // tickets (the final, authoritative moment) rather than trusting whatever
+  // was known back when the checkout was validated — mirrors how
+  // reserveTicketQuantity re-checks ticket_type.quantity fresh at this same
+  // point instead of trusting the earlier validateCheckout read.
+  let discountedUnitsRemaining = 0;
+
+  if (promoCode) {
+    const promoValidation = await getPromoCode(promoCode, eventId);
+
+    if (promoValidation.status === 200) {
+      const totalQuantity = ticketInputs.reduce(
+        (sum, input) => sum + input.quantity,
+        0,
+      );
+
+      const remainingUses = promoValidation.remainingUses ?? null;
+
+      discountedUnitsRemaining =
+        remainingUses === null
+          ? totalQuantity
+          : Math.min(totalQuantity, remainingUses);
+    } else {
+      // Promo is no longer valid (expired/exhausted/etc since the checkout
+      // was created). The price was already committed at checkout time, so
+      // we don't block ticket issuance over it — just skip recording any
+      // further usage.
+      console.log(
+        `Promo code "${promoCode}" no longer valid at ticket generation: ${promoValidation.message}`,
+      );
+    }
+  }
+
+  let discountedUnitsConsumed = 0;
 
   for (const input of ticketInputs) {
     // Get ticket type ID
@@ -170,17 +206,13 @@ export default async function generateTicket(
       ticketsCreated++;
     }
 
-    if (promoCode) {
-      const insertPromoCodeResponse = await insertPromoCodeUsage(promoCode);
-
-      if (insertPromoCodeResponse.status !== 200) {
-        console.log(insertPromoCodeResponse.message);
-
-        return {
-          status: insertPromoCodeResponse.status,
-          message: insertPromoCodeResponse.message,
-        };
-      }
+    if (discountedUnitsRemaining > 0) {
+      const eligibleForThisType = Math.min(
+        input.quantity,
+        discountedUnitsRemaining,
+      );
+      discountedUnitsConsumed += eligibleForThisType;
+      discountedUnitsRemaining -= eligibleForThisType;
     }
 
     const attendanceInsertResponse = await insertUserAttendance(
@@ -194,6 +226,22 @@ export default async function generateTicket(
         status: attendanceInsertResponse.status,
         message: attendanceInsertResponse.message,
       };
+    }
+  }
+
+  if (promoCode && discountedUnitsConsumed > 0) {
+    const insertPromoCodeResponse = await insertPromoCodeUsage(
+      promoCode,
+      eventId,
+      discountedUnitsConsumed,
+    );
+
+    if (insertPromoCodeResponse.status !== 200) {
+      // Tickets are already issued at this point — don't fail the purchase
+      // over a bookkeeping write; just log it for follow-up.
+      console.log(
+        `Failed to record promo code usage: ${insertPromoCodeResponse.message}`,
+      );
     }
   }
 

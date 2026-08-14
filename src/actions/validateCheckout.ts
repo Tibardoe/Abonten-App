@@ -18,6 +18,20 @@ type TicketWithEvent = {
   status: string;
 };
 
+type SelectedTicketFailure = { status: number; message: string };
+
+type SelectedTicketSuccess = {
+  ticketTypeId: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  discount: number;
+  discountedUnits: number;
+  amount: number;
+};
+
+type SelectedTicket = SelectedTicketFailure | SelectedTicketSuccess;
+
 export default async function validateCheckout({
   eventId,
   quantities,
@@ -107,9 +121,13 @@ export default async function validateCheckout({
   }
 
   let promoCodeDiscount: number | null = null;
+  // null = unlimited remaining uses; otherwise the number of ticket units
+  // still eligible for the discount, re-read fresh from the DB right now so
+  // a slot claimed by another checkout between "Apply" and "Proceed" is honored.
+  let remainingEligibleUnits: number | null = null;
 
   if (promoCode) {
-    const promoCodeResponse = await getPromoCode(promoCode);
+    const promoCodeResponse = await getPromoCode(promoCode, eventId);
 
     if (promoCodeResponse.status !== 200) {
       return {
@@ -119,63 +137,90 @@ export default async function validateCheckout({
     }
 
     promoCodeDiscount = promoCodeResponse.discountPercentage / 100;
+    remainingEligibleUnits = promoCodeResponse.remainingUses ?? null;
   }
 
-  const selectedTickets = await Promise.all(
-    Object.entries(quantities)
-      .filter(([_id, value]) => value > 0)
-      .map(async ([ticketTypeId, quantity]) => {
-        const { data: ticketType, error: ticketError } = await supabase
-          .from("ticket_type")
-          .select("*")
-          .eq("id", ticketTypeId)
-          .maybeSingle();
+  // Sequential (not Promise.all) so eligible discount units can be consumed
+  // first-come across ticket types in a deterministic order.
+  const selectedTickets: SelectedTicket[] = [];
 
-        if (ticketError || !ticketType) {
-          return {
-            status: 404,
-            message: `Ticket of type ${ticketTypeId} not found`,
-          };
-        }
+  for (const [ticketTypeId, quantity] of Object.entries(quantities).filter(
+    ([_id, value]) => value > 0,
+  )) {
+    const { data: ticketType, error: ticketError } = await supabase
+      .from("ticket_type")
+      .select("*")
+      .eq("id", ticketTypeId)
+      .maybeSingle();
 
-        if (ticketType.quantity !== null && quantity > ticketType.quantity) {
-          return {
-            status: 300,
-            message:
-              ticketType.quantity === 0
-                ? "This ticket type is sold out."
-                : `Only ${ticketType.quantity} ticket(s) left for this ticket type.`,
-          };
-        }
+    if (ticketError || !ticketType) {
+      selectedTickets.push({
+        status: 404,
+        message: `Ticket of type ${ticketTypeId} not found`,
+      });
+      continue;
+    }
 
-        const unitPrice = ticketType.price;
-        const discount = promoCodeDiscount ? promoCodeDiscount * unitPrice : 0;
-        const finalPrice = unitPrice - discount;
+    if (ticketType.quantity !== null && quantity > ticketType.quantity) {
+      selectedTickets.push({
+        status: 300,
+        message:
+          ticketType.quantity === 0
+            ? "This ticket type is sold out."
+            : `Only ${ticketType.quantity} ticket(s) left for this ticket type.`,
+      });
+      continue;
+    }
 
-        return {
-          ticketTypeId,
-          quantity,
-          unitPrice,
-          totalPrice: quantity * unitPrice,
-          discount,
-          amount: quantity * finalPrice,
-        };
-      }),
-  );
+    const unitPrice = ticketType.price;
+
+    let eligibleUnits = 0;
+    if (promoCodeDiscount) {
+      eligibleUnits =
+        remainingEligibleUnits === null
+          ? quantity
+          : Math.min(quantity, remainingEligibleUnits);
+
+      if (remainingEligibleUnits !== null) {
+        remainingEligibleUnits -= eligibleUnits;
+      }
+    }
+
+    const discount = promoCodeDiscount
+      ? promoCodeDiscount * unitPrice * eligibleUnits
+      : 0;
+    const amount = Math.max(0, quantity * unitPrice - discount);
+
+    selectedTickets.push({
+      ticketTypeId,
+      quantity,
+      unitPrice,
+      totalPrice: quantity * unitPrice,
+      discount,
+      discountedUnits: eligibleUnits,
+      amount,
+    });
+  }
 
   // Check for any failed ticket validation
-  const failed = selectedTickets.find((t) => t.status && t.status !== 200);
+  const failed = selectedTickets.find(
+    (t): t is SelectedTicketFailure => "status" in t,
+  );
   if (failed) {
     return failed;
   }
 
-  if (selectedTickets.length === 0) {
+  const validTickets = selectedTickets.filter(
+    (t): t is SelectedTicketSuccess => "ticketTypeId" in t,
+  );
+
+  if (validTickets.length === 0) {
     return { status: 404, message: "Please select at least one ticket." };
   }
 
   const checkoutSessionId = randomUUID();
 
-  for (const ticket of selectedTickets) {
+  for (const ticket of validTickets) {
     const { error: checkoutIdError } = await supabase
       .from("ticket_checkout")
       .insert({

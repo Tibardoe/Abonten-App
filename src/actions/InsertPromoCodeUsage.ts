@@ -1,7 +1,11 @@
 "use server";
 import { createClient } from "@/config/supabase/server";
 
-export default async function insertPromoCodeUsage(code: string) {
+export default async function insertPromoCodeUsage(
+  code: string,
+  eventId: string,
+  unitsUsed: number,
+) {
   const supabase = await createClient();
 
   const {
@@ -15,8 +19,9 @@ export default async function insertPromoCodeUsage(code: string) {
 
   const { data: promoCode, error: promoCodeError } = await supabase
     .from("promo_code")
-    .select("*, event:event_id(id)")
+    .select("*")
     .eq("promo_code", code)
+    .eq("event_id", eventId)
     .maybeSingle();
 
   if (promoCodeError) {
@@ -28,12 +33,16 @@ export default async function insertPromoCodeUsage(code: string) {
     };
   }
 
+  if (!promoCode) {
+    return { status: 404, message: "Promo code is invalid!" };
+  }
+
   const { error: insertError } = await supabase
     .from("promo_code_usage")
     .insert({
       promo_code_id: promoCode.id,
       user_id: user.id,
-      event_id: promoCode.event.id,
+      event_id: eventId,
     });
 
   if (insertError) {
@@ -44,7 +53,7 @@ export default async function insertPromoCodeUsage(code: string) {
 
   const { error: updateError } = await supabase
     .from("promo_code")
-    .update({ times_used: promoCode.times_used + 1 })
+    .update({ times_used: promoCode.times_used + unitsUsed })
     .eq("id", promoCode.id);
 
   if (updateError) {
