@@ -3,21 +3,21 @@
 // import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/config/supabase/client";
+import { useImageSelection } from "@/hooks/useImageSelection";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
-import { isImageFile } from "@/utils/isImageFile";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
 import { MdOutlineManageHistory } from "react-icons/md";
 import { cn } from "../lib/utils";
-import EventUploadMobileModal from "./EventUploadMobileModal";
+import EventUploadModal from "./EventUploadModal";
 import MobileFooter from "./MobileFooter";
 
 type menuClickedProp = {
@@ -50,32 +50,15 @@ export default function SideBar({
     }
   };
 
-  // Upload features
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
+    useImageSelection({
+      invalidFileMessage: "Please select an image file for your event flyer.",
+      onInvalidFile: (message) => alert(message),
+      onSelect: () => setShowPostModal(true),
+    });
 
   const closePopup = (state: boolean) => {
     setShowPostModal(state);
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) return;
-
-    if (!isImageFile(file)) {
-      alert("Please select an image file for your event flyer.");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
-    setSelectedFile(file);
-    setShowPostModal(true);
   };
 
   // const { data: userRole } = useQuery({
@@ -117,8 +100,8 @@ export default function SideBar({
 
   return (
     <>
-      {showPostModal && (
-        <EventUploadMobileModal
+      {showPostModal && imagePreview && selectedFile && (
+        <EventUploadModal
           handleClosePopup={closePopup}
           imgUrl={imagePreview}
           selectedFile={selectedFile}

@@ -1,28 +1,51 @@
 "use client";
 
+import { useImageSelection } from "@/hooks/useImageSelection";
 import { useState } from "react";
 import { IoCreateOutline } from "react-icons/io5";
-import UploadEventModal from "../organisms/UploadEventModal";
+import EventUploadModal from "../organisms/EventUploadModal";
 
+// Desktop nav-link trigger for event upload (rendered only inside the
+// desktop header). Picks the flyer itself, then opens EventUploadModal.
 export default function EventUploadButton() {
   const [showPopup, setShowPopup] = useState(false);
 
-  const handlePopup = () => {
-    setShowPopup(true);
-  };
+  const {
+    imagePreview,
+    selectedFile,
+    fileInputRef,
+    openFilePicker,
+    handleFileChange,
+  } = useImageSelection({
+    invalidFileMessage: "Please select an image file for your event flyer.",
+    onInvalidFile: (message) => alert(message),
+    onSelect: () => setShowPopup(true),
+  });
 
-  const closePopup = (state: boolean) => {
-    setShowPopup(state);
-  };
+  const closePopup = (state: boolean) => setShowPopup(state);
 
   return (
     <>
-      {showPopup && <UploadEventModal handleClosePopup={closePopup} />}
+      {showPopup && imagePreview && selectedFile && (
+        <EventUploadModal
+          handleClosePopup={closePopup}
+          imgUrl={imagePreview}
+          selectedFile={selectedFile}
+        />
+      )}
+
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
 
       <button
         type="button"
         className="flex gap-1 items-center"
-        onClick={handlePopup}
+        onClick={openFilePicker}
       >
         <IoCreateOutline className="text-3xl" />
         Post

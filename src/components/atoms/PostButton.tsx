@@ -1,51 +1,36 @@
 "use client";
 
-import { isImageFile } from "@/utils/isImageFile";
-import type React from "react";
-import { useRef, useState } from "react";
-import EventUploadMobileModal from "../organisms/EventUploadMobileModal";
-import UploadEventModal from "../organisms/UploadEventModal";
+import { useImageSelection } from "@/hooks/useImageSelection";
+import { useState } from "react";
+import EventUploadModal from "../organisms/EventUploadModal";
 import { Button } from "../ui/button";
 
+// Single "Post" trigger for event upload at every breakpoint, replacing the
+// previous pair of desktop/mobile buttons that each mounted their own full
+// event upload modal simultaneously (switching which was visible via CSS
+// only) rather than mounting one on demand.
 export default function PostButton() {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   const [showPostModal, setShowPostModal] = useState(false);
 
-  const handlePostModal = (state: boolean) => {
-    setShowPostModal(state);
-  };
+  const {
+    imagePreview,
+    selectedFile,
+    fileInputRef,
+    openFilePicker,
+    handleFileChange,
+  } = useImageSelection({
+    invalidFileMessage: "Please select an image file for your event flyer.",
+    onInvalidFile: (message) => alert(message),
+    onSelect: () => setShowPostModal(true),
+  });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) return;
-
-    if (!isImageFile(file)) {
-      alert("Please select an image file for your event flyer.");
-      return;
-    }
-
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
-    setSelectedFile(file);
-    setShowPostModal(true);
-  };
-
-  const closePopup = (state: boolean) => {
-    setShowPostModal(state);
-  };
+  const closePopup = (state: boolean) => setShowPostModal(state);
 
   return (
     <>
       <Button
-        className="px-10 hidden md:flex font-medium text-sm mt-5"
-        onClick={() => handlePostModal(true)}
+        className="px-10 font-medium text-sm mt-5"
+        onClick={openFilePicker}
       >
         Post
       </Button>
@@ -58,17 +43,8 @@ export default function PostButton() {
         onChange={handleFileChange}
       />
 
-      <Button
-        className="font-medium px-10 md:hidden mt-5"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        Post
-      </Button>
-
-      {showPostModal && <UploadEventModal handleClosePopup={handlePostModal} />}
-
-      {showPostModal && (
-        <EventUploadMobileModal
+      {showPostModal && imagePreview && selectedFile && (
+        <EventUploadModal
           handleClosePopup={closePopup}
           imgUrl={imagePreview}
           selectedFile={selectedFile}
