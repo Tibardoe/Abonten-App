@@ -48,6 +48,8 @@ export default async function insertSubscriptionCheckout(
       subscription_plan_name: subscriptionPackage.name,
       unit_price: subscriptionPackage.price,
       total_price: subscriptionPackage.price,
+      status: "pending",
+      expires_at: new Date(Date.now() + 15 * 60 * 1000),
     })
     .select("id")
     .single();

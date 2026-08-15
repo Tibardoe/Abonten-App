@@ -1,11 +1,10 @@
 "use client";
 
-import deleteCheckout from "@/actions/deleteCheckout";
 import generateTicket from "@/actions/generateTicket";
 import { getTickets } from "@/actions/getTickets";
+import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import type { TicketData } from "@/types/ticketType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,10 +18,7 @@ type EventSlugPageProp = {
   eventTitle: string;
   date: string;
   time: string;
-  ticketSummary?: TicketData[];
-  promoCode?: string;
   checkoutId?: string;
-  checkoutType?: "ticket" | "subscription";
   requireRegistration?: boolean;
   soldOut?: boolean;
 };
@@ -33,10 +29,7 @@ export default function CheckoutBtn({
   eventTitle,
   date,
   time,
-  ticketSummary,
-  promoCode,
   checkoutId,
-  checkoutType,
   requireRegistration,
   soldOut,
 }: EventSlugPageProp) {
@@ -67,11 +60,7 @@ export default function CheckoutBtn({
     });
   };
 
-  const handleRegistration = async (ticketQuantityAndType: TicketData[]) => {
-    if (!(await requireAuth())) return;
-
-    setLoading(true);
-
+  const getEventEndDate = () => {
     const rawDate = date;
 
     // Step 1: Extract the end date string
@@ -90,15 +79,13 @@ export default function CheckoutBtn({
       parsedEndDate.getTime() + 24 * 60 * 60 * 1000,
     );
 
-    const endDate = new Date(endDatePlusOneDay.getTime() + 24 * 60 * 60 * 1000);
+    return new Date(endDatePlusOneDay.getTime() + 24 * 60 * 60 * 1000);
+  };
 
-    const response = await generateTicket(
-      eventId,
-      ticketQuantityAndType,
-      promoCode,
-      endDate,
-    );
-
+  const handleResponse = async (response: {
+    status: number;
+    message?: string;
+  }) => {
     if (
       response?.status !== 200 &&
       response.message === "Ticket for this event already bought"
@@ -121,20 +108,31 @@ export default function CheckoutBtn({
       setNotification(response.message);
       await ticketPurchaseNotification();
 
-      if (checkoutId && checkoutType) {
-        const deleteCheckoutResponse = await deleteCheckout(
-          checkoutId,
-          checkoutType,
-        );
-
-        if (deleteCheckoutResponse.status !== 200) {
-          setNotification(deleteCheckoutResponse.message);
-        }
-      }
-
       setLoading(false);
       router.push("/manage/my-events");
     }
+  };
+
+  const handleFreeRegistration = async () => {
+    if (!(await requireAuth())) return;
+
+    setLoading(true);
+
+    const response = await registerForFreeEvent(eventId, getEventEndDate());
+
+    await handleResponse(response);
+  };
+
+  const handleMakePayment = async () => {
+    if (!(await requireAuth())) return;
+
+    if (!checkoutId) return;
+
+    setLoading(true);
+
+    const response = await generateTicket(checkoutId, getEventEndDate());
+
+    await handleResponse(response);
   };
 
   useEffect(() => {
@@ -197,9 +195,7 @@ export default function CheckoutBtn({
           requireRegistration && (
             <Button
               className="font-bold rounded-md w-full p-6 text-lg"
-              onClick={() =>
-                handleRegistration([{ type: "Free", quantity: 1 }])
-              }
+              onClick={handleFreeRegistration}
               disabled={loading}
             >
               {loading ? "Registering..." : btnText}
@@ -209,11 +205,11 @@ export default function CheckoutBtn({
       break;
 
     case "Make Payment":
-      if (ticketSummary) {
+      if (checkoutId) {
         actionButton = (
           <Button
             className="font-bold rounded-md w-full p-6 text-lg"
-            onClick={() => handleRegistration(ticketSummary)}
+            onClick={handleMakePayment}
             disabled={loading}
           >
             {loading ? "Please wait..." : btnText}

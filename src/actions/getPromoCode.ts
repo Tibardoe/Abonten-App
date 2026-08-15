@@ -81,6 +81,7 @@ export default async function getPromoCode(code: string, eventId: string) {
 
   return {
     status: 200,
+    id: promoCode.id,
     discountPercentage: promoCode.discount_percentage,
     remainingUses,
   };

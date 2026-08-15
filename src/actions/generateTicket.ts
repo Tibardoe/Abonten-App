@@ -5,17 +5,10 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
-import insertPromoCodeUsage from "./InsertPromoCodeUsage";
-import getPromoCode from "./getPromoCode";
 import insertUserAttendance from "./insertUserAttendance";
+import releasePromoUsage from "./releasePromoUsage";
 import releaseTicketQuantity from "./releaseTicketQuantity";
-import reserveTicketQuantity from "./reserveTicketQuantity";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
-
-type TicketInput = {
-  type: string;
-  quantity: number;
-};
 
 type TicketWithEvent = {
   user_id: string;
@@ -25,10 +18,26 @@ type TicketWithEvent = {
   status: string;
 };
 
+type CheckoutRow = {
+  id: string;
+  event_id: string;
+  ticket_type_id: string;
+  quantity: number;
+  promo_code: string | null;
+  discounted_units: number;
+  expires_at: string | null;
+};
+
+/**
+ * Issues tickets for an already-reserved, already-priced checkout session.
+ * This is deliberately checkout-session-driven rather than accepting a
+ * client-supplied {type, quantity}[] array: the checkout session (created
+ * by validateCheckout, owned by the caller, priced and inventory-reserved
+ * server-side) is the only source of truth for what gets issued. Nothing
+ * about "how many tickets of which type" is trusted from the client here.
+ */
 export default async function generateTicket(
-  eventId: string,
-  ticketInputs: TicketInput[],
-  promoCode: string | undefined,
+  checkoutSessionId: string,
   eventEndDate: Date,
   transactionId?: string,
   transactionMetada?: string,
@@ -49,7 +58,79 @@ export default async function generateTicket(
     };
   }
 
-  // Check if user has already bought ticket for the event
+  const { data: checkoutData, error: checkoutError } = await supabase
+    .from("ticket_checkout")
+    .select(
+      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at",
+    )
+    .eq("checkout_session_id", checkoutSessionId)
+    .eq("user_id", user.id)
+    .eq("status", "pending");
+
+  if (checkoutError) {
+    console.log(`Failed fetching checkout: ${checkoutError.message}`);
+
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const rows = (checkoutData ?? []) as CheckoutRow[];
+
+  if (rows.length === 0) {
+    return { status: 404, message: "Checkout not found" };
+  }
+
+  const now = new Date();
+  const isExpired = rows.some(
+    (row) => row.expires_at && new Date(row.expires_at) < now,
+  );
+
+  if (isExpired) {
+    const eventId = rows[0].event_id;
+
+    for (const row of rows) {
+      await releaseTicketQuantity(row.ticket_type_id, row.quantity);
+    }
+
+    const totalDiscountedUnits = rows.reduce(
+      (sum, row) => sum + (row.discounted_units || 0),
+      0,
+    );
+    const promoCode = rows[0].promo_code;
+
+    if (promoCode && totalDiscountedUnits > 0) {
+      const { data: promo } = await supabase
+        .from("promo_code")
+        .select("id")
+        .eq("promo_code", promoCode)
+        .maybeSingle();
+
+      if (promo) {
+        await releasePromoUsage(
+          promo.id,
+          user.id,
+          eventId,
+          totalDiscountedUnits,
+        );
+      }
+    }
+
+    await supabase
+      .from("ticket_checkout")
+      .update({ status: "expired" })
+      .in(
+        "id",
+        rows.map((row) => row.id),
+      );
+
+    return {
+      status: 410,
+      message: "This checkout has expired. Please start again.",
+    };
+  }
+
+  const eventId = rows[0].event_id;
+
+  // Check if user has already bought a ticket for the event
   const { data: rawTicketData, error: ticketDataError } = await supabase
     .from("ticket")
     .select("user_id, status, ticket_type_id(event_id)")
@@ -72,69 +153,10 @@ export default async function generateTicket(
     return { status: 300, message: "Ticket for this event already bought" };
   }
 
-  // Re-read the promo code's remaining eligible units right before issuing
-  // tickets (the final, authoritative moment) rather than trusting whatever
-  // was known back when the checkout was validated — mirrors how
-  // reserveTicketQuantity re-checks ticket_type.quantity fresh at this same
-  // point instead of trusting the earlier validateCheckout read.
-  let discountedUnitsRemaining = 0;
-
-  if (promoCode) {
-    const promoValidation = await getPromoCode(promoCode, eventId);
-
-    if (promoValidation.status === 200) {
-      const totalQuantity = ticketInputs.reduce(
-        (sum, input) => sum + input.quantity,
-        0,
-      );
-
-      const remainingUses = promoValidation.remainingUses ?? null;
-
-      discountedUnitsRemaining =
-        remainingUses === null
-          ? totalQuantity
-          : Math.min(totalQuantity, remainingUses);
-    } else {
-      // Promo is no longer valid (expired/exhausted/etc since the checkout
-      // was created). The price was already committed at checkout time, so
-      // we don't block ticket issuance over it — just skip recording any
-      // further usage.
-      console.log(
-        `Promo code "${promoCode}" no longer valid at ticket generation: ${promoValidation.message}`,
-      );
-    }
-  }
-
-  let discountedUnitsConsumed = 0;
-
-  for (const input of ticketInputs) {
-    // Get ticket type ID
-    const { data: ticketType, error: ticketTypeError } = await supabase
-      .from("ticket_type")
-      .select("id")
-      .eq("event_id", eventId)
-      .eq("type", input.type.toUpperCase())
-      .maybeSingle();
-
-    if (ticketTypeError || !ticketType) {
-      return {
-        status: 404,
-        message: `Ticket type ${input.type} not found`,
-      };
-    }
-
-    const reservationResponse = await reserveTicketQuantity(
-      ticketType.id,
-      input.quantity,
-    );
-
-    if (reservationResponse.status !== 200) {
-      return reservationResponse;
-    }
-
+  for (const row of rows) {
     let ticketsCreated = 0;
 
-    for (let i = 0; i < input.quantity; i++) {
+    for (let i = 0; i < row.quantity; i++) {
       const ticketCode = generateTicketCode();
 
       const qrCodeBase64 = await generateQRCodeDataURL(ticketCode);
@@ -150,8 +172,8 @@ export default async function generateTicket(
         );
 
         await releaseTicketQuantity(
-          ticketType.id,
-          input.quantity - ticketsCreated,
+          row.ticket_type_id,
+          row.quantity - ticketsCreated,
         );
 
         return { status: 500, message: "Something went wrong!" };
@@ -161,7 +183,7 @@ export default async function generateTicket(
         .from("ticket")
         .insert({
           user_id: user.id,
-          ticket_type_id: ticketType.id,
+          ticket_type_id: row.ticket_type_id,
           qr_public_id: uploadResponse.public_id,
           qr_version: uploadResponse.version,
           expires_at: eventEndDate,
@@ -181,8 +203,8 @@ export default async function generateTicket(
         console.log(`Error inserting ticket: ${insertTicketError.message}`);
 
         await releaseTicketQuantity(
-          ticketType.id,
-          input.quantity - ticketsCreated,
+          row.ticket_type_id,
+          row.quantity - ticketsCreated,
         );
 
         return {
@@ -193,8 +215,8 @@ export default async function generateTicket(
 
       if (!insertedTicket) {
         await releaseTicketQuantity(
-          ticketType.id,
-          input.quantity - ticketsCreated,
+          row.ticket_type_id,
+          row.quantity - ticketsCreated,
         );
 
         return {
@@ -206,19 +228,10 @@ export default async function generateTicket(
       ticketsCreated++;
     }
 
-    if (discountedUnitsRemaining > 0) {
-      const eligibleForThisType = Math.min(
-        input.quantity,
-        discountedUnitsRemaining,
-      );
-      discountedUnitsConsumed += eligibleForThisType;
-      discountedUnitsRemaining -= eligibleForThisType;
-    }
-
     const attendanceInsertResponse = await insertUserAttendance(
       eventId,
-      input.quantity,
-      ticketType.id,
+      row.quantity,
+      row.ticket_type_id,
     );
 
     if (attendanceInsertResponse.status !== 200) {
@@ -229,21 +242,13 @@ export default async function generateTicket(
     }
   }
 
-  if (promoCode && discountedUnitsConsumed > 0) {
-    const insertPromoCodeResponse = await insertPromoCodeUsage(
-      promoCode,
-      eventId,
-      discountedUnitsConsumed,
+  await supabase
+    .from("ticket_checkout")
+    .update({ status: "paid", completed_at: new Date() })
+    .in(
+      "id",
+      rows.map((row) => row.id),
     );
-
-    if (insertPromoCodeResponse.status !== 200) {
-      // Tickets are already issued at this point — don't fail the purchase
-      // over a bookkeeping write; just log it for follow-up.
-      console.log(
-        `Failed to record promo code usage: ${insertPromoCodeResponse.message}`,
-      );
-    }
-  }
 
   return { status: 200, message: "Tickets generated successfully" };
 }

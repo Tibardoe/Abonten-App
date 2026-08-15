@@ -108,10 +108,7 @@ export default async function page({
               eventTitle={eventTitle}
               date={eventDateAndTime.date}
               time={eventDateAndTime.time}
-              ticketSummary={ticketSummary}
-              promoCode={promoCode}
               checkoutId={checkoutId}
-              checkoutType={checkoutType}
             />
           ) : (
             <>

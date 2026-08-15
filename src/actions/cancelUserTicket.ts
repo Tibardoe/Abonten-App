@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import issueRefund from "./issueRefund";
+import releaseTicketQuantity from "./releaseTicketQuantity";
 
 export default async function cancelUserTicket(
   ticketId: string,
@@ -10,6 +11,17 @@ export default async function cancelUserTicket(
   eventId: string,
 ) {
   const supabase = await createClient();
+
+  const { data: ticket, error: ticketError } = await supabase
+    .from("ticket")
+    .select("ticket_type_id")
+    .eq("id", ticketId)
+    .maybeSingle();
+
+  if (ticketError || !ticket) {
+    console.log(`Failed fetching ticket: ${ticketError?.message}`);
+    return { status: 500, message: "Something went wrong!" };
+  }
 
   if (transactionId) {
     const { data: transaction, error: transactionError } = await supabase
@@ -57,6 +69,8 @@ export default async function cancelUserTicket(
 
     return { status: 500, message: "Something went wrong!" };
   }
+
+  await releaseTicketQuantity(ticket.ticket_type_id, 1);
 
   return { status: 200, message: "Ticket cancelled successfully" };
 }

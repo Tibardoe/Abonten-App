@@ -2,7 +2,13 @@
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
+import claimPromoUsage from "./claimPromoUsage";
 import getPromoCode from "./getPromoCode";
+import releasePromoUsage from "./releasePromoUsage";
+import releaseTicketQuantity from "./releaseTicketQuantity";
+import reserveTicketQuantity from "./reserveTicketQuantity";
+
+const CHECKOUT_RESERVATION_MINUTES = 15;
 
 type CheckoutDetailsProp = {
   eventId: string;
@@ -18,19 +24,53 @@ type TicketWithEvent = {
   status: string;
 };
 
-type SelectedTicketFailure = { status: number; message: string };
-
-type SelectedTicketSuccess = {
-  ticketTypeId: string;
+type PendingCheckoutRow = {
+  id: string;
+  checkout_session_id: string;
+  status: string;
+  expires_at: string | null;
+  ticket_type_id: string;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  discount: number;
-  discountedUnits: number;
-  amount: number;
+  promo_code: string | null;
+  discounted_units: number;
 };
 
-type SelectedTicket = SelectedTicketFailure | SelectedTicketSuccess;
+async function releaseExpiredCheckout(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  eventId: string,
+  userId: string,
+  rows: PendingCheckoutRow[],
+) {
+  for (const row of rows) {
+    await releaseTicketQuantity(row.ticket_type_id, row.quantity);
+  }
+
+  const totalDiscountedUnits = rows.reduce(
+    (sum, row) => sum + (row.discounted_units || 0),
+    0,
+  );
+  const promoCode = rows[0]?.promo_code;
+
+  if (promoCode && totalDiscountedUnits > 0) {
+    const { data: promo } = await supabase
+      .from("promo_code")
+      .select("id")
+      .eq("promo_code", promoCode)
+      .maybeSingle();
+
+    if (promo) {
+      await releasePromoUsage(promo.id, userId, eventId, totalDiscountedUnits);
+    }
+  }
+
+  await supabase
+    .from("ticket_checkout")
+    .update({ status: "expired" })
+    .in(
+      "id",
+      rows.map((row) => row.id),
+    );
+}
 
 export default async function validateCheckout({
   eventId,
@@ -57,11 +97,14 @@ export default async function validateCheckout({
   const { data: ticketCheckoutData, error: ticketCheckoutDataError } =
     await supabase
       .from("ticket_checkout")
-      .select("checkout_session_id, event_id, status")
+      .select(
+        "id, checkout_session_id, event_id, status, expires_at, ticket_type_id, quantity, promo_code, discounted_units",
+      )
       .eq("user_id", user.id)
-      .eq("event_id", eventId);
+      .eq("event_id", eventId)
+      .eq("status", "pending");
 
-  if (ticketCheckoutDataError || !ticketCheckoutData) {
+  if (ticketCheckoutDataError) {
     console.log(
       `Error fetching ticket checkout data: ${ticketCheckoutDataError.message}`,
     );
@@ -69,16 +112,25 @@ export default async function validateCheckout({
     return { status: 500, message: "Something went wrong" };
   }
 
-  const pendingCheckout = ticketCheckoutData?.find(
-    (checkout) => checkout.status === "pending",
-  );
+  const pendingRows = (ticketCheckoutData ?? []) as PendingCheckoutRow[];
 
-  if (pendingCheckout) {
-    return {
-      status: 300,
-      checkoutId: pendingCheckout.checkout_session_id,
-      message: "You already have a pending ticket checkout for this event",
-    };
+  if (pendingRows.length > 0) {
+    const now = new Date();
+    const isExpired = pendingRows.some(
+      (row) => row.expires_at && new Date(row.expires_at) < now,
+    );
+
+    if (!isExpired) {
+      return {
+        status: 300,
+        checkoutId: pendingRows[0].checkout_session_id,
+        message: "You already have a pending ticket checkout for this event",
+      };
+    }
+
+    // The previous reservation timed out — release what it held and let
+    // this request create a fresh one instead of blocking the user forever.
+    await releaseExpiredCheckout(supabase, eventId, user.id, pendingRows);
   }
 
   // Check if user has already bought ticket for the event
@@ -120,6 +172,7 @@ export default async function validateCheckout({
     return { status: 404, message: "No event found!" };
   }
 
+  let promoCodeId: string | null = null;
   let promoCodeDiscount: number | null = null;
   // null = unlimited remaining uses; otherwise the number of ticket units
   // still eligible for the discount, re-read fresh from the DB right now so
@@ -136,13 +189,33 @@ export default async function validateCheckout({
       };
     }
 
+    promoCodeId = promoCodeResponse.id;
     promoCodeDiscount = promoCodeResponse.discountPercentage / 100;
     remainingEligibleUnits = promoCodeResponse.remainingUses ?? null;
   }
 
-  // Sequential (not Promise.all) so eligible discount units can be consumed
-  // first-come across ticket types in a deterministic order.
-  const selectedTickets: SelectedTicket[] = [];
+  // Reserve inventory for every requested ticket type up front (this is the
+  // "checkout begins" reservation — Option B from the checkout redesign:
+  // holding the units now, and releasing them on expiry/cancellation, avoids
+  // telling a buyer their checkout is valid only to find the ticket gone at
+  // payment time). Each reservation uses the same atomic compare-and-swap
+  // as reserveTicketQuantity always has; if any later item in this request
+  // fails, everything reserved so far in THIS request is rolled back.
+  const reserved: { ticketTypeId: string; quantity: number }[] = [];
+  const rows: {
+    ticketTypeId: string;
+    quantity: number;
+    unitPrice: number;
+    discount: number;
+    discountedUnits: number;
+    amount: number;
+  }[] = [];
+
+  const rollbackReservations = async () => {
+    for (const item of reserved) {
+      await releaseTicketQuantity(item.ticketTypeId, item.quantity);
+    }
+  };
 
   for (const [ticketTypeId, quantity] of Object.entries(quantities).filter(
     ([_id, value]) => value > 0,
@@ -154,23 +227,21 @@ export default async function validateCheckout({
       .maybeSingle();
 
     if (ticketError || !ticketType) {
-      selectedTickets.push({
+      await rollbackReservations();
+      return {
         status: 404,
         message: `Ticket of type ${ticketTypeId} not found`,
-      });
-      continue;
+      };
     }
 
-    if (ticketType.quantity !== null && quantity > ticketType.quantity) {
-      selectedTickets.push({
-        status: 300,
-        message:
-          ticketType.quantity === 0
-            ? "This ticket type is sold out."
-            : `Only ${ticketType.quantity} ticket(s) left for this ticket type.`,
-      });
-      continue;
+    const reservation = await reserveTicketQuantity(ticketTypeId, quantity);
+
+    if (reservation.status !== 200) {
+      await rollbackReservations();
+      return { status: reservation.status, message: reservation.message };
     }
+
+    reserved.push({ ticketTypeId, quantity });
 
     const unitPrice = ticketType.price;
 
@@ -191,58 +262,81 @@ export default async function validateCheckout({
       : 0;
     const amount = Math.max(0, quantity * unitPrice - discount);
 
-    selectedTickets.push({
+    rows.push({
       ticketTypeId,
       quantity,
       unitPrice,
-      totalPrice: quantity * unitPrice,
       discount,
       discountedUnits: eligibleUnits,
       amount,
     });
   }
 
-  // Check for any failed ticket validation
-  const failed = selectedTickets.find(
-    (t): t is SelectedTicketFailure => "status" in t,
-  );
-  if (failed) {
-    return failed;
-  }
-
-  const validTickets = selectedTickets.filter(
-    (t): t is SelectedTicketSuccess => "ticketTypeId" in t,
-  );
-
-  if (validTickets.length === 0) {
+  if (rows.length === 0) {
+    await rollbackReservations();
     return { status: 404, message: "Please select at least one ticket." };
   }
 
-  const checkoutSessionId = randomUUID();
+  const totalDiscountedUnits = rows.reduce(
+    (sum, row) => sum + row.discountedUnits,
+    0,
+  );
 
-  for (const ticket of validTickets) {
-    const { error: checkoutIdError } = await supabase
-      .from("ticket_checkout")
-      .insert({
+  if (promoCodeId && totalDiscountedUnits > 0) {
+    const claim = await claimPromoUsage(
+      promoCodeId,
+      user.id,
+      eventId,
+      totalDiscountedUnits,
+    );
+
+    if (claim.status !== 200) {
+      await rollbackReservations();
+      return { status: claim.status, message: claim.message };
+    }
+  }
+
+  const checkoutSessionId = randomUUID();
+  const expiresAt = new Date(
+    Date.now() + CHECKOUT_RESERVATION_MINUTES * 60 * 1000,
+  );
+
+  const { error: checkoutInsertError } = await supabase
+    .from("ticket_checkout")
+    .insert(
+      rows.map((row) => ({
         checkout_session_id: checkoutSessionId,
         user_id: user.id,
         event_id: eventId,
-        ticket_type_id: ticket.ticketTypeId,
-        quantity: ticket.quantity,
-        unit_price: ticket.unitPrice,
+        ticket_type_id: row.ticketTypeId,
+        quantity: row.quantity,
+        unit_price: row.unitPrice,
         promo_code: promoCode ?? null,
-        discount: ticket.discount,
-        total_price: ticket.amount,
-      });
+        discount: row.discount,
+        discounted_units: row.discountedUnits,
+        total_price: row.amount,
+        status: "pending",
+        expires_at: expiresAt,
+      })),
+    );
 
-    if (checkoutIdError) {
-      console.log(`Failed to insert checkout: ${checkoutIdError.message}`);
+  if (checkoutInsertError) {
+    console.log(`Failed to insert checkout: ${checkoutInsertError.message}`);
 
-      return {
-        status: 500,
-        message: "Something went wrong!",
-      };
+    await rollbackReservations();
+    if (promoCodeId && totalDiscountedUnits > 0) {
+      await releasePromoUsage(
+        promoCodeId,
+        user.id,
+        eventId,
+        totalDiscountedUnits,
+      );
     }
+
+    return {
+      status: 500,
+      message: "Something went wrong!",
+    };
   }
 
   return { status: 200, checkoutSessionId };
