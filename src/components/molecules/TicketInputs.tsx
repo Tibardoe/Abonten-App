@@ -14,6 +14,7 @@ type TicketInputProp = {
   singleTicketPrice?: number | null;
   singleTicketQuantity?: number | null;
   handleSingleTicket?: (amount: number) => void;
+  multipleTickets?: Ticket[];
   handleMultipleTickets?: (tickets: Ticket[]) => void;
   handleSingleTicketQuantity?: (quantity: number) => void;
 };
@@ -24,6 +25,7 @@ export default function TicketInputs({
   singleTicketQuantity,
   handleSingleTicket,
   handleSingleTicketQuantity,
+  multipleTickets = [],
   handleMultipleTickets,
 }: TicketInputProp) {
   const [date, setDate] = React.useState<Date | undefined>(undefined);
@@ -36,18 +38,10 @@ export default function TicketInputs({
 
   const [newPrice, setNewPrice] = useState<number | null>(null);
 
-  const [multipleTickets, setMultipleTickets] = useState<
-    {
-      category: string;
-      price: number;
-      quantity: number;
-      availableFrom: Date;
-      availableUntil: Date;
-    }[]
-  >([]);
-
   const { data: currency } = useQuery({
-    queryKey: ["currency"],
+    // Same key as useEventUploadForm.ts's identical fetchCountryMetadata()
+    // call, so both share one cache entry instead of firing two requests.
+    queryKey: ["user-currency"],
     queryFn: async () => {
       const userCurrency = await fetchCountryMetadata();
       return userCurrency?.currency;
@@ -74,7 +68,6 @@ export default function TicketInputs({
 
       const updatedTickets = [...multipleTickets, newTicket];
 
-      setMultipleTickets(updatedTickets);
       handleMultipleTickets?.(updatedTickets);
 
       // Clear input fields
@@ -93,7 +86,6 @@ export default function TicketInputs({
     event?.preventDefault();
 
     const updatedTickets = multipleTickets.filter((t) => t.category !== ticket);
-    setMultipleTickets(updatedTickets);
 
     handleMultipleTickets?.(updatedTickets); // Send to parent
   };
@@ -260,13 +252,15 @@ export default function TicketInputs({
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
                       <MdDateRange className="text-xl" />
-                      {ticket.availableFrom.toLocaleDateString()} &rarr;{" "}
-                      {ticket.availableUntil.toLocaleDateString()}
+                      {ticket.availableFrom?.toLocaleDateString()} &rarr;{" "}
+                      {ticket.availableUntil?.toLocaleDateString()}
                     </div>
 
                     <button
                       type="button"
-                      onClick={(event) => handleRemove(event, ticket.category)}
+                      onClick={(event) =>
+                        handleRemove(event, ticket.category ?? "")
+                      }
                     >
                       <LiaTimesSolid className="text-xl" />
                     </button>

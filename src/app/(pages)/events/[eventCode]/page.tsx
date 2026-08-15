@@ -1,7 +1,5 @@
-import { getNearByEvents } from "@/actions/getNearByEvents";
+import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import { getUserRating } from "@/actions/getUserRating";
-import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
-// import BuyTicketBtn from "@/components/atoms/CheckoutBtn";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
@@ -39,8 +37,6 @@ export default async function page({
 
   const { eventCode } = await params;
 
-  // await ticketPurchaseNotification();
-
   const { data: event } = await supabase
     .from("event")
     .select(
@@ -70,12 +66,12 @@ export default async function page({
     .eq("event_code", eventCode.toUpperCase())
     .single();
 
-  const event_dates =
-    event?.event_occurrence.length > 0
-      ? event.event_occurrence
-      : [{ starts_at: event?.starts_at, ends_at: event?.ends_at }];
-
   if (!event) return <p className="p-8 text-center">No event found</p>;
+
+  const event_dates =
+    event.event_occurrence.length > 0
+      ? event.event_occurrence
+      : [{ starts_at: event.starts_at, ends_at: event.ends_at }];
 
   const safeLocation = event.address.full_address ?? "";
 
@@ -109,12 +105,17 @@ export default async function page({
     ticketTypes: event.ticket_type,
   });
 
-  // Nearby events genuinely depend on the geocode result above, so this stays sequential.
-  const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
-  const data: UserPostType[] = eventsWithinLocation.data || [];
-  const similarEvents = data.filter(
-    (evt) => evt.event_category === event.event_category && evt.id !== event.id,
+  // Similar events genuinely depend on the geocode result above, so this
+  // stays sequential. Uses the same category-matching RPC as the dedicated
+  // similar-events page instead of a separate nearby-events fetch + JS filter.
+  const similarEventsResponse = await getSimilarEvents(
+    event.event_category,
+    lng,
+    lat,
   );
+  const similarEvents: UserPostType[] = (
+    similarEventsResponse.similarEvents ?? []
+  ).filter((evt: UserPostType) => evt.id !== event.id);
 
   const postedAt = getRelativeTime(event.created_at);
   const eventDateAndTime = getFormattedEventDate(

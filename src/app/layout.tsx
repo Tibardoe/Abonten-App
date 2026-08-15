@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Providers from "@/context/authProvider";
 import LocaleProvider from "@/i18n/LocaleProvider";
 import { defaultLocale } from "@/i18n/config";
 import { loadMessages } from "@/i18n/messages";
@@ -50,9 +49,7 @@ export default async function RootLayout({
         >
           <LocaleProvider defaultMessages={messages}>
             <ReactQueryProvider>
-              <Providers>
-                <main>{children}</main>
-              </Providers>
+              <main>{children}</main>
             </ReactQueryProvider>
           </LocaleProvider>
         </ThemeProvider>

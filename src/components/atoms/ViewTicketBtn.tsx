@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-// import { Button } from "../ui/button";
 
 import type { UserTicketType } from "@/types/ticketType";
 import dynamic from "next/dynamic";
-// import { useParams } from "next/navigation";
-// import RecieptModal from "../organisms/RecieptModal";
 
 // Dynamically imported so the PDF-generation libraries (html2canvas, jspdf)
 // only load once a user actually opens their ticket.

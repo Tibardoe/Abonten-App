@@ -6,6 +6,15 @@ export async function getUserEventRole(userId: string) {
   const supabase = await createClient();
 
   try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (!user || userError || user.id !== userId) {
+      return { status: 401, role: "none" };
+    }
+
     const roles: ("organizer" | "attendee")[] = [];
     // Check if user is an organizer
     const { data: organizerEvent, error: organizerEventError } = await supabase

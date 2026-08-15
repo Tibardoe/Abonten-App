@@ -7,15 +7,11 @@ import Notification from "./Notification";
 type CancelTicketProp = {
   ticketId: string;
   transactionId: string | null;
-  userId: string;
-  eventId: string;
 };
 
 export default function CancelUserTicketBtn({
   ticketId,
   transactionId,
-  userId,
-  eventId,
 }: CancelTicketProp) {
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -24,12 +20,7 @@ export default function CancelUserTicketBtn({
   const handleCancelTicket = async () => {
     setLoading(true);
 
-    const response = await cancelUserTicket(
-      ticketId,
-      transactionId,
-      userId,
-      eventId,
-    );
+    const response = await cancelUserTicket(ticketId, transactionId);
 
     if (response.status !== 200) {
       setNotification(response.message);

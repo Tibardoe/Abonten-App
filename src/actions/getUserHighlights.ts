@@ -21,7 +21,9 @@ export default async function getUserHighlight(username: string) {
   const { data: highlights, error: highlightsError } = await supabase
     .from("highlight")
     .select("*")
-    .eq("user_id", userId.id);
+    .eq("user_id", userId.id)
+    // Safety cap, consistent with the other per-user list actions.
+    .limit(200);
 
   if (highlightsError) {
     console.log(`Error fetching highlights: ${highlightsError.message}`);

@@ -53,7 +53,7 @@ export default function ReviewModal({
   };
 
   const { data: reviewedId } = useQuery({
-    queryKey: ["reviewed-details"],
+    queryKey: ["reviewed-details", username],
     queryFn: async () => {
       try {
         const { data: user } = await supabase

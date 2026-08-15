@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -48,8 +49,16 @@ export default function LocaleProvider({
   const [locale, setLocaleState] = useState<Locale>(defaultLocale);
   const [messages, setMessages] = useState<Messages>(defaultMessages);
 
+  // Guards against two overlapping setLocale calls (the mount effect's
+  // cookie-correction and a manual pick from Language.tsx) resolving out of
+  // order — without this, a slower earlier call can overwrite a faster,
+  // newer one after it already resolved.
+  const generationRef = useRef(0);
+
   const setLocale = useCallback(
     async (next: Locale) => {
+      const generation = ++generationRef.current;
+
       if (next === defaultLocale) {
         setLocaleState(next);
         setMessages(defaultMessages);
@@ -57,6 +66,9 @@ export default function LocaleProvider({
       }
 
       const nextMessages = await loadMessages(next);
+
+      if (generation !== generationRef.current) return;
+
       setLocaleState(next);
       setMessages(nextMessages);
     },

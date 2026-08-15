@@ -171,6 +171,7 @@ export default function EventUploadFormFields({
             {ticket === "Multiple Ticket Types" && (
               <TicketInputs
                 ticketType={ticket}
+                multipleTickets={multipleTickets}
                 handleMultipleTickets={handleMultipleTickets}
               />
             )}

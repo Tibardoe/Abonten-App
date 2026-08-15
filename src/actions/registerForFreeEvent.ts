@@ -5,9 +5,11 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
+import {
+  releaseTicketQuantity,
+  reserveTicketQuantity,
+} from "@/utils/ticketInventory";
 import insertUserAttendance from "./insertUserAttendance";
-import releaseTicketQuantity from "./releaseTicketQuantity";
-import reserveTicketQuantity from "./reserveTicketQuantity";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
 type TicketWithEvent = {

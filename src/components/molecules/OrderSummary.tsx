@@ -192,14 +192,20 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 
 type OrderSummaryProps = {
   orderSummary: TicketSummaryProps | SubscriptionSummaryProps;
+  checkoutId: string;
 };
 
-export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
+export default function OrderSummary({
+  orderSummary,
+  checkoutId,
+}: OrderSummaryProps) {
   const queryClient = useQueryClient();
+
+  const queryKey = ["checkout-summary", checkoutId];
 
   // React Query becomes the source of truth
   const { data } = useQuery({
-    queryKey: ["checkout-summary"],
+    queryKey,
     queryFn: async () => orderSummary, // fallback (server already fetched)
     initialData: orderSummary,
   });
@@ -210,14 +216,14 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
       deleteTicketSummaryCheckout(ticketCheckoutId),
 
     onMutate: async (ticketCheckoutId) => {
-      await queryClient.cancelQueries({ queryKey: ["checkout-summary"] });
+      await queryClient.cancelQueries({ queryKey });
 
       const previousSummary = queryClient.getQueryData<
         TicketSummaryProps | SubscriptionSummaryProps
-      >(["checkout-summary"]);
+      >(queryKey);
 
       queryClient.setQueryData(
-        ["checkout-summary"],
+        queryKey,
         (old: TicketSummaryProps | SubscriptionSummaryProps | undefined) => {
           if (!old || old.type !== "ticket") return old;
 
@@ -234,13 +240,15 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
     },
 
     onError: (
-      // err,
-      // ticketCheckoutId,
-      context: {
-        previousSummary?: TicketSummaryProps | SubscriptionSummaryProps;
-      },
+      _err,
+      _ticketCheckoutId,
+      onMutateResult:
+        | {
+            previousSummary?: TicketSummaryProps | SubscriptionSummaryProps;
+          }
+        | undefined,
     ) => {
-      queryClient.setQueryData(["checkout-summary"], context?.previousSummary);
+      queryClient.setQueryData(queryKey, onMutateResult?.previousSummary);
       alert("Failed to delete item. Please try again.");
     },
 

@@ -30,6 +30,17 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
 
   const groupId = randomUUID();
 
+  // The MediaItem type only allows "image"/"video" at compile time — a
+  // direct call bypasses that, so it's re-checked here before item.type
+  // reaches Cloudinary's resource_type.
+  const invalidItem = mediaItems.find(
+    (item) => item.type !== "image" && item.type !== "video",
+  );
+
+  if (invalidItem) {
+    return { status: 400, message: "Unsupported media type" };
+  }
+
   const results = await Promise.allSettled(
     mediaItems.map(async (item) => {
       const arrayBuffer = await item.file.arrayBuffer();

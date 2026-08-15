@@ -1,5 +1,4 @@
 import { getTransactionById } from "@/actions/getTransactionById";
-import ViewReciptButton from "@/components/atoms/ViewReciptButton";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import { humanizeTransactionReason } from "@/utils/humanizeTransactionReason";
@@ -166,10 +165,6 @@ export default async function page({
             <p className="font-bold text-muted-foreground">{formattedDate}</p>
           </div>
         </div>
-      </div>
-
-      <div className="flex md:justify-end">
-        <ViewReciptButton />
       </div>
     </div>
   );

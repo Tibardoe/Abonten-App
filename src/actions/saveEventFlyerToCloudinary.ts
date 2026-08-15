@@ -23,7 +23,8 @@ export async function saveEventFlyerToCloudinary(selectedFile: File) {
     const fileBuffer = Buffer.from(await selectedFile.arrayBuffer());
 
     const tempDir = os.tmpdir();
-    const tempFilePath = path.join(tempDir, selectedFile.name);
+    const safeName = path.basename(selectedFile.name);
+    const tempFilePath = path.join(tempDir, safeName);
 
     await writeFile(tempFilePath, fileBuffer);
 

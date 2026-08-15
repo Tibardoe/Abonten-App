@@ -5,8 +5,8 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
+import { releaseTicketQuantity } from "@/utils/ticketInventory";
 import insertUserAttendance from "./insertUserAttendance";
-import releaseTicketQuantity from "./releaseTicketQuantity";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
 type TicketWithEvent = {
@@ -137,34 +137,45 @@ export default async function generateTicket(
   }
 
   for (const row of rows) {
-    let ticketsCreated = 0;
+    const ticketCodes = Array.from({ length: row.quantity }, () =>
+      generateTicketCode(),
+    );
 
-    for (let i = 0; i < row.quantity; i++) {
-      const ticketCode = generateTicketCode();
+    // QR generation + Cloudinary upload has no cross-unit dependency, so a
+    // group booking of N tickets no longer pays N sequential round trips —
+    // they all run concurrently. Only once every upload in this row has
+    // succeeded are the ticket rows inserted, in one batch: either the
+    // whole row commits or none of it does, so a single failure releases
+    // the row's full reserved quantity rather than tracking partial progress.
+    const uploadResults = await Promise.all(
+      ticketCodes.map(async (ticketCode) => {
+        const qrCodeBase64 = await generateQRCodeDataURL(ticketCode);
+        const uploadResponse = await saveEventQrCodeToCloudinary(
+          qrCodeBase64,
+          ticketCode,
+        );
+        return { ticketCode, uploadResponse };
+      }),
+    );
 
-      const qrCodeBase64 = await generateQRCodeDataURL(ticketCode);
+    const failedUpload = uploadResults.find(
+      ({ uploadResponse }) => uploadResponse.error,
+    );
 
-      const uploadResponse = await saveEventQrCodeToCloudinary(
-        qrCodeBase64,
-        ticketCode,
+    if (failedUpload) {
+      console.log(
+        `Error saving QR code to cloudinary:${failedUpload.uploadResponse.error}`,
       );
 
-      if (uploadResponse.error) {
-        console.log(
-          `Error saving QR code to cloudinary:${uploadResponse.error}`,
-        );
+      await releaseTicketQuantity(row.ticket_type_id, row.quantity);
 
-        await releaseTicketQuantity(
-          row.ticket_type_id,
-          row.quantity - ticketsCreated,
-        );
+      return { status: 500, message: "Something went wrong!" };
+    }
 
-        return { status: 500, message: "Something went wrong!" };
-      }
-
-      const { data: insertedTicket, error: insertTicketError } = await supabase
-        .from("ticket")
-        .insert({
+    const { data: insertedTickets, error: insertTicketError } = await supabase
+      .from("ticket")
+      .insert(
+        uploadResults.map(({ ticketCode, uploadResponse }) => ({
           user_id: user.id,
           ticket_type_id: row.ticket_type_id,
           qr_public_id: uploadResponse.public_id,
@@ -178,37 +189,23 @@ export default async function generateTicket(
           metadata: transactionMetada ?? null,
           created_at: new Date(),
           updated_at: null,
-        })
-        .select("id")
-        .maybeSingle();
+        })),
+      )
+      .select("id");
 
-      if (insertTicketError) {
-        console.log(`Error inserting ticket: ${insertTicketError.message}`);
+    if (
+      insertTicketError ||
+      !insertedTickets ||
+      insertedTickets.length !== row.quantity
+    ) {
+      console.log(`Error inserting ticket: ${insertTicketError?.message}`);
 
-        await releaseTicketQuantity(
-          row.ticket_type_id,
-          row.quantity - ticketsCreated,
-        );
+      await releaseTicketQuantity(row.ticket_type_id, row.quantity);
 
-        return {
-          status: 500,
-          message: "Something went wrong!",
-        };
-      }
-
-      if (!insertedTicket) {
-        await releaseTicketQuantity(
-          row.ticket_type_id,
-          row.quantity - ticketsCreated,
-        );
-
-        return {
-          status: 500,
-          message: "Ticket insertion failed — no ID returned",
-        };
-      }
-
-      ticketsCreated++;
+      return {
+        status: 500,
+        message: "Something went wrong!",
+      };
     }
 
     const attendanceInsertResponse = await insertUserAttendance(

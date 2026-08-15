@@ -6,6 +6,26 @@ export default async function getAttendanceList(eventId: string) {
   const supabase = await createClient();
 
   try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (!user || userError) {
+      return { status: 401, message: "User not logged in" };
+    }
+
+    const { data: event, error: eventError } = await supabase
+      .from("event")
+      .select("id")
+      .eq("id", eventId)
+      .eq("organizer_id", user.id)
+      .maybeSingle();
+
+    if (eventError || !event) {
+      return { status: 403, message: "Not authorized to view this event" };
+    }
+
     const { data: attendanceList, error: attendanceListError } = await supabase
       .from("attendance")
       .select(

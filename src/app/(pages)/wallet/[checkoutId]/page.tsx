@@ -98,7 +98,9 @@ export default async function page({
               to pay
             </p>
           </div>
-          {orderSummary && <OrderSummary orderSummary={orderSummary} />}
+          {orderSummary && (
+            <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
+          )}
           {!checkoutId ? (
             <AddWalletButton />
           ) : totalAmount === 0 && checkoutType === "ticket" ? (

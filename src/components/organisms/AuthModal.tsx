@@ -1,7 +1,7 @@
 "use client";
 
+import sendPhoneOtp from "@/actions/sendPhoneOtp";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
-import { signInWithPhone, verifyOtp } from "@/services/authService";
 import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
@@ -64,7 +64,7 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
     event.preventDefault();
 
     try {
-      await signInWithPhone(`${countryCode}${phone}`);
+      await sendPhoneOtp(`${countryCode}${phone}`);
       setStep(2);
     } catch (error) {
       console.error("Phone Sign-In Error:", error);
@@ -75,7 +75,7 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
     event.preventDefault();
 
     try {
-      // await verifyOtp(fullPhoneNumber, otp);
+      // await verifyPhoneOtp(requestId, prefix, otp); — see src/actions/verifyPhoneOtp.ts
       router.push(next || "/events");
     } catch (error) {
       console.error("OTP Verification Error:", error);

@@ -1,5 +1,9 @@
-"use server";
 import { createClient } from "@/config/supabase/server";
+
+// Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
+// for why. These accept an arbitrary userId with no session binding of their
+// own, so they must only ever be reached through validateCheckout, which
+// already resolves userId from the caller's own session.
 
 /**
  * Atomically claims `unitsToClaim` redemptions of a promo code for one
@@ -10,7 +14,7 @@ import { createClient } from "@/config/supabase/server";
  * The per-user promo_code_usage row (PK: promo_code_id, user_id, event_id)
  * additionally prevents the same user claiming twice.
  */
-export default async function claimPromoUsage(
+export async function claimPromoUsage(
   promoCodeId: string,
   userId: string,
   eventId: string,
@@ -72,4 +76,66 @@ export default async function claimPromoUsage(
   }
 
   return { status: 200 };
+}
+
+const MAX_CAS_ATTEMPTS = 5;
+
+/**
+ * Compensating action for claimPromoUsage: gives back a redemption that was
+ * claimed for a checkout that ultimately failed, expired, or was cancelled
+ * before payment — same role releaseTicketQuantity plays for inventory.
+ * Uses the same compare-and-swap update as claimPromoUsage, retried on
+ * contention, for the same reason: a plain read-then-write loses
+ * increments when two releases race.
+ */
+export async function releasePromoUsage(
+  promoCodeId: string,
+  userId: string,
+  eventId: string,
+  unitsToRelease: number,
+) {
+  if (unitsToRelease <= 0) return;
+
+  const supabase = await createClient();
+
+  await supabase
+    .from("promo_code_usage")
+    .delete()
+    .eq("promo_code_id", promoCodeId)
+    .eq("user_id", userId)
+    .eq("event_id", eventId);
+
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
+    const { data: promoCode, error: promoCodeError } = await supabase
+      .from("promo_code")
+      .select("times_used")
+      .eq("id", promoCodeId)
+      .maybeSingle();
+
+    if (promoCodeError || !promoCode) return;
+
+    const newTimesUsed = Math.max(0, promoCode.times_used - unitsToRelease);
+
+    const { data: updated, error: updateError } = await supabase
+      .from("promo_code")
+      .update({ times_used: newTimesUsed })
+      .eq("id", promoCodeId)
+      .eq("times_used", promoCode.times_used)
+      .select("id");
+
+    if (updateError) {
+      console.log(`Failed releasing promo usage: ${updateError.message}`);
+      return;
+    }
+
+    if (updated && updated.length > 0) {
+      return;
+    }
+    // 0 rows updated means another writer changed times_used between the
+    // read and write above — retry with a fresh read instead of overwriting it.
+  }
+
+  console.log(
+    `Failed releasing ${unitsToRelease} promo usage unit(s) for ${promoCodeId} after ${MAX_CAS_ATTEMPTS} attempts (contention)`,
+  );
 }

@@ -2,11 +2,12 @@
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
-import claimPromoUsage from "./claimPromoUsage";
+import { claimPromoUsage, releasePromoUsage } from "@/utils/promoUsage";
+import {
+  releaseTicketQuantity,
+  reserveTicketQuantity,
+} from "@/utils/ticketInventory";
 import getPromoCode from "./getPromoCode";
-import releasePromoUsage from "./releasePromoUsage";
-import releaseTicketQuantity from "./releaseTicketQuantity";
-import reserveTicketQuantity from "./reserveTicketQuantity";
 
 const CHECKOUT_RESERVATION_MINUTES = 15;
 

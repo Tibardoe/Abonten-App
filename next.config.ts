@@ -16,12 +16,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "api.qrserver.com",
-        pathname: "/**", // Match all paths
-      },
-
-      {
-        protocol: "https",
         hostname: "lh3.googleusercontent.com",
         pathname: "/**", // Match all paths
       },

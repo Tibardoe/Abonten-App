@@ -93,8 +93,6 @@ export default async function page() {
                     <CancelUserTicketBtn
                       ticketId={event.id}
                       transactionId={event.transaction_id}
-                      userId={event.user_id}
-                      eventId={event.event.id}
                     />
                   </div>
                 </div>

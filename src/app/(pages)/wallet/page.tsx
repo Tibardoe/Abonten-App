@@ -1,10 +1,3 @@
-// import getEventTitle from "@/actions/getEventTitle";
-// import getSubscriptionCheckout from "@/actions/getSubscriptionCheckout";
-// import getTicketCheckout from "@/actions/getTicketCheckout";
-// import CheckoutBtn from "@/components/atoms/CheckoutBtn";
-// import OrderSummary from "@/components/molecules/OrderSummary";
-// import type { TicketSummaryItem } from "@/types/ticketType";
-// import { getFormattedEventDate } from "@/utils/dateFormatter";
 import ContinueButton from "@/wallet/atoms/ContinueButton";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 

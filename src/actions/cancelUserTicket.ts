@@ -1,26 +1,34 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { releaseTicketQuantity } from "@/utils/ticketInventory";
 import issueRefund from "./issueRefund";
-import releaseTicketQuantity from "./releaseTicketQuantity";
 
 export default async function cancelUserTicket(
   ticketId: string,
   transactionId: string | null,
-  userId: string,
-  eventId: string,
 ) {
   const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (!user || userError) {
+    return { status: 401, message: "User not logged in" };
+  }
 
   const { data: ticket, error: ticketError } = await supabase
     .from("ticket")
     .select("ticket_type_id")
     .eq("id", ticketId)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (ticketError || !ticket) {
     console.log(`Failed fetching ticket: ${ticketError?.message}`);
-    return { status: 500, message: "Something went wrong!" };
+    return { status: 404, message: "Ticket not found" };
   }
 
   if (transactionId) {
@@ -28,6 +36,7 @@ export default async function cancelUserTicket(
       .from("transaction")
       .select("*")
       .eq("id", transactionId)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (transactionError || !transaction) {
@@ -48,7 +57,8 @@ export default async function cancelUserTicket(
   const { error: updateStatusError } = await supabase
     .from("ticket")
     .update({ status: "cancelled", updated_at: new Date() })
-    .eq("id", ticketId);
+    .eq("id", ticketId)
+    .eq("user_id", user.id);
 
   if (updateStatusError) {
     console.log(`Error updating ticket status:${updateStatusError.message}`);
@@ -59,8 +69,8 @@ export default async function cancelUserTicket(
   const { error: deleteFromAttendanceError } = await supabase
     .from("attendance")
     .delete()
-    .eq("user_id", userId)
-    .eq("event_id", eventId);
+    .eq("ticket_id", ticketId)
+    .eq("user_id", user.id);
 
   if (deleteFromAttendanceError) {
     console.log(
