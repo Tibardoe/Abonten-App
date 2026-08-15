@@ -33,7 +33,8 @@ export async function getUserReviews(username: string) {
   const { data, error } = await supabase
     .from("review")
     .select("*, user_info:reviewer_id(username)")
-    .eq("reviewed_id", user.id);
+    .eq("reviewed_id", user.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.log(`Failed fetching reviews: ${error.message}`);

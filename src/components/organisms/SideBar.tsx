@@ -24,12 +24,14 @@ type menuClickedProp = {
   menuClicked: boolean;
   onCloseAnimationEnd?: () => void;
   onPostSuccess?: () => void;
+  onNavigate?: () => void;
 };
 
 export default function SideBar({
   menuClicked,
   onCloseAnimationEnd,
   onPostSuccess,
+  onNavigate,
 }: menuClickedProp) {
   const t = useTranslations("navigation");
 
@@ -127,6 +129,7 @@ export default function SideBar({
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
               <Link
                 href={`/events/location/${location}`}
+                onClick={onNavigate}
                 className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <GoHome className="text-xl" />
@@ -144,6 +147,7 @@ export default function SideBar({
 
               <Link
                 href="/manage/attendance/event-list"
+                onClick={onNavigate}
                 className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <MdOutlineManageHistory className="text-xl" />
@@ -152,6 +156,7 @@ export default function SideBar({
 
               <Link
                 href="/manage/my-events"
+                onClick={onNavigate}
                 className="flex gap-1 items-center hover:text-primary transition-colors"
               >
                 <GiPartyFlags className="text-xl" />
@@ -177,9 +182,13 @@ export default function SideBar({
             </div>
           ) : (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
-              <Link href="/auth/signin">{t("signIn")}</Link>
+              <Link href="/auth/signin" onClick={onNavigate}>
+                {t("signIn")}
+              </Link>
 
-              <Link href="/auth/signin">{t("signUp")}</Link>
+              <Link href="/auth/signin" onClick={onNavigate}>
+                {t("signUp")}
+              </Link>
             </div>
           )}
 

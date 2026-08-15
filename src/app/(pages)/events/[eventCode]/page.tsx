@@ -10,6 +10,7 @@ import { createClient } from "@/config/supabase/server";
 import type { UserPostType } from "@/types/postsType";
 import { getFormattedEventDate, getRelativeTime } from "@/utils/dateFormatter";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiMail } from "react-icons/fi";
@@ -73,19 +74,11 @@ export default async function page({
     .select("*", { count: "exact", head: true })
     .eq("event_id", event.id);
 
-  const capacityReached =
-    !!event.capacity &&
-    event.capacity > 0 &&
-    (attendanceCount ?? 0) >= event.capacity;
-
-  const allTicketTypesDepleted =
-    event.ticket_type.length > 0 &&
-    event.ticket_type.every(
-      (t: { quantity: number | null }) =>
-        t.quantity !== null && t.quantity <= 0,
-    );
-
-  const soldOut = capacityReached || allTicketTypesDepleted;
+  const soldOut = getEventSoldOutStatus({
+    capacity: event.capacity,
+    attendeeCount: attendanceCount ?? 0,
+    ticketTypes: event.ticket_type,
+  });
 
   const { data: minTicket } = await supabase
     .from("ticket_type")

@@ -20,7 +20,8 @@ export default async function getOrganizerEvents() {
   const { data: events, error: eventsError } = await supabase
     .from("event")
     .select("*, occurrences:event_occurrence(*)")
-    .eq("organizer_id", userId);
+    .eq("organizer_id", userId)
+    .order("created_at", { ascending: false });
 
   if (eventsError) {
     console.log(`Error fetching organizer's events: ${eventsError.message}`);

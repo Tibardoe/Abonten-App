@@ -2,6 +2,7 @@
 
 import type { UserPostType } from "@/types/postsType";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
+import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,7 +32,10 @@ export default function EventCard({
   const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
   const attendees = attendanceCount ?? attendance_count ?? 0;
-  const soldOut = !!capacity && capacity > 0 && attendees >= capacity;
+  const soldOut = getEventSoldOutStatus({
+    capacity,
+    attendeeCount: attendees,
+  });
 
   return (
     <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">

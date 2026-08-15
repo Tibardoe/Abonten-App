@@ -4,6 +4,7 @@ import { supabase } from "@/config/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -30,6 +31,8 @@ export default function ReviewModal({
   username,
 }: ShowReviewModalProp) {
   useBodyScrollLock(true);
+
+  const router = useRouter();
 
   const [rating, setRating] = useState(0);
 
@@ -80,6 +83,7 @@ export default function ReviewModal({
         form.reset();
         setRating(0);
         handleShowReviewModal(false);
+        router.refresh();
         setNotification(response.message);
         setTimeout(() => setNotification(null), 3000);
       } else {

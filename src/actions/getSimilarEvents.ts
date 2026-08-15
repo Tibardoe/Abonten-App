@@ -7,14 +7,13 @@ export async function getSimilarEvents(
 ) {
   const supabase = await createClient();
 
-  const { data: similarEvents, error: similarEventsError } = await supabase.rpc(
-    "get_similar_events",
-    {
+  const { data: similarEvents, error: similarEventsError } = await supabase
+    .rpc("get_similar_events", {
       input_category: category,
       input_location: `SRID=4326;POINT(${lng} ${lat})`,
       input_radius_km: 10,
-    },
-  );
+    })
+    .order("starts_at", { ascending: true });
 
   if (similarEventsError) {
     console.log(similarEventsError.message);

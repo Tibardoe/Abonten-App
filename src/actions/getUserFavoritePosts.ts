@@ -25,7 +25,8 @@ export async function getUserFavoritePosts() {
     .select(
       "*, event (*, ticket_type(price, currency), event_occurrence(id, starts_at, ends_at))",
     )
-    .eq("user_id", user.user.id);
+    .eq("user_id", user.user.id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     return { status: 500, message: `Failed fetching events: ${error.message}` };

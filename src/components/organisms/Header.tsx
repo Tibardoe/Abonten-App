@@ -118,6 +118,7 @@ export default function Header() {
           menuClicked={isMenuClicked}
           onCloseAnimationEnd={() => setIsSidebarMounted(false)}
           onPostSuccess={closeSidebar}
+          onNavigate={closeSidebar}
         />
       )}
 
