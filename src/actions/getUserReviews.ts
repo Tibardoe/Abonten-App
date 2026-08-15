@@ -34,7 +34,10 @@ export async function getUserReviews(username: string) {
     .from("review")
     .select("*, user_info:reviewer_id(username)")
     .eq("reviewed_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // Safety cap: no pagination yet, so bound the worst case instead of
+    // shipping an unbounded review list.
+    .limit(200);
 
   if (error) {
     console.log(`Failed fetching reviews: ${error.message}`);

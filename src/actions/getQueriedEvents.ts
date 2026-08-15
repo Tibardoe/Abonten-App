@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/config/supabase/server";
+import { publicSupabase } from "@/config/supabase/publicClient";
 
 interface FilterParams {
   minPrice?: number | null;
@@ -17,7 +17,7 @@ interface FilterParams {
 }
 
 export async function getQueriedEvents(queryParams: FilterParams) {
-  const supabase = await createClient();
+  const supabase = publicSupabase;
 
   const {
     minPrice = null,
@@ -34,19 +34,23 @@ export async function getQueriedEvents(queryParams: FilterParams) {
   } = queryParams;
 
   // Call your PostgreSQL function using supabase.rpc
-  const { data, error } = await supabase.rpc("get_filtered_events", {
-    p_min_price: minPrice,
-    p_max_price: maxPrice,
-    p_min_rating: minRating,
-    p_user_lat: lat,
-    p_user_lng: lng,
-    p_max_distance_km: maxDistanceKm,
-    p_start_date: startDate,
-    p_end_date: endDate,
-    p_search_text: searchText ?? "",
-    p_event_category: category ?? "",
-    p_event_type: type ?? "",
-  });
+  const { data, error } = await supabase
+    .rpc("get_filtered_events", {
+      p_min_price: minPrice,
+      p_max_price: maxPrice,
+      p_min_rating: minRating,
+      p_user_lat: lat,
+      p_user_lng: lng,
+      p_max_distance_km: maxDistanceKm,
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_search_text: searchText ?? "",
+      p_event_category: category ?? "",
+      p_event_type: type ?? "",
+    })
+    // Safety cap: no pagination yet, so bound the worst case (a broad
+    // search with few filters) instead of shipping unbounded results.
+    .limit(200);
 
   if (error) {
     console.error("Error fetching filtered events:", error);

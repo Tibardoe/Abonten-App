@@ -3,6 +3,7 @@
 import { setUserLocale } from "@/actions/setUserLocale";
 import Notification from "@/components/atoms/Notification";
 import { languages } from "@/data/languages";
+import { useLocaleSwitcher } from "@/i18n/LocaleProvider";
 import type { Locale } from "@/i18n/config";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -14,6 +15,7 @@ type LanguageProps = {
 
 export default function Language({ currentLocale }: LanguageProps) {
   const t = useTranslations("common");
+  const { setLocale } = useLocaleSwitcher();
   const [isPending, startTransition] = useTransition();
   // Selected instantly on click rather than waiting on the server round-trip,
   // so the radio reflects the choice immediately; rolled back on failure.
@@ -37,6 +39,12 @@ export default function Language({ currentLocale }: LanguageProps) {
         return;
       }
 
+      // The root layout no longer re-reads the locale cookie per request
+      // (see layout.tsx), so it won't pick up the change on its own —
+      // apply it to the shared client provider directly. router.refresh()
+      // still re-runs this route's own server-rendered translations
+      // (e.g. this page's nav title, fetched via getTranslations()).
+      await setLocale(code);
       router.refresh();
     });
   };

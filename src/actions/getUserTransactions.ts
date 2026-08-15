@@ -23,7 +23,10 @@ export async function getUserTransactions() {
     .from("transaction")
     .select("*")
     .eq("user_id", user.user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // Safety cap: no pagination yet, so bound the worst case instead of
+    // shipping an unbounded transaction history.
+    .limit(200);
 
   if (transactionsError) {
     throw transactionsError;

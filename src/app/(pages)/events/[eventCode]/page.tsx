@@ -6,7 +6,7 @@ import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
-import { createClient } from "@/config/supabase/server";
+import { publicSupabase } from "@/config/supabase/publicClient";
 import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate, getRelativeTime } from "@/utils/dateFormatter";
@@ -23,12 +23,19 @@ import { PiTicketBold } from "react-icons/pi";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
+// Event details are public and don't depend on the viewer, so this page can
+// be statically rendered and revalidated periodically (ISR) instead of
+// re-querying Supabase on every request. 60s balances freshness (ticket
+// price/attendance/sold-out status shown here are display-only — checkout
+// re-validates stock live) against not hitting the DB on every hit.
+export const revalidate = 60;
+
 export default async function page({
   params,
 }: {
   params: Promise<{ eventCode: string }>;
 }) {
-  const supabase = await createClient();
+  const supabase = publicSupabase;
 
   const { eventCode } = await params;
 

@@ -13,7 +13,10 @@ export async function getSimilarEvents(
       input_location: `SRID=4326;POINT(${lng} ${lat})`,
       input_radius_km: 10,
     })
-    .order("starts_at", { ascending: true });
+    .order("starts_at", { ascending: true })
+    // Safety cap: this feeds a small "similar events" widget, not a full
+    // list page, so a tight cap is intentional here rather than a fallback.
+    .limit(20);
 
   if (similarEventsError) {
     console.log(similarEventsError.message);

@@ -32,7 +32,10 @@ export async function getTransactionsByDate(date: string) {
     .eq("user_id", user.user.id)
     .gte("transaction_date", dayStart)
     .lte("transaction_date", dayEnd)
-    .order("transaction_date", { ascending: false });
+    .order("transaction_date", { ascending: false })
+    // Safety cap: no pagination yet, so bound the worst case instead of
+    // shipping an unbounded transaction list.
+    .limit(200);
 
   if (transactionsError) {
     return {

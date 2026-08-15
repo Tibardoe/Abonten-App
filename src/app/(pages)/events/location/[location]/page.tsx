@@ -61,7 +61,7 @@ export default async function page({
     "happening-this-month",
   );
 
-  const selected = await getDailyEvent(events, safeLocation);
+  const selected = getDailyEvent(events, safeLocation);
 
   return (
     <section className="space-y-2">

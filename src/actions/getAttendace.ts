@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/config/supabase/server";
+import { publicSupabase } from "@/config/supabase/publicClient";
 
 export async function getEventAttendanceCount(eventId: string) {
-  const supabase = await createClient();
+  const supabase = publicSupabase;
   const { count, error } = await supabase
     .from("attendance")
     .select("*", { count: "exact", head: true })
@@ -25,7 +25,7 @@ export async function getEventAttendanceCounts(
 ): Promise<Record<string, number>> {
   if (eventIds.length === 0) return {};
 
-  const supabase = await createClient();
+  const supabase = publicSupabase;
   const { data, error } = await supabase
     .from("attendance")
     .select("event_id")

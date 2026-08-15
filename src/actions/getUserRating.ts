@@ -1,9 +1,9 @@
 "use server";
 
-import { createClient } from "@/config/supabase/server";
+import { publicSupabase } from "@/config/supabase/publicClient";
 
 export async function getUserRating(reviewedId: string) {
-  const supabase = await createClient();
+  const supabase = publicSupabase;
 
   const { data: ratingsData, error } = await supabase
     .from("review")

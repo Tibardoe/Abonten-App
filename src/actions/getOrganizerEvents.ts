@@ -21,7 +21,10 @@ export default async function getOrganizerEvents() {
     .from("event")
     .select("*, occurrences:event_occurrence(*)")
     .eq("organizer_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // Safety cap: no pagination yet, so bound the worst case instead of
+    // shipping an unbounded event list.
+    .limit(200);
 
   if (eventsError) {
     console.log(`Error fetching organizer's events: ${eventsError.message}`);

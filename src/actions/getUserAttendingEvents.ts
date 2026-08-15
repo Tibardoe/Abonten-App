@@ -32,7 +32,10 @@ export default async function getUserAttendingEvents() {
         )
       `,
       )
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      // Safety cap: no pagination yet, so bound the worst case instead of
+      // shipping an unbounded ticket list.
+      .limit(200);
 
     if (ticketsError) {
       console.error(

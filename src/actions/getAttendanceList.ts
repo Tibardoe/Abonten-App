@@ -11,7 +11,11 @@ export default async function getAttendanceList(eventId: string) {
       .select(
         "*, auth:id(email, phone), user_info:id(username, full_name), ticket_type(type, price, currency)",
       )
-      .eq("event_id", eventId);
+      .eq("event_id", eventId)
+      // Safety cap: this has no pagination yet, so bound the worst case
+      // (a very large or viral event) instead of shipping an unbounded
+      // attendee list.
+      .limit(1000);
 
     if (attendanceListError) {
       console.error("Supabase error:", attendanceListError.message);

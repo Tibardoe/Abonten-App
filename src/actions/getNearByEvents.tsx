@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/config/supabase/server";
+import { publicSupabase } from "@/config/supabase/publicClient";
 import type { UserPostType } from "@/types/postsType";
 import { getEventAttendanceCounts } from "./getAttendace";
 
@@ -9,13 +9,17 @@ export async function getNearByEvents(
   lng: number,
   radius: number,
 ) {
-  const supabase = await createClient();
+  const supabase = publicSupabase;
 
-  const { data, error } = await supabase.rpc("get_nearby_events", {
-    user_lat: lat,
-    user_lng: lng,
-    search_radius: radius,
-  });
+  const { data, error } = await supabase
+    .rpc("get_nearby_events", {
+      user_lat: lat,
+      user_lng: lng,
+      search_radius: radius,
+    })
+    // Safety cap: no pagination yet, so bound the worst case (a dense city
+    // with a wide radius) instead of shipping an unbounded event list.
+    .limit(200);
 
   if (error) {
     console.log(`Error fetching get nearby events: ${error.message}`);

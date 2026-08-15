@@ -1,5 +1,5 @@
+import LandingAuthLinks from "@/landing Page/molecules/LandingAuthLinks";
 import LandingLocationSearch from "@/landing Page/organisms/LandingLocationSearch";
-import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -7,9 +7,7 @@ import Link from "next/link";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-export default async function Home() {
-  const t = await getTranslations("navigation");
-
+export default function Home() {
   return (
     <div className="fixed w-full">
       <div className="bg-landing bg-repeat bg-cover bg-bottom w-full h-dvh relative text-white flex flex-col items-center">
@@ -26,20 +24,7 @@ export default async function Home() {
               />
             </Link>
 
-            <div className="space-x-3">
-              <Link
-                href="/auth/signin"
-                className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
-              >
-                {t("signUp")}
-              </Link>
-              <Link
-                href="/auth/signin"
-                className="bg-transparent rounded-md font-bold hover:bg-mint border border-mint p-2 text-sm"
-              >
-                {t("signIn")}
-              </Link>
-            </div>
+            <LandingAuthLinks />
           </div>
         </nav>
 

@@ -1,91 +1,32 @@
 // utils/dailyEventCache.ts
 
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import type { UserPostType } from "@/types/postsType";
 
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-const THREE_DAYS_MS = 3 * ONE_DAY_MS;
-const MAX_LOCATIONS = 20;
-
-// const CACHE_DIR = path.join(process.cwd(), "cache");
-
-const CACHE_DIR = path.join(os.tmpdir(), "daily-event-cache");
-
-export async function getDailyEvent(
+// Picks a stable "event of the day" per location without any stored state:
+// the pick is a deterministic function of (location, UTC date), so every
+// instance/request agrees without needing to share a cache. The previous
+// implementation cached this on local disk (os.tmpdir()), which doesn't
+// work across serverless instances (each gets its own ephemeral /tmp) or
+// across replicas of the Docker deployment — different requests for the
+// same location on the same day could get different "daily" events, and
+// the cache silently reset on every cold start/restart anyway.
+export function getDailyEvent(
   events: UserPostType[],
   location: string,
-): Promise<UserPostType | null> {
-  try {
-    const safeLocation = location.replace(/[^a-z0-9]/gi, "_").toLowerCase();
-    const cachePath = path.join(CACHE_DIR, `${safeLocation}_dailyEvent.json`);
+): UserPostType | null {
+  if (!events.length) return null;
 
-    if (!fs.existsSync(CACHE_DIR)) {
-      fs.mkdirSync(CACHE_DIR, { recursive: true });
-    }
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  const seed = `${location.toLowerCase()}_${today}`;
+  const index = hashSeed(seed) % events.length;
 
-    // Cleanup: remove stale files and limit total
-    cleanupOldCacheFiles();
-
-    if (fs.existsSync(cachePath)) {
-      const data = JSON.parse(fs.readFileSync(cachePath, "utf-8"));
-      const now = Date.now();
-
-      if (now - data.timestamp < ONE_DAY_MS && data.event) {
-        return data.event;
-      }
-    }
-
-    if (!events.length) return null;
-
-    const randomIndex = Math.floor(Math.random() * events.length);
-    const newEvent = events[randomIndex];
-
-    fs.writeFileSync(
-      cachePath,
-      JSON.stringify({ event: newEvent, timestamp: Date.now() }, null, 2),
-    );
-
-    return newEvent;
-  } catch (err) {
-    console.error("Error handling daily event cache:", err);
-    return null;
-  }
+  return events[index];
 }
 
-function cleanupOldCacheFiles() {
-  try {
-    const files = fs
-      .readdirSync(CACHE_DIR)
-      .filter((file) => file.endsWith("_dailyEvent.json"));
-
-    const now = Date.now();
-
-    // Remove old files
-    for (const file of files) {
-      const filePath = path.join(CACHE_DIR, file);
-      const { timestamp } = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-      if (now - timestamp > THREE_DAYS_MS) {
-        fs.unlinkSync(filePath);
-      }
-    }
-
-    // Enforce limit
-    const remainingFiles = fs
-      .readdirSync(CACHE_DIR)
-      .filter((file) => file.endsWith("_dailyEvent.json"))
-      .map((file) => {
-        const filePath = path.join(CACHE_DIR, file);
-        const { timestamp } = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-        return { filePath, timestamp };
-      })
-      .sort((a, b) => b.timestamp - a.timestamp);
-
-    for (let i = MAX_LOCATIONS; i < remainingFiles.length; i++) {
-      fs.unlinkSync(remainingFiles[i].filePath);
-    }
-  } catch (err) {
-    console.error("Error cleaning cache files:", err);
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
   }
+  return Math.abs(hash);
 }

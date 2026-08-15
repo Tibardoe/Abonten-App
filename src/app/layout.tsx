@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "@/context/authProvider";
+import LocaleProvider from "@/i18n/LocaleProvider";
+import { defaultLocale } from "@/i18n/config";
+import { loadMessages } from "@/i18n/messages";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -25,12 +26,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
+  // Always render the default locale on the server, instead of reading the
+  // locale cookie here — a cookies() read in the root layout would force
+  // every page in the app into per-request dynamic rendering, since it
+  // wraps everything. LocaleProvider corrects to the visitor's saved
+  // locale client-side after hydration (see its own comment for the
+  // trade-off this makes).
+  const messages = await loadMessages(defaultLocale);
 
   return (
     <html
-      lang={locale}
+      lang={defaultLocale}
       className="antialiased"
       style={{ fontFamily: "EuclidCircular, sans-serif" }}
       suppressHydrationWarning
@@ -42,13 +48,13 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <NextIntlClientProvider locale={locale} messages={messages}>
+          <LocaleProvider defaultMessages={messages}>
             <ReactQueryProvider>
               <Providers>
                 <main>{children}</main>
               </Providers>
             </ReactQueryProvider>
-          </NextIntlClientProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

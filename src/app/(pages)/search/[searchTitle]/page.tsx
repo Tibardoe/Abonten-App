@@ -9,6 +9,11 @@ import { undoSlug } from "@/utils/geerateSlug";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
+// This route only depends on the [searchTitle] segment (no query-string
+// filters), and getQueriedEvents is now a public, cookie-free read, so it
+// can be statically rendered and revalidated periodically (ISR).
+export const revalidate = 60;
+
 export default async function page({
   params,
 }: {

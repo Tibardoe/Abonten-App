@@ -32,7 +32,10 @@ export async function getUserPosts(username: string) {
       "*, ticket_type(price, currency), event_occurrence(id, starts_at, ends_at)",
     )
     .eq("organizer_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    // Safety cap: no pagination yet, so bound the worst case instead of
+    // shipping an unbounded event list.
+    .limit(200);
 
   if (error) {
     return { status: 500, message: `Failed fetching events: ${error.message}` };
