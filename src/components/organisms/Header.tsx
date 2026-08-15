@@ -1,14 +1,13 @@
 "use client";
 
-import { getUserDetails } from "@/actions/getUserDetails";
 // import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/config/supabase/client";
+import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { generateSlug } from "@/utils/geerateSlug";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -24,8 +23,6 @@ import EventUploadButton from "../atoms/EventUploadButton";
 import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
 import SideBar from "./SideBar";
-
-const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/abonten/image/upload/";
 
 const defaultPublicId = "AnonymousProfile_rn6qez";
 
@@ -51,32 +48,13 @@ export default function Header() {
       ? "/assets/images/abonten-logo-white.svg"
       : "/assets/images/abonten-logo-black.svg";
 
-  // Query for user session
+  // Shared with SideBar/MobileNavBar/etc. — one cached fetch instead of
+  // each component independently calling supabase.auth.getUser().
   const {
-    data: userSession,
-    isLoading: sessionLoading,
-    // error: sessionError,
-  } = useQuery({
-    queryKey: ["session"],
-    queryFn: async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) throw new Error(error?.message || "No user");
-      return data.user;
-    },
-  });
-
-  // Query for user details
-  const {
+    user: userSession,
+    userLoading: sessionLoading,
     data: userDetails,
-    // isLoading: detailsLoading
-  } = useQuery({
-    queryKey: ["user-details", userSession?.id],
-    enabled: !!userSession?.id,
-    queryFn: async () => {
-      const details = await getUserDetails();
-      return details?.status === 200 ? details.userDetails : null;
-    },
-  });
+  } = useCurrentUserDetails();
 
   const profile = {
     username: userDetails?.username ?? "",
@@ -85,8 +63,14 @@ export default function Header() {
   };
 
   const avatarUrl = profile.avatar_public_id
-    ? `${CLOUDINARY_BASE_URL}v${profile.avatar_version}/${profile.avatar_public_id}.jpg`
-    : `${CLOUDINARY_BASE_URL}v${defaulfVersion}/${defaultPublicId}.jpg`;
+    ? buildCloudinaryUrl(profile.avatar_public_id, profile.avatar_version, {
+        width: 60,
+        height: 60,
+      })
+    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, {
+        width: 60,
+        height: 60,
+      });
 
   const isUserAccount = pathname === `/user/${profile.username}/posts`;
 

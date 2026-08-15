@@ -24,28 +24,6 @@ export function formatDateWithSuffix(date: string | Date): string {
   return formattedDate.replace(/\d+/, `${day}${suffix}`);
 }
 
-// export function formatFullDateTimeRange(
-//   from?: Date | null | string,
-//   to?: Date | null | string,
-// ): { date: string; time: string } {
-//   const fromObj = from
-//     ? formatSingleDateTime(from)
-//     : { date: "N/A", time: "N/A" };
-//   const toObj = to ? formatSingleDateTime(to) : { date: "N/A", time: "N/A" };
-
-//   if (from && to && fromObj.date === toObj.date) {
-//     return {
-//       date: fromObj.date,
-//       time: `${fromObj.time} - ${toObj.time}`,
-//     };
-//   }
-
-//   return {
-//     date: `${fromObj.date} - ${toObj.date}`,
-//     time: `${fromObj.time} - ${toObj.time}`,
-//   };
-// }
-
 export function formatFullDateTimeRange(
   from?: Date | null | string,
   to?: Date | null | string,
@@ -96,30 +74,7 @@ export function formatSingleDateTime(date: Date | string): {
   else if (day % 10 === 2 && day !== 12) suffix = "nd";
   else if (day % 10 === 3 && day !== 13) suffix = "rd";
 
-  // const options: Intl.DateTimeFormatOptions = {
-  //   year: "numeric",
-  //   month: "short",
-  //   day: "numeric",
-  // };
-
-  // const day = parsedDate.getDate();
-  // let suffix = "th";
-
-  // if (day % 10 === 1 && day !== 11) suffix = "st";
-  // else if (day % 10 === 2 && day !== 12) suffix = "nd";
-  // else if (day % 10 === 3 && day !== 13) suffix = "rd";
-
-  // const formattedDate = parsedDate.toLocaleDateString("en-GB", options);
-  // const [monthStr, yearStr] = formattedDate.split(" ");
-
   const formattedDate = `${dayOfWeek}, ${day}${suffix} ${month} ${year}`;
-
-  // const dateStr = `${day}${suffix} ${monthStr}, ${yearStr}`;
-  // const timeStr = parsedDate.toLocaleTimeString("en-US", {
-  //   hour: "2-digit",
-  //   minute: "2-digit",
-  //   hour12: true,
-  // });
 
   const timeStr = parsedDate.toLocaleTimeString("en-US", {
     hour: "2-digit",
@@ -203,80 +158,6 @@ export function getDateParts(dateInput: string | Date) {
     time: formattedTime,
   };
 }
-
-// export function getFormattedEventDate(
-//   startsAt: string | Date | null | undefined,
-//   endsAt: string | Date | null | undefined,
-//   fallbackOccurrences?: Occurrence[] | null,
-// ): { date: string; time: string } {
-//   // ✅ Try single/range event first
-//   const formatted = formatFullDateTimeRange(startsAt, endsAt);
-
-//   const hasValidDates =
-//     formatted.date !== "N/A - N/A" && formatted.time !== "N/A - N/A";
-
-//   if (hasValidDates) {
-//     return formatted;
-//   }
-
-//   // ✅ If multi-date event (event_occurrence)
-//   if (fallbackOccurrences && fallbackOccurrences.length > 0) {
-//     const first = fallbackOccurrences.sort(
-//       (a, b) =>
-//         new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
-//     )[0];
-
-//     return formatFullDateTimeRange(first.starts_at, first.ends_at);
-//   }
-
-//   return {
-//     date: "Date not available",
-//     time: "Time not available",
-//   };
-// }
-
-// export function getFormattedEventDate(
-//   startsAt: string | Date | null | undefined,
-//   endsAt: string | Date | null | undefined,
-//   fallbackOccurrences?: Occurrence[] | null,
-// ): { date: string; time: string } {
-//   const now = new Date().getTime();
-
-//   // 1. Check the main event dates first
-//   // We only return these if the event is still "active" (hasn't ended)
-//   if (startsAt && endsAt) {
-//     const eventEndTime = new Date(endsAt).getTime();
-//     if (eventEndTime > now) {
-//       return formatFullDateTimeRange(startsAt, endsAt);
-//     }
-//   }
-
-//   // 2. If the main date is past OR missing, look at occurrences
-//   if (fallbackOccurrences && fallbackOccurrences.length > 0) {
-//     // Find the first occurrence that ends in the future
-//     const nextOccurrence = fallbackOccurrences
-//       .filter((occ) => new Date(occ.ends_at).getTime() > now) // Keep only future/current
-//       .sort(
-//         (a, b) =>
-//           new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
-//       )[0]; // Get the soonest one
-
-//     if (nextOccurrence) {
-//       return formatFullDateTimeRange(
-//         nextOccurrence.starts_at,
-//         nextOccurrence.ends_at,
-//       );
-//     }
-
-//     // Optional: If ALL occurrences are past, show the very last one
-//     // so the card isn't empty, or keep your "Date not available" logic.
-//   }
-
-//   return {
-//     date: "Date not available",
-//     time: "Time not available",
-//   };
-// }
 
 export function getFormattedEventDate(
   startsAt: string | Date | null | undefined,

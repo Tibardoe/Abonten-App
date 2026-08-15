@@ -1,5 +1,6 @@
-import { getUserTransactions } from "@/actions/getUserTransactions";
+import { getTransactionById } from "@/actions/getTransactionById";
 import ViewReciptButton from "@/components/atoms/ViewReciptButton";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import { humanizeTransactionReason } from "@/utils/humanizeTransactionReason";
 import Image from "next/image";
@@ -11,8 +12,6 @@ import { MdCancel } from "react-icons/md";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/abonten/image/upload/";
-
 export default async function page({
   params,
 }: {
@@ -20,11 +19,9 @@ export default async function page({
 }) {
   const { transactionId } = await params;
 
-  const transactions = await getUserTransactions();
+  const transaction = await getTransactionById(transactionId);
 
-  const transactionSlip = transactions.data?.find(
-    (transaction) => transaction.id === transactionId,
-  );
+  const transactionSlip = transaction.data;
 
   const status = transactionSlip?.status?.toLowerCase();
   const formattedDate = transactionSlip
@@ -34,7 +31,11 @@ export default async function page({
   const qrCodeUrl =
     transactionSlip?.reason === "Ticket_Purchase" &&
     transactionSlip?.ticket?.qr_public_id
-      ? `${CLOUDINARY_BASE_URL}v${transactionSlip.ticket.qr_version}/${transactionSlip.ticket.qr_public_id}.jpg`
+      ? buildCloudinaryUrl(
+          transactionSlip.ticket.qr_public_id,
+          transactionSlip.ticket.qr_version,
+          { width: 100, height: 100, lossless: true },
+        )
       : null;
 
   return (

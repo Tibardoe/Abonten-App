@@ -3,13 +3,19 @@
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Notification from "../atoms/Notification";
 import EventUploadFormFields from "../molecules/EventUploadFormFields";
 import ImagePreviewPane from "../molecules/ImagePreviewPane";
 import UploadStepHeader from "../molecules/UploadStepHeader";
-import ImageCropper from "./ImageCropper";
+
+// Dynamically imported so react-image-crop only loads once a user
+// actually reaches the cropping step.
+const ImageCropper = dynamic(() => import("./ImageCropper"), {
+  ssr: false,
+});
 
 type EventUploadModalProps = {
   handleClosePopup: (state: boolean) => void;

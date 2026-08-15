@@ -1,6 +1,5 @@
-import { supabase } from "@/config/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getEventShareUrl } from "@/utils/shareUrl";
-import { useQuery } from "@tanstack/react-query";
 import AddToFavoriteButton from "../atoms/AddToFavoriteButton";
 import CancelButton from "../atoms/CancelButton";
 import DeleteEventButton from "../atoms/DeleteEventButton";
@@ -25,16 +24,9 @@ export default function EventCardMenuModal({
 }: EventProp) {
   const shareUrl = getEventShareUrl(eventCode, address);
 
-  const { data: userData } = useQuery({
-    queryKey: ["user-auth"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      return user;
-    },
-  });
+  // Shared with Header/SideBar/etc. — one cached fetch instead of each
+  // component independently calling supabase.auth.getUser().
+  const { data: userData } = useCurrentUser();
 
   const isOrganizer = userData?.id === organizerId;
 

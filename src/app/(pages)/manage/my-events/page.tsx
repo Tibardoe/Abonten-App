@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
 import CancelUserTicketBtn from "@/components/atoms/CancelUserTicketBtn";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,8 +25,6 @@ export default async function page() {
     console.error("Error fetching user attending events:", error);
   }
 
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-
   return (
     <>
       <div className="space-y-5">
@@ -40,11 +39,14 @@ export default async function page() {
               >
                 <div className="relative h-48 w-full">
                   <Image
-                    src={`${cloudinaryBaseUrl}v${event.event.flyer_version}/${event.event.flyer_public_id}.jpg`}
+                    src={buildCloudinaryUrl(
+                      event.event.flyer_public_id,
+                      event.event.flyer_version,
+                      { width: 400, height: 192 },
+                    )}
                     alt={event.event.title}
-                    layout="fill"
-                    objectFit="cover"
-                    className="rounded-t-2xl"
+                    fill
+                    className="object-cover rounded-t-2xl"
                   />
                 </div>
                 <div className="p-4">

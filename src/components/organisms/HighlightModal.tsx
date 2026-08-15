@@ -11,6 +11,7 @@ import {
   Volume2Icon,
   VolumeXIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CiCrop } from "react-icons/ci";
@@ -18,7 +19,12 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
 import { MdOutlineCancel } from "react-icons/md";
 import ThumbnailStrip from "../molecules/ThumbnailStrip";
 import { Button } from "../ui/button";
-import ImageCropper from "./ImageCropper";
+
+// Dynamically imported so react-image-crop only loads once a user
+// actually reaches the cropping step.
+const ImageCropper = dynamic(() => import("./ImageCropper"), {
+  ssr: false,
+});
 
 type ClosePopupModalType = {
   handleShowHighlightModal: (state: boolean) => void;

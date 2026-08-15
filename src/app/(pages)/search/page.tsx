@@ -109,9 +109,10 @@ export default async function page({
 
       {events.QueriedData.length ? (
         <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
-          {events.QueriedData.map((event: UserPostType) => (
+          {events.QueriedData.map((event: UserPostType, index: number) => (
             <EventCard
               key={event.title}
+              priority={index < 4}
               id={event.id}
               title={event.title}
               flyer_public_id={event.flyer_public_id}

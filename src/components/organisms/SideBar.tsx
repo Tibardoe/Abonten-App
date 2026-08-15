@@ -2,11 +2,10 @@
 
 // import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/config/supabase/client";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -85,18 +84,9 @@ export default function SideBar({
   //   },
   // });
 
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ["sidebar-user"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return null;
-
-      return user;
-    },
-  });
+  // Shared with Header/MobileNavBar/etc. — one cached fetch instead of
+  // each component independently calling supabase.auth.getUser().
+  const { data: user, isLoading: userLoading } = useCurrentUser();
 
   return (
     <>

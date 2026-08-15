@@ -3,6 +3,7 @@ import AvatarUploadButton from "@/components/atoms/AvatarUploadButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getTranslations } from "next-intl/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -21,15 +22,23 @@ export default async function page() {
 
   const { userDetails } = userProfile;
 
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-
   const defaultPublicId = "AnonymousProfile_rn6qez";
 
   const defaulfVersion = "1743533914";
 
   const avatarUrl = userDetails.avatar_public_id
-    ? `${cloudinaryBaseUrl}v${userDetails.avatar_version}/${userDetails.avatar_public_id}.jpg`
-    : `${cloudinaryBaseUrl}v${defaulfVersion}/${defaultPublicId}.jpg`;
+    ? buildCloudinaryUrl(
+        userDetails.avatar_public_id,
+        userDetails.avatar_version,
+        {
+          width: 80,
+          height: 80,
+        },
+      )
+    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, {
+        width: 80,
+        height: 80,
+      });
 
   return (
     <div className="w-full flex flex-col gap-10">

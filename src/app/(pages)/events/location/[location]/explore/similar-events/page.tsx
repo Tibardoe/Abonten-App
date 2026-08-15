@@ -51,9 +51,10 @@ export default async function page({
 
       <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 overflow-x-scroll scrollbar-hide gap-2 pb-5">
         {events?.length
-          ? events.map((event) => (
+          ? events.map((event, index) => (
               <EventCard
                 key={event.title}
+                priority={index < 4}
                 title={event.title}
                 id={event.id}
                 event_code={event.event_code}

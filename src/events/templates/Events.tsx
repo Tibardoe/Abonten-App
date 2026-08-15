@@ -103,9 +103,10 @@ export default async function page({
             <h2 className="text-2xl font-bold mb-2">All Events</h2>
 
             <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
-              {events.map((post) => (
+              {events.map((post, index) => (
                 <EventCard
                   key={post.title}
+                  priority={index < 4}
                   id={post.id}
                   title={post.title}
                   flyer_public_id={post.flyer_public_id}

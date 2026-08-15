@@ -9,6 +9,9 @@ export async function geocodeAddress(address: string) {
     `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
       address,
     )}&key=${apiKey}`,
+    // Addresses are effectively immutable once set — cache resolved
+    // coordinates for a week instead of re-billing/re-fetching on every request.
+    { next: { revalidate: 60 * 60 * 24 * 7 } },
   );
 
   const data = await res.json();

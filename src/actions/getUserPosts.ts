@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { UserPostType } from "@/types/postsType";
-import { getEventAttendanceCount } from "./getAttendace";
+import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getUserPosts(username: string) {
   const supabase = await createClient();
@@ -38,31 +38,31 @@ export async function getUserPosts(username: string) {
     return { status: 500, message: `Failed fetching events: ${error.message}` };
   }
 
-  const eventsWithMinPriceAndAttendance = await Promise.all(
-    data.map(async (event: UserPostType) => {
-      let min_price = 0;
-      let currency = "";
-
-      if (event.ticket_type && event.ticket_type.length > 0) {
-        const minTicket = event.ticket_type.reduce((min, t) =>
-          t.price < min.price ? t : min,
-        );
-        min_price = minTicket.price;
-        currency = minTicket.currency;
-      }
-
-      // Get the attendance count for the event
-      const attendanceResponse = await getEventAttendanceCount(event.id);
-      const attendanceCount = attendanceResponse.count ?? 0;
-
-      return {
-        ...event,
-        min_price,
-        currency,
-        attendanceCount,
-      };
-    }),
+  // Attendance counts for every event in one grouped query instead of one
+  // round trip per event.
+  const attendanceCounts = await getEventAttendanceCounts(
+    data.map((event: UserPostType) => event.id),
   );
+
+  const eventsWithMinPriceAndAttendance = data.map((event: UserPostType) => {
+    let min_price = 0;
+    let currency = "";
+
+    if (event.ticket_type && event.ticket_type.length > 0) {
+      const minTicket = event.ticket_type.reduce((min, t) =>
+        t.price < min.price ? t : min,
+      );
+      min_price = minTicket.price;
+      currency = minTicket.currency;
+    }
+
+    return {
+      ...event,
+      min_price,
+      currency,
+      attendanceCount: attendanceCounts[event.id] ?? 0,
+    };
+  });
 
   // const eventsWithMinPrice = data.map((event: UserPostType) => {
   //   let min_price = 0;

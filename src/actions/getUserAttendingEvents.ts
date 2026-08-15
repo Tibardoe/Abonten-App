@@ -46,29 +46,10 @@ export default async function getUserAttendingEvents() {
       return { status: 404, message: "No events found!" };
     }
 
-    const ticketsWithEvents = await Promise.all(
-      tickets.map(async (ticket) => {
-        const { data: event, error: eventError } = await supabase
-          .from("event")
-          .select("*")
-          .eq("id", ticket.ticket_type.event_id)
-          .single();
-
-        if (eventError) {
-          console.log(
-            `Failed fetching event for ticket: ${eventError.message}`,
-          );
-
-          return { status: 500, message: "Something went wrong!" };
-        }
-
-        if (!event) {
-          return { status: 404, message: "No event found!" };
-        }
-
-        return { ...ticket, event };
-      }),
-    );
+    const ticketsWithEvents = tickets.map((ticket) => ({
+      ...ticket,
+      event: ticket.ticket_type.event,
+    }));
 
     return { status: 200, data: ticketsWithEvents };
   } catch (error) {

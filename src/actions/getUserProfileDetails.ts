@@ -6,13 +6,14 @@ export async function getUserProfileDetails(username: string) {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from("user_profile_details")
-      .select("*")
-      .eq("username", username)
-      .single();
-
-    const { data: authData } = await supabase.auth.getUser();
+    const [{ data, error }, { data: authData }] = await Promise.all([
+      supabase
+        .from("user_profile_details")
+        .select("*")
+        .eq("username", username)
+        .single(),
+      supabase.auth.getUser(),
+    ]);
 
     let ownUsername = null;
 

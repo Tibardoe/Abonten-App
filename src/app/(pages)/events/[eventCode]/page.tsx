@@ -8,6 +8,7 @@ import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { createClient } from "@/config/supabase/server";
 import type { UserPostType } from "@/types/postsType";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate, getRelativeTime } from "@/utils/dateFormatter";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
@@ -69,10 +70,31 @@ export default async function page({
 
   if (!event) return <p className="p-8 text-center">No event found</p>;
 
-  const { count: attendanceCount } = await supabase
-    .from("attendance")
-    .select("*", { count: "exact", head: true })
-    .eq("event_id", event.id);
+  const safeLocation = event.address.full_address ?? "";
+
+  // attendanceCount, minTicket, averageRating, and the geocode lookup only
+  // depend on `event` (not on each other), so run them concurrently instead
+  // of as four sequential round trips.
+  const [
+    { count: attendanceCount },
+    { data: minTicket },
+    averageRating,
+    { lat, lng },
+  ] = await Promise.all([
+    supabase
+      .from("attendance")
+      .select("*", { count: "exact", head: true })
+      .eq("event_id", event.id),
+    supabase
+      .from("ticket_type")
+      .select("id, type, price, currency")
+      .eq("event_id", event.id)
+      .order("price", { ascending: true })
+      .limit(1)
+      .single(),
+    getUserRating(event.organizer_id),
+    geocodeAddress(safeLocation),
+  ]);
 
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
@@ -80,23 +102,7 @@ export default async function page({
     ticketTypes: event.ticket_type,
   });
 
-  const { data: minTicket } = await supabase
-    .from("ticket_type")
-    .select("id, type, price, currency")
-    .eq("event_id", event.id)
-    .order("price", { ascending: true })
-    .limit(1)
-    .single();
-
-  const safeLocation = event.address.full_address ?? "";
-  // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  // const res = await fetch(
-  //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
-  // );
-
-  const res = await geocodeAddress(safeLocation);
-
-  const { lat, lng } = res;
+  // Nearby events genuinely depend on the geocode result above, so this stays sequential.
   const eventsWithinLocation = await getNearByEvents(lat, lng, 10);
   const data: UserPostType[] = eventsWithinLocation.data || [];
   const similarEvents = data.filter(
@@ -110,21 +116,21 @@ export default async function page({
     event.event_occurrence,
   );
 
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
   const tags = Array.isArray(event.event_type)
     ? event.event_type
     : typeof event.event_type === "string"
       ? JSON.parse(event.event_type)
       : [];
 
-  const averageRating = await getUserRating(event.organizer_id);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative h-72 md:h-[500px] bg-muted">
         <Image
-          src={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
+          src={buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
+            width: 1280,
+            height: 500,
+          })}
           alt={event.title}
           fill
           className="object-cover object-center"
@@ -173,7 +179,11 @@ export default async function page({
                   className="shrink-0 hover:scale-105 transition-transform"
                 >
                   <Image
-                    src={`${cloudinaryBaseUrl}v${event.user_info.avatar_version}/${event.user_info.avatar_public_id}.jpg`}
+                    src={buildCloudinaryUrl(
+                      event.user_info.avatar_public_id,
+                      event.user_info.avatar_version,
+                      { width: 56, height: 56 },
+                    )}
                     alt={event.user_info.username}
                     width={56}
                     height={56}

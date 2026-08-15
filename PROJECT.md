@@ -34,7 +34,7 @@ This document describes the current, verified state of the codebase for future d
 - Email: `resend`, `react-email` / `@react-email/components`.
 - Maps/location: `@react-google-maps/api`.
 - SMS/OTP: `twilio`, plus direct REST calls to Hubtel's OTP API.
-- i18n: `next-intl` (installed and scaffolded, but currently disabled — see §11 and §16).
+- i18n: `next-intl` (active — see §16 revision note).
 - Tooling: Biome (lint/format, primary linter per [biome.json](biome.json)), ESLint (`eslint-config-next`, secondary), Lefthook (git hooks, pre-commit runs Biome — [lefthook.yml](lefthook.yml)).
 - Deployment: multi-stage Docker build ([Dockerfile](Dockerfile)) — base → prod-builder → prod-runner (Next standalone output) / dev stage; `compose.yaml`, `docker-compose.override.yml`, `docker-compose.prod.yml` also present.
 
@@ -76,19 +76,19 @@ src/
   components/
     atoms/ molecules/ organisms/ ui/ lib/   Shared UI, atomic-design layered; ui/ = shadcn primitives
   config/supabase/         client.ts, server.ts, middleware.ts
-  context/                 authContext/authProvider, settingsContext, uiContext + wrapper components
+  context/                 authContext/authProvider (session/user/loading)
   providers/               ReactQueryProvider
   hooks/                   useCountries, useUserLocation, useUserProfile
   services/                authService (Supabase auth + Hubtel OTP calls), googleApi, restCountriesApi
   data/                    Static/dummy data + local lookup tables (languages, plans, event categories, etc.)
   types/                   Hand-written TypeScript types (no DB-generated types)
-  i18n/                    next-intl routing/navigation/request config (currently unused/disabled)
+  i18n/                    next-intl routing/navigation/request config (active — see §16)
   events/, wallet/, settings/, userAccount/, "landing Page"/
                            Feature-specific atomic-design folders (atoms/molecules/organisms/templates),
                            separate from the shared src/components tree
   utils/                   Helpers: zod schemas (eventSchema, receivingAcountSchema), slug/code generators,
                            geocoding, share URLs, network-provider data, etc.
-messages/en.json           next-intl message catalogue (unused — see §16)
+messages/en.json           next-intl message catalogue (active — see §16)
 cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 ```
 
@@ -104,7 +104,7 @@ cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 - **Event discovery**: landing page, `/events`, `/events/location/[location]` (+ `explore/[type]`, `explore/similar-events`), `/search`, `/search/[searchTitle]`, `/around-you`.
 - **Event detail & purchase**: `/events/[eventCode]`.
 - **Event creation/management** (organizer side): `/manage/my-events`, `/manage/attendance/attendance-list`, `/manage/attendance/event-list`; actions `postEvent`, `deleteEvent`, `cancelEvent`, `getOrganizerEvents`.
-- **Ticketing**: `validateCheckout` → `generateTicket` (QR-coded tickets), `cancelUserTicket`, `issueRefund`, `getTickets`, `getUserAttendingEvents`, ticket PDF (`TicketPdf.tsx`) and email (`ticketPurchaseNotification`, `TicketPurchaseEmailTemplate.tsx`).
+- **Ticketing**: `validateCheckout` → `generateTicket` (QR-coded tickets), `cancelUserTicket`, `issueRefund`, `getTickets`, `getUserAttendingEvents`, ticket PDF (`TicketModal.tsx`, via `html2canvas`+`jspdf`) and email (`ticketPurchaseNotification`, `TicketPurchaseEmailTemplate.tsx`).
 - **Promo codes**: `getPromoCode`, `InsertPromoCodeUsage`.
 - **User profile & social**: `/user-account`, `/user-account/[username]`, `/(userPage)/user/[username]/{favorites,posts,reviews}`; actions `getUserDetails`, `getUserProfileDetails`, `updateUserDetails`, `getUserPosts`, `getUserFavoritePosts`, `getUserReviews`, `postReview`, `getUserRating`, `getUserHighlights`, `uploadHighlight`.
 - **Favorites**: `addEventToFavorite`, `removeEventFromFavorite`, `checkIfEventIsFavorited` (React Query optimistic update per recent commit history).
@@ -349,8 +349,7 @@ api/user-profile                                   /api/user-profile
 - **Server state**: primarily fetched via Server Actions called directly inside `useEffect`/event handlers or from Server Components (RSC) — not via a REST client.
 - **React Query** (`@tanstack/react-query`) is installed and provided globally via [src/providers/ReactQueryProvider.tsx](src/providers/ReactQueryProvider.tsx) (wraps the whole app in [src/app/layout.tsx](src/app/layout.tsx)), but adoption is partial — the clearest example is optimistic favorite-toggling (per git history: "Update add to favorite button to use optimistic updates from react query"). Most other data fetching still uses direct action calls + local `useState`, not `useQuery`/`useMutation`.
 - **Client-side global state via React Context**, not Redux/Zustand:
-  - `authContext`/`authProvider` — user/session/loading + `activeTab` (persisted to `localStorage`).
-  - `settingsContext`/`SettingsProviderWrapper` — settings UI state.
+  - `authContext`/`authProvider` — user/session/loading. (As of 2026-08-15: previously also carried an unused `activeTab` field and `uiContext`/`ShowMenuProvider` and `settingsContext`/`SettingsProviderWrapper` existed alongside it — all confirmed to have zero real consumers and removed.)
   - `uiContext` — general UI state.
 - **Custom hooks** wrap one-off data needs: `useUserProfile` (fetches `user_info` client-side via the browser Supabase client), `useUserLocation` (geolocation → dial code via Google APIs), `useCountries`.
 - Supabase auth state is kept in sync client-side via `supabase.auth.onAuthStateChange` inside `AuthProvider`.
@@ -389,9 +388,9 @@ api/user-profile                                   /api/user-profile
 
 **Layout/navigation** (organisms): `Header`, `DesktopFooter`, `MobileFooter`, `MobileNavBar`, `SideBar`.
 
-**Event-related**: `EventCard` (molecule), `EventCardFlyerImage`, `EventCardMenuBtn`/`EventCardMenuModal`, `EventsSlider`, `UploadEventForm`/`UploadEventModal`/`EventUploadMobileModal`/`MobileUploadModal`, `CategoryFilter`, `TypeFilter`, `FilterModalPopup`, `LocationAndFilterSection`, `FilterSearchBar`.
+**Event-related**: `EventCard` (molecule), `EventCardMenuBtn`/`EventCardMenuModal`, `EventsSlider`, `UploadEventForm`/`UploadEventModal`/`EventUploadMobileModal`/`MobileUploadModal`, `CategoryFilter`, `TypeFilter`, `FilterModalPopup`, `LocationAndFilterSection`, `FilterSearchBar`.
 
-**Checkout/ticketing**: `CheckoutModal`, `OrderSummary`, `TicketType`, `TicketInputs`, `PromoCodeInputs`/`PromoCodeBtn`, `CheckoutBtn`, `TicketModal`, `TicketPdf`, `RecieptModal`/`ViewReciptButton`, `CancelUserTicketBtn`, `RefundButton`.
+**Checkout/ticketing**: `CheckoutModal`, `OrderSummary`, `TicketType`, `TicketInputs`, `PromoCodeInputs`/`PromoCodeBtn`, `CheckoutBtn`, `TicketModal`, `RecieptModal`/`ViewReciptButton`, `CancelUserTicketBtn`, `RefundButton`.
 
 **Maps/location**: `MapPicker`, `MapModal`, `ChangeLocationModal`, `AutoComplete`/`PostAutoComplete` (Google Places autocomplete), `GetDirectionBtn`.
 
@@ -428,7 +427,7 @@ api/user-profile                                   /api/user-profile
 ## 16. Known Issues & Technical Debt (Confirmed)
 
 1. **Next.js 16 "Cache Components" migration is incomplete.** Every route file in the app carries a commented-out `// TODO: Cache Components adoption... export const instant = false;` left by the upgrade; only [src/app/(pages)/(settings)/settings/language/page.tsx](<src/app/(pages)/(settings)/settings/language/page.tsx>) has `instant = false` actually active. Confirmed via `git show` of the "Project upgrade from next js 15 to 16" commit.
-2. **next-intl is fully scaffolded but disabled.** `src/i18n/{routing,navigation,request}.ts` and `messages/en.json` exist; the `next-intl` middleware and plugin are commented out in `src/proxy.ts` and `next.config.ts`; the root layout's `[locale]` param handling is commented out; no `useTranslations`/`getTranslations` call exists anywhere in `src/`. This is currently dead infrastructure.
+2. **Correction (2026-08-15): next-intl is active, not disabled.** This item previously said next-intl was fully scaffolded but dead; that's no longer accurate. `NextIntlClientProvider` is wired into `src/app/layout.tsx`, and `useTranslations`/`getTranslations` are called from `Header.tsx`, `Landing.tsx`, `AuthModal.tsx`, `SideBar.tsx`, `MobileNavBar.tsx`, `DeletePopupModal.tsx`, `useEventUploadForm.ts`, `Language.tsx`, `SwitchAppearance.tsx`, `GoogleAuthButton.tsx`, and `eventSchema.ts`. Left here as a record of the correction rather than deleted, per this document's own practice of calling out discrepancies explicitly.
 3. **Hubtel OTP credentials are exposed to the browser.** `NEXT_PUBLIC_HUBTEL_API_USERNAME`/`NEXT_PUBLIC_HUBTEL_API_PASSWORD` are used to construct a Basic Auth header inside `src/services/authService.ts`, which is called directly from the client component `AuthModal.tsx` — these values ship in the client JS bundle.
 4. **Phone sign-in does not create a real session.** The Supabase `signInWithOtp`/`verifyOtp` calls in `authService.ts` are commented out; only the Hubtel-side OTP send/verify happens, so a phone number is never actually linked to a Supabase auth session through this path.
 5. **No payment-gateway integration in this repo, though the database expects one (Flutterwave).** `validateCheckout`/`generateTicket` compute price and issue tickets, but no code path in this repo calls Flutterwave (or any payment API), and no action ever inserts a `transaction` row — see §7.6 discrepancy #2. Tickets can currently be generated without a linked transaction at all, since `ticket.transaction_id` is nullable.
@@ -453,7 +452,6 @@ api/user-profile                                   /api/user-profile
 
 ## 17. Potential Improvements (derived from the above, not yet implemented)
 
-- Decide and either finish or remove the `next-intl` i18n setup — currently it's fully wired dead code, which adds confusion for anyone reading routing/layout files.
 - Resolve the Next.js 16 Cache Components TODOs left across every route rather than leaving them commented out indefinitely.
 - Move the Hubtel OTP request server-side (a Server Action or route handler) so `HUBTEL_API_USERNAME`/`PASSWORD` are not `NEXT_PUBLIC_` and are not shipped to the browser.
 - Either complete the Supabase-session-issuing part of phone/OTP sign-in or remove the unused code paths so the feature isn't half-present.

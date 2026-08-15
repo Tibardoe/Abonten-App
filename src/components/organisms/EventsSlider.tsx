@@ -142,9 +142,10 @@ export default function EventsSlider({
           className="grid grid-flow-col auto-cols-[90%] sm:auto-cols-[45%] md:auto-cols-[35%] lg:auto-cols-[28%] xl:auto-cols-[25%] gap-1 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-3"
           // className="grid grid-flow-col auto-cols-[300px] overflow-x-scroll scrollbar-hide gap-2 pb-4 relative"
         >
-          {events.map((event) => (
+          {events.map((event, index) => (
             <EventCard
               key={event.title}
+              priority={index < 4}
               title={event.title}
               id={event.id}
               flyer_public_id={event.flyer_public_id}

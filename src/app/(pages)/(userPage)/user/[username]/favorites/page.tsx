@@ -37,11 +37,12 @@ export default async function page() {
 
   return userFavoritedEvents?.length > 0 ? (
     <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5 mb-5 md:mb-0">
-      {userFavoritedEvents.map((favorite) => {
+      {userFavoritedEvents.map((favorite, index) => {
         const event = favorite.event;
         return (
           <EventCard
             key={event.title}
+            priority={index < 4}
             title={event.title}
             id={event.id}
             event_code={event.event_code}

@@ -1,10 +1,9 @@
 "use client";
 
-import { supabase } from "@/config/supabase/client";
+import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getSignInUrl } from "@/utils/getSignInUrl";
-import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,24 +23,11 @@ export default function MobileNavBar() {
 
   const pathname = usePathname();
 
-  const { data: userData, isLoading: userDataLoading } = useQuery({
-    queryKey: ["username"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return null;
-
-      const response = await supabase
-        .from("user_info")
-        .select("username")
-        .eq("id", user.id)
-        .single();
-
-      return response.data?.username;
-    },
-  });
+  // Shared with Header/SideBar/etc. — one cached fetch instead of each
+  // component independently calling supabase.auth.getUser().
+  const { data: userDetails, userLoading: userDataLoading } =
+    useCurrentUserDetails();
+  const userData = userDetails?.username;
 
   return (
     <>

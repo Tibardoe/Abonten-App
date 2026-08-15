@@ -1,7 +1,6 @@
 "use client";
 
-import { supabase } from "@/config/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useState } from "react";
 import ReviewModal from "../organisms/ReviewModal";
 import { Button } from "../ui/button";
@@ -13,19 +12,9 @@ export default function AddReviewButton({ username }: { username: string }) {
     setShowReviewModal(state);
   };
 
-  const { data: user } = useQuery({
-    queryKey: ["user"],
-    queryFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        return user.id;
-      }
-
-      return null;
-    },
-  });
+  // Shared with Header/SideBar/etc. — one cached fetch instead of each
+  // component independently calling supabase.auth.getUser().
+  const { data: user } = useCurrentUser();
 
   if (!user) return;
 

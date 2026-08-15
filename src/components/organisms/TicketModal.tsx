@@ -1,5 +1,6 @@
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { UserTicketType } from "@/types/ticketType";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import {
   formatDateWithSuffix,
   getFormattedEventDate,
@@ -23,8 +24,6 @@ export default function TicketModal({
   handleShowTicket,
   event,
 }: ReceiptButtonProp) {
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-
   const pdfRef = useRef<HTMLDivElement>(null); // This ref will now point to the printable area
 
   useBodyScrollLock(true);
@@ -81,11 +80,14 @@ export default function TicketModal({
           <div className="bg-muted rounded-2xl overflow-hidden border border-border">
             <div className="relative h-56 w-full">
               <Image
-                src={`${cloudinaryBaseUrl}v${event.event.flyer_version}/${event.event.flyer_public_id}.jpg`}
+                src={buildCloudinaryUrl(
+                  event.event.flyer_public_id,
+                  event.event.flyer_version,
+                  { width: 500, height: 224 },
+                )}
                 alt={event.event.title}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-t-2xl"
+                fill
+                className="object-cover rounded-t-2xl"
               />
             </div>
             <div className="p-4">
@@ -144,10 +146,18 @@ export default function TicketModal({
               <div className="mt-4 flex justify-center">
                 <div className="relative h-56 w-56 border border-border">
                   <Image
-                    src={`${cloudinaryBaseUrl}v${event.qr_version}/${event.qr_public_id}.jpg`}
+                    src={buildCloudinaryUrl(
+                      event.qr_public_id,
+                      event.qr_version,
+                      {
+                        width: 224,
+                        height: 224,
+                        lossless: true,
+                      },
+                    )}
                     alt={event.event.title}
-                    layout="fill"
-                    objectFit="contain"
+                    fill
+                    className="object-contain"
                   />
                 </div>
               </div>

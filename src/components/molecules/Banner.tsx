@@ -2,6 +2,7 @@
 
 // import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@/types/postsType";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
@@ -17,8 +18,6 @@ interface BannerProps {
 }
 
 export default function Banner({ event }: BannerProps) {
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
-
   if (!event || !event.flyer_public_id) return null;
 
   const dateTime = getFormattedEventDate(
@@ -32,7 +31,10 @@ export default function Banner({ event }: BannerProps) {
       {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0">
         <Image
-          src={`${cloudinaryBaseUrl}v${event.flyer_version}/${event.flyer_public_id}.jpg`}
+          src={buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
+            width: 900,
+            height: 350,
+          })}
           alt={`${event.title} event flyer`}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"

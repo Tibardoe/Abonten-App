@@ -4,6 +4,7 @@ import AddReviewButton from "@/components/atoms/AddReviewButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import UserHighlights from "@/components/molecules/UserHighlights";
 import { Button } from "@/components/ui/button";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import Link from "next/link";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
@@ -11,24 +12,33 @@ import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
 type LayoutUserProp = {
   username: string;
+  userDetails?: Awaited<ReturnType<typeof getUserProfileDetails>>;
 };
 
-export default async function ProfileDetails({ username }: LayoutUserProp) {
-  const userDetails = await getUserProfileDetails(username);
+export default async function ProfileDetails({
+  username,
+  userDetails: prefetchedUserDetails,
+}: LayoutUserProp) {
+  const userDetails =
+    prefetchedUserDetails ?? (await getUserProfileDetails(username));
 
   const isCurrentUser = userDetails.ownUsername === username;
 
   const { data } = userDetails;
-
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
 
   const defaultPublicId = "AnonymousProfile_rn6qez";
 
   const defaulfVersion = "1743533914";
 
   const avatarUrl = data?.avatar_public_id
-    ? `${cloudinaryBaseUrl}v${data.avatar_version}/${data.avatar_public_id}.jpg`
-    : `${cloudinaryBaseUrl}v${defaulfVersion}/${defaultPublicId}.jpg`;
+    ? buildCloudinaryUrl(data.avatar_public_id, data.avatar_version, {
+        width: 150,
+        height: 150,
+      })
+    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, {
+        width: 150,
+        height: 150,
+      });
 
   const averageRating = await getUserRating(userDetails.data.user_id);
 

@@ -1,4 +1,4 @@
-import { getUserTransactions } from "@/actions/getUserTransactions";
+import { getTransactionsByDate } from "@/actions/getTransactionsByDate";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import { humanizeTransactionReason } from "@/utils/humanizeTransactionReason";
 import Link from "next/link";
@@ -15,13 +15,9 @@ export default async function page({
 }) {
   const { date } = await params;
 
-  const transactions = await getUserTransactions();
+  const transactions = await getTransactionsByDate(date);
 
-  const filteredTransactions = transactions.data?.filter(
-    (transaction) =>
-      new Date(transaction.transaction_date).toISOString().split("T")[0] ===
-      date,
-  );
+  const filteredTransactions = transactions.data;
 
   return filteredTransactions?.length ? (
     <ul>

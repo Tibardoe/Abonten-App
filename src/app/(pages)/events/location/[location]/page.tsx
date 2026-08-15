@@ -1,4 +1,4 @@
-import { getFilteredEvents } from "@/actions/getFilteredEvents";
+import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import Banner from "@/components/molecules/Banner";
 import EventCard from "@/components/molecules/EventCard";
@@ -36,41 +36,30 @@ export default async function page({
 
   const { lat, lng } = coordsFromQuery ?? (await geocodeAddress(safeLocation));
 
-  const eventsWithinLocation = await getNearByEvents(lat, lng, 10000);
-
-  const eventsAroundYou = await getNearByEvents(lat, lng, 5000);
+  // "Around You" (5km) is a genuinely different dataset from the 10km
+  // location-wide set, so both are fetched — but only once each. Every
+  // other slider below (top-rated, today/week/month) previously re-fetched
+  // "all events within 10km" from scratch per slider; they now filter the
+  // one `eventsWithinLocation` fetch in memory instead.
+  const [eventsWithinLocation, eventsAroundYou] = await Promise.all([
+    getNearByEvents(lat, lng, 10000),
+    getNearByEvents(lat, lng, 5000),
+  ]);
 
   const aroundYou: UserPostType[] = eventsAroundYou.data || [];
 
   const events: UserPostType[] = eventsWithinLocation.data || [];
 
-  const topRatedOrganizers: UserPostType[] = await getFilteredEvents({
-    lat: lat,
-    lng: lng,
-    filter: "top-rated-organizers",
-    radius: 10000,
-  });
-
-  const happeningToday: UserPostType[] = await getFilteredEvents({
-    lat: lat,
-    lng: lng,
-    filter: "happening-today",
-    radius: 10000,
-  });
-
-  const happeningThisWeek: UserPostType[] = await getFilteredEvents({
-    lat: lat,
-    lng: lng,
-    filter: "happening-this-week",
-    radius: 10000,
-  });
-
-  const happeningThisMonth: UserPostType[] = await getFilteredEvents({
-    lat: lat,
-    lng: lng,
-    filter: "happening-this-month",
-    radius: 10000,
-  });
+  const topRatedOrganizers = filterEventsByWindow(
+    events,
+    "top-rated-organizers",
+  );
+  const happeningToday = filterEventsByWindow(events, "happening-today");
+  const happeningThisWeek = filterEventsByWindow(events, "happening-this-week");
+  const happeningThisMonth = filterEventsByWindow(
+    events,
+    "happening-this-month",
+  );
 
   const selected = await getDailyEvent(events, safeLocation);
 
@@ -116,9 +105,10 @@ export default async function page({
             <h2 className="text-lg font-medium">All Events</h2>
 
             <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
-              {events.map((post) => (
+              {events.map((post, index) => (
                 <EventCard
                   key={post.title}
+                  priority={index < 4}
                   id={post.id}
                   title={post.title}
                   flyer_public_id={post.flyer_public_id}

@@ -1,4 +1,3 @@
-import SettingsProviderWrapper from "@/context/SettingsProviderWrapper";
 import SettingsDesktopSideBar from "@/settings/organisms/SettingsDesktopSidebar";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -11,15 +10,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SettingsProviderWrapper>
-      <main>
-        <section className="hidden lg:grid lg:grid-cols-[auto_1fr] gap-20">
-          <SettingsDesktopSideBar />
-          {children}
-        </section>
+    <main>
+      <section className="hidden lg:grid lg:grid-cols-[auto_1fr] gap-20">
+        <SettingsDesktopSideBar />
+        {children}
+      </section>
 
-        <section className="flex w-full lg:hidden">{children}</section>
-      </main>
-    </SettingsProviderWrapper>
+      <section className="flex w-full lg:hidden">{children}</section>
+    </main>
   );
 }

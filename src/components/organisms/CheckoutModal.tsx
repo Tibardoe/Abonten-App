@@ -1,14 +1,15 @@
 import getPromoCode from "@/actions/getPromoCode";
 import { getTickets } from "@/actions/getTickets";
 import validateCheckout from "@/actions/validateCheckout";
+import CheckoutOrderTotals from "@/components/molecules/CheckoutOrderTotals";
+import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
+import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { IoAddSharp } from "react-icons/io5";
-import { MdDiscount, MdOutlineCancel } from "react-icons/md";
-import { TfiMinus } from "react-icons/tfi";
+import { MdOutlineCancel } from "react-icons/md";
 import Notification from "../atoms/Notification";
 
 type CheckoutProp = {
@@ -46,19 +47,9 @@ export default function CheckoutModal({
     [ticketTypeId: string]: number;
   }>({});
 
-  const [error, setError] = useState<string | null>(null);
+  const { message: error, showMessage: setError } = useTimedMessage();
 
   const router = useRouter();
-
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
 
   const {
     data: ticketsResponse,
@@ -283,54 +274,15 @@ export default function CheckoutModal({
         </div>
 
         <div className="flex flex-col gap-5 overflow-y-scroll h-[80%] px-5">
-          <div className="flex flex-col text-sm gap-2">
-            <span>Promo Code</span>
-
-            <div className="space-y-2 flex flex-col">
-              <div className="flex gap-5 justify-between items-center border border-border p-4 rounded-md">
-                <input
-                  type="text"
-                  className="outline-none w-full h-full bg-transparent"
-                  placeholder="Enter code"
-                  value={promoCodeInput}
-                  disabled={!!appliedPromo}
-                  onChange={(e) => setPromoCodeInput(e.target.value)}
-                />
-
-                <button
-                  type="button"
-                  className="font-bold disabled:opacity-50"
-                  disabled={
-                    promoMutation.isPending || !promoCodeInput || !!appliedPromo
-                  }
-                  onClick={() => promoMutation.mutate(promoCodeInput)}
-                >
-                  {promoMutation.isPending ? "Loading..." : "Apply"}
-                </button>
-              </div>
-
-              {appliedPromo && (
-                <button
-                  type="button"
-                  onClick={removePromoCode}
-                  className="self-end font-bold border border-border rounded-md p-2"
-                >
-                  Remove
-                </button>
-              )}
-
-              {promoEligibility?.isPartial && (
-                <p className="text-xs text-muted-foreground">
-                  Promo code applies to {promoEligibility.eligibleTotal} of{" "}
-                  {promoEligibility.totalQuantity} selected tickets — its usage
-                  limit has been reached. The remaining{" "}
-                  {promoEligibility.totalQuantity -
-                    promoEligibility.eligibleTotal}{" "}
-                  ticket(s) are charged at full price.
-                </p>
-              )}
-            </div>
-          </div>
+          <CheckoutPromoCodeBox
+            promoCodeInput={promoCodeInput}
+            onPromoCodeInputChange={setPromoCodeInput}
+            appliedPromo={appliedPromo}
+            isApplying={promoMutation.isPending}
+            onApply={() => promoMutation.mutate(promoCodeInput)}
+            onRemove={removePromoCode}
+            promoEligibility={promoEligibility}
+          />
 
           {/* Display tickets */}
           {isTicketsLoading ? (
@@ -364,140 +316,37 @@ export default function CheckoutModal({
                   : null;
 
                 return (
-                  <div
+                  <CheckoutTicketRow
                     key={ticket.id}
-                    className={`border-2 rounded-md py-4 space-y-4 ${
-                      qty > 0 ? "border-primary" : "border-border"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between px-4">
-                      <p>{ticket.type}</p>
-
-                      <div className="flex items-center gap-4">
-                        <button
-                          type="button"
-                          disabled={qty <= 0}
-                          onClick={() =>
-                            setQuantities((prev) => ({
-                              ...prev,
-                              [ticket.id]: Math.max(
-                                (prev[ticket.id] || 0) - 1,
-                                0,
-                              ),
-                            }))
-                          }
-                          className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-muted border border-border text-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <TfiMinus />
-                        </button>
-
-                        <span>{qty}</span>
-
-                        <button
-                          type="button"
-                          disabled={
-                            ticket.quantity !== null &&
-                            qty >= (ticket.quantity ?? 0)
-                          }
-                          onClick={() =>
-                            setQuantities((prev) => ({
-                              ...prev,
-                              [ticket.id]: (prev[ticket.id] || 0) + 1,
-                            }))
-                          }
-                          className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <IoAddSharp />
-                        </button>
-                      </div>
-                    </div>
-
-                    <hr className="border-border" />
-
-                    <div className="flex flex-col items-start gap-2 px-4">
-                      <div className="flex justify-between items-center w-full font-bold">
-                        <div className="flex flex-col">
-                          <p className="flex items-center gap-2">
-                            {ticket.currency} {""}
-                            {discountedUnitPrice !== null ? (
-                              <span className="flex justify-center items-center gap-1">
-                                {discountedUnitPrice}{" "}
-                                <MdDiscount className="text-lg" />
-                              </span>
-                            ) : (
-                              ticket.price
-                            )}
-                          </p>
-
-                          {qty > 0 && appliedPromo && eligibleUnits < qty && (
-                            <p className="text-xs text-muted-foreground">
-                              Discount applies to {eligibleUnits} of {qty}
-                            </p>
-                          )}
-                        </div>
-
-                        <p
-                          className={
-                            ticket.quantity === 0
-                              ? "text-destructive font-bold"
-                              : ""
-                          }
-                        >
-                          {ticket.quantity === null
-                            ? "Unlimited"
-                            : ticket.quantity === 0
-                              ? "Sold out"
-                              : `Quantity left: ${ticket.quantity}`}
-                        </p>
-                      </div>
-
-                      {ticket.type !== "SINGLE TICKET" &&
-                        ticket.available_until && (
-                          <p className="text-sm">
-                            Sales end on{" "}
-                            {formatSingleDateTime(ticket.available_until).date}
-                          </p>
-                        )}
-                    </div>
-                  </div>
+                    ticket={ticket}
+                    quantity={qty}
+                    eligibleUnits={eligibleUnits}
+                    discountedUnitPrice={discountedUnitPrice}
+                    hasAppliedPromo={!!appliedPromo}
+                    onDecrement={() =>
+                      setQuantities((prev) => ({
+                        ...prev,
+                        [ticket.id]: Math.max((prev[ticket.id] || 0) - 1, 0),
+                      }))
+                    }
+                    onIncrement={() =>
+                      setQuantities((prev) => ({
+                        ...prev,
+                        [ticket.id]: (prev[ticket.id] || 0) + 1,
+                      }))
+                    }
+                  />
                 );
               })}
             </>
           )}
 
-          <div className="rounded-2xl mt-5">
-            {/* Subtotal */}
-            <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
-              <p>Subtotal</p>
-              <p>
-                <span className="font-medium">{ticketList[0]?.currency}</span>
-                {typeof subTotal === "number" ? subTotal.toFixed(2) : "0.00"}
-              </p>
-            </div>
-
-            {/* Fee (2%) */}
-            <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
-              <p>
-                Fee <span className="text-xs text-muted-foreground">(2%)</span>
-              </p>
-              <p>
-                <span className="font-medium">{ticketList[0]?.currency}</span>{" "}
-                {typeof fee === "number" ? fee.toFixed(2) : "0.00"}
-              </p>
-            </div>
-
-            {/* Divider */}
-            <hr className="my-3 border-border" />
-
-            {/* Total */}
-            <div className="flex justify-between items-center text-base font-bold text-foreground">
-              <p>Total</p>
-              <p>
-                <span className="text-primary">{ticketList[0]?.currency}</span>{" "}
-                {typeof total === "number" ? total.toFixed(2) : "0.00"}
-              </p>
-            </div>
-          </div>
+          <CheckoutOrderTotals
+            currency={ticketList[0]?.currency}
+            subTotal={subTotal}
+            fee={fee}
+            total={total}
+          />
 
           <button
             type="button"

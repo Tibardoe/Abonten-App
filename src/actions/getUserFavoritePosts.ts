@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { FavoriteEvents, TicketType } from "@/types/favoriteEventTypes";
-import { getEventAttendanceCount } from "./getAttendace";
+import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getUserFavoritePosts() {
   const supabase = await createClient();
@@ -32,9 +32,15 @@ export async function getUserFavoritePosts() {
     return { status: 500, message: `Failed fetching events: ${error.message}` };
   }
 
+  // Attendance counts for every favorited event in one grouped query
+  // instead of one round trip per event.
+  const attendanceCounts = await getEventAttendanceCounts(
+    data.map((favorite: FavoriteEvents) => favorite.event.id),
+  );
+
   // For each favorite, extract event + cheapest ticket + attendance count
-  const favoritesWithMinPriceAndAttendance = await Promise.all(
-    data.map(async (favorite: FavoriteEvents) => {
+  const favoritesWithMinPriceAndAttendance = data.map(
+    (favorite: FavoriteEvents) => {
       const event = favorite.event;
       const tickets = event.ticket_type;
 
@@ -45,19 +51,16 @@ export async function getUserFavoritePosts() {
           )
         : null;
 
-      // Get the attendance count for the event
-      const attendanceResponse = await getEventAttendanceCount(event.id);
-
       return {
         ...favorite,
         event: {
           ...event,
           price: cheapestTicket?.price,
           currency: cheapestTicket?.currency,
-          attendanceCount: attendanceResponse?.count,
+          attendanceCount: attendanceCounts[event.id] ?? 0,
         },
       };
-    }),
+    },
   );
 
   return { status: 200, favoritesWithMinPriceAndAttendance };

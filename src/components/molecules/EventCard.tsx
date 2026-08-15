@@ -1,6 +1,7 @@
 "use client";
 
 import type { UserPostType } from "@/types/postsType";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
@@ -27,9 +28,9 @@ export default function EventCard({
   event_code,
   status,
   organizer_id,
-}: UserPostType) {
+  priority,
+}: UserPostType & { priority?: boolean }) {
   const dateTime = getFormattedEventDate(starts_at, ends_at, occurrences);
-  const cloudinaryBaseUrl = "https://res.cloudinary.com/abonten/image/upload/";
   const overlayMessage = getEventStatusOverlay(starts_at, ends_at, occurrences);
   const attendees = attendanceCount ?? attendance_count ?? 0;
   const soldOut = getEventSoldOutStatus({
@@ -60,12 +61,15 @@ export default function EventCard({
         className="block relative h-64 w-full overflow-hidden"
       >
         <Image
-          src={`${cloudinaryBaseUrl}v${flyer_version}/${flyer_public_id}.jpg`}
+          src={buildCloudinaryUrl(flyer_public_id, flyer_version, {
+            width: 420,
+            height: 256,
+          })}
           alt={`Flyer for ${title}`}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority
+          priority={priority}
         />
 
         {/* Gradient Overlay */}

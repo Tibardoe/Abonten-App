@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { enrichTransactions } from "./transactionEnrichment";
 
 export async function getUserTransactions() {
   const supabase = await createClient();
@@ -28,30 +29,7 @@ export async function getUserTransactions() {
     throw transactionsError;
   }
 
-  const enriched = await Promise.all(
-    transactions.map(async (transaction) => {
-      if (transaction.reason === "Ticket_Purchase") {
-        const { data: ticket } = await supabase
-          .from("ticket")
-          .select("*, event(*)")
-          .eq("transaction_id", transaction.id)
-          .single();
-
-        return { ...transaction, ticket };
-      }
-
-      if (transaction.reason === "Plan_Purchase") {
-        const { data: subscription } = await supabase
-          .from("subscription")
-          .select("*, subscription_plan(*)")
-          .eq("transaction_id", transaction.id)
-          .single();
-        return { ...transaction, subscription };
-      }
-
-      return transaction;
-    }),
-  );
+  const enriched = await enrichTransactions(supabase, transactions);
 
   return { status: 200, data: enriched };
 }
