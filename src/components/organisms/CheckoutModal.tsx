@@ -61,10 +61,9 @@ export default function CheckoutModal({
   }, [error]);
 
   const {
-    data: ticketData,
+    data: ticketsResponse,
     isLoading: isTicketsLoading,
-    isError: isTicketsError,
-    error: ticketsError,
+    isError: isTicketsQueryError,
     refetch: refetchTickets,
   } = useQuery({
     queryKey: ["eventTickets", eventId],
@@ -76,6 +75,21 @@ export default function CheckoutModal({
     refetchInterval: 20_000,
     retry: 1,
   });
+
+  // getTickets returns { status, message } on failure instead of throwing —
+  // a thrown error here gets redacted to a generic "Minified React error"
+  // digest in production (Next.js strips messages from errors thrown out of
+  // a Server Action the same way it does for Server Component render
+  // errors), which left users with no useful message and only "Retry".
+  const ticketData =
+    ticketsResponse?.status === 200 ? ticketsResponse : undefined;
+  const isTicketsError =
+    isTicketsQueryError ||
+    (!!ticketsResponse && ticketsResponse.status !== 200);
+  const ticketsResponseMessage =
+    ticketsResponse && ticketsResponse.status !== 200
+      ? ticketsResponse.message
+      : null;
 
   const ticketList = useMemo(() => ticketData?.tickets ?? [], [ticketData]);
 
@@ -238,9 +252,7 @@ export default function CheckoutModal({
   };
 
   const ticketsErrorMessage = isTicketsError
-    ? ticketsError instanceof Error
-      ? ticketsError.message
-      : "Failed to load tickets. Please try again."
+    ? (ticketsResponseMessage ?? "Failed to load tickets. Please try again.")
     : null;
 
   return (

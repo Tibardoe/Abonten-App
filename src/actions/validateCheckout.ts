@@ -140,7 +140,7 @@ export default async function validateCheckout({
     .eq("user_id", user.id);
 
   if (ticketDataError || !rawTicketData) {
-    console.log(`Error fetching ticket data: ${ticketDataError.message}`);
+    console.log(`Error fetching ticket data: ${ticketDataError?.message}`);
 
     return { status: 500, message: "Something went wrong" };
   }
