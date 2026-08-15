@@ -5,9 +5,14 @@ import { createClient } from "@/config/supabase/server";
 import React from "react";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export default async function ticketPurchaseNotification() {
+  if (!process.env.RESEND_API_KEY) {
+    console.log("RESEND_API_KEY is not set; skipping ticket purchase email");
+    return { status: 500, message: "Email service not configured" };
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
   const supabase = await createClient();
 
   const { data: userData, error: userError } = await supabase.auth.getUser();
