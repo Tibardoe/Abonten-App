@@ -26,17 +26,25 @@ export default async function deleteCheckout(
   }
 
   if (type === "ticket") {
+    // Delete first, guarded by status = 'pending', and only release what
+    // this delete actually removed (returned by .select() on the
+    // delete — PostgREST executes this as a single atomic
+    // DELETE ... RETURNING). This mirrors the claim-then-release pattern
+    // the checkout-expiry sweep uses: if the scheduled sweep (or another
+    // request) already reclaimed this row first, the guard here matches
+    // zero rows and we correctly skip releasing anything a second time.
     const { data: rows, error: fetchError } = await supabase
       .from("ticket_checkout")
-      .select(
-        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units",
-      )
+      .delete()
       .eq("checkout_session_id", checkoutId)
       .eq("user_id", user.id)
-      .eq("status", "pending");
+      .eq("status", "pending")
+      .select(
+        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units",
+      );
 
     if (fetchError) {
-      console.log(`Failed fetching ticket checkout: ${fetchError.message}`);
+      console.log(`Failed deleting ticket checkout: ${fetchError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 
@@ -70,22 +78,6 @@ export default async function deleteCheckout(
           totalDiscountedUnits,
         );
       }
-    }
-
-    const { error: deleteTicketCheckoutError } = await supabase
-      .from("ticket_checkout")
-      .delete()
-      .in(
-        "id",
-        rows.map((row) => row.id),
-      );
-
-    if (deleteTicketCheckoutError) {
-      console.log(
-        `Failed deleting ticket checkout: ${deleteTicketCheckoutError.message}`,
-      );
-
-      return { status: 500, message: "Something went wrong!" };
     }
   } else if (type === "subscription") {
     const { error: deleteSubscriptionCheckoutError } = await supabase

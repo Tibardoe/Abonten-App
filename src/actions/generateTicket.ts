@@ -6,7 +6,6 @@ import {
   generateTicketCode,
 } from "@/utils/generateTicketCode";
 import insertUserAttendance from "./insertUserAttendance";
-import releasePromoUsage from "./releasePromoUsage";
 import releaseTicketQuantity from "./releaseTicketQuantity";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
@@ -58,6 +57,36 @@ export default async function generateTicket(
     };
   }
 
+  const { data: initialCheckoutData, error: initialCheckoutError } =
+    await supabase
+      .from("ticket_checkout")
+      .select(
+        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at",
+      )
+      .eq("checkout_session_id", checkoutSessionId)
+      .eq("user_id", user.id)
+      .eq("status", "pending");
+
+  if (initialCheckoutError) {
+    console.log(`Failed fetching checkout: ${initialCheckoutError.message}`);
+
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  if (!initialCheckoutData || initialCheckoutData.length === 0) {
+    return { status: 404, message: "Checkout not found" };
+  }
+
+  // Give the atomic sweep a chance to reclaim this checkout if its
+  // reservation window has passed — the same function the scheduled cron
+  // job runs (see migration expire_stale_ticket_checkouts). It only
+  // restocks rows it actually transitions from 'pending' to 'expired',
+  // so this can never double-release even if the job races this call.
+  // Re-reading status afterward (rather than comparing expires_at to the
+  // current time locally) keeps this in lockstep with whatever the sweep
+  // actually decided, including its grace period.
+  await supabase.rpc("expire_stale_ticket_checkouts");
+
   const { data: checkoutData, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
@@ -76,52 +105,6 @@ export default async function generateTicket(
   const rows = (checkoutData ?? []) as CheckoutRow[];
 
   if (rows.length === 0) {
-    return { status: 404, message: "Checkout not found" };
-  }
-
-  const now = new Date();
-  const isExpired = rows.some(
-    (row) => row.expires_at && new Date(row.expires_at) < now,
-  );
-
-  if (isExpired) {
-    const eventId = rows[0].event_id;
-
-    for (const row of rows) {
-      await releaseTicketQuantity(row.ticket_type_id, row.quantity);
-    }
-
-    const totalDiscountedUnits = rows.reduce(
-      (sum, row) => sum + (row.discounted_units || 0),
-      0,
-    );
-    const promoCode = rows[0].promo_code;
-
-    if (promoCode && totalDiscountedUnits > 0) {
-      const { data: promo } = await supabase
-        .from("promo_code")
-        .select("id")
-        .eq("promo_code", promoCode)
-        .maybeSingle();
-
-      if (promo) {
-        await releasePromoUsage(
-          promo.id,
-          user.id,
-          eventId,
-          totalDiscountedUnits,
-        );
-      }
-    }
-
-    await supabase
-      .from("ticket_checkout")
-      .update({ status: "expired" })
-      .in(
-        "id",
-        rows.map((row) => row.id),
-      );
-
     return {
       status: 410,
       message: "This checkout has expired. Please start again.",

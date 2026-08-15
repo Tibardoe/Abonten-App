@@ -35,43 +35,6 @@ type PendingCheckoutRow = {
   discounted_units: number;
 };
 
-async function releaseExpiredCheckout(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  eventId: string,
-  userId: string,
-  rows: PendingCheckoutRow[],
-) {
-  for (const row of rows) {
-    await releaseTicketQuantity(row.ticket_type_id, row.quantity);
-  }
-
-  const totalDiscountedUnits = rows.reduce(
-    (sum, row) => sum + (row.discounted_units || 0),
-    0,
-  );
-  const promoCode = rows[0]?.promo_code;
-
-  if (promoCode && totalDiscountedUnits > 0) {
-    const { data: promo } = await supabase
-      .from("promo_code")
-      .select("id")
-      .eq("promo_code", promoCode)
-      .maybeSingle();
-
-    if (promo) {
-      await releasePromoUsage(promo.id, userId, eventId, totalDiscountedUnits);
-    }
-  }
-
-  await supabase
-    .from("ticket_checkout")
-    .update({ status: "expired" })
-    .in(
-      "id",
-      rows.map((row) => row.id),
-    );
-}
-
 export default async function validateCheckout({
   eventId,
   quantities,
@@ -92,6 +55,15 @@ export default async function validateCheckout({
       message: "User not logged in",
     };
   }
+
+  // Reclaim anything that's timed out — for this user or anyone else —
+  // before deciding whether a pending checkout is blocking this request.
+  // This calls the same atomic sweep the scheduled cron job runs (see
+  // migration expire_stale_ticket_checkouts), so a reservation can never
+  // be released twice even if this call races the job: only the caller
+  // that actually flips a row from 'pending' to 'expired' releases its
+  // inventory/promo usage.
+  await supabase.rpc("expire_stale_ticket_checkouts");
 
   // check if user has a pending ticket checkout
   const { data: ticketCheckoutData, error: ticketCheckoutDataError } =
@@ -115,22 +87,13 @@ export default async function validateCheckout({
   const pendingRows = (ticketCheckoutData ?? []) as PendingCheckoutRow[];
 
   if (pendingRows.length > 0) {
-    const now = new Date();
-    const isExpired = pendingRows.some(
-      (row) => row.expires_at && new Date(row.expires_at) < now,
-    );
-
-    if (!isExpired) {
-      return {
-        status: 300,
-        checkoutId: pendingRows[0].checkout_session_id,
-        message: "You already have a pending ticket checkout for this event",
-      };
-    }
-
-    // The previous reservation timed out — release what it held and let
-    // this request create a fresh one instead of blocking the user forever.
-    await releaseExpiredCheckout(supabase, eventId, user.id, pendingRows);
+    // The sweep above already reclaims anything past its expiry, so a row
+    // still 'pending' here is genuinely still active.
+    return {
+      status: 300,
+      checkoutId: pendingRows[0].checkout_session_id,
+      message: "You already have a pending ticket checkout for this event",
+    };
   }
 
   // Check if user has already bought ticket for the event
