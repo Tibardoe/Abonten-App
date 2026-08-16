@@ -1,11 +1,15 @@
 "use client";
 
-import Image from "next/image";
+import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import { useState } from "react";
 import { IoMdAddCircle } from "react-icons/io";
 import AddPaymentMethodPopup from "./AddPaymentMethodPopup";
 
-export default function AddWalletButton() {
+type AddWalletButtonProps = {
+  onAdded?: (method: PaymentMethodRow) => void;
+};
+
+export default function AddWalletButton({ onAdded }: AddWalletButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePopupClick = () => {
@@ -15,6 +19,12 @@ export default function AddWalletButton() {
   const handlePopupClose = () => {
     setIsOpen(false);
   };
+
+  const handleAdded = (method: PaymentMethodRow) => {
+    setIsOpen(false);
+    onAdded?.(method);
+  };
+
   return (
     <>
       <button
@@ -28,7 +38,12 @@ export default function AddWalletButton() {
         </p>
       </button>
 
-      {isOpen && <AddPaymentMethodPopup onclick={handlePopupClose} />}
+      {isOpen && (
+        <AddPaymentMethodPopup
+          onclick={handlePopupClose}
+          onAdded={handleAdded}
+        />
+      )}
     </>
   );
 }

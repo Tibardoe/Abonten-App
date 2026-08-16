@@ -3,14 +3,13 @@ import getTicketCheckout from "@/actions/getTicketCheckout";
 import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
 import CheckoutExpiryBanner from "@/components/molecules/CheckoutExpiryBanner";
 import OrderSummary from "@/components/molecules/OrderSummary";
+import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
 import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
 import type { CheckoutSessionStatus } from "@/types/ticketType";
-import ContinueButton from "@/wallet/atoms/ContinueButton";
-import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import Link from "next/link";
 
 // Per-user, request-time data (this specific session's status plus every
-// other pending checkout) — see wallet/page.tsx for why force-dynamic.
+// other pending checkout) — see checkout/page.tsx for why force-dynamic.
 export const dynamic = "force-dynamic";
 
 export default async function page({
@@ -58,7 +57,7 @@ export default async function page({
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
-          <h1 className="font-bold text-xl md:text-2xl">Wallets</h1>
+          <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
         </div>
 
         {sessionStatus === "paid" && (
@@ -83,10 +82,12 @@ export default async function page({
         <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
 
         {sessionStatus === "pending" && (
-          <>
-            <AddWalletButton />
-            <ContinueButton />
-          </>
+          <PaymentMethodSelector
+            kind="subscription"
+            subscriptionCheckoutId={checkoutId}
+            amount={orderSummary.totalAmount}
+            currency="GHS"
+          />
         )}
       </div>
     );

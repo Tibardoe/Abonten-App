@@ -1,23 +1,56 @@
-// import { networks } from "@/utils/networkProviderData";
+"use client";
+
+import addPaymentMethod from "@/actions/addPaymentMethod";
+import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
-// import { useState } from "react";
+import {
+  type AddBankCardInput,
+  CARD_BRANDS,
+  addBankCardSchema,
+} from "@/utils/paymentMethodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 type PopupCloseProp = {
   onclick: () => void;
+  onSaved: (method: PaymentMethodRow) => void;
 };
 
-export default function AddBankCard({ onclick }: PopupCloseProp) {
-  const form = useForm();
+const currentYear = new Date().getFullYear();
+const expiryYears = Array.from({ length: 15 }, (_, i) => currentYear + i);
 
-  const { register } = form;
+export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  // const [showDropdown, setShowDropdown] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AddBankCardInput>({
+    resolver: zodResolver(addBankCardSchema),
+    defaultValues: {
+      type: "card",
+      brand: undefined,
+      last4: "",
+      expiryMonth: undefined,
+      expiryYear: undefined,
+      label: "",
+    },
+  });
 
-  // const handleDropdown = () => {
-  //   setShowDropdown((prevState) => !prevState);
-  // };
+  const onSubmit = async (values: AddBankCardInput) => {
+    setServerError(null);
+    const response = await addPaymentMethod(values);
+
+    if (response.status !== 200) {
+      setServerError(response.message);
+      return;
+    }
+
+    onSaved(response.data);
+  };
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
@@ -29,7 +62,7 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
         <div>
           <h1 className="font-bold text-lg">Add Bank Card</h1>
           <p className="opacity-50">
-            Add your Visa or Mastercard details to pay
+            Save your Visa or Mastercard for faster checkout
           </p>
         </div>
 
@@ -56,53 +89,127 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
         </div>
 
         <p className="text-center text-sm">
-          Add your Visa or Mastercard to pay
+          Save your Visa or Mastercard for faster checkout
         </p>
       </div>
 
-      <form className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+          For now this only saves a label for display — full card processing
+          isn't connected to a payment provider yet, so we only ask for the last
+          4 digits, never your full card number or CVV.
+        </p>
+
         <div className="flex flex-col gap-2">
-          <label htmlFor="phone" className="text-sm">
-            Card number
+          <label htmlFor="brand" className="text-sm">
+            Card Brand
+          </label>
+          <select
+            id="brand"
+            className="border border-input rounded-md px-4 py-2 bg-background outline-none"
+            {...register("brand")}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Select card brand
+            </option>
+            {CARD_BRANDS.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+          </select>
+          {errors.brand && (
+            <p className="text-xs text-destructive">{errors.brand.message}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="last4" className="text-sm">
+            Last 4 digits
           </label>
           <div className="border border-input rounded-md px-4 py-2 bg-background">
             <input
-              type="tel"
+              id="last4"
+              type="text"
               inputMode="numeric"
+              maxLength={4}
               className="outline-none w-full"
-              {...register("creditCard")}
-              placeholder="Eg. 1234 1234 1234 1234"
+              {...register("last4")}
+              placeholder="Eg. 4242"
             />
           </div>
+          {errors.last4 && (
+            <p className="text-xs text-destructive">{errors.last4.message}</p>
+          )}
         </div>
 
         <div className="flex gap-5">
           <div className="flex flex-col gap-2 w-full">
-            <label htmlFor="phone" className="text-sm">
-              Card Expiry
+            <label htmlFor="expiryMonth" className="text-sm">
+              Expiry Month
             </label>
-            <div className="border border-input rounded-md px-4 py-2 bg-background">
-              <input
-                type="tel"
-                className="outline-none w-full"
-                {...register("phone")}
-                placeholder="MM/YY"
-              />
-            </div>
+            <select
+              id="expiryMonth"
+              className="border border-input rounded-md px-4 py-2 bg-background outline-none"
+              {...register("expiryMonth", { valueAsNumber: true })}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                MM
+              </option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                <option key={month} value={month}>
+                  {String(month).padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+            {errors.expiryMonth && (
+              <p className="text-xs text-destructive">
+                {errors.expiryMonth.message}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 w-full">
-            <label htmlFor="phone" className="text-sm">
-              CVV
+            <label htmlFor="expiryYear" className="text-sm">
+              Expiry Year
             </label>
-            <div className="border border-input rounded-md px-4 py-2 bg-background">
-              <input
-                type="password"
-                className="outline-none w-full"
-                {...register("phone")}
-                placeholder="***"
-              />
-            </div>
+            <select
+              id="expiryYear"
+              className="border border-input rounded-md px-4 py-2 bg-background outline-none"
+              {...register("expiryYear", { valueAsNumber: true })}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                YYYY
+              </option>
+              {expiryYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+            {errors.expiryYear && (
+              <p className="text-xs text-destructive">
+                {errors.expiryYear.message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="label" className="text-sm">
+            Label (optional)
+          </label>
+          <div className="border border-input rounded-md px-4 py-2 bg-background">
+            <input
+              id="label"
+              type="text"
+              className="outline-none w-full"
+              {...register("label")}
+              placeholder="Eg. My Visa"
+            />
           </div>
         </div>
 
@@ -113,8 +220,16 @@ export default function AddBankCard({ onclick }: PopupCloseProp) {
           </p>
         </span>
 
-        <Button className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm mt-52 md:mt-0">
-          Save This Wallet
+        {serverError && (
+          <p className="text-sm text-destructive">{serverError}</p>
+        )}
+
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
+        >
+          {isSubmitting ? "Saving..." : "Save This Wallet"}
         </Button>
       </form>
     </div>

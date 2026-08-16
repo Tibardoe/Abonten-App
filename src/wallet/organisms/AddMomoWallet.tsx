@@ -1,23 +1,45 @@
+"use client";
+
+import addPaymentMethod from "@/actions/addPaymentMethod";
+import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
-import { networks } from "@/utils/networkProviderData";
-import Image from "next/image";
+import {
+  type AddMomoWalletInput,
+  MOMO_NETWORKS,
+  addMomoWalletSchema,
+} from "@/utils/paymentMethodSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 type PopupCloseProp = {
   onclick: () => void;
+  onSaved: (method: PaymentMethodRow) => void;
 };
 
-export default function AddMomoWallet({ onclick }: PopupCloseProp) {
-  const form = useForm();
+export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  const { register } = form;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AddMomoWalletInput>({
+    resolver: zodResolver(addMomoWalletSchema),
+    defaultValues: { type: "momo", network: undefined, last4: "", label: "" },
+  });
 
-  const [showDropdown, setShowDropdown] = useState(false);
+  const onSubmit = async (values: AddMomoWalletInput) => {
+    setServerError(null);
+    const response = await addPaymentMethod(values);
 
-  const handleDropdown = () => {
-    setShowDropdown((prevState) => !prevState);
+    if (response.status !== 200) {
+      setServerError(response.message);
+      return;
+    }
+
+    onSaved(response.data);
   };
 
   return (
@@ -52,98 +74,86 @@ export default function AddMomoWallet({ onclick }: PopupCloseProp) {
         </div>
 
         <p className="text-center text-sm">
-          Pay with your mobile money wallet from any provider
+          Save your mobile money wallet for faster checkout
         </p>
       </div>
 
-      <form className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+        <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+          For now this only saves a label for display — full mobile money
+          processing isn't connected to a payment provider yet, so we only ask
+          for the last 4 digits, not your full number.
+        </p>
+
         <div className="flex flex-col gap-2">
-          <label htmlFor="phone" className="text-sm">
-            Mobile Money Number
+          <label htmlFor="network" className="text-sm">
+            Mobile Money Network
+          </label>
+          <select
+            id="network"
+            className="border border-input rounded-md px-4 py-2 bg-background outline-none"
+            {...register("network")}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Select mobile network
+            </option>
+            {MOMO_NETWORKS.map((network) => (
+              <option key={network} value={network}>
+                {network}
+              </option>
+            ))}
+          </select>
+          {errors.network && (
+            <p className="text-xs text-destructive">{errors.network.message}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="last4" className="text-sm">
+            Last 4 digits of the number
           </label>
           <div className="border border-input rounded-md px-4 py-2 bg-background">
             <input
-              type="tel"
+              id="last4"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
               className="outline-none w-full"
-              {...register("phone")}
-              placeholder="Eg. +233 54 927 3094"
+              {...register("last4")}
+              placeholder="Eg. 3094"
+            />
+          </div>
+          {errors.last4 && (
+            <p className="text-xs text-destructive">{errors.last4.message}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label htmlFor="label" className="text-sm">
+            Label (optional)
+          </label>
+          <div className="border border-input rounded-md px-4 py-2 bg-background">
+            <input
+              id="label"
+              type="text"
+              className="outline-none w-full"
+              {...register("label")}
+              placeholder="Eg. My MTN MoMo"
             />
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="mobile money network" className="text-sm">
-            Select Mobile Money Network
-          </label>
+        {serverError && (
+          <p className="text-sm text-destructive">{serverError}</p>
+        )}
 
-          <button
-            type="button"
-            onClick={handleDropdown}
-            className="border border-input rounded-md px-4 py-2 bg-transparent flex justify-between items-center"
-          >
-            <p>Select mobile network</p>
-            <MaskIcon
-              src="/assets/images/arrowDown.svg"
-              alt="Dropdown icon"
-              className="w-[30px] h-[30px]"
-            />
-          </button>
-
-          {showDropdown && (
-            <>
-              {/* for mobile */}
-              {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-              <div
-                onClick={() => setShowDropdown(false)}
-                className="flex items-end md:hidden fixed top-0 left-0 w-full bg-overlay/70 h-dvh"
-              >
-                {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-                <ul
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-full bg-popover text-popover-foreground rounded-t-xl p-4"
-                >
-                  {networks.map((network) => (
-                    <button
-                      type="button"
-                      key={network.network}
-                      className="flex w-full gap-2 justify-start items-center border-b border-border py-3"
-                    >
-                      <Image
-                        src={network.logo}
-                        alt={network.network}
-                        width={50}
-                        height={50}
-                      />
-                      {network.network}
-                    </button>
-                  ))}
-                </ul>
-              </div>
-
-              {/* For desktop */}
-              <ul className="hidden md:flex flex-col gap-3 shadow-xl h-64 p-3 overflow-y-scroll rounded-xl">
-                {networks.map((network) => (
-                  <button
-                    type="button"
-                    key={network.network}
-                    className="flex gap-2 justify-start items-center border-b border-border py-3"
-                  >
-                    <Image
-                      src={network.logo}
-                      alt={network.network}
-                      width={50}
-                      height={50}
-                    />
-                    {network.network}
-                  </button>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-
-        <Button className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm mt-64 md:mt-0">
-          Save This Wallet
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
+        >
+          {isSubmitting ? "Saving..." : "Save This Wallet"}
         </Button>
       </form>
     </div>

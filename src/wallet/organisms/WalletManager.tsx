@@ -1,0 +1,127 @@
+"use client";
+
+import getUserPaymentMethods, {
+  type PaymentMethodRow,
+} from "@/actions/getUserPaymentMethods";
+import removePaymentMethod from "@/actions/removePaymentMethod";
+import setDefaultPaymentMethod from "@/actions/setDefaultPaymentMethod";
+import Notification from "@/components/atoms/Notification";
+import { Skeleton } from "@/components/ui/skeleton";
+import PaymentMethodCard from "@/wallet/molecules/PaymentMethodCard";
+import AddWalletButton from "@/wallet/organisms/AddWalletButton";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+type WalletManagerProps = {
+  initialPaymentMethods: PaymentMethodRow[];
+};
+
+export const PAYMENT_METHODS_QUERY_KEY = ["payment-methods"];
+
+/**
+ * Wallet management, independent of any checkout — this is what /wallet
+ * renders. It only ever reads/writes payment_method via
+ * getUserPaymentMethods/addPaymentMethod/removePaymentMethod/
+ * setDefaultPaymentMethod, none of which touch ticket_checkout or
+ * subscription_checkout, so this works the same whether the user has zero,
+ * one, or several pending checkouts elsewhere.
+ */
+export default function WalletManager({
+  initialPaymentMethods,
+}: WalletManagerProps) {
+  const queryClient = useQueryClient();
+  const [notification, setNotification] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: PAYMENT_METHODS_QUERY_KEY,
+    queryFn: async () => {
+      const response = await getUserPaymentMethods();
+      return response.status === 200 ? response.data : [];
+    },
+    initialData: initialPaymentMethods,
+  });
+
+  const methods = data ?? [];
+
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => removePaymentMethod(id),
+    onMutate: (id) => setRemovingId(id),
+    onSettled: () => {
+      setRemovingId(null);
+      queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
+    },
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        setNotification(response.message ?? "Failed to remove payment method.");
+      }
+    },
+    onError: () => setNotification("Failed to remove payment method."),
+  });
+
+  const setDefaultMutation = useMutation({
+    mutationFn: (id: string) => setDefaultPaymentMethod(id),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY }),
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        setNotification(response.message ?? "Failed to update default.");
+      }
+    },
+    onError: () => setNotification("Failed to update default."),
+  });
+
+  if (isPending && methods.length === 0) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-20 w-full rounded-xl" />
+        <Skeleton className="h-20 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-3 text-center text-muted-foreground py-8">
+        <p>Couldn't load your payment methods.</p>
+        <button
+          type="button"
+          onClick={() => refetch()}
+          className="underline font-medium"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {methods.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          You haven't added a payment method yet.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {methods.map((method) => (
+            <PaymentMethodCard
+              key={method.id}
+              method={method}
+              onSetDefault={() => setDefaultMutation.mutate(method.id)}
+              onRemove={() => removeMutation.mutate(method.id)}
+              removing={removingId === method.id}
+            />
+          ))}
+        </div>
+      )}
+
+      <AddWalletButton
+        onAdded={() =>
+          queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY })
+        }
+      />
+
+      {notification && <Notification notification={notification} />}
+    </div>
+  );
+}

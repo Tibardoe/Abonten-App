@@ -10,8 +10,8 @@ import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
 import Notification from "@/components/atoms/Notification";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
-import ContinueButton from "@/wallet/atoms/ContinueButton";
-import AddWalletButton from "@/wallet/organisms/AddWalletButton";
+import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
+import { computeCheckoutFee } from "@/utils/checkoutPricing";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -209,6 +209,11 @@ export default function PendingCheckoutsBasket({
     (sum, line) => sum + line.amount,
     0,
   );
+  // Same 2% service fee CheckoutModal.tsx previews before the checkout is
+  // even created — computed here (and again, authoritatively, in
+  // createPaymentAttempt.ts) so what's shown here matches what gets charged.
+  const selectedFee = computeCheckoutFee(selectedTotal);
+  const selectedGrandTotal = selectedTotal + selectedFee;
   const currency = selectedLines[0]?.currency ?? "";
 
   const allSelectedAreFree =
@@ -305,20 +310,39 @@ export default function PendingCheckoutsBasket({
             -{currency} {selectedDiscount.toFixed(2)}
           </p>
         </div>
+        <div className="flex justify-between text-sm text-muted-foreground">
+          <p>
+            Fee <span className="text-xs text-muted-foreground">(2%)</span>
+          </p>
+          <p>
+            {currency} {selectedFee.toFixed(2)}
+          </p>
+        </div>
         <div className="flex justify-between font-bold text-base pt-2 border-t border-border">
           <p>Total</p>
           <p>
-            {currency} {selectedTotal.toFixed(2)}
+            {currency} {selectedGrandTotal.toFixed(2)}
           </p>
         </div>
 
         {selectedSessions.length > 0 && !allSelectedAreFree ? (
           <div className="space-y-3 pt-2">
-            <p className="text-xs text-muted-foreground">
-              Payment isn't available yet for checkouts with a balance due.
-            </p>
-            <AddWalletButton />
-            <ContinueButton />
+            {selectedSessions.length > 1 ? (
+              <p className="text-xs text-muted-foreground">
+                Select a single checkout to pay for — pay for the rest one at a
+                time.
+              </p>
+            ) : (
+              <PaymentMethodSelector
+                kind="ticket"
+                checkoutSessionId={selectedSessions[0].checkoutSessionId}
+                amount={
+                  selectedSessions[0].sessionSubtotal +
+                  computeCheckoutFee(selectedSessions[0].sessionSubtotal)
+                }
+                currency={currency}
+              />
+            )}
           </div>
         ) : (
           <button
