@@ -79,15 +79,20 @@ export default async function page({
   // depend on `event` (not on each other), so run them concurrently instead
   // of as four sequential round trips.
   const [
-    { count: attendanceCount },
+    { data: attendanceRows },
     { data: minTicket },
     averageRating,
     { lat, lng },
   ] = await Promise.all([
+    // Sums number_of_tickets (one attendance row can represent a
+    // multi-ticket purchase) and only counts rows still 'attending' — a
+    // cancelled ticket's attendance row is marked 'cancelled', not deleted
+    // (see cancelUserTicket.ts), so it must be excluded here explicitly.
     supabase
       .from("attendance")
-      .select("*", { count: "exact", head: true })
-      .eq("event_id", event.id),
+      .select("number_of_tickets")
+      .eq("event_id", event.id)
+      .eq("status", "attending"),
     supabase
       .from("ticket_type")
       .select("id, type, price, currency")
@@ -99,9 +104,14 @@ export default async function page({
     geocodeAddress(safeLocation),
   ]);
 
+  const attendanceCount = (attendanceRows ?? []).reduce(
+    (sum, row) => sum + (row.number_of_tickets ?? 0),
+    0,
+  );
+
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
-    attendeeCount: attendanceCount ?? 0,
+    attendeeCount: attendanceCount,
     ticketTypes: event.ticket_type,
   });
 

@@ -1,6 +1,7 @@
 "use client";
 
 import cancelUserTicket from "@/actions/cancelUserTicket";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Notification from "./Notification";
 
@@ -17,20 +18,23 @@ export default function CancelUserTicketBtn({
 
   const [loading, setLoading] = useState(false);
 
+  const router = useRouter();
+
   const handleCancelTicket = async () => {
     setLoading(true);
 
     const response = await cancelUserTicket(ticketId, transactionId);
 
-    if (response.status !== 200) {
-      setNotification(response.message);
-
-      setLoading(false);
-    }
-
     setNotification(response.message);
-
     setLoading(false);
+
+    // The "My Tickets" list (manage/my-events, force-dynamic) and the event
+    // listing's sold-out status both depend on this ticket's now-updated
+    // status — refresh so they stop showing stale attendee counts instead
+    // of waiting for the user's next navigation.
+    if (response.status === 200) {
+      router.refresh();
+    }
   };
 
   useEffect(() => {

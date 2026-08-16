@@ -16,6 +16,11 @@ export default async function getSubscriptionCheckout(
     return { status: 401, message: "User not logged in" };
   }
 
+  // Self-heal: reclaim this checkout if its reservation window has passed,
+  // the same way getTicketCheckout does for ticket checkouts, so a page
+  // load always reflects an accurate status instead of a stale 'pending'.
+  await supabase.rpc("expire_stale_subscription_checkouts");
+
   const { data: checkoutData, error: checkoutDataError } = await supabase
     .from("subscription_checkout")
     .select("*, subscription_plan(*)")

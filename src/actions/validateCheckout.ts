@@ -2,14 +2,13 @@
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
+import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
 import { claimPromoUsage, releasePromoUsage } from "@/utils/promoUsage";
 import {
   releaseTicketQuantity,
   reserveTicketQuantity,
 } from "@/utils/ticketInventory";
 import getPromoCode from "./getPromoCode";
-
-const CHECKOUT_RESERVATION_MINUTES = 15;
 
 type CheckoutDetailsProp = {
   eventId: string;
@@ -261,9 +260,7 @@ export default async function validateCheckout({
   }
 
   const checkoutSessionId = randomUUID();
-  const expiresAt = new Date(
-    Date.now() + CHECKOUT_RESERVATION_MINUTES * 60 * 1000,
-  );
+  const expiresAt = getCheckoutExpiryTimestamp();
 
   const { error: checkoutInsertError } = await supabase
     .from("ticket_checkout")

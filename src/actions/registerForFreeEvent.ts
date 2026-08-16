@@ -129,8 +129,8 @@ export default async function registerForFreeEvent(
 
   const attendanceInsertResponse = await insertUserAttendance(
     eventId,
-    1,
     ticketType.id,
+    [insertedTicket.id],
   );
 
   if (attendanceInsertResponse.status !== 200) {

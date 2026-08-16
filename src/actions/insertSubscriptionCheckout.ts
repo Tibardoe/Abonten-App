@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
 
 export default async function insertSubscriptionCheckout(
   SubscriptionName: string | null,
@@ -49,7 +50,7 @@ export default async function insertSubscriptionCheckout(
       unit_price: subscriptionPackage.price,
       total_price: subscriptionPackage.price,
       status: "pending",
-      expires_at: new Date(Date.now() + 15 * 60 * 1000),
+      expires_at: getCheckoutExpiryTimestamp(),
     })
     .select("id")
     .single();

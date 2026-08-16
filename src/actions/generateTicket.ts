@@ -210,8 +210,8 @@ export default async function generateTicket(
 
     const attendanceInsertResponse = await insertUserAttendance(
       eventId,
-      row.quantity,
       row.ticket_type_id,
+      insertedTickets.map((ticket) => ticket.id),
     );
 
     if (attendanceInsertResponse.status !== 200) {

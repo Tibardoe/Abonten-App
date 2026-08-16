@@ -23,6 +23,35 @@ export default async function activateSubscription(checkoutSessionId: string) {
     return { status: 401, message: "User not logged in" };
   }
 
+  // Distinguish "never existed / wrong user" (404) from "existed but timed
+  // out" (410) by checking existence BEFORE running the expiry sweep below —
+  // mirrors generateTicket.ts's initial-then-post-sweep read for tickets.
+  const { data: existingCheckout, error: existingCheckoutError } =
+    await supabase
+      .from("subscription_checkout")
+      .select("id")
+      .eq("id", checkoutSessionId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+  if (existingCheckoutError) {
+    console.log(
+      `Failed fetching subscription checkout: ${existingCheckoutError.message}`,
+    );
+    return { status: 500, message: "Something went wrong!" };
+  }
+
+  if (!existingCheckout) {
+    return { status: 404, message: "Checkout not found" };
+  }
+
+  // Reclaim this checkout if its reservation window has passed — the same
+  // atomic sweep the scheduled cron job runs. Re-querying by
+  // status = 'pending' afterward keeps this in lockstep with whatever the
+  // sweep actually decided (including its grace period), instead of
+  // re-implementing the expiry check locally.
+  await supabase.rpc("expire_stale_subscription_checkouts");
+
   const { data: checkout, error: checkoutError } = await supabase
     .from("subscription_checkout")
     .select("*, subscription_plan(*)")
@@ -39,15 +68,6 @@ export default async function activateSubscription(checkoutSessionId: string) {
   }
 
   if (!checkout) {
-    return { status: 404, message: "Checkout not found" };
-  }
-
-  if (checkout.expires_at && new Date(checkout.expires_at) < new Date()) {
-    await supabase
-      .from("subscription_checkout")
-      .update({ status: "expired" })
-      .eq("id", checkout.id);
-
     return {
       status: 410,
       message: "This checkout has expired. Please start again.",

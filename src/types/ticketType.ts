@@ -90,11 +90,16 @@ export type TicketSummaryItem = {
   ticketCheckoutId: string;
 };
 
+export type CheckoutSessionStatus = "pending" | "paid" | "expired";
+
 export type TicketSummaryProps = {
   type: "ticket";
   eventTitle: string;
+  eventCode: string;
   ticketSummary: TicketSummaryItem[];
   totalAmount: number;
+  status: CheckoutSessionStatus;
+  expiresAt: string | null;
 };
 
 export type SubscriptionSummaryProps = {
@@ -103,4 +108,6 @@ export type SubscriptionSummaryProps = {
   amount: number;
   features: string[];
   totalAmount: number;
+  status: CheckoutSessionStatus;
+  expiresAt: string | null;
 };

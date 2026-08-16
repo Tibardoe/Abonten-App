@@ -7,7 +7,7 @@ export default async function getEventTitle(eventId: string) {
 
   const { data: eventData, error: eventTitleError } = await supabase
     .from("event")
-    .select("title,starts_at, ends_at, event_dates")
+    .select("title, starts_at, ends_at")
     .eq("id", eventId)
     .single();
 

@@ -1,0 +1,14 @@
+-- Backfilled from the live database's migration history
+-- (supabase_migrations.schema_migrations, version 20260815090208), which
+-- recorded this migration as already applied but had no corresponding file
+-- in this repo's supabase/migrations/ — a drift discovered while
+-- investigating the checkout/promo/ticket fixes in this same release. This
+-- file exists to keep local history accurate; it is NOT being (re-)applied
+-- here, since the ALTER it contains is already live.
+--
+-- Pins search_path the same way every other SECURITY-sensitive function in
+-- this schema does (see expire_stale_ticket_checkouts, SET search_path = ''
+-- in its own CREATE FUNCTION) so compute_subscription_end_date can't be
+-- tricked by a session-level search_path change into resolving
+-- subscription_plan against an attacker-controlled schema.
+ALTER FUNCTION public.compute_subscription_end_date(smallint, timestamp with time zone) SET search_path = '';
