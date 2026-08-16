@@ -49,3 +49,15 @@ export function computeLineAmount(
 
   return { discount, amount };
 }
+
+// Ticket checkout only — a flat service fee added on top of the (already
+// discounted) ticket total at payment time. Not persisted on ticket_checkout/
+// total_price (which stays pure ticket pricing, shared with inventory/promo
+// math) — computed once here so CheckoutModal.tsx's preview, the order
+// summary/basket totals, and createPaymentAttempt.ts's charged amount can
+// never drift apart the way they used to.
+export const CHECKOUT_FEE_RATE = 0.02;
+
+export function computeCheckoutFee(amountBeforeFee: number): number {
+  return amountBeforeFee > 0 ? amountBeforeFee * CHECKOUT_FEE_RATE : 0;
+}

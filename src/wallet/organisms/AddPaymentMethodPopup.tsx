@@ -1,5 +1,6 @@
 "use client";
 
+import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { useState } from "react";
 import PaymentOptionCard from "../molecules/PaymentOptionCard";
@@ -8,9 +9,13 @@ import AddMomoWallet from "./AddMomoWallet";
 
 type PopupCloseProp = {
   onclick: () => void;
+  onAdded: (method: PaymentMethodRow) => void;
 };
 
-export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
+export default function AddPaymentMethodPopup({
+  onclick,
+  onAdded,
+}: PopupCloseProp) {
   const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState("");
@@ -65,9 +70,11 @@ export default function AddPaymentMethodPopup({ onclick }: PopupCloseProp) {
       )}
 
       {step === 2 && title === "Mobile Money" && (
-        <AddMomoWallet onclick={onclick} />
+        <AddMomoWallet onclick={onclick} onSaved={onAdded} />
       )}
-      {step === 2 && title === "Bank Card" && <AddBankCard onclick={onclick} />}
+      {step === 2 && title === "Bank Card" && (
+        <AddBankCard onclick={onclick} onSaved={onAdded} />
+      )}
     </div>
   );
 }

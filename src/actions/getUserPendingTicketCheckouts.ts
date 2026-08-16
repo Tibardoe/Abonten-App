@@ -57,7 +57,7 @@ export type PendingCheckoutSession = {
 /**
  * The order-summary "basket": every active, non-expired, non-selected-yet
  * pending checkout session across ALL of the user's events — not just the
- * one named in a /wallet/[checkoutId] URL. Self-heals expiry the same way
+ * one named in a /checkout/[checkoutId] URL. Self-heals expiry the same way
  * every other checkout read does, so a session that just timed out is
  * already gone from this list rather than needing a separate filter.
  */

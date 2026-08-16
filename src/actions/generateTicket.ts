@@ -262,8 +262,8 @@ export default async function generateTicket(
   // anywhere: without this, browser Back to the wallet pages could keep
   // showing the pre-payment "pending" render until a manual refresh, since
   // nothing else in this codebase calls revalidatePath for checkout routes.
-  revalidatePath("/wallet");
-  revalidatePath(`/wallet/${checkoutSessionId}`);
+  revalidatePath("/checkout");
+  revalidatePath(`/checkout/${checkoutSessionId}`);
   revalidatePath("/manage/my-events");
 
   return { status: 200, message: "Tickets generated successfully" };

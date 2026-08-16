@@ -37,7 +37,7 @@ export default function SubscriptionPlans() {
 
     const id = res.data?.id;
 
-    router.push(`/wallet/${id}?&type=subscription`);
+    router.push(`/checkout/${id}?&type=subscription`);
   };
 
   useEffect(() => {

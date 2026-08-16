@@ -1,18 +1,26 @@
-import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
-import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
+import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
+import WalletManager from "@/wallet/organisms/WalletManager";
 
-// This page is always per-user, request-time basket data (which pending
-// checkouts exist right now) — force-dynamic matches the same precedent
-// manage/my-events/page.tsx already established for the same reason.
+// Per-user, request-time data (this user's saved payment methods) — same
+// force-dynamic precedent as manage/my-events/page.tsx. Independent of any
+// checkout: this page must render the same way whether the user has zero,
+// one, or several pending/completed checkouts elsewhere.
 export const dynamic = "force-dynamic";
 
 export default async function page() {
-  const response = await getUserPendingTicketCheckouts();
-  const sessions = response.status === 200 ? response.sessions : [];
+  const response = await getUserPaymentMethods();
+  const paymentMethods = response.status === 200 ? response.data : [];
 
   return (
     <div className="flex flex-col justify-center gap-5">
-      <PendingCheckoutsBasket initialSessions={sessions} />
+      <div>
+        <h1 className="font-bold text-xl md:text-2xl">Wallets</h1>
+        <p className="opacity-60 text-sm">
+          Save a payment method so you don't have to enter it every time.
+        </p>
+      </div>
+
+      <WalletManager initialPaymentMethods={paymentMethods} />
     </div>
   );
 }

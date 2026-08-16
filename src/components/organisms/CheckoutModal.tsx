@@ -8,6 +8,7 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import {
   allocatePromoEligibility,
+  computeCheckoutFee,
   computeLineAmount,
 } from "@/utils/checkoutPricing";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -199,7 +200,7 @@ export default function CheckoutModal({
       (quantities[ticket.id] || 0) > ticket.quantity,
   );
 
-  const fee = subTotal > 0 ? subTotal * 0.02 : 0;
+  const fee = computeCheckoutFee(subTotal);
 
   const total = subTotal + fee;
 
@@ -218,7 +219,7 @@ export default function CheckoutModal({
         "You already have a pending ticket checkout for this event"
     ) {
       setError(response?.message ?? "Something ocurred");
-      router.push(`/wallet/${response.checkoutId}?type=ticket`);
+      router.push(`/checkout/${response.checkoutId}?type=ticket`);
 
       setIsProceeding(false);
       return;
@@ -242,7 +243,7 @@ export default function CheckoutModal({
     }
 
     if (response?.status === 200 && response.checkoutSessionId) {
-      router.push(`/wallet/${response.checkoutSessionId}?type=ticket`);
+      router.push(`/checkout/${response.checkoutSessionId}?type=ticket`);
     }
   };
 
