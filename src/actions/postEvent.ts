@@ -49,6 +49,7 @@ export async function postEvent(formData: PostsType) {
     ends_at,
     promoCodes,
     specific_dates,
+    featured,
   } = formData;
 
   const eventCode = generateEventCode(title);
@@ -109,6 +110,7 @@ export async function postEvent(formData: PostsType) {
       event_category: category,
       event_type: types,
       require_registration: checked,
+      featured: featured ?? false,
     })
     .select("id") // ✅ Better: Get inserted event ID directly
     .single();

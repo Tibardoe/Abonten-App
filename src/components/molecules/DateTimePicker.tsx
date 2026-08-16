@@ -20,6 +20,10 @@ import { Button } from "../ui/button";
 type DateAndTimeType = {
   dateType: string;
   handleDateAndTime: (dateAndTime: DateRange | Entry[]) => void;
+  // Prefills the picker with an event's existing schedule (edit flow only —
+  // the create flow doesn't pass these, so it keeps starting empty).
+  initialRange?: DateRange;
+  initialEntries?: Entry[];
 };
 
 // type Entry = { date: Date; from: Date; to: Date };
@@ -29,13 +33,17 @@ type Entry = { start: Date; end: Date };
 export default function DateTimePicker({
   handleDateAndTime,
   dateType,
+  initialRange,
+  initialEntries,
 }: DateAndTimeType) {
   const [isRangeMode, setIsRangeMode] = useState(false);
 
-  const [dateRange, _setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined,
-  });
+  const [dateRange, _setDateRange] = useState<DateRange>(
+    initialRange ?? {
+      from: undefined,
+      to: undefined,
+    },
+  );
 
   // wrapper to update and notify
   const setDateRange = (r: DateRange) => {
@@ -47,7 +55,7 @@ export default function DateTimePicker({
   const [tempDate, setTempDate] = useState<Date | undefined>(new Date());
   const [tempFrom, setTempFrom] = useState<Date | undefined>(new Date());
   const [tempTo, setTempTo] = useState<Date | undefined>(new Date());
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [entries, setEntries] = useState<Entry[]>(initialEntries ?? []);
 
   const addEntry = () => {
     if (!tempDate || !tempFrom || !tempTo) return;

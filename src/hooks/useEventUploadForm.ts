@@ -79,6 +79,7 @@ export function useEventUploadForm({
   const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(false);
 
   const [checked, setChecked] = useState(false);
+  const [featured, setFeatured] = useState(false);
   const [paymentOption, setPaymentOption] = useState<string | null>(null);
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
@@ -116,6 +117,8 @@ export function useEventUploadForm({
   };
 
   const handleChecked = () => setChecked((prev) => !prev);
+
+  const handleFeatured = () => setFeatured((prev) => !prev);
 
   const handlePaymentOption = (option: string) => setPaymentOption(option);
 
@@ -240,6 +243,7 @@ export function useEventUploadForm({
         multipleTickets,
         currency: userCurrency,
         checked,
+        featured,
         paymentOption,
         receivingAccountDetails,
         selectedNetwork,
@@ -288,6 +292,8 @@ export function useEventUploadForm({
     handleMultipleTickets: setMultipleTickets,
     checked,
     handleChecked,
+    featured,
+    handleFeatured,
     promoCodes,
     handlePromoCodesChange,
     showPromoCodeFormPopup,

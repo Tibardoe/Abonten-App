@@ -1,6 +1,32 @@
 import type { UserPostType } from "@/types/postsType";
 import { getNearByEvents } from "./getNearByEvents";
 
+/**
+ * All of an event's session start times — every occurrence's starts_at, or
+ * the main starts_at as a single-session fallback. Multi-date events have
+ * `starts_at` set to null (see postEvent.ts), so checking only that field
+ * silently drops them from every date-window filter below; checking each
+ * occurrence is what makes a multi-date event show up in "Happening Today"
+ * when ANY of its sessions (not just the first) falls in that window.
+ */
+function getOccurrenceStarts(event: UserPostType): Date[] {
+  const occurrences =
+    event.occurrences && event.occurrences.length > 0
+      ? event.occurrences
+      : (event.event_occurrence ?? []);
+
+  const starts =
+    occurrences.length > 0
+      ? occurrences.map((occ) => occ.starts_at)
+      : event.starts_at
+        ? [event.starts_at]
+        : [];
+
+  return starts
+    .map((s) => new Date(s))
+    .filter((d) => !Number.isNaN(d.getTime()));
+}
+
 export type EventDateFilter =
   | "happening-today"
   | "happening-this-week"
@@ -36,25 +62,25 @@ export function filterEventsByWindow(
 
   switch (filter) {
     case "happening-today":
-      return events.filter((event) => {
-        if (!event.starts_at) return false;
-        const startDate = new Date(event.starts_at);
-        return startDate >= todayStart && startDate <= todayEnd;
-      });
+      return events.filter((event) =>
+        getOccurrenceStarts(event).some(
+          (startDate) => startDate >= todayStart && startDate <= todayEnd,
+        ),
+      );
 
     case "happening-this-week":
-      return events.filter((event) => {
-        if (!event.starts_at) return false;
-        const startDate = new Date(event.starts_at);
-        return startDate >= now && startDate <= oneWeekFromNow;
-      });
+      return events.filter((event) =>
+        getOccurrenceStarts(event).some(
+          (startDate) => startDate >= now && startDate <= oneWeekFromNow,
+        ),
+      );
 
     case "happening-this-month":
-      return events.filter((event) => {
-        if (!event.starts_at) return false;
-        const startDate = new Date(event.starts_at);
-        return startDate >= now && startDate <= endOfMonth;
-      });
+      return events.filter((event) =>
+        getOccurrenceStarts(event).some(
+          (startDate) => startDate >= now && startDate <= endOfMonth,
+        ),
+      );
 
     // "around-you" is a radius filter (handled by the caller's fetch, not a
     // date window) and "top-rated-organizers"/"category" aren't implemented

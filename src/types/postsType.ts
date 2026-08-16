@@ -69,6 +69,7 @@ export type PostsType = {
     maximumUse: number;
     expiryDate: Date;
   }[];
+  featured?: boolean;
 };
 
 export type EventDates = {
@@ -105,4 +106,5 @@ export type UserPostType = {
   ticket_price?: number | undefined;
   ticket_currency?: string;
   status?: string;
+  featured?: boolean;
 };

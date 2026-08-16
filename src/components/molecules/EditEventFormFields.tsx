@@ -1,100 +1,97 @@
-import DateTimeSelectorBtn from "@/components/atoms/DateTimeSelectorBtn";
+"use client";
+
 import PostAutoComplete from "@/components/atoms/PostAutoComplete";
 import PostInput from "@/components/atoms/PostInput";
-import PromoCodeBtn from "@/components/atoms/PromoCodeBtn";
 import CategoryFilter from "@/components/molecules/CategoryFilter";
 import DateTimePicker from "@/components/molecules/DateTimePicker";
-import PromoCodeInputs from "@/components/molecules/PromoCodeInputs";
-import ReceivingAccountForms from "@/components/molecules/ReceivingAccountForms";
-import TicketInputs from "@/components/molecules/TicketInputs";
-import TicketType from "@/components/molecules/TicketType";
 import TypeFilter from "@/components/molecules/TypeFilter";
-import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
+import type { useEventEditForm } from "@/hooks/useEventEditForm";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import Image from "next/image";
 import { TbWorld } from "react-icons/tb";
 
-type EventUploadFormFieldsProps = Pick<
-  ReturnType<typeof useEventUploadForm>,
+type EditEventFormFieldsProps = Pick<
+  ReturnType<typeof useEventEditForm>,
   | "register"
   | "errors"
   | "selectedAddress"
   | "setSelectedAddress"
   | "dateType"
-  | "setDateType"
   | "handleDateAndTime"
-  | "ticket"
-  | "setTicket"
+  | "initialRange"
+  | "initialEntries"
   | "checked"
   | "handleChecked"
   | "featured"
   | "handleFeatured"
-  | "singleTicket"
-  | "handleSingleTicket"
-  | "singleTicketQuantity"
-  | "handleSingleTicketQuantity"
-  | "multipleTickets"
-  | "handleMultipleTickets"
-  | "receivingAccountForm"
-  | "paymentOption"
-  | "handlePaymentOption"
-  | "selectedNetwork"
-  | "handleSelectedNetwork"
-  | "showNetworkDropdown"
-  | "handleNetworkDropdown"
-  | "handlePromoCodesChange"
-  | "showPromoCodeFormPopup"
-  | "handlePromoCodeFormPopup"
   | "category"
   | "setCategory"
   | "types"
   | "handleType"
+  | "existingFlyer"
+  | "handleFileChange"
   | "handleSubmit"
   | "onSubmit"
 > & { className?: string };
 
-// The event-details fields shared by every step-2 (details) screen of the
-// event upload flow. Previously pasted twice (once per desktop/mobile
-// modal) with identical fields, validation messages and handlers.
-export default function EventUploadFormFields({
+// Edit-mode counterpart to EventUploadFormFields. Deliberately omits
+// everything ticketing-related (TicketType/TicketInputs/ReceivingAccountForms
+// /PromoCodeBtn) — see updateEvent.ts for why ticket types and promo codes
+// aren't editable here.
+export default function EditEventFormFields({
   register,
   errors,
   selectedAddress,
   setSelectedAddress,
   dateType,
-  setDateType,
   handleDateAndTime,
-  ticket,
-  setTicket,
+  initialRange,
+  initialEntries,
   checked,
   handleChecked,
   featured,
   handleFeatured,
-  singleTicket,
-  handleSingleTicket,
-  singleTicketQuantity,
-  handleSingleTicketQuantity,
-  multipleTickets,
-  handleMultipleTickets,
-  receivingAccountForm,
-  paymentOption,
-  handlePaymentOption,
-  selectedNetwork,
-  handleSelectedNetwork,
-  showNetworkDropdown,
-  handleNetworkDropdown,
-  handlePromoCodesChange,
-  showPromoCodeFormPopup,
-  handlePromoCodeFormPopup,
   category,
   setCategory,
   types,
   handleType,
+  existingFlyer,
+  handleFileChange,
   handleSubmit,
   onSubmit,
   className,
-}: EventUploadFormFieldsProps) {
+}: EditEventFormFieldsProps) {
   return (
     <form className={className} onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-4 py-5 font-normal">
+        {existingFlyer && (
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+            <Image
+              src={buildCloudinaryUrl(
+                existingFlyer.publicId,
+                existingFlyer.version,
+                { width: 640, height: 360 },
+              )}
+              alt="Current event flyer"
+              fill
+              className="object-cover"
+            />
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <label htmlFor="edit-flyer" className="text-sm font-medium">
+            Replace flyer (optional)
+          </label>
+          <input
+            id="edit-flyer"
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+            className="block w-full text-sm text-muted-foreground"
+          />
+        </div>
+
         <PostInput
           type="text"
           inputPlaceholder="Title"
@@ -117,6 +114,7 @@ export default function EventUploadFormFields({
 
         <PostAutoComplete
           address={{ address: setSelectedAddress }}
+          value={selectedAddress}
           placeholderText={{
             text: "Location",
             svgUrl: "/assets/images/location.svg",
@@ -126,85 +124,20 @@ export default function EventUploadFormFields({
           <p className="text-destructive text-sm">Location required</p>
         )}
 
-        {/* Date and time */}
+        {/* Date and time — dateType is fixed to whatever the event was
+            created with (single/range vs specific dates); switching the
+            schedule TYPE isn't supported from edit, only the dates within it. */}
         <div className="space-y-4 text-sm">
           <h2>Date & Time</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <DateTimeSelectorBtn
-              dateType="single"
-              currentType={dateType}
-              title="Single/Range"
-              text="One date or continuous range"
-              onClick={setDateType}
-            />
-
-            <DateTimeSelectorBtn
-              dateType="specific"
-              currentType={dateType}
-              title="Multiple Dates"
-              text="Set specific non-consecutive dates"
-              onClick={setDateType}
-            />
-          </div>
-
           <DateTimePicker
             handleDateAndTime={handleDateAndTime}
             dateType={dateType}
+            initialRange={initialRange}
+            initialEntries={initialEntries}
           />
         </div>
 
         <div className="space-y-4 text-sm font-normal">
-          <div className="space-y-3">
-            <TicketType
-              handleTicket={setTicket}
-              ticket={ticket}
-              checked={checked}
-              handleChecked={handleChecked}
-            />
-
-            {ticket === "Single Ticket Type" && (
-              <TicketInputs
-                ticketType={ticket}
-                singleTicketPrice={singleTicket}
-                handleSingleTicket={handleSingleTicket}
-                singleTicketQuantity={singleTicketQuantity}
-                handleSingleTicketQuantity={handleSingleTicketQuantity}
-              />
-            )}
-
-            {ticket === "Multiple Ticket Types" && (
-              <TicketInputs
-                ticketType={ticket}
-                multipleTickets={multipleTickets}
-                handleMultipleTickets={handleMultipleTickets}
-              />
-            )}
-
-            {(ticket === "Single Ticket Type" ||
-              ticket === "Multiple Ticket Types") && (
-              <ReceivingAccountForms
-                form={receivingAccountForm}
-                handlePaymentOption={handlePaymentOption}
-                paymentOption={paymentOption}
-                handleSelectedNetwork={handleSelectedNetwork}
-                selectedNetwork={selectedNetwork}
-                showNetworkDropdown={showNetworkDropdown}
-                setShowNetworkDropdown={handleNetworkDropdown}
-              />
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <PromoCodeBtn
-              ticket={ticket}
-              handlePromoCodeFormPopup={handlePromoCodeFormPopup}
-            />
-
-            {showPromoCodeFormPopup && (
-              <PromoCodeInputs onPromoCodesChange={handlePromoCodesChange} />
-            )}
-          </div>
-
           <CategoryFilter handleCategory={setCategory} category={category} />
           {category === "" && (
             <p className="text-destructive text-sm">Select event category</p>
@@ -254,6 +187,16 @@ export default function EventUploadFormFields({
               {errors.capacity.message}
             </p>
           )}
+
+          <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
+            <span>Require registration</span>
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={handleChecked}
+              className="h-5 w-5 accent-primary"
+            />
+          </label>
 
           <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
             <span>Feature this event on the homepage banner</span>

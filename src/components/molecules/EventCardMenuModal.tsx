@@ -3,8 +3,8 @@ import { getEventShareUrl } from "@/utils/shareUrl";
 import AddToFavoriteButton from "../atoms/AddToFavoriteButton";
 import CancelButton from "../atoms/CancelButton";
 import DeleteEventButton from "../atoms/DeleteEventButton";
+import EditEventButton from "../atoms/EditEventButton";
 import RefundButton from "../atoms/RefundButton";
-import RescheduleEventButton from "../atoms/RescheduleEventButton";
 import ShareButton from "../atoms/ShareButton";
 
 type EventProp = {
@@ -46,7 +46,7 @@ export default function EventCardMenuModal({
 
       {isOrganizer && (
         <>
-          <RescheduleEventButton />
+          <EditEventButton eventId={eventId} />
           <hr className="border-border" />
           <CancelButton eventId={eventId} />
           <hr className="border-border" />
