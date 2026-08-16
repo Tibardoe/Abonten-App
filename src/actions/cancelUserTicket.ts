@@ -113,6 +113,7 @@ export default async function cancelUserTicket(
   // cancellation never invalidated the organizer's view at all).
   revalidatePath("/manage/my-events");
   revalidatePath("/manage/attendance/attendance-list");
+  revalidatePath("/manage/dashboard");
 
   return { status: 200, message: "Ticket cancelled successfully" };
 }

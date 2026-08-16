@@ -1,8 +1,7 @@
 "use client";
 
-// import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useCurrentUser, useIsOrganizer } from "@/hooks/useCurrentUser";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
@@ -14,7 +13,10 @@ import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
-import { MdOutlineManageHistory } from "react-icons/md";
+import {
+  MdOutlineManageHistory,
+  MdOutlineSpaceDashboard,
+} from "react-icons/md";
 import { cn } from "../lib/utils";
 import EventUploadModal from "./EventUploadModal";
 import MobileFooter from "./MobileFooter";
@@ -60,33 +62,13 @@ export default function SideBar({
     setShowPostModal(state);
   };
 
-  // const { data: userRole } = useQuery({
-  //   queryKey: ["user-role"],
-  //   queryFn: async () => {
-  //     const {
-  //       data: { user },
-  //     } = await supabase.auth.getUser();
-
-  //     if (!user) return null;
-
-  //     try {
-  //       const res = await getUserEventRole(user.id);
-
-  //       // ✅ Validate the role value before setting state
-  //       if (Array.isArray(res.role)) {
-  //         return res.role;
-  //       }
-
-  //       return null;
-  //     } catch (error) {
-  //       console.error("Error fetching user role:", error);
-  //     }
-  //   },
-  // });
-
   // Shared with Header/MobileNavBar/etc. — one cached fetch instead of
   // each component independently calling supabase.auth.getUser().
   const { data: user, isLoading: userLoading } = useCurrentUser();
+
+  // Gates the Organizer Dashboard link specifically — My Events/Manage
+  // Attendance below keep their existing "any signed-in user" visibility.
+  const isOrganizer = useIsOrganizer();
 
   return (
     <>
@@ -134,6 +116,17 @@ export default function SideBar({
                 <IoCreateOutline className="text-xl" />
                 {t("post")}
               </button>
+
+              {isOrganizer && (
+                <Link
+                  href="/manage/dashboard"
+                  onClick={onNavigate}
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <MdOutlineSpaceDashboard className="text-xl" />
+                  {t("dashboard")}
+                </Link>
+              )}
 
               <Link
                 href="/manage/attendance/event-list"

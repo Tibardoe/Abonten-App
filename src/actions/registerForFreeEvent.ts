@@ -177,6 +177,7 @@ export default async function registerForFreeEvent(
   }
 
   revalidatePath("/manage/attendance/attendance-list");
+  revalidatePath("/manage/dashboard");
 
   return { status: 200, message: "Event registered successfully" };
 }

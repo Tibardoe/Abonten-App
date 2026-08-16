@@ -268,6 +268,7 @@ export default async function generateTicket(
   revalidatePath(`/checkout/${checkoutSessionId}`);
   revalidatePath("/manage/my-events");
   revalidatePath("/manage/attendance/attendance-list");
+  revalidatePath("/manage/dashboard");
 
   return { status: 200, message: "Tickets generated successfully" };
 }

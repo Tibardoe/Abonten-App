@@ -1,0 +1,28 @@
+"use server";
+
+import { createClient } from "@/config/supabase/server";
+
+export default async function getOrganizerUpcomingEvents(limit = 5) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (!user || userError) {
+    return { status: 401 as const, message: "User not logged in" };
+  }
+
+  const { data, error } = await supabase.rpc("get_organizer_upcoming_events", {
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("Supabase error:", error.message);
+    return { status: 500 as const, message: "Something went wrong!" };
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
+  return { status: 200 as const, data: (data ?? []) as any[] };
+}

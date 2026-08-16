@@ -1,9 +1,8 @@
 "use client";
 
-// import { getUserEventRole } from "@/actions/getUserEventRole";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
+import { useCurrentUserDetails, useIsOrganizer } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -18,7 +17,10 @@ import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoMenuOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
-import { MdOutlineManageHistory } from "react-icons/md";
+import {
+  MdOutlineManageHistory,
+  MdOutlineSpaceDashboard,
+} from "react-icons/md";
 import EventUploadButton from "../atoms/EventUploadButton";
 import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
@@ -55,6 +57,10 @@ export default function Header() {
     userLoading: sessionLoading,
     data: userDetails,
   } = useCurrentUserDetails();
+
+  // Gates the Organizer Dashboard link specifically — My Events/Manage
+  // Attendance below keep their existing "any signed-in user" visibility.
+  const isOrganizer = useIsOrganizer();
 
   const profile = {
     username: userDetails?.username ?? "",
@@ -139,6 +145,16 @@ export default function Header() {
             </div>
           ) : userSession ? (
             <div className="hidden lg:flex items-center gap-7 min-w-fit text-sidebar-foreground">
+              {isOrganizer && (
+                <Link
+                  href="/manage/dashboard"
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <MdOutlineSpaceDashboard className="text-2xl" />
+                  {t("dashboard")}
+                </Link>
+              )}
+
               <Link
                 href="/manage/attendance/event-list"
                 className="flex gap-1 items-center hover:text-primary transition-colors"

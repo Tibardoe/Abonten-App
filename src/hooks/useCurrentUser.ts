@@ -1,6 +1,7 @@
 "use client";
 
 import { getUserDetails } from "@/actions/getUserDetails";
+import { getUserEventRole } from "@/actions/getUserEventRole";
 import { supabase } from "@/config/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -37,4 +38,21 @@ export function useCurrentUserDetails() {
   });
 
   return { user, userLoading, ...detailsQuery };
+}
+
+// Gates organizer-only nav links (e.g. the Organizer Dashboard link) on
+// whether this user actually owns at least one event, rather than showing
+// them to every signed-in user the way My Events/Manage Attendance
+// currently do — those two are unrelated existing behavior, left as-is.
+export function useIsOrganizer() {
+  const { data: user } = useCurrentUser();
+
+  const { data } = useQuery({
+    queryKey: ["user-event-role", user?.id],
+    enabled: !!user?.id,
+    queryFn: () => getUserEventRole(user?.id as string),
+    staleTime: 60 * 1000,
+  });
+
+  return Array.isArray(data?.role) && data.role.includes("organizer");
 }
