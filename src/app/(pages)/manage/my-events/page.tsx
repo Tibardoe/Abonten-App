@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
 import CancelUserTicketBtn from "@/components/atoms/CancelUserTicketBtn";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
+import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { generateSlug } from "@/utils/geerateSlug";
 import Image from "next/image";
@@ -12,91 +13,95 @@ import Link from "next/link";
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
+function TicketCard({ event }: { event: UserTicketType }) {
+  return (
+    <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
+      <div className="relative h-48 w-full">
+        <Image
+          src={buildCloudinaryUrl(
+            event.event.flyer_public_id,
+            event.event.flyer_version,
+            { width: 400, height: 192 },
+          )}
+          alt={event.event.title}
+          fill
+          className="object-cover rounded-t-2xl"
+        />
+      </div>
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <Link
+            href={`/events/${generateSlug(
+              event.event.address.full_address,
+            )}/event/${event.event.slug}`}
+            className="text-xl font-semibold mb-2"
+          >
+            {event.event.title}
+          </Link>
+
+          <p className="text-sm text-muted-foreground mb-2 font-bold">
+            Ticket Type:{" "}
+            <span className="font-mono text-foreground">
+              {event.ticket_type.type}
+            </span>
+          </p>
+        </div>
+
+        <p className="text-sm text-muted-foreground mb-2">
+          Ticket Code:{" "}
+          <span className="font-mono text-foreground">{event.ticket_code}</span>
+        </p>
+        <p className="text-sm text-muted-foreground mb-4">
+          Status:{" "}
+          {event.status === "active" ? (
+            <span className="font-semibold text-green-600">{event.status}</span>
+          ) : (
+            <span className="font-semibold text-red-600">{event.status}</span>
+          )}
+        </p>
+
+        <div className="flex justify-between gap-2">
+          <ViewTicketBtn event={event} />
+
+          {event.status === "active" && (
+            <CancelUserTicketBtn
+              ticketId={event.id}
+              transactionId={event.transaction_id}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default async function page() {
-  let events = [];
+  let events: UserTicketType[] = [];
 
   try {
     const response = await getUserAttendingEvents();
 
     if (response?.data) {
-      events = response.data;
+      events = response.data as unknown as UserTicketType[];
     }
   } catch (error) {
     console.error("Error fetching user attending events:", error);
   }
 
+  const activeEvents = events.filter((event) => event.status === "active");
+  const cancelledEvents = events.filter(
+    (event) => event.status === "cancelled",
+  );
+
   return (
-    <>
+    <div className="space-y-8">
       <div className="space-y-5">
-        <h1 className="md:text-2xl font-bold">My Tickets</h1>
+        <h1 className="md:text-2xl font-bold">Active Tickets</h1>
 
-        {events.length > 0 ? (
+        {activeEvents.length > 0 ? (
           <div className="grid md:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <div
-                key={event.id}
-                className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border"
-              >
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={buildCloudinaryUrl(
-                      event.event.flyer_public_id,
-                      event.event.flyer_version,
-                      { width: 400, height: 192 },
-                    )}
-                    alt={event.event.title}
-                    fill
-                    className="object-cover rounded-t-2xl"
-                  />
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={`/events/${generateSlug(
-                        event.event.address.full_address,
-                      )}/event/${event.event.slug}`}
-                      className="text-xl font-semibold mb-2"
-                    >
-                      {event.event.title}
-                    </Link>
-
-                    <p className="text-sm text-muted-foreground mb-2 font-bold">
-                      Ticket Type:{" "}
-                      <span className="font-mono text-foreground">
-                        {event.ticket_type.type}
-                      </span>
-                    </p>
-                  </div>
-
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Ticket Code:{" "}
-                    <span className="font-mono text-foreground">
-                      {event.ticket_code}
-                    </span>
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Status:{" "}
-                    {event.status === "active" ? (
-                      <span className="font-semibold text-green-600">
-                        {event.status}
-                      </span>
-                    ) : (
-                      <span className="font-semibold text-red-600">
-                        {event.status}
-                      </span>
-                    )}
-                  </p>
-
-                  <div className="flex justify-between gap-2">
-                    <ViewTicketBtn event={event} />
-
-                    <CancelUserTicketBtn
-                      ticketId={event.id}
-                      transactionId={event.transaction_id}
-                    />
-                  </div>
-                </div>
-              </div>
+            {activeEvents.map((event) => (
+              <TicketCard key={event.id} event={event} />
             ))}
           </div>
         ) : (
@@ -105,6 +110,20 @@ export default async function page() {
           </p>
         )}
       </div>
-    </>
+
+      {cancelledEvents.length > 0 && (
+        <details className="space-y-5">
+          <summary className="md:text-xl font-bold cursor-pointer text-muted-foreground">
+            Cancelled ({cancelledEvents.length})
+          </summary>
+
+          <div className="grid md:grid-cols-3 gap-6 mt-5">
+            {cancelledEvents.map((event) => (
+              <TicketCard key={event.id} event={event} />
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
   );
 }

@@ -1,11 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { resolveEventEndDate } from "@/utils/dateFormatter";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
+import { revalidatePath } from "next/cache";
 import insertUserAttendance from "./insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
@@ -34,10 +36,14 @@ type CheckoutRow = {
  * by validateCheckout, owned by the caller, priced and inventory-reserved
  * server-side) is the only source of truth for what gets issued. Nothing
  * about "how many tickets of which type" is trusted from the client here.
+ * The event's end date (for ticket.expires_at) is resolved server-side from
+ * the event's own rows too — previously this was a client-supplied Date
+ * parsed back out of an already-formatted display string, which was fragile
+ * for one session and outright unreliable once a single "Proceed to
+ * Payment" click can walk several different events' sessions in a row.
  */
 export default async function generateTicket(
   checkoutSessionId: string,
-  eventEndDate: Date,
   transactionId?: string,
   transactionMetada?: string,
 ) {
@@ -136,6 +142,28 @@ export default async function generateTicket(
     return { status: 300, message: "Ticket for this event already bought" };
   }
 
+  const { data: event, error: eventFetchError } = await supabase
+    .from("event")
+    .select("starts_at, ends_at, event_occurrence(id, starts_at, ends_at)")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (eventFetchError || !event) {
+    console.log(`Failed fetching event: ${eventFetchError?.message}`);
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const eventEndDate = resolveEventEndDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+  );
+
+  if (!eventEndDate) {
+    console.log(`Event ${eventId} has no resolvable start/end date`);
+    return { status: 500, message: "This event has no scheduled date" };
+  }
+
   for (const row of rows) {
     const ticketCodes = Array.from({ length: row.quantity }, () =>
       generateTicketCode(),
@@ -229,6 +257,14 @@ export default async function generateTicket(
       "id",
       rows.map((row) => row.id),
     );
+
+  // Establish the successful-purchase state before the caller redirects
+  // anywhere: without this, browser Back to the wallet pages could keep
+  // showing the pre-payment "pending" render until a manual refresh, since
+  // nothing else in this codebase calls revalidatePath for checkout routes.
+  revalidatePath("/wallet");
+  revalidatePath(`/wallet/${checkoutSessionId}`);
+  revalidatePath("/manage/my-events");
 
   return { status: 200, message: "Tickets generated successfully" };
 }

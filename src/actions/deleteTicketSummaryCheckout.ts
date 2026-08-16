@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { releasePromoUsage } from "@/utils/promoUsage";
+import { adjustPromoUsageUnits } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
 
 /**
@@ -68,12 +68,33 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
       .maybeSingle();
 
     if (promoCode) {
-      await releasePromoUsage(
-        promoCode.id,
-        userData.user.id,
-        checkout.event_id,
-        checkout.discounted_units,
-      );
+      // Only release THIS line's discounted units, not the whole usage row —
+      // a multi-line checkout can have other pending/paid lines still
+      // holding a discount from the same promo_code_usage row (composite PK
+      // is per user+event+promo, not per line). Deleting the usage row here
+      // unconditionally used to let the user reapply the code to a fresh
+      // checkout while a sibling line's discount was still live.
+      await adjustPromoUsageUnits(promoCode.id, -checkout.discounted_units);
+
+      const { data: siblingDiscountedRows } = await supabase
+        .from("ticket_checkout")
+        .select("id")
+        .eq("user_id", userData.user.id)
+        .eq("event_id", checkout.event_id)
+        .eq("promo_code", checkout.promo_code)
+        .in("status", ["pending", "paid"])
+        .gt("discounted_units", 0)
+        .neq("id", checkoutId)
+        .limit(1);
+
+      if (!siblingDiscountedRows || siblingDiscountedRows.length === 0) {
+        await supabase
+          .from("promo_code_usage")
+          .delete()
+          .eq("promo_code_id", promoCode.id)
+          .eq("user_id", userData.user.id)
+          .eq("event_id", checkout.event_id);
+      }
     }
   }
 

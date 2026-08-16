@@ -1,6 +1,5 @@
 "use client";
 
-import generateTicket from "@/actions/generateTicket";
 import { getTickets } from "@/actions/getTickets";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
@@ -18,7 +17,6 @@ type EventSlugPageProp = {
   eventTitle: string;
   date: string;
   time: string;
-  checkoutId?: string;
   requireRegistration?: boolean;
   soldOut?: boolean;
 };
@@ -29,7 +27,6 @@ export default function CheckoutBtn({
   eventTitle,
   date,
   time,
-  checkoutId,
   requireRegistration,
   soldOut,
 }: EventSlugPageProp) {
@@ -58,28 +55,6 @@ export default function CheckoutBtn({
       queryFn: () => getTickets(eventId),
       staleTime: 30_000,
     });
-  };
-
-  const getEventEndDate = () => {
-    const rawDate = date;
-
-    // Step 1: Extract the end date string
-    let endDateStr = rawDate.includes("-")
-      ? rawDate.split("-")[1].trim()
-      : rawDate.trim();
-
-    // Step 2: Remove ordinal suffixes
-    endDateStr = endDateStr.replace(/(\d+)(st|nd|rd|th)/, "$1");
-
-    // Step 3: Parse end date
-    const parsedEndDate = new Date(endDateStr);
-
-    // Step 4: Add 24 hours (in milliseconds)
-    const endDatePlusOneDay = new Date(
-      parsedEndDate.getTime() + 24 * 60 * 60 * 1000,
-    );
-
-    return new Date(endDatePlusOneDay.getTime() + 24 * 60 * 60 * 1000);
   };
 
   const handleResponse = async (response: {
@@ -118,19 +93,7 @@ export default function CheckoutBtn({
 
     setLoading(true);
 
-    const response = await registerForFreeEvent(eventId, getEventEndDate());
-
-    await handleResponse(response);
-  };
-
-  const handleMakePayment = async () => {
-    if (!(await requireAuth())) return;
-
-    if (!checkoutId) return;
-
-    setLoading(true);
-
-    const response = await generateTicket(checkoutId, getEventEndDate());
+    const response = await registerForFreeEvent(eventId);
 
     await handleResponse(response);
   };
@@ -202,20 +165,6 @@ export default function CheckoutBtn({
             </Button>
           )
         );
-      break;
-
-    case "Make Payment":
-      if (checkoutId) {
-        actionButton = (
-          <Button
-            className="font-bold rounded-md w-full p-6 text-lg"
-            onClick={handleMakePayment}
-            disabled={loading}
-          >
-            {loading ? "Please wait..." : btnText}
-          </Button>
-        );
-      }
       break;
   }
 

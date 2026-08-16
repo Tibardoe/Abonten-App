@@ -3,6 +3,10 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
+import {
+  allocatePromoEligibility,
+  computeLineAmount,
+} from "@/utils/checkoutPricing";
 import { claimPromoUsage, releasePromoUsage } from "@/utils/promoUsage";
 import {
   releaseTicketQuantity,
@@ -136,11 +140,16 @@ export default async function validateCheckout({
   }
 
   let promoCodeId: string | null = null;
-  let promoCodeDiscount: number | null = null;
-  // null = unlimited remaining uses; otherwise the number of ticket units
-  // still eligible for the discount, re-read fresh from the DB right now so
-  // a slot claimed by another checkout between "Apply" and "Proceed" is honored.
-  let remainingEligibleUnits: number | null = null;
+  let discountPercentage = 0;
+  const requestedLines = Object.entries(quantities)
+    .filter(([, value]) => value > 0)
+    .map(([ticketTypeId, quantity]) => ({ id: ticketTypeId, quantity }));
+
+  // Eligible-unit allocation is computed up front, across every requested
+  // ticket type in one pass (first-come in requestedLines order) — see
+  // checkoutPricing.ts, the same function CheckoutModal.tsx's live preview
+  // uses, so the two can't drift apart.
+  let eligibleUnitsByTicketType: Record<string, number> = {};
 
   if (promoCode) {
     const promoCodeResponse = await getPromoCode(promoCode, eventId);
@@ -153,8 +162,11 @@ export default async function validateCheckout({
     }
 
     promoCodeId = promoCodeResponse.id;
-    promoCodeDiscount = promoCodeResponse.discountPercentage / 100;
-    remainingEligibleUnits = promoCodeResponse.remainingUses ?? null;
+    discountPercentage = promoCodeResponse.discountPercentage;
+    eligibleUnitsByTicketType = allocatePromoEligibility(
+      requestedLines,
+      promoCodeResponse.remainingUses ?? null,
+    );
   }
 
   // Reserve inventory for every requested ticket type up front (this is the
@@ -207,23 +219,13 @@ export default async function validateCheckout({
     reserved.push({ ticketTypeId, quantity });
 
     const unitPrice = ticketType.price;
-
-    let eligibleUnits = 0;
-    if (promoCodeDiscount) {
-      eligibleUnits =
-        remainingEligibleUnits === null
-          ? quantity
-          : Math.min(quantity, remainingEligibleUnits);
-
-      if (remainingEligibleUnits !== null) {
-        remainingEligibleUnits -= eligibleUnits;
-      }
-    }
-
-    const discount = promoCodeDiscount
-      ? promoCodeDiscount * unitPrice * eligibleUnits
-      : 0;
-    const amount = Math.max(0, quantity * unitPrice - discount);
+    const eligibleUnits = eligibleUnitsByTicketType[ticketTypeId] ?? 0;
+    const { discount, amount } = computeLineAmount(
+      quantity,
+      unitPrice,
+      discountPercentage,
+      eligibleUnits,
+    );
 
     rows.push({
       ticketTypeId,

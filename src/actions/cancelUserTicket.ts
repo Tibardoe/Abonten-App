@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { releasePromoUsage } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
+import { revalidatePath } from "next/cache";
 import issueRefund from "./issueRefund";
 
 type TicketRow = {
@@ -105,6 +106,10 @@ export default async function cancelUserTicket(
   if (eventId) {
     await releasePromoUsageIfEventFullyCancelled(supabase, user.id, eventId);
   }
+
+  // Server-side, so this fires regardless of which UI called this action —
+  // the "My Tickets" list depends on this ticket's now-updated status.
+  revalidatePath("/manage/my-events");
 
   return { status: 200, message: "Ticket cancelled successfully" };
 }

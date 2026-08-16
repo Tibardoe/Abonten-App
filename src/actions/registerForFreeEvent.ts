@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { resolveEventEndDate } from "@/utils/dateFormatter";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
@@ -28,10 +29,7 @@ type TicketWithEvent = {
  * old generateTicket(eventId, ticketInputs, ...) signature allowed when
  * ticketInputs came straight from the browser.
  */
-export default async function registerForFreeEvent(
-  eventId: string,
-  eventEndDate: Date,
-) {
+export default async function registerForFreeEvent(eventId: string) {
   const supabase = await createClient();
 
   const {
@@ -63,6 +61,28 @@ export default async function registerForFreeEvent(
 
   if (alreadyBought) {
     return { status: 300, message: "Ticket for this event already bought" };
+  }
+
+  const { data: event, error: eventFetchError } = await supabase
+    .from("event")
+    .select("starts_at, ends_at, event_occurrence(id, starts_at, ends_at)")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (eventFetchError || !event) {
+    console.log(`Failed fetching event: ${eventFetchError?.message}`);
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const eventEndDate = resolveEventEndDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+  );
+
+  if (!eventEndDate) {
+    console.log(`Event ${eventId} has no resolvable start/end date`);
+    return { status: 500, message: "This event has no scheduled date" };
   }
 
   const { data: ticketType, error: ticketTypeError } = await supabase

@@ -81,6 +81,75 @@ export async function claimPromoUsage(
 const MAX_CAS_ATTEMPTS = 5;
 
 /**
+ * Adjusts times_used by a signed delta WITHOUT touching the promo_code_usage
+ * row (unlike claimPromoUsage/releasePromoUsage, which create/delete it). Used
+ * when a single checkout line's quantity changes after the usage row already
+ * exists — the user has still "used" the code for this event regardless of
+ * how many units it currently covers, so that row's lifecycle is managed
+ * separately (see updateTicketCheckoutQuantity.ts / deleteTicketSummaryCheckout.ts).
+ * A positive delta is bound-checked against max_uses, same as claimPromoUsage;
+ * a non-positive delta is floored at 0, same as releasePromoUsage. Same CAS
+ * retry pattern as both.
+ */
+export async function adjustPromoUsageUnits(
+  promoCodeId: string,
+  unitsDelta: number,
+) {
+  if (unitsDelta === 0) return { status: 200 };
+
+  const supabase = await createClient();
+
+  for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
+    const { data: promoCode, error: promoCodeError } = await supabase
+      .from("promo_code")
+      .select("times_used, max_uses")
+      .eq("id", promoCodeId)
+      .maybeSingle();
+
+    if (promoCodeError || !promoCode) {
+      return { status: 404, message: "Promo code no longer exists" };
+    }
+
+    const newTimesUsed = Math.max(0, promoCode.times_used + unitsDelta);
+
+    if (
+      unitsDelta > 0 &&
+      promoCode.max_uses !== null &&
+      newTimesUsed > promoCode.max_uses
+    ) {
+      return {
+        status: 409,
+        message: "Promo code has reached its usage limit!",
+      };
+    }
+
+    const { data: updated, error: updateError } = await supabase
+      .from("promo_code")
+      .update({ times_used: newTimesUsed })
+      .eq("id", promoCodeId)
+      .eq("times_used", promoCode.times_used)
+      .select("id");
+
+    if (updateError) {
+      console.log(`Failed adjusting promo usage: ${updateError.message}`);
+      return { status: 500, message: "Something went wrong!" };
+    }
+
+    if (updated && updated.length > 0) {
+      return { status: 200 };
+    }
+    // 0 rows updated means another writer changed times_used between the
+    // read and write above — retry with a fresh read instead of overwriting it.
+  }
+
+  return {
+    status: 409,
+    message:
+      "This promo code was just claimed by someone else. Please try again.",
+  };
+}
+
+/**
  * Compensating action for claimPromoUsage: gives back a redemption that was
  * claimed for a checkout that ultimately failed, expired, or was cancelled
  * before payment — same role releaseTicketQuantity plays for inventory.

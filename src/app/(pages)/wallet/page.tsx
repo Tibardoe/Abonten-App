@@ -1,24 +1,18 @@
-import ContinueButton from "@/wallet/atoms/ContinueButton";
-import AddWalletButton from "@/wallet/organisms/AddWalletButton";
+import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
+import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-// export const instant = false;
+// This page is always per-user, request-time basket data (which pending
+// checkouts exist right now) — force-dynamic matches the same precedent
+// manage/my-events/page.tsx already established for the same reason.
+export const dynamic = "force-dynamic";
 
 export default async function page() {
+  const response = await getUserPendingTicketCheckouts();
+  const sessions = response.status === 200 ? response.sessions : [];
+
   return (
     <div className="flex flex-col justify-center gap-5">
-      <div>
-        <h1 className="font-bold text-xl md:text-2xl">Wallets</h1>
-        <p className="opacity-60 text-sm">
-          Add your mobile money wallet or bank card (and associated account) to
-          pay
-        </p>
-      </div>
-
-      <AddWalletButton />
-
-      <ContinueButton />
+      <PendingCheckoutsBasket initialSessions={sessions} />
     </div>
   );
 }

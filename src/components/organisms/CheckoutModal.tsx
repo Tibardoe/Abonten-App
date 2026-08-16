@@ -6,6 +6,10 @@ import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
+import {
+  allocatePromoEligibility,
+  computeLineAmount,
+} from "@/utils/checkoutPricing";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -138,31 +142,29 @@ export default function CheckoutModal({
   };
 
   // How many of the selected ticket units the applied promo actually covers.
-  // Filled first-come across ticket types (in display order) so this matches
-  // the same rule validateCheckout enforces server-side when max_uses is
-  // smaller than the total quantity selected.
+  // Uses the same allocatePromoEligibility function validateCheckout.ts runs
+  // server-side (checkoutPricing.ts), fed with lines in ticketList order —
+  // this is a live preview only, the server recomputes and persists the
+  // authoritative numbers at "Proceed to Payment".
   const promoEligibility = useMemo(() => {
     if (!appliedPromo) return null;
 
-    const totalQuantity = ticketList.reduce(
-      (sum, ticket) => sum + (quantities[ticket.id] || 0),
-      0,
+    const lines = ticketList.map((ticket) => ({
+      id: ticket.id,
+      quantity: quantities[ticket.id] || 0,
+    }));
+
+    const totalQuantity = lines.reduce((sum, line) => sum + line.quantity, 0);
+
+    const eligibleUnitsByTicket = allocatePromoEligibility(
+      lines,
+      appliedPromo.remainingUses,
     );
 
-    const eligibleTotal =
-      appliedPromo.remainingUses === null
-        ? totalQuantity
-        : Math.min(totalQuantity, appliedPromo.remainingUses);
-
-    let unitsLeft = eligibleTotal;
-    const eligibleUnitsByTicket: { [ticketTypeId: string]: number } = {};
-
-    for (const ticket of ticketList) {
-      const selected = quantities[ticket.id] || 0;
-      const eligible = Math.min(selected, unitsLeft);
-      eligibleUnitsByTicket[ticket.id] = eligible;
-      unitsLeft -= eligible;
-    }
+    const eligibleTotal = Object.values(eligibleUnitsByTicket).reduce(
+      (sum, units) => sum + units,
+      0,
+    );
 
     return {
       totalQuantity,
@@ -178,13 +180,15 @@ export default function CheckoutModal({
 
     const eligibleUnits =
       promoEligibility?.eligibleUnitsByTicket[ticket.id] ?? 0;
-    const discountPerUnit = appliedPromo
-      ? (appliedPromo.discountPercentage / 100) * ticket.price
-      : 0;
 
-    const lineTotal = qty * ticket.price - eligibleUnits * discountPerUnit;
+    const { amount } = computeLineAmount(
+      qty,
+      ticket.price,
+      appliedPromo?.discountPercentage ?? 0,
+      eligibleUnits,
+    );
 
-    return acc + Math.max(0, lineTotal);
+    return acc + amount;
   }, 0);
 
   const hasSelectedTickets = Object.values(quantities).some((qty) => qty > 0);

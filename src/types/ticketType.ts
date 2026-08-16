@@ -73,34 +73,7 @@ export type UserTicketType = {
   };
 };
 
-export type TicketData = {
-  quantity: number;
-  discount?: number;
-  amount?: number;
-  type: string;
-};
-
-export type TicketSummaryItem = {
-  type: string;
-  quantity: number;
-  discount: number;
-  amount: number;
-  unitPrice: string;
-  currency: string;
-  ticketCheckoutId: string;
-};
-
 export type CheckoutSessionStatus = "pending" | "paid" | "expired";
-
-export type TicketSummaryProps = {
-  type: "ticket";
-  eventTitle: string;
-  eventCode: string;
-  ticketSummary: TicketSummaryItem[];
-  totalAmount: number;
-  status: CheckoutSessionStatus;
-  expiresAt: string | null;
-};
 
 export type SubscriptionSummaryProps = {
   type: "subscription";

@@ -159,11 +159,22 @@ export function getDateParts(dateInput: string | Date) {
   };
 }
 
-export function getFormattedEventDate(
+/**
+ * Picks which occurrence/date range represents "the event" right now: the
+ * next future-or-current occurrence, else the main starts_at/ends_at if
+ * still future, else the most recent past occurrence, else the main
+ * starts_at/ends_at even if past. Returns null only if the event has
+ * neither occurrences nor starts_at/ends_at at all (not enforced by a DB
+ * constraint, so this is a real possible state, not defensive dead code).
+ * Single decision point reused by both getFormattedEventDate (display) and
+ * resolveEventEndDate (raw Date, e.g. for ticket expiry) so the two can
+ * never disagree about which date range "the event" resolves to.
+ */
+function resolveEventDateRange(
   startsAt: string | Date | null | undefined,
   endsAt: string | Date | null | undefined,
   fallbackOccurrences?: Occurrence[] | null,
-): { date: string; time: string } {
+): { starts: Date; ends: Date } | null {
   const now = new Date().getTime();
 
   // 1. Try to find a FUTURE or CURRENT occurrence
@@ -176,21 +187,21 @@ export function getFormattedEventDate(
       )[0];
 
     if (nextOccurrence) {
-      return formatFullDateTimeRange(
-        nextOccurrence.starts_at,
-        nextOccurrence.ends_at,
-      );
+      return {
+        starts: new Date(nextOccurrence.starts_at),
+        ends: new Date(nextOccurrence.ends_at),
+      };
     }
   }
 
   // 2. If no future occurrences, try the main startsAt (if it's in the future)
   if (startsAt && endsAt) {
     if (new Date(endsAt).getTime() > now) {
-      return formatFullDateTimeRange(startsAt, endsAt);
+      return { starts: new Date(startsAt), ends: new Date(endsAt) };
     }
   }
 
-  // 3. FALLBACK: If EVERYTHING is in the past, show the very last occurrence
+  // 3. FALLBACK: If EVERYTHING is in the past, use the very last occurrence
   // so the card still shows the date it happened.
   if (fallbackOccurrences && fallbackOccurrences.length > 0) {
     const lastOccurrence = fallbackOccurrences.sort(
@@ -198,19 +209,49 @@ export function getFormattedEventDate(
         new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime(),
     )[0]; // Note: sorted by latest first
 
-    return formatFullDateTimeRange(
-      lastOccurrence.starts_at,
-      lastOccurrence.ends_at,
-    );
+    return {
+      starts: new Date(lastOccurrence.starts_at),
+      ends: new Date(lastOccurrence.ends_at),
+    };
   }
 
   // 4. Final Fallback for single events that are past
   if (startsAt && endsAt) {
-    return formatFullDateTimeRange(startsAt, endsAt);
+    return { starts: new Date(startsAt), ends: new Date(endsAt) };
   }
 
-  return {
-    date: "Date not available",
-    time: "Time not available",
-  };
+  return null;
+}
+
+export function getFormattedEventDate(
+  startsAt: string | Date | null | undefined,
+  endsAt: string | Date | null | undefined,
+  fallbackOccurrences?: Occurrence[] | null,
+): { date: string; time: string } {
+  const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
+
+  if (!range) {
+    return {
+      date: "Date not available",
+      time: "Time not available",
+    };
+  }
+
+  return formatFullDateTimeRange(range.starts, range.ends);
+}
+
+/**
+ * Raw-Date equivalent of getFormattedEventDate's resolution logic, for
+ * callers that need an actual Date (e.g. ticket.expires_at) rather than a
+ * display string. Returns null in the same case getFormattedEventDate falls
+ * back to "Date not available" — callers must handle that explicitly rather
+ * than inserting an invalid date.
+ */
+export function resolveEventEndDate(
+  startsAt: string | Date | null | undefined,
+  endsAt: string | Date | null | undefined,
+  fallbackOccurrences?: Occurrence[] | null,
+): Date | null {
+  const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
+  return range ? range.ends : null;
 }

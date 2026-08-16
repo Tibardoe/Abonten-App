@@ -1,8 +1,7 @@
 import type { getTickets } from "@/actions/getTickets";
+import QuantityStepper from "@/components/atoms/QuantityStepper";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
-import { IoAddSharp } from "react-icons/io5";
 import { MdDiscount } from "react-icons/md";
-import { TfiMinus } from "react-icons/tfi";
 
 type Ticket = NonNullable<
   Awaited<ReturnType<typeof getTickets>>["tickets"]
@@ -36,29 +35,12 @@ export default function CheckoutTicketRow({
       <div className="flex items-center justify-between px-4">
         <p>{ticket.type}</p>
 
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            disabled={quantity <= 0}
-            onClick={onDecrement}
-            className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-muted border border-border text-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <TfiMinus />
-          </button>
-
-          <span>{quantity}</span>
-
-          <button
-            type="button"
-            disabled={
-              ticket.quantity !== null && quantity >= (ticket.quantity ?? 0)
-            }
-            onClick={onIncrement}
-            className="w-8 h-8 grid place-items-center text-xl md:text-2xl bg-primary text-primary-foreground rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <IoAddSharp />
-          </button>
-        </div>
+        <QuantityStepper
+          quantity={quantity}
+          maxQuantity={ticket.quantity}
+          onIncrement={onIncrement}
+          onDecrement={onDecrement}
+        />
       </div>
 
       <hr className="border-border" />
