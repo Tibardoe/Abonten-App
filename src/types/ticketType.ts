@@ -73,7 +73,11 @@ export type UserTicketType = {
   };
 };
 
-export type CheckoutSessionStatus = "pending" | "paid" | "expired";
+export type CheckoutSessionStatus =
+  | "pending"
+  | "paid"
+  | "expired"
+  | "cancelled";
 
 export type SubscriptionSummaryProps = {
   type: "subscription";
