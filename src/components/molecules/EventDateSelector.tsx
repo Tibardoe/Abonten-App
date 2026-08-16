@@ -90,6 +90,7 @@ export default function EventDateSelector({
       {selectedDateTime && (
         <CheckoutBtn
           eventId={eventId}
+          occurrenceId={selectedOccurrence?.id ?? null}
           btnText={
             minTicket?.price === 0 || minTicket === null
               ? "Register"

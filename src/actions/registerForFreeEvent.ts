@@ -10,6 +10,7 @@ import {
   releaseTicketQuantity,
   reserveTicketQuantity,
 } from "@/utils/ticketInventory";
+import { revalidatePath } from "next/cache";
 import insertUserAttendance from "./insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 
@@ -29,7 +30,10 @@ type TicketWithEvent = {
  * old generateTicket(eventId, ticketInputs, ...) signature allowed when
  * ticketInputs came straight from the browser.
  */
-export default async function registerForFreeEvent(eventId: string) {
+export default async function registerForFreeEvent(
+  eventId: string,
+  occurrenceId?: string | null,
+) {
   const supabase = await createClient();
 
   const {
@@ -85,6 +89,17 @@ export default async function registerForFreeEvent(eventId: string) {
     return { status: 500, message: "This event has no scheduled date" };
   }
 
+  // occurrenceId is client-supplied and now affects a DB write, so verify it
+  // actually belongs to this event before trusting it (same check
+  // validateCheckout.ts does for paid tickets) — reuse the occurrences
+  // already fetched above rather than a second round trip.
+  if (
+    occurrenceId &&
+    !event.event_occurrence.some((occ) => occ.id === occurrenceId)
+  ) {
+    return { status: 400, message: "Invalid event date" };
+  }
+
   const { data: ticketType, error: ticketTypeError } = await supabase
     .from("ticket_type")
     .select("id")
@@ -135,6 +150,7 @@ export default async function registerForFreeEvent(eventId: string) {
       ticket_code: ticketCode,
       created_at: new Date(),
       updated_at: null,
+      occurrence_id: occurrenceId ?? null,
     })
     .select("id")
     .maybeSingle();
@@ -159,6 +175,8 @@ export default async function registerForFreeEvent(eventId: string) {
       message: attendanceInsertResponse.message,
     };
   }
+
+  revalidatePath("/manage/attendance/attendance-list");
 
   return { status: 200, message: "Event registered successfully" };
 }

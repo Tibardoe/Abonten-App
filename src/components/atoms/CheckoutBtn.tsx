@@ -13,6 +13,7 @@ import Notification from "./Notification";
 
 type EventSlugPageProp = {
   eventId: string;
+  occurrenceId: string | null;
   btnText: string;
   eventTitle: string;
   date: string;
@@ -23,6 +24,7 @@ type EventSlugPageProp = {
 
 export default function CheckoutBtn({
   eventId,
+  occurrenceId,
   btnText,
   eventTitle,
   date,
@@ -93,7 +95,7 @@ export default function CheckoutBtn({
 
     setLoading(true);
 
-    const response = await registerForFreeEvent(eventId);
+    const response = await registerForFreeEvent(eventId, occurrenceId);
 
     await handleResponse(response);
   };
@@ -135,6 +137,7 @@ export default function CheckoutBtn({
             <CheckoutModal
               handleCheckoutModal={handleCheckoutModal}
               eventId={eventId}
+              occurrenceId={occurrenceId}
               btnText={btnText}
               eventTitle={eventTitle}
               date={date}

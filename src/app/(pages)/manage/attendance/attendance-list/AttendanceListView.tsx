@@ -29,14 +29,26 @@ export default function AttendanceListView({
           key={attendee.id}
           className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"
         >
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-2">
             <h2 className="font-bold">
               {attendee.user_info?.full_name ?? attendee.user_info?.username}
             </h2>
 
-            <span className="text-sm text-muted-foreground">
-              {attendee.ticket_type?.type}
-            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-sm text-muted-foreground">
+                {attendee.ticket_type?.type}
+              </span>
+
+              {attendee.status === "cancelled" ? (
+                <span className="px-2 py-1 rounded-full text-xs font-semibold bg-destructive/10 text-destructive">
+                  Cancelled
+                </span>
+              ) : (
+                <span className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-600/10 text-emerald-700 dark:text-emerald-400">
+                  Active
+                </span>
+              )}
+            </div>
           </div>
 
           <p className="text-sm text-muted-foreground">

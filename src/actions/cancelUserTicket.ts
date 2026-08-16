@@ -108,8 +108,11 @@ export default async function cancelUserTicket(
   }
 
   // Server-side, so this fires regardless of which UI called this action —
-  // the "My Tickets" list depends on this ticket's now-updated status.
+  // the "My Tickets" list depends on this ticket's now-updated status, and
+  // the organizer's attendance dashboard depends on it too (previously this
+  // cancellation never invalidated the organizer's view at all).
   revalidatePath("/manage/my-events");
+  revalidatePath("/manage/attendance/attendance-list");
 
   return { status: 200, message: "Ticket cancelled successfully" };
 }

@@ -1,4 +1,5 @@
 import getAttendanceList from "@/actions/getAttendanceList";
+import EventAnalyticsDashboard from "@/components/organisms/EventAnalyticsDashboard";
 import AttendanceListView from "./AttendanceListView";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -22,7 +23,9 @@ export default async function page({
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-8">
+      <EventAnalyticsDashboard eventId={eventId} />
+
       <h1 className="font-bold md:text-xl">List of Attendance</h1>
 
       <AttendanceListView

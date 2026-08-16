@@ -18,6 +18,7 @@ type CheckoutDetailsProp = {
   eventId: string;
   quantities: { [ticketTypeId: string]: number };
   promoCode?: string | null;
+  occurrenceId?: string | null;
 };
 
 type TicketWithEvent = {
@@ -43,6 +44,7 @@ export default async function validateCheckout({
   eventId,
   quantities,
   promoCode,
+  occurrenceId,
 }: CheckoutDetailsProp) {
   const supabase = await createClient();
 
@@ -137,6 +139,22 @@ export default async function validateCheckout({
 
   if (!event) {
     return { status: 404, message: "No event found!" };
+  }
+
+  // occurrenceId is client-supplied and now affects a DB write, so verify it
+  // actually belongs to this event before trusting it (a tampered client
+  // could otherwise stamp a purchase with another event's occurrence id).
+  if (occurrenceId) {
+    const { data: occurrence, error: occurrenceError } = await supabase
+      .from("event_occurrence")
+      .select("id")
+      .eq("id", occurrenceId)
+      .eq("event_id", eventId)
+      .maybeSingle();
+
+    if (occurrenceError || !occurrence) {
+      return { status: 400, message: "Invalid event date" };
+    }
   }
 
   let promoCodeId: string | null = null;
@@ -280,6 +298,7 @@ export default async function validateCheckout({
         total_price: row.amount,
         status: "pending",
         expires_at: expiresAt,
+        occurrence_id: occurrenceId ?? null,
       })),
     );
 

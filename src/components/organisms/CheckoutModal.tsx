@@ -20,6 +20,7 @@ import Notification from "../atoms/Notification";
 type CheckoutProp = {
   handleCheckoutModal: (state: boolean) => void;
   eventId: string;
+  occurrenceId: string | null;
   btnText: string;
   eventTitle: string;
   date: string;
@@ -35,6 +36,7 @@ type AppliedPromo = {
 export default function CheckoutModal({
   handleCheckoutModal,
   eventId,
+  occurrenceId,
   // btnText,
   eventTitle,
   time,
@@ -211,6 +213,7 @@ export default function CheckoutModal({
       eventId,
       quantities,
       promoCode: appliedPromo?.code ?? null,
+      occurrenceId,
     });
 
     if (

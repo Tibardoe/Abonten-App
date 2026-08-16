@@ -27,6 +27,7 @@ type CheckoutRow = {
   promo_code: string | null;
   discounted_units: number;
   expires_at: string | null;
+  occurrence_id: string | null;
 };
 
 /**
@@ -67,7 +68,7 @@ export default async function generateTicket(
     await supabase
       .from("ticket_checkout")
       .select(
-        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at",
+        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id",
       )
       .eq("checkout_session_id", checkoutSessionId)
       .eq("user_id", user.id)
@@ -96,7 +97,7 @@ export default async function generateTicket(
   const { data: checkoutData, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at",
+      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id",
     )
     .eq("checkout_session_id", checkoutSessionId)
     .eq("user_id", user.id)
@@ -217,6 +218,7 @@ export default async function generateTicket(
           metadata: transactionMetada ?? null,
           created_at: new Date(),
           updated_at: null,
+          occurrence_id: row.occurrence_id,
         })),
       )
       .select("id");
@@ -265,6 +267,7 @@ export default async function generateTicket(
   revalidatePath("/checkout");
   revalidatePath(`/checkout/${checkoutSessionId}`);
   revalidatePath("/manage/my-events");
+  revalidatePath("/manage/attendance/attendance-list");
 
   return { status: 200, message: "Tickets generated successfully" };
 }
