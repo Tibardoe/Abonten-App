@@ -1,11 +1,33 @@
-import { getFilteredEvents } from "@/actions/getFilteredEvents";
-import EventCard from "@/components/molecules/EventCard";
+import {
+  type EventWindow,
+  getEventsInWindow,
+} from "@/actions/getEventsInWindow";
+import { getNearByEvents } from "@/actions/getNearByEvents";
+import type { PaginatedResult } from "@/types/pagination";
 import type { UserPostType } from "@/types/postsType";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import ExploreEventsList from "./ExploreEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
+
+const validFilters = [
+  "happening-today",
+  "happening-this-week",
+  "happening-this-month",
+  "top-rated-organizers",
+  "around-you",
+  "category",
+] as const;
+
+type FilterType = (typeof validFilters)[number];
+
+const windowFilters: readonly FilterType[] = [
+  "happening-today",
+  "happening-this-week",
+  "happening-this-month",
+];
 
 export default async function page({
   params,
@@ -14,86 +36,80 @@ export default async function page({
 }) {
   const { location, type } = await params;
 
-  const validFilters = [
-    "happening-today",
-    "happening-this-week",
-    "happening-this-month",
-    "top-rated-organizers",
-    "around-you",
-    "category",
-  ] as const;
-
-  type FilterType = (typeof validFilters)[number];
-
   if (!validFilters.includes(type as FilterType)) {
     throw new Error("Invalid heading provided");
   }
 
+  const filter = type as FilterType;
   const safeLocation = location ?? "";
 
-  // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-  // const res = await fetch(
-  //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
-  // );
-
-  // if (!res.ok) {
-  //   const errorText = await res.text(); // Get the HTML error to see what happened
-  //   console.error("Geocode API failed:", res.status, errorText);
-  //   throw new Error(`Failed to fetch geocode: ${res.status}`);
-  // }
-
-  // const { lat, lng } = await res.json();
-
-  const res = await geocodeAddress(safeLocation);
-
-  const { lat, lng } = res;
+  const { lat, lng } = await geocodeAddress(safeLocation);
 
   const urlPath = type
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  const events: UserPostType[] = await getFilteredEvents({
-    lat: lat,
-    lng: lng,
-    filter: type as FilterType,
-    radius: 10000,
-  });
+  let firstPage: PaginatedResult<UserPostType>;
+  let fetchPage: (
+    cursor: string | null,
+  ) => Promise<PaginatedResult<UserPostType>>;
+
+  if (windowFilters.includes(filter)) {
+    // "Happening today/this week/this month": a real server-side date-range
+    // query (get_events_in_window), not the old fetch-200-then-filter-in-JS
+    // approach — see getFilteredEvents.ts's filterEventsByWindow, which is
+    // still used for the bounded preview sliders but not here.
+    firstPage = await getEventsInWindow({
+      lat,
+      lng,
+      radius: 10,
+      window: filter as EventWindow,
+    });
+
+    fetchPage = async (cursor: string | null) => {
+      "use server";
+      return getEventsInWindow({
+        lat,
+        lng,
+        radius: 10,
+        window: filter as EventWindow,
+        cursor,
+      });
+    };
+  } else {
+    // "around-you" / "top-rated-organizers" / "category": radius-only —
+    // top-rated-organizers/category don't actually implement their named
+    // sort/filter (pre-existing gap, unrelated to pagination), matching
+    // prior behavior.
+    const radius = filter === "around-you" ? 5000 : 10000;
+
+    firstPage = await getNearByEvents(lat, lng, radius);
+
+    fetchPage = async (cursor: string | null) => {
+      "use server";
+      return getNearByEvents(lat, lng, radius, { cursor });
+    };
+  }
+
+  const emptyState = (
+    <div className="w-full h-[500] flex flex-col justify-center items-center">
+      <h1 className="font-bold text-lg md:text-xl">No events found</h1>
+      <p>Try other categories</p>
+    </div>
+  );
 
   return (
     <div className="space-y-3">
       <h1 className="font-bold text-xl">{urlPath}</h1>
 
-      {events.length ? (
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 overflow-x-scroll scrollbar-hide gap-2 pb-5">
-          {events.map((event, index) => (
-            <EventCard
-              key={event.title}
-              priority={index < 4}
-              title={event.title}
-              id={event.id}
-              flyer_public_id={event.flyer_public_id}
-              flyer_version={event.flyer_version}
-              event_code={event.event_code}
-              address={event.address}
-              starts_at={event.starts_at}
-              occurrences={event.occurrences}
-              ends_at={event.ends_at}
-              organizer_id={event.organizer_id}
-              min_price={event.min_price}
-              currency={event.currency ?? ""}
-              created_at={event.created_at}
-              attendanceCount={event.attendanceCount ?? 0}
-            />
-          ))}
-        </ul>
-      ) : (
-        <div className="w-full h-[500] flex flex-col justify-center items-center">
-          <h1 className="font-bold text-lg md:text-xl">No events found</h1>
-          <p>Try other categories</p>
-        </div>
-      )}
+      <ExploreEventsList
+        key={`${filter}-${lat}-${lng}`}
+        queryKey={["events", "window", filter, lat, lng]}
+        initialPage={firstPage}
+        fetchPage={fetchPage}
+        emptyState={emptyState}
+      />
     </div>
   );
 }

@@ -1,22 +1,23 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import {
+  DEFAULT_EVENTS_PAGE_SIZE,
+  decodeCursor,
+  encodeCursor,
+  keysetOlderThan,
+  splitPage,
+} from "@/utils/pagination";
 
-export async function getUserReviews(username: string) {
+export async function getUserReviews(
+  username: string,
+  options?: { cursor?: string | null; pageSize?: number },
+  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
+): Promise<PaginatedResult<any>> {
   const supabase = await createClient();
-
-  // const { data: user, error: userError } = await supabase.auth.getUser();
-
-  // if (userError) {
-  //   return {
-  //     status: 500,
-  //     message: `Failed fetching user: ${userError.message}`,
-  //   };
-  // }
-
-  // if (!user) {
-  //   return { status: 401, message: "User not logged in" };
-  // }
+  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
+  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
   const { data: user, error: userError } = await supabase
     .from("user_info")
@@ -27,26 +28,52 @@ export async function getUserReviews(username: string) {
   if (!user || userError) {
     console.log(`Error fetching user id: ${userError?.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "Something went wrong!",
+    };
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("review")
     .select("*, user_info:reviewer_id(username)")
     .eq("reviewed_id", user.id)
     .order("created_at", { ascending: false })
-    // Safety cap: no pagination yet, so bound the worst case instead of
-    // shipping an unbounded review list.
-    .limit(200);
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
+
+  if (cursor) {
+    query = query.or(keysetOlderThan("created_at", "id", cursor));
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.log(`Failed fetching reviews: ${error.message}`);
 
     return {
       status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
       message: "Something went wrong!",
     };
   }
 
-  return { status: 200, data };
+  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
+  const { page, hasNextPage } = splitPage<any>(data, pageSize);
+
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasNextPage && last
+      ? encodeCursor<SimpleCursor>({
+          sortValue: String(last.created_at),
+          id: last.id,
+        })
+      : null;
+
+  return { status: 200, data: page, nextCursor, hasNextPage };
 }

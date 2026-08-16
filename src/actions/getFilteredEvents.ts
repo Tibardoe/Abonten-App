@@ -1,5 +1,4 @@
 import type { UserPostType } from "@/types/postsType";
-import { getNearByEvents } from "./getNearByEvents";
 
 /**
  * All of an event's session start times — every occurrence's starts_at, or
@@ -36,10 +35,12 @@ export type EventDateFilter =
   | "around-you";
 
 /**
- * Pure, synchronous date-window filter — no fetching. Split out from
- * `getFilteredEvents` so callers that already have an events dataset in
- * hand (e.g. one shared "nearby events" fetch reused across several
- * sliders) can derive each slice without re-fetching per filter.
+ * Pure, synchronous date-window filter — no fetching. Used for the small,
+ * bounded preview sliders on the location page, which reuse one shared
+ * "nearby events" fetch across several sliders instead of re-fetching per
+ * filter. The dedicated, infinite-scrolled "see all" pages for
+ * happening-today/this-week/this-month use `getEventsInWindow` (a real
+ * server-side, paginated date-range query) instead of this function.
  */
 export function filterEventsByWindow(
   events: UserPostType[],
@@ -90,26 +91,4 @@ export function filterEventsByWindow(
     default:
       return events;
   }
-}
-
-export async function getFilteredEvents({
-  lat,
-  lng,
-  filter,
-  radius = 10, // default to 10km if not provided
-}: {
-  lat: number;
-  lng: number;
-  radius?: number;
-  filter: EventDateFilter;
-}) {
-  const { data: events, error } = await getNearByEvents(
-    lat,
-    lng,
-    filter === "around-you" ? 5 : radius,
-  );
-
-  if (error || !events) return [];
-
-  return filterEventsByWindow(events, filter);
 }

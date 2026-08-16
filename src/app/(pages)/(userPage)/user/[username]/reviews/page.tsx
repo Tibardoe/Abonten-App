@@ -1,8 +1,6 @@
 import { getUserReviews } from "@/actions/getUserReviews";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
-import Rating from "@/components/atoms/Rating";
-import { getRelativeTime } from "@/utils/dateFormatter";
-import { ClockIcon, UserIcon } from "lucide-react"; // Assuming you're using Lucide
+import UserReviewsList from "./UserReviewsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -15,61 +13,22 @@ export default async function page({
 }) {
   const { username } = await params;
 
-  let userReviews = [];
+  const firstPage = await getUserReviews(username);
 
-  try {
-    const response = await getUserReviews(username);
-
-    if (response.status === 200 && response.data) {
-      userReviews = response.data;
-    } else {
-      return (
-        <div className="text-center mt-5 text-destructive">
-          Failed to load reviews: {response.message}
-        </div>
-      );
-    }
-  } catch (error) {
-    console.log(error);
+  if (firstPage.status !== 200) {
     return (
       <div className="text-center mt-5 text-destructive">
-        An error occurred while fetching reviews.
+        Failed to load reviews: {firstPage.message}
       </div>
     );
   }
 
-  return userReviews.length > 0 ? (
-    <ul className="flex flex-col gap-6">
-      {userReviews.map((review) => (
-        <li
-          key={review.title + review.created_at}
-          className="w-full bg-card text-card-foreground shadow-sm hover:shadow-md transition rounded-xl p-5 flex flex-col gap-3 border border-border"
-        >
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-card-foreground">
-              {review.title}
-            </h2>
-            <Rating rating={review.rating} />
-          </div>
+  async function fetchPage(cursor: string | null) {
+    "use server";
+    return getUserReviews(username, { cursor });
+  }
 
-          <p className="text-foreground text-justify leading-relaxed">
-            {review.comment}
-          </p>
-
-          <div className="flex flex-wrap items-center text-sm gap-4 text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <UserIcon size={16} />
-              <span>{review.user_info.username}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <ClockIcon size={16} />
-              <span>{getRelativeTime(review.created_at)}</span>
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  ) : (
+  const emptyState = (
     <div className="flex flex-col items-center justify-center mt-10 gap-4 text-center">
       <h1 className="text-2xl font-bold text-foreground">No reviews yet</h1>
       <p className="text-muted-foreground">
@@ -77,5 +36,14 @@ export default async function page({
       </p>
       <AddReviewButton username={username} />
     </div>
+  );
+
+  return (
+    <UserReviewsList
+      queryKey={["user-reviews", username]}
+      initialPage={firstPage}
+      fetchPage={fetchPage}
+      emptyState={emptyState}
+    />
   );
 }

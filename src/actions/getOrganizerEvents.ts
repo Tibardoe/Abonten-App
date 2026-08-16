@@ -1,9 +1,23 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import type { UserPostType } from "@/types/postsType";
+import {
+  DEFAULT_EVENTS_PAGE_SIZE,
+  decodeCursor,
+  encodeCursor,
+  keysetOlderThan,
+  splitPage,
+} from "@/utils/pagination";
 
-export default async function getOrganizerEvents() {
+export default async function getOrganizerEvents(options?: {
+  cursor?: string | null;
+  pageSize?: number;
+}): Promise<PaginatedResult<UserPostType>> {
   const supabase = await createClient();
+  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
+  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
   const {
     data: { user },
@@ -12,41 +26,51 @@ export default async function getOrganizerEvents() {
 
   if (userError || !user) {
     console.error(userError?.message);
-    return { status: 500, message: "User not logged in" };
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "User not logged in",
+    };
   }
 
-  const userId = user.id;
-
-  const { data: events, error: eventsError } = await supabase
+  let query = supabase
     .from("event")
     .select("*, occurrences:event_occurrence(*)")
-    .eq("organizer_id", userId)
+    .eq("organizer_id", user.id)
     .order("created_at", { ascending: false })
-    // Safety cap: no pagination yet, so bound the worst case instead of
-    // shipping an unbounded event list.
-    .limit(200);
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
+
+  if (cursor) {
+    query = query.or(keysetOlderThan("created_at", "id", cursor));
+  }
+
+  const { data: events, error: eventsError } = await query;
 
   if (eventsError) {
     console.log(`Error fetching organizer's events: ${eventsError.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "Something went wrong!",
+    };
   }
 
-  //   if (!events || events.length === 0) {
-  //     return { status: 404, message: "No events found!" };
-  //   }
+  const { page, hasNextPage } = splitPage<UserPostType>(events, pageSize);
 
-  //   const eventsWithTickets = events.map(async (event) => {
-  //     const response = await getTickets(event.id);
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasNextPage && last
+      ? encodeCursor<SimpleCursor>({
+          sortValue: String(last.created_at),
+          id: last.id,
+        })
+      : null;
 
-  //     if (response.status !== 200) {
-  //       console.log(response.message);
-  //     }
-
-  //     const ticket = response.tickets
-
-  //     return {...events}
-  //   });
-
-  return { status: 200, data: events };
+  return { status: 200, data: page, nextCursor, hasNextPage };
 }

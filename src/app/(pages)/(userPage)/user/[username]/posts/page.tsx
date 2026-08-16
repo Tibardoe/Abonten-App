@@ -1,11 +1,22 @@
 import { getUserPosts } from "@/actions/getUserPosts";
 import PostButton from "@/components/atoms/PostButton";
-import EventCard from "@/components/molecules/EventCard";
-import type { UserPostType } from "@/types/postsType";
+import UserPostsList from "./UserPostsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
+
+const emptyState = (
+  <div className="flex flex-col items-center">
+    <h1 className="font-bold text-2xl">No posts yet</h1>
+
+    <p className="text-sm text-muted-foreground">
+      Post events for others to attend
+    </p>
+
+    <PostButton />
+  </div>
+);
 
 export default async function page({
   params,
@@ -13,66 +24,28 @@ export default async function page({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
-  let userPosts: UserPostType[] = [];
 
-  try {
-    const response = await getUserPosts(username);
+  const firstPage = await getUserPosts(username);
 
-    if (response.status === 200 && response.eventsWithMinPriceAndAttendance) {
-      userPosts = response.eventsWithMinPriceAndAttendance;
-    } else {
-      return (
-        <div className="text-center mt-5 text-red-500">
-          Failed to load posts: {response.message}
-        </div>
-      );
-    }
-  } catch (error) {
-    console.log(error);
-
+  if (firstPage.status !== 200) {
     return (
       <div className="text-center mt-5 text-red-500">
-        An error occurred while fetching posts.
+        Failed to load posts: {firstPage.message}
       </div>
     );
   }
 
-  return userPosts?.length ? (
-    <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-      {userPosts.map((post, index) => {
-        return (
-          <EventCard
-            key={post.title}
-            priority={index < 4}
-            id={post.id}
-            title={post.title}
-            flyer_public_id={post.flyer_public_id}
-            flyer_version={post.flyer_version}
-            address={post.address}
-            event_code={post.event_code}
-            starts_at={post.starts_at}
-            ends_at={post.ends_at}
-            occurrences={post.event_occurrence}
-            min_price={post.min_price}
-            currency={post.currency}
-            organizer_id={post.organizer_id}
-            created_at={post.created_at}
-            capacity={post.capacity}
-            attendanceCount={post.attendanceCount}
-            status={post.status}
-          />
-        );
-      })}
-    </ul>
-  ) : (
-    <div className="flex flex-col items-center">
-      <h1 className="font-bold text-2xl">No posts yet</h1>
+  async function fetchPage(cursor: string | null) {
+    "use server";
+    return getUserPosts(username, { cursor });
+  }
 
-      <p className="text-sm text-muted-foreground">
-        Post events for others to attend
-      </p>
-
-      <PostButton />
-    </div>
+  return (
+    <UserPostsList
+      queryKey={["user-posts", username]}
+      initialPage={firstPage}
+      fetchPage={fetchPage}
+      emptyState={emptyState}
+    />
   );
 }

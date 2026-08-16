@@ -1,12 +1,12 @@
 import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import Banner from "@/components/molecules/Banner";
-import EventCard from "@/components/molecules/EventCard";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import type { UserPostType } from "@/types/postsType";
 import { getDailyEvent } from "@/utils/dailyEventCache";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import AllEventsList from "./AllEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -63,6 +63,34 @@ export default async function page({
 
   const selected = getDailyEvent(events, safeLocation);
 
+  async function fetchAllEventsPage(cursor: string | null) {
+    "use server";
+    return getNearByEvents(lat, lng, 10000, { cursor });
+  }
+
+  const allEventsEmptyState = (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] py-5 px-4 text-center">
+      <div className="max-w-md mx-auto">
+        <div className="relative w-64 h-64 mx-auto mb-8">
+          <img
+            src="/assets/images/notFound.jpg"
+            alt="No events found"
+            className="w-full h-full object-contain opacity-90"
+          />
+        </div>
+
+        <h2 className="text-2xl font-medium text-muted-foreground mb-1">
+          No Events Found
+        </h2>
+
+        <p className="text-muted-foreground text-sm mb-6 max-w-md">
+          We couldn’t find any events in this location. Try changing your
+          location or be the first to post one.
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <section className="space-y-2">
       <LocationAndFilterSection />
@@ -104,31 +132,13 @@ export default async function page({
           <div className="mb-5">
             <h2 className="text-lg font-medium">All Events</h2>
 
-            <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-3">
-              {events.map((post, index) => (
-                <EventCard
-                  key={post.title}
-                  priority={index < 4}
-                  id={post.id}
-                  title={post.title}
-                  flyer_public_id={post.flyer_public_id}
-                  flyer_version={post.flyer_version}
-                  address={post.address}
-                  event_code={post.event_code}
-                  starts_at={post.starts_at}
-                  ends_at={post.ends_at}
-                  organizer_id={post.organizer_id}
-                  occurrences={post.occurrences}
-                  minTicket={post.minTicket}
-                  created_at={post.created_at}
-                  capacity={post.capacity}
-                  min_price={post.min_price}
-                  currency={post.currency}
-                  attendanceCount={post.attendanceCount}
-                  status={post.status}
-                />
-              ))}
-            </ul>
+            <AllEventsList
+              key={`${lat}-${lng}`}
+              queryKey={["events", "nearby", lat, lng, 10000]}
+              initialPage={eventsWithinLocation}
+              fetchPage={fetchAllEventsPage}
+              emptyState={allEventsEmptyState}
+            />
           </div>
         </>
       ) : (

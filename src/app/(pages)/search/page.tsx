@@ -1,8 +1,7 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
-import EventCard from "@/components/molecules/EventCard";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
-import type { UserPostType } from "@/types/postsType";
 import { parseFilters } from "@/utils/parseFilterModalQueries";
+import SearchResultsList from "./SearchResultsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -28,7 +27,7 @@ export default async function page({
     lng,
   } = parseFilters(queryParams);
 
-  const events = await getQueriedEvents({
+  const filters = {
     minPrice,
     maxPrice,
     minRating,
@@ -39,7 +38,14 @@ export default async function page({
     endDate,
     category,
     type,
-  });
+  };
+
+  const firstPage = await getQueriedEvents(filters);
+
+  async function fetchPage(cursor: string | null) {
+    "use server";
+    return getQueriedEvents({ ...filters, cursor });
+  }
 
   // Helper to format date
   const formatDate = (dateString: string) => {
@@ -50,6 +56,29 @@ export default async function page({
       day: "numeric",
     });
   };
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
+      <div className="max-w-md mx-auto">
+        <div className="relative w-64 h-64 mx-auto mb-8">
+          <img
+            src="/assets/images/notFound.jpg"
+            alt="No events found"
+            className="w-full h-full object-contain opacity-90"
+          />
+        </div>
+
+        <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
+          No results
+        </h2>
+
+        <p className="text-muted-foreground mb-6 max-w-md">
+          We couldn’t find any events for your queried data. Try adjusting your
+          search queries.
+        </p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-5">
@@ -107,53 +136,13 @@ export default async function page({
         )}
       </div>
 
-      {events.QueriedData.length ? (
-        <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
-          {events.QueriedData.map((event: UserPostType, index: number) => (
-            <EventCard
-              key={event.title}
-              priority={index < 4}
-              id={event.id}
-              title={event.title}
-              flyer_public_id={event.flyer_public_id}
-              flyer_version={event.flyer_version}
-              address={event.address}
-              event_code={event.event_code}
-              starts_at={event.starts_at}
-              ends_at={event.ends_at}
-              organizer_id={event.organizer_id}
-              occurrences={event.occurrences}
-              minTicket={event.minTicket}
-              created_at={event.created_at}
-              capacity={event.capacity}
-              min_price={event.min_price}
-              currency={event.currency}
-              attendance_count={event.attendance_count}
-            />
-          ))}
-        </ul>
-      ) : (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="relative w-64 h-64 mx-auto mb-8">
-              <img
-                src="/assets/images/notFound.jpg"
-                alt="No events found"
-                className="w-full h-full object-contain opacity-90"
-              />
-            </div>
-
-            <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
-              No results
-            </h2>
-
-            <p className="text-muted-foreground mb-6 max-w-md">
-              We couldn’t find any events for your queried data. Try adjusting
-              your search queries.
-            </p>
-          </div>
-        </div>
-      )}
+      <SearchResultsList
+        key={JSON.stringify(filters)}
+        queryKey={["events", "search", filters]}
+        initialPage={firstPage}
+        fetchPage={fetchPage}
+        emptyState={emptyState}
+      />
     </div>
   );
 }

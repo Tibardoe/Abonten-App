@@ -1,9 +1,7 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
-import PostButton from "@/components/atoms/PostButton";
-import EventCard from "@/components/molecules/EventCard";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
-import type { UserPostType } from "@/types/postsType";
 import { undoSlug } from "@/utils/geerateSlug";
+import SearchTitleResultsList from "./SearchTitleResultsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -22,8 +20,38 @@ export default async function page({
   const { searchTitle } = await params;
 
   const formattedSearchTitle = undoSlug(searchTitle);
+  const filters = { searchText: formattedSearchTitle };
 
-  const events = await getQueriedEvents({ searchText: formattedSearchTitle });
+  const firstPage = await getQueriedEvents(filters);
+
+  async function fetchPage(cursor: string | null) {
+    "use server";
+    return getQueriedEvents({ ...filters, cursor });
+  }
+
+  const emptyState = (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
+      <div className="max-w-md mx-auto">
+        <div className="relative w-64 h-64 mx-auto mb-8">
+          <img
+            src="/assets/images/notFound.jpg"
+            alt="No events found"
+            className="w-full h-full object-contain opacity-90"
+          />
+        </div>
+
+        <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
+          No results for {formattedSearchTitle}
+        </h2>
+
+        <p className="text-muted-foreground mb-6 max-w-md">
+          We couldn’t find any events for {formattedSearchTitle}. Try adjusting
+          your search input.
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-5">
       <FilterSearchBar />
@@ -37,53 +65,13 @@ export default async function page({
         )}
       </div>
 
-      {events.QueriedData.length ? (
-        <ul className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-x-2 gap-y-5">
-          {events.QueriedData.map((event: UserPostType, index: number) => (
-            <EventCard
-              key={event.title}
-              priority={index < 4}
-              id={event.id}
-              title={event.title}
-              flyer_public_id={event.flyer_public_id}
-              flyer_version={event.flyer_version}
-              address={event.address}
-              event_code={event.event_code}
-              starts_at={event.starts_at}
-              ends_at={event.ends_at}
-              organizer_id={event.organizer_id}
-              occurrences={event.occurrences}
-              minTicket={event.minTicket}
-              created_at={event.created_at}
-              capacity={event.capacity}
-              min_price={event.min_price}
-              currency={event.currency}
-              attendanceCount={event.attendanceCount}
-            />
-          ))}
-        </ul>
-      ) : (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="relative w-64 h-64 mx-auto mb-8">
-              <img
-                src="/assets/images/notFound.jpg"
-                alt="No events found"
-                className="w-full h-full object-contain opacity-90"
-              />
-            </div>
-
-            <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
-              No results for {formattedSearchTitle}
-            </h2>
-
-            <p className="text-muted-foreground mb-6 max-w-md">
-              We couldn’t find any events for {formattedSearchTitle}. Try
-              adjusting your search input.
-            </p>
-          </div>
-        </div>
-      )}
+      <SearchTitleResultsList
+        key={formattedSearchTitle}
+        queryKey={["events", "search-title", formattedSearchTitle]}
+        initialPage={firstPage}
+        fetchPage={fetchPage}
+        emptyState={emptyState}
+      />
     </div>
   );
 }

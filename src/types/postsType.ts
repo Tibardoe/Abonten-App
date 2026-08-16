@@ -107,4 +107,5 @@ export type UserPostType = {
   ticket_currency?: string;
   status?: string;
   featured?: boolean;
+  distance_km?: number | null;
 };

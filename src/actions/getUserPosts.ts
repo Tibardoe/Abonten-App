@@ -1,11 +1,24 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { UserPostType } from "@/types/postsType";
+import {
+  DEFAULT_EVENTS_PAGE_SIZE,
+  decodeCursor,
+  encodeCursor,
+  keysetOlderThan,
+  splitPage,
+} from "@/utils/pagination";
 import { getEventAttendanceCounts } from "./getAttendace";
 
-export async function getUserPosts(username: string) {
+export async function getUserPosts(
+  username: string,
+  options?: { cursor?: string | null; pageSize?: number },
+): Promise<PaginatedResult<UserPostType>> {
   const supabase = await createClient();
+  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
+  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
   const { data: user, error: userError } = await supabase
     .from("user_info")
@@ -16,38 +29,48 @@ export async function getUserPosts(username: string) {
   if (!user || userError) {
     console.log(`Error fetching user id: ${userError?.message}`);
 
-    return { status: 500, message: "Something went wrong!" };
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "Something went wrong!",
+    };
   }
 
-  // const { data, error } = await supabase
-  //   .from("event")
-  //   .select(
-  //     "*, user_info:event_organizer_id_fkey(username), ticket_type(price, currency)"
-  //   )
-  //   .eq("user_info.username", username);
-
-  const { data, error } = await supabase
+  let query = supabase
     .from("event")
     .select(
       "*, ticket_type(price, currency), event_occurrence(id, starts_at, ends_at)",
     )
     .eq("organizer_id", user.id)
     .order("created_at", { ascending: false })
-    // Safety cap: no pagination yet, so bound the worst case instead of
-    // shipping an unbounded event list.
-    .limit(200);
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
 
-  if (error) {
-    return { status: 500, message: `Failed fetching events: ${error.message}` };
+  if (cursor) {
+    query = query.or(keysetOlderThan("created_at", "id", cursor));
   }
 
-  // Attendance counts for every event in one grouped query instead of one
-  // round trip per event.
+  const { data, error } = await query;
+
+  if (error) {
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: `Failed fetching events: ${error.message}`,
+    };
+  }
+
+  const { page, hasNextPage } = splitPage<UserPostType>(data, pageSize);
+
   const attendanceCounts = await getEventAttendanceCounts(
-    data.map((event: UserPostType) => event.id),
+    page.map((event) => event.id),
   );
 
-  const eventsWithMinPriceAndAttendance = data.map((event: UserPostType) => {
+  const eventsWithMinPriceAndAttendance = page.map((event) => {
     let min_price = 0;
     let currency = "";
 
@@ -67,23 +90,19 @@ export async function getUserPosts(username: string) {
     };
   });
 
-  // const eventsWithMinPrice = data.map((event: UserPostType) => {
-  //   let min_price = 0;
-  //   let currency = "";
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasNextPage && last
+      ? encodeCursor<SimpleCursor>({
+          sortValue: String(last.created_at),
+          id: last.id,
+        })
+      : null;
 
-  //   if (event.ticket_type && event.ticket_type.length > 0) {
-  //     const minTicket = event.ticket_type.reduce((min, t) =>
-  //       t.price < min.price ? t : min
-  //     );
-  //     min_price = minTicket.price;
-  //     currency = minTicket.currency;
-  //   }
-
-  //   return {
-  //     ...event,
-  //     min_price,
-  //     currency,
-  //   };
-  // });
-  return { status: 200, eventsWithMinPriceAndAttendance };
+  return {
+    status: 200,
+    data: eventsWithMinPriceAndAttendance,
+    nextCursor,
+    hasNextPage,
+  };
 }
