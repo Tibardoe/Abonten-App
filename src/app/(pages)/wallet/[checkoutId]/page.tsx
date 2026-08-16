@@ -105,12 +105,18 @@ export default async function page({
     const pendingRows = allRows.filter((row) => row.status === "pending");
     const paidRows = allRows.filter((row) => row.status === "paid");
 
+    // "expired" (a real timeout — worth an alarm banner) and "cancelled"
+    // (the user removed it on purpose, e.g. via the basket's "Remove
+    // checkout"/delete-line actions) both leave zero pending/paid rows, but
+    // they mean very different things to the user — don't lump them together.
     sessionStatus =
       pendingRows.length > 0
         ? "pending"
         : paidRows.length > 0
           ? "paid"
-          : "expired";
+          : allRows.some((row) => row.status === "expired")
+            ? "expired"
+            : "cancelled";
     eventCode = allRows[0].event.event_code;
   }
 
@@ -146,6 +152,10 @@ export default async function page({
           )}
         </div>
       )}
+
+      {/* sessionStatus === "cancelled" means the user removed this exact
+          checkout on purpose (e.g. from the basket below) — nothing to
+          alarm them about, and the basket already reflects current reality. */}
 
       <PendingCheckoutsBasket initialSessions={sessions} />
     </div>
