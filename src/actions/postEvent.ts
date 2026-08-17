@@ -6,6 +6,9 @@ import { generateEventCode } from "@/utils/eventCodeGenerator";
 import { generateSlug } from "@/utils/geerateSlug";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
+// Postgres error code for a unique-constraint violation.
+const UNIQUE_VIOLATION = "23505";
+
 export async function postEvent(formData: PostsType) {
   const supabase = await createClient();
 
@@ -50,6 +53,7 @@ export async function postEvent(formData: PostsType) {
     promoCodes,
     specific_dates,
     featured,
+    clientRequestId,
   } = formData;
 
   const eventCode = generateEventCode(title);
@@ -72,7 +76,14 @@ export async function postEvent(formData: PostsType) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  const slug = generateSlug(title);
+  // generateSlug(title) alone is purely deterministic from the title, so two
+  // events with the same title (any organizer) produced the same slug and
+  // collided on event_slug_key -- surfacing to users as "duplicate title".
+  // eventCode already carries a random suffix, so appending it here makes
+  // the slug collision-resistant without touching the unique constraint
+  // (slug isn't used for routing -- only for ILIKE search -- so the
+  // human-readable prefix still matches search text).
+  const slug = `${generateSlug(title)}-${generateSlug(eventCode)}`;
 
   const { public_id, version } = flyerUpload;
 
@@ -81,206 +92,138 @@ export async function postEvent(formData: PostsType) {
 
   const eventStartDate = isSpecificEvent ? null : starts_at;
   const eventEndDate = isSpecificEvent ? null : ends_at;
-  let eventDates = specific_dates || [];
 
-  // If specific_dates is not provided, use the provided start and end date
-  if (!specific_dates || specific_dates.length === 0) {
-    eventDates = [];
-  }
+  const specificDatesPayload = isSpecificEvent
+    ? specific_dates.map((entry) => ({ start: entry.start, end: entry.end }))
+    : null;
 
-  // 3. Insert the event
-  const { data: insertedEvent, error: insertError } = await supabase
-    .from("event")
-    .insert({
-      slug,
-      title: formattedTitle,
-      description: description,
-      event_code: eventCode,
-      location: `POINT(${longitude} ${latitude})`,
-      address: { full_address: address },
-      capacity: capacity,
-      created_at: new Date(),
-      organizer_id: user.id,
-      website_url: website_url,
-      flyer_public_id: public_id,
-      flyer_version: version,
-      starts_at: eventStartDate ?? null,
-      ends_at: eventEndDate ?? null,
-      status: "published",
-      event_category: category,
-      event_type: types,
-      require_registration: checked,
-      featured: featured ?? false,
-    })
-    .select("id") // ✅ Better: Get inserted event ID directly
-    .single();
+  const receivingAccountPayload =
+    paymentOption === "Mobile Money"
+      ? {
+          full_name: receivingAccountDetails?.name,
+          email: receivingAccountDetails?.email,
+          phone: receivingAccountDetails?.phone,
+          network_service_provider: selectedNetwork,
+          payment_option: paymentOption,
+        }
+      : paymentOption === "Bank"
+        ? {
+            full_name: receivingAccountDetails?.name,
+            email: receivingAccountDetails?.email,
+            bank_name: receivingAccountDetails?.bankName,
+            bank_branch: receivingAccountDetails?.branch,
+            bank_account_number: receivingAccountDetails?.bankAccountNumber,
+            payment_option: paymentOption,
+          }
+        : null;
 
-  if (insertError || !insertedEvent) {
+  const ticketTypesPayload = isFreeEvent
+    ? [
+        {
+          type: "FREE",
+          price: 0,
+          currency,
+          quantity: capacity ?? null,
+          available_from: null,
+          available_until: null,
+        },
+      ]
+    : [
+        ...(singleTicket
+          ? [
+              {
+                type: "SINGLE TICKET",
+                price: singleTicket,
+                currency,
+                quantity: singleTicketQuantity,
+                available_from: null,
+                available_until: null,
+              },
+            ]
+          : []),
+        ...(multipleTickets ?? []).map((ticket) => ({
+          type: ticket.category,
+          price: ticket.price,
+          quantity: ticket.quantity,
+          available_from: ticket.availableFrom ?? null,
+          available_until: ticket.availableUntil ?? null,
+          currency,
+        })),
+      ];
+
+  const promoCodesPayload =
+    promoCodes && promoCodes.length > 0
+      ? promoCodes.map((promo) => ({
+          promo_code: promo.promoCode,
+          discount_percentage: promo.discount,
+          expires_at: promo.expiryDate,
+          max_uses: promo.maximumUse,
+        }))
+      : null;
+
+  const { data: eventId, error: createEventError } = await supabase.rpc(
+    "create_event",
+    {
+      p_client_request_id: clientRequestId,
+      p_organizer_id: user.id,
+      p_title: formattedTitle,
+      p_slug: slug,
+      p_description: description,
+      p_event_code: eventCode,
+      p_event_category: category,
+      p_event_type: types,
+      p_latitude: latitude,
+      p_longitude: longitude,
+      p_address: { full_address: address },
+      p_capacity: capacity ?? null,
+      p_website_url: website_url ?? null,
+      p_flyer_public_id: public_id,
+      p_flyer_version: version,
+      p_starts_at: eventStartDate ?? null,
+      p_ends_at: eventEndDate ?? null,
+      p_require_registration: checked,
+      p_featured: featured ?? false,
+      p_specific_dates: specificDatesPayload,
+      p_ticket_types: ticketTypesPayload.length > 0 ? ticketTypesPayload : null,
+      p_promo_codes: promoCodesPayload,
+      p_receiving_account: receivingAccountPayload,
+    },
+  );
+
+  if (createEventError) {
+    if (createEventError.code === UNIQUE_VIOLATION) {
+      if (
+        createEventError.message.includes(
+          "promo_code_event_id_normalized_code_key",
+        )
+      ) {
+        return {
+          status: 409,
+          message:
+            "One of your promo codes is already used for this event. Please use a different code.",
+        };
+      }
+
+      // event_client_request_id_key can't fire here (create_event checks
+      // for it before inserting); event_code/slug collisions are now
+      // extremely rare thanks to their random suffixes, so this is a
+      // generic fallback rather than a specific message about any one field.
+      return {
+        status: 500,
+        message: "We couldn't post your event. Please try again.",
+      };
+    }
+
+    console.log(`Error creating event: ${createEventError.message}`);
     return {
       status: 500,
-      message: `Error inserting event: ${insertError?.message}`,
+      message: "We couldn't post your event. Please try again.",
     };
   }
 
-  const eventId = insertedEvent.id;
-
-  // ✅ Insert multiple specific dates (if any)
-  if (specific_dates && specific_dates.length > 0) {
-    const occurrencePayload = specific_dates.map((entry) => ({
-      event_id: eventId,
-      starts_at: entry.start, // must be full Date object or ISO string
-      ends_at: entry.end,
-    }));
-
-    const { error: occurrenceError } = await supabase
-      .from("event_occurrence")
-      .insert(occurrencePayload);
-
-    if (occurrenceError) {
-      return {
-        status: 500,
-        message: `Error inserting event occurrences: ${occurrenceError.message}`,
-      };
-    }
-  }
-
-  // isert receiving account if event is not free
-  if (paymentOption && paymentOption === "Mobile Money") {
-    const { error: insertReceivingAccountDetailsError } = await supabase
-      .from("receiving_account")
-      .insert({
-        full_name: receivingAccountDetails?.name,
-        email: receivingAccountDetails?.email,
-        phone: receivingAccountDetails?.phone,
-        network_service_provider: selectedNetwork,
-        user_id: user.id,
-        event_id: eventId,
-        payment_option: paymentOption,
-      });
-
-    if (insertReceivingAccountDetailsError) {
-      console.log(
-        `Error inserting user receiving account details: ${insertReceivingAccountDetailsError.message}`,
-      );
-
-      return { status: 500, message: "Something went wrong!" };
-    }
-  }
-
-  if (paymentOption && paymentOption === "Bank") {
-    const { error: insertReceivingAccountDetailsError } = await supabase
-      .from("receiving_account")
-      .insert({
-        full_name: receivingAccountDetails?.name,
-        email: receivingAccountDetails?.email,
-        user_id: user.id,
-        event_id: eventId,
-        bank_name: receivingAccountDetails?.bankName,
-        bank_branch: receivingAccountDetails?.branch,
-        bank_account_number: receivingAccountDetails?.bankAccountNumber,
-        payment_option: paymentOption,
-      });
-
-    if (insertReceivingAccountDetailsError) {
-      console.log(
-        `Error inserting user receiving account details: ${insertReceivingAccountDetailsError.message}`,
-      );
-
-      return { status: 500, message: "Something went wrong!" };
-    }
-  }
-
-  // Insert ticket(s)
-  if (isFreeEvent) {
-    const { error: freeTicketError } = await supabase
-      .from("ticket_type")
-      .insert({
-        event_id: eventId,
-        type: "FREE",
-        price: 0,
-        currency,
-        quantity: capacity ?? null,
-        available_from: null,
-        available_until: null,
-      });
-
-    if (freeTicketError) {
-      return {
-        status: 500,
-        message: `Error inserting free ticket: ${freeTicketError.message}`,
-      };
-    }
-  } else {
-    if (singleTicket) {
-      const { error: singleTicketError } = await supabase
-        .from("ticket_type")
-        .insert({
-          event_id: eventId,
-          type: "SINGLE TICKET",
-          price: singleTicket,
-          currency,
-          quantity: singleTicketQuantity,
-          available_from: null,
-          available_until: null,
-        });
-
-      if (singleTicketError) {
-        return {
-          status: 500,
-          message: `Error inserting single ticket: ${singleTicketError.message}`,
-        };
-      }
-    }
-
-    if (multipleTickets?.length) {
-      for (const ticket of multipleTickets) {
-        const { category, price, quantity, availableFrom, availableUntil } =
-          ticket;
-
-        const { error: multipleTicketError } = await supabase
-          .from("ticket_type")
-          .insert({
-            event_id: eventId,
-            type: category,
-            price,
-            quantity,
-            available_from: availableFrom,
-            available_until: availableUntil,
-            currency,
-          });
-
-        if (multipleTicketError) {
-          return {
-            status: 500,
-            message: `Error inserting ticket category ${category}: ${multipleTicketError.message}`,
-          };
-        }
-      }
-    }
-  }
-
-  // Insert promo codes if any
-  if (promoCodes && promoCodes.length > 0) {
-    const promoInsertPayload = promoCodes.map((promo) => ({
-      event_id: eventId,
-      promo_code: promo.promoCode,
-      discount_percentage: promo.discount,
-      expires_at: promo.expiryDate,
-      max_uses: promo.maximumUse,
-      is_active: promo.expiryDate > new Date(),
-    }));
-
-    const { error: promoInsertError } = await supabase
-      .from("promo_code")
-      .insert(promoInsertPayload);
-
-    if (promoInsertError) {
-      return {
-        status: 500,
-        message: `Error inserting promo codes: ${promoInsertError.message}`,
-      };
-    }
-  }
-
-  return { status: 200, message: "Event posted successfully!" };
+  return {
+    status: 200,
+    message: "Event posted successfully!",
+    eventId: eventId as string,
+  };
 }

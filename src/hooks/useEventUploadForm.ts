@@ -11,7 +11,7 @@ import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -56,6 +56,20 @@ export function useEventUploadForm({
   const { message: notification, showMessage } = useTimedMessage(3000);
 
   const [isUploading, setIsUploading] = useState(false);
+
+  // Synchronous lock against double submission (double-click, rapid repeat
+  // clicks): a ref is checked/set on the very first line of onSubmit,
+  // before any await, so it closes the race window that setIsUploading
+  // (a state update, only visible next render) can't -- two fast clicks
+  // can both fire before the button's disabled state re-renders.
+  const isSubmittingRef = useRef(false);
+
+  // Generated once per upload-modal mount and reused across every
+  // postEvent call made during this session (including retries after a
+  // validation error), so the server can recognize a replay of the same
+  // submission (double click that slipped past the lock, network retry)
+  // and return the already-created event instead of inserting a duplicate.
+  const clientRequestIdRef = useRef(crypto.randomUUID());
 
   const [dateType, setDateType] = useState("single");
   const [singleDateRange, setSingleDateRange] = useState<DateRange>({
@@ -130,6 +144,9 @@ export function useEventUploadForm({
   const handleNetworkDropdown = () => setShowNetworkDropdown((prev) => !prev);
 
   const onSubmit = async (formData: EventSchema) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
     try {
       setIsUploading(true);
 
@@ -247,6 +264,7 @@ export function useEventUploadForm({
         paymentOption,
         receivingAccountDetails,
         selectedNetwork,
+        clientRequestId: clientRequestIdRef.current,
         ...eventDates,
       };
 
@@ -262,6 +280,7 @@ export function useEventUploadForm({
       showMessage("Location unknown! Try again with different location");
     } finally {
       setIsUploading(false);
+      isSubmittingRef.current = false;
     }
   };
 

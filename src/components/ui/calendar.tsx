@@ -45,7 +45,6 @@ function Calendar({
         ...formatters,
       }}
       classNames={{
-        root: cn("w-fit", defaultClassNames.root),
         months: cn(
           "relative flex flex-col gap-4 md:flex-row",
           defaultClassNames.months,
@@ -124,6 +123,12 @@ function Calendar({
         ),
         hidden: cn("invisible", defaultClassNames.hidden),
         ...classNames,
+        // Placed after the spread above so a caller-supplied classNames.root
+        // (e.g. "w-full" to fill its container, instead of the default
+        // shrink-to-content sizing) merges with -- and can override -- the
+        // default via twMerge, rather than being clobbered by the spread or
+        // silently dropping defaultClassNames.root if it replaced it outright.
+        root: cn("w-fit", defaultClassNames.root, classNames?.root),
       }}
       components={{
         Root: ({ className, rootRef, ...props }) => {

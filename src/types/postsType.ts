@@ -70,6 +70,11 @@ export type PostsType = {
     expiryDate: Date;
   }[];
   featured?: boolean;
+  // Generated once per upload-modal session and reused across retries of
+  // the same submission, so create_event can recognize a network retry or
+  // a double submit and return the already-created event instead of
+  // inserting a duplicate.
+  clientRequestId: string;
 };
 
 export type EventDates = {

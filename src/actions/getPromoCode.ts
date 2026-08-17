@@ -14,10 +14,17 @@ export default async function getPromoCode(code: string, eventId: string) {
     return { status: 401, message: "User not logged in" };
   }
 
+  // Promo codes are unique per (event_id, normalized code), not globally,
+  // so the lookup must be scoped by event_id and normalized the same way
+  // codes are stored (upper/trim) -- otherwise the same code reused on a
+  // different event would make maybeSingle() throw on multiple rows, and
+  // a differently-cased code (e.g. "summer20" vs "SUMMER20") would
+  // incorrectly miss.
   const { data: promoCode, error: promoCodeError } = await supabase
     .from("promo_code")
     .select("*")
-    .eq("promo_code", code)
+    .eq("event_id", eventId)
+    .eq("promo_code", code.trim().toUpperCase())
     .maybeSingle();
 
   if (promoCodeError) {
@@ -31,13 +38,6 @@ export default async function getPromoCode(code: string, eventId: string) {
 
   if (!promoCode) {
     return { status: 404, message: "Promo code is invalid!" };
-  }
-
-  if (promoCode.event_id !== eventId) {
-    return {
-      status: 404,
-      message: "This promo code is not valid for this event.",
-    };
   }
 
   if (promoCode.is_active === false) {

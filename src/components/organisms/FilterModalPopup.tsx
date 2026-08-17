@@ -235,6 +235,7 @@ export default function FilterModalPopup({
                   selected={date}
                   onSelect={setDate}
                   numberOfMonths={1}
+                  classNames={{ root: "w-full max-w-xs mx-auto" }}
                 />
               </div>
 
