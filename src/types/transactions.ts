@@ -1,0 +1,38 @@
+// Row shapes returned by the get_user_transaction_summary/history RPCs
+// (supabase/migrations/20260817090000_add_user_transaction_history_analytics.sql).
+// Typed precisely (unlike most Supabase-table reads in this repo, which use
+// `any` — see PROJECT.md) since these are brand-new, simple, RPC-owned shapes.
+
+export type TransactionKind = "ticket" | "subscription";
+
+export type TransactionStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "cancelled"
+  | "expired";
+
+export interface UserTransactionSummaryRow {
+  currency: string;
+  amount_spent: number;
+  total_transactions: number;
+  successful_count: number;
+  pending_count: number;
+  failed_count: number;
+  tickets_purchased: number;
+  subscriptions_count: number;
+}
+
+export interface UserTransactionRow {
+  id: string;
+  kind: TransactionKind;
+  status: TransactionStatus;
+  created_at: string;
+  completed_at: string | null;
+  amount: number;
+  currency: string;
+  title: string | null;
+  subtitle: string | null;
+  quantity: number | null;
+  reference: string;
+}
