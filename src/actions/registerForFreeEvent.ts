@@ -11,8 +11,10 @@ import {
   reserveTicketQuantity,
 } from "@/utils/ticketInventory";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import insertUserAttendance from "./insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
+import ticketPurchaseNotification from "./ticketPurchaseNotification";
 
 type TicketWithEvent = {
   user_id: string;
@@ -178,6 +180,14 @@ export default async function registerForFreeEvent(
 
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
+
+  // Runs after this response is sent — see generateTicket.ts for why this
+  // is scheduled with after() rather than awaited inline.
+  after(() =>
+    ticketPurchaseNotification([insertedTicket.id], 0).catch((error) =>
+      console.log(`Failed sending ticket purchase email: ${error}`),
+    ),
+  );
 
   return { status: 200, message: "Event registered successfully" };
 }

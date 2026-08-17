@@ -5,6 +5,7 @@ import { updateEvent } from "@/actions/updateEvent";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
+import { parseEventTypes } from "@/utils/parseEventTypes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -99,12 +100,7 @@ export function useEventEditForm({
     setSelectedAddress(event.address?.full_address ?? "");
     setCategory(event.event_category ?? "");
 
-    const parsedTypes = Array.isArray(event.event_type)
-      ? event.event_type
-      : typeof event.event_type === "string" && event.event_type
-        ? JSON.parse(event.event_type)
-        : [];
-    setTypes(parsedTypes);
+    setTypes(parseEventTypes(event.event_type));
 
     setChecked(!!event.require_registration);
     setFeatured(!!event.featured);

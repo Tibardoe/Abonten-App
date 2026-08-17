@@ -10,6 +10,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import { TICKET_WITH_EVENT_SELECT } from "@/utils/ticketSelect";
 
 export default async function getUserAttendingEvents(options?: {
   status?: "active" | "cancelled";
@@ -39,18 +40,7 @@ export default async function getUserAttendingEvents(options?: {
 
   let query = supabase
     .from("ticket")
-    .select(
-      `
-      *,
-      ticket_type:ticket_type_id (
-        *,
-        event:event_id (
-          *,
-          occurrences:event_occurrence (*)
-        )
-      )
-    `,
-    )
+    .select(TICKET_WITH_EVENT_SELECT)
     .eq("user_id", user.id)
     .eq("status", status)
     .order("created_at", { ascending: false })

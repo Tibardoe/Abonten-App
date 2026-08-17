@@ -2,7 +2,6 @@
 
 import { getTickets } from "@/actions/getTickets";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
-import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -83,7 +82,6 @@ export default function CheckoutBtn({
 
     if (response.status === 200 && response.message) {
       setNotification(response.message);
-      await ticketPurchaseNotification();
 
       setLoading(false);
       router.push("/manage/my-events");

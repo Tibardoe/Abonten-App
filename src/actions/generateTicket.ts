@@ -8,8 +8,10 @@ import {
 } from "@/utils/generateTicketCode";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import insertUserAttendance from "./insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
+import ticketPurchaseNotification from "./ticketPurchaseNotification";
 
 type TicketWithEvent = {
   user_id: string;
@@ -28,6 +30,7 @@ type CheckoutRow = {
   discounted_units: number;
   expires_at: string | null;
   occurrence_id: string | null;
+  total_price: number;
 };
 
 /**
@@ -68,7 +71,7 @@ export default async function generateTicket(
     await supabase
       .from("ticket_checkout")
       .select(
-        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id",
+        "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id, total_price",
       )
       .eq("checkout_session_id", checkoutSessionId)
       .eq("user_id", user.id)
@@ -165,6 +168,8 @@ export default async function generateTicket(
     return { status: 500, message: "This event has no scheduled date" };
   }
 
+  const allInsertedTicketIds: string[] = [];
+
   for (const row of rows) {
     const ticketCodes = Array.from({ length: row.quantity }, () =>
       generateTicketCode(),
@@ -250,6 +255,8 @@ export default async function generateTicket(
         message: attendanceInsertResponse.message,
       };
     }
+
+    allInsertedTicketIds.push(...insertedTickets.map((ticket) => ticket.id));
   }
 
   await supabase
@@ -270,6 +277,17 @@ export default async function generateTicket(
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
   revalidatePath("/transactions");
+
+  // Runs after this response is sent, so PDF generation + email delivery
+  // never add to checkout latency. Only ever scheduled once every ticket
+  // row above has actually committed — never on a failed/partial run, since
+  // every earlier failure path returns before reaching here.
+  const totalAmount = rows.reduce((sum, row) => sum + row.total_price, 0);
+  after(() =>
+    ticketPurchaseNotification(allInsertedTicketIds, totalAmount).catch(
+      (error) => console.log(`Failed sending ticket purchase email: ${error}`),
+    ),
+  );
 
   return { status: 200, message: "Tickets generated successfully" };
 }

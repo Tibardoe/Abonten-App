@@ -6,14 +6,17 @@ import {
   getFormattedEventDate,
 } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import {
+  buildTicketPdfData,
+  buildTicketPdfFilename,
+} from "@/utils/ticketPdfData";
+import { pdf } from "@react-pdf/renderer";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import { useRef } from "react";
 import { IoChevronBackSharp } from "react-icons/io5";
 import { Button } from "../ui/button";
+import TicketPdfDocument from "./TicketPdfDocument";
 
 type ReceiptButtonProp = {
   handleShowTicket: (state: boolean) => void;
@@ -24,36 +27,24 @@ export default function TicketModal({
   handleShowTicket,
   event,
 }: ReceiptButtonProp) {
-  const pdfRef = useRef<HTMLDivElement>(null); // This ref will now point to the printable area
-
   useBodyScrollLock(true);
 
   const handleDOwnloadPdf = async () => {
-    if (!pdfRef.current) return;
+    // Same TicketPdfDocument the purchase-confirmation email attaches
+    // server-side — this is the one canonical ticket PDF, just generated
+    // client-side here instead of via renderToBuffer.
+    const blob = await pdf(
+      <TicketPdfDocument ticket={buildTicketPdfData(event)} />,
+    ).toBlob();
 
-    const canvas = await html2canvas(pdfRef.current, { scale: 2 }); // Increase scale for better quality
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    // Calculate the dimensions to fit the image while maintaining aspect ratio
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgWidth = imgProps.width;
-    const imgHeight = imgProps.height;
-
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-
-    const scaledWidth = imgWidth * ratio;
-    const scaledHeight = imgHeight * ratio;
-
-    // Center the image on the page
-    const x = (pdfWidth - scaledWidth) / 2;
-    const y = (pdfHeight - scaledHeight) / 2;
-
-    pdf.addImage(imgData, "PNG", x, y, scaledWidth, scaledHeight);
-    pdf.save("ticket_receipt.pdf");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = buildTicketPdfFilename(event.ticket_code);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -68,8 +59,7 @@ export default function TicketModal({
           Back
         </button>
 
-        {/* This is the new div that contains only the content for the PDF */}
-        <div ref={pdfRef} className="pdf-content p-2">
+        <div className="pdf-content p-2">
           <div className="text-center mb-6">
             <h1 className="text-4xl font-bold tracking-wide mb-1">Receipt</h1>
             <p className="text-muted-foreground text-sm">

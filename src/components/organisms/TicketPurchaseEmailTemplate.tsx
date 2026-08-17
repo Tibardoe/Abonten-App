@@ -1,4 +1,8 @@
 import {
+  ABONTEN_LOGO_EMAIL_DARK_URL,
+  ABONTEN_LOGO_EMAIL_LIGHT_URL,
+} from "@/config/brandAssets";
+import {
   Body,
   Column,
   Container,
@@ -15,20 +19,61 @@ import {
   Text,
   pixelBasedPreset,
 } from "@react-email/components";
-import tailwindConfig from "../../../tailwind.config";
 
-const logoUrl = "/assets/images/abonte-logo-white.svg";
+export type EmailTicketLine = {
+  ticketCode: string;
+  ticketTypeName: string;
+};
 
 interface EmailTemplateProp {
-  username: string;
+  username: string | null;
+  eventTitle: string;
+  eventDate: string;
+  eventTime: string;
+  eventAddress: string;
+  tickets: EmailTicketLine[];
+  purchaseDate: string;
+  amountLabel: string;
+  myEventsUrl: string;
 }
 
 export default function TicketPurchaseEmailTemplate({
   username,
+  eventTitle,
+  eventDate,
+  eventTime,
+  eventAddress,
+  tickets,
+  purchaseDate,
+  amountLabel,
+  myEventsUrl,
 }: EmailTemplateProp) {
+  const quantity = tickets.length;
+
   return (
     <Html>
-      <Head />
+      <Head>
+        {/* Lets mail clients (Apple Mail, Outlook, Gmail's app dark theme)
+            know this email explicitly supports both schemes, instead of the
+            client silently re-tinting the background around a logo that
+            can't repaint itself. @react-email/tailwind (2.0.7) doesn't
+            compile `dark:` variants to a real @media block — it just
+            collapses to whichever class comes last — so the light/dark logo
+            swap below is done with a plain hand-written style block instead. */}
+        <meta name="color-scheme" content="light dark" />
+        <meta name="supported-color-schemes" content="light dark" />
+        <style>
+          {`.abonten-logo-dark{display:none}
+            @media (prefers-color-scheme:dark){
+              .abonten-logo-light{display:none!important}
+              .abonten-logo-dark{display:block!important}
+            }
+            @media (max-width:480px){
+              .td-label,.td-value{display:block!important;width:100%!important;text-align:left!important}
+              .td-value{margin-top:2px!important}
+            }`}
+        </style>
+      </Head>
       <Tailwind
         config={{
           presets: [pixelBasedPreset],
@@ -41,178 +86,179 @@ export default function TicketPurchaseEmailTemplate({
           },
         }}
       >
-        <Body className="bg-white font-nike">
+        <Body className="bg-white font-sans">
           <Preview>
-            Your Abonten event ticket is ready — see details inside
+            Your Abonten ticket for {eventTitle} is ready — see details inside
           </Preview>
           <Container className="my-[10px] mx-auto w-[600px] max-w-full border border-[#E5E5E5]">
-            <Section className="py-10 px-[74px] text-center">
+            <Section className="py-10 px-[48px] text-center">
+              {/* The logo is a flat raster image, so it can't react to dark
+                  mode on its own — swap between a black-on-light and a
+                  white-on-dark variant via the prefers-color-scheme rule
+                  above instead. */}
               <Img
-                src={`${logoUrl}/static/nike-logo.png`}
-                width="66"
-                height="22"
-                alt="Nike"
-                className="mx-auto"
+                src={ABONTEN_LOGO_EMAIL_LIGHT_URL}
+                width="120"
+                alt="Abonten Hub"
+                className="abonten-logo-light mx-auto mb-4"
+                style={{ display: "block" }}
               />
-              <Heading className="text-[32px] leading-[1.3] font-bold text-center -tracking-[1px]">
-                Your Ticket Is Ready 🎟️
+              <Img
+                src={ABONTEN_LOGO_EMAIL_DARK_URL}
+                width="120"
+                alt="Abonten Hub"
+                className="abonten-logo-dark mx-auto mb-4"
+                style={{ display: "none" }}
+              />
+              <Heading className="text-[28px] leading-[1.3] font-bold text-center -tracking-[1px]">
+                Congratulations! 🎟️
               </Heading>
               <Text className="m-0 text-[14px] leading-[2] text-[#747474] font-medium">
-                Hi {username}, your ticket purchase was successful.
+                Hi {username ?? "there"}, your ticket for{" "}
+                <strong>{eventTitle}</strong> has been successfully purchased.
               </Text>
-              <Text className="m-0 text-[14px] leading-[2] text-[#747474] font-medium mt-6">
-                Your official event ticket is attached to this email as a PDF.
-                Please keep it safe — you’ll need it for entry at the venue.
+              <Text className="m-0 text-[14px] leading-[2] text-[#747474] font-medium mt-4">
+                Your ticket is attached to this email as a PDF. You can also
+                access it anytime from My Events in Abonten.
               </Text>
             </Section>
 
             <Hr className="border-[#E5E5E5] m-0" />
 
-            <Section className="px-5 pt-5 bg-[#F7F7F7]">
+            <Section className="px-[48px] py-8">
               <Row>
-                <Text className="px-5 font-bold">Get Help</Text>
+                <Text className="text-[13px] font-bold text-[#747474] uppercase tracking-wide m-0 mb-3">
+                  Ticket Details
+                </Text>
               </Row>
-              <Row className="py-[22px] px-5">
-                <Column className="w-1/3" colSpan={1}>
-                  <Link
-                    href="https://www.nike.com/"
-                    className="text-[13.5px] mt-0 font-medium text-black"
-                  >
-                    Shipping Status
-                  </Link>
+
+              <Row className="mb-2">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">
+                    Event
+                  </Text>
                 </Column>
-                <Column className="w-1/3" colSpan={1}>
-                  <Link
-                    href="https://www.nike.com/"
-                    className="text-[13.5px] mt-0 font-medium text-black"
-                  >
-                    Shipping & Delivery
-                  </Link>
-                </Column>
-                <Column className="w-1/3" colSpan={1}>
-                  <Link
-                    href="https://www.nike.com/"
-                    className="text-[13.5px] mt-0 font-medium text-black"
-                  >
-                    Returns & Exchanges
-                  </Link>
-                </Column>
-              </Row>
-              <Row className="pb-[22px] px-5 pt-0">
-                <Column className="w-1/3" colSpan={1}>
-                  <Link
-                    href="https://www.nike.com/"
-                    className="text-[13.5px] mt-0 font-medium text-black"
-                  >
-                    How to Return
-                  </Link>
-                </Column>
-                <Column className="w-2/3" colSpan={2}>
-                  <Link
-                    href="https://www.nike.com/"
-                    className="text-[13.5px] mt-0 font-medium text-black"
-                  >
-                    Contact Options
-                  </Link>
-                </Column>
-              </Row>
-              <Hr className="border-[#E5E5E5] m-0" />
-              <Row className="px-5 pt-8 pb-[22px]">
-                <Column>
-                  <Row>
-                    <Column className="w-4">
-                      <Img
-                        src={`${logoUrl}/static/nike-phone.png`}
-                        alt="Nike Phone"
-                        width="16px"
-                        height="26px"
-                        className="pr-[14px]"
-                      />
-                    </Column>
-                    <Column>
-                      <Text className="text-[13.5px] mt-0 font-medium text-black mb-0">
-                        1-800-806-6453
-                      </Text>
-                    </Column>
-                  </Row>
-                </Column>
-                <Column>
-                  <Text className="text-[13.5px] mt-0 font-medium text-black mb-0">
-                    4 am - 11 pm PT
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {eventTitle}
                   </Text>
                 </Column>
               </Row>
+
+              <Row className="mb-2">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">Date</Text>
+                </Column>
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {eventDate}
+                  </Text>
+                </Column>
+              </Row>
+
+              <Row className="mb-2">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">Time</Text>
+                </Column>
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {eventTime}
+                  </Text>
+                </Column>
+              </Row>
+
+              <Row className="mb-2">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">
+                    Venue
+                  </Text>
+                </Column>
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {eventAddress}
+                  </Text>
+                </Column>
+              </Row>
+
+              <Row className="mb-2">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">
+                    Quantity
+                  </Text>
+                </Column>
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {quantity} {quantity === 1 ? "ticket" : "tickets"}
+                  </Text>
+                </Column>
+              </Row>
+
+              <Row className="mb-2">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">
+                    Purchase Date
+                  </Text>
+                </Column>
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {purchaseDate}
+                  </Text>
+                </Column>
+              </Row>
+
+              <Row className="mb-4">
+                <Column className="w-1/3 td-label">
+                  <Text className="m-0 text-[13.5px] text-[#747474]">
+                    Amount Paid
+                  </Text>
+                </Column>
+                <Column className="td-value">
+                  <Text className="m-0 text-[13.5px] font-bold text-black">
+                    {amountLabel}
+                  </Text>
+                </Column>
+              </Row>
+
+              {tickets.map((ticket) => (
+                <Row key={ticket.ticketCode} className="mt-3">
+                  <Column className="w-1/3 td-label">
+                    <Text className="m-0 text-[13.5px] text-[#747474]">
+                      {ticket.ticketTypeName}
+                    </Text>
+                  </Column>
+                  <Column className="td-value">
+                    <Text className="m-0 text-[13.5px] font-mono text-black">
+                      {ticket.ticketCode}
+                    </Text>
+                  </Column>
+                </Row>
+              ))}
             </Section>
+
             <Hr className="border-[#E5E5E5] m-0" />
-            <Section className="py-[22px]">
-              <Row>
-                <Text className="text-[32px] leading-[1.3] font-bold text-center -tracking-[1px]">
-                  Nike.com
-                </Text>
-              </Row>
-              <Row className="w-[370px] mx-auto pt-3">
-                <Column align="center">
-                  <Link
-                    href="https://www.nike.com/"
-                    className="font-medium text-black"
-                  >
-                    Men
-                  </Link>
-                </Column>
-                <Column align="center">
-                  <Link
-                    href="https://www.nike.com/"
-                    className="font-medium text-black"
-                  >
-                    Women
-                  </Link>
-                </Column>
-                <Column align="center">
-                  <Link
-                    href="https://www.nike.com/"
-                    className="font-medium text-black"
-                  >
-                    Kids
-                  </Link>
-                </Column>
-                <Column align="center">
-                  <Link
-                    href="https://www.nike.com/"
-                    className="font-medium text-black"
-                  >
-                    Customize
-                  </Link>
-                </Column>
-              </Row>
+
+            <Section className="py-8 text-center">
+              <Link
+                href={myEventsUrl}
+                className="bg-brand text-white font-bold text-[14px] rounded-[8px] px-8 py-3 inline-block"
+              >
+                View My Events
+              </Link>
             </Section>
-            <Hr className="border-[#E5E5E5] m-0 mt-3" />
+
+            <Hr className="border-[#E5E5E5] m-0" />
+
             <Section className="py-[22px]">
-              <Row className="w-[166px] mx-auto">
-                <Column>
-                  <Text className="m-0 text-[#AFAFAF] text-[13px] text-center">
-                    Web Version
-                  </Text>
-                </Column>
-                <Column>
-                  <Text className="m-0 text-[#AFAFAF] text-[13px] text-center">
-                    Privacy Policy
-                  </Text>
-                </Column>
-              </Row>
               <Row>
-                <Text className="m-0 text-[#AFAFAF] text-[13px] text-center py-[30px]">
-                  Please contact us if you have any questions. (If you reply to
-                  this email, we won&apos;t be able to see it.)
+                <Text className="m-0 text-[#AFAFAF] text-[13px] text-center px-10">
+                  Please keep your ticket safe — you&apos;ll need it (or the
+                  attached PDF) for entry at the venue. If you have any
+                  questions, contact us through the Abonten app.
                 </Text>
               </Row>
               <Row>
-                <Text className="m-0 text-[#AFAFAF] text-[13px] text-center">
-                  © 2022 Nike, Inc. All Rights Reserved.
-                </Text>
-              </Row>
-              <Row>
-                <Text className="m-0 text-[#AFAFAF] text-[13px] text-center">
-                  NIKE, INC. One Bowerman Drive, Beaverton, Oregon 97005, USA.
+                <Text className="m-0 text-[#AFAFAF] text-[13px] text-center pt-4">
+                  © {new Date().getFullYear()} Abonten Hub. All Rights Reserved.
                 </Text>
               </Row>
             </Section>

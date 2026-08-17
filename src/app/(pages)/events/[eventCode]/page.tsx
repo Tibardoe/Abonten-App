@@ -10,6 +10,7 @@ import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate, getRelativeTime } from "@/utils/dateFormatter";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
+import { parseEventTypes } from "@/utils/parseEventTypes";
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight, FiMail } from "react-icons/fi";
@@ -134,11 +135,7 @@ export default async function page({
     event.event_occurrence,
   );
 
-  const tags = Array.isArray(event.event_type)
-    ? event.event_type
-    : typeof event.event_type === "string"
-      ? JSON.parse(event.event_type)
-      : [];
+  const tags = parseEventTypes(event.event_type);
 
   return (
     <div className="min-h-screen bg-background">

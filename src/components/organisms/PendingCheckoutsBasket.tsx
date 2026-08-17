@@ -6,7 +6,6 @@ import generateTicket from "@/actions/generateTicket";
 import getUserPendingTicketCheckouts, {
   type PendingCheckoutSession,
 } from "@/actions/getUserPendingTicketCheckouts";
-import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
 import Notification from "@/components/atoms/Notification";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
@@ -238,10 +237,6 @@ export default function PendingCheckoutsBasket({
 
     const failed = results.filter((r) => !r.ok);
     const succeeded = results.filter((r) => r.ok);
-
-    if (succeeded.length > 0) {
-      await ticketPurchaseNotification();
-    }
 
     queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     setIsProceeding(false);

@@ -5,8 +5,8 @@ import React, { useState } from "react";
 import type { UserTicketType } from "@/types/ticketType";
 import dynamic from "next/dynamic";
 
-// Dynamically imported so the PDF-generation libraries (html2canvas, jspdf)
-// only load once a user actually opens their ticket.
+// Dynamically imported so the PDF-generation library (@react-pdf/renderer)
+// only loads once a user actually opens their ticket.
 const TicketModal = dynamic(() => import("../organisms/TicketModal"), {
   ssr: false,
 });
