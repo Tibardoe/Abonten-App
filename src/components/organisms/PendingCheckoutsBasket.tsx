@@ -89,6 +89,30 @@ export default function PendingCheckoutsBasket({
     });
   };
 
+  const allSelected =
+    sessions.length > 0 &&
+    sessions.every((s) => selectedIds.has(s.checkoutSessionId));
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) =>
+      prev.size === sessions.length
+        ? new Set()
+        : new Set(sessions.map((s) => s.checkoutSessionId)),
+    );
+  };
+
+  const handleInvalidSessions = (invalidSessionIds: string[]) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of invalidSessionIds) next.delete(id);
+      return next;
+    });
+    setNotification(
+      "One of your selected checkouts has expired. Please review your order.",
+    );
+    queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  };
+
   const quantityMutation = useMutation({
     mutationFn: ({
       ticketCheckoutId,
@@ -269,7 +293,23 @@ export default function PendingCheckoutsBasket({
 
   return (
     <div className="space-y-5">
-      <h2 className="font-bold text-lg md:text-xl">Order Summary</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-bold text-lg md:text-xl">Order Summary</h2>
+        {sessions.length > 1 && (
+          <button
+            type="button"
+            onClick={toggleSelectAll}
+            className="text-xs font-medium text-primary underline"
+          >
+            {allSelected ? "Deselect all" : "Select all"}
+          </button>
+        )}
+      </div>
+      {sessions.length > 1 && (
+        <p className="text-xs text-muted-foreground -mt-3">
+          Select the tickets you want to pay for.
+        </p>
+      )}
 
       {sessions.map((session) => (
         <TicketCheckoutSessionCard
@@ -292,7 +332,16 @@ export default function PendingCheckoutsBasket({
         />
       ))}
 
-      <div className="border border-border rounded-2xl shadow-lg p-6 space-y-2 bg-card text-card-foreground">
+      <div className="sticky bottom-0 border border-border rounded-2xl shadow-lg p-6 space-y-2 bg-card text-card-foreground">
+        <p className="text-xs text-muted-foreground">
+          {selectedSessions.length} checkout
+          {selectedSessions.length === 1 ? "" : "s"} selected (
+          {selectedLines.reduce((sum, line) => sum + line.quantity, 0)} ticket
+          {selectedLines.reduce((sum, line) => sum + line.quantity, 0) === 1
+            ? ""
+            : "s"}
+          )
+        </p>
         <div className="flex justify-between text-sm text-muted-foreground">
           <p>Selected subtotal</p>
           <p>
@@ -322,22 +371,11 @@ export default function PendingCheckoutsBasket({
 
         {selectedSessions.length > 0 && !allSelectedAreFree ? (
           <div className="space-y-3 pt-2">
-            {selectedSessions.length > 1 ? (
-              <p className="text-xs text-muted-foreground">
-                Select a single checkout to pay for — pay for the rest one at a
-                time.
-              </p>
-            ) : (
-              <PaymentMethodSelector
-                kind="ticket"
-                checkoutSessionId={selectedSessions[0].checkoutSessionId}
-                amount={
-                  selectedSessions[0].sessionSubtotal +
-                  computeCheckoutFee(selectedSessions[0].sessionSubtotal)
-                }
-                currency={currency}
-              />
-            )}
+            <PaymentMethodSelector
+              kind="ticket"
+              checkoutSessionIds={[...selectedIds]}
+              onInvalidSessions={handleInvalidSessions}
+            />
           </div>
         ) : (
           <button

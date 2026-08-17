@@ -2,21 +2,12 @@
 
 import { createClient } from "@/config/supabase/server";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
+import {
+  type PaymentAttemptRow,
+  upsertPaymentAttemptForSession,
+} from "@/utils/paymentAttempt";
 
-export type PaymentAttemptRow = {
-  id: string;
-  status:
-    | "initiated"
-    | "pending"
-    | "processing"
-    | "succeeded"
-    | "failed"
-    | "cancelled"
-    | "refunded";
-  amount: number;
-  currency: string;
-  payment_method_id: string | null;
-};
+export type { PaymentAttemptRow };
 
 type CreatePaymentAttemptInput = {
   paymentMethodId: string;
@@ -138,49 +129,12 @@ export default async function createPaymentAttempt(
     matchValue = input.subscriptionCheckoutId;
   }
 
-  const { data: existingAttempt, error: existingError } = await supabase
-    .from("payment_attempt")
-    .select("id, status, amount, currency, payment_method_id")
-    .eq(matchColumn, matchValue)
-    .eq("user_id", user.id)
-    .in("status", ["initiated", "pending", "processing"])
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (existingError) {
-    console.log(`Failed checking existing attempt: ${existingError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  if (existingAttempt) {
-    if (existingAttempt.payment_method_id === input.paymentMethodId) {
-      return { status: 200, data: existingAttempt as PaymentAttemptRow };
-    }
-
-    await supabase
-      .from("payment_attempt")
-      .update({ status: "cancelled", updated_at: new Date() })
-      .eq("id", existingAttempt.id);
-  }
-
-  const { data: attempt, error: insertError } = await supabase
-    .from("payment_attempt")
-    .insert({
-      user_id: user.id,
-      [matchColumn]: matchValue,
-      payment_method_id: input.paymentMethodId,
-      amount,
-      currency,
-      status: "initiated",
-    })
-    .select("id, status, amount, currency, payment_method_id")
-    .single();
-
-  if (insertError) {
-    console.log(`Failed creating payment attempt: ${insertError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  return { status: 200, data: attempt as PaymentAttemptRow };
+  return upsertPaymentAttemptForSession(
+    user.id,
+    matchColumn,
+    matchValue,
+    amount,
+    currency,
+    input.paymentMethodId,
+  );
 }
