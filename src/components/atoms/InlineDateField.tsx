@@ -68,7 +68,7 @@ export function InlineDateField({
             // Fills its container up to a comfortable size rather than
             // stretching edge-to-edge -- unbounded full width spaced the day
             // numbers out too far once the container got wide.
-            classNames={{ root: "w-full max-w-xs mx-auto" }}
+            classNames={{ root: "w-full" }}
           />
         </div>
       )}

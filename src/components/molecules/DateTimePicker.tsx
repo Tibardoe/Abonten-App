@@ -95,7 +95,18 @@ export default function DateTimePicker({
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => setEditorOpen(true)}
+                onClick={() => {
+                  // Restore range mode from the entry's actual shape --
+                  // otherwise a multi-day range reopens as a single date
+                  // field and silently collapses to one day on save.
+                  const spansMultipleDays =
+                    !!dateRange.from &&
+                    !!dateRange.to &&
+                    dateRange.from.toDateString() !==
+                      dateRange.to.toDateString();
+                  setIsRangeMode(spansMultipleDays);
+                  setEditorOpen(true);
+                }}
               >
                 Edit
               </Button>
@@ -111,8 +122,11 @@ export default function DateTimePicker({
           </div>
         )}
 
-      {/* Specific-mode summary list */}
-      {dateType === "specific" && entries.length > 0 && (
+      {/* Specific-mode summary list -- hidden while the editor is open so
+          another entry can't be deleted/reordered out from under the one
+          currently being edited, which would desync editingIndex from the
+          list and cause "Save changes" to overwrite the wrong entry. */}
+      {dateType === "specific" && entries.length > 0 && !editorOpen && (
         <ul className="space-y-2">
           {entries.map((entry, i) => (
             <li
