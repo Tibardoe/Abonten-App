@@ -158,12 +158,15 @@ export default function PaymentMethodSelector(
       return;
     }
 
-    if (paystack.chargeStatus === "failed") {
-      // Already conclusively declined (e.g. insufficient funds, or — in
-      // test mode — a real number used instead of a Paystack test number)
-      // — verify immediately to record the failure server-side, rather
-      // than showing a misleading "approve on your phone" message for a
-      // few seconds until the next poll cycle catches up.
+    if (
+      paystack.chargeStatus === "failed" ||
+      paystack.chargeStatus === "success"
+    ) {
+      // Already conclusively resolved (declined, or — for some mobile money
+      // networks — approved instantly with no phone prompt at all) — verify
+      // immediately rather than showing a misleading "awaiting
+      // approval"/"approve on your phone" message for a few seconds until
+      // the next poll cycle catches up.
       setUiState({ phase: "verifying" });
       verifyMutation.mutate(primaryAttemptId);
       return;

@@ -55,7 +55,11 @@ export type PaystackVerifyResponse = {
     paid_at: string | null;
     created_at: string;
     channel: string;
-    metadata: Record<string, unknown> | null;
+    // See paystackService.ts's verifyResponseSchema comment — Paystack's
+    // shape for this field is inconsistent in practice and it isn't read
+    // anywhere in this app. Optional because zod infers z.unknown() object
+    // properties as possibly-absent.
+    metadata?: unknown;
     customer: {
       email: string;
     };
@@ -88,9 +92,10 @@ export type PaystackChargeResponse = {
     // Paystack's data.message carries the actual outcome/decline reason —
     // the top-level `message` above is a generic "Charge attempted" for
     // both success and failure on this endpoint, so this is what should
-    // actually be shown to the user.
-    message?: string;
-    display_text?: string;
+    // actually be shown to the user. Paystack sends an explicit `null`
+    // here (not just omits the field) on a successful charge.
+    message?: string | null;
+    display_text?: string | null;
     amount?: number;
     currency?: string;
   };

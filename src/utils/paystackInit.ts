@@ -187,7 +187,7 @@ async function chargeCardDirect(
       // Paystack's data.message carries the actual outcome (e.g. a decline
       // reason); display_text is only populated for offline/USSD-style
       // instructions — prefer whichever one is actually present.
-      displayMessage: charge.message ?? charge.display_text,
+      displayMessage: charge.message ?? charge.display_text ?? undefined,
     },
   };
 }
@@ -243,7 +243,7 @@ async function chargeMomoDirect(
       mode: "direct",
       reference: charge.reference,
       chargeStatus: charge.status,
-      displayMessage: charge.message ?? charge.display_text,
+      displayMessage: charge.message ?? charge.display_text ?? undefined,
     },
   };
 }

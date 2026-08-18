@@ -45,10 +45,10 @@ export default async function cancelUserTicket(
   if (transactionId) {
     const { data: transaction, error: transactionError } = await supabase
       .from("transaction")
-      .select("*")
+      .select("id, amount")
       .eq("id", transactionId)
       .eq("user_id", user.id)
-      .maybeSingle();
+      .maybeSingle<{ id: string; amount: number }>();
 
     if (transactionError || !transaction) {
       console.log(`Failed fetching transaction: ${transactionError?.message}`);
@@ -57,7 +57,7 @@ export default async function cancelUserTicket(
     }
 
     if (transaction.amount > 0) {
-      const response = await issueRefund(transaction);
+      const response = await issueRefund(transaction.id);
 
       if (response.status !== 200) {
         console.log(response.message);

@@ -19,6 +19,7 @@ import type { AuthOverride } from "@/types/authOverrideType";
 export default async function activateSubscription(
   checkoutSessionId: string,
   authOverride?: AuthOverride,
+  transactionId?: string,
 ) {
   const supabase = authOverride?.supabase ?? (await createClient());
 
@@ -120,6 +121,7 @@ export default async function activateSubscription(
       end_date: endDate,
       events_used: 0,
       stories_used: 0,
+      transaction_id: transactionId ?? null,
     },
     { onConflict: "user_id" },
   );

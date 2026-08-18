@@ -15,7 +15,7 @@
 import activateSubscription from "@/actions/activateSubscription";
 import generateTicket from "@/actions/generateTicket";
 import { verifyTransaction } from "@/services/paystackService";
-import { toPesewas } from "@/utils/paystackAmount";
+import { fromPesewas, toPesewas } from "@/utils/paystackAmount";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type PaymentAttemptFullRow = {
@@ -215,6 +215,53 @@ export async function finalizePaystackPayment(
     };
   }
 
+  // One `transaction` row per Paystack charge (not per group member) — a
+  // grouped multi-checkout payment shares a single Paystack reference across
+  // several payment_attempt rows, and that reference is unique per
+  // transaction row, so all tickets issued from this charge point at the
+  // same transaction. Every member in a group is always the same kind
+  // (all ticket checkouts, or one subscription — createMultiCheckoutPaymentAttempt
+  // never mixes them), so a single `reason` value is correct here.
+  const { data: userInfo } = await supabase
+    .from("user_info")
+    .select("username, full_name")
+    .eq("id", primary.user_id)
+    .maybeSingle();
+
+  const { data: transactionRow, error: transactionInsertError } = await supabase
+    .from("transaction")
+    .insert({
+      user_id: primary.user_id,
+      full_name:
+        userInfo?.full_name ??
+        userInfo?.username ??
+        verification.customer.email,
+      email: verification.customer.email,
+      reason: primary.checkout_session_id ? "Ticket_Purchase" : "Plan_Purchase",
+      amount: fromPesewas(expectedAmountPesewas),
+      currency: primary.currency,
+      status: "successful",
+      payment_method: "paystack",
+      payment_gateway_response: verification,
+      paystack_reference: primary.provider_reference,
+    })
+    .select("id")
+    .maybeSingle();
+
+  if (transactionInsertError || !transactionRow) {
+    console.log(
+      `finalizePaystackPayment: failed recording transaction for attempt ${primary.id} (${transactionInsertError?.message})`,
+    );
+    await markGroup("failed", {
+      failure_reason: "Failed to record transaction",
+    });
+    return {
+      status: "failed",
+      message:
+        "Payment succeeded but we couldn't record it. Please contact support.",
+    };
+  }
+
   // Verified — issue tickets / activate the subscription per group member,
   // reusing the existing, unmodified ticket-generation and subscription-
   // activation logic. Each member is independent: if one session's ticket
@@ -226,18 +273,25 @@ export async function finalizePaystackPayment(
   let anyFailed = false;
 
   for (const member of groupMembers) {
+    // Carrying the already-verified email avoids ticketPurchaseNotification
+    // falling back to supabase.auth.admin.getUserById() — that admin API
+    // call only works with a service-role client (the webhook path), and
+    // silently fails on the ordinary cookie-bound client this frontend
+    // verify path uses, which was dropping the purchase email entirely.
     const authOverride = {
       supabase,
       userId: primary.user_id,
+      userEmail: verification.customer.email,
     };
 
     if (member.checkout_session_id) {
       const result = await generateTicket(
         member.checkout_session_id,
-        member.id,
+        transactionRow.id,
         JSON.stringify({
           provider: "paystack",
           reference: primary.provider_reference,
+          paymentAttemptId: member.id,
         }),
         authOverride,
       );
@@ -271,6 +325,7 @@ export async function finalizePaystackPayment(
       const result = await activateSubscription(
         member.subscription_checkout_id,
         authOverride,
+        transactionRow.id,
       );
 
       if (result.status === 200) {

@@ -116,7 +116,7 @@ export default async function generateTicket(
   const { data: checkoutData, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id",
+      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id, total_price",
     )
     .eq("checkout_session_id", checkoutSessionId)
     .eq("user_id", userId)

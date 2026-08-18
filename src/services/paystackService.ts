@@ -67,7 +67,11 @@ const verifyResponseSchema = z.object({
     paid_at: z.string().nullable(),
     created_at: z.string(),
     channel: z.string(),
-    metadata: z.record(z.unknown()).nullable(),
+    // Paystack's shape for this field is inconsistent in practice (has been
+    // observed as an object, null, and the bare number 0 for "no metadata
+    // set") and it isn't read anywhere in this app — accept whatever comes
+    // back rather than failing verification over it.
+    metadata: z.unknown(),
     customer: z.object({ email: z.string() }),
     authorization: authorizationSchema.nullable().optional(),
   }),
@@ -87,8 +91,8 @@ const chargeResponseSchema = z.object({
       "pay_offline",
       "open_url",
     ]),
-    message: z.string().optional(),
-    display_text: z.string().optional(),
+    message: z.string().nullable().optional(),
+    display_text: z.string().nullable().optional(),
     amount: z.number().optional(),
     currency: z.string().optional(),
   }),
