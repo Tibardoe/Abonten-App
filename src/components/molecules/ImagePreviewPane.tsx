@@ -88,7 +88,11 @@ export default function ImagePreviewPane({
           sizes="100vw"
           className={cn(
             "object-contain",
-            isReady ? "" : "hidden",
+            // Kept in layout (not display:none) even while hidden: next/image
+            // lazy-loads via IntersectionObserver, which never reports a
+            // display:none element as intersecting, so the image would never
+            // start loading and isReady could never flip true.
+            isReady ? "" : "opacity-0",
             imageClassName,
           )}
           onLoad={() => setIsReady(true)}

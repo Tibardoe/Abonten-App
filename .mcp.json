@@ -7,6 +7,14 @@
     "resend": {
       "type": "http",
       "url": "https://mcp.resend.com/mcp"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "env": {}
     }
   }
 }
