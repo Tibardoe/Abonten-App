@@ -1,6 +1,7 @@
 "use client";
 
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useState } from "react";
 import { IoCreateOutline } from "react-icons/io5";
 import EventUploadModal from "../organisms/EventUploadModal";
@@ -18,6 +19,7 @@ export default function EventUploadButton() {
     handleFileChange,
   } = useImageSelection({
     invalidFileMessage: "Please select an image file for your event flyer.",
+    maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
     onInvalidFile: (message) => alert(message),
     onSelect: () => setShowPopup(true),
   });

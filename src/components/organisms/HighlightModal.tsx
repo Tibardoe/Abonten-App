@@ -65,6 +65,19 @@ export default function HighlightModal({
   const maxVideoUploadDuration = 60; // Max allowed duration for uploaded videos (1 minute)
   const maxTrimSegmentDuration = 60; // Max duration of the *trimmed segment* (1 minute)
 
+  // Cloudinary's free-tier non-chunked upload ceiling is 100MB; 90MB leaves
+  // headroom so users see our own clear error instead of a raw Cloudinary
+  // rejection near the edge. Re-checked server-side in uploadHighlight.ts.
+  const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+  const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+  ];
+  const MAX_VIDEO_SIZE_BYTES = 90 * 1024 * 1024;
+  const MAX_IMAGE_SIZE_BYTES = 20 * 1024 * 1024;
+
   // Handle swipe gestures for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -175,6 +188,44 @@ export default function HighlightModal({
     }
 
     for (const file of filesToProcess) {
+      const isVideo = file.type.startsWith("video");
+      const isImage = file.type.startsWith("image");
+
+      if (!isVideo && !isImage) {
+        alert(`"${file.name}" isn't a supported file type.`);
+        continue;
+      }
+
+      if (isVideo && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
+        alert(
+          `"${file.name}" isn't a supported video format. Please use MP4, MOV, or WebM.`,
+        );
+        continue;
+      }
+
+      if (isImage && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        alert(`"${file.name}" isn't a supported image format.`);
+        continue;
+      }
+
+      if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
+        alert(
+          `"${file.name}" is too large. Maximum video size is ${
+            MAX_VIDEO_SIZE_BYTES / (1024 * 1024)
+          }MB.`,
+        );
+        continue;
+      }
+
+      if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
+        alert(
+          `"${file.name}" is too large. Maximum image size is ${
+            MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
+          }MB.`,
+        );
+        continue;
+      }
+
       const url = URL.createObjectURL(file);
 
       if (file.type.startsWith("video")) {

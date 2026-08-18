@@ -5,7 +5,9 @@ import { updateEvent } from "@/actions/updateEvent";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
+import { isImageFile } from "@/utils/isImageFile";
 import { parseEventTypes } from "@/utils/parseEventTypes";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -150,7 +152,32 @@ export function useEventEditForm({
 
   const handleChecked = () => setChecked((prev) => !prev);
   const handleFeatured = () => setFeatured((prev) => !prev);
-  const handleFileChange = (file: File | null) => setNewFile(file);
+
+  // Previously accepted any file with no validation at all (relying only on
+  // the <input accept="image/*"> hint, which a user/browser can bypass) —
+  // an oversized replacement flyer would only fail once submitted, as the
+  // Server Action's raw-File argument hitting Next's 5MB body limit (same
+  // failure mode as uploadHighlight.ts's video bug). Rejecting immediately
+  // matches useImageSelection's create-flow validation.
+  const handleFileChange = (file: File | null) => {
+    if (!file) {
+      setNewFile(null);
+      return;
+    }
+
+    if (!isImageFile(file)) {
+      showMessage("Please select an image file for your event flyer.");
+      return;
+    }
+
+    if (file.size > MAX_EVENT_FLYER_SIZE_BYTES) {
+      const maxMb = Math.round(MAX_EVENT_FLYER_SIZE_BYTES / (1024 * 1024));
+      showMessage(`Image is too large. Maximum size is ${maxMb}MB.`);
+      return;
+    }
+
+    setNewFile(file);
+  };
 
   const onSubmit = async (formData: EventSchema) => {
     try {

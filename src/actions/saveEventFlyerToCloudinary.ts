@@ -3,6 +3,7 @@
 import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -17,6 +18,15 @@ export async function saveEventFlyerToCloudinary(selectedFile: File) {
 
   if (!selectedFile.type.startsWith("image/")) {
     return { error: "Only image files are allowed for event flyers" };
+  }
+
+  // Defense-in-depth: postEvent.ts/updateEvent.ts/saveEventDraft.ts's
+  // callers already reject an oversized flyer client-side before it's ever
+  // selected (see useImageSelection.ts / useEventEditForm.ts), but this
+  // action is the one shared chokepoint for every caller, present and
+  // future.
+  if (selectedFile.size > MAX_EVENT_FLYER_SIZE_BYTES) {
+    return { error: "Image is too large. Maximum size is 5MB." };
   }
 
   try {

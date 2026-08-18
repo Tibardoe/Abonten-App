@@ -1,13 +1,8 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
-import type { MediaItem } from "@/types/mediaItemType";
-import {
-  type UploadApiResponse,
-  v2 as cloudinary,
-  // type UploadApiErrorResponse,
-} from "cloudinary";
+import type { HighlightUploadMetadataItem } from "@/types/highlightUploadType";
+import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -16,7 +11,24 @@ cloudinary.config({
   secure: true,
 });
 
-export default async function uploadHighlight(mediaItems: MediaItem[]) {
+// Cloudinary's free-tier non-chunked upload ceiling is 100MB; these mirror
+// the client-side caps in HighlightModal.tsx and are re-checked here as
+// defense-in-depth against a client that skips/bypasses that validation.
+const MAX_VIDEO_BYTES = 90 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// The video bytes themselves never reach this action -- they go straight
+// from the browser to Cloudinary (see uploadToCloudinary.ts +
+// getHighlightUploadSignature.ts). This only ever receives small JSON
+// metadata about an upload that already completed, which is what fixes the
+// "Body exceeded 5mb limit" Server Action error for videos.
+export default async function uploadHighlight(
+  items: HighlightUploadMetadataItem[],
+  groupId: string,
+) {
   const supabase = await createClient();
 
   const {
@@ -28,57 +40,49 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
     return { status: 401, message: "Sign in to upload highlight!" };
   }
 
-  const groupId = randomUUID();
+  if (items.length === 0) {
+    return { status: 400, message: "No media to upload" };
+  }
 
-  // The MediaItem type only allows "image"/"video" at compile time — a
-  // direct call bypasses that, so it's re-checked here before item.type
-  // reaches Cloudinary's resource_type.
-  const invalidItem = mediaItems.find(
-    (item) => item.type !== "image" && item.type !== "video",
-  );
+  if (!UUID_PATTERN.test(groupId)) {
+    return { status: 400, message: "Invalid upload batch" };
+  }
 
-  if (invalidItem) {
-    return { status: 400, message: "Unsupported media type" };
+  // The public_id's folder was bound to this user's id when the signature
+  // was issued (see getHighlightUploadSignature.ts) -- a publicId outside
+  // that folder means the metadata was tampered with client-side, since a
+  // legitimate upload could never have landed anywhere else.
+  const expectedFolderPrefix = `highlight_media/${user.id}/`;
+
+  for (const item of items) {
+    if (item.resourceType !== "image" && item.resourceType !== "video") {
+      return { status: 400, message: "Unsupported media type" };
+    }
+
+    if (!item.publicId.startsWith(expectedFolderPrefix)) {
+      return { status: 403, message: "Not authorized for this media" };
+    }
+
+    const maxBytes =
+      item.resourceType === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+
+    if (item.bytes > maxBytes) {
+      return { status: 400, message: "Media exceeds the maximum allowed size" };
+    }
   }
 
   const results = await Promise.allSettled(
-    mediaItems.map(async (item) => {
-      const arrayBuffer = await item.file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-
-      // No `eager` transformations here. Without `eager_async: true`,
-      // Cloudinary runs eager transformations synchronously before this
-      // call resolves — for videos that meant a full re-encode (whose
-      // result was never even read) plus a thumbnail crop job blocking
-      // every upload. The thumbnail is built below as a plain Cloudinary
-      // delivery URL instead: Cloudinary generates it on first request and
-      // caches it, so no pre-processing is needed at upload time.
-      const uploadOptions = {
-        resource_type: item.type,
-        folder: "highlight_media",
-      };
-
-      const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          uploadOptions,
-          (error, result) => {
-            if (error) return reject(error);
-            if (!result) return reject(new Error("Upload failed"));
-            resolve(result);
-          },
-        );
-        stream.end(buffer);
-      });
-
+    items.map(async (item) => {
       // Deterministic thumbnail URL, built locally (no extra upload or
-      // network round trip) from the same public_id/version — matches the
-      // c_thumb,h_300,w_300 shape already used for existing highlights.
+      // network round trip) from the public_id/version Cloudinary already
+      // returned to the browser -- Cloudinary generates it on first request
+      // and caches it, so no pre-processing is needed at upload time.
       const thumbnailUrl =
-        item.type === "video"
-          ? cloudinary.url(result.public_id, {
+        item.resourceType === "video"
+          ? cloudinary.url(item.publicId, {
               resource_type: "video",
               format: "jpg",
-              version: result.version,
+              version: item.version,
               transformation: [{ width: 300, height: 300, crop: "thumb" }],
               secure: true,
             })
@@ -86,15 +90,19 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
 
       const { error: dbError } = await supabase.from("highlight").insert({
         user_id: user.id,
-        media_url: result.secure_url,
-        media_type: item.type,
+        media_url: item.secureUrl,
+        media_type: item.resourceType,
         thumbnail_url: thumbnailUrl,
-        media_duration: item.type === "video" ? result.duration : null,
+        media_duration:
+          item.resourceType === "video" ? item.durationSeconds : null,
         group_id: groupId,
-        public_id: result.public_id,
+        public_id: item.publicId,
       });
 
-      if (dbError) throw new Error(dbError.message);
+      if (dbError) {
+        await cleanupOrphanedAsset(item.publicId, item.resourceType);
+        throw new Error(dbError.message);
+      }
     }),
   );
 
@@ -108,82 +116,44 @@ export default async function uploadHighlight(mediaItems: MediaItem[]) {
 
     return {
       status: 500,
-      message: `Uploaded ${mediaItems.length - failed.length}, failed ${
-        failed.length
-      }.`,
+      message: `Uploaded ${items.length - failed.length}, failed ${failed.length}.`,
     };
   }
 
   return { status: 200, message: "Highlight uploaded successfully." };
 }
 
-// export default async function uploadHighlight(mediaItems: MediaItem[]) {
-//   const supabase = await createClient();
+// Called when a highlight's Cloudinary upload succeeded but the matching DB
+// insert failed -- destroys the now-orphaned asset immediately (we're
+// already in a live server request, no reason to defer). Only falls back to
+// the queue table (drained opportunistically by cleanupOrphanedDraftAssets,
+// see that file) if the immediate destroy call itself fails.
+async function cleanupOrphanedAsset(
+  publicId: string,
+  resourceType: "image" | "video",
+) {
+  const supabase = await createClient();
 
-//   const {
-//     data: { user },
-//     error: userError,
-//   } = await supabase.auth.getUser();
+  try {
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+  } catch (cloudError) {
+    console.error(
+      "Failed to immediately clean up orphaned highlight asset, queueing:",
+      cloudError,
+    );
 
-//   if (!user || userError) {
-//     console.log(`Error fetching user: ${userError?.message}`);
+    const { error: queueError } = await supabase
+      .from("draft_asset_cleanup_queue")
+      .insert({ public_id: publicId, resource_type: resourceType });
 
-//     return { status: 401, message: "Sign in to upload highlight!" };
-//   }
-
-//   const uploadPromises = mediaItems.map(async (item, index) => {
-//     const arrayBuffer = await item.file.arrayBuffer();
-//     const buffer = Buffer.from(arrayBuffer);
-
-//     // Upload options
-//     const uploadOptions = {
-//       resource_type: item.type,
-//       folder: "highlight_media",
-//       eager:
-//         item.type === "video"
-//           ? [
-//               { quality: "auto", fetch_format: "auto" },
-//               { width: 300, height: 300, crop: "thumb", format: "jpg" }, // Generate thumbnail
-//             ]
-//           : undefined,
-//       transformation: buildTransformations(item.transformations),
-//     };
-
-//     // Upload to Cloudinary
-//     const result = await new Promise<UploadApiResponse>((resolve, reject) => {
-//       const stream = cloudinary.uploader.upload_stream(
-//         uploadOptions,
-//         (
-//           error: UploadApiErrorResponse | undefined,
-//           result: UploadApiResponse | undefined
-//         ) => {
-//           if (error) return reject(error);
-//           if (!result) return reject(new Error("Upload failed with no result"));
-//           resolve(result);
-//         }
-//       );
-//       stream.end(buffer);
-//     });
-
-//     // Save to Supabase
-//     const { error: highlightInsertError } = await supabase
-//       .from("highlight")
-//       .insert({
-//         user_id: user.id,
-//         media_url: result.secure_url,
-//         media_type: item.type,
-//         thumbnail_url:
-//           item.type === "video" ? result.eager?.[1]?.secure_url : null,
-//         duration: item.type === "video" ? result.duration : null,
-//       });
-
-//     if (highlightInsertError) {
-//       console.log(`Error uploading highlight:${highlightInsertError.message}`);
-
-//       return {
-//         status: 500,
-//         message: "Failed to upload highlight! Please try again.",
-//       };
-//     }
-//   });
-// }
+    if (queueError) {
+      console.error(
+        "Failed to queue orphaned highlight asset for cleanup:",
+        publicId,
+        queueError,
+      );
+    }
+  }
+}

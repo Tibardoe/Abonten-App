@@ -6,6 +6,12 @@ import { useEffect, useRef, useState } from "react";
 type UseImageSelectionOptions = {
   onInvalidFile?: (message: string) => void;
   invalidFileMessage?: string;
+  // Rejects a selection before it's ever previewed or handed to a Server
+  // Action — those actions receive the raw File as an argument, and Next.js
+  // rejects any Server Action request body over 5MB (see uploadHighlight.ts
+  // for the same limit hit by videos). Optional so callers that don't pass
+  // it (none currently) keep today's unlimited-size behavior.
+  maxSizeBytes?: number;
   onSelect?: (file: File, previewUrl: string) => void;
 };
 
@@ -15,6 +21,7 @@ type UseImageSelectionOptions = {
 export function useImageSelection({
   onInvalidFile,
   invalidFileMessage = "Please select an image file.",
+  maxSizeBytes,
   onSelect,
 }: UseImageSelectionOptions = {}) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -37,6 +44,12 @@ export function useImageSelection({
 
     if (!isImageFile(file)) {
       onInvalidFile?.(invalidFileMessage);
+      return;
+    }
+
+    if (maxSizeBytes && file.size > maxSizeBytes) {
+      const maxMb = Math.round(maxSizeBytes / (1024 * 1024));
+      onInvalidFile?.(`Image is too large. Maximum size is ${maxMb}MB.`);
       return;
     }
 

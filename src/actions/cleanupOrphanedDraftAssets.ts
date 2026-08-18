@@ -12,14 +12,17 @@ cloudinary.config({
 
 const BATCH_SIZE = 10;
 
-// Drains a small batch of Cloudinary assets queued by the
-// cleanup_expired_drafts() cron job (see the drafts migrations). pg_cron
+// Drains a small batch of Cloudinary assets queued in
+// draft_asset_cleanup_queue — mainly by the cleanup_expired_drafts() cron
+// job (see the drafts migrations), but also by uploadHighlight.ts as a
+// fallback when a highlight's Cloudinary upload succeeds but the matching DB
+// insert fails and the immediate destroy() call itself errors. pg_cron
 // can't call Cloudinary directly (no pg_net + Edge Function wired up for
 // this yet), so this best-effort sweep is called opportunistically whenever
-// any authenticated user loads the Drafts page — cleanup of *expired*
-// drafts' images is therefore eventual, not guaranteed-immediate. Errors
-// are swallowed: this is best-effort housekeeping, never something a user
-// action should fail because of.
+// any authenticated user loads the Drafts page — cleanup queued from outside
+// that flow is therefore eventual, not guaranteed-immediate. Errors are
+// swallowed: this is best-effort housekeeping, never something a user action
+// should fail because of.
 export async function cleanupOrphanedDraftAssets() {
   const supabase = await createClient();
 

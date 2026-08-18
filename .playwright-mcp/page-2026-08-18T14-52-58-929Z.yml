@@ -1,0 +1,80 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - navigation [ref=e3]:
+      - link [ref=e6] [cursor=pointer]:
+        - /url: /events/location
+        - img "Abonten Logo" [ref=e7]
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - generic [ref=e16]:
+            - img "User Avatar" [ref=e18]
+            - generic [ref=e19]:
+              - heading "Big_Ceo" [level=2] [ref=e20]
+              - button [ref=e21] [cursor=pointer]:
+                - link "Edit Profile" [ref=e22]:
+                  - /url: /settings/edit-profile
+              - link [ref=e23] [cursor=pointer]:
+                - /url: /settings
+              - heading "2 Posts" [level=2] [ref=e28]
+              - heading "0 Favorites" [level=2] [ref=e30]
+              - heading "1 Ratings" [level=2] [ref=e32]
+              - paragraph [ref=e34]: That big function guy. No gatekeeping! 👌 Abonten Father🇬🇭🤌🏾🙌🏾
+          - generic [ref=e35]:
+            - heading "Highlights" [level=2] [ref=e36]
+            - generic [ref=e37]:
+              - button [ref=e38] [cursor=pointer]:
+                - img "Highlight button" [ref=e39]
+              - list [ref=e40]:
+                - listitem [ref=e41]
+                - listitem [ref=e43]
+                - listitem [ref=e45]
+                - listitem [ref=e47]
+                - listitem [ref=e49]
+          - generic [ref=e52]:
+            - link [ref=e53] [cursor=pointer]:
+              - /url: /user/Big_Ceo/posts
+              - img "Posts" [ref=e54]
+              - paragraph [ref=e55]: Posts
+            - link [ref=e56] [cursor=pointer]:
+              - /url: /user/Big_Ceo/favorites
+              - img "Favorites" [ref=e57]
+              - paragraph [ref=e58]: Favorites
+            - link [ref=e59] [cursor=pointer]:
+              - /url: /user/Big_Ceo/reviews
+              - img "Reviews" [ref=e60]
+              - paragraph [ref=e61]: Reviews
+        - button [ref=e62] [cursor=pointer]:
+          - img "Highlight button" [ref=e63]
+    - generic [ref=e64]:
+      - generic [ref=e65]:
+        - link [ref=e66] [cursor=pointer]:
+          - /url: "#"
+          - img "Facebook" [ref=e67]
+        - link [ref=e68] [cursor=pointer]:
+          - /url: "#"
+          - img "Twitter" [ref=e69]
+        - link [ref=e70] [cursor=pointer]:
+          - /url: "#"
+          - img "Instagram" [ref=e71]
+        - link [ref=e72] [cursor=pointer]:
+          - /url: "#"
+          - img "LinkedIn" [ref=e73]
+        - link [ref=e74] [cursor=pointer]:
+          - /url: "#"
+          - img "TikTok" [ref=e75]
+      - separator [ref=e76]
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - img "Copyright" [ref=e79]
+          - paragraph [ref=e80]: 2025 Abonten App
+        - generic [ref=e81]:
+          - link "Terms & Conditions" [ref=e82] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=e83] [cursor=pointer]:
+            - /url: "#"
+          - link "Cookies" [ref=e84] [cursor=pointer]:
+            - /url: "#"
+          - link "Security" [ref=e85] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=e91] [cursor=pointer]
