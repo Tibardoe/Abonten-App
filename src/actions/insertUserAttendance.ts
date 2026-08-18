@@ -1,30 +1,40 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { AuthOverride } from "@/types/authOverrideType";
 
 export default async function insertUserAttendance(
   eventId: string,
   ticketTypeId: string,
   ticketIds: string[],
+  authOverride?: AuthOverride,
 ) {
-  const supabase = await createClient();
+  const supabase = authOverride?.supabase ?? (await createClient());
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let userId: string;
 
-  if (userError) {
-    console.log(`Failed fetching user: ${userError.message}`);
+  if (authOverride) {
+    userId = authOverride.userId;
+  } else {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    return {
-      status: 500,
-      message: "Something went wrong!",
-    };
-  }
+    if (userError) {
+      console.log(`Failed fetching user: ${userError.message}`);
 
-  if (!user) {
-    return { status: 401, message: "User not logged in" };
+      return {
+        status: 500,
+        message: "Something went wrong!",
+      };
+    }
+
+    if (!user) {
+      return { status: 401, message: "User not logged in" };
+    }
+
+    userId = user.id;
   }
 
   if (!ticketTypeId || ticketIds.length === 0) {
@@ -37,7 +47,7 @@ export default async function insertUserAttendance(
   const { data: ownedTickets, error: ticketCountError } = await supabase
     .from("ticket")
     .select("id")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("ticket_type_id", ticketTypeId)
     .eq("status", "active")
     .in("id", ticketIds);
@@ -59,7 +69,7 @@ export default async function insertUserAttendance(
   // ticket_id, instead of needing to guess how to split an aggregate count.
   const { error: insertError } = await supabase.from("attendance").insert(
     ticketIds.map((ticketId) => ({
-      user_id: user.id,
+      user_id: userId,
       event_id: eventId,
       ticket_type_id: ticketTypeId,
       ticket_id: ticketId,

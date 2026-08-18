@@ -4,6 +4,7 @@ import TicketPurchaseEmailTemplate, {
   type EmailTicketLine,
 } from "@/components/organisms/TicketPurchaseEmailTemplate";
 import { createClient } from "@/config/supabase/server";
+import type { AuthOverride } from "@/types/authOverrideType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
 import {
@@ -22,10 +23,17 @@ import getTicketsByIds from "./getTicketsByIds";
  * committed — never throws, so a failure here can never roll back or be
  * mistaken for a failed ticket purchase; the ticket already exists and
  * remains accessible from My Events regardless of email outcome.
+ *
+ * `authOverride` lets the Paystack webhook (no cookies/session) drive this
+ * exact same email flow — see src/types/authOverrideType.ts. If it doesn't
+ * carry a resolved email, one is looked up via the service-role client's
+ * admin API (the equivalent of what supabase.auth.getUser() would have
+ * returned in the cookie-based path).
  */
 export default async function ticketPurchaseNotification(
   ticketIds: string[],
   orderAmount?: number | null,
+  authOverride?: AuthOverride,
 ) {
   try {
     if (!process.env.RESEND_API_KEY) {
@@ -33,19 +41,42 @@ export default async function ticketPurchaseNotification(
       return { status: 500, message: "Email service not configured" };
     }
 
-    const supabase = await createClient();
+    const supabase = authOverride?.supabase ?? (await createClient());
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    let userId: string;
+    let email: string;
 
-    if (!user || userError) {
-      console.log(`Error fetching user: ${userError?.message}`);
-      return { status: 401, message: "User not logged in!" };
+    if (authOverride) {
+      userId = authOverride.userId;
+      if (authOverride.userEmail) {
+        email = authOverride.userEmail;
+      } else {
+        const { data: adminUser, error: adminUserError } =
+          await supabase.auth.admin.getUserById(authOverride.userId);
+        if (adminUserError || !adminUser.user) {
+          console.log(
+            `Failed resolving user email: ${adminUserError?.message}`,
+          );
+          return { status: 500, message: "Could not resolve user email" };
+        }
+        email = adminUser.user.email ?? "";
+      }
+    } else {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (!user || userError) {
+        console.log(`Error fetching user: ${userError?.message}`);
+        return { status: 401, message: "User not logged in!" };
+      }
+
+      userId = user.id;
+      email = user.email ?? "";
     }
 
-    const ticketsResponse = await getTicketsByIds(ticketIds);
+    const ticketsResponse = await getTicketsByIds(ticketIds, authOverride);
 
     if (ticketsResponse.status !== 200 || ticketsResponse.data.length === 0) {
       console.log(
@@ -55,12 +86,11 @@ export default async function ticketPurchaseNotification(
     }
 
     const tickets = ticketsResponse.data;
-    const email = user.email ?? "";
 
     const { data: userInfo, error: infoError } = await supabase
       .from("user_info")
       .select("username, full_name")
-      .eq("id", user.id)
+      .eq("id", userId)
       .single();
 
     if (infoError) {

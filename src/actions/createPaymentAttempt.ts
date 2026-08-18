@@ -6,6 +6,10 @@ import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
 } from "@/utils/paymentAttempt";
+import {
+  type SelectedPaymentMethod,
+  initiatePaystackChargeForAttempt,
+} from "@/utils/paystackInit";
 
 export type { PaymentAttemptRow };
 
@@ -13,9 +17,26 @@ type CreatePaymentAttemptInput = {
   paymentMethodId: string;
 } & ({ checkoutSessionId: string } | { subscriptionCheckoutId: string });
 
+type PaystackPaymentInfo =
+  | {
+      mode: "popup";
+      reference: string;
+      accessCode: string;
+      authorizationUrl: string;
+    }
+  | {
+      mode: "direct";
+      reference: string;
+      chargeStatus: string;
+      displayMessage?: string;
+    };
+
 type CreatePaymentAttemptResult =
   | { status: 400 | 401 | 404 | 410 | 500; message: string }
-  | { status: 200; data: PaymentAttemptRow };
+  | {
+      status: 200;
+      data: PaymentAttemptRow & { paystack: PaystackPaymentInfo };
+    };
 
 type TicketCheckoutLine = {
   total_price: number;
@@ -48,7 +69,7 @@ export default async function createPaymentAttempt(
 
   const { data: method, error: methodError } = await supabase
     .from("payment_method")
-    .select("id")
+    .select("id, method_type, details")
     .eq("id", input.paymentMethodId)
     .eq("user_id", user.id)
     .eq("status", "active")
@@ -63,10 +84,18 @@ export default async function createPaymentAttempt(
     return { status: 404, message: "Payment method not found" };
   }
 
+  if (!user.email) {
+    return {
+      status: 400,
+      message: "Your account needs a verified email to pay",
+    };
+  }
+
   let amount: number;
   let currency: string;
   let matchColumn: "checkout_session_id" | "subscription_checkout_id";
   let matchValue: string;
+  let callbackPath: string;
 
   if ("checkoutSessionId" in input) {
     await supabase.rpc("expire_stale_ticket_checkouts");
@@ -100,6 +129,7 @@ export default async function createPaymentAttempt(
     currency = lines[0].ticket_type?.currency ?? "GHS";
     matchColumn = "checkout_session_id";
     matchValue = input.checkoutSessionId;
+    callbackPath = `/checkout/${input.checkoutSessionId}?type=ticket`;
   } else {
     await supabase.rpc("expire_stale_subscription_checkouts");
 
@@ -127,9 +157,10 @@ export default async function createPaymentAttempt(
     currency = "GHS";
     matchColumn = "subscription_checkout_id";
     matchValue = input.subscriptionCheckoutId;
+    callbackPath = `/checkout/${input.subscriptionCheckoutId}?type=subscription`;
   }
 
-  return upsertPaymentAttemptForSession(
+  const attemptResult = await upsertPaymentAttemptForSession(
     user.id,
     matchColumn,
     matchValue,
@@ -137,4 +168,27 @@ export default async function createPaymentAttempt(
     currency,
     input.paymentMethodId,
   );
+
+  if (attemptResult.status !== 200) {
+    return attemptResult;
+  }
+
+  const paystackResult = await initiatePaystackChargeForAttempt(
+    supabase,
+    attemptResult.data,
+    amount,
+    currency,
+    user.email,
+    method as unknown as SelectedPaymentMethod,
+    `${process.env.NEXT_PUBLIC_BASE_URL}${callbackPath}`,
+  );
+
+  if (paystackResult.status !== 200) {
+    return paystackResult;
+  }
+
+  return {
+    status: 200,
+    data: { ...attemptResult.data, paystack: paystackResult.data },
+  };
 }

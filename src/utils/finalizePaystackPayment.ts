@@ -1,0 +1,313 @@
+// The single authoritative path that turns a Paystack payment into a
+// finished Abonten purchase. Both the client-triggered verify action
+// (src/actions/verifyPaystackPayment.ts, optimistic fast path right after
+// the Paystack popup closes) and the webhook
+// (src/app/api/paystack/webhook/route.ts, the authoritative source of
+// truth) call this exact function — neither path duplicates the other's
+// logic, and neither ever marks a purchase successful without an
+// independent Paystack verification.
+//
+// Deliberately NOT a "use server" Server Action: it takes an
+// already-constructed Supabase client (cookie-bound for the frontend path,
+// service-role for the webhook) and a payment_attempt id already resolved
+// by the caller — same category as ticketInventory.ts/paymentAttempt.ts.
+
+import activateSubscription from "@/actions/activateSubscription";
+import generateTicket from "@/actions/generateTicket";
+import { verifyTransaction } from "@/services/paystackService";
+import { toPesewas } from "@/utils/paystackAmount";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+type PaymentAttemptFullRow = {
+  id: string;
+  user_id: string;
+  status: string;
+  amount: number;
+  currency: string;
+  provider_reference: string | null;
+  payment_group_id: string | null;
+  checkout_session_id: string | null;
+  subscription_checkout_id: string | null;
+};
+
+export type FinalizeResult =
+  | { status: "succeeded" }
+  | { status: "pending"; message: string }
+  | { status: "failed"; message: string }
+  | { status: "already_processing" }
+  | { status: "not_found" };
+
+const PAYMENT_ATTEMPT_FULL_SELECT =
+  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id";
+
+export async function finalizePaystackPayment(
+  supabase: SupabaseClient,
+  primaryAttemptId: string,
+): Promise<FinalizeResult> {
+  const { data: primary, error: primaryError } = await supabase
+    .from("payment_attempt")
+    .select(PAYMENT_ATTEMPT_FULL_SELECT)
+    .eq("id", primaryAttemptId)
+    .maybeSingle<PaymentAttemptFullRow>();
+
+  if (primaryError || !primary) {
+    console.log(
+      `finalizePaystackPayment: attempt not found (${primaryError?.message})`,
+    );
+    return { status: "not_found" };
+  }
+
+  if (primary.status === "succeeded") {
+    return { status: "succeeded" };
+  }
+
+  if (!primary.provider_reference) {
+    // Paystack was never initialized for this attempt — nothing to verify.
+    return { status: "failed", message: "Payment was never started" };
+  }
+
+  // Grouped multi-checkout payments (see createMultiCheckoutPaymentAttempt.ts)
+  // share one Paystack transaction across several payment_attempt rows, all
+  // tagged with the same payment_group_id. Only the primary row carries the
+  // Paystack reference; siblings are finalized alongside it.
+  let groupMembers: PaymentAttemptFullRow[] = [primary];
+  if (primary.payment_group_id) {
+    const { data: siblings, error: siblingsError } = await supabase
+      .from("payment_attempt")
+      .select(PAYMENT_ATTEMPT_FULL_SELECT)
+      .eq("payment_group_id", primary.payment_group_id)
+      .in("status", ["initiated", "pending", "processing", "succeeded"]);
+
+    if (siblingsError) {
+      console.log(
+        `finalizePaystackPayment: failed fetching group members (${siblingsError.message})`,
+      );
+      return { status: "failed", message: "Something went wrong" };
+    }
+
+    if (siblings && siblings.length > 0) {
+      groupMembers = siblings as PaymentAttemptFullRow[];
+    }
+  }
+
+  if (groupMembers.some((m) => m.status === "succeeded")) {
+    // Some/all of the group already finalized (e.g. a previous, partially
+    // successful run) — treat the whole group as already handled rather
+    // than re-running ticket generation for members that already have
+    // tickets.
+    return { status: "succeeded" };
+  }
+
+  // Atomic CAS lock: only one concurrent caller (frontend verify vs.
+  // webhook, or two overlapping webhook deliveries) can move the primary
+  // attempt from an open state into 'processing'. Losing this race means
+  // another call is already handling (or has already finished handling)
+  // this payment — never proceed to verify/issue tickets twice.
+  const { data: locked, error: lockError } = await supabase
+    .from("payment_attempt")
+    .update({ status: "processing", updated_at: new Date() })
+    .eq("id", primary.id)
+    .in("status", ["initiated", "pending"])
+    .select("id")
+    .maybeSingle();
+
+  if (lockError) {
+    console.log(`finalizePaystackPayment: lock failed (${lockError.message})`);
+    return { status: "failed", message: "Something went wrong" };
+  }
+
+  if (!locked) {
+    return { status: "already_processing" };
+  }
+
+  const siblingIds = groupMembers
+    .map((m) => m.id)
+    .filter((id) => id !== primary.id);
+
+  if (siblingIds.length > 0) {
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "processing", updated_at: new Date() })
+      .in("id", siblingIds)
+      .in("status", ["initiated", "pending"]);
+  }
+
+  const markGroup = async (
+    status: "failed" | "succeeded",
+    extra: Record<string, unknown> = {},
+  ) => {
+    await supabase
+      .from("payment_attempt")
+      .update({ status, updated_at: new Date(), ...extra })
+      .in(
+        "id",
+        groupMembers.map((m) => m.id),
+      );
+  };
+
+  let verification: Awaited<ReturnType<typeof verifyTransaction>>;
+  try {
+    verification = await verifyTransaction(primary.provider_reference);
+  } catch (error) {
+    console.log(`finalizePaystackPayment: verify call failed (${error})`);
+    // A transient Paystack/network failure shouldn't permanently fail the
+    // payment — leave it retryable so a later webhook delivery (or another
+    // manual verify) can try again instead of stranding a real payment.
+    await markGroup("failed", {
+      failure_reason: "Could not reach Paystack to verify this payment",
+    });
+    return {
+      status: "failed",
+      message: "Could not verify payment right now. Please try again.",
+    };
+  }
+
+  const expectedAmountPesewas = toPesewas(
+    groupMembers.reduce((sum, m) => sum + m.amount, 0),
+  );
+
+  if (verification.reference !== primary.provider_reference) {
+    console.log(
+      `finalizePaystackPayment: reference mismatch for attempt ${primary.id}`,
+    );
+    await markGroup("failed", { failure_reason: "Reference mismatch" });
+    return { status: "failed", message: "Payment could not be verified" };
+  }
+
+  if (verification.status === "pending" || verification.status === "queued") {
+    // Ghana mobile money and some other channels can stay pending while the
+    // customer authorizes on their phone — this is not a failure, and
+    // inventory/checkout stays reserved via the existing 30-minute expiry
+    // window. Revert the lock so a later webhook delivery can retry.
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "pending", updated_at: new Date() })
+      .in(
+        "id",
+        groupMembers.map((m) => m.id),
+      );
+    return {
+      status: "pending",
+      message: "Your payment is still awaiting authorization.",
+    };
+  }
+
+  if (
+    verification.status !== "success" ||
+    verification.amount !== expectedAmountPesewas ||
+    verification.currency.toUpperCase() !== primary.currency.toUpperCase()
+  ) {
+    console.log(
+      `finalizePaystackPayment: verification mismatch for attempt ${primary.id} (status=${verification.status}, amount=${verification.amount} vs ${expectedAmountPesewas}, currency=${verification.currency} vs ${primary.currency})`,
+    );
+    await markGroup("failed", {
+      failure_reason:
+        verification.status !== "success"
+          ? `Paystack reported status: ${verification.status}`
+          : "Amount/currency mismatch on verification",
+    });
+    return {
+      status: "failed",
+      message:
+        verification.status === "abandoned"
+          ? "This payment was cancelled."
+          : "Your payment was declined. Please try another payment method.",
+    };
+  }
+
+  // Verified — issue tickets / activate the subscription per group member,
+  // reusing the existing, unmodified ticket-generation and subscription-
+  // activation logic. Each member is independent: if one session's ticket
+  // issuance fails (e.g. a transient Cloudinary error) after a shared
+  // Paystack payment already succeeded, that member is left in a retryable
+  // state rather than silently marked succeeded, while the others still
+  // complete — a rare edge case documented as a known limitation rather
+  // than solved with automated compensation/refunds (out of scope here).
+  let anyFailed = false;
+
+  for (const member of groupMembers) {
+    const authOverride = {
+      supabase,
+      userId: primary.user_id,
+    };
+
+    if (member.checkout_session_id) {
+      const result = await generateTicket(
+        member.checkout_session_id,
+        member.id,
+        JSON.stringify({
+          provider: "paystack",
+          reference: primary.provider_reference,
+        }),
+        authOverride,
+      );
+
+      if (result.status === 200) {
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "succeeded",
+            paid_at: new Date(),
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      } else {
+        console.log(
+          `finalizePaystackPayment: generateTicket failed for attempt ${member.id}: ${result.status} ${result.message}`,
+        );
+        anyFailed = true;
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "failed",
+            failure_reason: result.message ?? "Ticket generation failed",
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      }
+    } else if (member.subscription_checkout_id) {
+      const result = await activateSubscription(
+        member.subscription_checkout_id,
+        authOverride,
+      );
+
+      if (result.status === 200) {
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "succeeded",
+            paid_at: new Date(),
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      } else {
+        console.log(
+          `finalizePaystackPayment: activateSubscription failed for attempt ${member.id}: ${result.status} ${result.message}`,
+        );
+        anyFailed = true;
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "failed",
+            failure_reason: result.message ?? "Subscription activation failed",
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      }
+    }
+  }
+
+  if (anyFailed) {
+    return {
+      status: "failed",
+      message:
+        "Payment succeeded but we couldn't finish issuing everything. Please contact support.",
+    };
+  }
+
+  return { status: "succeeded" };
+}

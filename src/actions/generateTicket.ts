@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { AuthOverride } from "@/types/authOverrideType";
 import { resolveEventEndDate } from "@/utils/dateFormatter";
 import {
   generateQRCodeDataURL,
@@ -45,26 +46,41 @@ type CheckoutRow = {
  * parsed back out of an already-formatted display string, which was fragile
  * for one session and outright unreliable once a single "Proceed to
  * Payment" click can walk several different events' sessions in a row.
+ *
+ * `authOverride` lets the Paystack webhook (no cookies/session) call this
+ * exact same function to finalize a paid checkout instead of duplicating
+ * the ticket-issuing logic — see src/types/authOverrideType.ts and
+ * src/utils/finalizePaystackPayment.ts. Every existing call site omits it
+ * and keeps deriving the user from cookies exactly as before.
  */
 export default async function generateTicket(
   checkoutSessionId: string,
   transactionId?: string,
   transactionMetada?: string,
+  authOverride?: AuthOverride,
 ) {
-  const supabase = await createClient();
+  const supabase = authOverride?.supabase ?? (await createClient());
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let userId: string;
 
-  if (userError || !user) {
-    console.log(`Failed fetching user: ${userError?.message}`);
+  if (authOverride) {
+    userId = authOverride.userId;
+  } else {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-    return {
-      status: 401,
-      message: "User not logged in",
-    };
+    if (userError || !user) {
+      console.log(`Failed fetching user: ${userError?.message}`);
+
+      return {
+        status: 401,
+        message: "User not logged in",
+      };
+    }
+
+    userId = user.id;
   }
 
   const { data: initialCheckoutData, error: initialCheckoutError } =
@@ -74,7 +90,7 @@ export default async function generateTicket(
         "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id, total_price",
       )
       .eq("checkout_session_id", checkoutSessionId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("status", "pending");
 
   if (initialCheckoutError) {
@@ -103,7 +119,7 @@ export default async function generateTicket(
       "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, expires_at, occurrence_id",
     )
     .eq("checkout_session_id", checkoutSessionId)
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("status", "pending");
 
   if (checkoutError) {
@@ -127,7 +143,7 @@ export default async function generateTicket(
   const { data: rawTicketData, error: ticketDataError } = await supabase
     .from("ticket")
     .select("user_id, status, ticket_type_id(event_id)")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   if (ticketDataError || !rawTicketData) {
     console.log(`Error fetching ticket data: ${ticketDataError?.message}`);
@@ -210,7 +226,7 @@ export default async function generateTicket(
       .from("ticket")
       .insert(
         uploadResults.map(({ ticketCode, uploadResponse }) => ({
-          user_id: user.id,
+          user_id: userId,
           ticket_type_id: row.ticket_type_id,
           qr_public_id: uploadResponse.public_id,
           qr_version: uploadResponse.version,
@@ -247,6 +263,7 @@ export default async function generateTicket(
       eventId,
       row.ticket_type_id,
       insertedTickets.map((ticket) => ticket.id),
+      authOverride,
     );
 
     if (attendanceInsertResponse.status !== 200) {
@@ -284,8 +301,12 @@ export default async function generateTicket(
   // every earlier failure path returns before reaching here.
   const totalAmount = rows.reduce((sum, row) => sum + row.total_price, 0);
   after(() =>
-    ticketPurchaseNotification(allInsertedTicketIds, totalAmount).catch(
-      (error) => console.log(`Failed sending ticket purchase email: ${error}`),
+    ticketPurchaseNotification(
+      allInsertedTicketIds,
+      totalAmount,
+      authOverride,
+    ).catch((error) =>
+      console.log(`Failed sending ticket purchase email: ${error}`),
     ),
   );
 

@@ -19,10 +19,22 @@ type PaymentMethodCardProps = {
 
 function getDisplay(method: PaymentMethodRow) {
   if (method.method_type === "momo") {
-    const details = method.details as MomoPaymentMethodDetails;
+    const details = method.details as MomoPaymentMethodDetails &
+      // Wallets saved before real phone numbers/network codes were
+      // collected only ever stored `network`/`last4` — displayed here
+      // rather than crashing, since there's no way to recover a real phone
+      // number from a last-4-digits-only record.
+      Partial<{ network: string; last4: string }>;
+    const networkName =
+      details.networkName ?? details.network ?? "Mobile Money";
+    const maskedNumber = details.phone
+      ? `•••• ${details.phone.slice(-4)}`
+      : details.last4
+        ? `•••• ${details.last4}`
+        : "";
     return {
-      title: details.label?.trim() || details.network,
-      subtitle: `${details.network} •••• ${details.last4}`,
+      title: details.label?.trim() || networkName,
+      subtitle: `${networkName} ${maskedNumber}`.trim(),
     };
   }
 

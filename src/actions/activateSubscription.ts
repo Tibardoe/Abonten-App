@@ -1,26 +1,42 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { AuthOverride } from "@/types/authOverrideType";
 
 /**
  * Commit step for a subscription purchase — the equivalent of generateTicket
- * for tickets. Not called from any UI yet, since there's no payment provider
- * to confirm payment: this is the function a future payment webhook/verify
- * step should call once it has independently confirmed payment for the
- * given checkout session. It never trusts a client-supplied plan or price —
- * everything comes from the already-priced subscription_checkout row and
- * the subscription_plan it references.
+ * for tickets. This is the function a payment webhook/verify step calls
+ * once it has independently confirmed payment for the given checkout
+ * session (see src/utils/finalizePaystackPayment.ts). It never trusts a
+ * client-supplied plan or price — everything comes from the already-priced
+ * subscription_checkout row and the subscription_plan it references.
+ *
+ * `authOverride` lets the Paystack webhook (no cookies/session) call this
+ * without a browser session — see src/types/authOverrideType.ts. The
+ * existing frontend-verify call path omits it and keeps deriving the user
+ * from cookies exactly as before.
  */
-export default async function activateSubscription(checkoutSessionId: string) {
-  const supabase = await createClient();
+export default async function activateSubscription(
+  checkoutSessionId: string,
+  authOverride?: AuthOverride,
+) {
+  const supabase = authOverride?.supabase ?? (await createClient());
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let userId: string;
 
-  if (userError || !user) {
-    return { status: 401, message: "User not logged in" };
+  if (authOverride) {
+    userId = authOverride.userId;
+  } else {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return { status: 401, message: "User not logged in" };
+    }
+
+    userId = user.id;
   }
 
   // Distinguish "never existed / wrong user" (404) from "existed but timed
@@ -31,7 +47,7 @@ export default async function activateSubscription(checkoutSessionId: string) {
       .from("subscription_checkout")
       .select("id")
       .eq("id", checkoutSessionId)
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
   if (existingCheckoutError) {
@@ -56,7 +72,7 @@ export default async function activateSubscription(checkoutSessionId: string) {
     .from("subscription_checkout")
     .select("*, subscription_plan(*)")
     .eq("id", checkoutSessionId)
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .eq("status", "pending")
     .maybeSingle();
 
@@ -98,7 +114,7 @@ export default async function activateSubscription(checkoutSessionId: string) {
 
   const { error: upsertError } = await supabase.from("subscription").upsert(
     {
-      user_id: user.id,
+      user_id: userId,
       plan_id: plan.id,
       start_date: startDate,
       end_date: endDate,

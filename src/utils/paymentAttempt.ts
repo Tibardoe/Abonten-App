@@ -22,7 +22,12 @@ export type PaymentAttemptRow = {
   amount: number;
   currency: string;
   payment_method_id: string | null;
+  provider_reference: string | null;
+  metadata: Record<string, unknown> | null;
 };
+
+const PAYMENT_ATTEMPT_ROW_SELECT =
+  "id, status, amount, currency, payment_method_id, provider_reference, metadata";
 
 type UpsertPaymentAttemptResult =
   | { status: 500; message: string }
@@ -50,7 +55,7 @@ export async function upsertPaymentAttemptForSession(
 
   const { data: existingAttempt, error: existingError } = await supabase
     .from("payment_attempt")
-    .select("id, status, amount, currency, payment_method_id")
+    .select(PAYMENT_ATTEMPT_ROW_SELECT)
     .eq(matchColumn, matchValue)
     .eq("user_id", userId)
     .in("status", ["initiated", "pending", "processing"])
@@ -73,7 +78,7 @@ export async function upsertPaymentAttemptForSession(
         .from("payment_attempt")
         .update({ payment_group_id: paymentGroupId, updated_at: new Date() })
         .eq("id", existingAttempt.id)
-        .select("id, status, amount, currency, payment_method_id")
+        .select(PAYMENT_ATTEMPT_ROW_SELECT)
         .single();
 
       if (updateError) {
@@ -101,7 +106,7 @@ export async function upsertPaymentAttemptForSession(
       status: "initiated",
       payment_group_id: paymentGroupId ?? null,
     })
-    .select("id, status, amount, currency, payment_method_id")
+    .select(PAYMENT_ATTEMPT_ROW_SELECT)
     .single();
 
   if (insertError) {

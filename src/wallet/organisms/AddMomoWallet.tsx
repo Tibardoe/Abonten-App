@@ -1,15 +1,17 @@
 "use client";
 
 import addPaymentMethod from "@/actions/addPaymentMethod";
+import getPaystackMobileMoneyNetworks from "@/actions/getPaystackMobileMoneyNetworks";
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
 import {
   type AddMomoWalletInput,
-  MOMO_NETWORKS,
   addMomoWalletSchema,
 } from "@/utils/paymentMethodSchema";
+import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -18,21 +20,52 @@ type PopupCloseProp = {
   onSaved: (method: PaymentMethodRow) => void;
 };
 
+// Ghana local format (0XXXXXXXXX) is normalized to Paystack's expected
+// international form before it's ever sent to the server.
+function normalizeGhanaPhone(phone: string): string {
+  const trimmed = phone.trim();
+  if (trimmed.startsWith("+233")) return trimmed;
+  return `+233${phoneNumberFormatter(trimmed)}`;
+}
+
 export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
+    data: networksResponse,
+    isPending: isNetworksPending,
+    isError: isNetworksError,
+  } = useQuery({
+    queryKey: ["paystack-momo-networks"],
+    queryFn: getPaystackMobileMoneyNetworks,
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  const networks =
+    networksResponse?.status === 200 ? networksResponse.data : [];
+
+  const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AddMomoWalletInput>({
     resolver: zodResolver(addMomoWalletSchema),
-    defaultValues: { type: "momo", network: undefined, last4: "", label: "" },
+    defaultValues: {
+      type: "momo",
+      networkCode: "",
+      networkName: "",
+      phone: "",
+      label: "",
+    },
   });
 
   const onSubmit = async (values: AddMomoWalletInput) => {
     setServerError(null);
-    const response = await addPaymentMethod(values);
+    const response = await addPaymentMethod({
+      ...values,
+      phone: normalizeGhanaPhone(values.phone),
+    });
 
     if (response.status !== 200) {
       setServerError(response.message);
@@ -79,53 +112,60 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-        <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-          For now this only saves a label for display — full mobile money
-          processing isn't connected to a payment provider yet, so we only ask
-          for the last 4 digits, not your full number.
-        </p>
-
         <div className="flex flex-col gap-2">
-          <label htmlFor="network" className="text-sm">
+          <label htmlFor="networkCode" className="text-sm">
             Mobile Money Network
           </label>
           <select
-            id="network"
+            id="networkCode"
             className="border border-input rounded-md px-4 py-2 bg-background outline-none"
-            {...register("network")}
+            disabled={isNetworksPending || isNetworksError}
             defaultValue=""
+            onChange={(e) => {
+              const selected = networks.find((n) => n.code === e.target.value);
+              setValue("networkCode", selected?.code ?? "", {
+                shouldValidate: true,
+              });
+              setValue("networkName", selected?.name ?? "", {
+                shouldValidate: true,
+              });
+            }}
           >
             <option value="" disabled>
-              Select mobile network
+              {isNetworksPending
+                ? "Loading networks…"
+                : isNetworksError
+                  ? "Couldn't load networks"
+                  : "Select mobile network"}
             </option>
-            {MOMO_NETWORKS.map((network) => (
-              <option key={network} value={network}>
-                {network}
+            {networks.map((network) => (
+              <option key={network.code} value={network.code}>
+                {network.name}
               </option>
             ))}
           </select>
-          {errors.network && (
-            <p className="text-xs text-destructive">{errors.network.message}</p>
+          {errors.networkCode && (
+            <p className="text-xs text-destructive">
+              {errors.networkCode.message}
+            </p>
           )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="last4" className="text-sm">
-            Last 4 digits of the number
+          <label htmlFor="phone" className="text-sm">
+            Mobile Money Number
           </label>
           <div className="border border-input rounded-md px-4 py-2 bg-background">
             <input
-              id="last4"
-              type="text"
-              inputMode="numeric"
-              maxLength={4}
+              id="phone"
+              type="tel"
               className="outline-none w-full"
-              {...register("last4")}
-              placeholder="Eg. 3094"
+              {...register("phone")}
+              placeholder="Eg. 0244123456"
             />
           </div>
-          {errors.last4 && (
-            <p className="text-xs text-destructive">{errors.last4.message}</p>
+          {errors.phone && (
+            <p className="text-xs text-destructive">{errors.phone.message}</p>
           )}
         </div>
 
@@ -150,7 +190,7 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
 
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isNetworksPending || isNetworksError}
           className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
         >
           {isSubmitting ? "Saving..." : "Save This Wallet"}

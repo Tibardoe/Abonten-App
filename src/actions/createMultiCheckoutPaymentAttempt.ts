@@ -7,11 +7,29 @@ import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
 } from "@/utils/paymentAttempt";
+import {
+  type SelectedPaymentMethod,
+  initiatePaystackChargeForAttempt,
+} from "@/utils/paystackInit";
 
 type CreateMultiCheckoutPaymentAttemptInput = {
   checkoutSessionIds: string[];
   paymentMethodId: string;
 };
+
+type PaystackPaymentInfo =
+  | {
+      mode: "popup";
+      reference: string;
+      accessCode: string;
+      authorizationUrl: string;
+    }
+  | {
+      mode: "direct";
+      reference: string;
+      chargeStatus: string;
+      displayMessage?: string;
+    };
 
 type CreateMultiCheckoutPaymentAttemptResult =
   | { status: 400 | 401 | 404 | 500; message: string }
@@ -22,7 +40,11 @@ type CreateMultiCheckoutPaymentAttemptResult =
     }
   | {
       status: 200;
-      data: { paymentGroupId: string; attempts: PaymentAttemptRow[] };
+      data: {
+        paymentGroupId: string;
+        attempts: PaymentAttemptRow[];
+        paystack: PaystackPaymentInfo;
+      };
     };
 
 /**
@@ -59,7 +81,7 @@ export default async function createMultiCheckoutPaymentAttempt(
 
   const { data: method, error: methodError } = await supabase
     .from("payment_method")
-    .select("id")
+    .select("id, method_type, details")
     .eq("id", input.paymentMethodId)
     .eq("user_id", user.id)
     .eq("status", "active")
@@ -72,6 +94,13 @@ export default async function createMultiCheckoutPaymentAttempt(
 
   if (!method) {
     return { status: 404, message: "Payment method not found" };
+  }
+
+  if (!user.email) {
+    return {
+      status: 400,
+      message: "Your account needs a verified email to pay",
+    };
   }
 
   let prepared: Awaited<ReturnType<typeof prepareCheckoutPayment>>;
@@ -123,5 +152,39 @@ export default async function createMultiCheckoutPaymentAttempt(
     insertedAttempts.push(result.data);
   }
 
-  return { status: 200, data: { paymentGroupId, attempts: insertedAttempts } };
+  // Only the group's first (primary) attempt row is initialized with
+  // Paystack — one Paystack transaction covers the whole group's grand
+  // total, rather than opening a separate popup per checkout session.
+  // finalizePaystackPayment.ts fans a successful verification back out to
+  // every member sharing this paymentGroupId.
+  const primary = insertedAttempts[0];
+  const paystackResult = await initiatePaystackChargeForAttempt(
+    supabase,
+    primary,
+    prepared.grandTotal,
+    prepared.currency,
+    user.email,
+    method as unknown as SelectedPaymentMethod,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${prepared.validSessions[0].checkoutSessionId}?type=ticket`,
+  );
+
+  if (paystackResult.status !== 200) {
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "cancelled", updated_at: new Date() })
+      .in(
+        "id",
+        insertedAttempts.map((a) => a.id),
+      );
+    return paystackResult;
+  }
+
+  return {
+    status: 200,
+    data: {
+      paymentGroupId,
+      attempts: insertedAttempts,
+      paystack: paystackResult.data,
+    },
+  };
 }

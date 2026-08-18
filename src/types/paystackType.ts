@@ -1,0 +1,110 @@
+// Hand-written types for Paystack API shapes this app actually uses
+// (Initialize/Verify Transaction, the charge.success webhook event) —
+// matches this repo's convention of precisely typing new external/RPC
+// response shapes (see src/types/transactions.ts) rather than using `any`.
+// Runtime-validated with zod in src/services/paystackService.ts, since
+// external API responses aren't trusted as pre-typed.
+
+export type PaymentAttemptStatus =
+  | "initiated"
+  | "pending"
+  | "processing"
+  | "succeeded"
+  | "failed"
+  | "cancelled"
+  | "refunded";
+
+export type PaystackInitializeResponse = {
+  status: boolean;
+  message: string;
+  data: {
+    authorization_url: string;
+    access_code: string;
+    reference: string;
+  };
+};
+
+export type PaystackAuthorization = {
+  authorization_code: string;
+  bin: string;
+  last4: string;
+  exp_month: string;
+  exp_year: string;
+  channel: string;
+  card_type: string;
+  bank: string | null;
+  reusable: boolean;
+};
+
+export type PaystackVerifyResponse = {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    status:
+      | "success"
+      | "failed"
+      | "abandoned"
+      | "pending"
+      | "queued"
+      | "reversed";
+    reference: string;
+    amount: number;
+    currency: string;
+    gateway_response: string;
+    paid_at: string | null;
+    created_at: string;
+    channel: string;
+    metadata: Record<string, unknown> | null;
+    customer: {
+      email: string;
+    };
+    authorization?: PaystackAuthorization | null;
+  };
+};
+
+export type PaystackWebhookEvent = {
+  event: string;
+  data: PaystackVerifyResponse["data"];
+};
+
+// Response shape of POST /charge (direct mobile money / other non-popup
+// charges) and POST /transaction/charge_authorization (charging a saved
+// card's authorization_code). Both return the same "status" discriminator
+// Paystack uses across its async payment flows.
+export type PaystackChargeResponse = {
+  status: boolean;
+  message: string;
+  data: {
+    reference: string;
+    status:
+      | "success"
+      | "failed"
+      | "pending"
+      | "send_otp"
+      | "send_pin"
+      | "pay_offline"
+      | "open_url";
+    // Paystack's data.message carries the actual outcome/decline reason —
+    // the top-level `message` above is a generic "Charge attempted" for
+    // both success and failure on this endpoint, so this is what should
+    // actually be shown to the user.
+    message?: string;
+    display_text?: string;
+    amount?: number;
+    currency?: string;
+  };
+};
+
+export type PaystackBank = {
+  name: string;
+  code: string;
+  type: string;
+  currency: string;
+};
+
+export type PaystackListBanksResponse = {
+  status: boolean;
+  message: string;
+  data: PaystackBank[];
+};

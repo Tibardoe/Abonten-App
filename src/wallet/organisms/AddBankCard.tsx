@@ -1,56 +1,95 @@
 "use client";
 
-import addPaymentMethod from "@/actions/addPaymentMethod";
+import confirmCardVerification from "@/actions/confirmCardVerification";
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
+import initCardVerification from "@/actions/initCardVerification";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
 import {
-  type AddBankCardInput,
-  CARD_BRANDS,
-  addBankCardSchema,
-} from "@/utils/paymentMethodSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
+  PAYSTACK_INLINE_SCRIPT_SRC,
+  useResumePaystackPopup,
+} from "@/hooks/usePaystackPopup";
+import { useMutation } from "@tanstack/react-query";
+import Script from "next/script";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 
 type PopupCloseProp = {
   onclick: () => void;
   onSaved: (method: PaymentMethodRow) => void;
 };
 
-const currentYear = new Date().getFullYear();
-const expiryYears = Array.from({ length: 15 }, (_, i) => currentYear + i);
+type CardFlowState =
+  | { phase: "idle" }
+  | { phase: "awaiting-popup"; reference: string; accessCode: string }
+  | { phase: "confirming" }
+  | { phase: "error"; message: string };
 
+/**
+ * Getting a real, reusable saved card requires one real Paystack charge —
+ * there is no way to "tokenize" a card without actually charging it. This
+ * runs a small GHS 1 verification charge through the Paystack popup, then
+ * confirmCardVerification.ts independently verifies it, captures the
+ * reusable authorization Paystack returns, refunds the GHS 1, and saves
+ * only the safe display fields + the authorization token. No card number
+ * or CVV is ever collected by this form — there is no form.
+ */
 export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [label, setLabel] = useState("");
+  const [state, setState] = useState<CardFlowState>({ phase: "idle" });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<AddBankCardInput>({
-    resolver: zodResolver(addBankCardSchema),
-    defaultValues: {
-      type: "card",
-      brand: undefined,
-      last4: "",
-      expiryMonth: undefined,
-      expiryYear: undefined,
-      label: "",
+  const startMutation = useMutation({
+    mutationFn: initCardVerification,
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        setState({ phase: "error", message: response.message });
+        return;
+      }
+      setState({
+        phase: "awaiting-popup",
+        reference: response.data.reference,
+        accessCode: response.data.accessCode,
+      });
     },
+    onError: () =>
+      setState({
+        phase: "error",
+        message: "Couldn't start card verification. Please try again.",
+      }),
   });
 
-  const onSubmit = async (values: AddBankCardInput) => {
-    setServerError(null);
-    const response = await addPaymentMethod(values);
+  const confirmMutation = useMutation({
+    mutationFn: (reference: string) =>
+      confirmCardVerification(reference, label || undefined),
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        setState({ phase: "error", message: response.message });
+        return;
+      }
+      onSaved(response.data);
+    },
+    onError: () =>
+      setState({
+        phase: "error",
+        message: "Couldn't verify your card. Please try again.",
+      }),
+  });
 
-    if (response.status !== 200) {
-      setServerError(response.message);
-      return;
-    }
+  useResumePaystackPopup(
+    state.phase === "awaiting-popup" ? state.accessCode : null,
+    {
+      onSuccess: () => {
+        if (state.phase !== "awaiting-popup") return;
+        setState({ phase: "confirming" });
+        confirmMutation.mutate(state.reference);
+      },
+      onCancel: () => setState({ phase: "idle" }),
+    },
+  );
 
-    onSaved(response.data);
-  };
+  const isBusy =
+    startMutation.isPending ||
+    state.phase === "awaiting-popup" ||
+    state.phase === "confirming";
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
@@ -58,6 +97,8 @@ export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
       onClick={(e) => e.stopPropagation()}
       className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-card text-card-foreground md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
     >
+      <Script src={PAYSTACK_INLINE_SCRIPT_SRC} strategy="afterInteractive" />
+
       <div className="hidden md:flex justify-between items-center">
         <div>
           <h1 className="font-bold text-lg">Add Bank Card</h1>
@@ -93,110 +134,12 @@ export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+      <div className="flex flex-col gap-5">
         <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-          For now this only saves a label for display — full card processing
-          isn't connected to a payment provider yet, so we only ask for the last
-          4 digits, never your full card number or CVV.
+          We'll charge GHS 1 through Paystack's secure payment window to verify
+          your card, then refund it immediately. We never see or store your card
+          number or CVV — only Paystack does.
         </p>
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="brand" className="text-sm">
-            Card Brand
-          </label>
-          <select
-            id="brand"
-            className="border border-input rounded-md px-4 py-2 bg-background outline-none"
-            {...register("brand")}
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Select card brand
-            </option>
-            {CARD_BRANDS.map((brand) => (
-              <option key={brand} value={brand}>
-                {brand}
-              </option>
-            ))}
-          </select>
-          {errors.brand && (
-            <p className="text-xs text-destructive">{errors.brand.message}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="last4" className="text-sm">
-            Last 4 digits
-          </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="last4"
-              type="text"
-              inputMode="numeric"
-              maxLength={4}
-              className="outline-none w-full"
-              {...register("last4")}
-              placeholder="Eg. 4242"
-            />
-          </div>
-          {errors.last4 && (
-            <p className="text-xs text-destructive">{errors.last4.message}</p>
-          )}
-        </div>
-
-        <div className="flex gap-5">
-          <div className="flex flex-col gap-2 w-full">
-            <label htmlFor="expiryMonth" className="text-sm">
-              Expiry Month
-            </label>
-            <select
-              id="expiryMonth"
-              className="border border-input rounded-md px-4 py-2 bg-background outline-none"
-              {...register("expiryMonth", { valueAsNumber: true })}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                MM
-              </option>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
-                <option key={month} value={month}>
-                  {String(month).padStart(2, "0")}
-                </option>
-              ))}
-            </select>
-            {errors.expiryMonth && (
-              <p className="text-xs text-destructive">
-                {errors.expiryMonth.message}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2 w-full">
-            <label htmlFor="expiryYear" className="text-sm">
-              Expiry Year
-            </label>
-            <select
-              id="expiryYear"
-              className="border border-input rounded-md px-4 py-2 bg-background outline-none"
-              {...register("expiryYear", { valueAsNumber: true })}
-              defaultValue=""
-            >
-              <option value="" disabled>
-                YYYY
-              </option>
-              {expiryYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-            {errors.expiryYear && (
-              <p className="text-xs text-destructive">
-                {errors.expiryYear.message}
-              </p>
-            )}
-          </div>
-        </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor="label" className="text-sm">
@@ -207,31 +150,42 @@ export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
               id="label"
               type="text"
               className="outline-none w-full"
-              {...register("label")}
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
               placeholder="Eg. My Visa"
+              disabled={isBusy}
             />
           </div>
         </div>
 
-        <span className="p-3 rounded-md bg-muted text-center font-semibold text-sm">
-          <p>
-            Note: Only bank cards registered in your name can be added to your
-            account
+        {state.phase === "awaiting-popup" && (
+          <p className="text-sm text-muted-foreground text-center">
+            Complete the GHS 1 verification in the Paystack window…
           </p>
-        </span>
+        )}
 
-        {serverError && (
-          <p className="text-sm text-destructive">{serverError}</p>
+        {state.phase === "confirming" && (
+          <p className="text-sm text-muted-foreground text-center">
+            Verifying and saving your card…
+          </p>
+        )}
+
+        {state.phase === "error" && (
+          <p className="text-sm text-destructive">{state.message}</p>
         )}
 
         <Button
-          type="submit"
-          disabled={isSubmitting}
+          type="button"
+          disabled={isBusy}
+          onClick={() => {
+            setState({ phase: "idle" });
+            startMutation.mutate();
+          }}
           className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
         >
-          {isSubmitting ? "Saving..." : "Save This Wallet"}
+          {isBusy ? "Processing…" : "Verify & Save Card"}
         </Button>
-      </form>
+      </div>
     </div>
   );
 }

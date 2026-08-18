@@ -3,8 +3,9 @@
 import { createClient } from "@/config/supabase/server";
 
 export type MomoPaymentMethodDetails = {
-  network: string;
-  last4: string;
+  networkCode: string;
+  networkName: string;
+  phone: string;
   label?: string;
 };
 
@@ -13,6 +14,8 @@ export type CardPaymentMethodDetails = {
   last4: string;
   expiryMonth: number;
   expiryYear: number;
+  authorizationCode: string;
+  bank?: string | null;
   label?: string;
 };
 

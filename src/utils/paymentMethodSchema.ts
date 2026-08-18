@@ -1,24 +1,5 @@
 import { z } from "zod";
 
-// Kept in sync with src/utils/networkProviderData.ts's `networks` list.
-export const MOMO_NETWORKS = [
-  "AT Money",
-  "G-Money",
-  "MTN Mobile Money",
-  "Telecel Cash",
-] as const;
-
-export const CARD_BRANDS = ["Visa", "Mastercard"] as const;
-
-// Deliberately narrow: only non-sensitive, display-safe fields the user
-// types themselves. No full card/PIN/mobile-money number is ever collected —
-// there is no tokenization provider behind this yet (see AddMomoWallet.tsx /
-// AddBankCard.tsx for the user-facing note explaining this).
-const last4Schema = z
-  .string()
-  .trim()
-  .regex(/^[0-9]{4}$/, "Enter the last 4 digits only");
-
 const labelSchema = z
   .string()
   .trim()
@@ -26,38 +7,50 @@ const labelSchema = z
   .optional()
   .or(z.literal(""));
 
+// Ghana mobile numbers: local format (0XXXXXXXXX, 10 digits) or
+// international (+233XXXXXXXXX). Normalized to the +233 form before being
+// sent to Paystack's Charge API — see phoneNumberFormatter.ts.
+const ghanaPhoneSchema = z
+  .string()
+  .trim()
+  .regex(
+    /^(0[0-9]{9}|\+233[0-9]{9})$/,
+    "Enter a valid Ghana phone number (e.g. 024XXXXXXX or +233XXXXXXXXX)",
+  );
+
+// User-submitted form: real phone number + a network chosen from Paystack's
+// live-fetched mobile money provider list (getPaystackMobileMoneyNetworks.ts)
+// rather than a hardcoded guess at what Paystack supports.
 export const addMomoWalletSchema = z.object({
   type: z.literal("momo"),
-  network: z.enum(MOMO_NETWORKS, {
-    invalid_type_error: "Select a mobile money network",
-  }),
-  last4: last4Schema,
+  networkCode: z.string().min(1, "Select a mobile money network"),
+  networkName: z.string().min(1),
+  phone: ghanaPhoneSchema,
   label: labelSchema,
 });
 
-export const addBankCardSchema = z.object({
+// NOT a user-submitted form: a card is never typed in directly (no PAN/CVV
+// collection — PCI compliance and this repo's explicit rule). This shape is
+// constructed server-side from Paystack's own verified charge response
+// (see confirmCardVerification.ts) after a real GHS 1 verification charge
+// captures a reusable authorization_code. Still zod-validated as a safety
+// net against a malformed/unexpected Paystack response shape.
+export const cardPaymentMethodSchema = z.object({
   type: z.literal("card"),
-  brand: z.enum(CARD_BRANDS, {
-    invalid_type_error: "Select a card brand",
-  }),
-  last4: last4Schema,
-  expiryMonth: z
-    .number({ invalid_type_error: "Enter the expiry month" })
-    .int()
-    .min(1, "Invalid month")
-    .max(12, "Invalid month"),
-  expiryYear: z
-    .number({ invalid_type_error: "Enter the expiry year" })
-    .int()
-    .min(new Date().getFullYear(), "This card has already expired"),
+  brand: z.string().min(1),
+  last4: z.string().regex(/^[0-9]{4}$/),
+  expiryMonth: z.number().int().min(1).max(12),
+  expiryYear: z.number().int(),
+  authorizationCode: z.string().min(1),
+  bank: z.string().nullable().optional(),
   label: labelSchema,
 });
 
 export const addPaymentMethodSchema = z.discriminatedUnion("type", [
   addMomoWalletSchema,
-  addBankCardSchema,
+  cardPaymentMethodSchema,
 ]);
 
 export type AddMomoWalletInput = z.infer<typeof addMomoWalletSchema>;
-export type AddBankCardInput = z.infer<typeof addBankCardSchema>;
+export type CardPaymentMethodInput = z.infer<typeof cardPaymentMethodSchema>;
 export type AddPaymentMethodInput = z.infer<typeof addPaymentMethodSchema>;
