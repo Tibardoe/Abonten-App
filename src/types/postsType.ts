@@ -47,7 +47,16 @@ export type PostsType = {
   website_url?: string | undefined;
   price?: number | undefined;
   capacity?: number | undefined;
-  selectedFile: File;
+  // Optional when publishing a continued draft whose flyer wasn't replaced
+  // — postEvent falls back to existingFlyer below instead of re-uploading.
+  selectedFile: File | null;
+  // Set when the flyer was already uploaded as part of an event draft and
+  // hasn't been replaced — lets postEvent skip a redundant Cloudinary
+  // upload and pass the existing asset straight to create_event.
+  existingFlyer?: { public_id: string; version: string };
+  // The draft this event is being published from, if any. Deleted only
+  // after create_event succeeds — a failed publish leaves the draft intact.
+  draftId?: string;
   currency: string | null | undefined;
   paymentOption?: string | null;
   selectedNetwork?: string | null;

@@ -3,6 +3,7 @@
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
+import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,6 +11,7 @@ import Notification from "../atoms/Notification";
 import EventUploadFormFields from "../molecules/EventUploadFormFields";
 import ImagePreviewPane from "../molecules/ImagePreviewPane";
 import UploadStepHeader from "../molecules/UploadStepHeader";
+import SaveDraftConfirmDialog from "./SaveDraftConfirmDialog";
 
 // Dynamically imported so react-image-crop only loads once a user
 // actually reaches the cropping step.
@@ -20,26 +22,47 @@ const ImageCropper = dynamic(() => import("./ImageCropper"), {
 type EventUploadModalProps = {
   handleClosePopup: (state: boolean) => void;
   imgUrl: string;
-  selectedFile: File;
+  // Optional in continue-draft mode: a draft's flyer is already on
+  // Cloudinary (see existingFlyer), so there's no local File until/unless
+  // the user picks a replacement.
+  selectedFile: File | null;
   onUploadSuccess?: () => void;
+  // Continue-draft mode.
+  draftId?: string;
+  initialValues?: EventDraftPayload;
+  initialUpdatedAt?: string;
+  existingFlyer?: { public_id: string; version: string };
 };
 
 // One responsive modal for event flyer upload, replacing the previous
 // desktop-only UploadEventModal and mobile-only EventUploadMobileModal,
 // which duplicated ~150 lines of validation/submit logic and ~180 lines of
 // form JSX verbatim. The file itself is picked by the trigger before this
-// modal ever mounts (previously true only for the mobile flow).
+// modal ever mounts (previously true only for the mobile flow) — except in
+// continue-draft mode, which opens the modal directly with the draft's
+// already-uploaded flyer.
 export default function EventUploadModal({
   handleClosePopup,
   imgUrl,
   selectedFile,
   onUploadSuccess,
+  draftId,
+  initialValues,
+  initialUpdatedAt,
+  existingFlyer,
 }: EventUploadModalProps) {
   useBodyScrollLock(true);
 
   const router = useRouter();
-  const [step, setStep] = useState<1 | 2>(1);
+  // Skip straight to the details step only when continuing a draft that
+  // already has an uploaded flyer (nothing to crop/pick) — a draft with no
+  // image yet, or a brand-new event, still goes through the normal
+  // pick/crop step first.
+  const [step, setStep] = useState<1 | 2>(
+    initialValues && existingFlyer ? 2 : 1,
+  );
   const [showCrop, setShowCrop] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const { cropped, croppedPreview, handleCropped } = useCroppedImage({
     onCropped: () => {
@@ -58,9 +81,37 @@ export default function EventUploadModal({
       handleClosePopup(false);
       onUploadSuccess?.();
     },
+    draftId,
+    initialValues,
+    initialUpdatedAt,
+    existingFlyer,
   });
 
-  const { notification, isUploading, handleSubmit, onSubmit } = eventUploadForm;
+  const {
+    notification,
+    isUploading,
+    handleSubmit,
+    onSubmit,
+    hasMeaningfulContent,
+    saveDraft,
+    isSavingDraft,
+  } = eventUploadForm;
+
+  const requestClose = () => {
+    if (hasMeaningfulContent) {
+      setShowCancelConfirm(true);
+    } else {
+      handleClosePopup(false);
+    }
+  };
+
+  const handleSaveDraftAndClose = async () => {
+    const response = await saveDraft();
+    setShowCancelConfirm(false);
+    if (response.status === 200) {
+      handleClosePopup(false);
+    }
+  };
 
   return (
     <>
@@ -79,7 +130,7 @@ export default function EventUploadModal({
               ) : (
                 <>
                   <UploadStepHeader
-                    onBack={() => handleClosePopup(false)}
+                    onBack={requestClose}
                     primaryAction={{
                       label: "Next",
                       onClick: () => setStep(2),
@@ -103,7 +154,7 @@ export default function EventUploadModal({
           {step === 2 && (
             <>
               <UploadStepHeader
-                onBack={() => setStep(1)}
+                onBack={requestClose}
                 title="Create new post"
                 primaryAction={{
                   label: isUploading ? "Uploading..." : "Upload",
@@ -130,6 +181,19 @@ export default function EventUploadModal({
           )}
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <SaveDraftConfirmDialog
+          message="You have unsaved changes to this event."
+          isSaving={isSavingDraft}
+          onSaveDraft={handleSaveDraftAndClose}
+          onDiscard={() => {
+            setShowCancelConfirm(false);
+            handleClosePopup(false);
+          }}
+          onContinueEditing={() => setShowCancelConfirm(false)}
+        />
+      )}
 
       <Notification notification={notification} />
     </>

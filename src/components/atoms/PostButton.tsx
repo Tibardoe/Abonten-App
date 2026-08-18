@@ -1,7 +1,9 @@
 "use client";
 
+import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useState } from "react";
+import NewEventOrDraftChooser from "../molecules/NewEventOrDraftChooser";
 import EventUploadModal from "../organisms/EventUploadModal";
 import { Button } from "../ui/button";
 
@@ -11,6 +13,7 @@ import { Button } from "../ui/button";
 // only) rather than mounting one on demand.
 export default function PostButton() {
   const [showPostModal, setShowPostModal] = useState(false);
+  const [showChooser, setShowChooser] = useState(false);
 
   const {
     imagePreview,
@@ -26,12 +29,18 @@ export default function PostButton() {
 
   const closePopup = (state: boolean) => setShowPostModal(state);
 
+  const handleClick = async () => {
+    const { data } = await getActiveDraftCounts();
+    if (data.event > 0) {
+      setShowChooser(true);
+    } else {
+      openFilePicker();
+    }
+  };
+
   return (
     <>
-      <Button
-        className="px-10 font-medium text-sm mt-5"
-        onClick={openFilePicker}
-      >
+      <Button className="px-10 font-medium text-sm mt-5" onClick={handleClick}>
         Post
       </Button>
 
@@ -42,6 +51,16 @@ export default function PostButton() {
         ref={fileInputRef}
         onChange={handleFileChange}
       />
+
+      {showChooser && (
+        <NewEventOrDraftChooser
+          onCreateNew={() => {
+            setShowChooser(false);
+            openFilePicker();
+          }}
+          onClose={() => setShowChooser(false)}
+        />
+      )}
 
       {showPostModal && imagePreview && selectedFile && (
         <EventUploadModal

@@ -2,9 +2,11 @@
 
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
+import { saveEventDraft } from "@/actions/saveEventDraft";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
-import type { EventDates } from "@/types/postsType";
+import type { EventDates, PostsType } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
+import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
@@ -28,6 +30,14 @@ type PromoCode = {
 type UseEventUploadFormOptions = {
   file: File | null;
   onSuccess: () => void;
+  // Draft-continue mode: seeds every piece of state below from a
+  // previously saved draft instead of starting empty.
+  draftId?: string;
+  initialValues?: EventDraftPayload;
+  initialUpdatedAt?: string;
+  // The draft's already-uploaded flyer, reused by postEvent instead of
+  // re-uploading when the user hasn't picked a replacement file.
+  existingFlyer?: { public_id: string; version: string };
 };
 
 // All state, validation and submit logic for posting an event, previously
@@ -38,24 +48,43 @@ type UseEventUploadFormOptions = {
 export function useEventUploadForm({
   file,
   onSuccess,
+  draftId,
+  initialValues,
+  initialUpdatedAt,
+  existingFlyer,
 }: UseEventUploadFormOptions) {
   const t = useTranslations("events");
   const eventSchema = useMemo(() => getEventSchema(t), [t]);
 
-  const form = useForm<EventSchema>({ resolver: zodResolver(eventSchema) });
+  const form = useForm<EventSchema>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: initialValues?.title,
+      description: initialValues?.description,
+      website_url: initialValues?.websiteUrl,
+      capacity: initialValues?.capacity,
+    },
+  });
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isDirty: isFormDirty },
   } = form;
 
   const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
     resolver: zodResolver(receivingAccountSchema),
+    defaultValues: initialValues?.receivingAccountDetails,
   });
 
   const { message: notification, showMessage } = useTimedMessage(3000);
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
+    draftId,
+  );
+  const draftUpdatedAtRef = useRef<string | undefined>(initialUpdatedAt);
 
   // Synchronous lock against double submission (double-click, rapid repeat
   // clicks): a ref is checked/set on the very first line of onSubmit,
@@ -71,32 +100,78 @@ export function useEventUploadForm({
   // and return the already-created event instead of inserting a duplicate.
   const clientRequestIdRef = useRef(crypto.randomUUID());
 
-  const [dateType, setDateType] = useState("single");
-  const [singleDateRange, setSingleDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: new Date(),
-  });
-  const [multipleDates, setMultipleDates] = useState<DateEntry[]>([]);
+  const [dateType, setDateType] = useState<string>(
+    initialValues?.dateType ?? "single",
+  );
+  const [singleDateRange, setSingleDateRange] = useState<DateRange>(
+    initialValues?.singleDateRange?.from && initialValues?.singleDateRange?.to
+      ? {
+          from: initialValues.singleDateRange.from,
+          to: initialValues.singleDateRange.to,
+        }
+      : { from: new Date(), to: new Date() },
+  );
+  const [multipleDates, setMultipleDates] = useState<DateEntry[]>(
+    initialValues?.multipleDates ?? [],
+  );
 
-  const [selectedAddress, setSelectedAddress] = useState("");
-  const [category, setCategory] = useState("");
-  const [types, setTypes] = useState<string[]>([]);
+  // Raw hydration values for DateTimePicker's own initialRange/initialEntries
+  // props -- distinct from singleDateRange above, which always has a
+  // (today, today) fallback that would wrongly pre-fill the picker's editor
+  // on a fresh, non-draft create.
+  const initialDateRangeForPicker =
+    initialValues?.singleDateRange?.from && initialValues?.singleDateRange?.to
+      ? {
+          from: initialValues.singleDateRange.from,
+          to: initialValues.singleDateRange.to,
+        }
+      : undefined;
+  const initialDateEntriesForPicker = initialValues?.multipleDates;
 
-  const [ticket, setTicket] = useState<string | null>(null);
-  const [singleTicket, setSingleTicket] = useState<number | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState(
+    initialValues?.address ?? "",
+  );
+  const [category, setCategory] = useState(initialValues?.category ?? "");
+  const [types, setTypes] = useState<string[]>(initialValues?.types ?? []);
+
+  const [ticket, setTicket] = useState<string | null>(
+    initialValues?.ticket ?? null,
+  );
+  const [singleTicket, setSingleTicket] = useState<number | null>(
+    initialValues?.singleTicket ?? null,
+  );
   const [singleTicketQuantity, setSingleTicketQuantity] = useState<
     number | null
-  >(null);
-  const [multipleTickets, setMultipleTickets] = useState<Ticket[]>([]);
+  >(initialValues?.singleTicketQuantity ?? null);
+  const [multipleTickets, setMultipleTickets] = useState<Ticket[]>(
+    initialValues?.multipleTickets ?? [],
+  );
 
-  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
-  const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(false);
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(
+    initialValues?.promoCodes ?? [],
+  );
+  const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(
+    (initialValues?.promoCodes?.length ?? 0) > 0,
+  );
 
-  const [checked, setChecked] = useState(false);
-  const [featured, setFeatured] = useState(false);
-  const [paymentOption, setPaymentOption] = useState<string | null>(null);
-  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+  const [checked, setChecked] = useState(
+    initialValues?.requireRegistration ?? false,
+  );
+  const [featured, setFeatured] = useState(initialValues?.featured ?? false);
+  const [paymentOption, setPaymentOption] = useState<string | null>(
+    initialValues?.paymentOption ?? null,
+  );
+  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(
+    initialValues?.selectedNetwork ?? null,
+  );
   const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
+
+  // Tracks whether the organizer has actually entered anything this
+  // session, beyond whatever a continued draft was hydrated with — used to
+  // decide whether Cancel needs to prompt at all (an untouched fresh form
+  // just closes, per spec).
+  const [touched, setTouched] = useState(false);
+  const markTouched = () => setTouched(true);
 
   const { data: userCurrency } = useQuery({
     queryKey: ["user-currency"],
@@ -104,9 +179,11 @@ export function useEventUploadForm({
       const countryMetadata = await fetchCountryMetadata();
       return countryMetadata?.currency ?? "GHS";
     },
+    initialData: initialValues?.currency ?? undefined,
   });
 
   const handleDateAndTime = (date: DateRange | DateEntry[]) => {
+    markTouched();
     if (dateType === "single" && !Array.isArray(date)) {
       setSingleDateRange(date);
     } else if (dateType === "specific" && Array.isArray(date)) {
@@ -115,6 +192,7 @@ export function useEventUploadForm({
   };
 
   const handleType = (selectedType: string) => {
+    markTouched();
     setTypes((prevTypes) =>
       prevTypes.includes(selectedType)
         ? prevTypes.filter((type) => type !== selectedType)
@@ -123,6 +201,7 @@ export function useEventUploadForm({
   };
 
   const handlePromoCodesChange = (updatedPromoCodes: PromoCode[]) => {
+    markTouched();
     setPromoCodes(updatedPromoCodes);
   };
 
@@ -130,18 +209,135 @@ export function useEventUploadForm({
     setShowPromoCodeFormPopup((prev) => !prev);
   };
 
-  const handleChecked = () => setChecked((prev) => !prev);
+  const handleChecked = () => {
+    markTouched();
+    setChecked((prev) => !prev);
+  };
 
-  const handleFeatured = () => setFeatured((prev) => !prev);
+  const handleFeatured = () => {
+    markTouched();
+    setFeatured((prev) => !prev);
+  };
 
-  const handlePaymentOption = (option: string) => setPaymentOption(option);
+  const handlePaymentOption = (option: string) => {
+    markTouched();
+    setPaymentOption(option);
+  };
 
   const handleSelectedNetwork = (network: string) => {
+    markTouched();
     setSelectedNetwork(network);
     setShowNetworkDropdown(false);
   };
 
   const handleNetworkDropdown = () => setShowNetworkDropdown((prev) => !prev);
+
+  const handleSelectedAddress = (address: string) => {
+    markTouched();
+    setSelectedAddress(address);
+  };
+
+  const handleCategory = (selectedCategory: string) => {
+    markTouched();
+    setCategory(selectedCategory);
+  };
+
+  const handleTicketSelection = (selectedTicket: string) => {
+    markTouched();
+    setTicket(selectedTicket);
+  };
+
+  const handleSingleTicketWithTouch = (amount: number) => {
+    markTouched();
+    setSingleTicket(amount);
+  };
+
+  const handleSingleTicketQuantityWithTouch = (quantity: number) => {
+    markTouched();
+    setSingleTicketQuantity(quantity);
+  };
+
+  const handleMultipleTicketsWithTouch = (tickets: Ticket[]) => {
+    markTouched();
+    setMultipleTickets(tickets);
+  };
+
+  const handleDateTypeWithTouch = (nextDateType: string) => {
+    markTouched();
+    setDateType(nextDateType);
+  };
+
+  // Whether there's anything worth protecting on Cancel — either the form
+  // was hydrated from an existing draft, or the organizer has actually
+  // entered something this session.
+  const hasMeaningfulContent =
+    Boolean(initialValues) ||
+    touched ||
+    isFormDirty ||
+    receivingAccountForm.formState.isDirty;
+
+  const buildDraftPayload = (): EventDraftPayload => {
+    const formValues = form.getValues();
+    const receivingAccountValues = receivingAccountForm.getValues();
+    const hasReceivingAccountValues = Object.values(
+      receivingAccountValues,
+    ).some((value) => Boolean(value));
+
+    return {
+      title: formValues.title || undefined,
+      description: formValues.description || undefined,
+      websiteUrl: formValues.website_url || undefined,
+      capacity: Number.isFinite(formValues.capacity)
+        ? formValues.capacity
+        : undefined,
+      category: category || undefined,
+      types: types.length > 0 ? types : undefined,
+      address: selectedAddress || undefined,
+      latitude: undefined,
+      longitude: undefined,
+      dateType: dateType === "specific" ? "specific" : "single",
+      singleDateRange:
+        dateType === "single" && singleDateRange.from && singleDateRange.to
+          ? { from: singleDateRange.from, to: singleDateRange.to }
+          : undefined,
+      multipleDates: dateType === "specific" ? multipleDates : undefined,
+      ticket: ticket ?? undefined,
+      singleTicket: singleTicket ?? undefined,
+      singleTicketQuantity: singleTicketQuantity ?? undefined,
+      multipleTickets: multipleTickets.length > 0 ? multipleTickets : undefined,
+      promoCodes: promoCodes.length > 0 ? promoCodes : undefined,
+      requireRegistration: checked,
+      featured,
+      paymentOption: paymentOption ?? undefined,
+      selectedNetwork: selectedNetwork ?? undefined,
+      receivingAccountDetails: hasReceivingAccountValues
+        ? receivingAccountValues
+        : undefined,
+      currency: userCurrency ?? undefined,
+    };
+  };
+
+  const saveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      const payload = buildDraftPayload();
+      const response = await saveEventDraft({
+        draftId: currentDraftId,
+        payload,
+        expectedUpdatedAt: draftUpdatedAtRef.current,
+        flyerFile: file,
+      });
+
+      if (response.status === 200 && response.data) {
+        setCurrentDraftId(response.data.draftId);
+        draftUpdatedAtRef.current = response.data.updatedAt;
+      }
+
+      return response;
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
 
   const onSubmit = async (formData: EventSchema) => {
     if (isSubmittingRef.current) return;
@@ -150,7 +346,7 @@ export function useEventUploadForm({
     try {
       setIsUploading(true);
 
-      if (!file) {
+      if (!file && !existingFlyer) {
         showMessage("Please select a file first!");
         return;
       }
@@ -245,7 +441,7 @@ export function useEventUploadForm({
         return;
       }
 
-      const finalData = {
+      const finalData: PostsType = {
         ...formData,
         address: selectedAddress,
         latitude: coords.lat,
@@ -253,6 +449,8 @@ export function useEventUploadForm({
         category,
         types,
         selectedFile: file,
+        existingFlyer: !file ? existingFlyer : undefined,
+        draftId: currentDraftId,
         promoCodes,
         freeEvents: ticket,
         singleTicket,
@@ -293,22 +491,24 @@ export function useEventUploadForm({
     isUploading,
     onSubmit,
     dateType,
-    setDateType,
+    setDateType: handleDateTypeWithTouch,
     handleDateAndTime,
+    initialDateRangeForPicker,
+    initialDateEntriesForPicker,
     selectedAddress,
-    setSelectedAddress,
+    setSelectedAddress: handleSelectedAddress,
     category,
-    setCategory,
+    setCategory: handleCategory,
     types,
     handleType,
     ticket,
-    setTicket,
+    setTicket: handleTicketSelection,
     singleTicket,
-    handleSingleTicket: setSingleTicket,
+    handleSingleTicket: handleSingleTicketWithTouch,
     singleTicketQuantity,
-    handleSingleTicketQuantity: setSingleTicketQuantity,
+    handleSingleTicketQuantity: handleSingleTicketQuantityWithTouch,
     multipleTickets,
-    handleMultipleTickets: setMultipleTickets,
+    handleMultipleTickets: handleMultipleTicketsWithTouch,
     checked,
     handleChecked,
     featured,
@@ -323,5 +523,9 @@ export function useEventUploadForm({
     handleSelectedNetwork,
     showNetworkDropdown,
     handleNetworkDropdown,
+    hasMeaningfulContent,
+    saveDraft,
+    isSavingDraft,
+    currentDraftId,
   };
 }

@@ -21,6 +21,8 @@ type EventUploadFormFieldsProps = Pick<
   | "dateType"
   | "setDateType"
   | "handleDateAndTime"
+  | "initialDateRangeForPicker"
+  | "initialDateEntriesForPicker"
   | "ticket"
   | "setTicket"
   | "checked"
@@ -41,6 +43,7 @@ type EventUploadFormFieldsProps = Pick<
   | "showNetworkDropdown"
   | "handleNetworkDropdown"
   | "handlePromoCodesChange"
+  | "promoCodes"
   | "showPromoCodeFormPopup"
   | "handlePromoCodeFormPopup"
   | "category"
@@ -62,6 +65,8 @@ export default function EventUploadFormFields({
   dateType,
   setDateType,
   handleDateAndTime,
+  initialDateRangeForPicker,
+  initialDateEntriesForPicker,
   ticket,
   setTicket,
   checked,
@@ -82,6 +87,7 @@ export default function EventUploadFormFields({
   showNetworkDropdown,
   handleNetworkDropdown,
   handlePromoCodesChange,
+  promoCodes,
   showPromoCodeFormPopup,
   handlePromoCodeFormPopup,
   category,
@@ -150,6 +156,8 @@ export default function EventUploadFormFields({
           <DateTimePicker
             handleDateAndTime={handleDateAndTime}
             dateType={dateType}
+            initialRange={initialDateRangeForPicker}
+            initialEntries={initialDateEntriesForPicker}
           />
         </div>
 
@@ -201,7 +209,10 @@ export default function EventUploadFormFields({
             />
 
             {showPromoCodeFormPopup && (
-              <PromoCodeInputs onPromoCodesChange={handlePromoCodesChange} />
+              <PromoCodeInputs
+                onPromoCodesChange={handlePromoCodesChange}
+                initialPromoCodes={promoCodes}
+              />
             )}
           </div>
 

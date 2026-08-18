@@ -1,4 +1,5 @@
 import { postReview } from "@/actions/postReview";
+import { saveReviewDraft } from "@/actions/saveReviewDraft";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { supabase } from "@/config/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
@@ -11,10 +12,19 @@ import { z } from "zod";
 import Notification from "../atoms/Notification";
 import StarRatingInput from "../atoms/StarRatingInput";
 import { Button } from "../ui/button";
+import SaveDraftConfirmDialog from "./SaveDraftConfirmDialog";
 
 type ShowReviewModalProp = {
   handleShowReviewModal: (state: boolean) => void;
   username: string;
+  // Continue-draft mode.
+  draftId?: string;
+  initialValues?: {
+    title: string | null;
+    comment: string | null;
+    rating: number | null;
+  };
+  initialUpdatedAt?: string;
 };
 
 const eventSchema = z.object({
@@ -29,26 +39,41 @@ const eventSchema = z.object({
 export default function ReviewModal({
   handleShowReviewModal,
   username,
+  draftId,
+  initialValues,
+  initialUpdatedAt,
 }: ShowReviewModalProp) {
   useBodyScrollLock(true);
 
   const router = useRouter();
 
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(initialValues?.rating ?? 0);
 
   const [notification, setNotification] = useState<string | null>(null);
 
+  const [currentDraftId, setCurrentDraftId] = useState(draftId);
+  const [draftUpdatedAt, setDraftUpdatedAt] = useState(initialUpdatedAt);
+  const [touched, setTouched] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
   const form = useForm<z.infer<typeof eventSchema>>({
     resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: initialValues?.title ?? undefined,
+      review: initialValues?.comment ?? undefined,
+    },
   });
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    getValues,
+    formState: { errors, isDirty },
   } = form;
 
   const handleRatingChange = (value: number) => {
+    setTouched(true);
     setRating(value);
   };
 
@@ -75,6 +100,7 @@ export default function ReviewModal({
         ...formData,
         rating: rating,
         reviewedId: reviewedId,
+        draftId: currentDraftId,
       };
 
       const response = await postReview(finalData);
@@ -102,6 +128,56 @@ export default function ReviewModal({
     mutate(formData);
   };
 
+  const hasMeaningfulContent =
+    Boolean(initialValues) || touched || isDirty || rating > 0;
+
+  const handleSaveDraft = async () => {
+    if (!reviewedId) {
+      setNotification("User ID not found yet. Please wait...");
+      return null;
+    }
+
+    setIsSavingDraft(true);
+    try {
+      const values = getValues();
+      const response = await saveReviewDraft({
+        draftId: currentDraftId,
+        expectedUpdatedAt: draftUpdatedAt,
+        payload: {
+          reviewedId,
+          title: values.title || undefined,
+          comment: values.review || undefined,
+          rating: rating > 0 ? rating : undefined,
+        },
+      });
+
+      if (response.status === 200 && response.data) {
+        setCurrentDraftId(response.data.draftId);
+        setDraftUpdatedAt(response.data.updatedAt);
+      }
+
+      return response;
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const requestClose = () => {
+    if (hasMeaningfulContent) {
+      setShowCancelConfirm(true);
+    } else {
+      handleShowReviewModal(false);
+    }
+  };
+
+  const handleSaveDraftAndClose = async () => {
+    const response = await handleSaveDraft();
+    setShowCancelConfirm(false);
+    if (response?.status === 200) {
+      handleShowReviewModal(false);
+    }
+  };
+
   return (
     <>
       <div className="fixed top-0 left-0 h-dvh w-full bg-overlay/50 z-30 flex justify-center items-center">
@@ -111,7 +187,7 @@ export default function ReviewModal({
             <button
               type="button"
               className="md:hidden font-bold"
-              onClick={() => handleShowReviewModal(false)}
+              onClick={requestClose}
             >
               Cancel
             </button>
@@ -131,7 +207,7 @@ export default function ReviewModal({
             <button
               type="button"
               className="hidden md:flex"
-              onClick={() => handleShowReviewModal(false)}
+              onClick={requestClose}
             >
               <MaskIcon
                 src="/assets/images/circularCancel.svg"
@@ -146,7 +222,10 @@ export default function ReviewModal({
           <div className="space-y-4">
             <div className="flex items-center justify-between md:flex-col md:justify-start md:items-start md:gap-2">
               <p className="font-normal">Rate</p>
-              <StarRatingInput onChange={handleRatingChange} />
+              <StarRatingInput
+                initialRating={initialValues?.rating ?? 0}
+                onChange={handleRatingChange}
+              />
             </div>
             {rating <= 0 && (
               <p className="text-destructive text-sm">Rating required</p>
@@ -191,6 +270,20 @@ export default function ReviewModal({
           </div>
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <SaveDraftConfirmDialog
+          message="You have unsaved changes to this review."
+          isSaving={isSavingDraft}
+          onSaveDraft={handleSaveDraftAndClose}
+          onDiscard={() => {
+            setShowCancelConfirm(false);
+            handleShowReviewModal(false);
+          }}
+          onContinueEditing={() => setShowCancelConfirm(false)}
+        />
+      )}
+
       <Notification notification={notification} />
     </>
   );

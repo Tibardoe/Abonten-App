@@ -54,21 +54,38 @@ export async function postEvent(formData: PostsType) {
     specific_dates,
     featured,
     clientRequestId,
+    existingFlyer,
+    draftId,
   } = formData;
 
   const eventCode = generateEventCode(title);
 
   const isFreeEvent = freeEvents === "Free";
 
-  const flyerUpload = await saveEventFlyerToCloudinary(selectedFile);
+  // A continued draft whose flyer wasn't replaced already has an uploaded
+  // Cloudinary asset — reuse it instead of uploading again.
+  let public_id: string;
+  let version: string | number;
 
-  if (!flyerUpload?.public_id || !flyerUpload?.version) {
-    return {
-      status: 500,
-      message:
-        (flyerUpload as { error?: string })?.error ??
-        "Flyer upload to Cloudinary failed.",
-    };
+  if (existingFlyer) {
+    public_id = existingFlyer.public_id;
+    version = existingFlyer.version;
+  } else if (selectedFile) {
+    const flyerUpload = await saveEventFlyerToCloudinary(selectedFile);
+
+    if (!flyerUpload?.public_id || !flyerUpload?.version) {
+      return {
+        status: 500,
+        message:
+          (flyerUpload as { error?: string })?.error ??
+          "Flyer upload to Cloudinary failed.",
+      };
+    }
+
+    public_id = flyerUpload.public_id;
+    version = flyerUpload.version;
+  } else {
+    return { status: 400, message: "An event flyer is required." };
   }
 
   const formattedTitle = title
@@ -84,8 +101,6 @@ export async function postEvent(formData: PostsType) {
   // (slug isn't used for routing -- only for ILIKE search -- so the
   // human-readable prefix still matches search text).
   const slug = `${generateSlug(title)}-${generateSlug(eventCode)}`;
-
-  const { public_id, version } = flyerUpload;
 
   // Handle specific dates or start and end times
   const isSpecificEvent = specific_dates && specific_dates.length > 0;
@@ -219,6 +234,25 @@ export async function postEvent(formData: PostsType) {
       status: 500,
       message: "We couldn't post your event. Please try again.",
     };
+  }
+
+  // Only delete the source draft after the event has actually been
+  // created — if create_event had failed above, we'd already have
+  // returned, leaving the draft untouched. Best-effort: a failure here
+  // doesn't affect the publish result the user sees, and a stray draft
+  // just expires naturally in 48h.
+  if (draftId) {
+    const { error: deleteDraftError } = await supabase
+      .from("drafts")
+      .delete()
+      .eq("id", draftId)
+      .eq("user_id", user.id);
+
+    if (deleteDraftError) {
+      console.error(
+        `Failed to delete draft ${draftId} after successful publish: ${deleteDraftError.message}`,
+      );
+    }
   }
 
   return {

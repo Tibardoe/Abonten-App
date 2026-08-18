@@ -14,6 +14,7 @@ import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
 import {
+  MdOutlineDrafts,
   MdOutlineManageHistory,
   MdOutlineSpaceDashboard,
 } from "react-icons/md";
@@ -144,6 +145,15 @@ export default function SideBar({
               >
                 <GiPartyFlags className="text-xl" />
                 {t("myEvents")}
+              </Link>
+
+              <Link
+                href="/manage/drafts"
+                onClick={onNavigate}
+                className="flex gap-1 items-center hover:text-primary transition-colors"
+              >
+                <MdOutlineDrafts className="text-xl" />
+                {t("drafts")}
               </Link>
 
               <input

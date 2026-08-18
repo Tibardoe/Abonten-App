@@ -7,6 +7,10 @@ type FormDataType = {
   review: string;
   rating: number;
   reviewedId: string;
+  // The draft this review is being submitted from, if any. Deleted only
+  // after the insert below succeeds — a failed submission leaves the
+  // draft intact so the written review text is never lost.
+  draftId?: string;
 };
 
 export async function postReview(formData: FormDataType) {
@@ -45,7 +49,7 @@ export async function postReview(formData: FormDataType) {
     return { status: 401, message: "User not found" };
   }
 
-  const { title, review, rating, reviewedId } = formData;
+  const { title, review, rating, reviewedId, draftId } = formData;
 
   if (reviewedId === user.id) {
     return { status: 400, message: "You cannot review yourself" };
@@ -108,6 +112,23 @@ export async function postReview(formData: FormDataType) {
     console.log(`Error inserting review: ${insertEror.message}`);
 
     return { status: 500, message: "Something went wrong!" };
+  }
+
+  // Only remove the source draft after the review has actually been
+  // created. Best-effort: a failure here doesn't affect the result the
+  // user sees, and a stray draft just expires naturally in 48h.
+  if (draftId) {
+    const { error: deleteDraftError } = await supabase
+      .from("drafts")
+      .delete()
+      .eq("id", draftId)
+      .eq("user_id", user.id);
+
+    if (deleteDraftError) {
+      console.error(
+        `Failed to delete draft ${draftId} after successful review submission: ${deleteDraftError.message}`,
+      );
+    }
   }
 
   return { status: 200, message: "Review posted successfully!" };

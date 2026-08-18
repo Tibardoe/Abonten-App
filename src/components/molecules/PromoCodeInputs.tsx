@@ -30,10 +30,20 @@ type PromoCodeInputProps = {
       expiryDate: Date;
     }[],
   ) => void;
+  // Prefills the list from an event draft's saved promo codes (draft
+  // continue flow only — the create flow doesn't pass this, so it keeps
+  // starting empty). Mirrors DateTimePicker's initialEntries prop.
+  initialPromoCodes?: {
+    promoCode: string;
+    discount: number;
+    maximumUse: number;
+    expiryDate: Date;
+  }[];
 };
 
 export default function PromoCodeInputs({
   onPromoCodesChange,
+  initialPromoCodes,
 }: PromoCodeInputProps) {
   const [promoCode, setPromoCode] = useState("");
 
@@ -58,7 +68,7 @@ export default function PromoCodeInputs({
       maximumUse: number;
       expiryDate: Date;
     }[]
-  >([]);
+  >(initialPromoCodes ?? []);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();

@@ -18,6 +18,7 @@ import { HiOutlineLogin } from "react-icons/hi";
 import { IoMenuOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import {
+  MdOutlineDrafts,
   MdOutlineManageHistory,
   MdOutlineSpaceDashboard,
 } from "react-icons/md";
@@ -169,6 +170,14 @@ export default function Header() {
               >
                 <GiPartyFlags className="text-2xl" />
                 {t("myEvents")}
+              </Link>
+
+              <Link
+                href="/manage/drafts"
+                className="flex gap-1 items-center hover:text-primary transition-colors"
+              >
+                <MdOutlineDrafts className="text-2xl" />
+                {t("drafts")}
               </Link>
 
               <EventUploadButton />

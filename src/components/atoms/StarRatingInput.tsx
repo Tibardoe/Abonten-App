@@ -5,11 +5,17 @@ import { IoIosStar } from "react-icons/io";
 type Props = {
   onChange: (rating: number) => void;
   totalStars?: number;
+  // Prefills the stars from a continued review draft's saved rating.
+  initialRating?: number;
 };
 
-const StarRatingInput: React.FC<Props> = ({ onChange, totalStars = 5 }) => {
+const StarRatingInput: React.FC<Props> = ({
+  onChange,
+  totalStars = 5,
+  initialRating = 0,
+}) => {
   const [hoveredStar, setHoveredStar] = useState<number | null>(null);
-  const [selectedRating, setSelectedRating] = useState<number>(0);
+  const [selectedRating, setSelectedRating] = useState<number>(initialRating);
 
   const handleClick = (index: number) => {
     setSelectedRating(index);
