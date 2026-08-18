@@ -12,6 +12,7 @@ type ContinueEventDraftButtonProps = {
   draftId: string;
   className?: string;
   children: ReactNode;
+  onDraftListChanged: () => void;
 };
 
 // Loads a draft's full payload, then opens EventUploadModal directly
@@ -22,6 +23,7 @@ export default function ContinueEventDraftButton({
   draftId,
   className,
   children,
+  onDraftListChanged,
 }: ContinueEventDraftButtonProps) {
   const router = useRouter();
   const [draft, setDraft] = useState<EventDraftDetail | null>(null);
@@ -106,7 +108,11 @@ export default function ContinueEventDraftButton({
           draftId={draft.id}
           initialValues={draft.payload}
           initialUpdatedAt={draft.updatedAt}
-          onUploadSuccess={() => router.refresh()}
+          onUploadSuccess={() => {
+            router.refresh();
+            onDraftListChanged();
+          }}
+          onDraftSaved={onDraftListChanged}
         />
       )}
     </>

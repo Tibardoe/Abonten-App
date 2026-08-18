@@ -9,6 +9,7 @@ type ContinueReviewDraftButtonProps = {
   draftId: string;
   className?: string;
   children: ReactNode;
+  onDraftListChanged: () => void;
 };
 
 // Loads the draft's full payload and re-verifies review eligibility
@@ -19,6 +20,7 @@ export default function ContinueReviewDraftButton({
   draftId,
   className,
   children,
+  onDraftListChanged,
 }: ContinueReviewDraftButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +87,8 @@ export default function ContinueReviewDraftButton({
           draftId={draftId}
           initialValues={modalData.initialValues}
           initialUpdatedAt={modalData.initialUpdatedAt}
+          onReviewSubmitted={onDraftListChanged}
+          onDraftSaved={onDraftListChanged}
         />
       )}
     </>

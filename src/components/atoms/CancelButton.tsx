@@ -1,5 +1,11 @@
+"use client";
+
 import cancelEvent from "@/actions/cancelEvent";
-import { useEffect, useState } from "react";
+import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
 import Notification from "./Notification";
 
@@ -8,49 +14,54 @@ type CancelProp = {
 };
 
 export default function CancelButton({ eventId }: CancelProp) {
-  const [loading, setLoading] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [responseMessage, setResponseMessage] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { message: notification, showMessage } = useTimedMessage(3000);
 
-  const handleCancel = async () => {
-    setLoading(true);
-
-    const response = await cancelEvent(eventId);
-
-    if (response.status !== 200) {
-      setResponseMessage(
-        response.mesage ?? "Failed updating event status. Please try again.",
-      );
-
-      setLoading(false);
-      return;
-    }
-
-    setResponseMessage(response.mesage ?? "Event status updated successfully.");
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (responseMessage !== null) {
-      setTimeout(() => {
-        setResponseMessage(null);
-      }, 3000);
-    }
-  }, [responseMessage]);
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => cancelEvent(eventId),
+    onSuccess: (response) => {
+      if (response.status === 200) {
+        setShowCancelConfirm(false);
+        invalidateEventListQueries(queryClient);
+        showMessage(response.message);
+      } else {
+        setError(
+          response.message ?? "Failed updating event status. Please try again.",
+        );
+      }
+    },
+    onError: () => {
+      setError("Something went wrong. Please try again.");
+    },
+  });
 
   return (
     <>
       <button
-        onClick={handleCancel}
-        disabled={loading}
+        onClick={() => {
+          setError(null);
+          setShowCancelConfirm(true);
+        }}
         type="button"
-        className="flex items-center gap-1 p-1 text-destructive disabled:opacity-50"
+        className="flex items-center gap-1 p-1 text-destructive"
       >
         <MdOutlineCancel className="text-xl " />
-        {loading ? "Cancelling event..." : "Cancel Event"}
+        Cancel Event
       </button>
 
-      <Notification notification={responseMessage} />
+      {showCancelConfirm && (
+        <ConfirmDeleteModal
+          message={error ?? "Are you sure you want to cancel this event?"}
+          isLoading={isPending}
+          onConfirm={() => mutate()}
+          onCancel={() => setShowCancelConfirm(false)}
+        />
+      )}
+
+      {notification && <Notification notification={notification} />}
     </>
   );
 }

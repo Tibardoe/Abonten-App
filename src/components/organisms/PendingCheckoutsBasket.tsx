@@ -11,6 +11,7 @@ import Notification from "@/components/atoms/Notification";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
+import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -263,6 +264,12 @@ export default function PendingCheckoutsBasket({
     const succeeded = results.filter((r) => r.ok);
 
     queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    if (succeeded.length > 0) {
+      // A newly-issued ticket affects the organizer's attendance list and
+      // dashboard stats too, not just this basket — same cache family
+      // cancelUserTicket invalidates, since both are ticket-status changes.
+      invalidateTicketStatusQueries(queryClient);
+    }
     setIsProceeding(false);
 
     if (failed.length === 0) {

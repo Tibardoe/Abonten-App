@@ -12,11 +12,13 @@ import { useState } from "react";
 type ReviewDraftCardProps = {
   draft: ReviewDraftListItem;
   onDeleted: (draftId: string) => void;
+  onDraftListChanged: () => void;
 };
 
 export default function ReviewDraftCard({
   draft,
   onDeleted,
+  onDraftListChanged,
 }: ReviewDraftCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -57,6 +59,7 @@ export default function ReviewDraftCard({
         <ContinueReviewDraftButton
           draftId={draft.id}
           className="rounded-md bg-primary text-primary-foreground px-3 py-1 text-sm hover:bg-primary/90 transition-colors"
+          onDraftListChanged={onDraftListChanged}
         >
           Continue
         </ContinueReviewDraftButton>

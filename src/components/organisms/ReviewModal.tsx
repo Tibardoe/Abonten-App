@@ -4,7 +4,7 @@ import MaskIcon from "@/components/atoms/MaskIcon";
 import { supabase } from "@/config/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -25,6 +25,11 @@ type ShowReviewModalProp = {
     rating: number | null;
   };
   initialUpdatedAt?: string;
+  // Fired after a successful submit (publish) — distinct from onDraftSaved,
+  // which fires for "Save Draft & close" instead.
+  onReviewSubmitted?: () => void;
+  // Fired after a successful "Save Draft & close".
+  onDraftSaved?: () => void;
 };
 
 const eventSchema = z.object({
@@ -42,10 +47,13 @@ export default function ReviewModal({
   draftId,
   initialValues,
   initialUpdatedAt,
+  onReviewSubmitted,
+  onDraftSaved,
 }: ShowReviewModalProp) {
   useBodyScrollLock(true);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [rating, setRating] = useState(initialValues?.rating ?? 0);
 
@@ -103,18 +111,21 @@ export default function ReviewModal({
         draftId: currentDraftId,
       };
 
-      const response = await postReview(finalData);
+      return postReview(finalData);
+    },
+    onSuccess: (response) => {
+      setNotification(response.message);
+      setTimeout(() => setNotification(null), 3000);
 
       if (response?.status === 200) {
         form.reset();
         setRating(0);
         handleShowReviewModal(false);
         router.refresh();
-        setNotification(response.message);
-        setTimeout(() => setNotification(null), 3000);
-      } else {
-        setNotification(response.message);
-        setTimeout(() => setNotification(null), 3000);
+        // The reviews list (["user-reviews", username]) is a TanStack Query
+        // cache that router.refresh() cannot touch once mounted.
+        queryClient.invalidateQueries({ queryKey: ["user-reviews", username] });
+        onReviewSubmitted?.();
       }
     },
   });
@@ -175,6 +186,7 @@ export default function ReviewModal({
     setShowCancelConfirm(false);
     if (response?.status === 200) {
       handleShowReviewModal(false);
+      onDraftSaved?.();
     }
   };
 

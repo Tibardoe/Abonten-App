@@ -5,6 +5,8 @@ import EditEventFormFields from "@/components/molecules/EditEventFormFields";
 import UploadStepHeader from "@/components/molecules/UploadStepHeader";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
+import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 type EditEventModalProps = {
@@ -19,11 +21,13 @@ export default function EditEventModal({
   useBodyScrollLock(true);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const eventEditForm = useEventEditForm({
     eventId,
     onSuccess: () => {
       router.refresh();
+      invalidateEventListQueries(queryClient);
       handleClosePopup(false);
     },
   });

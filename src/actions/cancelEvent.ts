@@ -30,5 +30,5 @@ export default async function cancelEvent(eventId: string) {
     return { status: 403, message: "Not authorized to cancel this event" };
   }
 
-  return { status: 200, mesage: "Event status updated successfully." };
+  return { status: 200, message: "Event status updated successfully." };
 }

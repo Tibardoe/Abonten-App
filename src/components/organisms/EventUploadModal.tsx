@@ -4,6 +4,8 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
+import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
+import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -32,6 +34,9 @@ type EventUploadModalProps = {
   initialValues?: EventDraftPayload;
   initialUpdatedAt?: string;
   existingFlyer?: { public_id: string; version: string };
+  // Fired after a successful "Save Draft & close" — distinct from
+  // onUploadSuccess, which only fires when the event is actually published.
+  onDraftSaved?: () => void;
 };
 
 // One responsive modal for event flyer upload, replacing the previous
@@ -50,10 +55,12 @@ export default function EventUploadModal({
   initialValues,
   initialUpdatedAt,
   existingFlyer,
+  onDraftSaved,
 }: EventUploadModalProps) {
   useBodyScrollLock(true);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
   // Skip straight to the details step only when continuing a draft that
   // already has an uploaded flyer (nothing to crop/pick) — a draft with no
   // image yet, or a brand-new event, still goes through the normal
@@ -78,6 +85,7 @@ export default function EventUploadModal({
     file: cropped ?? selectedFile,
     onSuccess: () => {
       router.refresh();
+      invalidateEventListQueries(queryClient);
       handleClosePopup(false);
       onUploadSuccess?.();
     },
@@ -110,6 +118,7 @@ export default function EventUploadModal({
     setShowCancelConfirm(false);
     if (response.status === 200) {
       handleClosePopup(false);
+      onDraftSaved?.();
     }
   };
 

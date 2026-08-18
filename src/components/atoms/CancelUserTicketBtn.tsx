@@ -1,8 +1,11 @@
 "use client";
 
 import cancelUserTicket from "@/actions/cancelUserTicket";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import Notification from "./Notification";
 
 type CancelTicketProp = {
@@ -14,49 +17,49 @@ export default function CancelUserTicketBtn({
   ticketId,
   transactionId,
 }: CancelTicketProp) {
-  const [notification, setNotification] = useState<string | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const { message: notification, showMessage } = useTimedMessage(3000);
 
-  const router = useRouter();
-
-  const handleCancelTicket = async () => {
-    setLoading(true);
-
-    const response = await cancelUserTicket(ticketId, transactionId);
-
-    setNotification(response.message);
-    setLoading(false);
-
-    // The "My Tickets" list (manage/my-events, force-dynamic) and the event
-    // listing's sold-out status both depend on this ticket's now-updated
-    // status — refresh so they stop showing stale attendee counts instead
-    // of waiting for the user's next navigation.
-    if (response.status === 200) {
-      router.refresh();
-    }
-  };
-
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => {
-        setNotification(null);
-      }, 3000); // 3 seconds
-
-      return () => clearTimeout(timer); // Cleanup
-    }
-  }, [notification]);
+  const { mutate, isPending } = useMutation({
+    mutationFn: () => cancelUserTicket(ticketId, transactionId),
+    onSuccess: (response) => {
+      if (response.status === 200) {
+        setShowCancelConfirm(false);
+        invalidateTicketStatusQueries(queryClient);
+        showMessage(response.message);
+      } else {
+        setError(response.message);
+      }
+    },
+    onError: () => {
+      setError("Something went wrong. Please try again.");
+    },
+  });
 
   return (
     <>
       <button
         type="button"
         className="bg-none text-destructive border border-border text-sm px-4 py-2 rounded-lg"
-        disabled={loading}
-        onClick={handleCancelTicket}
+        onClick={() => {
+          setError(null);
+          setShowCancelConfirm(true);
+        }}
       >
-        {loading ? "Cancelling ticket..." : " Cancel Ticket"}
+        Cancel Ticket
       </button>
+
+      {showCancelConfirm && (
+        <ConfirmDeleteModal
+          message={error ?? "Are you sure you want to cancel this ticket?"}
+          isLoading={isPending}
+          onConfirm={() => mutate()}
+          onCancel={() => setShowCancelConfirm(false)}
+        />
+      )}
 
       {notification && <Notification notification={notification} />}
     </>

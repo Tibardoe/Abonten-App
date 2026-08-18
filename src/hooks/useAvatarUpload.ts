@@ -2,7 +2,7 @@
 
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
@@ -16,6 +16,7 @@ type UseAvatarUploadOptions = {
 // upload modals.
 export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { message: notification, showMessage } = useTimedMessage(3000);
 
   const { mutate, isPending } = useMutation({
@@ -34,6 +35,12 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         await saveAvatarToCloudinary(file);
         showMessage("Upload successful!");
         router.refresh();
+        // No user id is threaded into this hook, so invalidate every
+        // ["user-details", ...] entry rather than one specific id — this is
+        // still a small, scoped predicate, not an app-wide invalidation.
+        queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === "user-details",
+        });
         onSuccess?.();
       } catch (error) {
         console.error("Error uploading image:", error);

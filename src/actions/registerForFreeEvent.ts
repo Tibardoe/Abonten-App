@@ -178,6 +178,7 @@ export default async function registerForFreeEvent(
     };
   }
 
+  revalidatePath("/manage/my-events");
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
 

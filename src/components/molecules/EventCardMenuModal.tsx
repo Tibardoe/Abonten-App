@@ -4,6 +4,7 @@ import AddToFavoriteButton from "../atoms/AddToFavoriteButton";
 import CancelButton from "../atoms/CancelButton";
 import DeleteEventButton from "../atoms/DeleteEventButton";
 import EditEventButton from "../atoms/EditEventButton";
+import ManagePromoCodesButton from "../atoms/ManagePromoCodesButton";
 import RefundButton from "../atoms/RefundButton";
 import ShareButton from "../atoms/ShareButton";
 
@@ -47,6 +48,8 @@ export default function EventCardMenuModal({
       {isOrganizer && (
         <>
           <EditEventButton eventId={eventId} />
+          <hr className="border-border" />
+          <ManagePromoCodesButton eventId={eventId} />
           <hr className="border-border" />
           <CancelButton eventId={eventId} />
           <hr className="border-border" />

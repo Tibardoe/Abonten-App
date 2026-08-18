@@ -23,7 +23,9 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
     queryFn: () => checkIfEventIsFavorited(eventId),
     enabled: !!eventId,
     initialData: () => {
-      return queryClient.getQueryData(["user-favorited", eventId]);
+      return queryClient.getQueryData<
+        Awaited<ReturnType<typeof checkIfEventIsFavorited>>
+      >(["user-favorited", eventId]);
     },
   });
 
@@ -71,6 +73,11 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
     onSettled: () => {
       setTimeout(() => setError(null), 3000);
       queryClient.invalidateQueries({ queryKey: ["user-favorited", eventId] });
+      // The favorites list page (["favorites"]) is a separate cache entry
+      // from this button's own starred/unstarred state above — without this,
+      // unfavoriting an event from its card menu on /favorites leaves the
+      // card visible until a manual reload.
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
     },
   });
 

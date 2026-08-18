@@ -13,11 +13,13 @@ import { useState } from "react";
 type EventDraftCardProps = {
   draft: EventDraftListItem;
   onDeleted: (draftId: string) => void;
+  onDraftListChanged: () => void;
 };
 
 export default function EventDraftCard({
   draft,
   onDeleted,
+  onDraftListChanged,
 }: EventDraftCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -73,6 +75,7 @@ export default function EventDraftCard({
         <ContinueEventDraftButton
           draftId={draft.id}
           className="rounded-md bg-primary text-primary-foreground px-3 py-1 text-sm hover:bg-primary/90 transition-colors"
+          onDraftListChanged={onDraftListChanged}
         >
           Continue
         </ContinueEventDraftButton>

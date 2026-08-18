@@ -1,6 +1,8 @@
 "use client";
 
+import { getEventDrafts } from "@/actions/getEventDrafts";
 import type { EventDraftListItem } from "@/actions/getEventDrafts";
+import { getReviewDrafts } from "@/actions/getReviewDrafts";
 import type { ReviewDraftListItem } from "@/actions/getReviewDrafts";
 import PostButton from "@/components/atoms/PostButton";
 import { cn } from "@/components/lib/utils";
@@ -22,6 +24,22 @@ export default function DraftsView({
   const [activeTab, setActiveTab] = useState<Tab>("event");
   const [eventDrafts, setEventDrafts] = useState(initialEventDrafts);
   const [reviewDrafts, setReviewDrafts] = useState(initialReviewDrafts);
+
+  // Re-fetch-and-replace, mirroring the local-state approach already used
+  // for delete (onDeleted below). Save-and-close and publish only ever call
+  // router.refresh(), which re-renders this component's Server Component
+  // parent with fresh initialEventDrafts/initialReviewDrafts props — but
+  // useState(initialEventDrafts) above only reads its initial value once,
+  // so those new props are silently dropped and the list stays stale.
+  const refreshEventDrafts = async () => {
+    const response = await getEventDrafts();
+    if (response.status === 200) setEventDrafts(response.data);
+  };
+
+  const refreshReviewDrafts = async () => {
+    const response = await getReviewDrafts();
+    if (response.status === 200) setReviewDrafts(response.data);
+  };
 
   return (
     <div className="space-y-5">
@@ -68,6 +86,7 @@ export default function DraftsView({
                   onDeleted={(id) =>
                     setEventDrafts((prev) => prev.filter((d) => d.id !== id))
                   }
+                  onDraftListChanged={refreshEventDrafts}
                 />
               ))}
             </div>
@@ -90,6 +109,7 @@ export default function DraftsView({
                   onDeleted={(id) =>
                     setReviewDrafts((prev) => prev.filter((d) => d.id !== id))
                   }
+                  onDraftListChanged={refreshReviewDrafts}
                 />
               ))}
             </div>

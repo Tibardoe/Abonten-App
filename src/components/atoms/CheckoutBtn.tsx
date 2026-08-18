@@ -3,6 +3,7 @@
 import { getTickets } from "@/actions/getTickets";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -82,6 +83,10 @@ export default function CheckoutBtn({
 
     if (response.status === 200 && response.message) {
       setNotification(response.message);
+
+      // The organizer's own attendance list/dashboard (if open elsewhere in
+      // this session) depends on this new registration too.
+      invalidateTicketStatusQueries(queryClient);
 
       setLoading(false);
       router.push("/manage/my-events");

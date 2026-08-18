@@ -2,7 +2,7 @@
 
 import { updateUserDetails } from "@/actions/updateUserDetails";
 import type { UserDetailsFormType } from "@/types/userProfileType";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
@@ -29,11 +29,18 @@ export default function EditProfileInputFields({
   const { register, handleSubmit } = form;
 
   const [notification, setNotification] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
     mutationFn: updateUserDetails,
     onSuccess: (profileData) => {
       setNotification(profileData?.message || "Profile updated successfully.");
+      // Header/SideBar/MobileNavBar all read this shared cache entry for the
+      // displayed username/avatar — without this it stays stale for up to
+      // its 60s staleTime.
+      queryClient.invalidateQueries({
+        queryKey: ["user-details", initialData.id],
+      });
     },
     onError: (error) => {
       setNotification(error?.message || "Something went wrong.");
