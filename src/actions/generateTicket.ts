@@ -285,6 +285,19 @@ export default async function generateTicket(
       rows.map((row) => row.id),
     );
 
+  // Organizer Finances ledger: one 'earning' entry per checkout row, priced
+  // server-side from the now-paid ticket_checkout/ticket_type/event chain —
+  // see record_organizer_earning. Idempotent (organizer_ledger_entry_earning_once),
+  // so this stays safe even if generateTicket is ever invoked twice for the
+  // same checkout session.
+  await Promise.all(
+    rows.map((row) =>
+      supabase.rpc("record_organizer_earning", {
+        p_ticket_checkout_id: row.id,
+      }),
+    ),
+  );
+
   // Establish the successful-purchase state before the caller redirects
   // anywhere: without this, browser Back to the wallet pages could keep
   // showing the pre-payment "pending" render until a manual refresh, since

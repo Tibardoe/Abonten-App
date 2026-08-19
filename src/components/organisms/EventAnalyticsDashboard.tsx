@@ -2,6 +2,7 @@
 
 import getEventOverviewAnalytics from "@/actions/getEventOverviewAnalytics";
 import EventDateBreakdown from "@/components/molecules/EventDateBreakdown";
+import EventFinanceSummary from "@/components/molecules/EventFinanceSummary";
 import EventOverviewCards from "@/components/molecules/EventOverviewCards";
 import EventPromoBreakdown from "@/components/molecules/EventPromoBreakdown";
 import EventReturningAttendeeStats from "@/components/molecules/EventReturningAttendeeStats";
@@ -53,6 +54,7 @@ export default function EventAnalyticsDashboard({
         <EventOverviewCards overview={overview} isLoading={isLoading} />
       </section>
 
+      <EventFinanceSummary eventId={eventId} />
       <EventTicketTypeBreakdown eventId={eventId} />
       <EventPromoBreakdown eventId={eventId} />
       <EventDateBreakdown eventId={eventId} />

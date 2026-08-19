@@ -9,6 +9,7 @@ import getOrganizerUpcomingEvents from "@/actions/getOrganizerUpcomingEvents";
 import EventUploadButton from "@/components/atoms/EventUploadButton";
 import DashboardPeriodFilter from "@/components/molecules/DashboardPeriodFilter";
 import OrganizerEventPerformanceList from "@/components/molecules/OrganizerEventPerformanceList";
+import OrganizerFinanceSummary from "@/components/molecules/OrganizerFinanceSummary";
 import OrganizerNeedsAttention from "@/components/molecules/OrganizerNeedsAttention";
 import OrganizerOverviewCards from "@/components/molecules/OrganizerOverviewCards";
 import OrganizerRecentActivity from "@/components/molecules/OrganizerRecentActivity";
@@ -158,6 +159,8 @@ export default function OrganizerDashboard() {
         period={period}
         isLoading={overviewQuery.isLoading}
       />
+
+      <OrganizerFinanceSummary />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-bold md:text-lg">Sales Over Time</h2>

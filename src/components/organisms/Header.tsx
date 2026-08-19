@@ -18,6 +18,7 @@ import { HiOutlineLogin } from "react-icons/hi";
 import { IoMenuOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import {
+  MdOutlineAccountBalanceWallet,
   MdOutlineDrafts,
   MdOutlineManageHistory,
   MdOutlineSpaceDashboard,
@@ -153,6 +154,16 @@ export default function Header() {
                 >
                   <MdOutlineSpaceDashboard className="text-2xl" />
                   {t("dashboard")}
+                </Link>
+              )}
+
+              {isOrganizer && (
+                <Link
+                  href="/finances"
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <MdOutlineAccountBalanceWallet className="text-2xl" />
+                  {t("finances")}
                 </Link>
               )}
 

@@ -14,6 +14,7 @@ import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoCreateOutline } from "react-icons/io5";
 import {
+  MdOutlineAccountBalanceWallet,
   MdOutlineDrafts,
   MdOutlineManageHistory,
   MdOutlineSpaceDashboard,
@@ -126,6 +127,17 @@ export default function SideBar({
                 >
                   <MdOutlineSpaceDashboard className="text-xl" />
                   {t("dashboard")}
+                </Link>
+              )}
+
+              {isOrganizer && (
+                <Link
+                  href="/finances"
+                  onClick={onNavigate}
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <MdOutlineAccountBalanceWallet className="text-xl" />
+                  {t("finances")}
                 </Link>
               )}
 

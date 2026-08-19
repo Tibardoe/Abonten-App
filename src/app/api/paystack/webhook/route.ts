@@ -116,6 +116,24 @@ export async function POST(req: Request) {
         console.log(
           `Paystack webhook: transaction ${updated.id} -> ${newStatus} via ${event.event}`,
         );
+
+        // Only reverse the organizer's earning once the refund is actually
+        // CONFIRMED by Paystack (refund.processed), never at refund_pending
+        // request time — same principle as issueRefund.ts never marking a
+        // refund complete just because the API request was accepted.
+        // Idempotent (organizer_ledger_entry_refund_once).
+        if (newStatus === "refunded") {
+          const { error: ledgerError } = await supabase.rpc(
+            "record_refund_adjustment",
+            { p_transaction_id: updated.id },
+          );
+
+          if (ledgerError) {
+            console.error(
+              `Paystack webhook: failed recording refund ledger adjustment for transaction ${updated.id}: ${ledgerError.message}`,
+            );
+          }
+        }
       }
 
       return NextResponse.json({ received: true }, { status: 200 });
