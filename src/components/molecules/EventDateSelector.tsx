@@ -3,6 +3,7 @@
 import type { Occurrence } from "@/types/occurrenceType";
 import { formatFullDateTimeRange, getDateParts } from "@/utils/dateFormatter";
 import React, { useState } from "react";
+import AttendingButton from "../atoms/AttendingButton";
 import CheckoutBtn from "../atoms/CheckoutBtn";
 import DateBtn from "../atoms/DateBtn";
 
@@ -10,24 +11,21 @@ type EventDateSelectorProps = {
   eventDates: Occurrence[];
   eventId: string;
   eventTitle: string;
-  minTicket: {
-    id: string;
-    type: string;
-    price: number;
-    currency: string;
-  } | null;
   time: string;
   requireRegistration?: boolean;
   soldOut?: boolean;
+  isAbsolutelyFreeEvent?: boolean;
+  eventStatus?: string;
 };
 
 export default function EventDateSelector({
   eventDates,
   eventId,
-  minTicket,
   eventTitle,
   requireRegistration,
   soldOut,
+  isAbsolutelyFreeEvent,
+  eventStatus,
 }: EventDateSelectorProps) {
   const now = new Date();
 
@@ -54,7 +52,7 @@ export default function EventDateSelector({
         <div className="mb-3 p-2">
           <h2 className="font-bold mb-2">Dates</h2>
           <div className="flex overflow-x-auto gap-3">
-            {sortedEventDates.map((occurrence) => {
+            {sortedEventDates.map((occurrence, index) => {
               const dateValue = occurrence.starts_at;
 
               const { day, month, date, time } = getDateParts(dateValue);
@@ -66,7 +64,11 @@ export default function EventDateSelector({
 
               return (
                 <DateBtn
-                  key={occurrence.id}
+                  // occurrence.id is absent for single-date events (see
+                  // page.tsx) — it's deliberately not fabricated there since
+                  // it flows downstream as the RSVP/checkout occurrenceId,
+                  // so fall back to the index for the list key here instead.
+                  key={occurrence.id ?? `date-${index}`}
                   dateString={occurrence.starts_at.toString()}
                   onClick={() => {
                     if (!isPast) {
@@ -86,23 +88,29 @@ export default function EventDateSelector({
         </div>
       )}
 
-      {/* Buy ticket btn */}
-      {selectedDateTime && (
-        <CheckoutBtn
-          eventId={eventId}
-          occurrenceId={selectedOccurrence?.id ?? null}
-          btnText={
-            minTicket?.price === 0 || minTicket === null
-              ? "Register"
-              : "Buy Ticket"
-          }
-          eventTitle={eventTitle}
-          date={selectedDateTime.date}
-          time={selectedDateTime.time}
-          requireRegistration={requireRegistration}
-          soldOut={soldOut}
-        />
-      )}
+      {/* Buy ticket / RSVP btn */}
+      {selectedDateTime &&
+        (isAbsolutelyFreeEvent ? (
+          requireRegistration && (
+            <AttendingButton
+              eventId={eventId}
+              occurrenceId={selectedOccurrence?.id ?? null}
+              eventStatusRaw={eventStatus ?? "published"}
+              eventDates={eventDates}
+              soldOut={soldOut}
+            />
+          )
+        ) : (
+          <CheckoutBtn
+            eventId={eventId}
+            occurrenceId={selectedOccurrence?.id ?? null}
+            btnText="Buy Ticket"
+            eventTitle={eventTitle}
+            date={selectedDateTime.date}
+            time={selectedDateTime.time}
+            soldOut={soldOut}
+          />
+        ))}
     </div>
   );
 }

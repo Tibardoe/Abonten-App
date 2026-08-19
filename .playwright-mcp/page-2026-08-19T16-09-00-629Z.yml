@@ -1,0 +1,206 @@
+- generic [active] [ref=f5e1]:
+  - main [ref=f5e2]:
+    - navigation [ref=f5e3]:
+      - generic [ref=f5e4]:
+        - link [ref=f5e6] [cursor=pointer]:
+          - /url: /events/location
+          - img "Abonten Logo" [ref=f5e7]
+        - generic [ref=f5e8]:
+          - link "Manage Attendance" [ref=f5e9] [cursor=pointer]:
+            - /url: /manage/attendance/event-list
+          - link "My Events" [ref=f5e13] [cursor=pointer]:
+            - /url: /manage/my-events
+          - link "Drafts" [ref=f5e16] [cursor=pointer]:
+            - /url: /manage/drafts
+          - button "Post" [ref=f5e20] [cursor=pointer]
+          - button "Sign Out" [ref=f5e24] [cursor=pointer]
+    - main [ref=f5e27]:
+      - generic [ref=f5e28]:
+        - generic [ref=f5e29]:
+          - img "Hchngc" [ref=f5e30]
+          - generic [ref=f5e32]:
+            - heading "Hchngc" [level=1] [ref=f5e33]
+            - generic [ref=f5e34]:
+              - generic [ref=f5e35]: Free Entry
+              - generic [ref=f5e39]: 🎉 0 Attendees
+        - generic [ref=f5e40]:
+          - generic [ref=f5e41]:
+            - generic [ref=f5e42]:
+              - generic [ref=f5e44]:
+                - link [ref=f5e45] [cursor=pointer]:
+                  - /url: /user/Big_Ceo/posts
+                  - img "Big_Ceo" [ref=f5e46]
+                - generic [ref=f5e47]:
+                  - link "Big_Ceo" [ref=f5e48] [cursor=pointer]:
+                    - /url: /user/Big_Ceo/posts
+                  - generic [ref=f5e49]:
+                    - generic [ref=f5e50]:
+                      - generic [ref=f5e51]: ★
+                      - generic [ref=f5e52]: ★
+                      - generic [ref=f5e53]: ★
+                      - generic [ref=f5e54]: ★
+                      - generic [ref=f5e55]: ★
+                    - generic [ref=f5e56]: (1.0)
+                - generic [ref=f5e57]: Posted 16 minutes ago
+              - generic [ref=f5e58]:
+                - generic [ref=f5e59]:
+                  - heading "Location" [level=3] [ref=f5e64]
+                  - paragraph [ref=f5e65]: Nkawie
+                  - button "Get Directions" [ref=f5e66] [cursor=pointer]
+                - generic [ref=f5e70]:
+                  - heading "Date & Time" [level=3] [ref=f5e75]
+                  - paragraph [ref=f5e76]: Fri, 21st Aug 2026
+                  - paragraph [ref=f5e77]: 10:00 AM - 08:00 PM
+              - generic [ref=f5e78]:
+                - heading "About the Event" [level=2] [ref=f5e79]
+                - paragraph [ref=f5e80]: hgcvmhb hjvmjhv vjmhvmhjv jhvmjhvm
+              - generic [ref=f5e81]:
+                - button "Share" [ref=f5e82] [cursor=pointer]
+                - button "Contact Organizer" [ref=f5e89] [cursor=pointer]
+              - generic [ref=f5e95]:
+                - heading "Dates" [level=2] [ref=f5e96]
+                - button [ref=f5e98] [cursor=pointer]:
+                  - paragraph [ref=f5e99]: Friday
+                  - separator [ref=f5e100]
+                  - paragraph [ref=f5e101]: August
+                  - paragraph [ref=f5e102]: "21"
+                  - paragraph [ref=f5e103]: 10:00 AM
+            - generic [ref=f5e104]:
+              - generic [ref=f5e105]:
+                - heading "Event Category" [level=3] [ref=f5e106]
+                - generic [ref=f5e107]: Music & Concerts
+              - generic [ref=f5e109]:
+                - heading "Event Tags" [level=3] [ref=f5e110]
+                - generic [ref=f5e111]: "#Live Concerts"
+              - generic [ref=f5e113]:
+                - heading "Event Capacity" [level=3] [ref=f5e114]
+                - generic [ref=f5e116]:
+                  - generic [ref=f5e117]: Available
+                  - generic [ref=f5e118]: 100 remaining
+          - generic [ref=f5e121]:
+            - generic [ref=f5e122]:
+              - heading "Similar Events" [level=2] [ref=f5e123]
+              - link "View all" [ref=f5e124] [cursor=pointer]:
+                - /url: /events/location/undefined/explore/similar-events?category=music-concerts
+            - list [ref=f5e130]:
+              - listitem [ref=f5e131]:
+                - generic [ref=f5e132]: Ongoing
+                - link [ref=f5e133] [cursor=pointer]:
+                  - /url: /events/h3119
+                  - img "Flyer for Hvbmjhvg" [ref=f5e134]
+                - generic [ref=f5e136]:
+                  - generic [ref=f5e137]:
+                    - link "Hvbmjhvg" [ref=f5e138] [cursor=pointer]:
+                      - /url: /events/h3119
+                    - button [ref=f5e140] [cursor=pointer]:
+                      - img "Event options" [ref=f5e141]
+                  - generic [ref=f5e142]:
+                    - paragraph [ref=f5e147]: Nkawie
+                    - generic [ref=f5e148]:
+                      - generic [ref=f5e149]: Wed, 19th Aug 2026
+                      - generic [ref=f5e154]: 08:00 AM - 10:00 PM
+                    - generic [ref=f5e159]:
+                      - generic [ref=f5e160]:
+                        - generic [ref=f5e161]: 10 spots
+                        - generic [ref=f5e162]: 0 attending
+                      - generic [ref=f5e163]: GHS 1
+              - listitem [ref=f5e164]:
+                - generic [ref=f5e165]: Ongoing
+                - link [ref=f5e166] [cursor=pointer]:
+                  - /url: /events/u4481
+                  - img "Flyer for Uygkuygv" [ref=f5e167]
+                - generic [ref=f5e169]:
+                  - generic [ref=f5e170]:
+                    - link "Uygkuygv" [ref=f5e171] [cursor=pointer]:
+                      - /url: /events/u4481
+                    - button [ref=f5e173] [cursor=pointer]:
+                      - img "Event options" [ref=f5e174]
+                  - generic [ref=f5e175]:
+                    - paragraph [ref=f5e180]: Nkawie
+                    - generic [ref=f5e181]:
+                      - generic [ref=f5e182]: Wed, 19th Aug 2026
+                      - generic [ref=f5e187]: 10:00 AM - 05:00 PM
+                    - generic [ref=f5e192]:
+                      - generic [ref=f5e193]:
+                        - generic [ref=f5e194]: 10 spots
+                        - generic [ref=f5e195]: 0 attending
+                      - generic [ref=f5e196]: GHS 100
+              - listitem [ref=f5e197]:
+                - link [ref=f5e198] [cursor=pointer]:
+                  - /url: /events/ky2813
+                  - img "Flyer for Kuyyvjytvj Yv Jyv" [ref=f5e199]
+                - generic [ref=f5e201]:
+                  - generic [ref=f5e202]:
+                    - link "Kuyyvjytvj Yv Jyv" [ref=f5e203] [cursor=pointer]:
+                      - /url: /events/ky2813
+                    - button [ref=f5e205] [cursor=pointer]:
+                      - img "Event options" [ref=f5e206]
+                  - generic [ref=f5e207]:
+                    - paragraph [ref=f5e212]: Nkawie
+                    - generic [ref=f5e213]:
+                      - generic [ref=f5e214]: Thu, 20th Aug 2026
+                      - generic [ref=f5e219]: 10:00 AM - 11:00 PM
+                    - generic [ref=f5e224]:
+                      - generic [ref=f5e225]:
+                        - generic [ref=f5e226]: 100 spots
+                        - generic [ref=f5e227]: 0 attending
+                      - generic [ref=f5e228]: GHS 100
+              - listitem [ref=f5e229]:
+                - link [ref=f5e230] [cursor=pointer]:
+                  - /url: /events/u1766
+                  - img "Flyer for Udjcjdj" [ref=f5e231]
+                - generic [ref=f5e233]:
+                  - generic [ref=f5e234]:
+                    - link "Udjcjdj" [ref=f5e235] [cursor=pointer]:
+                      - /url: /events/u1766
+                    - button [ref=f5e237] [cursor=pointer]:
+                      - img "Event options" [ref=f5e238]
+                  - generic [ref=f5e239]:
+                    - paragraph [ref=f5e244]: Nkawie
+                    - generic [ref=f5e245]:
+                      - generic [ref=f5e246]: Fri, 21st Aug 2026
+                      - generic [ref=f5e251]: 08:00 AM - 08:00 PM
+                    - generic [ref=f5e256]:
+                      - generic [ref=f5e257]:
+                        - generic [ref=f5e258]: 10 spots
+                        - generic [ref=f5e259]: 0 attending
+                      - generic [ref=f5e260]: GHS 200
+    - generic [ref=f5e261]:
+      - generic [ref=f5e262]:
+        - link [ref=f5e263] [cursor=pointer]:
+          - /url: "#"
+          - img "Facebook" [ref=f5e264]
+        - link [ref=f5e265] [cursor=pointer]:
+          - /url: "#"
+          - img "Twitter" [ref=f5e266]
+        - link [ref=f5e267] [cursor=pointer]:
+          - /url: "#"
+          - img "Instagram" [ref=f5e268]
+        - link [ref=f5e269] [cursor=pointer]:
+          - /url: "#"
+          - img "LinkedIn" [ref=f5e270]
+        - link [ref=f5e271] [cursor=pointer]:
+          - /url: "#"
+          - img "TikTok" [ref=f5e272]
+      - separator [ref=f5e273]
+      - generic [ref=f5e274]:
+        - generic [ref=f5e275]:
+          - img "Copyright" [ref=f5e276]
+          - paragraph [ref=f5e277]: 2025 Abonten App
+        - generic [ref=f5e278]:
+          - link "Terms & Conditions" [ref=f5e279] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=f5e280] [cursor=pointer]:
+            - /url: "#"
+          - link "Cookies" [ref=f5e281] [cursor=pointer]:
+            - /url: "#"
+          - link "Security" [ref=f5e282] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=f5e288] [cursor=pointer]:
+    - generic [ref=f5e291]:
+      - text: Rendering
+      - generic [ref=f5e292]:
+        - generic [ref=f5e293]: .
+        - generic [ref=f5e294]: .
+        - generic [ref=f5e295]: .
+  - alert [ref=f5e296]

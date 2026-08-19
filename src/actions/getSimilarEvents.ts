@@ -27,5 +27,21 @@ export async function getSimilarEvents(
     };
   }
 
-  return { status: 200, similarEvents: similarEvents };
+  // get_similar_events returns ticket_price/ticket_currency, unlike
+  // get_filtered_events/get_nearby_events which return min_price/currency —
+  // EventCard (via EventsSlider) only reads the latter names, so without
+  // this mapping every similar-event card's price badge renders
+  // "undefined undefined" instead of "Free Entry" / the actual price.
+  const mappedSimilarEvents = (similarEvents ?? []).map(
+    (event: {
+      ticket_price: number | null;
+      ticket_currency: string | null;
+    }) => ({
+      ...event,
+      min_price: event.ticket_price,
+      currency: event.ticket_currency,
+    }),
+  );
+
+  return { status: 200, similarEvents: mappedSimilarEvents };
 }

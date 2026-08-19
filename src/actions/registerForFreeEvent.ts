@@ -71,13 +71,24 @@ export default async function registerForFreeEvent(
 
   const { data: event, error: eventFetchError } = await supabase
     .from("event")
-    .select("starts_at, ends_at, event_occurrence(id, starts_at, ends_at)")
+    .select(
+      "status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+    )
     .eq("id", eventId)
     .maybeSingle();
 
   if (eventFetchError || !event) {
     console.log(`Failed fetching event: ${eventFetchError?.message}`);
     return { status: 500, message: "Something went wrong" };
+  }
+
+  // The client's copy of event status can be stale (ISR-cached event details
+  // page) — never trust it for this decision, re-check the live row.
+  if (event.status !== "published") {
+    return {
+      status: 409,
+      message: "This event is no longer accepting RSVPs.",
+    };
   }
 
   const eventEndDate = resolveEventEndDate(
@@ -89,6 +100,10 @@ export default async function registerForFreeEvent(
   if (!eventEndDate) {
     console.log(`Event ${eventId} has no resolvable start/end date`);
     return { status: 500, message: "This event has no scheduled date" };
+  }
+
+  if (eventEndDate < new Date()) {
+    return { status: 409, message: "This event has ended." };
   }
 
   // occurrenceId is client-supplied and now affects a DB write, so verify it

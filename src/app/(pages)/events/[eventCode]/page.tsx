@@ -72,7 +72,15 @@ export default async function page({
   const event_dates =
     event.event_occurrence.length > 0
       ? event.event_occurrence
-      : [{ starts_at: event.starts_at, ends_at: event.ends_at }];
+      : // Single-date events have no event_occurrence rows — synthesize one
+        // pseudo-occurrence from the event's own dates. Deliberately no
+        // `id`: this array's occurrence "id" flows downstream as the
+        // occurrenceId sent to registerForFreeEvent/validateCheckout, which
+        // validate it against the event's real event_occurrence rows — a
+        // fabricated id here would fail that check with "Invalid event
+        // date". EventDateSelector falls back to the array index for its
+        // list key instead of relying on this id.
+        [{ starts_at: event.starts_at, ends_at: event.ends_at }];
 
   const safeLocation = event.address.full_address ?? "";
 
@@ -136,6 +144,14 @@ export default async function page({
   );
 
   const tags = parseEventTypes(event.event_type);
+
+  // Mutually exclusive at creation time (postEvent.ts either creates one
+  // "FREE" ticket_type or only paid ones, and updateEvent.ts never touches
+  // ticket_type afterwards) — so "every ticket_type is free" is a safe,
+  // permanent definition rather than just checking the cheapest one.
+  const isAbsolutelyFreeEvent =
+    event.ticket_type.length > 0 &&
+    event.ticket_type.every((t: { price: number }) => t.price === 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -324,9 +340,10 @@ export default async function page({
                 eventId={event.id}
                 time={eventDateAndTime.time}
                 eventTitle={event.title}
-                minTicket={minTicket}
                 requireRegistration={event.require_registration}
                 soldOut={soldOut}
+                isAbsolutelyFreeEvent={isAbsolutelyFreeEvent}
+                eventStatus={event.status}
               />
             </div>
           </div>

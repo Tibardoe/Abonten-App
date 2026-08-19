@@ -1,15 +1,11 @@
 "use client";
 
 import { getTickets } from "@/actions/getTickets";
-import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
-import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
 import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import CheckoutModal from "../organisms/CheckoutModal";
 import { Button } from "../ui/button";
-import Notification from "./Notification";
 
 type EventSlugPageProp = {
   eventId: string;
@@ -18,7 +14,6 @@ type EventSlugPageProp = {
   eventTitle: string;
   date: string;
   time: string;
-  requireRegistration?: boolean;
   soldOut?: boolean;
 };
 
@@ -29,24 +24,17 @@ export default function CheckoutBtn({
   eventTitle,
   date,
   time,
-  requireRegistration,
   soldOut,
 }: EventSlugPageProp) {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
-  const [notification, setNotification] = useState<string | null>(null);
-
-  const [loading, setLoading] = useState(false);
-
   const requireAuth = useRequireAuth();
+
+  const queryClient = useQueryClient();
 
   const handleCheckoutModal = (state: boolean) => {
     setShowCheckoutModal(state);
   };
-
-  const router = useRouter();
-
-  const queryClient = useQueryClient();
 
   // Warm the same query CheckoutModal uses, so by the time a user actually
   // clicks "Buy Ticket" the modal usually opens with data already cached
@@ -59,125 +47,36 @@ export default function CheckoutBtn({
     });
   };
 
-  const handleResponse = async (response: {
-    status: number;
-    message?: string;
-  }) => {
-    if (
-      response?.status !== 200 &&
-      response.message === "Ticket for this event already bought"
-    ) {
-      setNotification(response?.message ?? "Something ocurred");
-      router.push("/manage/my-events");
-
-      setLoading(false);
-      return;
-    }
-
-    if (response.status !== 200 && response.message) {
-      setNotification(response.message);
-      setLoading(false);
-
-      return;
-    }
-
-    if (response.status === 200 && response.message) {
-      setNotification(response.message);
-
-      // The organizer's own attendance list/dashboard (if open elsewhere in
-      // this session) depends on this new registration too.
-      invalidateTicketStatusQueries(queryClient);
-
-      setLoading(false);
-      router.push("/manage/my-events");
-    }
-  };
-
-  const handleFreeRegistration = async () => {
-    if (!(await requireAuth())) return;
-
-    setLoading(true);
-
-    const response = await registerForFreeEvent(eventId, occurrenceId);
-
-    await handleResponse(response);
-  };
-
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => {
-        setNotification(null);
-      }, 3000); // 3 seconds
-
-      return () => clearTimeout(timer); // Cleanup
-    }
-  }, [notification]);
-
-  let actionButton: React.ReactNode = null;
-
-  switch (btnText) {
-    case "Buy Ticket":
-      actionButton = soldOut ? (
-        <Button
-          className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
-          disabled
-        >
-          Sold Out
-        </Button>
-      ) : (
-        <>
-          <Button
-            className="font-bold rounded-lg w-full p-6 text-lg"
-            onClick={async () => {
-              if (await requireAuth()) handleCheckoutModal(true);
-            }}
-            onPointerEnter={prefetchTickets}
-            onFocus={prefetchTickets}
-          >
-            {btnText}
-          </Button>
-          {showCheckoutModal && (
-            <CheckoutModal
-              handleCheckoutModal={handleCheckoutModal}
-              eventId={eventId}
-              occurrenceId={occurrenceId}
-              btnText={btnText}
-              eventTitle={eventTitle}
-              date={date}
-              time={time}
-            />
-          )}
-        </>
-      );
-      break;
-
-    case "Register":
-      actionButton =
-        requireRegistration && soldOut ? (
-          <Button
-            className="font-bold rounded-md w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
-            disabled
-          >
-            Sold Out
-          </Button>
-        ) : (
-          requireRegistration && (
-            <Button
-              className="font-bold rounded-md w-full p-6 text-lg"
-              onClick={handleFreeRegistration}
-              disabled={loading}
-            >
-              {loading ? "Registering..." : btnText}
-            </Button>
-          )
-        );
-      break;
-  }
-
-  return (
+  return soldOut ? (
+    <Button
+      className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
+      disabled
+    >
+      Sold Out
+    </Button>
+  ) : (
     <>
-      {actionButton}
-      {notification && <Notification notification={notification} />}
+      <Button
+        className="font-bold rounded-lg w-full p-6 text-lg"
+        onClick={async () => {
+          if (await requireAuth()) handleCheckoutModal(true);
+        }}
+        onPointerEnter={prefetchTickets}
+        onFocus={prefetchTickets}
+      >
+        {btnText}
+      </Button>
+      {showCheckoutModal && (
+        <CheckoutModal
+          handleCheckoutModal={handleCheckoutModal}
+          eventId={eventId}
+          occurrenceId={occurrenceId}
+          btnText={btnText}
+          eventTitle={eventTitle}
+          date={date}
+          time={time}
+        />
+      )}
     </>
   );
 }

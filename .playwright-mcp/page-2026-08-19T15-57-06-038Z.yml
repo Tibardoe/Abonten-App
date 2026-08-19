@@ -1,0 +1,50 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - navigation [ref=e3]:
+      - link [ref=e6] [cursor=pointer]:
+        - /url: /events/location
+        - img "Abonten Logo" [ref=e7]
+    - main [ref=e13]:
+      - generic [ref=e14]:
+        - generic [ref=e15]:
+          - button [ref=e16] [cursor=pointer]:
+            - paragraph [ref=e20]: Unknown Location
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - link [ref=e23] [cursor=pointer]:
+                - /url: /search
+              - textbox "Explore events" [ref=e26]
+            - button [ref=e27] [cursor=pointer]
+        - generic [ref=e30]: No address set
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - link [ref=e33] [cursor=pointer]:
+          - /url: "#"
+          - img "Facebook" [ref=e34]
+        - link [ref=e35] [cursor=pointer]:
+          - /url: "#"
+          - img "Twitter" [ref=e36]
+        - link [ref=e37] [cursor=pointer]:
+          - /url: "#"
+          - img "Instagram" [ref=e38]
+        - link [ref=e39] [cursor=pointer]:
+          - /url: "#"
+          - img "LinkedIn" [ref=e40]
+        - link [ref=e41] [cursor=pointer]:
+          - /url: "#"
+          - img "TikTok" [ref=e42]
+      - separator [ref=e43]
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - img "Copyright" [ref=e46]
+          - paragraph [ref=e47]: 2025 Abonten App
+        - generic [ref=e48]:
+          - link "Terms & Conditions" [ref=e49] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=e50] [cursor=pointer]:
+            - /url: "#"
+          - link "Cookies" [ref=e51] [cursor=pointer]:
+            - /url: "#"
+          - link "Security" [ref=e52] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=e58] [cursor=pointer]

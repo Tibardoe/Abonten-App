@@ -1,0 +1,61 @@
+- generic [active] [ref=f4e1]:
+  - main [ref=f4e2]:
+    - navigation [ref=f4e3]:
+      - generic [ref=f4e4]:
+        - link [ref=f4e6] [cursor=pointer]:
+          - /url: /events/location
+          - img "Abonten Logo" [ref=f4e7]
+        - generic [ref=f4e8]:
+          - link "Manage Attendance" [ref=f4e9] [cursor=pointer]:
+            - /url: /manage/attendance/event-list
+          - link "My Events" [ref=f4e13] [cursor=pointer]:
+            - /url: /manage/my-events
+          - link "Drafts" [ref=f4e16] [cursor=pointer]:
+            - /url: /manage/drafts
+          - button "Post" [ref=f4e20] [cursor=pointer]
+          - button "Sign Out" [ref=f4e24] [cursor=pointer]
+    - main [ref=f4e27]:
+      - list [ref=f4e76]:
+        - listitem [ref=f4e77]
+        - listitem [ref=f4e93]
+        - listitem [ref=f4e109]
+        - listitem [ref=f4e125]
+    - generic [ref=f4e141]:
+      - generic [ref=f4e142]:
+        - link [ref=f4e143] [cursor=pointer]:
+          - /url: "#"
+          - img "Facebook" [ref=f4e144]
+        - link [ref=f4e145] [cursor=pointer]:
+          - /url: "#"
+          - img "Twitter" [ref=f4e146]
+        - link [ref=f4e147] [cursor=pointer]:
+          - /url: "#"
+          - img "Instagram" [ref=f4e148]
+        - link [ref=f4e149] [cursor=pointer]:
+          - /url: "#"
+          - img "LinkedIn" [ref=f4e150]
+        - link [ref=f4e151] [cursor=pointer]:
+          - /url: "#"
+          - img "TikTok" [ref=f4e152]
+      - separator [ref=f4e153]
+      - generic [ref=f4e154]:
+        - generic [ref=f4e155]:
+          - img "Copyright" [ref=f4e156]
+          - paragraph [ref=f4e157]: 2025 Abonten App
+        - generic [ref=f4e158]:
+          - link "Terms & Conditions" [ref=f4e159] [cursor=pointer]:
+            - /url: "#"
+          - link "Privacy" [ref=f4e160] [cursor=pointer]:
+            - /url: "#"
+          - link "Cookies" [ref=f4e161] [cursor=pointer]:
+            - /url: "#"
+          - link "Security" [ref=f4e162] [cursor=pointer]:
+            - /url: "#"
+  - button "Open Next.js Dev Tools" [ref=f4e168] [cursor=pointer]:
+    - generic [ref=f4e171]:
+      - text: Rendering
+      - generic [ref=f4e172]:
+        - generic [ref=f4e173]: .
+        - generic [ref=f4e174]: .
+        - generic [ref=f4e175]: .
+  - alert [ref=f4e176]
