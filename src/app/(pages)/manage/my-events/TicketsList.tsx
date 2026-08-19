@@ -7,10 +7,15 @@ import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { generateSlug } from "@/utils/geerateSlug";
+import { getRefundStatusLabel } from "@/utils/refundStatus";
 import Image from "next/image";
 import Link from "next/link";
 
 function TicketCard({ event }: { event: UserTicketType }) {
+  const refundBadge =
+    event.status === "cancelled" && event.transaction
+      ? getRefundStatusLabel(event.transaction.status)
+      : null;
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
       <div className="relative h-48 w-full">
@@ -48,7 +53,9 @@ function TicketCard({ event }: { event: UserTicketType }) {
           Ticket Code:{" "}
           <span className="font-mono text-foreground">{event.ticket_code}</span>
         </p>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p
+          className={`text-sm text-muted-foreground ${refundBadge ? "mb-1" : "mb-4"}`}
+        >
           Status:{" "}
           {event.status === "active" ? (
             <span className="font-semibold text-green-600">{event.status}</span>
@@ -56,6 +63,12 @@ function TicketCard({ event }: { event: UserTicketType }) {
             <span className="font-semibold text-red-600">{event.status}</span>
           )}
         </p>
+
+        {refundBadge && (
+          <p className={`text-sm mb-4 font-semibold ${refundBadge.className}`}>
+            {refundBadge.label}
+          </p>
+        )}
 
         <div className="flex justify-between gap-2">
           <ViewTicketBtn event={event} />

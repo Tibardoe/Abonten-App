@@ -26,6 +26,7 @@ export type UserTicketType = {
   id: string;
   user_id: string;
   transaction_id: string | null;
+  transaction: { status: string } | null;
   seat_number: string | null;
   status: "active" | "cancelled" | string;
   qr_public_id: string;

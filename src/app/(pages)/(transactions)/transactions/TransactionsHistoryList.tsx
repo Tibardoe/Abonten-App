@@ -8,7 +8,38 @@ import InfiniteList from "@/components/organisms/InfiniteList";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTransactionRow } from "@/types/transactions";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { getRefundStatusLabel } from "@/utils/refundStatus";
 import Link from "next/link";
+
+// Only meaningful for ticket rows with at least one cancelled ticket —
+// summarizes "N of M cancelled" plus the refund outcome for those, without
+// implying the whole purchase is cancelled when quantity>1 and only some
+// units were.
+function getRefundSummary(item: UserTransactionRow) {
+  if (
+    item.kind !== "ticket" ||
+    !item.cancelled_quantity ||
+    item.cancelled_quantity <= 0
+  ) {
+    return null;
+  }
+
+  const isFullyCancelled = item.cancelled_quantity === item.quantity;
+  const badge = item.refund_status
+    ? getRefundStatusLabel(item.refund_status)
+    : null;
+
+  const parts = [
+    !isFullyCancelled && item.quantity
+      ? `${item.cancelled_quantity} of ${item.quantity} cancelled`
+      : null,
+    badge?.label ?? null,
+  ].filter(Boolean);
+
+  if (parts.length === 0) return null;
+
+  return { text: parts.join(" · "), className: badge?.className };
+}
 
 function TransactionsListSkeleton() {
   return (
@@ -46,6 +77,7 @@ export default function TransactionsHistoryList({
         const title =
           item.title ??
           (item.kind === "subscription" ? "Subscription" : "Ticket Purchase");
+        const refundSummary = getRefundSummary(item);
 
         return (
           <Link
@@ -64,6 +96,13 @@ export default function TransactionsHistoryList({
                 </p>
               )}
               <p className="text-sm text-muted-foreground">{date}</p>
+              {refundSummary && (
+                <p
+                  className={`text-xs font-semibold ${refundSummary.className ?? "text-muted-foreground"}`}
+                >
+                  {refundSummary.text}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-2 md:gap-3 font-bold">

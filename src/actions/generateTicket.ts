@@ -228,6 +228,7 @@ export default async function generateTicket(
         uploadResults.map(({ ticketCode, uploadResponse }) => ({
           user_id: userId,
           ticket_type_id: row.ticket_type_id,
+          ticket_checkout_id: row.id,
           qr_public_id: uploadResponse.public_id,
           qr_version: uploadResponse.version,
           expires_at: eventEndDate,

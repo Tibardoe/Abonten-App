@@ -30,7 +30,9 @@ export async function getUserTransactionDetail(
   if (kind === "ticket") {
     const { data, error } = await supabase
       .from("ticket_checkout")
-      .select("*, event(title), ticket_type(type, currency)")
+      .select(
+        "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(status))",
+      )
       .eq("id", id)
       .eq("user_id", user.user.id)
       .maybeSingle();

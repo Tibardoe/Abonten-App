@@ -1,8 +1,24 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import type { PaystackWebhookEvent } from "@/types/paystackType";
+import type {
+  PaystackRefundWebhookData,
+  PaystackWebhookEvent,
+} from "@/types/paystackType";
 import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
 import { NextResponse } from "next/server";
+
+// Checked in the order community-documented Paystack integrations use this
+// field across API versions — see PaystackRefundWebhookData's comment.
+function extractRefundReference(
+  data: PaystackRefundWebhookData,
+): string | null {
+  return (
+    data.transaction_reference ??
+    data.transaction?.reference ??
+    data.reference ??
+    null
+  );
+}
 
 /**
  * Authoritative Paystack payment confirmation path — the frontend's
@@ -54,6 +70,56 @@ export async function POST(req: Request) {
     }
 
     const event = JSON.parse(rawBody) as PaystackWebhookEvent;
+
+    if (event.event === "refund.processed" || event.event === "refund.failed") {
+      const refundData = event.data as unknown as PaystackRefundWebhookData;
+      const reference = extractRefundReference(refundData);
+
+      if (!reference) {
+        console.warn(
+          `Paystack webhook: ${event.event} had no resolvable transaction reference`,
+          refundData,
+        );
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+
+      const supabase = getSupabaseServiceClient();
+      // A failed refund leaves the underlying payment exactly as it was —
+      // still `successful` — not a new "failed" state; the customer's
+      // ticket stays cancelled regardless (cancelUserTicket.ts never
+      // reverses that), so this is logged for manual follow-up rather than
+      // resurrecting the ticket automatically.
+      const newStatus =
+        event.event === "refund.processed" ? "refunded" : "successful";
+
+      // Only transitions a transaction that's actually awaiting this
+      // confirmation — a retried webhook delivery, or one that arrives after
+      // this was already resolved another way, is a no-op rather than
+      // clobbering a later state.
+      const { data: updated, error: updateError } = await supabase
+        .from("transaction")
+        .update({ status: newStatus, updated_at: new Date() })
+        .eq("paystack_reference", reference)
+        .eq("status", "refund_pending")
+        .select("id")
+        .maybeSingle();
+
+      if (updateError) {
+        console.error(
+          `Paystack webhook: failed updating transaction for ${event.event} (${updateError.message})`,
+        );
+      } else if (!updated) {
+        console.log(
+          `Paystack webhook: ${event.event} for reference ${reference} — no matching refund_pending transaction`,
+        );
+      } else {
+        console.log(
+          `Paystack webhook: transaction ${updated.id} -> ${newStatus} via ${event.event}`,
+        );
+      }
+
+      return NextResponse.json({ received: true }, { status: 200 });
+    }
 
     if (event.event !== "charge.success") {
       // Acknowledge and ignore other event types so Paystack doesn't keep

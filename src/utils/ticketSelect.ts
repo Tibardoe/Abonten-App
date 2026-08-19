@@ -6,6 +6,7 @@
  */
 export const TICKET_WITH_EVENT_SELECT = `
   *,
+  transaction:transaction_id ( status ),
   ticket_type:ticket_type_id (
     *,
     event:event_id (

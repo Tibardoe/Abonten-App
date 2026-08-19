@@ -35,4 +35,10 @@ export interface UserTransactionRow {
   subtitle: string | null;
   quantity: number | null;
   reference: string;
+  // Ticket rows only — how many of `quantity` tickets from this checkout
+  // line are cancelled, and the linked transaction's status for those
+  // (every ticket from one checkout line always shares one transaction —
+  // see generateTicket.ts). Always null for subscription rows.
+  cancelled_quantity: number | null;
+  refund_status: string | null;
 }

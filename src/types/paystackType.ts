@@ -101,6 +101,23 @@ export type PaystackChargeResponse = {
   };
 };
 
+// Shape of the refund.processed / refund.failed webhook events. Paystack's
+// official docs are unreachable from this environment (403), and community
+// sources disagree on whether the transaction reference is a flat
+// `transaction_reference` field or nested under `transaction.reference` —
+// every field here is optional so the webhook handler can check all of them
+// defensively instead of assuming one and silently missing refund
+// confirmations if the assumption is wrong.
+export type PaystackRefundWebhookData = {
+  id?: number;
+  status?: string;
+  amount?: number;
+  currency?: string;
+  reference?: string;
+  transaction_reference?: string;
+  transaction?: { reference?: string } | null;
+};
+
 export type PaystackBank = {
   name: string;
   code: string;

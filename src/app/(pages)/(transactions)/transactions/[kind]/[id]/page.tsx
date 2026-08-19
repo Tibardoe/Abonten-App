@@ -4,6 +4,7 @@ import TransactionStatusIcon, {
 } from "@/components/atoms/TransactionStatusIcon";
 import type { TransactionKind, TransactionStatus } from "@/types/transactions";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { getRefundStatusLabel } from "@/utils/refundStatus";
 import { notFound } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -56,6 +57,10 @@ export default async function Page({
             checkout_session_id: string | null;
             event: { title: string } | null;
             ticket_type: { type: string; currency: string | null } | null;
+            tickets: {
+              status: string;
+              transaction: { status: string } | null;
+            }[];
           }
         | {
             kind: "subscription";
@@ -70,6 +75,17 @@ export default async function Page({
 
   const currency =
     row.kind === "ticket" ? (row.ticket_type?.currency ?? "GHS") : "GHS";
+  const cancelledTickets =
+    row.kind === "ticket"
+      ? row.tickets.filter((t) => t.status === "cancelled")
+      : [];
+  // Every ticket from one checkout line shares the same transaction (see
+  // generateTicket.ts), so the first cancelled ticket's refund status
+  // speaks for all of them.
+  const refundBadge =
+    cancelledTickets.length > 0 && cancelledTickets[0].transaction
+      ? getRefundStatusLabel(cancelledTickets[0].transaction.status)
+      : null;
   const { label: statusLabel } = getTransactionStatusMeta(row.status);
   const contextualDate =
     row.status === "paid"
@@ -137,6 +153,22 @@ export default async function Page({
               label="Order Reference"
               value={row.checkout_session_id ?? id}
             />
+            {cancelledTickets.length > 0 && (
+              <DetailRow
+                label="Cancelled"
+                value={`${cancelledTickets.length} of ${row.quantity}`}
+              />
+            )}
+            {refundBadge && (
+              <DetailRow
+                label="Refund"
+                value={
+                  <span className={refundBadge.className}>
+                    {refundBadge.label}
+                  </span>
+                }
+              />
+            )}
           </>
         ) : (
           <>

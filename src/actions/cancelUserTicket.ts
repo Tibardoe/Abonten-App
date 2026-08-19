@@ -8,6 +8,7 @@ import issueRefund from "./issueRefund";
 
 type TicketRow = {
   ticket_type_id: string;
+  ticket_checkout_id: string | null;
   ticket_type: { event_id: string } | null;
 };
 
@@ -28,7 +29,9 @@ export default async function cancelUserTicket(
 
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
-    .select("ticket_type_id, ticket_type:ticket_type_id(event_id)")
+    .select(
+      "ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id(event_id)",
+    )
     .eq("id", ticketId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -41,6 +44,8 @@ export default async function cancelUserTicket(
   const ticket = rawTicket as unknown as TicketRow;
   const ticketTypeId = ticket.ticket_type_id;
   const eventId = ticket.ticket_type?.event_id;
+
+  let refundMessage: string | null = null;
 
   if (transactionId) {
     const { data: transaction, error: transactionError } = await supabase
@@ -61,6 +66,8 @@ export default async function cancelUserTicket(
 
       if (response.status !== 200) {
         console.log(response.message);
+      } else {
+        refundMessage = response.message;
       }
     }
   }
@@ -95,6 +102,13 @@ export default async function cancelUserTicket(
     return { status: 500, message: "Something went wrong!" };
   }
 
+  if (ticket.ticket_checkout_id) {
+    await markCheckoutCancelledIfAllTicketsCancelled(
+      supabase,
+      ticket.ticket_checkout_id,
+    );
+  }
+
   await releaseTicketQuantity(ticketTypeId, 1);
 
   // A promo code should only count as "used" while the purchase it was
@@ -114,8 +128,55 @@ export default async function cancelUserTicket(
   revalidatePath("/manage/my-events");
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
+  revalidatePath("/transactions");
 
-  return { status: 200, message: "Ticket cancelled successfully" };
+  return {
+    status: 200,
+    message: refundMessage
+      ? `Ticket cancelled. ${refundMessage}.`
+      : "Ticket cancelled successfully",
+  };
+}
+
+// A ticket_checkout row can cover multiple tickets (quantity > 1) — only
+// flip its status to 'cancelled' once every ticket it produced is
+// cancelled, so /transactions doesn't show a whole purchase as cancelled
+// when only some of its tickets actually are. Partial cancellations are
+// left as 'paid' and reflected instead via get_user_transaction_history's
+// cancelled_quantity/refund_status columns.
+async function markCheckoutCancelledIfAllTicketsCancelled(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ticketCheckoutId: string,
+) {
+  const { data: siblingTickets, error: siblingTicketsError } = await supabase
+    .from("ticket")
+    .select("status")
+    .eq("ticket_checkout_id", ticketCheckoutId);
+
+  if (siblingTicketsError) {
+    console.log(
+      `Failed checking sibling tickets for checkout ${ticketCheckoutId}: ${siblingTicketsError.message}`,
+    );
+    return;
+  }
+
+  const allCancelled = (siblingTickets ?? []).every(
+    (t) => t.status === "cancelled",
+  );
+
+  if (!allCancelled) return;
+
+  const { error: checkoutUpdateError } = await supabase
+    .from("ticket_checkout")
+    .update({ status: "cancelled" })
+    .eq("id", ticketCheckoutId)
+    .eq("status", "paid");
+
+  if (checkoutUpdateError) {
+    console.log(
+      `Failed marking checkout ${ticketCheckoutId} cancelled: ${checkoutUpdateError.message}`,
+    );
+  }
 }
 
 async function releasePromoUsageIfEventFullyCancelled(

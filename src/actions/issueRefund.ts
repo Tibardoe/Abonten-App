@@ -40,6 +40,13 @@ export default async function issueRefund(transactionId: string) {
     return { status: 200, message: "This payment was already refunded" };
   }
 
+  if (transaction.status === "refund_pending") {
+    return {
+      status: 200,
+      message: "Your refund is already being processed by Paystack",
+    };
+  }
+
   if (transaction.status !== "successful") {
     return {
       status: 400,
@@ -61,19 +68,29 @@ export default async function issueRefund(transactionId: string) {
     };
   }
 
+  // Paystack accepting the refund request doesn't mean the refund is
+  // complete — it's asynchronous, the same way a charge is never trusted as
+  // successful just because /transaction/initialize returned. The webhook's
+  // refund.processed/refund.failed events (src/app/api/paystack/webhook/route.ts)
+  // are what actually confirm completion and move this to `refunded`.
   const { error: updateError } = await supabase
     .from("transaction")
-    .update({ status: "refunded", updated_at: new Date() })
+    .update({ status: "refund_pending", updated_at: new Date() })
     .eq("id", transaction.id);
 
   if (updateError) {
-    console.log(`Failed marking transaction refunded: ${updateError.message}`);
+    console.log(
+      `Failed marking transaction refund_pending: ${updateError.message}`,
+    );
     return {
       status: 500,
       message:
-        "Refund was processed but couldn't be recorded. Please contact support.",
+        "Refund was requested but couldn't be recorded. Please contact support.",
     };
   }
 
-  return { status: 200, message: "Refund successful" };
+  return {
+    status: 200,
+    message: "Refund requested — Paystack will confirm once it's processed",
+  };
 }
