@@ -20,6 +20,64 @@ const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// The client-side editor lets a user trim a video, but the raw file itself
+// is always uploaded unchanged -- so playback/delivery has to be the thing
+// that respects the trim. Rather than a DB schema change, this builds a
+// Cloudinary delivery URL with start_offset/end_offset baked in, so
+// media_url (already a plain text column) simply points at the trimmed
+// segment. Falls back to the untrimmed URL whenever the trim metadata is
+// missing, inconsistent, or covers the full clip -- trimming is an
+// enhancement, never something that should block a legitimate upload.
+function resolveVideoDelivery(item: HighlightUploadMetadataItem): {
+  mediaUrl: string;
+  durationSeconds: number | null;
+} {
+  const fallback = {
+    mediaUrl: item.secureUrl,
+    durationSeconds: item.durationSeconds ?? null,
+  };
+
+  if (item.resourceType !== "video") return fallback;
+
+  const {
+    trimStartSeconds: start,
+    trimEndSeconds: end,
+    durationSeconds,
+  } = item;
+
+  const trimIsValid =
+    typeof start === "number" &&
+    typeof end === "number" &&
+    Number.isFinite(start) &&
+    Number.isFinite(end) &&
+    start >= 0 &&
+    end > start &&
+    (typeof durationSeconds !== "number" || end <= durationSeconds + 0.5);
+
+  if (!trimIsValid) return fallback;
+
+  const isFullLength =
+    start <= 0.05 &&
+    typeof durationSeconds === "number" &&
+    end >= durationSeconds - 0.05;
+
+  if (isFullLength) return fallback;
+
+  const format = item.secureUrl.split(/[?#]/)[0]?.split(".").pop();
+
+  return {
+    mediaUrl: cloudinary.url(item.publicId, {
+      resource_type: "video",
+      version: item.version,
+      format,
+      start_offset: start,
+      end_offset: end,
+      secure: true,
+    }),
+    durationSeconds: end - start,
+  };
+}
+
 // The video bytes themselves never reach this action -- they go straight
 // from the browser to Cloudinary (see uploadToCloudinary.ts +
 // getHighlightUploadSignature.ts). This only ever receives small JSON
@@ -88,13 +146,14 @@ export default async function uploadHighlight(
             })
           : null;
 
+      const { mediaUrl, durationSeconds } = resolveVideoDelivery(item);
+
       const { error: dbError } = await supabase.from("highlight").insert({
         user_id: user.id,
-        media_url: item.secureUrl,
+        media_url: mediaUrl,
         media_type: item.resourceType,
         thumbnail_url: thumbnailUrl,
-        media_duration:
-          item.resourceType === "video" ? item.durationSeconds : null,
+        media_duration: item.resourceType === "video" ? durationSeconds : null,
         group_id: groupId,
         public_id: item.publicId,
       });

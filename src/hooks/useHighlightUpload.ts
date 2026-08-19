@@ -95,6 +95,12 @@ export function useHighlightUpload(username: string) {
               resourceType: cloudinaryResult.resource_type,
               bytes: cloudinaryResult.bytes,
               durationSeconds: cloudinaryResult.duration ?? null,
+              trimStartSeconds:
+                mediaItem.type === "video"
+                  ? (mediaItem.startTime ?? null)
+                  : null,
+              trimEndSeconds:
+                mediaItem.type === "video" ? (mediaItem.endTime ?? null) : null,
             },
           ],
           groupId,

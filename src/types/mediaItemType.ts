@@ -1,4 +1,5 @@
 export type MediaItem = {
+  id: string; // Stable client-side identity -- never use array index for CRUD/keying.
   url: string;
   file: File;
   type: "image" | "video";
@@ -6,4 +7,5 @@ export type MediaItem = {
   startTime?: number; // Trimmed start time
   endTime?: number; // Trimmed end time
   thumbnail?: string;
+  timelineThumbnails?: string[]; // Small frames spanning full duration, for the trim timeline background
 };
