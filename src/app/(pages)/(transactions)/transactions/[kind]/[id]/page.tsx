@@ -59,7 +59,10 @@ export default async function Page({
             ticket_type: { type: string; currency: string | null } | null;
             tickets: {
               status: string;
-              transaction: { status: string } | null;
+              transaction: {
+                status: string;
+                refund_requested_at: string | null;
+              } | null;
             }[];
           }
         | {
@@ -84,7 +87,10 @@ export default async function Page({
   // speaks for all of them.
   const refundBadge =
     cancelledTickets.length > 0 && cancelledTickets[0].transaction
-      ? getRefundStatusLabel(cancelledTickets[0].transaction.status)
+      ? getRefundStatusLabel(
+          cancelledTickets[0].transaction.status,
+          cancelledTickets[0].transaction.refund_requested_at,
+        )
       : null;
   const { label: statusLabel } = getTransactionStatusMeta(row.status);
   const contextualDate =

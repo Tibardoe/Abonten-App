@@ -45,7 +45,20 @@ export default async function cancelUserTicket(
   const ticketTypeId = ticket.ticket_type_id;
   const eventId = ticket.ticket_type?.event_id;
 
+  const { error: updateStatusError } = await supabase
+    .from("ticket")
+    .update({ status: "cancelled", updated_at: new Date() })
+    .eq("id", ticketId)
+    .eq("user_id", user.id);
+
+  if (updateStatusError) {
+    console.log(`Error updating ticket status:${updateStatusError.message}`);
+
+    return { status: 500, message: "Something went wrong!" };
+  }
+
   let refundMessage: string | null = null;
+  let refundDeferred = false;
 
   if (transactionId) {
     const { data: transaction, error: transactionError } = await supabase
@@ -62,26 +75,34 @@ export default async function cancelUserTicket(
     }
 
     if (transaction.amount > 0) {
-      const response = await issueRefund(transaction.id);
+      // A single Paystack charge (transaction) can cover multiple tickets —
+      // every ticket, quantity, and even every event in a multi-checkout
+      // group shares one transaction_id (see generateTicket.ts) — and this
+      // integration's refund call has no partial-amount option (see
+      // paystackService.refundTransaction), so it always refunds the WHOLE
+      // transaction. Requesting it here unconditionally would refund the
+      // entire order's payment while sibling tickets from the same order are
+      // still active and unrefunded-looking. Instead, only request the
+      // refund once THIS cancellation makes every ticket sharing this
+      // transaction cancelled — mirroring how markCheckoutCancelledIfAllTicketsCancelled
+      // already gates ticket_checkout.status the same way, one level up.
+      const allCancelled = await areAllTicketsForTransactionCancelled(
+        supabase,
+        transaction.id,
+      );
 
-      if (response.status !== 200) {
-        console.log(response.message);
+      if (allCancelled) {
+        const response = await issueRefund(transaction.id);
+
+        if (response.status !== 200) {
+          console.log(response.message);
+        } else {
+          refundMessage = response.message;
+        }
       } else {
-        refundMessage = response.message;
+        refundDeferred = true;
       }
     }
-  }
-
-  const { error: updateStatusError } = await supabase
-    .from("ticket")
-    .update({ status: "cancelled", updated_at: new Date() })
-    .eq("id", ticketId)
-    .eq("user_id", user.id);
-
-  if (updateStatusError) {
-    console.log(`Error updating ticket status:${updateStatusError.message}`);
-
-    return { status: 500, message: "Something went wrong!" };
   }
 
   // State-based, not a delete: the attendance row for this exact ticket
@@ -134,8 +155,36 @@ export default async function cancelUserTicket(
     status: 200,
     message: refundMessage
       ? `Ticket cancelled. ${refundMessage}.`
-      : "Ticket cancelled successfully",
+      : refundDeferred
+        ? "Ticket cancelled. The refund for this order will be requested once every ticket in it is cancelled."
+        : "Ticket cancelled successfully",
   };
+}
+
+// Checks whether every ticket sharing this transaction (across every
+// checkout line and, for a multi-event checkout, every event it covers) is
+// now cancelled — the gate for actually requesting a refund, since Paystack
+// refunds this integration issues are always for the transaction's full
+// amount, never a per-ticket partial amount.
+async function areAllTicketsForTransactionCancelled(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  transactionId: string,
+) {
+  const { data: siblingTickets, error: siblingTicketsError } = await supabase
+    .from("ticket")
+    .select("status")
+    .eq("transaction_id", transactionId);
+
+  if (siblingTicketsError) {
+    console.log(
+      `Failed checking sibling tickets for transaction ${transactionId}: ${siblingTicketsError.message}`,
+    );
+    // Fail closed: if this can't be verified, don't risk refunding a still-
+    // partly-active order.
+    return false;
+  }
+
+  return (siblingTickets ?? []).every((t) => t.status === "cancelled");
 }
 
 // A ticket_checkout row can cover multiple tickets (quantity > 1) — only

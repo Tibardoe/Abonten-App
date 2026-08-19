@@ -26,7 +26,7 @@ function getRefundSummary(item: UserTransactionRow) {
 
   const isFullyCancelled = item.cancelled_quantity === item.quantity;
   const badge = item.refund_status
-    ? getRefundStatusLabel(item.refund_status)
+    ? getRefundStatusLabel(item.refund_status, item.refund_requested_at)
     : null;
 
   const parts = [

@@ -1,67 +1,74 @@
 export const dynamic = "force-dynamic";
 
+import getMyEventsTabCounts from "@/actions/getMyEventsTabCounts";
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
-import TicketsList from "./TicketsList";
+import getUserTicketRefunds from "@/actions/getUserTicketRefunds";
+import type { PaginatedResult } from "@/types/pagination";
+import type { UserTicketType } from "@/types/ticketType";
+import MyEventsTabs from "./MyEventsTabs";
+import { isMyEventsTab } from "./myEventsTab";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-const noActiveTicketsState = (
-  <p className="text-center text-muted-foreground">
-    No event ticket purchased!
-  </p>
-);
+async function fetchActivePage(cursor: string | null) {
+  "use server";
+  return getUserAttendingEvents({ status: "active", cursor });
+}
 
-const noCancelledTicketsState = (
-  <p className="text-center text-muted-foreground text-sm">
-    No cancelled tickets.
-  </p>
-);
+async function fetchCancelledPage(cursor: string | null) {
+  "use server";
+  return getUserAttendingEvents({ status: "cancelled", cursor });
+}
 
-export default async function page() {
-  const [activeFirstPage, cancelledFirstPage] = await Promise.all([
-    getUserAttendingEvents({ status: "active" }),
-    getUserAttendingEvents({ status: "cancelled" }),
+async function fetchRefundsPage(cursor: string | null) {
+  "use server";
+  return getUserTicketRefunds({ cursor });
+}
+
+export default async function page({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab } = await searchParams;
+  const initialTab = isMyEventsTab(tab) ? tab : "active";
+
+  // Only the currently selected tab's first page is fetched server-side —
+  // the other two stay null and load lazily (via fetchPage) the first time
+  // the user actually switches to them, so a visit to /manage/my-events
+  // never pays for all three lists just to render one.
+  const [counts, selectedTabFirstPage] = await Promise.all([
+    getMyEventsTabCounts(),
+    initialTab === "active"
+      ? getUserAttendingEvents({ status: "active" })
+      : initialTab === "cancelled"
+        ? getUserAttendingEvents({ status: "cancelled" })
+        : getUserTicketRefunds(),
   ]);
 
-  async function fetchActivePage(cursor: string | null) {
-    "use server";
-    return getUserAttendingEvents({ status: "active", cursor });
-  }
-
-  async function fetchCancelledPage(cursor: string | null) {
-    "use server";
-    return getUserAttendingEvents({ status: "cancelled", cursor });
-  }
+  const activeInitialPage: PaginatedResult<UserTicketType> | null =
+    initialTab === "active" ? selectedTabFirstPage : null;
+  const cancelledInitialPage: PaginatedResult<UserTicketType> | null =
+    initialTab === "cancelled" ? selectedTabFirstPage : null;
+  const refundsInitialPage: PaginatedResult<UserTicketType> | null =
+    initialTab === "refunds" ? selectedTabFirstPage : null;
 
   return (
-    <div className="space-y-8">
-      <div className="space-y-5">
-        <h1 className="md:text-2xl font-bold">Active Tickets</h1>
+    <div className="space-y-5">
+      <h1 className="md:text-2xl font-bold">My Events</h1>
 
-        <TicketsList
-          queryKey={["attending-events", "active"]}
-          initialPage={activeFirstPage}
-          fetchPage={fetchActivePage}
-          emptyState={noActiveTicketsState}
-        />
-      </div>
-
-      <details className="space-y-5">
-        <summary className="md:text-xl font-bold cursor-pointer text-muted-foreground">
-          Cancelled
-        </summary>
-
-        <div className="mt-5">
-          <TicketsList
-            queryKey={["attending-events", "cancelled"]}
-            initialPage={cancelledFirstPage}
-            fetchPage={fetchCancelledPage}
-            emptyState={noCancelledTicketsState}
-          />
-        </div>
-      </details>
+      <MyEventsTabs
+        initialTab={initialTab}
+        initialCounts={counts.data}
+        activeInitialPage={activeInitialPage}
+        cancelledInitialPage={cancelledInitialPage}
+        refundsInitialPage={refundsInitialPage}
+        fetchActivePage={fetchActivePage}
+        fetchCancelledPage={fetchCancelledPage}
+        fetchRefundsPage={fetchRefundsPage}
+      />
     </div>
   );
 }

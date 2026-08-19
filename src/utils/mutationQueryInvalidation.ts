@@ -20,6 +20,7 @@ const EVENT_LIST_KEY_PREFIXES = [
 // the organizer dashboard's stat widgets.
 const TICKET_STATUS_KEY_PREFIXES = [
   "attending-events",
+  "attending-events-counts",
   "attendance-list",
   "organizer-dashboard",
 ];

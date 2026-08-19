@@ -31,7 +31,7 @@ export async function getUserTransactionDetail(
     const { data, error } = await supabase
       .from("ticket_checkout")
       .select(
-        "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(status))",
+        "*, event(title), ticket_type(type, currency), tickets:ticket(status, transaction:transaction_id(status, refund_requested_at))",
       )
       .eq("id", id)
       .eq("user_id", user.user.id)

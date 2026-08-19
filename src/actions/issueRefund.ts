@@ -62,6 +62,16 @@ export default async function issueRefund(transactionId: string) {
     await refundTransaction(transaction.paystack_reference);
   } catch (error) {
     console.log(`Refund failed for transaction ${transaction.id}: ${error}`);
+
+    // Still record that a request was actually made — refund_requested_at
+    // is what lets the UI tell "attempted and failed" apart from "not
+    // requested yet" for a transaction stuck at status=successful.
+    await supabase
+      .from("transaction")
+      .update({ refund_requested_at: new Date(), updated_at: new Date() })
+      .eq("id", transaction.id)
+      .is("refund_requested_at", null);
+
     return {
       status: 500,
       message: "Refund could not be processed. Please contact support.",
@@ -75,7 +85,11 @@ export default async function issueRefund(transactionId: string) {
   // are what actually confirm completion and move this to `refunded`.
   const { error: updateError } = await supabase
     .from("transaction")
-    .update({ status: "refund_pending", updated_at: new Date() })
+    .update({
+      status: "refund_pending",
+      refund_requested_at: new Date(),
+      updated_at: new Date(),
+    })
     .eq("id", transaction.id);
 
   if (updateError) {

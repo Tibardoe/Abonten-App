@@ -6,6 +6,8 @@ export default function Loading() {
     <div className="space-y-5">
       <Skeleton className="h-7 w-32" />
 
+      <Skeleton className="h-11 w-full md:w-[360px] rounded-lg" />
+
       <div className="grid md:grid-cols-3 gap-6">
         {Array.from({ length: 6 }, (_, i) => (
           <TicketCardSkeleton key={i.toLocaleString()} />

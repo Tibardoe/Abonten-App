@@ -41,4 +41,9 @@ export interface UserTransactionRow {
   // see generateTicket.ts). Always null for subscription rows.
   cancelled_quantity: number | null;
   refund_status: string | null;
+  // Set once a refund was actually requested from Paystack for the
+  // transaction behind these cancelled tickets — null means the refund is
+  // deliberately deferred until the rest of the order is cancelled, not
+  // that a request failed. See refundStatus.ts.
+  refund_requested_at: string | null;
 }

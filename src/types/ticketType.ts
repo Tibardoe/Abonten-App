@@ -26,7 +26,15 @@ export type UserTicketType = {
   id: string;
   user_id: string;
   transaction_id: string | null;
-  transaction: { status: string } | null;
+  transaction: {
+    status: string;
+    refund_requested_at: string | null;
+    // Only populated when fetched via TICKET_REFUND_SELECT (the Refunds
+    // tab) — Active/Cancelled use TICKET_WITH_EVENT_SELECT, which doesn't
+    // need these for its own display.
+    amount?: number;
+    currency?: string;
+  } | null;
   seat_number: string | null;
   status: "active" | "cancelled" | string;
   qr_public_id: string;
