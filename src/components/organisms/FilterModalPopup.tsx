@@ -15,11 +15,12 @@ import { Calendar } from "@/components/ui/calendar";
 // } from "@/components/ui/popover";
 import { distances, rating } from "@/data/distanceAndRating";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 // Date moodules
 // import { addDays, format } from "date-fns";
 // import { CalendarIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import type { DateRange } from "react-day-picker";
 import { cn } from "../lib/utils";
 import CategoryFilter from "../molecules/CategoryFilter";
@@ -28,13 +29,31 @@ import TypeFilter from "../molecules/TypeFilter";
 type FilterModalPopupProp = {
   handlePopup: (state: boolean) => void;
   className?: React.HTMLAttributes<HTMLDivElement>;
+  // Which tab this filter applies to -- the Places spec explicitly requires
+  // the filter modal to adapt to the selected tab (Category/Date/Price/
+  // Distance for Events vs. Category/Distance/Open now/Rating for Places,
+  // with irrelevant fields like Event date hidden on Places). Defaults to
+  // "events" so every existing call site keeps its current behavior.
+  contentType?: "events" | "places";
+};
+
+// Parses "Up to 5km" -> 5, "From 4.5" -> 4.5. Both arrays (src/data/
+// distanceAndRating.ts) are shared between Events and Places filtering.
+const parseLeadingNumber = (value: string): number | null => {
+  const match = value.match(/[\d.]+/);
+  return match ? Number(match[0]) : null;
 };
 
 export default function FilterModalPopup({
   handlePopup,
   className,
+  contentType = "events",
 }: FilterModalPopupProp) {
   useBodyScrollLock(true);
+
+  const params = useParams();
+  const locationSlug =
+    typeof params?.location === "string" ? params.location : "";
 
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
@@ -51,9 +70,31 @@ export default function FilterModalPopup({
 
   const [distance, setDistance] = useState("");
 
+  // Places-only filter state -- kept separate from the Events fields above
+  // (category/types) since place_category is a different lookup table and
+  // Places has no "types" concept.
+  const [placeCategoryId, setPlaceCategoryId] = useState<number | null>(null);
+
+  const [openNowOnly, setOpenNowOnly] = useState(false);
+
   const router = useRouter();
 
   const handleFilter = async () => {
+    if (contentType === "places") {
+      const query = new URLSearchParams({ tab: "places" });
+      if (placeCategoryId !== null) {
+        query.set("categoryId", String(placeCategoryId));
+      }
+      if (openNowOnly) query.set("openNow", "true");
+      const minRating = parseLeadingNumber(ratingg);
+      if (minRating !== null) query.set("rating", String(minRating));
+      const maxDistanceKm = parseLeadingNumber(distance);
+      if (maxDistanceKm !== null) query.set("distance", String(maxDistanceKm));
+
+      router.push(`/explore/${locationSlug}?${query.toString()}`);
+      return;
+    }
+
     const coordinates = await getCurrentPosition();
 
     const query = new URLSearchParams({
@@ -85,6 +126,10 @@ export default function FilterModalPopup({
     setRating("");
 
     setDistance("");
+
+    setPlaceCategoryId(null);
+
+    setOpenNowOnly(false);
   };
 
   const handleCategory = (categoryName: string) => {
@@ -153,94 +198,128 @@ export default function FilterModalPopup({
           <h2 className="font-semibold md:text-lg">Sort by</h2>
 
           <div className="space-y-5">
-            <div>
-              <div className="space-y-3">
-                {/* Price and inputs */}
-                <div className="flex justify-between items-center">
-                  <p>Price</p>
+            {contentType === "events" && (
+              <div>
+                <div className="space-y-3">
+                  {/* Price and inputs */}
+                  <div className="flex justify-between items-center">
+                    <p>Price</p>
 
-                  <div className="flex gap-3 items-center">
-                    <input
-                      type="number"
-                      value={minMax[0]}
+                    <div className="flex gap-3 items-center">
+                      <input
+                        type="number"
+                        value={minMax[0]}
+                        min={0}
+                        max={minMax[1]}
+                        onChange={(e) => handleInputChange(0, e.target.value)}
+                        className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
+                      />
+                      <span>-</span>
+                      <input
+                        type="number"
+                        value={minMax[1]}
+                        min={minMax[0]}
+                        max={99999}
+                        onChange={(e) => handleInputChange(1, e.target.value)}
+                        className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Range slider */}
+                  <div className="flex justify-between items-center gap-3">
+                    <p>${minMax[0]}</p>
+
+                    <RangeSlider
                       min={0}
-                      max={minMax[1]}
-                      onChange={(e) => handleInputChange(0, e.target.value)}
-                      className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
+                      max={999}
+                      step={1}
+                      value={minMax}
+                      onInput={(val) => setMinMax(val as [number, number])}
+                      id="range-slider-yellow"
                     />
-                    <span>-</span>
-                    <input
-                      type="number"
-                      value={minMax[1]}
-                      min={minMax[0]}
-                      max={99999}
-                      onChange={(e) => handleInputChange(1, e.target.value)}
-                      className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
-                    />
+
+                    <p>${minMax[1] === 999 ? "Any" : minMax[1]}</p>
                   </div>
                 </div>
 
-                {/* Range slider */}
-                <div className="flex justify-between items-center gap-3">
-                  <p>${minMax[0]}</p>
-
-                  <RangeSlider
-                    min={0}
-                    max={999}
-                    step={1}
-                    value={minMax}
-                    onInput={(val) => setMinMax(val as [number, number])}
-                    id="range-slider-yellow"
-                  />
-
-                  <p>${minMax[1] === 999 ? "Any" : minMax[1]}</p>
-                </div>
+                <hr className="mt-5 border-border" />
               </div>
-
-              <hr className="mt-5 border-border" />
-            </div>
+            )}
 
             {/* category */}
-            <div>
-              <CategoryFilter
-                handleCategory={handleCategory}
-                category={category}
-                classname="font-semibold md:text-lg"
-              />
-
-              <hr className="mt-5 border-border" />
-            </div>
-
-            {/* types */}
-            <div>
-              <TypeFilter
-                selectedTypes={types}
-                selectedCategory={category}
-                handleType={handleType}
-                classname="font-semibold md:text-lg"
-              />
-
-              <hr className="mt-5 border-border" />
-            </div>
-
-            {/* date */}
-            <div>
-              <h2 className="font-semibold md:text-lg mb-5">Date</h2>
-
-              <div className={cn("grid gap-2 border", className)}>
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={date?.from}
-                  selected={date}
-                  onSelect={setDate}
-                  numberOfMonths={1}
-                  classNames={{ root: "w-full" }}
+            {contentType === "events" ? (
+              <div>
+                <CategoryFilter
+                  handleCategory={handleCategory}
+                  category={category}
+                  classname="font-semibold md:text-lg"
                 />
-              </div>
 
-              <hr className="mt-5 border-border" />
-            </div>
+                <hr className="mt-5 border-border" />
+              </div>
+            ) : (
+              <div>
+                <PlaceCategoryPicker
+                  categoryId={placeCategoryId}
+                  onSelect={setPlaceCategoryId}
+                />
+
+                <hr className="mt-5 border-border" />
+              </div>
+            )}
+
+            {/* types -- Events only, Places has no "types" concept */}
+            {contentType === "events" && (
+              <div>
+                <TypeFilter
+                  selectedTypes={types}
+                  selectedCategory={category}
+                  handleType={handleType}
+                  classname="font-semibold md:text-lg"
+                />
+
+                <hr className="mt-5 border-border" />
+              </div>
+            )}
+
+            {/* Open now -- Places only, per spec no "Event date" shown here */}
+            {contentType === "places" && (
+              <div>
+                <label className="flex items-center justify-between font-semibold md:text-lg cursor-pointer">
+                  <span>Open now</span>
+                  <input
+                    type="checkbox"
+                    checked={openNowOnly}
+                    onChange={(e) => setOpenNowOnly(e.target.checked)}
+                    className="h-5 w-5 accent-primary"
+                  />
+                </label>
+
+                <hr className="mt-5 border-border" />
+              </div>
+            )}
+
+            {/* date -- Events only */}
+            {contentType === "events" && (
+              <div>
+                <h2 className="font-semibold md:text-lg mb-5">Date</h2>
+
+                <div className={cn("grid gap-2 border", className)}>
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={1}
+                    classNames={{ root: "w-full" }}
+                  />
+                </div>
+
+                <hr className="mt-5 border-border" />
+              </div>
+            )}
           </div>
 
           {/* Rating */}

@@ -27,11 +27,25 @@ export default async function PlacesTabContent({
   lng,
   location,
   categorySlug,
+  categoryId: categoryIdParam,
+  openNow,
+  minRating: minRatingParam,
+  maxDistanceKm: maxDistanceKmParam,
+  searchText,
 }: {
   lat: number | null;
   lng: number | null;
   location: string;
   categorySlug: string | null;
+  // Filter-modal-driven equivalents of categorySlug/etc above (the modal
+  // works in ids/numbers, PlaceCategoryChips works in slugs -- both are
+  // accepted and resolve to the same `selectedCategory`/query params below,
+  // see FilterModalPopup.tsx's "places" branch).
+  categoryId?: number | null;
+  openNow?: boolean;
+  minRating?: number | null;
+  maxDistanceKm?: number | null;
+  searchText?: string | null;
 }) {
   // Categories are a small, rarely-changing lookup table (see
   // getPlaceCategories.ts) — fetched first so the selected category's id can
@@ -41,7 +55,16 @@ export default async function PlacesTabContent({
     categoriesResult.status === 200 ? (categoriesResult.data ?? []) : [];
   const selectedCategory = categorySlug
     ? (categories.find((category) => category.slug === categorySlug) ?? null)
-    : null;
+    : categoryIdParam
+      ? (categories.find((category) => category.id === categoryIdParam) ?? null)
+      : null;
+
+  // Only "All Places" (the primary, filterable listing) honors the filter
+  // modal's Open now/Rating/Distance/search choices -- the three bounded
+  // sliders above it (Around You/Open Now/Top Rated) keep their own fixed,
+  // curated semantics regardless of what the owner filtered by, same as the
+  // Events tab's sliders don't change shape when a search is active.
+  const effectiveMaxDistanceKm = maxDistanceKmParam ?? EXPLORE_PLACES_RADIUS_KM;
 
   const [aroundYouResult, openNowResult, topRatedResult, allPlacesInitialPage] =
     await Promise.all([
@@ -63,8 +86,11 @@ export default async function PlacesTabContent({
       getQueriedPlaces({
         lat,
         lng,
-        maxDistanceKm: EXPLORE_PLACES_RADIUS_KM,
+        maxDistanceKm: effectiveMaxDistanceKm,
         categoryId: selectedCategory?.id ?? null,
+        openNow: openNow ?? null,
+        minRating: minRatingParam ?? null,
+        searchText: searchText ?? null,
       }),
     ]);
 
@@ -77,8 +103,11 @@ export default async function PlacesTabContent({
     return getQueriedPlaces({
       lat,
       lng,
-      maxDistanceKm: EXPLORE_PLACES_RADIUS_KM,
+      maxDistanceKm: effectiveMaxDistanceKm,
       categoryId: selectedCategory?.id ?? null,
+      openNow: openNow ?? null,
+      minRating: minRatingParam ?? null,
+      searchText: searchText ?? null,
       cursor,
     });
   }
@@ -108,14 +137,17 @@ export default async function PlacesTabContent({
         <h2 className="text-lg font-medium mb-1">All Places</h2>
 
         <AllPlacesList
-          key={`${lat}-${lng}-${selectedCategory?.id ?? "all"}`}
+          key={`${lat}-${lng}-${selectedCategory?.id ?? "all"}-${openNow ?? "any"}-${minRatingParam ?? "any"}-${effectiveMaxDistanceKm}-${searchText ?? ""}`}
           queryKey={[
             "places",
             "filtered",
             lat,
             lng,
-            EXPLORE_PLACES_RADIUS_KM,
+            effectiveMaxDistanceKm,
             selectedCategory?.id ?? null,
+            openNow ?? null,
+            minRatingParam ?? null,
+            searchText ?? null,
           ]}
           initialPage={allPlacesInitialPage}
           fetchPage={fetchAllPlacesPage}

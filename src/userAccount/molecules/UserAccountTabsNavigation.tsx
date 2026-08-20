@@ -18,18 +18,13 @@ export default function UserAccountTabsNavigation({
 
   const isCurrentUser = username === ownUsername;
 
-  // const tabs = [
-  //   { imgUrl: "/assets/images/posts.svg", text: "Posts" },
-  //   { imgUrl: "/assets/images/favorites.svg", text: "Favorites" },
-  //   { imgUrl: "/assets/images/reviews.svg", text: "Reviews" },
-  // ];
-
   return (
     <div className="w-full flex justify-center items-center flex-col border-t border-border">
       <div className="flex gap-5">
         <UserAccountTabsNavButton
           imgUrl="/assets/images/posts.svg"
-          text="Posts"
+          text="Events"
+          path="posts"
           username={username}
         />
 

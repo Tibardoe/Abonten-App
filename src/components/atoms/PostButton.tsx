@@ -43,7 +43,7 @@ export default function PostButton() {
   return (
     <>
       <Button className="px-10 font-medium text-sm mt-5" onClick={handleClick}>
-        Post
+        Create Event
       </Button>
 
       <input

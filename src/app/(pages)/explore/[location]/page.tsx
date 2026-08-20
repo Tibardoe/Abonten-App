@@ -46,10 +46,25 @@ export default async function page({
     lng?: string;
     tab?: string;
     category?: string;
+    categoryId?: string;
+    openNow?: string;
+    rating?: string;
+    distance?: string;
+    q?: string;
   }>;
 }) {
   const { location } = await params;
-  const { lat: latParam, lng: lngParam, tab, category } = await searchParams;
+  const {
+    lat: latParam,
+    lng: lngParam,
+    tab,
+    category,
+    categoryId,
+    openNow,
+    rating,
+    distance,
+    q,
+  } = await searchParams;
 
   const safeLocation = location ?? "";
   const initialTab = isExploreTab(tab) ? tab : "events";
@@ -159,6 +174,11 @@ export default async function page({
             lng={lng ?? null}
             location={safeLocation}
             categorySlug={category ?? null}
+            categoryId={categoryId ? Number(categoryId) : null}
+            openNow={openNow === "true"}
+            minRating={rating ? Number(rating) : null}
+            maxDistanceKm={distance ? Number(distance) : null}
+            searchText={q ?? null}
           />
         }
       />

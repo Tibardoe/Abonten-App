@@ -8,7 +8,7 @@ import UserPostsList from "./UserPostsList";
 
 const emptyState = (
   <div className="flex flex-col items-center">
-    <h1 className="font-bold text-2xl">No posts yet</h1>
+    <h1 className="font-bold text-2xl">No events yet</h1>
 
     <p className="text-sm text-muted-foreground">
       Post events for others to attend
@@ -30,7 +30,7 @@ export default async function page({
   if (firstPage.status !== 200) {
     return (
       <div className="text-center mt-5 text-red-500">
-        Failed to load posts: {firstPage.message}
+        Failed to load events: {firstPage.message}
       </div>
     );
   }

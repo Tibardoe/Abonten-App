@@ -16,15 +16,13 @@ export default function PlaceOpenStatusBadge({
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-sm font-medium ${
-        status.isOpen
-          ? "text-green-600 dark:text-green-400"
-          : "text-muted-foreground"
+        status.isOpen ? "text-primary" : "text-muted-foreground"
       } ${className ?? ""}`}
     >
       <span
         aria-hidden
         className={`h-2 w-2 rounded-full ${
-          status.isOpen ? "bg-green-500" : "bg-red-500"
+          status.isOpen ? "bg-primary" : "bg-destructive"
         }`}
       />
       {status.label}
