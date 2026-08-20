@@ -1,10 +1,17 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentUser, useIsOrganizer } from "@/hooks/useCurrentUser";
+import {
+  useCurrentUser,
+  useIsOrganizer,
+  useIsPlaceOwner,
+} from "@/hooks/useCurrentUser";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
+import CreateMenu from "@/places/molecules/CreateMenu";
+import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { signOut } from "@/services/authService";
+import { generateSlug } from "@/utils/geerateSlug";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,7 +19,7 @@ import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
-import { IoCreateOutline } from "react-icons/io5";
+import { IoStorefrontOutline } from "react-icons/io5";
 import {
   MdOutlineAccountBalanceWallet,
   MdOutlineDrafts,
@@ -39,6 +46,7 @@ export default function SideBar({
   const t = useTranslations("navigation");
 
   const [showPostModal, setShowPostModal] = useState(false);
+  const [showPlaceModal, setShowPlaceModal] = useState(false);
 
   const location = useGetUserLocation();
 
@@ -64,6 +72,10 @@ export default function SideBar({
     setShowPostModal(state);
   };
 
+  const closePlaceModal = (state: boolean) => {
+    setShowPlaceModal(state);
+  };
+
   // Shared with Header/MobileNavBar/etc. — one cached fetch instead of
   // each component independently calling supabase.auth.getUser().
   const { data: user, isLoading: userLoading } = useCurrentUser();
@@ -71,6 +83,9 @@ export default function SideBar({
   // Gates the Organizer Dashboard link specifically — My Events/Manage
   // Attendance below keep their existing "any signed-in user" visibility.
   const isOrganizer = useIsOrganizer();
+  // Gates the Places link (Places feature Milestone 6) — only shown to
+  // users who actually own at least one place.
+  const isPlaceOwner = useIsPlaceOwner();
 
   return (
     <>
@@ -79,6 +94,13 @@ export default function SideBar({
           handleClosePopup={closePopup}
           imgUrl={imagePreview}
           selectedFile={selectedFile}
+          onUploadSuccess={onPostSuccess}
+        />
+      )}
+
+      {showPlaceModal && (
+        <PlaceUploadModal
+          handleClosePopup={closePlaceModal}
           onUploadSuccess={onPostSuccess}
         />
       )}
@@ -102,7 +124,7 @@ export default function SideBar({
           ) : user ? (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
               <Link
-                href={`/events/location/${location}`}
+                href={`/explore/${generateSlug(location ?? "")}`}
                 onClick={onNavigate}
                 className="flex gap-1 items-center hover:text-primary transition-colors"
               >
@@ -110,14 +132,13 @@ export default function SideBar({
                 {t("home")}
               </Link>
 
-              <button
-                type="button"
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <IoCreateOutline className="text-xl" />
-                {t("post")}
-              </button>
+              <CreateMenu
+                label={t("create")}
+                onSelectEvent={() => fileInputRef.current?.click()}
+                onSelectPlace={() => setShowPlaceModal(true)}
+                triggerClassName="hover:text-primary transition-colors"
+                iconClassName="text-xl"
+              />
 
               {isOrganizer && (
                 <Link
@@ -149,6 +170,17 @@ export default function SideBar({
                 <MdOutlineManageHistory className="text-xl" />
                 {t("manageAttendance")}
               </Link>
+
+              {isPlaceOwner && (
+                <Link
+                  href="/manage/places"
+                  onClick={onNavigate}
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <IoStorefrontOutline className="text-xl" />
+                  {t("places")}
+                </Link>
+              )}
 
               <Link
                 href="/manage/my-events"

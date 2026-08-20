@@ -1,0 +1,11 @@
+{
+  "validation": {
+    "nameRequired": "Name is required",
+    "nameTooLong": "Name must be less than 150 characters",
+    "descriptionRequired": "Description is required",
+    "descriptionTooLong": "Description must be less than 2000 characters",
+    "invalidUrl": "Enter a valid URL (e.g., www.example.com or https://example.com)",
+    "invalidPhone": "Enter a valid phone number",
+    "invalidWhatsapp": "Enter a valid WhatsApp number"
+  }
+}

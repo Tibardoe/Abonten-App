@@ -33,6 +33,12 @@ export default function UserAccountTabsNavigation({
           username={username}
         />
 
+        <UserAccountTabsNavButton
+          imgUrl="/assets/images/location.svg"
+          text="Places"
+          username={username}
+        />
+
         {isCurrentUser && (
           <UserAccountTabsNavButton
             imgUrl="/assets/images/favorites.svg"

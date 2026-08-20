@@ -33,24 +33,22 @@ export default function LandingLocationSearch() {
       if (result?.status === "unresolved") {
         // Google Places found no match for the typed text — fall back to
         // using it as a raw slug rather than doing nothing.
-        router.push(`/events/location/${generateSlug(result.rawText)}`);
+        router.push(`/explore/${generateSlug(result.rawText)}`);
         return;
       }
 
       // Nothing was typed: try the user's current location instead.
       if (!navigator.geolocation) {
-        router.push("/events");
+        router.push("/explore");
         return;
       }
 
       const position = await getCurrentPosition();
       const { latitude, longitude } = position.coords;
-      router.push(
-        `/events/location/current-location?lat=${latitude}&lng=${longitude}`,
-      );
+      router.push(`/explore/current-location?lat=${latitude}&lng=${longitude}`);
     } catch (error) {
       console.error("Unable to resolve location:", error);
-      router.push("/events");
+      router.push("/explore");
     } finally {
       setIsResolvingLocation(false);
     }

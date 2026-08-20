@@ -2,6 +2,7 @@
 
 import { getUserDetails } from "@/actions/getUserDetails";
 import { getUserEventRole } from "@/actions/getUserEventRole";
+import { getUserPlaceRole } from "@/actions/getUserPlaceRole";
 import { supabase } from "@/config/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -55,4 +56,20 @@ export function useIsOrganizer() {
   });
 
   return Array.isArray(data?.role) && data.role.includes("organizer");
+}
+
+// Gates the Places nav link (Places feature Milestone 6) on whether this
+// user owns at least one place -- mirrors useIsOrganizer() exactly, calling
+// getUserPlaceRole instead of getUserEventRole.
+export function useIsPlaceOwner() {
+  const { data: user } = useCurrentUser();
+
+  const { data } = useQuery({
+    queryKey: ["user-place-role", user?.id],
+    enabled: !!user?.id,
+    queryFn: () => getUserPlaceRole(user?.id as string),
+    staleTime: 60 * 1000,
+  });
+
+  return data?.role === "owner";
 }

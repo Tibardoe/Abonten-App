@@ -32,3 +32,12 @@ export type SimpleCursor = {
   sortValue: string; // ISO timestamp of whichever column the list orders by
   id: string;
 };
+
+// get_nearby_places / get_filtered_places (Places feature) both order by
+// (distance_km, id) — see 20260820090000_add_places_feature.sql. Unlike
+// FilteredEventsCursor, there's no starts_at to also carry: places have no
+// schedule.
+export type PlacesCursor = {
+  distanceKm: number;
+  id: string;
+};

@@ -6,6 +6,7 @@ const namespaces = [
   "auth",
   "settings",
   "events",
+  "places",
 ] as const;
 
 export type Messages = Record<string, unknown>;

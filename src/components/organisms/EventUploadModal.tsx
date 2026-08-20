@@ -37,6 +37,13 @@ type EventUploadModalProps = {
   // Fired after a successful "Save Draft & close" — distinct from
   // onUploadSuccess, which only fires when the event is actually published.
   onDraftSaved?: () => void;
+  // Places feature Milestone 6: set when opened from a place's management
+  // page ("+ Add Upcoming Event"), locking this event's venue to that
+  // place — the owner still fills in everything else about the event
+  // normally.
+  preselectedPlaceId?: string;
+  preselectedPlaceAddress?: string;
+  preselectedPlaceName?: string;
 };
 
 // One responsive modal for event flyer upload, replacing the previous
@@ -56,6 +63,9 @@ export default function EventUploadModal({
   initialUpdatedAt,
   existingFlyer,
   onDraftSaved,
+  preselectedPlaceId,
+  preselectedPlaceAddress,
+  preselectedPlaceName,
 }: EventUploadModalProps) {
   useBodyScrollLock(true);
 
@@ -93,6 +103,9 @@ export default function EventUploadModal({
     initialValues,
     initialUpdatedAt,
     existingFlyer,
+    preselectedPlaceId,
+    preselectedPlaceAddress,
+    preselectedPlaceName,
   });
 
   const {

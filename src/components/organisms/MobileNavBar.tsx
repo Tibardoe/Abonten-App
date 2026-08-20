@@ -34,9 +34,7 @@ export default function MobileNavBar() {
       <div className="flex md:hidden justify-center w-full fixed z-10 bottom-0 border-t border-sidebar-border py-4 bg-sidebar">
         <div className="flex justify-between w-[90%]">
           <MobileNavButton
-            href={`/events/location/${generateSlug(
-              location || "default-location",
-            )}`}
+            href={`/explore/${generateSlug(location || "default-location")}`}
             text={t("home")}
             Icon={GoHome}
           />

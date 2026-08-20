@@ -84,6 +84,11 @@ export type PostsType = {
   // a double submit and return the already-created event instead of
   // inserting a duplicate.
   clientRequestId: string;
+  // The Abonten Place this event happens at, if the organizer picked one as
+  // the venue instead of (or alongside) typing a free-text address — see
+  // useEventUploadForm.ts's selectedPlaceId. Optional/nullable: most events
+  // still have no associated Place.
+  placeId?: string | null;
 };
 
 export type EventDates = {

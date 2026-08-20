@@ -2,7 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCurrentUserDetails, useIsOrganizer } from "@/hooks/useCurrentUser";
+import {
+  useCurrentUserDetails,
+  useIsOrganizer,
+  useIsPlaceOwner,
+} from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -15,7 +19,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
-import { IoMenuOutline } from "react-icons/io5";
+import { IoMenuOutline, IoStorefrontOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import {
   MdOutlineAccountBalanceWallet,
@@ -63,6 +67,9 @@ export default function Header() {
   // Gates the Organizer Dashboard link specifically — My Events/Manage
   // Attendance below keep their existing "any signed-in user" visibility.
   const isOrganizer = useIsOrganizer();
+  // Gates the Places link (Places feature Milestone 6) — only shown to
+  // users who actually own at least one place.
+  const isPlaceOwner = useIsPlaceOwner();
 
   const profile = {
     username: userDetails?.username ?? "",
@@ -131,7 +138,7 @@ export default function Header() {
             </button>
 
             <Link
-              href={`/events/location/${generateSlug(location ?? "")}`}
+              href={`/explore/${generateSlug(location ?? "")}`}
               className="absolute right-4 transform lg:static lg:translate-x-0 w-12 h-12 md:w-16 md:h-16"
             >
               <Image src={logoSrc} alt="Abonten Logo" fill />
@@ -174,6 +181,16 @@ export default function Header() {
                 <MdOutlineManageHistory className="text-2xl" />
                 {t("manageAttendance")}
               </Link>
+
+              {isPlaceOwner && (
+                <Link
+                  href="/manage/places"
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <IoStorefrontOutline className="text-2xl" />
+                  {t("places")}
+                </Link>
+              )}
 
               <Link
                 href="/manage/my-events"

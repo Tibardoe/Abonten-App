@@ -45,3 +45,16 @@ export function invalidateTicketStatusQueries(queryClient: QueryClient) {
       matchesAnyPrefix(query.queryKey[0], TICKET_STATUS_KEY_PREFIXES),
   });
 }
+
+// No Places list queries exist yet (Explore/management pages are later
+// milestones) — this is a forward-looking single-prefix analog of
+// invalidateEventListQueries, ready for whatever query key those milestones
+// introduce as long as it's namespaced under "places".
+const PLACE_LIST_KEY_PREFIXES = ["places"];
+
+export function invalidatePlaceListQueries(queryClient: QueryClient) {
+  queryClient.invalidateQueries({
+    predicate: (query) =>
+      matchesAnyPrefix(query.queryKey[0], PLACE_LIST_KEY_PREFIXES),
+  });
+}

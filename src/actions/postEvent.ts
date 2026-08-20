@@ -56,6 +56,7 @@ export async function postEvent(formData: PostsType) {
     clientRequestId,
     existingFlyer,
     draftId,
+    placeId,
   } = formData;
 
   const eventCode = generateEventCode(title);
@@ -202,6 +203,7 @@ export async function postEvent(formData: PostsType) {
       p_ticket_types: ticketTypesPayload.length > 0 ? ticketTypesPayload : null,
       p_promo_codes: promoCodesPayload,
       p_receiving_account: receivingAccountPayload,
+      p_place_id: placeId ?? null,
     },
   );
 

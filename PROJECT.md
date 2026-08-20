@@ -4,6 +4,8 @@ This document describes the current, verified state of the codebase for future d
 
 > **Revision note (2026-08-10):** Section 7 (Database / Supabase Structure) was rewritten from the actual pulled schema at [supabase/migrations/20260810084821_remote_schema.sql](supabase/migrations/20260810084821_remote_schema.sql), replacing the earlier version's table/column/relationship guesses that were inferred only from application query strings. Several confirmed discrepancies between the app code and the real schema were found in the process — see §7.6 — and related notes in §9, §16, and §17 were updated to match.
 
+> **Revision note (2026-08-20):** Added §18 (Places Feature) documenting the new Places Discovery feature — a second first-class content type alongside Event, built incrementally across nine milestones and finished with this polish pass. Covers the new routes, the `place`/`place_category`/`place_photo`/`place_opening_hours`/`place_service`/`place_review`/`place_report`/`favorite_place`/`place_analytics_event` tables (plus the additive `event.place_id`), the new RPCs, and the Server Actions added under `src/actions/`. Verified against [supabase/migrations/20260820090000_add_places_feature.sql](supabase/migrations/20260820090000_add_places_feature.sql) and [supabase/migrations/20260821090000_add_place_id_to_create_event.sql](supabase/migrations/20260821090000_add_place_id_to_create_event.sql), the same way §7 was verified against its own migration file rather than assumed from application code.
+
 ---
 
 ## 1. Project Purpose & Overview
@@ -476,6 +478,39 @@ api/user-profile                                   /api/user-profile
 - Rename `src/landing Page` to remove the space, if/when a broader refactor touches that area.
 - Update `README.md` to describe the actual project instead of the `create-next-app` default.
 - Add a `PRD.md` or equivalent product doc, since the current one is a placeholder.
+
+---
+
+## 18. Places Feature (Phase 1)
+
+**Confirmed** (verified against [supabase/migrations/20260820090000_add_places_feature.sql](supabase/migrations/20260820090000_add_places_feature.sql) and [supabase/migrations/20260821090000_add_place_id_to_create_event.sql](supabase/migrations/20260821090000_add_place_id_to_create_event.sql), the same way §7 was verified against its own migration rather than assumed from application code)
+
+Places is a second first-class content type alongside Event — restaurants, pubs, gyms, hotels, and similar venues that users can discover and optionally connect to Events (an Event can happen "at" a Place). Built on branch `feature-places-discovery`, following the reuse-first conventions documented elsewhere in this file (Server Action `{status, message?, data?}` return shape, cursor-pagination via `src/utils/pagination.ts`/`src/types/pagination.ts`, the atomic-RPC pattern `create_event`/`create_place` both follow, the same Cloudinary upload chokepoint pattern, and no RLS — matching every other table in this schema, a deliberate confirmed decision, not an oversight).
+
+**New routes**:
+- `/explore`, `/explore/[location]` — the new primary discovery entry point, replacing `/events/location/[location]` as the destination linked from the landing page and primary nav (Header/SideBar/MobileNavBar). Has Events/Places tabs (`?tab=events|places`, shallow-URL-synced, same pattern as `/manage/my-events`'s `MyEventsTabs.tsx`). The old `/events/location/[location]` route is untouched and still reachable — not linked from primary nav anymore, but not removed.
+- `/places/[slug]` — Place details page, `revalidate = 60`, mirrors `/events/[eventCode]`'s structure (hero, primary actions, About/Hours/Services/Photos/Location/Contact/Upcoming Events/Reviews/Similar Places).
+- `/manage/places`, `/manage/places/[placeId]` — organizer-side list + tabbed management page (Details/Photos/Hours/Services/Reviews/Insights), gated by a new `useIsPlaceOwner()` hook (mirrors `useIsOrganizer()`).
+- `/user/[username]/places` — a profile's owned places (public, like Posts — not gated to the profile owner the way Favorites is).
+- `/user/[username]/favorites` was extended (not replaced) to show a second "Favorite Places" section alongside the existing "Favorite Events" section.
+
+**New database tables** (all non-partitioned — deliberately, since several existing partitioned tables in this schema were pulled with zero partitions defined and can't accept inserts, see §7.5 — and none have RLS, per the confirmed decision above):
+- `place_category` — a real lookup table (14 seeded rows: Restaurant, Food Spot, Pub, Nightclub, Gaming Center, Cinema, Gym/Fitness, Hotel, Supermarket, Skating, Go-Karting, Entertainment, Recreation, Other), unlike `event_category`/`event_type` which remain a hardcoded TS array (`src/data/eventCategoriesAndTypes.ts`).
+- `place` — the core record (`owner_id → user_info`, `category_id → place_category`, `location geography(Point,4326)` + `address jsonb` mirroring `event`'s shape, `cover_public_id`/`cover_version`, `status`, `temporary_status`/`temporary_status_note` for owner-overridden closures, `claimed`/`verified` booleans as foundation-only columns for a future claim/verification flow — no claim UI exists yet).
+- `place_photo`, `place_opening_hours` (multiple rows per `day_of_week` supported, for split shifts), `place_service` (price always nullable), `place_review` (`UNIQUE(place_id, reviewer_id)` — one review per user per place, enforced at the DB level; deliberately a separate table from `review`, not shared/polymorphic, since `review.reviewed_id` is hard-wired to a person via an organizer-attendance gate baked into `postReview.ts` that place reviews don't use), `place_report` (moderation foundation only, no admin UI), `favorite_place` (mirrors `favorite`'s shape rather than adding a polymorphic column to it), `place_analytics_event` (view/direction_click/phone_click/whatsapp_click/website_click/booking_click — Phase 1's "basic insights", explicitly not claiming verified physical visits).
+- `event.place_id` — one additive, nullable column on the existing `event` table (`ON DELETE SET NULL`), so an Event can optionally reference a Place as its venue.
+
+**New RPCs**: `create_place` (atomic multi-table insert — place + opening_hours + services — idempotent via `client_request_id`, same pattern as `create_event`), `get_nearby_places`/`get_filtered_places` (PostGIS radius search + filters, cursor-paginated on `(distance_km, id)`, mirroring `get_nearby_events`/`get_filtered_events`), `place_is_open_now` (single source of truth for open/closed, used by `get_filtered_places`'s "open now" filter; a separate pure-TypeScript mirror, `src/utils/computePlaceOpenStatus.ts`, drives the richer client-side "closes at X" display). `create_event`'s signature was changed (`DROP`+`CREATE`, since Postgres has no `ALTER FUNCTION ... ADD PARAMETER`) to add one trailing `p_place_id uuid DEFAULT NULL` param — existing callers are unaffected.
+
+**Server Actions**: ~30 new files under `src/actions/` (`postPlace`, `updatePlace`, `getPlaceBySlug`, `getNearByPlaces`, `getQueriedPlaces`, `getOrganizerPlaces` — accepts an optional `username` to view any profile's places, falling back to the authenticated caller's own when omitted — `getPlaceCategories`, `addPlaceService`/`updatePlaceService`/`removePlaceService`, `updatePlaceOpeningHours`, `setPlaceTemporaryStatus`, `savePlacePhotoToCloudinary`/`getPlacePhotoUploadSignature`/`addPlacePhoto`/`removePlacePhoto`/`reorderPlacePhotos`, `addPlaceToFavorite`/`removePlaceFromFavorite`/`checkIfPlaceIsFavorited`/`getUserFavoritePlaces`, `postPlaceReview`/`getPlaceReviews`/`getPlaceRating`/`respondToPlaceReview`, `reportPlace`/`reportPlaceReview`, `getPlaceUpcomingEvents`, `logPlaceEngagement`/`getPlaceInsights`, `getUserPlaceRole`) — see `src/actions/` itself as the source of truth, same convention §9 already establishes for events.
+
+**UI**: a new `src/places/` feature folder (atoms/molecules/organisms), following the same per-feature atomic-design precedent as `src/wallet/`/`src/settings/`/`src/userAccount/` (`src/events/` does not actually exist in this repo despite being referenced in some docs — `src/wallet/` is the real precedent). The "Post" button (`EventUploadButton.tsx`, `SideBar.tsx`) became a "Create" popover (`src/places/molecules/CreateMenu.tsx`) offering Event or Place.
+
+**Explicitly deferred to Phase 2/3, not built in this pass**: map/list toggle view, Place verification badge UI, Claim Place flow UI (DB columns exist, no UI), Featured Places / paid promotion (no `Promotion` table — no consumer yet, and monetization was explicitly deferred until organic demand exists), bookings, verified-visit review signals, business subscriptions, and any new notification system (no notification infrastructure exists anywhere in this codebase to extend — a separate future initiative, not silently skipped). The Explore page's "Popular Places" and "Featured Places" sections were likewise omitted (no ranking RPC / no promotion flag exists yet); "Top Rated" uses a small client-side re-sort of an already radius-and-rating-filtered page rather than a dedicated rating-sort RPC parameter.
+
+**Needs Investigation**
+- This migration could not be applied against a live database in the development environment this feature was built in (no reachable Supabase project) — verified only by static SQL review against the existing `create_event`/`get_nearby_events` migrations' exact patterns. Apply and smoke-test against a real database before considering Phase 1 production-ready.
+- `getPlaceUpcomingEvents`'s attendance/price joins were added to match `EventCard`'s expected shape, but weren't exercised against real ticket data for the same reason above.
 
 ---
 

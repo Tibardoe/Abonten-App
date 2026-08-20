@@ -10,6 +10,7 @@ import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import TypeFilter from "@/components/molecules/TypeFilter";
 import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
+import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
 import { TbWorld } from "react-icons/tb";
 
 type EventUploadFormFieldsProps = Pick<
@@ -52,6 +53,11 @@ type EventUploadFormFieldsProps = Pick<
   | "handleType"
   | "handleSubmit"
   | "onSubmit"
+  | "selectedPlaceId"
+  | "selectedPlaceName"
+  | "handleSelectPlace"
+  | "clearSelectedPlace"
+  | "isPlacePreselected"
 > & { className?: string };
 
 // The event-details fields shared by every step-2 (details) screen of the
@@ -96,6 +102,11 @@ export default function EventUploadFormFields({
   handleType,
   handleSubmit,
   onSubmit,
+  selectedPlaceId,
+  selectedPlaceName,
+  handleSelectPlace,
+  clearSelectedPlace,
+  isPlacePreselected,
   className,
 }: EventUploadFormFieldsProps) {
   return (
@@ -123,6 +134,7 @@ export default function EventUploadFormFields({
 
         <PostAutoComplete
           address={{ address: setSelectedAddress }}
+          value={selectedAddress}
           placeholderText={{
             text: "Location",
             svgUrl: "/assets/images/location.svg",
@@ -130,6 +142,20 @@ export default function EventUploadFormFields({
         />
         {selectedAddress === "" && (
           <p className="text-destructive text-sm">Location required</p>
+        )}
+
+        {/* Venue / Place (optional) -- an alternative to typing the address
+            above: pick an existing Abonten Place instead, which fills the
+            address field for you. Hidden entirely when the venue is already
+            locked in (opened from a place's own "+ Add Upcoming Event"
+            button), per the Places spec. */}
+        {!isPlacePreselected && (
+          <PlaceSearchSelect
+            selectedPlaceId={selectedPlaceId}
+            selectedPlaceName={selectedPlaceName}
+            onSelect={handleSelectPlace}
+            onClear={clearSelectedPlace}
+          />
         )}
 
         {/* Date and time */}

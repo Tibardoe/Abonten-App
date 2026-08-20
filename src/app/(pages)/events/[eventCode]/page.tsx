@@ -61,6 +61,10 @@ export default async function page({
     id,
     starts_at,
     ends_at
+  ),
+  place:place_id(
+    name,
+    slug
   )
     `,
     )
@@ -280,6 +284,14 @@ export default async function page({
                 <p className="text-muted-foreground mb-4 text-sm md:text-base">
                   {event.address.full_address}
                 </p>
+                {event.place && (
+                  <Link
+                    href={`/places/${event.place.slug}`}
+                    className="inline-block text-sm text-primary hover:underline mb-4"
+                  >
+                    📍 At: {event.place.name}
+                  </Link>
+                )}
                 <GetDirectionBtn location={event.location} />
               </div>
 

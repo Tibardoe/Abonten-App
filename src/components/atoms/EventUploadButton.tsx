@@ -1,15 +1,21 @@
 "use client";
 
 import { useImageSelection } from "@/hooks/useImageSelection";
+import CreateMenu from "@/places/molecules/CreateMenu";
+import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useState } from "react";
-import { IoCreateOutline } from "react-icons/io5";
 import EventUploadModal from "../organisms/EventUploadModal";
 
-// Desktop nav-link trigger for event upload (rendered only inside the
-// desktop header). Picks the flyer itself, then opens EventUploadModal.
+// Desktop nav-link trigger for creating an Event or a Place (rendered only
+// inside the desktop header). "Create" replaces the old single-purpose
+// "Post" button now that there are two things to create — selecting Event
+// keeps this file's existing flyer-first flow untouched; selecting Place
+// opens PlaceUploadModal directly, since a place's cover photo is picked
+// inside that modal's own Photos step, not before it.
 export default function EventUploadButton() {
   const [showPopup, setShowPopup] = useState(false);
+  const [showPlaceModal, setShowPlaceModal] = useState(false);
 
   const {
     imagePreview,
@@ -25,6 +31,7 @@ export default function EventUploadButton() {
   });
 
   const closePopup = (state: boolean) => setShowPopup(state);
+  const closePlaceModal = (state: boolean) => setShowPlaceModal(state);
 
   return (
     <>
@@ -36,6 +43,10 @@ export default function EventUploadButton() {
         />
       )}
 
+      {showPlaceModal && (
+        <PlaceUploadModal handleClosePopup={closePlaceModal} />
+      )}
+
       <input
         type="file"
         accept="image/*"
@@ -44,14 +55,12 @@ export default function EventUploadButton() {
         onChange={handleFileChange}
       />
 
-      <button
-        type="button"
-        className="flex gap-1 items-center"
-        onClick={openFilePicker}
-      >
-        <IoCreateOutline className="text-3xl" />
-        Post
-      </button>
+      <CreateMenu
+        label="Create"
+        onSelectEvent={openFilePicker}
+        onSelectPlace={() => setShowPlaceModal(true)}
+        iconClassName="text-3xl"
+      />
     </>
   );
 }

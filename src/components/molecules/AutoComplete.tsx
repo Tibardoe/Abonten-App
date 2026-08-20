@@ -62,7 +62,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
         if (success) {
           const pathSegment = mainText.trim().replace(/\s+/g, "-");
           router.push(
-            `/events/location/${generateSlug(encodeURIComponent(pathSegment))}`,
+            `/explore/${generateSlug(encodeURIComponent(pathSegment))}`,
           );
         }
 

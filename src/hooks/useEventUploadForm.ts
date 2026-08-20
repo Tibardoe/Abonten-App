@@ -38,6 +38,15 @@ type UseEventUploadFormOptions = {
   // The draft's already-uploaded flyer, reused by postEvent instead of
   // re-uploading when the user hasn't picked a replacement file.
   existingFlyer?: { public_id: string; version: string };
+  // Places feature Milestone 6: set when this modal was opened from a
+  // place's management page ("+ Add Upcoming Event"), locking the venue to
+  // that place. When set, EventUploadFormFields skips rendering the venue
+  // picker entirely (per spec) and every submission carries this place id.
+  preselectedPlaceId?: string;
+  // The locked place's own address, used to seed selectedAddress so the
+  // owner doesn't have to retype their own place's address.
+  preselectedPlaceAddress?: string;
+  preselectedPlaceName?: string;
 };
 
 // All state, validation and submit logic for posting an event, previously
@@ -52,6 +61,9 @@ export function useEventUploadForm({
   initialValues,
   initialUpdatedAt,
   existingFlyer,
+  preselectedPlaceId,
+  preselectedPlaceAddress,
+  preselectedPlaceName,
 }: UseEventUploadFormOptions) {
   const t = useTranslations("events");
   const eventSchema = useMemo(() => getEventSchema(t), [t]);
@@ -129,9 +141,38 @@ export function useEventUploadForm({
   const initialDateEntriesForPicker = initialValues?.multipleDates;
 
   const [selectedAddress, setSelectedAddress] = useState(
-    initialValues?.address ?? "",
+    initialValues?.address ?? preselectedPlaceAddress ?? "",
   );
   const [category, setCategory] = useState(initialValues?.category ?? "");
+
+  // Places feature Milestone 6: the Abonten Place picked as this event's
+  // venue, either locked in from `preselectedPlaceId` (opened from a
+  // place's management page) or chosen via PlaceSearchSelect in the venue
+  // picker. Plain useState, mirroring every other piece of non-RHF state in
+  // this hook.
+  const [selectedPlaceId, setSelectedPlaceIdState] = useState<string | null>(
+    preselectedPlaceId ?? null,
+  );
+  const [selectedPlaceName, setSelectedPlaceName] = useState<string | null>(
+    preselectedPlaceName ?? null,
+  );
+
+  const handleSelectPlace = (place: {
+    id: string;
+    name: string;
+    address: string;
+  }) => {
+    markTouched();
+    setSelectedPlaceIdState(place.id);
+    setSelectedPlaceName(place.name);
+    setSelectedAddress(place.address);
+  };
+
+  const clearSelectedPlace = () => {
+    markTouched();
+    setSelectedPlaceIdState(null);
+    setSelectedPlaceName(null);
+  };
   const [types, setTypes] = useState<string[]>(initialValues?.types ?? []);
 
   const [ticket, setTicket] = useState<string | null>(
@@ -463,6 +504,7 @@ export function useEventUploadForm({
         receivingAccountDetails,
         selectedNetwork,
         clientRequestId: clientRequestIdRef.current,
+        placeId: selectedPlaceId,
         ...eventDates,
       };
 
@@ -527,5 +569,10 @@ export function useEventUploadForm({
     saveDraft,
     isSavingDraft,
     currentDraftId,
+    selectedPlaceId,
+    selectedPlaceName,
+    handleSelectPlace,
+    clearSelectedPlace,
+    isPlacePreselected: !!preselectedPlaceId,
   };
 }

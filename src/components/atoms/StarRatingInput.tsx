@@ -33,7 +33,9 @@ const StarRatingInput: React.FC<Props> = ({
             onClick={() => handleClick(starIndex)}
             onMouseEnter={() => setHoveredStar(starIndex)}
             onMouseLeave={() => setHoveredStar(null)}
-            className="focus:outline-none"
+            aria-label={`Rate ${starIndex} out of ${totalStars} star${starIndex === 1 ? "" : "s"}`}
+            aria-pressed={selectedRating >= starIndex}
+            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
           >
             <IoIosStar
               className={`text-xl md:text-2xl transition-colors ${
