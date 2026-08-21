@@ -22,3 +22,76 @@
   └─ ƒ getUserEventRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 748ms src/actions/getUserEventRole.ts
  POST /explore/kwame-nkrumah-university-of-science-and-technology?tab=events&view=list 200 in 770ms (next.js: 12ms, proxy.ts: 268ms, application-code: 490ms)
   └─ ƒ getUserPlaceRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 482ms src/actions/getUserPlaceRole.ts
+ GET /manage/attendance/event-list 200 in 1715ms (next.js: 648ms, proxy.ts: 437ms, application-code: 629ms)
+ POST /manage/attendance/event-list 200 in 920ms (next.js: 6ms, proxy.ts: 355ms, application-code: 559ms)
+  └─ ƒ <inline action>(null) in 551ms src/app/(pages)/manage/attendance/event-list/page.tsx
+ POST /manage/attendance/event-list 200 in 1150ms (next.js: 5ms, proxy.ts: 488ms, application-code: 656ms)
+  └─ ƒ getUnreadNotificationCount() in 648ms src/actions/getUnreadNotificationCount.ts
+ GET /user/Big_Ceo/posts 200 in 2.6s (next.js: 1359ms, proxy.ts: 418ms, application-code: 835ms)
+ POST /user/Big_Ceo/posts 200 in 1039ms (next.js: 12ms, proxy.ts: 530ms, application-code: 496ms)
+  └─ ƒ default("Big_Ceo") in 486ms src/actions/getUserHighlights.ts
+ POST /user/Big_Ceo/posts 200 in 1482ms (next.js: 14ms, proxy.ts: 281ms, application-code: 1187ms)
+  └─ ƒ <inline action>({"reason":{"count":148,"fork":false},"status":"fulfilled","value":"oL17BvaWHHV+NsremmoIlct5YOa7+tBmNezhc/fRg/wR4bU9kBBZEnO1G9QUZkEnKyxU6ZSrBJLAs7ZQj08B72+dOguMIXYH1ay40W1XB+68oYQhvC4KYUXha8F70rVn8G1RYmdKRcmBCC/Vcg=="}, null) in 1177ms src/app/(pages)/(userPage)/user/[username]/posts/page.tsx
+ GET /user/Big_Ceo/places 200 in 2.6s (next.js: 1017ms, proxy.ts: 378ms, application-code: 1183ms)
+ GET /user/Big_Ceo/favorites 200 in 2.5s (next.js: 844ms, proxy.ts: 435ms, application-code: 1231ms)
+ POST /user/[username]/places 200 in 686ms (next.js: 10ms, proxy.ts: 275ms, application-code: 401ms)
+  └─ ƒ <inline action>({"reason":{"count":148,"fork":false},"status":"fulfilled","value":"YirzcpkW25b58tsQ+icIzOFa0g13BQ/L7XMrBgUUXXDT2pTIEfGWAMYJFrama95VPK5lib4S5NC4VXVsStRn4wEC+FyqfZOKo9nK+w0OGW3v8ryX41qBWvsnOrJdp/WIT+a+VgKEA1amsnLoBg=="}, null) in 389ms src/app/(pages)/(userPage)/user/[username]/places/page.tsx
+ POST /user/Big_Ceo/favorites 200 in 1671ms (next.js: 10ms, proxy.ts: 964ms, application-code: 697ms)
+ POST /user/Big_Ceo/favorites 200 in 1072ms (next.js: 11ms, proxy.ts: 277ms, application-code: 783ms)
+  └─ ƒ <inline action>(null) in 776ms src/app/(pages)/(userPage)/user/[username]/favorites/page.tsx
+ POST /user/Big_Ceo/favorites?tab=places 200 in 786ms (next.js: 31ms, proxy.ts: 265ms, application-code: 489ms)
+  └─ ƒ <inline action>(null) in 480ms src/app/(pages)/(userPage)/user/[username]/favorites/page.tsx
+ POST /user/Big_Ceo/favorites?tab=places 200 in 791ms (next.js: 11ms, proxy.ts: 304ms, application-code: 476ms)
+  └─ ƒ getUnreadNotificationCount() in 467ms src/actions/getUnreadNotificationCount.ts
+ POST /user/Big_Ceo/favorites?tab=events 200 in 1281ms (next.js: 11ms, proxy.ts: 578ms, application-code: 692ms)
+  └─ ƒ <inline action>(null) in 684ms src/app/(pages)/(userPage)/user/[username]/favorites/page.tsx
+ GET /user/Big_Ceo/reviews 200 in 1746ms (next.js: 945ms, proxy.ts: 298ms, application-code: 503ms)
+ POST /user/Big_Ceo/reviews 200 in 732ms (next.js: 14ms, proxy.ts: 292ms, application-code: 426ms)
+  └─ ƒ <inline action>({"reason":{"count":148,"fork":false},"status":"fulfilled","value":"oRlkI1DZV42rkpZ8gSIAmrtvGMuYYlKMxOBaTms6lUREutsVADmuXQUrsX9A/Seu0g2iZ73lptvC4um+ucXf3ReGPHI6zTjvQ4N2x6QT2yu2ni7fblpafCz4NY1QlYABy+LdpYKfTca/yvRxPA=="}, null) in 417ms src/app/(pages)/(userPage)/user/[username]/reviews/page.tsx
+ POST /user/Big_Ceo/reviews 200 in 1073ms (next.js: 12ms, proxy.ts: 368ms, application-code: 693ms)
+  └─ ƒ getUserEventRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 684ms src/actions/getUserEventRole.ts
+ POST /user/Big_Ceo/reviews 200 in 784ms (next.js: 12ms, proxy.ts: 298ms, application-code: 473ms)
+  └─ ƒ getUserPlaceRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 465ms src/actions/getUserPlaceRole.ts
+ GET /user/Big_Ceo/bookings 200 in 1642ms (next.js: 752ms, proxy.ts: 388ms, application-code: 502ms)
+ POST /user/Big_Ceo/bookings 200 in 744ms (next.js: 10ms, proxy.ts: 277ms, application-code: 457ms)
+  └─ ƒ <inline action>(null) in 448ms src/app/(pages)/(userPage)/user/[username]/bookings/page.tsx
+ POST /user/Big_Ceo/bookings 200 in 790ms (next.js: 11ms, proxy.ts: 295ms, application-code: 484ms)
+  └─ ƒ getUnreadNotificationCount() in 475ms src/actions/getUnreadNotificationCount.ts
+ GET /manage/attendance/event-list 200 in 873ms (next.js: 6ms, proxy.ts: 365ms, application-code: 502ms)
+ POST /manage/attendance/event-list 200 in 795ms (next.js: 5ms, proxy.ts: 286ms, application-code: 503ms)
+  └─ ƒ <inline action>(null) in 495ms src/app/(pages)/manage/attendance/event-list/page.tsx
+ POST /user/Big_Ceo/bookings 200 in 725ms (next.js: 11ms, proxy.ts: 287ms, application-code: 428ms)
+  └─ ƒ default("Big_Ceo") in 420ms src/actions/getUserHighlights.ts
+ POST /user/Big_Ceo/bookings 200 in 765ms (next.js: 11ms, proxy.ts: 287ms, application-code: 467ms)
+  └─ ƒ <inline action>(null) in 459ms src/app/(pages)/(userPage)/user/[username]/bookings/page.tsx
+ POST /user/Big_Ceo/bookings 200 in 1035ms (next.js: 11ms, proxy.ts: 535ms, application-code: 490ms)
+  └─ ƒ getUnreadNotificationCount() in 481ms src/actions/getUnreadNotificationCount.ts
+[browser] As of March 1st, 2025, google.maps.places.AutocompleteService is not available to new customers. Please use google.maps.places.AutocompleteSuggestion instead. At this time, google.maps.places.AutocompleteService is not scheduled to be discontinued, but google.maps.places.AutocompleteSuggestion is recommended over google.maps.places.AutocompleteService. While google.maps.places.AutocompleteService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.AutocompleteService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/1a/places.js:84:89)
+ POST /user/Big_Ceo/bookings 200 in 647ms (next.js: 13ms, proxy.ts: 445ms, application-code: 189ms)
+  └─ ƒ getPlaceCategories() in 177ms src/actions/getPlaceCategories.ts
+ POST /user/Big_Ceo/bookings 200 in 952ms (next.js: 13ms, proxy.ts: 392ms, application-code: 547ms)
+  └─ ƒ getUnreadNotificationCount() in 536ms src/actions/getUnreadNotificationCount.ts
+ POST /user/Big_Ceo/bookings 200 in 944ms (next.js: 11ms, proxy.ts: 396ms, application-code: 537ms)
+  └─ ƒ getUnreadNotificationCount() in 528ms src/actions/getUnreadNotificationCount.ts
+[browser] As of March 1st, 2025, google.maps.places.AutocompleteService is not available to new customers. Please use google.maps.places.AutocompleteSuggestion instead. At this time, google.maps.places.AutocompleteService is not scheduled to be discontinued, but google.maps.places.AutocompleteSuggestion is recommended over google.maps.places.AutocompleteService. While google.maps.places.AutocompleteService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.AutocompleteService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/1a/places.js:84:89)
+[browser] As of March 1st, 2025, google.maps.places.PlacesService is not available to new customers. Please use google.maps.places.Place instead. At this time, google.maps.places.PlacesService is not scheduled to be discontinued, but google.maps.places.Place is recommended over google.maps.places.PlacesService. While google.maps.places.PlacesService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.PlacesService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/1a/places.js:758:351)
+ POST /user/Big_Ceo/bookings 200 in 1011ms (next.js: 14ms, proxy.ts: 445ms, application-code: 552ms)
+  └─ ƒ getUnreadNotificationCount() in 543ms src/actions/getUnreadNotificationCount.ts
+[browser] As of March 1st, 2025, google.maps.places.AutocompleteService is not available to new customers. Please use google.maps.places.AutocompleteSuggestion instead. At this time, google.maps.places.AutocompleteService is not scheduled to be discontinued, but google.maps.places.AutocompleteSuggestion is recommended over google.maps.places.AutocompleteService. While google.maps.places.AutocompleteService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.AutocompleteService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/1a/places.js:84:89)
+[browser] As of March 1st, 2025, google.maps.places.AutocompleteService is not available to new customers. Please use google.maps.places.AutocompleteSuggestion instead. At this time, google.maps.places.AutocompleteService is not scheduled to be discontinued, but google.maps.places.AutocompleteSuggestion is recommended over google.maps.places.AutocompleteService. While google.maps.places.AutocompleteService will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.AutocompleteService will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/1a/places.js:84:89)
+ POST /user/Big_Ceo/bookings 200 in 1123ms (next.js: 12ms, proxy.ts: 633ms, application-code: 479ms)
+  └─ ƒ getUnreadNotificationCount() in 470ms src/actions/getUnreadNotificationCount.ts
+ GET /user/Big_Ceo/bookings 200 in 1293ms (next.js: 11ms, proxy.ts: 467ms, application-code: 815ms)
+[browser] Image with src "http://localhost:3000/assets/images/abonten-logo-black.svg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+[browser] Image with src "http://localhost:3000/assets/images/abonten-logo-white.svg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+ POST /user/Big_Ceo/bookings 200 in 792ms (next.js: 12ms, proxy.ts: 299ms, application-code: 481ms)
+  └─ ƒ <inline action>(null) in 472ms src/app/(pages)/(userPage)/user/[username]/bookings/page.tsx
+ POST /user/Big_Ceo/bookings 200 in 800ms (next.js: 10ms, proxy.ts: 272ms, application-code: 517ms)
+  └─ ƒ getUnreadNotificationCount() in 509ms src/actions/getUnreadNotificationCount.ts
+ POST /user/Big_Ceo/bookings 200 in 970ms (next.js: 10ms, proxy.ts: 459ms, application-code: 501ms)
+  └─ ƒ getUserDetails() in 493ms src/actions/getUserDetails.ts
+ POST /user/Big_Ceo/bookings 200 in 1309ms (next.js: 10ms, proxy.ts: 333ms, application-code: 966ms)
+  └─ ƒ getUserEventRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 957ms src/actions/getUserEventRole.ts
+ POST /user/Big_Ceo/bookings 200 in 2.4s (next.js: 11ms, proxy.ts: 339ms, application-code: 2.1s)
+  └─ ƒ getUserPlaceRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 2055ms src/actions/getUserPlaceRole.ts
+ GET /explore 200 in 1020ms (next.js: 360ms, proxy.ts: 642ms, application-code: 18ms)
