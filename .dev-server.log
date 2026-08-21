@@ -1,0 +1,24 @@
+
+> client@0.1.0 dev
+> next dev --turbopack
+
+▲ Next.js 16.3.0 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.20.10.4:3000
+- Environments: .env.local
+✓ Ready in 407ms
+✓ Running next.config.ts took 50ms
+- Experiments (use with caution):
+  · serverActions
+
+○ Compiling /explore/[location] ...
+ POST /explore/kwame-nkrumah-university-of-science-and-technology?tab=events&view=list 200 in 3.5s (next.js: 11ms, proxy.ts: 492ms, application-code: 3.0s)
+  └─ ƒ getUnreadNotificationCount() in 2953ms src/actions/getUnreadNotificationCount.ts
+ GET /explore/kwame-nkrumah-university-of-science-and-technology?tab=events&view=list 200 in 11.6s (next.js: 4.6s, proxy.ts: 645ms, application-code: 6.4s)
+ POST /explore/kwame-nkrumah-university-of-science-and-technology?tab=events&view=list 200 in 984ms (next.js: 26ms, proxy.ts: 410ms, application-code: 547ms)
+  └─ ƒ getUserDetails() in 539ms src/actions/getUserDetails.ts
+[browser] Image with src "http://localhost:3000/assets/images/abonten-logo-white.svg" has "fill" and parent element with invalid "position". Provided "static" should be one of absolute,fixed,relative.
+ POST /explore/kwame-nkrumah-university-of-science-and-technology?tab=events&view=list 200 in 1055ms (next.js: 10ms, proxy.ts: 289ms, application-code: 756ms)
+  └─ ƒ getUserEventRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 748ms src/actions/getUserEventRole.ts
+ POST /explore/kwame-nkrumah-university-of-science-and-technology?tab=events&view=list 200 in 770ms (next.js: 12ms, proxy.ts: 268ms, application-code: 490ms)
+  └─ ƒ getUserPlaceRole("4c726a28-da76-4360-9f2d-34ae2e5fd4e9") in 482ms src/actions/getUserPlaceRole.ts

@@ -1,14 +1,14 @@
 "use client";
 
 import { updatePlace } from "@/actions/updatePlace";
+import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
-import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { isImageFile } from "@/utils/isImageFile";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
 type ManagedPlaceAddress = { full_address?: string };
@@ -67,6 +67,16 @@ export function useManagePlaceDetailsForm({
   );
   const [newCoverFile, setNewCoverFile] = useState<File | null>(null);
 
+  const addressInputRef = useRef<PostAutoCompleteHandle>(null);
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const handleSelectCoordinates = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
+    coordsRef.current = { lat: location.lat, lng: location.lng };
+  };
+
   const handleCoverFileChange = (file: File | null) => {
     if (!file) {
       setNewCoverFile(null);
@@ -96,7 +106,19 @@ export function useManagePlaceDetailsForm({
         return;
       }
 
-      const coords = await getCoordinatesFromAddress(selectedAddress);
+      const resolution = await addressInputRef.current?.resolveTypedInput();
+      if (!resolution || resolution.status === "empty") {
+        showMessage("Please enter an address");
+        return;
+      }
+      if (resolution.status === "unresolved") {
+        showMessage(
+          "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+
+      const coords = coordsRef.current;
       if (!coords) {
         showMessage("Could not fetch coordinates");
         return;
@@ -142,6 +164,8 @@ export function useManagePlaceDetailsForm({
     setCategoryId,
     selectedAddress,
     setSelectedAddress,
+    addressInputRef,
+    handleSelectCoordinates,
     newCoverFile,
     handleCoverFileChange,
   };

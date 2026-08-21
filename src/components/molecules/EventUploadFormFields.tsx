@@ -19,6 +19,8 @@ type EventUploadFormFieldsProps = Pick<
   | "errors"
   | "selectedAddress"
   | "setSelectedAddress"
+  | "addressInputRef"
+  | "handleSelectCoordinates"
   | "dateType"
   | "setDateType"
   | "handleDateAndTime"
@@ -68,6 +70,8 @@ export default function EventUploadFormFields({
   errors,
   selectedAddress,
   setSelectedAddress,
+  addressInputRef,
+  handleSelectCoordinates,
   dateType,
   setDateType,
   handleDateAndTime,
@@ -133,7 +137,9 @@ export default function EventUploadFormFields({
         )}
 
         <PostAutoComplete
+          ref={addressInputRef}
           address={{ address: setSelectedAddress }}
+          onSelectCoordinates={handleSelectCoordinates}
           value={selectedAddress}
           placeholderText={{
             text: "Location",

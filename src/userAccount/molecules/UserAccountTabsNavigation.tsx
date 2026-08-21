@@ -19,8 +19,12 @@ export default function UserAccountTabsNavigation({
   const isCurrentUser = username === ownUsername;
 
   return (
-    <div className="w-full flex justify-center items-center flex-col border-t border-border">
-      <div className="flex gap-5">
+    <div className="w-full flex justify-center items-center border-t border-border">
+      {/* No horizontal scroll: full-width even spacing on mobile (at most 4
+          tabs since Bookings moved into the profile's Manage menu), fixed
+          gap centered row from sm: up, matching UserAccountTabsNavButton's
+          own mobile/desktop sizing split. */}
+      <div className="flex w-full justify-between px-1 sm:w-auto sm:justify-center sm:gap-5 sm:px-0">
         <UserAccountTabsNavButton
           imgUrl="/assets/images/posts.svg"
           text="Events"
@@ -47,14 +51,6 @@ export default function UserAccountTabsNavigation({
           text="Reviews"
           username={username}
         />
-
-        {isCurrentUser && (
-          <UserAccountTabsNavButton
-            imgUrl="/assets/images/date.svg"
-            text="Bookings"
-            username={username}
-          />
-        )}
       </div>
     </div>
   );

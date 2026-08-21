@@ -16,6 +16,8 @@ type EditEventFormFieldsProps = Pick<
   | "errors"
   | "selectedAddress"
   | "setSelectedAddress"
+  | "addressInputRef"
+  | "handleSelectCoordinates"
   | "dateType"
   | "handleDateAndTime"
   | "initialRange"
@@ -43,6 +45,8 @@ export default function EditEventFormFields({
   errors,
   selectedAddress,
   setSelectedAddress,
+  addressInputRef,
+  handleSelectCoordinates,
   dateType,
   handleDateAndTime,
   initialRange,
@@ -113,7 +117,9 @@ export default function EditEventFormFields({
         )}
 
         <PostAutoComplete
+          ref={addressInputRef}
           address={{ address: setSelectedAddress }}
+          onSelectCoordinates={handleSelectCoordinates}
           value={selectedAddress}
           placeholderText={{
             text: "Location",

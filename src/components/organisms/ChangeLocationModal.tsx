@@ -4,10 +4,12 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import MaskIcon from "../atoms/MaskIcon";
-import AutoComplete from "../molecules/AutoComplete";
+import AutoComplete, {
+  type AutoCompleteHandle,
+} from "../molecules/AutoComplete";
 
 type ChangeLocationModalProp = {
   handleShowChangeLocationModal: (state: boolean) => void;
@@ -22,8 +24,9 @@ export default function ChangeLocationModal({
   handleShowChangeLocationModal,
 }: ChangeLocationModalProp) {
   useBodyScrollLock(true);
-
-  const [selectedAddress, setSelectedAddress] = useState("");
+  const router = useRouter();
+  const autoCompleteRef = useRef<AutoCompleteHandle>(null);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
@@ -60,6 +63,46 @@ export default function ChangeLocationModal({
     setIsMapOpen(false); // Close modal
   };
 
+  // Mirrors LandingLocationSearch.tsx's "Go" handler exactly: resolves
+  // whatever is currently typed -- even if the user never picked a dropdown
+  // suggestion -- through the same predictions lookup, with a raw-text-slug
+  // fallback, so typing alone is enough to set a location here too.
+  const handleSetClick = async () => {
+    if (isResolvingLocation) return;
+
+    setIsResolvingLocation(true);
+    try {
+      const result = await autoCompleteRef.current?.resolveTypedInput();
+
+      if (result?.status === "resolved") {
+        // AutoComplete already navigated to the resolved location.
+        handleShowChangeLocationModal(false);
+        return;
+      }
+
+      if (result?.status === "unresolved") {
+        router.push(`/explore/${generateSlug(result.rawText)}`);
+        handleShowChangeLocationModal(false);
+        return;
+      }
+
+      if (!navigator.geolocation) {
+        router.push("/explore");
+        handleShowChangeLocationModal(false);
+        return;
+      }
+
+      const position = await getCurrentPosition();
+      const { latitude, longitude } = position.coords;
+      router.push(`/explore/current-location?lat=${latitude}&lng=${longitude}`);
+      handleShowChangeLocationModal(false);
+    } catch (error) {
+      console.error("Unable to resolve location:", error);
+    } finally {
+      setIsResolvingLocation(false);
+    }
+  };
+
   return (
     <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[80%] lg:w-[40%] md:rounded-xl p-5 space-y-10">
@@ -81,22 +124,23 @@ export default function ChangeLocationModal({
         <div className="flex flex-col gap-5">
           <div className="flex gap-2 items-center">
             <AutoComplete
+              ref={autoCompleteRef}
               placeholderText={{
                 text: "Enter your address",
                 svgUrl: "/assets/images/search.svg",
               }}
               classname="bg-muted"
-              address={{ address: setSelectedAddress }}
+              address={{ address: () => {} }}
             />
 
-            {selectedAddress !== "" && (
-              <Link
-                className="bg-primary rounded-lg p-3 md:p-5 w-24 h-full text-primary-foreground grid place-items-center font-bold"
-                href={`/events/${generateSlug(selectedAddress)}`}
-              >
-                Set
-              </Link>
-            )}
+            <button
+              type="button"
+              onClick={handleSetClick}
+              disabled={isResolvingLocation}
+              className="bg-primary rounded-lg p-3 md:p-5 w-24 h-full text-primary-foreground grid place-items-center font-bold disabled:opacity-60"
+            >
+              {isResolvingLocation ? "..." : "Set"}
+            </button>
           </div>
 
           <div className="space-y-4">

@@ -1,8 +1,8 @@
 "use client";
 
 import { postPlace } from "@/actions/postPlace";
+import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import type { PlaceFormType, PlaceOpeningHoursInput } from "@/types/placeType";
-import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -89,6 +89,20 @@ export function usePlaceUploadForm({
     setSelectedAddressState(address);
   };
 
+  // Real coordinates captured the moment a suggestion (or current location)
+  // resolves -- a ref, not state, so onSubmit can read the just-resolved
+  // value synchronously right after awaiting resolveTypedInput() without
+  // hitting a stale-closure read of last render's state.
+  const addressInputRef = useRef<PostAutoCompleteHandle>(null);
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const handleSelectCoordinates = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
+    coordsRef.current = { lat: location.lat, lng: location.lng };
+  };
+
   const [openingHours, setOpeningHoursState] = useState<
     PlaceOpeningHoursInput[]
   >(DEFAULT_OPENING_HOURS);
@@ -129,7 +143,19 @@ export function usePlaceUploadForm({
         return;
       }
 
-      const coords = await getCoordinatesFromAddress(selectedAddress);
+      const resolution = await addressInputRef.current?.resolveTypedInput();
+      if (!resolution || resolution.status === "empty") {
+        showMessage("Please enter an address");
+        return;
+      }
+      if (resolution.status === "unresolved") {
+        showMessage(
+          "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+
+      const coords = coordsRef.current;
       if (!coords) {
         showMessage("Could not fetch coordinates");
         return;
@@ -178,6 +204,8 @@ export function usePlaceUploadForm({
     setCategoryId,
     selectedAddress,
     setSelectedAddress,
+    addressInputRef,
+    handleSelectCoordinates,
     openingHours,
     setOpeningHours,
     hasMeaningfulContent,

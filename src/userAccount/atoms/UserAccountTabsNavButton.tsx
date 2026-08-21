@@ -33,12 +33,16 @@ export default function UserAccountTabsNavButton({
       href={href}
       type="button"
       className={cn(
-        "flex gap-3 items-center p-3",
+        "flex flex-col sm:flex-row gap-1 sm:gap-3 items-center p-2 sm:p-3 shrink-0",
         isActive ? "border-t-2 border-primary font-bold" : "border-transparent",
       )}
     >
-      <MaskIcon src={imgUrl} alt={text} className="w-[30px] h-[30px]" />
-      <p className="md:text-md lg:text-lg">{text}</p>
+      <MaskIcon
+        src={imgUrl}
+        alt={text}
+        className="w-[22px] h-[22px] sm:w-[30px] sm:h-[30px]"
+      />
+      <p className="text-xs sm:text-md lg:text-lg">{text}</p>
     </Link>
   );
 }

@@ -3,12 +3,12 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
 import { saveEventDraft } from "@/actions/saveEventDraft";
+import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { EventDates, PostsType } from "@/types/postsType";
 import type { Ticket } from "@/types/ticketType";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
-import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -143,6 +143,17 @@ export function useEventUploadForm({
   const [selectedAddress, setSelectedAddress] = useState(
     initialValues?.address ?? preselectedPlaceAddress ?? "",
   );
+
+  const addressInputRef = useRef<PostAutoCompleteHandle>(null);
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const handleSelectCoordinates = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
+    coordsRef.current = { lat: location.lat, lng: location.lng };
+  };
+
   const [category, setCategory] = useState(initialValues?.category ?? "");
 
   // Places feature Milestone 6: the Abonten Place picked as this event's
@@ -397,7 +408,19 @@ export function useEventUploadForm({
         return;
       }
 
-      const coords = await getCoordinatesFromAddress(selectedAddress);
+      const resolution = await addressInputRef.current?.resolveTypedInput();
+      if (!resolution || resolution.status === "empty") {
+        showMessage("Please enter a location");
+        return;
+      }
+      if (resolution.status === "unresolved") {
+        showMessage(
+          "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+
+      const coords = coordsRef.current;
       if (!coords) {
         showMessage("Could not fetch coordinates");
         return;
@@ -539,6 +562,8 @@ export function useEventUploadForm({
     initialDateEntriesForPicker,
     selectedAddress,
     setSelectedAddress: handleSelectedAddress,
+    addressInputRef,
+    handleSelectCoordinates,
     category,
     setCategory: handleCategory,
     types,

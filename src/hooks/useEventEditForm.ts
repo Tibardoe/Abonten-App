@@ -2,16 +2,16 @@
 
 import { getEventForEdit } from "@/actions/getEventForEdit";
 import { updateEvent } from "@/actions/updateEvent";
+import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
-import { getCoordinatesFromAddress } from "@/utils/getCoordinatesFromAddress";
 import { isImageFile } from "@/utils/isImageFile";
 import { parseEventTypes } from "@/utils/parseEventTypes";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
 
@@ -61,6 +61,17 @@ export function useEventEditForm({
   const [multipleDates, setMultipleDates] = useState<DateEntry[]>([]);
 
   const [selectedAddress, setSelectedAddress] = useState("");
+
+  const addressInputRef = useRef<PostAutoCompleteHandle>(null);
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const handleSelectCoordinates = (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => {
+    coordsRef.current = { lat: location.lat, lng: location.lng };
+  };
+
   const [category, setCategory] = useState("");
   const [types, setTypes] = useState<string[]>([]);
 
@@ -188,7 +199,19 @@ export function useEventEditForm({
         return;
       }
 
-      const coords = await getCoordinatesFromAddress(selectedAddress);
+      const resolution = await addressInputRef.current?.resolveTypedInput();
+      if (!resolution || resolution.status === "empty") {
+        showMessage("Please enter a location");
+        return;
+      }
+      if (resolution.status === "unresolved") {
+        showMessage(
+          "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+
+      const coords = coordsRef.current;
       if (!coords) {
         showMessage("Could not fetch coordinates");
         return;
@@ -298,6 +321,8 @@ export function useEventEditForm({
     initialEntries,
     selectedAddress,
     setSelectedAddress,
+    addressInputRef,
+    handleSelectCoordinates,
     category,
     setCategory,
     types,

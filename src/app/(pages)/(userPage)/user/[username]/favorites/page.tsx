@@ -1,8 +1,13 @@
 import { getUserFavoritePlaces } from "@/actions/getUserFavoritePlaces";
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
+import ExploreTabs from "@/places/organisms/ExploreTabs";
 import Link from "next/link";
 import FavoritePlacesList from "./FavoritePlacesList";
 import FavoritesList from "./FavoritesList";
+
+type FavoritesPageProps = {
+  searchParams: Promise<{ tab?: string }>;
+};
 
 // TODO: Cache Components adoption. Refactor this route can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -42,10 +47,17 @@ const placesEmptyState = (
   </div>
 );
 
-// Two independent sub-sections -- Favorite Events (unchanged) and Favorite
-// Places (Milestone 7) -- each with its own query key/empty state, since a
-// user can have favorites in one and none in the other.
-export default async function page() {
+// Two independent sub-tabs -- Favorite Events (unchanged) and Favorite Places
+// (Milestone 7) -- each with its own query key/empty state, since a user can
+// have favorites in one and none in the other. Reuses the same
+// ExploreTabs/exploreTab.ts "events"|"places" switcher the Explore page
+// already uses instead of a bespoke tab UI, and the same "fully fetched
+// server-side, handed in as children" shape.
+export default async function page({ searchParams }: FavoritesPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const initialTab =
+    resolvedSearchParams.tab === "places" ? "places" : "events";
+
   const [eventsFirstPage, placesFirstPage] = await Promise.all([
     getUserFavoritePosts(),
     getUserFavoritePlaces(),
@@ -61,41 +73,39 @@ export default async function page() {
     return getUserFavoritePlaces({ cursor });
   }
 
+  const eventsContent =
+    eventsFirstPage.status !== 200 ? (
+      <div className="text-center mt-5 text-destructive">
+        Failed to load favorited posts: {eventsFirstPage.message}
+      </div>
+    ) : (
+      <FavoritesList
+        queryKey={["favorites"]}
+        initialPage={eventsFirstPage}
+        fetchPage={fetchEventsPage}
+        emptyState={eventsEmptyState}
+      />
+    );
+
+  const placesContent =
+    placesFirstPage.status !== 200 ? (
+      <div className="text-center mt-5 text-destructive">
+        Failed to load favorited places: {placesFirstPage.message}
+      </div>
+    ) : (
+      <FavoritePlacesList
+        queryKey={["favorite-places"]}
+        initialPage={placesFirstPage}
+        fetchPage={fetchPlacesPage}
+        emptyState={placesEmptyState}
+      />
+    );
+
   return (
-    <div className="flex flex-col gap-10">
-      <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-xl">Favorite Events</h2>
-
-        {eventsFirstPage.status !== 200 ? (
-          <div className="text-center mt-5 text-destructive">
-            Failed to load favorited posts: {eventsFirstPage.message}
-          </div>
-        ) : (
-          <FavoritesList
-            queryKey={["favorites"]}
-            initialPage={eventsFirstPage}
-            fetchPage={fetchEventsPage}
-            emptyState={eventsEmptyState}
-          />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-xl">Favorite Places</h2>
-
-        {placesFirstPage.status !== 200 ? (
-          <div className="text-center mt-5 text-destructive">
-            Failed to load favorited places: {placesFirstPage.message}
-          </div>
-        ) : (
-          <FavoritePlacesList
-            queryKey={["favorite-places"]}
-            initialPage={placesFirstPage}
-            fetchPage={fetchPlacesPage}
-            emptyState={placesEmptyState}
-          />
-        )}
-      </section>
-    </div>
+    <ExploreTabs
+      initialTab={initialTab}
+      eventsContent={eventsContent}
+      placesContent={placesContent}
+    />
   );
 }

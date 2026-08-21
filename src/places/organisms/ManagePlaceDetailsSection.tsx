@@ -53,6 +53,8 @@ export default function ManagePlaceDetailsSection({
     setCategoryId,
     selectedAddress,
     setSelectedAddress,
+    addressInputRef,
+    handleSelectCoordinates,
     newCoverFile,
     handleCoverFileChange,
   } = detailsForm;
@@ -125,7 +127,9 @@ export default function ManagePlaceDetailsSection({
         )}
 
         <PostAutoComplete
+          ref={addressInputRef}
           address={{ address: setSelectedAddress }}
+          onSelectCoordinates={handleSelectCoordinates}
           value={selectedAddress}
           placeholderText={{
             text: "Address",

@@ -11,6 +11,8 @@ type PlaceCreateStepBasicInfoProps = Pick<
   | "setCategoryId"
   | "selectedAddress"
   | "setSelectedAddress"
+  | "addressInputRef"
+  | "handleSelectCoordinates"
 > & { className?: string };
 
 // Step 1 of the Place creation flow: name, category, description, address
@@ -26,6 +28,8 @@ export default function PlaceCreateStepBasicInfo({
   setCategoryId,
   selectedAddress,
   setSelectedAddress,
+  addressInputRef,
+  handleSelectCoordinates,
   className,
 }: PlaceCreateStepBasicInfoProps) {
   return (
@@ -50,7 +54,9 @@ export default function PlaceCreateStepBasicInfo({
       )}
 
       <PostAutoComplete
+        ref={addressInputRef}
         address={{ address: setSelectedAddress }}
+        onSelectCoordinates={handleSelectCoordinates}
         placeholderText={{
           text: "Address",
           svgUrl: "/assets/images/location.svg",
