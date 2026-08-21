@@ -3,6 +3,8 @@
 // (see PROJECT.md). Field names/shapes here must match
 // supabase/migrations/20260820090000_add_places_feature.sql exactly.
 
+import type { CheckoutSessionStatus } from "@/types/ticketType";
+
 export type PlaceOpeningHoursInput = {
   dayOfWeek: number; // 0 (Sunday) - 6 (Saturday) — place_opening_hours.day_of_week
   openTime: string | null; // "HH:MM" — null when isClosed
@@ -81,6 +83,26 @@ export type PlaceCategory = {
   slug: string;
 };
 
+// Row shape for the admin claim-request review list (Places Phase 2,
+// Milestone 2). Field names/shapes here must match
+// supabase/migrations/20260824090000_add_place_claim_requests.sql exactly.
+// `place`/`user_info` are the joined rows from getPlaceClaimRequests.ts's
+// `place(name, slug)` / `user_info!claimant_id(username)` select.
+export type PlaceClaimRequest = {
+  id: string;
+  place_id: string;
+  claimant_id: string;
+  note: string | null;
+  contact_phone: string | null;
+  contact_email: string | null;
+  status: "pending" | "approved" | "rejected";
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  place: { name: string; slug: string } | null;
+  user_info: { username: string } | null;
+};
+
 // Params accepted by getQueriedPlaces / get_filtered_places.
 export type PlaceFilters = {
   searchText?: string | null;
@@ -92,4 +114,30 @@ export type PlaceFilters = {
   maxDistanceKm?: number | null;
   cursor?: string | null;
   pageSize?: number;
+};
+
+// Row shape for place_promotion_tier -- Places Phase 2, Milestone 5,
+// Featured Places. Field names must match
+// supabase/migrations/20260826090000_add_place_promotions.sql exactly.
+export type PlacePromotionTier = {
+  id: number;
+  duration_label: string;
+  duration: string;
+  price: number;
+  currency: string;
+  is_active: boolean;
+};
+
+// Discriminated-union sibling of ticketType.ts's SubscriptionSummaryProps,
+// consumed by the same OrderSummary component -- a Featured Places purchase
+// is a single, standalone purchase with no basket concept, same shape as a
+// subscription purchase.
+export type PlacePromotionSummaryProps = {
+  type: "promotion";
+  placeName: string;
+  tierLabel: string;
+  amount: number;
+  totalAmount: number;
+  status: CheckoutSessionStatus;
+  expiresAt: string | null;
 };

@@ -6,10 +6,12 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import EventCard from "@/components/molecules/EventCard";
 import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
+import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
 import PlaceCard from "@/places/molecules/PlaceCard";
 import PlaceOpenStatusBadge from "@/places/molecules/PlaceOpenStatusBadge";
 import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
+import VerifiedBadge from "@/places/molecules/VerifiedBadge";
 import PlaceActionButtons from "@/places/organisms/PlaceActionButtons";
 import PlaceReviewsSection from "@/places/organisms/PlaceReviewsSection";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -147,7 +149,12 @@ export default async function page({
             <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl">
               {place.name}
             </h1>
-            <div className="text-white shrink-0 mt-2">
+            <div className="text-white shrink-0 mt-2 flex items-center gap-2">
+              <ClaimPlaceButton
+                placeId={place.id}
+                placeName={place.name}
+                ownerId={place.owner_id}
+              />
               <AddPlaceToFavoriteButton placeId={place.id} />
             </div>
           </div>
@@ -156,6 +163,11 @@ export default async function page({
             <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
               {categoryName}
             </span>
+            {place.verified && (
+              <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-sm md:text-base">
+                <VerifiedBadge />
+              </span>
+            )}
             <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-sm md:text-base">
               <PlaceOpenStatusBadge status={openStatus} />
             </span>
@@ -182,9 +194,12 @@ export default async function page({
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
               <PlaceActionButtons
                 placeId={place.id}
+                placeName={place.name}
+                ownerId={place.owner_id}
                 location={place.location}
                 phone={place.phone}
                 whatsapp={place.whatsapp}
+                services={services}
               />
             </div>
 

@@ -2,7 +2,9 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 
-// Mirrors place_analytics_event_type_check in the migration exactly.
+// Mirrors place_analytics_event_type_check in the migration exactly --
+// "promotion_impression" added by 20260826090000_add_place_promotions.sql's
+// CHECK constraint update, kept in sync here (Milestone 5, Featured Places).
 const ALLOWED_EVENT_TYPES = [
   "view",
   "direction_click",
@@ -10,6 +12,7 @@ const ALLOWED_EVENT_TYPES = [
   "whatsapp_click",
   "website_click",
   "booking_click",
+  "promotion_impression",
 ] as const;
 
 type PlaceEngagementEventType = (typeof ALLOWED_EVENT_TYPES)[number];

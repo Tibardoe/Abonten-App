@@ -9,6 +9,7 @@ import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";
 import AddPlaceToFavoriteButton from "./AddPlaceToFavoriteButton";
 import PlaceOpenStatusBadge from "./PlaceOpenStatusBadge";
+import VerifiedBadge from "./VerifiedBadge";
 
 export default function PlaceCard({
   id,
@@ -23,6 +24,7 @@ export default function PlaceCard({
   distance_km,
   is_open,
   temporary_status,
+  verified,
   priority,
 }: PlaceType & { priority?: boolean }) {
   const openStatus = derivePlaceCardOpenStatus(is_open, temporary_status);
@@ -71,6 +73,7 @@ export default function PlaceCard({
             <span className="px-2.5 py-1 bg-muted text-muted-foreground rounded-full text-xs">
               {category_name}
             </span>
+            {verified && <VerifiedBadge />}
             <PlaceOpenStatusBadge status={openStatus} />
           </div>
 

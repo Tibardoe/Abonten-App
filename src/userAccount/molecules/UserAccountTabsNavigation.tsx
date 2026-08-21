@@ -47,6 +47,14 @@ export default function UserAccountTabsNavigation({
           text="Reviews"
           username={username}
         />
+
+        {isCurrentUser && (
+          <UserAccountTabsNavButton
+            imgUrl="/assets/images/date.svg"
+            text="Bookings"
+            username={username}
+          />
+        )}
       </div>
     </div>
   );

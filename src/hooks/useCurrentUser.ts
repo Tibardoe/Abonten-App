@@ -1,5 +1,6 @@
 "use client";
 
+import { getIsAdmin } from "@/actions/getIsAdmin";
 import { getUserDetails } from "@/actions/getUserDetails";
 import { getUserEventRole } from "@/actions/getUserEventRole";
 import { getUserPlaceRole } from "@/actions/getUserPlaceRole";
@@ -72,4 +73,23 @@ export function useIsPlaceOwner() {
   });
 
   return data?.role === "owner";
+}
+
+// Gates admin-only UI (e.g. a future admin nav link) on whether this user
+// has user_info.is_admin = true -- mirrors useIsPlaceOwner() exactly,
+// calling getIsAdmin instead of getUserPlaceRole. This is UI gating only:
+// /admin/place-claims re-checks is_admin server-side itself regardless (see
+// src/app/(pages)/admin/place-claims/page.tsx), so this hook is never the
+// actual security boundary.
+export function useIsAdmin() {
+  const { data: user } = useCurrentUser();
+
+  const { data } = useQuery({
+    queryKey: ["user-is-admin", user?.id],
+    enabled: !!user?.id,
+    queryFn: () => getIsAdmin(user?.id as string),
+    staleTime: 60 * 1000,
+  });
+
+  return data?.role === "admin";
 }

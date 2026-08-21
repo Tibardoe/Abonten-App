@@ -1,5 +1,6 @@
 "use client";
 
+import NotificationBell from "@/components/organisms/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -209,6 +210,10 @@ export default function Header() {
               </Link>
 
               <EventUploadButton />
+
+              {/* Not gated on isOrganizer/isPlaceOwner like the links above --
+              every signed-in user can have notifications, regardless of role. */}
+              <NotificationBell />
 
               <button
                 type="button"

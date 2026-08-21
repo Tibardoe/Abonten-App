@@ -44,7 +44,10 @@ type UpsertPaymentAttemptResult =
  */
 export async function upsertPaymentAttemptForSession(
   userId: string,
-  matchColumn: "checkout_session_id" | "subscription_checkout_id",
+  matchColumn:
+    | "checkout_session_id"
+    | "subscription_checkout_id"
+    | "place_promotion_checkout_id",
   matchValue: string,
   amount: number,
   currency: string,

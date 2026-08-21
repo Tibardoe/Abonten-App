@@ -51,6 +51,7 @@ export default async function page({
     rating?: string;
     distance?: string;
     q?: string;
+    view?: string;
   }>;
 }) {
   const { location } = await params;
@@ -64,7 +65,10 @@ export default async function page({
     rating,
     distance,
     q,
+    view,
   } = await searchParams;
+
+  const placesView = view === "map" ? "map" : "list";
 
   const safeLocation = location ?? "";
   const initialTab = isExploreTab(tab) ? tab : "events";
@@ -179,6 +183,7 @@ export default async function page({
             minRating={rating ? Number(rating) : null}
             maxDistanceKm={distance ? Number(distance) : null}
             searchText={q ?? null}
+            view={placesView}
           />
         }
       />

@@ -12,6 +12,7 @@
 // service-role for the webhook) and a payment_attempt id already resolved
 // by the caller — same category as ticketInventory.ts/paymentAttempt.ts.
 
+import activatePlacePromotion from "@/actions/activatePlacePromotion";
 import activateSubscription from "@/actions/activateSubscription";
 import generateTicket from "@/actions/generateTicket";
 import { verifyTransaction } from "@/services/paystackService";
@@ -28,6 +29,7 @@ type PaymentAttemptFullRow = {
   payment_group_id: string | null;
   checkout_session_id: string | null;
   subscription_checkout_id: string | null;
+  place_promotion_checkout_id: string | null;
 };
 
 export type FinalizeResult =
@@ -38,7 +40,7 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id";
+  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id, place_promotion_checkout_id";
 
 export async function finalizePaystackPayment(
   supabase: SupabaseClient,
@@ -220,13 +222,22 @@ export async function finalizePaystackPayment(
   // several payment_attempt rows, and that reference is unique per
   // transaction row, so all tickets issued from this charge point at the
   // same transaction. Every member in a group is always the same kind
-  // (all ticket checkouts, or one subscription — createMultiCheckoutPaymentAttempt
-  // never mixes them), so a single `reason` value is correct here.
+  // (all ticket checkouts, or one subscription, or one promotion —
+  // createMultiCheckoutPaymentAttempt never mixes them; a promotion
+  // purchase is never grouped in practice, but the reason derivation stays
+  // correct even if it ever were), so a single `reason` value is correct
+  // here.
   const { data: userInfo } = await supabase
     .from("user_info")
     .select("username, full_name")
     .eq("id", primary.user_id)
     .maybeSingle();
+
+  const reason = primary.checkout_session_id
+    ? "Ticket_Purchase"
+    : primary.subscription_checkout_id
+      ? "Plan_Purchase"
+      : "Promotion_Purchase";
 
   const { data: transactionRow, error: transactionInsertError } = await supabase
     .from("transaction")
@@ -237,7 +248,7 @@ export async function finalizePaystackPayment(
         userInfo?.username ??
         verification.customer.email,
       email: verification.customer.email,
-      reason: primary.checkout_session_id ? "Ticket_Purchase" : "Plan_Purchase",
+      reason,
       amount: fromPesewas(expectedAmountPesewas),
       currency: primary.currency,
       status: "successful",
@@ -348,6 +359,37 @@ export async function finalizePaystackPayment(
           .update({
             status: "failed",
             failure_reason: result.message ?? "Subscription activation failed",
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      }
+    } else if (member.place_promotion_checkout_id) {
+      const result = await activatePlacePromotion(
+        member.place_promotion_checkout_id,
+        authOverride,
+      );
+
+      if (result.status === 200) {
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "succeeded",
+            paid_at: new Date(),
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      } else {
+        console.log(
+          `finalizePaystackPayment: activatePlacePromotion failed for attempt ${member.id}: ${result.status} ${result.message}`,
+        );
+        anyFailed = true;
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "failed",
+            failure_reason: result.message ?? "Promotion activation failed",
             verified_at: new Date(),
             updated_at: new Date(),
           })

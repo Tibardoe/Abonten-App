@@ -30,6 +30,12 @@ type PaymentMethodSelectorProps =
       subscriptionCheckoutId: string;
       amount: number;
       currency: string;
+    }
+  | {
+      kind: "promotion";
+      placePromotionCheckoutId: string;
+      amount: number;
+      currency: string;
     };
 
 type PaystackPaymentInfo =
@@ -117,13 +123,13 @@ export default function PaymentMethodSelector(
   }, [prepared]);
 
   const amount =
-    props.kind === "subscription"
+    props.kind === "subscription" || props.kind === "promotion"
       ? props.amount
       : prepared?.status === 200
         ? prepared.grandTotal
         : 0;
   const currency =
-    props.kind === "subscription"
+    props.kind === "subscription" || props.kind === "promotion"
       ? props.currency
       : prepared?.status === 200
         ? prepared.currency
@@ -223,8 +229,30 @@ export default function PaymentMethodSelector(
       setNotification("Failed to start payment. Please try again."),
   });
 
+  const promotionPayMutation = useMutation({
+    mutationFn: (paymentMethodId: string) =>
+      createPaymentAttempt({
+        placePromotionCheckoutId:
+          props.kind === "promotion" ? props.placePromotionCheckoutId : "",
+        paymentMethodId,
+      }),
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        setNotification(response.message);
+        return;
+      }
+      handlePaystackInfo(response.data.id, response.data.paystack);
+    },
+    onError: () =>
+      setNotification("Failed to start payment. Please try again."),
+  });
+
   const payMutation =
-    props.kind === "ticket" ? ticketPayMutation : subscriptionPayMutation;
+    props.kind === "ticket"
+      ? ticketPayMutation
+      : props.kind === "promotion"
+        ? promotionPayMutation
+        : subscriptionPayMutation;
 
   const verifyMutation = useMutation({
     mutationFn: (primaryAttemptId: string) =>

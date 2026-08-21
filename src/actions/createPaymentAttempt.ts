@@ -15,7 +15,11 @@ export type { PaymentAttemptRow };
 
 type CreatePaymentAttemptInput = {
   paymentMethodId: string;
-} & ({ checkoutSessionId: string } | { subscriptionCheckoutId: string });
+} & (
+  | { checkoutSessionId: string }
+  | { subscriptionCheckoutId: string }
+  | { placePromotionCheckoutId: string }
+);
 
 type PaystackPaymentInfo =
   | {
@@ -93,7 +97,10 @@ export default async function createPaymentAttempt(
 
   let amount: number;
   let currency: string;
-  let matchColumn: "checkout_session_id" | "subscription_checkout_id";
+  let matchColumn:
+    | "checkout_session_id"
+    | "subscription_checkout_id"
+    | "place_promotion_checkout_id";
   let matchValue: string;
   let callbackPath: string;
 
@@ -130,7 +137,7 @@ export default async function createPaymentAttempt(
     matchColumn = "checkout_session_id";
     matchValue = input.checkoutSessionId;
     callbackPath = `/checkout/${input.checkoutSessionId}?type=ticket`;
-  } else {
+  } else if ("subscriptionCheckoutId" in input) {
     await supabase.rpc("expire_stale_subscription_checkouts");
 
     const { data: checkout, error: checkoutError } = await supabase
@@ -158,6 +165,34 @@ export default async function createPaymentAttempt(
     matchColumn = "subscription_checkout_id";
     matchValue = input.subscriptionCheckoutId;
     callbackPath = `/checkout/${input.subscriptionCheckoutId}?type=subscription`;
+  } else {
+    await supabase.rpc("expire_stale_place_promotion_checkouts");
+
+    const { data: checkout, error: checkoutError } = await supabase
+      .from("place_promotion_checkout")
+      .select("total_price, currency")
+      .eq("id", input.placePromotionCheckoutId)
+      .eq("owner_id", user.id)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (checkoutError) {
+      console.log(`Failed fetching checkout: ${checkoutError.message}`);
+      return { status: 500, message: "Something went wrong!" };
+    }
+
+    if (!checkout) {
+      return {
+        status: 410,
+        message: "This checkout has expired. Please start again.",
+      };
+    }
+
+    amount = checkout.total_price;
+    currency = checkout.currency;
+    matchColumn = "place_promotion_checkout_id";
+    matchValue = input.placePromotionCheckoutId;
+    callbackPath = `/checkout/${input.placePromotionCheckoutId}?type=promotion`;
   }
 
   const attemptResult = await upsertPaymentAttemptForSession(

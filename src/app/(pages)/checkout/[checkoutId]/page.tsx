@@ -1,3 +1,4 @@
+import getPlacePromotionCheckout from "@/actions/getPlacePromotionCheckout";
 import getSubscriptionCheckout from "@/actions/getSubscriptionCheckout";
 import getTicketCheckout from "@/actions/getTicketCheckout";
 import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
@@ -5,6 +6,7 @@ import CheckoutExpiryBanner from "@/components/molecules/CheckoutExpiryBanner";
 import OrderSummary from "@/components/molecules/OrderSummary";
 import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
 import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
+import type { PlacePromotionSummaryProps } from "@/types/placeType";
 import type { CheckoutSessionStatus } from "@/types/ticketType";
 import Link from "next/link";
 
@@ -87,6 +89,88 @@ export default async function page({
             subscriptionCheckoutId={checkoutId}
             amount={orderSummary.totalAmount}
             currency="GHS"
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Featured Places promotions are a single, standalone purchase — same
+  // reasoning as the subscription branch above — not part of the ticket
+  // basket.
+  if (checkoutType === "promotion") {
+    const response = await getPlacePromotionCheckout(checkoutId);
+
+    if (response.status !== 200 || !response.data?.length) {
+      return (
+        <div>
+          <p>Order processed successfully!</p>
+        </div>
+      );
+    }
+
+    const data = response.data[0];
+    const sessionStatus: CheckoutSessionStatus =
+      data.status === "pending"
+        ? "pending"
+        : data.status === "paid"
+          ? "paid"
+          : "expired";
+    const expiresAt = sessionStatus === "pending" ? data.expires_at : null;
+
+    const orderSummary: PlacePromotionSummaryProps = {
+      type: "promotion",
+      placeName: data.place?.name ?? "",
+      tierLabel: data.place_promotion_tier?.duration_label ?? "",
+      amount: data.unit_price,
+      totalAmount: data.total_price,
+      status: sessionStatus,
+      expiresAt,
+    };
+
+    return (
+      <div className="flex flex-col justify-center gap-5">
+        <div>
+          <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
+        </div>
+
+        {sessionStatus === "paid" && (
+          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
+            Purchase complete —{" "}
+            <Link
+              href={`/manage/places/${data.place_id}`}
+              className="underline"
+            >
+              your place is now featured
+            </Link>
+            .
+          </div>
+        )}
+
+        {sessionStatus === "expired" && (
+          <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
+            <p>This checkout has expired and can no longer be completed.</p>
+            <Link
+              href={`/manage/places/${data.place_id}`}
+              className="inline-block underline font-medium"
+            >
+              Start a new promotion
+            </Link>
+          </div>
+        )}
+
+        {sessionStatus === "pending" && expiresAt && (
+          <CheckoutExpiryBanner expiresAt={expiresAt} />
+        )}
+
+        <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
+
+        {sessionStatus === "pending" && (
+          <PaymentMethodSelector
+            kind="promotion"
+            placePromotionCheckoutId={checkoutId}
+            amount={orderSummary.totalAmount}
+            currency={data.currency}
           />
         )}
       </div>

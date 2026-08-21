@@ -2,13 +2,20 @@
 
 import EventUploadModal from "@/components/organisms/EventUploadModal";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import ManagePlaceBookingsSection from "@/places/organisms/ManagePlaceBookingsSection";
 import ManagePlaceDetailsSection from "@/places/organisms/ManagePlaceDetailsSection";
 import ManagePlaceHoursSection from "@/places/organisms/ManagePlaceHoursSection";
 import ManagePlaceInsightsSection from "@/places/organisms/ManagePlaceInsightsSection";
 import ManagePlacePhotosSection from "@/places/organisms/ManagePlacePhotosSection";
+import ManagePlacePromotionSection from "@/places/organisms/ManagePlacePromotionSection";
 import ManagePlaceReviewsSection from "@/places/organisms/ManagePlaceReviewsSection";
 import ManagePlaceServicesSection from "@/places/organisms/ManagePlaceServicesSection";
 import type { PaginatedResult } from "@/types/pagination";
+import type {
+  BookingStatus,
+  OwnerPlaceBooking,
+} from "@/types/placeBookingType";
+import type { PlacePromotionTier } from "@/types/placeType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoAddOutline } from "react-icons/io5";
@@ -44,18 +51,35 @@ type ManagePlaceViewProps = {
   fetchReviewsPage: (
     cursor: string | null,
   ) => Promise<PaginatedResult<PlaceReviewRow>>;
+  bookingsFirstPage: PaginatedResult<OwnerPlaceBooking>;
+  fetchBookingsPage: (
+    status: BookingStatus | undefined,
+    cursor: string | null,
+  ) => Promise<PaginatedResult<OwnerPlaceBooking>>;
   insights: Record<string, number>;
+  promotionTiers: PlacePromotionTier[];
+  currentPromotion: { ends_at: string; tier_label: string | null } | null;
 };
 
-type Tab = "details" | "photos" | "hours" | "services" | "reviews" | "insights";
+type Tab =
+  | "details"
+  | "photos"
+  | "hours"
+  | "services"
+  | "bookings"
+  | "reviews"
+  | "insights"
+  | "promotion";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "Details & Location" },
   { id: "photos", label: "Photos" },
   { id: "hours", label: "Hours & Status" },
   { id: "services", label: "Services" },
+  { id: "bookings", label: "Bookings" },
   { id: "reviews", label: "Reviews" },
   { id: "insights", label: "Insights" },
+  { id: "promotion", label: "Promotion" },
 ];
 
 // Top-level management view for a single place, tabbed across the sections
@@ -70,7 +94,11 @@ export default function ManagePlaceView({
   photos,
   reviewsFirstPage,
   fetchReviewsPage,
+  bookingsFirstPage,
+  fetchBookingsPage,
   insights,
+  promotionTiers,
+  currentPromotion,
 }: ManagePlaceViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("details");
@@ -167,6 +195,14 @@ export default function ManagePlaceView({
           />
         )}
 
+        {activeTab === "bookings" && (
+          <ManagePlaceBookingsSection
+            placeId={place.id}
+            initialPage={bookingsFirstPage}
+            fetchPage={fetchBookingsPage}
+          />
+        )}
+
         {activeTab === "reviews" && (
           <ManagePlaceReviewsSection
             placeId={place.id}
@@ -177,6 +213,14 @@ export default function ManagePlaceView({
 
         {activeTab === "insights" && (
           <ManagePlaceInsightsSection insights={insights} />
+        )}
+
+        {activeTab === "promotion" && (
+          <ManagePlacePromotionSection
+            placeId={place.id}
+            tiers={promotionTiers}
+            currentPromotion={currentPromotion}
+          />
         )}
       </div>
 

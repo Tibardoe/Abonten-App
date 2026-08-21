@@ -2,25 +2,41 @@
 
 import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
+import RequestBookingButton from "@/places/molecules/RequestBookingButton";
 import { FiPhone } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io5";
 
+type BookingService = {
+  id: string;
+  name: string;
+};
+
 type PlaceActionButtonsProps = {
   placeId: string;
+  placeName: string;
+  ownerId: string;
   location: string;
   phone: string | null;
   whatsapp: string | null;
+  services: BookingService[];
 };
 
-// Primary, essential actions only, per the Places spec -- Directions, Call,
-// WhatsApp. No "Book" button in Phase 1 (no booking feature exists yet).
-// Each click logs analytics fire-and-forget (never awaited, never blocks
-// navigation/the tel:/wa.me link) via logPlaceEngagement.
+// Primary, essential actions, per the Places spec -- Directions, Book
+// (Places Phase 2, Milestone 4 -- "Book, if enabled" was always meant to go
+// here per the original Phase 1 spec, just not built until now), Call,
+// WhatsApp. Each click logs analytics fire-and-forget (never awaited, never
+// blocks navigation/the tel:/wa.me link) via logPlaceEngagement --
+// RequestBookingButton gates its own visibility (signed-in, non-owner) and
+// opens a modal rather than navigating, so it has no engagement click to log
+// here.
 export default function PlaceActionButtons({
   placeId,
+  placeName,
+  ownerId,
   location,
   phone,
   whatsapp,
+  services,
 }: PlaceActionButtonsProps) {
   const whatsappDigits = whatsapp?.replace(/\D/g, "");
 
@@ -35,6 +51,13 @@ export default function PlaceActionButtons({
       <div onClick={() => logPlaceEngagement(placeId, "direction_click")}>
         <GetDirectionBtn location={location} />
       </div>
+
+      <RequestBookingButton
+        placeId={placeId}
+        placeName={placeName}
+        ownerId={ownerId}
+        services={services}
+      />
 
       {phone && (
         <a
