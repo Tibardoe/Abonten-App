@@ -17,7 +17,7 @@ const PostInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
           {inputPlaceholder === "Description" ? (
             <textarea
               ref={ref as React.Ref<HTMLTextAreaElement>}
-              className="bg-transparent outline-none text-md w-full"
+              className="bg-transparent outline-none text-base md:text-sm w-full"
               rows={5}
               placeholder={inputPlaceholder}
               {...props}
@@ -36,7 +36,7 @@ const PostInput = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
                 }
               }}
               placeholder={inputPlaceholder}
-              className="bg-transparent outline-none text-md w-full"
+              className="bg-transparent outline-none text-base md:text-sm w-full"
               {...props}
             />
           )}

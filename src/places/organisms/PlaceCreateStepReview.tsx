@@ -23,8 +23,7 @@ type PlaceCreateStepReviewProps = Pick<
 
 // Step 4 of the Place creation flow: a compact read-only summary of
 // everything entered on the previous three steps, so the owner gets one
-// last look before Publish — there's no draft-save safety net in Phase 1,
-// unlike the event flow's Save Draft option.
+// last look before Publish.
 export default function PlaceCreateStepReview({
   getValues,
   categoryId,

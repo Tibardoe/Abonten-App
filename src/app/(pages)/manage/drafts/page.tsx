@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { cleanupOrphanedDraftAssets } from "@/actions/cleanupOrphanedDraftAssets";
 import { getEventDrafts } from "@/actions/getEventDrafts";
+import { getPlaceDrafts } from "@/actions/getPlaceDrafts";
 import { getReviewDrafts } from "@/actions/getReviewDrafts";
 import DraftsView from "@/components/organisms/DraftsView";
 
@@ -13,9 +14,10 @@ export default async function DraftsPage() {
   // drafts (see the drafts migrations) -- pg_cron can delete the expired
   // rows themselves, but not call Cloudinary directly. Never blocks the
   // page on failure.
-  const [eventDrafts, reviewDrafts] = await Promise.all([
+  const [eventDrafts, reviewDrafts, placeDrafts] = await Promise.all([
     getEventDrafts(),
     getReviewDrafts(),
+    getPlaceDrafts(),
     cleanupOrphanedDraftAssets().catch(() => null),
   ]);
 
@@ -26,6 +28,7 @@ export default async function DraftsPage() {
       <DraftsView
         initialEventDrafts={eventDrafts.data}
         initialReviewDrafts={reviewDrafts.data}
+        initialPlaceDrafts={placeDrafts.data}
       />
     </div>
   );

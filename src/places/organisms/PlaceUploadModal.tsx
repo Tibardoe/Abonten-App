@@ -2,11 +2,13 @@
 
 import Notification from "@/components/atoms/Notification";
 import UploadStepHeader from "@/components/molecules/UploadStepHeader";
+import SaveDraftConfirmDialog from "@/components/organisms/SaveDraftConfirmDialog";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
 import { invalidatePlaceListQueries } from "@/utils/mutationQueryInvalidation";
+import type { PlaceDraftPayload } from "@/utils/placeDraftSchema";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
@@ -27,22 +29,37 @@ const ImageCropper = dynamic(
 type PlaceUploadModalProps = {
   handleClosePopup: (state: boolean) => void;
   onUploadSuccess?: () => void;
+  // Continue-draft mode.
+  draftId?: string;
+  initialValues?: PlaceDraftPayload;
+  initialUpdatedAt?: string;
+  existingCoverPhoto?: { public_id: string; version: string };
+  existingCoverPreviewUrl?: string;
+  // Fired on every successful "Save as Draft," separately from
+  // onUploadSuccess, which only fires when the place is actually published.
+  onDraftSaved?: () => void;
 };
 
 type Step = 1 | 2 | 3 | 4;
 
 // Modal shell for the Place creation flow (Places feature Milestone 3).
 // Four steps rather than events' two: Basic Info, Photos, Hours, then a
-// Review/Publish step giving the owner one last look before publishing —
-// there's no draft-save safety net for Places in Phase 1, so this final
-// confirmation is deliberate. Unlike EventUploadModal, there's no
-// pre-modal file picker — the cover photo (step 2) is picked from inside
-// this modal, since Places has no equivalent of the flyer-first flow.
-// Cancel just closes the modal (no SaveDraftConfirmDialog equivalent),
-// also deliberate — Place creation is meant to stay short.
+// Review/Publish step giving the owner one last look before publishing.
+// Unlike EventUploadModal, there's no pre-modal file picker — the cover
+// photo (step 2) is picked from inside this modal, since Places has no
+// equivalent of the flyer-first flow. Cancel offers save-as-draft/discard
+// (SaveDraftConfirmDialog) from Step 1's back button, same as
+// EventUploadModal — steps 2-4's back buttons just navigate to the
+// previous step and don't need this.
 export default function PlaceUploadModal({
   handleClosePopup,
   onUploadSuccess,
+  draftId,
+  initialValues,
+  initialUpdatedAt,
+  existingCoverPhoto,
+  existingCoverPreviewUrl,
+  onDraftSaved,
 }: PlaceUploadModalProps) {
   useBodyScrollLock(true);
 
@@ -51,6 +68,7 @@ export default function PlaceUploadModal({
 
   const [step, setStep] = useState<Step>(1);
   const [showCrop, setShowCrop] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const {
     imagePreview,
@@ -76,13 +94,62 @@ export default function PlaceUploadModal({
       handleClosePopup(false);
       onUploadSuccess?.();
     },
+    draftId,
+    initialValues,
+    initialUpdatedAt,
+    existingCoverPhoto,
   });
 
-  const { notification, isUploading, handleSubmit, onSubmit } = placeUploadForm;
+  const {
+    notification,
+    isUploading,
+    isResolvingLocation,
+    handleSubmit,
+    onSubmit,
+    resolveLocation,
+    hasMeaningfulContent,
+    saveDraft,
+    isSavingDraft,
+  } = placeUploadForm;
 
-  const requestClose = () => handleClosePopup(false);
+  const publishButtonLabel = isResolvingLocation
+    ? "Resolving location..."
+    : isUploading
+      ? "Publishing..."
+      : "Publish";
 
-  const coverPreview = croppedPreview ?? imagePreview;
+  const basicInfoNextLabel = isResolvingLocation
+    ? "Resolving location..."
+    : "Next";
+
+  // The address field only exists while this step is mounted -- resolve it
+  // now, before advancing, rather than at final Publish (step 4), where
+  // PostAutoComplete has already unmounted and can no longer resolve
+  // anything typed here.
+  const handleBasicInfoNext = async () => {
+    const resolved = await resolveLocation();
+    if (resolved) setStep(2);
+  };
+
+  const requestClose = () => {
+    if (hasMeaningfulContent) {
+      setShowCancelConfirm(true);
+    } else {
+      handleClosePopup(false);
+    }
+  };
+
+  const handleSaveDraftAndClose = async () => {
+    const response = await saveDraft();
+    setShowCancelConfirm(false);
+    if (response.status === 200) {
+      handleClosePopup(false);
+      onDraftSaved?.();
+    }
+  };
+
+  const coverPreview =
+    croppedPreview ?? imagePreview ?? existingCoverPreviewUrl ?? null;
 
   return (
     <>
@@ -102,9 +169,9 @@ export default function PlaceUploadModal({
                 onBack={requestClose}
                 title="New Place · Basic Info"
                 primaryAction={{
-                  label: "Next",
-                  onClick: () => setStep(2),
-                  disabled: isUploading,
+                  label: basicInfoNextLabel,
+                  onClick: handleBasicInfoNext,
+                  disabled: isUploading || isResolvingLocation,
                 }}
               />
               <PlaceCreateStepBasicInfo
@@ -169,7 +236,7 @@ export default function PlaceUploadModal({
                 onBack={() => setStep(3)}
                 title="New Place · Review"
                 primaryAction={{
-                  label: isUploading ? "Publishing..." : "Publish",
+                  label: publishButtonLabel,
                   onClick: handleSubmit(onSubmit),
                   disabled: isUploading,
                 }}
@@ -183,6 +250,19 @@ export default function PlaceUploadModal({
           )}
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <SaveDraftConfirmDialog
+          message="You have unsaved changes to this place."
+          isSaving={isSavingDraft}
+          onSaveDraft={handleSaveDraftAndClose}
+          onDiscard={() => {
+            setShowCancelConfirm(false);
+            handleClosePopup(false);
+          }}
+          onContinueEditing={() => setShowCancelConfirm(false)}
+        />
+      )}
 
       <Notification notification={notification} />
     </>

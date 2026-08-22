@@ -37,6 +37,16 @@ export default function LandingLocationSearch() {
         return;
       }
 
+      if (result?.status === "error") {
+        // A genuine API/service failure, not "nothing typed" — falling
+        // through to the geolocation branch below would silently ignore
+        // whatever the user actually typed, so this needs its own branch
+        // even though it degrades the same way "unresolved" does.
+        console.error("Location service unavailable while resolving input.");
+        router.push("/explore");
+        return;
+      }
+
       // Nothing was typed: try the user's current location instead.
       if (!navigator.geolocation) {
         router.push("/explore");

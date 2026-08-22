@@ -96,7 +96,7 @@ export default function PlaceSearchSelect({
           value={query}
           onChange={handleInputChange}
           placeholder="Search an existing Abonten Place (optional)"
-          className="text-foreground outline-none w-full bg-transparent text-sm"
+          className="text-foreground outline-none w-full bg-transparent text-base md:text-sm"
         />
       </div>
 

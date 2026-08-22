@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { validateLocationInput } from "@/utils/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
@@ -68,6 +69,11 @@ export async function updatePlace(formData: UpdatePlaceInput) {
     longitude,
     selectedFile,
   } = formData;
+
+  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  if (!locationCheck.valid) {
+    return { status: 400, message: locationCheck.message };
+  }
 
   const { data: existingPlace, error: fetchError } = await supabase
     .from("place")

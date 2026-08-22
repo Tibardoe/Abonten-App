@@ -1,8 +1,11 @@
 "use client";
 
 import { postPlace } from "@/actions/postPlace";
+import { savePlaceDraft } from "@/actions/savePlaceDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import type { PlaceFormType, PlaceOpeningHoursInput } from "@/types/placeType";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
+import type { PlaceDraftPayload } from "@/utils/placeDraftSchema";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -16,6 +19,14 @@ type UsePlaceUploadFormOptions = {
   // once the owner crops the cover photo, otherwise the raw selection.
   file: File | null;
   onSuccess: () => void;
+  // Draft-continue mode: seeds every piece of state below from a
+  // previously saved draft instead of starting empty.
+  draftId?: string;
+  initialValues?: PlaceDraftPayload;
+  initialUpdatedAt?: string;
+  // The draft's already-uploaded cover photo, reused by postPlace instead
+  // of re-uploading when the owner hasn't picked a replacement file.
+  existingCoverPhoto?: { public_id: string; version: string };
 };
 
 // A place starts open every day 09:00-17:00 — a sensible default the owner
@@ -33,19 +44,30 @@ const DEFAULT_OPENING_HOURS: PlaceOpeningHoursInput[] = Array.from(
 // All state, validation and submit logic for the Place creation flow.
 // Mirrors useEventUploadForm.ts's shape: RHF+Zod for the schema-covered
 // fields (name/description/website/phone/whatsapp), plain useState for
-// everything else, a synchronous double-submit lock, and a per-mount
+// everything else, a synchronous double-submit lock, a per-mount
 // clientRequestId threaded into the submit payload so a retried/duplicated
 // request can be recognized server-side instead of creating a duplicate
-// place.
+// place, and full save-as-draft support (buildDraftPayload/saveDraft).
 export function usePlaceUploadForm({
   file,
   onSuccess,
+  draftId,
+  initialValues,
+  initialUpdatedAt,
+  existingCoverPhoto,
 }: UsePlaceUploadFormOptions) {
   const t = useTranslations("places");
   const placeSchema = useMemo(() => getPlaceSchema(t), [t]);
 
   const form = useForm<PlaceSchema>({
     resolver: zodResolver(placeSchema),
+    defaultValues: {
+      name: initialValues?.name,
+      description: initialValues?.description,
+      website_url: initialValues?.websiteUrl,
+      phone: initialValues?.phone,
+      whatsapp: initialValues?.whatsapp,
+    },
   });
   const {
     register,
@@ -57,6 +79,13 @@ export function usePlaceUploadForm({
   const { message: notification, showMessage } = useTimedMessage(3000);
 
   const [isUploading, setIsUploading] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
+  const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
+    draftId,
+  );
+  const draftUpdatedAtRef = useRef<string | undefined>(initialUpdatedAt);
 
   // Synchronous lock against double submission (double-click, rapid repeat
   // clicks): checked/set on the very first line of onSubmit, before any
@@ -69,21 +98,24 @@ export function usePlaceUploadForm({
   // return the already-created place instead of inserting a duplicate.
   const clientRequestIdRef = useRef(crypto.randomUUID());
 
-  // Tracks whether the owner has entered anything this session. Not
-  // currently consumed for a cancel-confirmation (Places has no draft flow
-  // in Phase 1 — Cancel just closes the modal) but returned for parity with
-  // useEventUploadForm.ts's hasMeaningfulContent, in case a later milestone
-  // wants it.
+  // Tracks whether the owner has actually entered anything this session,
+  // beyond whatever a continued draft was hydrated with — used to decide
+  // whether Cancel needs to prompt at all (an untouched fresh form just
+  // closes, per spec).
   const [touched, setTouched] = useState(false);
   const markTouched = () => setTouched(true);
 
-  const [categoryId, setCategoryIdState] = useState<number | null>(null);
+  const [categoryId, setCategoryIdState] = useState<number | null>(
+    initialValues?.categoryId ?? null,
+  );
   const setCategoryId = (id: number) => {
     markTouched();
     setCategoryIdState(id);
   };
 
-  const [selectedAddress, setSelectedAddressState] = useState("");
+  const [selectedAddress, setSelectedAddressState] = useState(
+    initialValues?.address ?? "",
+  );
   const setSelectedAddress = (address: string) => {
     markTouched();
     setSelectedAddressState(address);
@@ -94,24 +126,115 @@ export function usePlaceUploadForm({
   // value synchronously right after awaiting resolveTypedInput() without
   // hitting a stale-closure read of last render's state.
   const addressInputRef = useRef<PostAutoCompleteHandle>(null);
-  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
-  const handleSelectCoordinates = (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => {
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(
+    initialValues?.latitude !== undefined &&
+      initialValues?.longitude !== undefined
+      ? { lat: initialValues.latitude, lng: initialValues.longitude }
+      : null,
+  );
+  const handleSelectCoordinates = (location: ResolvedLocation) => {
     coordsRef.current = { lat: location.lat, lng: location.lng };
   };
 
   const [openingHours, setOpeningHoursState] = useState<
     PlaceOpeningHoursInput[]
-  >(DEFAULT_OPENING_HOURS);
+  >(initialValues?.openingHours ?? DEFAULT_OPENING_HOURS);
   const setOpeningHours = (hours: PlaceOpeningHoursInput[]) => {
     markTouched();
     setOpeningHoursState(hours);
   };
 
-  const hasMeaningfulContent = touched || isFormDirty || Boolean(file);
+  // Not currently editable from the create-flow UI (services/social links
+  // have no step-1-4 form control yet), but preserved across a draft
+  // save/continue cycle rather than silently dropped if a future milestone
+  // adds one.
+  const socialLinks = initialValues?.socialLinks;
+  const services = initialValues?.services;
+
+  const hasMeaningfulContent =
+    Boolean(initialValues) || touched || isFormDirty || Boolean(file);
+
+  const buildDraftPayload = (): PlaceDraftPayload => {
+    const formValues = form.getValues();
+
+    return {
+      name: formValues.name || undefined,
+      description: formValues.description || undefined,
+      websiteUrl: formValues.website_url || undefined,
+      phone: formValues.phone || undefined,
+      whatsapp: formValues.whatsapp || undefined,
+      categoryId: categoryId ?? undefined,
+      address: selectedAddress || undefined,
+      latitude: coordsRef.current?.lat,
+      longitude: coordsRef.current?.lng,
+      socialLinks,
+      openingHours,
+      services,
+    };
+  };
+
+  const saveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      const payload = buildDraftPayload();
+      const response = await savePlaceDraft({
+        draftId: currentDraftId,
+        payload,
+        expectedUpdatedAt: draftUpdatedAtRef.current,
+        coverFile: file,
+      });
+
+      if (response.status === 200 && response.data) {
+        setCurrentDraftId(response.data.draftId);
+        draftUpdatedAtRef.current = response.data.updatedAt;
+      }
+
+      return response;
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  // Resolves whatever is currently typed in the address field -- must run
+  // while PostAutoComplete (the Basic Info step) is still mounted, because
+  // addressInputRef.current is set by that component's ref and React nulls
+  // it out the moment the step unmounts. The Place creation modal is a
+  // 4-step wizard that unmounts each step's fields when moving to the
+  // next one, so by the time Publish (step 4) is clicked, this ref is
+  // already null and resolveTypedInput() can no longer be called -- this
+  // was silently producing "Please enter an address" even for a fully
+  // typed/selected location. The modal calls this from the Basic Info
+  // step's own "Next" button instead, while resolution is still possible,
+  // and the resolved address/coordinates are then carried forward in
+  // selectedAddress/coordsRef (plain state/ref, unaffected by unmounting).
+  const resolveLocation = async (): Promise<boolean> => {
+    setIsResolvingLocation(true);
+    const resolution = await addressInputRef.current?.resolveTypedInput();
+    setIsResolvingLocation(false);
+
+    if (!resolution || resolution.status === "empty") {
+      showMessage("Please enter an address");
+      return false;
+    }
+    if (resolution.status === "unresolved") {
+      showMessage(
+        "Could not find that location — please check the spelling or pick a suggestion.",
+      );
+      return false;
+    }
+    if (resolution.status === "error") {
+      showMessage(
+        "We couldn't verify this location right now. Please try again.",
+      );
+      return false;
+    }
+    if (!coordsRef.current) {
+      showMessage("Could not fetch coordinates");
+      return false;
+    }
+
+    return true;
+  };
 
   const onSubmit = async (formData: PlaceSchema) => {
     if (isSubmittingRef.current) return;
@@ -120,13 +243,8 @@ export function usePlaceUploadForm({
     try {
       setIsUploading(true);
 
-      if (!file) {
+      if (!file && !existingCoverPhoto) {
         showMessage("Please select a cover photo first!");
-        return;
-      }
-
-      if (!selectedAddress) {
-        showMessage("Please enter an address");
         return;
       }
 
@@ -143,21 +261,12 @@ export function usePlaceUploadForm({
         return;
       }
 
-      const resolution = await addressInputRef.current?.resolveTypedInput();
-      if (!resolution || resolution.status === "empty") {
-        showMessage("Please enter an address");
-        return;
-      }
-      if (resolution.status === "unresolved") {
-        showMessage(
-          "Could not find that location — please check the spelling or pick a suggestion.",
-        );
-        return;
-      }
-
+      // Location was already resolved (and confirmed) back on the Basic
+      // Info step via resolveLocation() -- addressInputRef.current is null
+      // by now, so resolveTypedInput() can't be called again here.
       const coords = coordsRef.current;
-      if (!coords) {
-        showMessage("Could not fetch coordinates");
+      if (!selectedAddress || !coords) {
+        showMessage("Please enter an address");
         return;
       }
 
@@ -171,9 +280,25 @@ export function usePlaceUploadForm({
         websiteUrl: formData.website_url || undefined,
         phone: formData.phone || undefined,
         whatsapp: formData.whatsapp || undefined,
+        socialLinks,
         selectedFile: file,
+        existingCoverPhoto: !file ? existingCoverPhoto : undefined,
         openingHours,
+        // Draft-safe services allow every field to be optional (draft
+        // validity != publish validity — see placeDraftSchema.ts); the
+        // create flow has no service-editing step yet, so a continued
+        // draft's services just need coercing into the stricter
+        // publish-time shape rather than being dropped.
+        services: services
+          ?.filter((service): service is typeof service & { name: string } =>
+            Boolean(service.name),
+          )
+          .map((service) => ({
+            ...service,
+            showPrice: service.showPrice ?? false,
+          })),
         clientRequestId: clientRequestIdRef.current,
+        draftId: currentDraftId,
       };
 
       const response = await postPlace(finalData);
@@ -185,9 +310,10 @@ export function usePlaceUploadForm({
         showMessage(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Location unknown! Try again with different location");
+      showMessage("Something went wrong. Please try again.");
     } finally {
       setIsUploading(false);
+      setIsResolvingLocation(false);
       isSubmittingRef.current = false;
     }
   };
@@ -199,7 +325,9 @@ export function usePlaceUploadForm({
     getValues,
     notification,
     isUploading,
+    isResolvingLocation,
     onSubmit,
+    resolveLocation,
     categoryId,
     setCategoryId,
     selectedAddress,
@@ -209,5 +337,8 @@ export function usePlaceUploadForm({
     openingHours,
     setOpeningHours,
     hasMeaningfulContent,
+    saveDraft,
+    isSavingDraft,
+    currentDraftId,
   };
 }

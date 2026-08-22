@@ -4,6 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import type { PostsType } from "@/types/postsType";
 import { generateEventCode } from "@/utils/eventCodeGenerator";
 import { generateSlug } from "@/utils/geerateSlug";
+import { validateLocationInput } from "@/utils/validateLocationInput";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
 // Postgres error code for a unique-constraint violation.
@@ -58,6 +59,11 @@ export async function postEvent(formData: PostsType) {
     draftId,
     placeId,
   } = formData;
+
+  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  if (!locationCheck.valid) {
+    return { status: 400, message: locationCheck.message };
+  }
 
   const eventCode = generateEventCode(title);
 

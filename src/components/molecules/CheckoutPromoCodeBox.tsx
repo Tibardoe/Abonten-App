@@ -37,7 +37,7 @@ export default function CheckoutPromoCodeBox({
         <div className="flex gap-5 justify-between items-center border border-border p-4 rounded-md">
           <input
             type="text"
-            className="outline-none w-full h-full bg-transparent"
+            className="outline-none w-full h-full bg-transparent text-base md:text-sm"
             placeholder="Enter code"
             value={promoCodeInput}
             disabled={!!appliedPromo}

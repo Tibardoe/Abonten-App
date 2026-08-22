@@ -48,7 +48,7 @@ export default function ReceivingAccountForms({
           <input
             {...register("name")}
             placeholder="Full Name"
-            className="w-full border rounded-md px-4 py-2 text-sm"
+            className="w-full border rounded-md px-4 py-2 text-base md:text-sm"
           />
           {renderError(errors.name)}
         </div>
@@ -56,7 +56,7 @@ export default function ReceivingAccountForms({
           <input
             {...register("email")}
             placeholder="Email"
-            className="w-full border rounded-md px-4 py-2 text-sm"
+            className="w-full border rounded-md px-4 py-2 text-base md:text-sm"
           />
 
           {renderError(errors.email)}
@@ -131,7 +131,7 @@ export default function ReceivingAccountForms({
               <input
                 {...register("phone")}
                 placeholder="Phone Number"
-                className="w-full border rounded-md px-4 py-2 text-sm"
+                className="w-full border rounded-md px-4 py-2 text-base md:text-sm"
               />
               {renderError(errors.phone)}
             </div>
@@ -145,7 +145,7 @@ export default function ReceivingAccountForms({
                 <input
                   {...register("bankName")}
                   placeholder="Bank Name"
-                  className="w-full border rounded-md px-4 py-2 text-sm"
+                  className="w-full border rounded-md px-4 py-2 text-base md:text-sm"
                 />
                 {renderError(errors.bankName)}
               </div>
@@ -153,7 +153,7 @@ export default function ReceivingAccountForms({
                 <input
                   {...register("branch")}
                   placeholder="Bank Branch"
-                  className="w-full border rounded-md px-4 py-2 text-sm"
+                  className="w-full border rounded-md px-4 py-2 text-base md:text-sm"
                 />
                 {renderError(errors.branch)}
               </div>
@@ -163,7 +163,7 @@ export default function ReceivingAccountForms({
                 {...register("bankAccountNumber")}
                 placeholder="Account Number"
                 type="number"
-                className="w-full border rounded-md px-4 py-2 text-sm"
+                className="w-full border rounded-md px-4 py-2 text-base md:text-sm"
               />
               {renderError(errors.bankAccountNumber)}
             </div>

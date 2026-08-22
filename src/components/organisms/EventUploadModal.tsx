@@ -111,12 +111,19 @@ export default function EventUploadModal({
   const {
     notification,
     isUploading,
+    isResolvingLocation,
     handleSubmit,
     onSubmit,
     hasMeaningfulContent,
     saveDraft,
     isSavingDraft,
   } = eventUploadForm;
+
+  const uploadButtonLabel = isResolvingLocation
+    ? "Resolving location..."
+    : isUploading
+      ? "Uploading..."
+      : "Upload";
 
   const requestClose = () => {
     if (hasMeaningfulContent) {
@@ -179,7 +186,7 @@ export default function EventUploadModal({
                 onBack={requestClose}
                 title="Create new post"
                 primaryAction={{
-                  label: isUploading ? "Uploading..." : "Upload",
+                  label: uploadButtonLabel,
                   onClick: handleSubmit(onSubmit),
                   disabled: isUploading,
                 }}

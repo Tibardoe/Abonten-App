@@ -1,5 +1,6 @@
 "use client";
 
+import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { animateMarkerTo } from "@/utils/animateMarker";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import type React from "react";
@@ -10,11 +11,7 @@ const containerClass =
   "w-full h-[500px] md:h-[300px] rounded-lg overflow-hidden";
 
 interface MapPickerProps {
-  onLocationSelect: (coords: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => void;
+  onLocationSelect: (coords: ResolvedLocation) => void;
   defaultCenter: { lat: number; lng: number };
   center?: { lat: number; lng: number };
 }

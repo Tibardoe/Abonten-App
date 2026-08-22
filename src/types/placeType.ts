@@ -31,9 +31,13 @@ export type PlaceFormType = {
   phone?: string;
   whatsapp?: string;
   socialLinks?: Record<string, string>;
-  // Required on creation — unlike PostsType.selectedFile, there's no
-  // existingFlyer-style fallback (Places has no draft flow in Phase 1).
-  selectedFile: File;
+  // Required unless the place is being published from a continued draft
+  // that already has a cover photo uploaded (see existingCoverPhoto) —
+  // mirrors PostsType.selectedFile/existingFlyer.
+  selectedFile: File | null;
+  // Set when continuing a draft whose cover photo was already uploaded to
+  // Cloudinary and the owner hasn't picked a replacement this session.
+  existingCoverPhoto?: { public_id: string; version: string };
   openingHours: PlaceOpeningHoursInput[];
   services?: PlaceServiceInput[];
   // Generated once per submission and reused across retries, so
@@ -41,6 +45,9 @@ export type PlaceFormType = {
   // return the already-created place instead of inserting a duplicate
   // (mirrors PostsType.clientRequestId / create_event's same convention).
   clientRequestId: string;
+  // Set when publishing from a continued draft — deleted server-side once
+  // the place is actually created (mirrors PostsType.draftId).
+  draftId?: string;
 };
 
 // Row shape returned by get_nearby_places / get_filtered_places — both RPCs

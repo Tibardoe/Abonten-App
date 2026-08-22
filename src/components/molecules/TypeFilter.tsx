@@ -1,8 +1,7 @@
 "use client";
 
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
-import { useState } from "react";
-import { IoIosArrowDown } from "react-icons/io";
+import TileSelector from "./TileSelector";
 
 type TypeFIlter = {
   selectedCategory: string;
@@ -17,45 +16,18 @@ export default function TypeFilter({
   handleType,
   classname,
 }: TypeFIlter) {
-  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
+  const types =
+    eventCategoriesAndTypes.find((c) => c.category === selectedCategory)
+      ?.types ?? [];
 
   return (
-    <div className="space-y-2">
-      <div className="space-y-3">
-        <button
-          type="button"
-          onClick={() => setShowTypeDropdown((prevState) => !prevState)}
-          className="flex gap-2 justify-between w-full items-center"
-        >
-          <h2 className={`${classname}`}>Type</h2>
-          <IoIosArrowDown className="text-2xl" />
-        </button>
-
-        {showTypeDropdown && (
-          <div className="space-y-5">
-            {eventCategoriesAndTypes
-              .find((c) => c.category === selectedCategory)
-              ?.types.map((typeItem) => (
-                <button
-                  key={typeItem}
-                  type="button"
-                  onClick={() => handleType(typeItem)}
-                  className="flex justify-between items-center w-full text-sm"
-                >
-                  {typeItem}
-
-                  <span className="w-[20px] h-[20px] rounded grid place-items-center border border-border">
-                    {selectedTypes.includes(typeItem) && (
-                      <span className="w-full h-full bg-primary rounded-sm relative">
-                        <span className="w-[7px] h-[12px] border-r-2 border-b-[3px] border-primary-foreground rotate-45 absolute top-[10%] left-1/2 -translate-x-1/2" />
-                      </span>
-                    )}
-                  </span>
-                </button>
-              ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <TileSelector
+      mode="multi"
+      options={types.map((type) => ({ id: type, label: type }))}
+      value={selectedTypes}
+      onChange={handleType}
+      label="Type"
+      labelClassName={classname}
+    />
   );
 }

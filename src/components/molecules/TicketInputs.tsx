@@ -102,7 +102,7 @@ export default function TicketInputs({
               placeholder="Fee"
               value={singleTicketPrice ?? ""}
               onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
-              className="outline-none text-sm"
+              className="outline-none text-base md:text-sm"
             />
           </div>
 
@@ -113,7 +113,7 @@ export default function TicketInputs({
             onChange={(e) =>
               handleSingleTicketQuantity?.(Number(e.target.value))
             }
-            className="border w-full p-2 rounded-md text-sm"
+            className="border w-full p-2 rounded-md text-base md:text-sm"
           />
         </div>
       )}
@@ -127,7 +127,7 @@ export default function TicketInputs({
                 placeholder="Category name"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="border w-full p-2 rounded-md text-sm"
+                className="border w-full p-2 rounded-md text-base md:text-sm"
               />
             </div>
 
@@ -140,7 +140,7 @@ export default function TicketInputs({
                   placeholder="Fee"
                   value={newPrice ?? ""}
                   onChange={(e) => setNewPrice(Number(e.target.value))}
-                  className="outline-none text-sm"
+                  className="outline-none text-base md:text-sm"
                 />
               </div>
 
@@ -149,7 +149,7 @@ export default function TicketInputs({
                 placeholder="Quantity"
                 value={quantity ?? ""}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="border p-2 rounded-md text-sm w-full"
+                className="border p-2 rounded-md text-base md:text-sm w-full"
               />
             </div>
 

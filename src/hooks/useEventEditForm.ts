@@ -4,6 +4,7 @@ import { getEventForEdit } from "@/actions/getEventForEdit";
 import { updateEvent } from "@/actions/updateEvent";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { isImageFile } from "@/utils/isImageFile";
 import { parseEventTypes } from "@/utils/parseEventTypes";
@@ -46,6 +47,7 @@ export function useEventEditForm({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPrefilled, setIsPrefilled] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
 
   const [dateType, setDateType] = useState("single");
   const [initialRange, setInitialRange] = useState<DateRange | undefined>(
@@ -64,11 +66,7 @@ export function useEventEditForm({
 
   const addressInputRef = useRef<PostAutoCompleteHandle>(null);
   const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
-  const handleSelectCoordinates = (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => {
+  const handleSelectCoordinates = (location: ResolvedLocation) => {
     coordsRef.current = { lat: location.lat, lng: location.lng };
   };
 
@@ -194,12 +192,10 @@ export function useEventEditForm({
     try {
       setIsSubmitting(true);
 
-      if (!selectedAddress) {
-        showMessage("Please enter a location");
-        return;
-      }
-
+      setIsResolvingLocation(true);
       const resolution = await addressInputRef.current?.resolveTypedInput();
+      setIsResolvingLocation(false);
+
       if (!resolution || resolution.status === "empty") {
         showMessage("Please enter a location");
         return;
@@ -207,6 +203,12 @@ export function useEventEditForm({
       if (resolution.status === "unresolved") {
         showMessage(
           "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+      if (resolution.status === "error") {
+        showMessage(
+          "We couldn't verify this location right now. Please try again.",
         );
         return;
       }
@@ -299,9 +301,10 @@ export function useEventEditForm({
         showMessage(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Location unknown! Try again with different location");
+      showMessage("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setIsResolvingLocation(false);
     }
   };
 
@@ -311,6 +314,7 @@ export function useEventEditForm({
     errors,
     notification,
     isSubmitting,
+    isResolvingLocation,
     isFetchingEvent: isFetchingEvent && !isPrefilled,
     isReady: isPrefilled,
     onSubmit,

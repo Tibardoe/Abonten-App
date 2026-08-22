@@ -2,7 +2,11 @@
 
 import { createClient } from "@/config/supabase/server";
 
-export type ActiveDraftCounts = { event: number; review: number };
+export type ActiveDraftCounts = {
+  event: number;
+  review: number;
+  place: number;
+};
 
 // Cheap, head-only count query (no rows fetched) — used for the "you have
 // saved drafts" chooser before starting a new event, and could back a nav
@@ -22,13 +26,13 @@ export async function getActiveDraftCounts(): Promise<{
     return {
       status: 401,
       message: "User not authenticated",
-      data: { event: 0, review: 0 },
+      data: { event: 0, review: 0, place: 0 },
     };
   }
 
   const nowIso = new Date().toISOString();
 
-  const [eventResult, reviewResult] = await Promise.all([
+  const [eventResult, reviewResult, placeResult] = await Promise.all([
     supabase
       .from("drafts")
       .select("id", { count: "exact", head: true })
@@ -41,6 +45,12 @@ export async function getActiveDraftCounts(): Promise<{
       .eq("user_id", user.id)
       .eq("draft_type", "review")
       .gt("expires_at", nowIso),
+    supabase
+      .from("drafts")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("draft_type", "place")
+      .gt("expires_at", nowIso),
   ]);
 
   return {
@@ -49,6 +59,7 @@ export async function getActiveDraftCounts(): Promise<{
     data: {
       event: eventResult.count ?? 0,
       review: reviewResult.count ?? 0,
+      place: placeResult.count ?? 0,
     },
   };
 }

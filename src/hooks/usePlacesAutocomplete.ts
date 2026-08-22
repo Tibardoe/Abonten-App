@@ -2,6 +2,7 @@
 
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -11,11 +12,7 @@ const libraries: "places"[] = ["places"];
 type UsePlacesAutocompleteOptions = {
   address?: AutoCompleteAddressType;
   value?: string;
-  onSelectCoordinates?: (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => void;
+  onSelectCoordinates?: (location: ResolvedLocation) => void;
 };
 
 /**
@@ -43,6 +40,11 @@ export function usePlacesAutocomplete({
   const sessionTokenRef =
     useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Guards against an out-of-order debounced predictions response (e.g. a
+  // slow "Accra" request resolving after a faster "Kumasi" one) clobbering
+  // the results for whatever is actually typed now.
+  const latestRequestIdRef = useRef(0);
 
   useClickOutside([containerRef], () => setSearchResults([]));
 
@@ -85,6 +87,8 @@ export function usePlacesAutocomplete({
       )
         return;
 
+      const requestId = ++latestRequestIdRef.current;
+
       const request: google.maps.places.AutocompleteRequest = {
         input,
         sessionToken: sessionTokenRef.current,
@@ -96,6 +100,10 @@ export function usePlacesAutocomplete({
       autocompleteServiceRef.current.getPlacePredictions(
         request,
         (predictions, status) => {
+          // A newer request has since been fired -- this response is stale,
+          // ignore it so it can't overwrite fresher results.
+          if (requestId !== latestRequestIdRef.current) return;
+
           if (
             status === google.maps.places.PlacesServiceStatus.OK &&
             predictions
@@ -118,6 +126,14 @@ export function usePlacesAutocomplete({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextValue = e.target.value;
     setInputValue(nextValue);
+
+    if (!nextValue.trim()) {
+      // Clearing the field should clear any previously selected location,
+      // not leave a stale selection lingering behind an empty input.
+      setSearchResults([]);
+      address?.address("");
+    }
+
     debouncedApiCall(nextValue);
   };
 
@@ -170,18 +186,15 @@ export function usePlacesAutocomplete({
     [address, onSelectCoordinates, getFormattedPlaceDetails],
   );
 
-  const handleSelectCurrentLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+  // Reverse-geocodes a lat/lng pair into a formatted address and commits it
+  // through the same state-update path a predictions-based resolution
+  // uses. Shared by "use my current location" and by resolving raw
+  // "lat,lng" text typed directly into the input (Google's Autocomplete
+  // predictions API isn't built to handle bare coordinates).
+  const resolveCoordinates = useCallback(
+    (latlng: { lat: number; lng: number }): Promise<string | null> => {
+      return new Promise((resolve) => {
         const geocoder = new google.maps.Geocoder();
-        const latlng = { lat: latitude, lng: longitude };
-
         geocoder.geocode({ location: latlng }, (results, status) => {
           if (status === "OK" && results && results.length > 0) {
             const formattedAddress = results[0].formatted_address;
@@ -189,17 +202,68 @@ export function usePlacesAutocomplete({
             setInputValue(formattedAddress);
             setSearchResults([]);
             onSelectCoordinates?.({ ...latlng, address: formattedAddress });
+            resolve(formattedAddress);
           } else {
-            alert("No address found.");
+            resolve(null);
           }
         });
+      });
+    },
+    [address, onSelectCoordinates],
+  );
+
+  // Forward-geocodes typed text directly via the Geocoding API, bypassing
+  // the Autocomplete predictions index entirely. Used as a fallback when
+  // Places Autocomplete returns zero predictions for text that can still
+  // be a genuinely resolvable address -- e.g. compact digital-address
+  // codes (like Ghana Post GPS's "AK-150-5882") that aren't indexed as
+  // autocomplete-suggestable places but that the Geocoding API itself
+  // does understand. Reuses the same Geocoder already used for reverse
+  // geocoding rather than introducing a second geocoding system.
+  const geocodeAddressText = useCallback(
+    (text: string): Promise<string | null> => {
+      return new Promise((resolve) => {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: text }, (results, status) => {
+          const location = results?.[0]?.geometry?.location;
+          if (status === "OK" && results && results.length > 0 && location) {
+            const formattedAddress = results[0].formatted_address;
+            const coords = { lat: location.lat(), lng: location.lng() };
+            address?.address(formattedAddress);
+            setInputValue(formattedAddress);
+            setSearchResults([]);
+            onSelectCoordinates?.({ ...coords, address: formattedAddress });
+            resolve(formattedAddress);
+          } else {
+            resolve(null);
+          }
+        });
+      });
+    },
+    [address, onSelectCoordinates],
+  );
+
+  const handleSelectCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        const resolvedAddress = await resolveCoordinates({
+          lat: latitude,
+          lng: longitude,
+        });
+        if (!resolvedAddress) alert("No address found.");
       },
       (error) => {
         console.error("Error getting location:", error);
         alert("Unable to retrieve location.");
       },
     );
-  }, [address, onSelectCoordinates]);
+  }, [resolveCoordinates]);
 
   useEffect(() => {
     if (value) setInputValue(value);
@@ -217,5 +281,7 @@ export function usePlacesAutocomplete({
     handleInputChange,
     handleSelectPrediction,
     handleSelectCurrentLocation,
+    resolveCoordinates,
+    geocodeAddressText,
   };
 }

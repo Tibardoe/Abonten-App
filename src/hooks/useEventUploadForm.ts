@@ -6,6 +6,7 @@ import { saveEventDraft } from "@/actions/saveEventDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { EventDates, PostsType } from "@/types/postsType";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
 import type { Ticket } from "@/types/ticketType";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
@@ -92,6 +93,7 @@ export function useEventUploadForm({
 
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
 
   const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
     draftId,
@@ -146,11 +148,7 @@ export function useEventUploadForm({
 
   const addressInputRef = useRef<PostAutoCompleteHandle>(null);
   const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
-  const handleSelectCoordinates = (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => {
+  const handleSelectCoordinates = (location: ResolvedLocation) => {
     coordsRef.current = { lat: location.lat, lng: location.lng };
   };
 
@@ -403,12 +401,14 @@ export function useEventUploadForm({
         return;
       }
 
-      if (!selectedAddress) {
-        showMessage("Please enter a location");
-        return;
-      }
-
+      // The single source of truth for "is there a usable location" —
+      // selectedAddress is only ever set when the user taps a suggestion,
+      // so gating on it here would reject a manually typed address that
+      // this call is about to resolve successfully.
+      setIsResolvingLocation(true);
       const resolution = await addressInputRef.current?.resolveTypedInput();
+      setIsResolvingLocation(false);
+
       if (!resolution || resolution.status === "empty") {
         showMessage("Please enter a location");
         return;
@@ -416,6 +416,12 @@ export function useEventUploadForm({
       if (resolution.status === "unresolved") {
         showMessage(
           "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+      if (resolution.status === "error") {
+        showMessage(
+          "We couldn't verify this location right now. Please try again.",
         );
         return;
       }
@@ -540,9 +546,10 @@ export function useEventUploadForm({
         showMessage(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Location unknown! Try again with different location");
+      showMessage("Something went wrong. Please try again.");
     } finally {
       setIsUploading(false);
+      setIsResolvingLocation(false);
       isSubmittingRef.current = false;
     }
   };
@@ -554,6 +561,7 @@ export function useEventUploadForm({
     receivingAccountForm,
     notification,
     isUploading,
+    isResolvingLocation,
     onSubmit,
     dateType,
     setDateType: handleDateTypeWithTouch,

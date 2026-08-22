@@ -3,7 +3,9 @@
 import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { generateSlug } from "@/utils/geerateSlug";
+import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
 import { useRouter } from "next/navigation";
 import { forwardRef, useCallback, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
@@ -13,11 +15,7 @@ type AddressProp = {
   address: AutoCompleteAddressType;
   classname?: string;
   value?: string;
-  onSelectCoordinates?: (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => void;
+  onSelectCoordinates?: (location: ResolvedLocation) => void;
 };
 
 // Result of resolving whatever text is currently typed into the input,
@@ -26,7 +24,9 @@ type AddressProp = {
 export type ResolveTypedInputResult =
   | { status: "empty" }
   | { status: "resolved" }
-  | { status: "unresolved"; rawText: string };
+  | { status: "unresolved"; rawText: string }
+  // A genuine service/API failure rather than "no place matched".
+  | { status: "error" };
 
 export type AutoCompleteHandle = {
   resolveTypedInput: () => Promise<ResolveTypedInputResult>;
@@ -51,6 +51,8 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
       handleInputChange,
       handleSelectPrediction: resolvePrediction,
       handleSelectCurrentLocation,
+      resolveCoordinates,
+      geocodeAddressText,
     } = usePlacesAutocomplete({ address, value, onSelectCoordinates });
 
     // Layers this component's navigation behavior on top of the shared
@@ -81,8 +83,30 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
           const text = inputValue.trim();
           if (!text) return { status: "empty" };
 
+          // Raw "lat,lng" coordinates aren't something the Autocomplete
+          // predictions API is built to handle -- resolve them directly via
+          // reverse geocoding, then navigate the same way a resolved
+          // prediction would.
+          const coords = parseRawCoordinates(text);
+          if (coords) {
+            try {
+              const resolvedAddress = await resolveCoordinates(coords);
+              if (!resolvedAddress) {
+                return { status: "unresolved", rawText: text };
+              }
+              const pathSegment = resolvedAddress.trim().replace(/\s+/g, "-");
+              router.push(
+                `/explore/${generateSlug(encodeURIComponent(pathSegment))}`,
+              );
+              return { status: "resolved" };
+            } catch (error) {
+              console.error("Failed to reverse-geocode coordinates:", error);
+              return { status: "error" };
+            }
+          }
+
           if (!autocompleteServiceRef.current || !sessionTokenRef.current) {
-            return { status: "unresolved", rawText: text };
+            return { status: "error" };
           }
 
           const request: google.maps.places.AutocompleteRequest = {
@@ -93,26 +117,51 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
             }),
           };
 
-          const predictions = await new Promise<
-            google.maps.places.AutocompletePrediction[]
-          >((resolve) => {
-            autocompleteServiceRef.current?.getPlacePredictions(
-              request,
-              (results, status) => {
-                if (
-                  status === google.maps.places.PlacesServiceStatus.OK &&
-                  results
-                ) {
-                  resolve(results);
-                } else {
-                  resolve([]);
-                }
-              },
-            );
-          });
+          let predictions: google.maps.places.AutocompletePrediction[];
+          try {
+            predictions = await new Promise<
+              google.maps.places.AutocompletePrediction[]
+            >((resolve, reject) => {
+              autocompleteServiceRef.current?.getPlacePredictions(
+                request,
+                (results, status) => {
+                  const { PlacesServiceStatus } = google.maps.places;
+                  if (status === PlacesServiceStatus.OK && results) {
+                    resolve(results);
+                  } else if (status === PlacesServiceStatus.ZERO_RESULTS) {
+                    resolve([]);
+                  } else {
+                    reject(new Error(status));
+                  }
+                },
+              );
+            });
+          } catch (error) {
+            console.error("Places predictions request failed:", error);
+            return { status: "error" };
+          }
 
           const topPrediction = predictions[0];
-          if (!topPrediction) return { status: "unresolved", rawText: text };
+          if (!topPrediction) {
+            // Places Autocomplete has no suggestion for this text (e.g.
+            // compact digital address codes it doesn't index) -- fall back
+            // to the Geocoding API directly, then navigate the same way a
+            // resolved prediction would.
+            try {
+              const resolvedAddress = await geocodeAddressText(text);
+              if (!resolvedAddress) {
+                return { status: "unresolved", rawText: text };
+              }
+              const pathSegment = resolvedAddress.trim().replace(/\s+/g, "-");
+              router.push(
+                `/explore/${generateSlug(encodeURIComponent(pathSegment))}`,
+              );
+              return { status: "resolved" };
+            } catch (error) {
+              console.error("Fallback geocoding failed:", error);
+              return { status: "error" };
+            }
+          }
 
           const resolved = await handleSelectPrediction(
             topPrediction.description,
@@ -131,6 +180,9 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
         autocompleteServiceRef,
         sessionTokenRef,
         handleSelectPrediction,
+        resolveCoordinates,
+        geocodeAddressText,
+        router,
       ],
     );
 

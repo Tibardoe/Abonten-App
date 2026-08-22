@@ -269,7 +269,7 @@ export default function EventUploadFormFields({
               <input
                 type="text"
                 placeholder="Website"
-                className="rounded-md p-2 bg-transparent"
+                className="rounded-md p-2 bg-transparent text-base md:text-sm"
                 {...register("website_url")}
               />
             </div>
@@ -289,7 +289,7 @@ export default function EventUploadFormFields({
               type="number"
               placeholder="0 if any"
               {...register("capacity", { valueAsNumber: true })}
-              className="border border-input bg-background w-28 p-2 rounded-md"
+              className="border border-input bg-background w-28 p-2 rounded-md text-base md:text-sm"
             />
           </div>
           {errors.capacity && (

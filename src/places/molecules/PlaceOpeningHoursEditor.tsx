@@ -89,7 +89,7 @@ export default function PlaceOpeningHoursEditor({
                     onChange={(event) =>
                       updateDay(dayOfWeek, { openTime: event.target.value })
                     }
-                    className="bg-muted rounded-md px-2 py-1"
+                    className="bg-muted rounded-md px-2 py-1 text-base md:text-sm"
                   />
                   <span className="text-muted-foreground">to</span>
                   <input
@@ -99,7 +99,7 @@ export default function PlaceOpeningHoursEditor({
                     onChange={(event) =>
                       updateDay(dayOfWeek, { closeTime: event.target.value })
                     }
-                    className="bg-muted rounded-md px-2 py-1"
+                    className="bg-muted rounded-md px-2 py-1 text-base md:text-sm"
                   />
                 </div>
               )}

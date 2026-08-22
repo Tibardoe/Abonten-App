@@ -3,6 +3,8 @@
 import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
+import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
 import { forwardRef, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
 
@@ -11,11 +13,7 @@ type AddressProp = {
   address: AutoCompleteAddressType;
   classname?: string;
   value?: string;
-  onSelectCoordinates?: (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => void;
+  onSelectCoordinates?: (location: ResolvedLocation) => void;
 };
 
 // Result of resolving whatever text is currently typed into the input, even
@@ -26,7 +24,11 @@ type AddressProp = {
 export type PostAutoCompleteResolveResult =
   | { status: "empty" }
   | { status: "resolved" }
-  | { status: "unresolved"; rawText: string };
+  | { status: "unresolved"; rawText: string }
+  // A genuine service/API failure (script not loaded, network error,
+  // Google returned an error status) rather than "no place matched" --
+  // callers should show a service-outage message, not "location unknown".
+  | { status: "error" };
 
 export type PostAutoCompleteHandle = {
   resolveTypedInput: () => Promise<PostAutoCompleteResolveResult>;
@@ -49,6 +51,8 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
       handleInputChange,
       handleSelectPrediction,
       handleSelectCurrentLocation,
+      resolveCoordinates,
+      geocodeAddressText,
     } = usePlacesAutocomplete({ address, value, onSelectCoordinates });
 
     // Lets a submit handler resolve whatever text is currently typed --
@@ -64,8 +68,25 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
           const text = inputValue.trim();
           if (!text) return { status: "empty" };
 
+          // Raw "lat,lng" coordinates aren't something the Autocomplete
+          // predictions API is built to handle -- resolve them directly via
+          // reverse geocoding instead (same path "use my current location"
+          // uses).
+          const coords = parseRawCoordinates(text);
+          if (coords) {
+            try {
+              const resolvedAddress = await resolveCoordinates(coords);
+              return resolvedAddress
+                ? { status: "resolved" }
+                : { status: "unresolved", rawText: text };
+            } catch (error) {
+              console.error("Failed to reverse-geocode coordinates:", error);
+              return { status: "error" };
+            }
+          }
+
           if (!autocompleteServiceRef.current || !sessionTokenRef.current) {
-            return { status: "unresolved", rawText: text };
+            return { status: "error" };
           }
 
           const request: google.maps.places.AutocompleteRequest = {
@@ -76,26 +97,47 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
             }),
           };
 
-          const predictions = await new Promise<
-            google.maps.places.AutocompletePrediction[]
-          >((resolve) => {
-            autocompleteServiceRef.current?.getPlacePredictions(
-              request,
-              (results, status) => {
-                if (
-                  status === google.maps.places.PlacesServiceStatus.OK &&
-                  results
-                ) {
-                  resolve(results);
-                } else {
-                  resolve([]);
-                }
-              },
-            );
-          });
+          let predictions: google.maps.places.AutocompletePrediction[];
+          try {
+            predictions = await new Promise<
+              google.maps.places.AutocompletePrediction[]
+            >((resolve, reject) => {
+              autocompleteServiceRef.current?.getPlacePredictions(
+                request,
+                (results, status) => {
+                  const { PlacesServiceStatus } = google.maps.places;
+                  if (status === PlacesServiceStatus.OK && results) {
+                    resolve(results);
+                  } else if (status === PlacesServiceStatus.ZERO_RESULTS) {
+                    resolve([]);
+                  } else {
+                    reject(new Error(status));
+                  }
+                },
+              );
+            });
+          } catch (error) {
+            console.error("Places predictions request failed:", error);
+            return { status: "error" };
+          }
 
           const topPrediction = predictions[0];
-          if (!topPrediction) return { status: "unresolved", rawText: text };
+          if (!topPrediction) {
+            // Places Autocomplete has no suggestion for this text -- it's
+            // indexed for place names/addresses-as-you-type, and doesn't
+            // recognize every valid address format (e.g. compact digital
+            // address codes). Fall back to the Geocoding API directly
+            // before giving up.
+            try {
+              const resolvedAddress = await geocodeAddressText(text);
+              return resolvedAddress
+                ? { status: "resolved" }
+                : { status: "unresolved", rawText: text };
+            } catch (error) {
+              console.error("Fallback geocoding failed:", error);
+              return { status: "error" };
+            }
+          }
 
           const resolved = await handleSelectPrediction(
             topPrediction.description,
@@ -114,6 +156,8 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
         autocompleteServiceRef,
         sessionTokenRef,
         handleSelectPrediction,
+        resolveCoordinates,
+        geocodeAddressText,
       ],
     );
 
@@ -141,7 +185,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
           onChange={handleInputChange}
           value={inputValue}
           placeholder={placeholderText.text}
-          className="text-foreground outline-none w-full bg-transparent"
+          className="text-foreground outline-none w-full bg-transparent text-base md:text-sm"
         />
 
         <IoLocationOutline className="text-2xl" />

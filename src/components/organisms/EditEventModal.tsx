@@ -35,11 +35,18 @@ export default function EditEventModal({
   const {
     notification,
     isSubmitting,
+    isResolvingLocation,
     isFetchingEvent,
     isReady,
     handleSubmit,
     onSubmit,
   } = eventEditForm;
+
+  const saveButtonLabel = isResolvingLocation
+    ? "Resolving location..."
+    : isSubmitting
+      ? "Saving..."
+      : "Save";
 
   return (
     <>
@@ -49,7 +56,7 @@ export default function EditEventModal({
             onBack={() => handleClosePopup(false)}
             title="Edit event"
             primaryAction={{
-              label: isSubmitting ? "Saving..." : "Save",
+              label: saveButtonLabel,
               onClick: handleSubmit(onSubmit),
               disabled: isSubmitting || !isReady,
             }}

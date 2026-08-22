@@ -48,6 +48,7 @@ export default function ManagePlaceDetailsSection({
     errors,
     notification,
     isSaving,
+    isResolvingLocation,
     onSubmit,
     categoryId,
     setCategoryId,
@@ -180,7 +181,11 @@ export default function ManagePlaceDetailsSection({
           disabled={isSaving}
           className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSaving ? "Saving..." : "Save changes"}
+          {isResolvingLocation
+            ? "Resolving location..."
+            : isSaving
+              ? "Saving..."
+              : "Save changes"}
         </button>
       </form>
 

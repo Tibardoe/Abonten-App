@@ -3,6 +3,7 @@
 import { updatePlace } from "@/actions/updatePlace";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
+import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { isImageFile } from "@/utils/isImageFile";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
@@ -61,6 +62,7 @@ export function useManagePlaceDetailsForm({
   const { message: notification, showMessage } = useTimedMessage(3000);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
   const [categoryId, setCategoryId] = useState<number>(place.category_id);
   const [selectedAddress, setSelectedAddress] = useState(
     place.address?.full_address ?? "",
@@ -69,11 +71,7 @@ export function useManagePlaceDetailsForm({
 
   const addressInputRef = useRef<PostAutoCompleteHandle>(null);
   const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
-  const handleSelectCoordinates = (location: {
-    lat: number;
-    lng: number;
-    address: string;
-  }) => {
+  const handleSelectCoordinates = (location: ResolvedLocation) => {
     coordsRef.current = { lat: location.lat, lng: location.lng };
   };
 
@@ -101,12 +99,10 @@ export function useManagePlaceDetailsForm({
     try {
       setIsSaving(true);
 
-      if (!selectedAddress) {
-        showMessage("Please enter an address");
-        return;
-      }
-
+      setIsResolvingLocation(true);
       const resolution = await addressInputRef.current?.resolveTypedInput();
+      setIsResolvingLocation(false);
+
       if (!resolution || resolution.status === "empty") {
         showMessage("Please enter an address");
         return;
@@ -114,6 +110,12 @@ export function useManagePlaceDetailsForm({
       if (resolution.status === "unresolved") {
         showMessage(
           "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        return;
+      }
+      if (resolution.status === "error") {
+        showMessage(
+          "We couldn't verify this location right now. Please try again.",
         );
         return;
       }
@@ -147,9 +149,10 @@ export function useManagePlaceDetailsForm({
         showMessage(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Location unknown! Try again with different location");
+      showMessage("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
+      setIsResolvingLocation(false);
     }
   };
 
@@ -159,6 +162,7 @@ export function useManagePlaceDetailsForm({
     errors,
     notification,
     isSaving,
+    isResolvingLocation,
     onSubmit,
     categoryId,
     setCategoryId,

@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import type { PlaceFormType } from "@/types/placeType";
 import { generateSlug } from "@/utils/geerateSlug";
+import { validateLocationInput } from "@/utils/validateLocationInput";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
 // Postgres error code for a unique-constraint violation.
@@ -40,24 +41,46 @@ export async function postPlace(formData: PlaceFormType) {
     whatsapp,
     socialLinks,
     selectedFile,
+    existingCoverPhoto,
     openingHours,
     services,
     clientRequestId,
+    draftId,
   } = formData;
 
-  if (!selectedFile) {
+  if (!selectedFile && !existingCoverPhoto) {
     return { status: 400, message: "A cover photo is required." };
   }
 
-  const coverUpload = await savePlacePhotoToCloudinary(selectedFile);
+  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  if (!locationCheck.valid) {
+    return { status: 400, message: locationCheck.message };
+  }
 
-  if (!coverUpload?.public_id || !coverUpload?.version) {
-    return {
-      status: 500,
-      message:
-        (coverUpload as { error?: string })?.error ??
-        "Cover photo upload to Cloudinary failed.",
-    };
+  let coverPublicId: string;
+  let coverVersion: string | number;
+
+  if (existingCoverPhoto) {
+    coverPublicId = existingCoverPhoto.public_id;
+    coverVersion = existingCoverPhoto.version;
+  } else if (selectedFile) {
+    const coverUpload = await savePlacePhotoToCloudinary(selectedFile);
+
+    if (!coverUpload?.public_id || !coverUpload?.version) {
+      return {
+        status: 500,
+        message:
+          (coverUpload as { error?: string })?.error ??
+          "Cover photo upload to Cloudinary failed.",
+      };
+    }
+
+    coverPublicId = coverUpload.public_id;
+    coverVersion = coverUpload.version;
+  } else {
+    // Unreachable given the guard above, but keeps coverPublicId/coverVersion
+    // definitely-assigned for TypeScript.
+    return { status: 400, message: "A cover photo is required." };
   }
 
   // Places have no event-code-style human identifier to append (unlike
@@ -102,8 +125,8 @@ export async function postPlace(formData: PlaceFormType) {
       p_phone: phone ?? null,
       p_whatsapp: whatsapp ?? null,
       p_social_links: socialLinks ?? null,
-      p_cover_public_id: coverUpload.public_id,
-      p_cover_version: String(coverUpload.version),
+      p_cover_public_id: coverPublicId,
+      p_cover_version: String(coverVersion),
       p_opening_hours: openingHoursPayload,
       p_services: servicesPayload,
     },
@@ -127,6 +150,25 @@ export async function postPlace(formData: PlaceFormType) {
       status: 500,
       message: "We couldn't publish your place. Please try again.",
     };
+  }
+
+  // Only delete the source draft after the place has actually been
+  // created — if create_place had failed above, we'd already have
+  // returned, leaving the draft untouched. Best-effort: a failure here
+  // doesn't affect the publish result the user sees, and a stray draft
+  // just expires naturally in 48h.
+  if (draftId) {
+    const { error: deleteDraftError } = await supabase
+      .from("drafts")
+      .delete()
+      .eq("id", draftId)
+      .eq("user_id", user.id);
+
+    if (deleteDraftError) {
+      console.error(
+        `Failed to delete draft ${draftId} after successful publish: ${deleteDraftError.message}`,
+      );
+    }
   }
 
   return {

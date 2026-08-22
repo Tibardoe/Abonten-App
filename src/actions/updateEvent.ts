@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { validateLocationInput } from "@/utils/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
@@ -65,6 +66,11 @@ export async function updateEvent(formData: UpdateEventInput) {
     specific_dates,
     selectedFile,
   } = formData;
+
+  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  if (!locationCheck.valid) {
+    return { status: 400, message: locationCheck.message };
+  }
 
   // Ownership-scoped fetch first (same pattern as deleteEvent.ts) — also
   // gives us the current flyer so we only touch Cloudinary when a new file
