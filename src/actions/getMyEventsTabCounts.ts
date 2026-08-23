@@ -38,7 +38,9 @@ export default async function getMyEventsTabCounts(): Promise<{
       .from("ticket")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
-      .eq("status", "active"),
+      // Matches getUserAttendingEvents.ts's "active" tab definition --
+      // 'used' (checked in) still counts as an active, non-cancelled ticket.
+      .in("status", ["active", "used"]),
     supabase
       .from("ticket")
       .select("id", { count: "exact", head: true })

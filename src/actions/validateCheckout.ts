@@ -118,7 +118,8 @@ export default async function validateCheckout({
 
   const alreadyBought = ticketData?.some(
     (ticket) =>
-      ticket.ticket_type_id.event_id === eventId && ticket.status === "active",
+      ticket.ticket_type_id.event_id === eventId &&
+      (ticket.status === "active" || ticket.status === "used"),
   );
 
   if (alreadyBought) {

@@ -38,14 +38,18 @@ export default async function page({
   // Only the currently selected tab's first page is fetched server-side —
   // the other two stay null and load lazily (via fetchPage) the first time
   // the user actually switches to them, so a visit to /manage/my-events
-  // never pays for all three lists just to render one.
+  // never pays for all three lists just to render one. "To Review" has no
+  // server-side prefetch at all — EventsToReviewList always fetches it
+  // client-side (see its own comment for why: no pagination, small list).
   const [counts, selectedTabFirstPage] = await Promise.all([
     getMyEventsTabCounts(),
     initialTab === "active"
       ? getUserAttendingEvents({ status: "active" })
       : initialTab === "cancelled"
         ? getUserAttendingEvents({ status: "cancelled" })
-        : getUserTicketRefunds(),
+        : initialTab === "refunds"
+          ? getUserTicketRefunds()
+          : null,
   ]);
 
   const activeInitialPage: PaginatedResult<UserTicketType> | null =

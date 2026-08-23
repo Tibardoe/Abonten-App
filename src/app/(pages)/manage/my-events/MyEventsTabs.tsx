@@ -1,5 +1,6 @@
 "use client";
 
+import { getEventsAwaitingReview } from "@/actions/getEventsAwaitingReview";
 import getMyEventsTabCounts, {
   type MyEventsTabCounts,
 } from "@/actions/getMyEventsTabCounts";
@@ -9,6 +10,7 @@ import type { UserTicketType } from "@/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import EventsToReviewList from "./EventsToReviewList";
 import TicketsList from "./TicketsList";
 import { type MyEventsTab, isMyEventsTab } from "./myEventsTab";
 
@@ -80,6 +82,15 @@ export default function MyEventsTabs({
     initialData: initialCounts,
   });
 
+  // "To Review" has no server-seeded count (see page.tsx's comment) — it
+  // shares the exact same query EventsToReviewList uses, so this doesn't add
+  // a second fetch, just reads the same cached result for the badge.
+  const { data: toReviewData } = useQuery({
+    queryKey: ["events-awaiting-review"],
+    queryFn: () => getEventsAwaitingReview(),
+  });
+  const toReviewCount = toReviewData?.data.length ?? 0;
+
   function handleTabChange(value: string) {
     if (!isMyEventsTab(value)) return;
 
@@ -97,12 +108,15 @@ export default function MyEventsTabs({
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange}>
       <div className="flex justify-center">
-        <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid md:min-w-[360px]">
+        <TabsList className="grid w-full grid-cols-4 md:w-auto md:inline-grid md:min-w-[440px]">
           <TabsTrigger value="active">Active ({counts.active})</TabsTrigger>
           <TabsTrigger value="cancelled">
             Cancelled ({counts.cancelled})
           </TabsTrigger>
           <TabsTrigger value="refunds">Refunds ({counts.refunds})</TabsTrigger>
+          <TabsTrigger value="toReview">
+            To Review ({toReviewCount})
+          </TabsTrigger>
         </TabsList>
       </div>
 
@@ -132,6 +146,10 @@ export default function MyEventsTabs({
           emptyState={noRefundsState}
           showRefundInfo
         />
+      </TabsContent>
+
+      <TabsContent value="toReview">
+        <EventsToReviewList />
       </TabsContent>
     </Tabs>
   );

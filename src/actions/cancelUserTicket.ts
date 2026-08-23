@@ -242,7 +242,10 @@ async function releasePromoUsageIfEventFullyCancelled(
       .from("ticket")
       .select("id, status, ticket_type_id(event_id)")
       .eq("user_id", userId)
-      .eq("status", "active");
+      // 'used' (checked in) is still a valid, non-cancelled ticket -- same
+      // reasoning as validateCheckout.ts/registerForFreeEvent.ts's
+      // "already bought" check.
+      .in("status", ["active", "used"]);
 
   if (remainingTicketsError) {
     console.log(

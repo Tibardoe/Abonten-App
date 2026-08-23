@@ -42,7 +42,11 @@ export default async function getUserAttendingEvents(options?: {
     .from("ticket")
     .select(TICKET_WITH_EVENT_SELECT)
     .eq("user_id", user.id)
-    .eq("status", status)
+    // "Active" means "still a valid, non-cancelled ticket" -- includes
+    // 'used' (checked in via checkInTicket.ts), not just the literal
+    // 'active' status. Without this, a ticket disappears from the
+    // attendee's own list the moment an organizer checks them in.
+    .in("status", status === "active" ? ["active", "used"] : ["cancelled"])
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);

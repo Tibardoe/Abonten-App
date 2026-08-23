@@ -7,7 +7,6 @@ import InfiniteList from "@/components/organisms/InfiniteList";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { generateSlug } from "@/utils/geerateSlug";
 import { getRefundStatusLabel } from "@/utils/refundStatus";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,9 +48,7 @@ function TicketCard({
       <div className="p-4">
         <div className="flex items-center justify-between">
           <Link
-            href={`/events/${generateSlug(
-              event.event.address.full_address,
-            )}/event/${event.event.slug}`}
+            href={`/events/${event.event.event_code}`}
             className="text-xl font-semibold mb-2"
           >
             {event.event.title}
@@ -73,10 +70,12 @@ function TicketCard({
           className={`text-sm text-muted-foreground ${refundBadge ? "mb-1" : "mb-4"}`}
         >
           Status:{" "}
-          {event.status === "active" ? (
-            <span className="font-semibold text-green-600">{event.status}</span>
+          {event.status === "cancelled" ? (
+            <span className="font-semibold text-red-600">Cancelled</span>
+          ) : event.status === "used" ? (
+            <span className="font-semibold text-green-600">Checked in</span>
           ) : (
-            <span className="font-semibold text-red-600">{event.status}</span>
+            <span className="font-semibold text-green-600">Active</span>
           )}
         </p>
 

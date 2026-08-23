@@ -5,7 +5,6 @@ import {
   formatDateWithSuffix,
   getFormattedEventDate,
 } from "@/utils/dateFormatter";
-import { generateSlug } from "@/utils/geerateSlug";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
@@ -83,9 +82,7 @@ export default function TicketModal({
             <div className="p-4">
               <div className="flex items-center justify-between">
                 <Link
-                  href={`/events/${generateSlug(
-                    event.event.address.full_address,
-                  )}/event/${event.event.slug}`}
+                  href={`/events/${event.event.event_code}`}
                   className="text-xl font-semibold mb-2"
                 >
                   {event.event.title}
@@ -107,14 +104,14 @@ export default function TicketModal({
               </p>
               <p className="text-sm text-muted-foreground mb-2">
                 Status:{" "}
-                {event.status === "active" ? (
+                {event.status === "cancelled" ? (
+                  <span className="font-semibold text-red-600">Cancelled</span>
+                ) : event.status === "used" ? (
                   <span className="font-semibold text-green-600">
-                    {event.status}
+                    Checked in
                   </span>
                 ) : (
-                  <span className="font-semibold text-red-600">
-                    {event.status}
-                  </span>
+                  <span className="font-semibold text-green-600">Active</span>
                 )}
               </p>
 

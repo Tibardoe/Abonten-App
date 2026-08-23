@@ -126,12 +126,12 @@ export default function TicketPdfDocument({
               <Text style={styles.label}>Status</Text>
               <Text
                 style={
-                  ticket.status === "active"
+                  ticket.status === "active" || ticket.status === "used"
                     ? styles.statusActive
                     : styles.statusOther
                 }
               >
-                {ticket.status}
+                {ticket.status === "used" ? "Checked in" : ticket.status}
               </Text>
             </View>
 
