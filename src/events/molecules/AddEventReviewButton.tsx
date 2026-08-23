@@ -61,6 +61,13 @@ export default function AddEventReviewButton({
     queryClient.invalidateQueries({
       queryKey: ["event-review-eligibility", eventId],
     });
+    // Keeps My Tickets' To Review/Reviewed tabs (and their badge counts)
+    // correct if the viewer already has that page mounted elsewhere in the
+    // same session -- harmless no-op otherwise, since invalidating an
+    // unmounted query just marks it stale for its next fetch.
+    queryClient.invalidateQueries({ queryKey: ["events-awaiting-review"] });
+    queryClient.invalidateQueries({ queryKey: ["user-event-reviews"] });
+    queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });
   };
 
   const { mutate: deleteReview, isPending: isDeleting } = useMutation({

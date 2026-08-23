@@ -96,6 +96,12 @@ export default function EventsToReviewList() {
                 queryClient.invalidateQueries({
                   queryKey: ["events-awaiting-review"],
                 });
+                queryClient.invalidateQueries({
+                  queryKey: ["user-event-reviews"],
+                });
+                queryClient.invalidateQueries({
+                  queryKey: ["attending-events-counts"],
+                });
               }}
             />
           )}

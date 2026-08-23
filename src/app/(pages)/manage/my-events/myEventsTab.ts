@@ -7,6 +7,7 @@ export const MY_EVENTS_TAB_VALUES = [
   "cancelled",
   "refunds",
   "toReview",
+  "reviewed",
 ] as const;
 export type MyEventsTab = (typeof MY_EVENTS_TAB_VALUES)[number];
 

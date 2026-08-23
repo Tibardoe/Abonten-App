@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import EventsToReviewList from "./EventsToReviewList";
+import ReviewedEventsList from "./ReviewedEventsList";
 import TicketsList from "./TicketsList";
 import { type MyEventsTab, isMyEventsTab } from "./myEventsTab";
 
@@ -45,6 +46,10 @@ type TicketPage = PaginatedResult<UserTicketType> | null;
 type FetchTicketPage = (
   cursor: string | null,
 ) => Promise<PaginatedResult<UserTicketType>>;
+// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getUserEventReviews.ts's own return type
+type ReviewPage = PaginatedResult<any> | null;
+// biome-ignore lint/suspicious/noExplicitAny: see above
+type FetchReviewPage = (cursor: string | null) => Promise<PaginatedResult<any>>;
 
 export default function MyEventsTabs({
   initialTab,
@@ -52,18 +57,22 @@ export default function MyEventsTabs({
   activeInitialPage,
   cancelledInitialPage,
   refundsInitialPage,
+  reviewedInitialPage,
   fetchActivePage,
   fetchCancelledPage,
   fetchRefundsPage,
+  fetchReviewedPage,
 }: {
   initialTab: MyEventsTab;
   initialCounts: MyEventsTabCounts;
   activeInitialPage: TicketPage;
   cancelledInitialPage: TicketPage;
   refundsInitialPage: TicketPage;
+  reviewedInitialPage: ReviewPage;
   fetchActivePage: FetchTicketPage;
   fetchCancelledPage: FetchTicketPage;
   fetchRefundsPage: FetchTicketPage;
+  fetchReviewedPage: FetchReviewPage;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -108,7 +117,7 @@ export default function MyEventsTabs({
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange}>
       <div className="flex justify-center">
-        <TabsList className="grid w-full grid-cols-4 md:w-auto md:inline-grid md:min-w-[440px]">
+        <TabsList className="grid w-full grid-cols-5 md:w-auto md:inline-grid md:min-w-[560px]">
           <TabsTrigger value="active">Active ({counts.active})</TabsTrigger>
           <TabsTrigger value="cancelled">
             Cancelled ({counts.cancelled})
@@ -116,6 +125,9 @@ export default function MyEventsTabs({
           <TabsTrigger value="refunds">Refunds ({counts.refunds})</TabsTrigger>
           <TabsTrigger value="toReview">
             To Review ({toReviewCount})
+          </TabsTrigger>
+          <TabsTrigger value="reviewed">
+            Reviewed ({counts.reviewed})
           </TabsTrigger>
         </TabsList>
       </div>
@@ -150,6 +162,13 @@ export default function MyEventsTabs({
 
       <TabsContent value="toReview">
         <EventsToReviewList />
+      </TabsContent>
+
+      <TabsContent value="reviewed">
+        <ReviewedEventsList
+          initialPage={reviewedInitialPage}
+          fetchPage={fetchReviewedPage}
+        />
       </TabsContent>
     </Tabs>
   );
