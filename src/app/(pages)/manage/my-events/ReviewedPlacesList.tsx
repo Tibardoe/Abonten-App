@@ -1,10 +1,10 @@
 "use client";
 
-import { deleteEventReview } from "@/actions/deleteEventReview";
+import { deletePlaceReview } from "@/actions/deletePlaceReview";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import EventReviewModal from "@/events/organisms/EventReviewModal";
+import PlaceReviewModal from "@/places/organisms/PlaceReviewModal";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
@@ -15,41 +15,39 @@ import { useState } from "react";
 
 const noReviewsState = (
   <p className="text-center text-muted-foreground text-sm py-10">
-    You haven&apos;t reviewed any events yet.
+    You haven&apos;t reviewed any places yet.
   </p>
 );
 
 // No generated Supabase types exist in this repo (see PROJECT.md) — matches
-// getUserEventReviews.ts's own biome-ignore'd `any` return type.
+// getUserPlaceReviews.ts's own biome-ignore'd `any` return type.
 // biome-ignore lint/suspicious/noExplicitAny: see above
-type EventReviewRow = any;
+type PlaceReviewRow = any;
 
-function ReviewedEventCard({ review }: { review: EventReviewRow }) {
+// Mirrors ReviewedEventsList.tsx exactly, one content type over (place_review
+// instead of event_review, updatePlaceReview/deletePlaceReview instead of
+// their event counterparts).
+function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Invalidates every cache this review could appear in — this list, and
-  // (in case the viewer also has the Event Details page open in the same
-  // session) the eligibility/rating/list queries EventReviewsSection.tsx
-  // and AddEventReviewButton.tsx key off of for this same event.
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["user-event-reviews"] });
-    queryClient.invalidateQueries({ queryKey: ["events-awaiting-review"] });
+    queryClient.invalidateQueries({ queryKey: ["user-place-reviews"] });
     queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });
     queryClient.invalidateQueries({
-      queryKey: ["event-reviews", review.event_id],
+      queryKey: ["place-reviews", review.place_id],
     });
     queryClient.invalidateQueries({
-      queryKey: ["event-rating", review.event_id],
+      queryKey: ["place-rating", review.place_id],
     });
     queryClient.invalidateQueries({
-      queryKey: ["event-review-eligibility", review.event_id],
+      queryKey: ["own-place-review", review.place_id],
     });
   };
 
   const { mutate: deleteReview, isPending: isDeleting } = useMutation({
-    mutationFn: () => deleteEventReview(review.id),
+    mutationFn: () => deletePlaceReview(review.id),
     onSuccess: (response) => {
       if (response.status === 200) {
         setShowDeleteConfirm(false);
@@ -63,11 +61,11 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
       <div className="relative h-40 w-full">
         <Image
           src={buildCloudinaryUrl(
-            review.event.flyer_public_id,
-            review.event.flyer_version,
+            review.place.cover_public_id,
+            review.place.cover_version,
             { width: 400, height: 160 },
           )}
-          alt={review.event.title}
+          alt={review.place.name}
           fill
           className="object-cover"
         />
@@ -75,10 +73,10 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
 
       <div className="p-4 space-y-2">
         <Link
-          href={`/events/${review.event.event_code}#reviews`}
+          href={`/places/${review.place.slug}#reviews`}
           className="font-semibold block"
         >
-          {review.event.title}
+          {review.place.name}
         </Link>
 
         <div className="flex items-center justify-between">
@@ -100,7 +98,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
           </p>
         )}
 
-        <ReviewPhotoGrid photos={review.event_review_photo} />
+        <ReviewPhotoGrid photos={review.place_review_photo} />
 
         <div className="flex gap-4 pt-1">
           <button
@@ -121,8 +119,8 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
       </div>
 
       {isEditing && (
-        <EventReviewModal
-          eventId={review.event_id}
+        <PlaceReviewModal
+          placeId={review.place_id}
           handleShowReviewModal={setIsEditing}
           existingReview={{
             id: review.id,
@@ -165,25 +163,25 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
   );
 }
 
-export default function ReviewedEventsList({
+export default function ReviewedPlacesList({
   initialPage,
   fetchPage,
 }: {
-  initialPage: PaginatedResult<EventReviewRow> | null;
+  initialPage: PaginatedResult<PlaceReviewRow> | null;
   fetchPage: (
     cursor: string | null,
-  ) => Promise<PaginatedResult<EventReviewRow>>;
+  ) => Promise<PaginatedResult<PlaceReviewRow>>;
 }) {
   return (
-    <InfiniteList<EventReviewRow>
-      queryKey={["user-event-reviews"]}
+    <InfiniteList<PlaceReviewRow>
+      queryKey={["user-place-reviews"]}
       initialPage={initialPage}
       fetchPage={fetchPage}
       emptyState={noReviewsState}
       listElement="div"
       listClassName="grid md:grid-cols-3 gap-6"
       renderItem={(review) => (
-        <ReviewedEventCard key={review.id} review={review} />
+        <ReviewedPlaceCard key={review.id} review={review} />
       )}
     />
   );

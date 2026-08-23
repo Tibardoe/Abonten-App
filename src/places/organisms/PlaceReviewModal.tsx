@@ -2,6 +2,7 @@
 
 import getPlaceReviewPhotoUploadSignature from "@/actions/getPlaceReviewPhotoUploadSignature";
 import { postPlaceReview } from "@/actions/postPlaceReview";
+import { updatePlaceReview } from "@/actions/updatePlaceReview";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import Notification from "@/components/atoms/Notification";
 import StarRatingInput from "@/components/atoms/StarRatingInput";
@@ -15,10 +16,21 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+type ExistingReview = {
+  id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+};
+
 type PlaceReviewModalProps = {
   placeId: string;
   handleShowReviewModal: (state: boolean) => void;
   onReviewSubmitted?: () => void;
+  // When present, the modal edits this review (updatePlaceReview) instead of
+  // creating a new one -- mirrors EventReviewModal.tsx's existingReview prop.
+  // Photo editing stays out of scope here too.
+  existingReview?: ExistingReview;
 };
 
 // Unlike ReviewModal.tsx (event/organizer reviews), title and comment are
@@ -44,12 +56,14 @@ export default function PlaceReviewModal({
   placeId,
   handleShowReviewModal,
   onReviewSubmitted,
+  existingReview,
 }: PlaceReviewModalProps) {
   useBodyScrollLock(true);
 
+  const isEditing = !!existingReview;
   const queryClient = useQueryClient();
 
-  const [rating, setRating] = useState(0);
+  const [rating, setRating] = useState(existingReview?.rating ?? 0);
   const [notification, setNotification] = useState<string | null>(null);
   const photoUpload = useReviewPhotoUpload(getPlaceReviewPhotoUploadSignature);
 
@@ -59,16 +73,26 @@ export default function PlaceReviewModal({
     formState: { errors },
   } = useForm<PlaceReviewFormValues>({
     resolver: zodResolver(placeReviewSchema),
+    defaultValues: {
+      title: existingReview?.title ?? undefined,
+      comment: existingReview?.comment ?? undefined,
+    },
   });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (formData: PlaceReviewFormValues) =>
-      postPlaceReview({
-        placeId,
-        rating,
-        ...formData,
-        photos: photoUpload.uploadedPhotos,
-      }),
+      existingReview
+        ? updatePlaceReview({
+            reviewId: existingReview.id,
+            rating,
+            ...formData,
+          })
+        : postPlaceReview({
+            placeId,
+            rating,
+            ...formData,
+            photos: photoUpload.uploadedPhotos,
+          }),
     onSuccess: (response) => {
       setNotification(response.message ?? null);
       setTimeout(() => setNotification(null), 3000);
@@ -79,6 +103,9 @@ export default function PlaceReviewModal({
           queryKey: ["place-reviews", placeId],
         });
         queryClient.invalidateQueries({ queryKey: ["place-rating", placeId] });
+        queryClient.invalidateQueries({
+          queryKey: ["own-place-review", placeId],
+        });
         onReviewSubmitted?.();
       }
     },
@@ -115,7 +142,7 @@ export default function PlaceReviewModal({
             </button>
 
             <h1 className="mx-auto text-xl md:text-2xl font-bold">
-              Add Review
+              {isEditing ? "Edit Review" : "Add Review"}
             </h1>
 
             <button
@@ -143,7 +170,7 @@ export default function PlaceReviewModal({
           <div className="space-y-4">
             <div className="flex items-center justify-between md:flex-col md:justify-start md:items-start md:gap-2">
               <p className="font-normal">Rate</p>
-              <StarRatingInput onChange={setRating} />
+              <StarRatingInput onChange={setRating} initialRating={rating} />
             </div>
             {rating <= 0 && (
               <p className="text-destructive text-sm">Rating required</p>
@@ -177,19 +204,27 @@ export default function PlaceReviewModal({
                 </p>
               )}
 
-              <ReviewPhotoPicker
-                items={photoUpload.items}
-                atLimit={photoUpload.atLimit}
-                onFilesSelected={photoUpload.addFiles}
-                onRemove={photoUpload.remove}
-              />
+              {!isEditing && (
+                <ReviewPhotoPicker
+                  items={photoUpload.items}
+                  atLimit={photoUpload.atLimit}
+                  onFilesSelected={photoUpload.addFiles}
+                  onRemove={photoUpload.remove}
+                />
+              )}
 
               <Button
                 type="submit"
                 disabled={isPending || photoUpload.isUploading}
                 className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
               >
-                {isPending ? "Adding review..." : "Add"}
+                {isPending
+                  ? isEditing
+                    ? "Saving changes..."
+                    : "Adding review..."
+                  : isEditing
+                    ? "Save Changes"
+                    : "Add"}
               </Button>
             </form>
           </div>

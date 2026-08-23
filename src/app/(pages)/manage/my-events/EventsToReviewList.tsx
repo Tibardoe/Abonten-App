@@ -69,7 +69,7 @@ export default function EventsToReviewList() {
           </div>
           <div className="p-4 space-y-3">
             <Link
-              href={`/events/${event.event_code}`}
+              href={`/events/${event.event_code}#reviews`}
               className="text-lg font-semibold block"
             >
               {event.title}

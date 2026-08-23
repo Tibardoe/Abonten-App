@@ -67,7 +67,10 @@ export default function EventReviewsSection({
     queryClient.invalidateQueries({ queryKey: ["event-reviews", eventId] });
 
   return (
-    <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-4">
+    <div
+      id="reviews"
+      className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-4 scroll-mt-20"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl md:text-2xl font-medium text-card-foreground">

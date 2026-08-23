@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import EventsToReviewList from "./EventsToReviewList";
-import ReviewedEventsList from "./ReviewedEventsList";
+import ReviewedTabContent from "./ReviewedTabContent";
 import TicketsList from "./TicketsList";
 import { type MyEventsTab, isMyEventsTab } from "./myEventsTab";
 
@@ -46,10 +46,6 @@ type TicketPage = PaginatedResult<UserTicketType> | null;
 type FetchTicketPage = (
   cursor: string | null,
 ) => Promise<PaginatedResult<UserTicketType>>;
-// biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getUserEventReviews.ts's own return type
-type ReviewPage = PaginatedResult<any> | null;
-// biome-ignore lint/suspicious/noExplicitAny: see above
-type FetchReviewPage = (cursor: string | null) => Promise<PaginatedResult<any>>;
 
 export default function MyEventsTabs({
   initialTab,
@@ -57,22 +53,18 @@ export default function MyEventsTabs({
   activeInitialPage,
   cancelledInitialPage,
   refundsInitialPage,
-  reviewedInitialPage,
   fetchActivePage,
   fetchCancelledPage,
   fetchRefundsPage,
-  fetchReviewedPage,
 }: {
   initialTab: MyEventsTab;
   initialCounts: MyEventsTabCounts;
   activeInitialPage: TicketPage;
   cancelledInitialPage: TicketPage;
   refundsInitialPage: TicketPage;
-  reviewedInitialPage: ReviewPage;
   fetchActivePage: FetchTicketPage;
   fetchCancelledPage: FetchTicketPage;
   fetchRefundsPage: FetchTicketPage;
-  fetchReviewedPage: FetchReviewPage;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -99,6 +91,9 @@ export default function MyEventsTabs({
     queryFn: () => getEventsAwaitingReview(),
   });
   const toReviewCount = toReviewData?.data.length ?? 0;
+  // "Reviewed" is one outer tab covering both Events and Places (see
+  // ReviewedTabContent.tsx), so its badge is the combined total.
+  const reviewedCount = counts.reviewed + counts.reviewedPlaces;
 
   function handleTabChange(value: string) {
     if (!isMyEventsTab(value)) return;
@@ -116,18 +111,26 @@ export default function MyEventsTabs({
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange}>
-      <div className="flex justify-center">
-        <TabsList className="grid w-full grid-cols-5 md:w-auto md:inline-grid md:min-w-[560px]">
-          <TabsTrigger value="active">Active ({counts.active})</TabsTrigger>
-          <TabsTrigger value="cancelled">
+      {/* A fixed grid squeezed all five tabs into equal, cramped columns
+          regardless of viewport — a horizontally scrollable strip (same
+          overflow-x-auto/scrollbar-hide idiom as CategoryChipsRow.tsx) lets
+          each tab keep its natural width and scales to more tabs cleanly. */}
+      <div className="overflow-x-auto scrollbar-hide -mx-2 px-2 md:mx-0 md:px-0 md:flex md:justify-center">
+        <TabsList className="flex w-max md:w-auto gap-1 bg-muted p-1 rounded-lg">
+          <TabsTrigger className="shrink-0 grow-0" value="active">
+            Active ({counts.active})
+          </TabsTrigger>
+          <TabsTrigger className="shrink-0 grow-0" value="cancelled">
             Cancelled ({counts.cancelled})
           </TabsTrigger>
-          <TabsTrigger value="refunds">Refunds ({counts.refunds})</TabsTrigger>
-          <TabsTrigger value="toReview">
+          <TabsTrigger className="shrink-0 grow-0" value="refunds">
+            Refunds ({counts.refunds})
+          </TabsTrigger>
+          <TabsTrigger className="shrink-0 grow-0" value="toReview">
             To Review ({toReviewCount})
           </TabsTrigger>
-          <TabsTrigger value="reviewed">
-            Reviewed ({counts.reviewed})
+          <TabsTrigger className="shrink-0 grow-0" value="reviewed">
+            Reviewed ({reviewedCount})
           </TabsTrigger>
         </TabsList>
       </div>
@@ -165,10 +168,7 @@ export default function MyEventsTabs({
       </TabsContent>
 
       <TabsContent value="reviewed">
-        <ReviewedEventsList
-          initialPage={reviewedInitialPage}
-          fetchPage={fetchReviewedPage}
-        />
+        <ReviewedTabContent />
       </TabsContent>
     </Tabs>
   );

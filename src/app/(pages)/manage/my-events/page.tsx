@@ -2,16 +2,25 @@ export const dynamic = "force-dynamic";
 
 import getMyEventsTabCounts from "@/actions/getMyEventsTabCounts";
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
-import { getUserEventReviews } from "@/actions/getUserEventReviews";
 import getUserTicketRefunds from "@/actions/getUserTicketRefunds";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
+import type { Metadata } from "next";
 import MyEventsTabs from "./MyEventsTabs";
 import { isMyEventsTab } from "./myEventsTab";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
+
+// This route had no page-specific metadata before -- every page in the app
+// besides /places/[slug] falls back to the root layout's generic "Abonten
+// Hub | Connecting people to experiences" title, which is what actually
+// shows in the browser tab here despite the on-page heading already saying
+// "My Tickets".
+export const metadata: Metadata = {
+  title: "My Tickets | Abonten Hub",
+};
 
 async function fetchActivePage(cursor: string | null) {
   "use server";
@@ -28,11 +37,6 @@ async function fetchRefundsPage(cursor: string | null) {
   return getUserTicketRefunds({ cursor });
 }
 
-async function fetchReviewedPage(cursor: string | null) {
-  "use server";
-  return getUserEventReviews({ cursor });
-}
-
 export default async function page({
   searchParams,
 }: {
@@ -44,9 +48,9 @@ export default async function page({
   // Only the currently selected tab's first page is fetched server-side —
   // the others stay null and load lazily (via fetchPage) the first time the
   // user actually switches to them, so a visit to /manage/my-events never
-  // pays for every list just to render one. "To Review" has no server-side
-  // prefetch at all — EventsToReviewList always fetches it client-side (see
-  // its own comment for why: no pagination, small list).
+  // pays for every list just to render one. "To Review" and "Reviewed" have
+  // no server-side prefetch at all — both always fetch client-side (see
+  // EventsToReviewList.tsx's and ReviewedTabContent.tsx's own comments).
   const [counts, selectedTabFirstPage] = await Promise.all([
     getMyEventsTabCounts(),
     initialTab === "active"
@@ -55,26 +59,15 @@ export default async function page({
         ? getUserAttendingEvents({ status: "cancelled" })
         : initialTab === "refunds"
           ? getUserTicketRefunds()
-          : initialTab === "reviewed"
-            ? getUserEventReviews()
-            : null,
+          : null,
   ]);
 
   const activeInitialPage: PaginatedResult<UserTicketType> | null =
-    initialTab === "active"
-      ? (selectedTabFirstPage as PaginatedResult<UserTicketType>)
-      : null;
+    initialTab === "active" ? selectedTabFirstPage : null;
   const cancelledInitialPage: PaginatedResult<UserTicketType> | null =
-    initialTab === "cancelled"
-      ? (selectedTabFirstPage as PaginatedResult<UserTicketType>)
-      : null;
+    initialTab === "cancelled" ? selectedTabFirstPage : null;
   const refundsInitialPage: PaginatedResult<UserTicketType> | null =
-    initialTab === "refunds"
-      ? (selectedTabFirstPage as PaginatedResult<UserTicketType>)
-      : null;
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getUserEventReviews.ts's own return type
-  const reviewedInitialPage: PaginatedResult<any> | null =
-    initialTab === "reviewed" ? selectedTabFirstPage : null;
+    initialTab === "refunds" ? selectedTabFirstPage : null;
 
   return (
     <div className="space-y-5">
@@ -86,11 +79,9 @@ export default async function page({
         activeInitialPage={activeInitialPage}
         cancelledInitialPage={cancelledInitialPage}
         refundsInitialPage={refundsInitialPage}
-        reviewedInitialPage={reviewedInitialPage}
         fetchActivePage={fetchActivePage}
         fetchCancelledPage={fetchCancelledPage}
         fetchRefundsPage={fetchRefundsPage}
-        fetchReviewedPage={fetchReviewedPage}
       />
     </div>
   );
