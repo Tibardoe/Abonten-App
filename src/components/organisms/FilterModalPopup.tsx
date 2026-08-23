@@ -35,6 +35,28 @@ type FilterModalPopupProp = {
   // with irrelevant fields like Event date hidden on Places). Defaults to
   // "events" so every existing call site keeps its current behavior.
   contentType?: "events" | "places";
+  // Set only when opened from the Explore page's Events tab (see
+  // FilterSearchBar.tsx) -- when present, the Events branch in
+  // handleFilter writes the category selection back to this Explore URL
+  // (?tab=events&eventCategory=...) instead of routing to /search,
+  // mirroring the Places branch's existing
+  // /explore/[location]?tab=places&categoryId=... pattern. Every other
+  // caller (e.g. /events, /events/location/[location]) leaves this unset
+  // and keeps routing to /search unchanged.
+  exploreEventsBasePath?: string;
+  // Preselects every field from Explore's current ?eventCategory=/
+  // eventMinPrice=/eventMaxPrice=/eventFrom=/eventTo=/eventRating=/
+  // eventDistance= when opened from that context, so reopening the modal
+  // never looks like it "forgot" an active filter -- the standard pattern
+  // discovery apps (Airbnb, Eventbrite) use for a filter modal that shares
+  // state with quick-filter chips. Unset ("" / undefined) everywhere else.
+  initialCategory?: string;
+  initialMinPrice?: number;
+  initialMaxPrice?: number;
+  initialFromDate?: string;
+  initialToDate?: string;
+  initialMinRating?: number;
+  initialMaxDistanceKm?: number;
 };
 
 // Parses "Up to 5km" -> 5, "From 4.5" -> 4.5. Both arrays (src/data/
@@ -48,6 +70,14 @@ export default function FilterModalPopup({
   handlePopup,
   className,
   contentType = "events",
+  exploreEventsBasePath,
+  initialCategory = "",
+  initialMinPrice,
+  initialMaxPrice,
+  initialFromDate,
+  initialToDate,
+  initialMinRating,
+  initialMaxDistanceKm,
 }: FilterModalPopupProp) {
   useBodyScrollLock(true);
 
@@ -55,20 +85,39 @@ export default function FilterModalPopup({
   const locationSlug =
     typeof params?.location === "string" ? params.location : "";
 
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(),
-    to: new Date(),
-  });
+  // No range picked by default (rather than silently defaulting to "today
+  // only") -- an untouched date field must mean "no date filter", not an
+  // invisible filter the user never chose.
+  const [date, setDate] = React.useState<DateRange | undefined>(() =>
+    initialFromDate || initialToDate
+      ? {
+          from: initialFromDate ? new Date(initialFromDate) : undefined,
+          to: initialToDate ? new Date(initialToDate) : undefined,
+        }
+      : undefined,
+  );
 
-  const [minMax, setMinMax] = useState<[number, number]>([0, 20]);
+  // [0, 999] is "Any price" (999 already renders as "Any" below) -- the true
+  // no-filter default, rather than an arbitrary 0-20 cap that would silently
+  // exclude every event priced above GHS 20 until the user notices.
+  const [minMax, setMinMax] = useState<[number, number]>([
+    initialMinPrice ?? 0,
+    initialMaxPrice ?? 999,
+  ]);
 
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(initialCategory);
 
   const [types, setTypes] = useState<string[]>([]);
 
-  const [ratingg, setRating] = useState("");
+  const [ratingg, setRating] = useState(
+    () => rating.find((r) => parseLeadingNumber(r) === initialMinRating) ?? "",
+  );
 
-  const [distance, setDistance] = useState("");
+  const [distance, setDistance] = useState(
+    () =>
+      distances.find((d) => parseLeadingNumber(d) === initialMaxDistanceKm) ??
+      "",
+  );
 
   // Places-only filter state -- kept separate from the Events fields above
   // (category/types) since place_category is a different lookup table and
@@ -95,6 +144,30 @@ export default function FilterModalPopup({
       return;
     }
 
+    if (contentType === "events" && exploreEventsBasePath) {
+      // Every field the modal exposes round-trips through Explore's URL
+      // alongside the category chip row, combining with AND semantics --
+      // the same "quick chips + advanced filters modal share one filter
+      // state" pattern used by discovery apps like Airbnb/Eventbrite,
+      // rather than only syncing category and leaving price/date/rating/
+      // distance modal-only.
+      const query = new URLSearchParams({ tab: "events" });
+      if (category) query.set("eventCategory", category);
+      if (minMax[0] > 0) query.set("eventMinPrice", String(minMax[0]));
+      if (minMax[1] < 999) query.set("eventMaxPrice", String(minMax[1]));
+      if (date?.from) query.set("eventFrom", date.from.toISOString());
+      if (date?.to) query.set("eventTo", date.to.toISOString());
+      const minRating = parseLeadingNumber(ratingg);
+      if (minRating !== null) query.set("eventRating", String(minRating));
+      const maxDistanceKm = parseLeadingNumber(distance);
+      if (maxDistanceKm !== null) {
+        query.set("eventDistance", String(maxDistanceKm));
+      }
+
+      router.push(`${exploreEventsBasePath}?${query.toString()}`);
+      return;
+    }
+
     const coordinates = await getCurrentPosition();
 
     const query = new URLSearchParams({
@@ -113,11 +186,9 @@ export default function FilterModalPopup({
   };
 
   const handleReset = () => {
-    const now = new Date();
+    setDate(undefined);
 
-    setDate({ from: now, to: now });
-
-    setMinMax([0, 0]);
+    setMinMax([0, 999]);
 
     setCategory("");
 

@@ -5,13 +5,12 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { IoGridOutline, IoMapOutline } from "react-icons/io5";
 
-// List/Map toggle for the Explore page's Places tab "All Places" section
-// (Places Phase 2, Milestone 3). Reads the live searchParams (rather than
-// reconstructing a URL from individual filter props) so toggling the view
-// never drops a filter this component doesn't itself know about --
-// category/openNow/rating/distance/q all stay intact, only "view" changes.
-// Pill styling mirrors PlaceCategoryChips.tsx's active/inactive treatment.
-export default function PlacesViewToggle({ view }: { view: "list" | "map" }) {
+// List/Map toggle shared by the Explore page's Places and Events tabs.
+// Reads the live searchParams (rather than reconstructing a URL from
+// individual filter props) so toggling the view never drops a filter this
+// component doesn't itself know about (category/openNow/rating/distance/q
+// for Places; eventCategory for Events) — only "view" changes.
+export default function ViewToggle({ view }: { view: "list" | "map" }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 

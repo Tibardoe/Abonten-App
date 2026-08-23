@@ -116,6 +116,10 @@ export type UserPostType = {
   status?: string;
   featured?: boolean;
   distance_km?: number | null;
+  // Raw PostGIS geography value as returned by PostgREST — not parsed here,
+  // same as PlaceType.location. Only populated by get_nearby_events and
+  // get_filtered_events; every other UserPostType producer omits it.
+  location?: string;
 };
 
 // Row shape for event_promotion_tier -- Unified Event Management, Event

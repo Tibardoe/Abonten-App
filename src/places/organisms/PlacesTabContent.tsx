@@ -2,9 +2,9 @@ import { getActivePlacePromotions } from "@/actions/getActivePlacePromotions";
 import { getNearByPlaces } from "@/actions/getNearByPlaces";
 import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
+import ViewToggle from "@/components/molecules/ViewToggle";
 import NoPlacesEmptyState from "../molecules/NoPlacesEmptyState";
 import PlaceCategoryChips from "../molecules/PlaceCategoryChips";
-import PlacesViewToggle from "../molecules/PlacesViewToggle";
 import AllPlacesList from "./AllPlacesList";
 import FeaturedPlacesSlider from "./FeaturedPlacesSlider";
 import PlacesMapView from "./PlacesMapView";
@@ -162,7 +162,7 @@ export default async function PlacesTabContent({
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
           <h2 className="text-lg font-medium">All Places</h2>
-          <PlacesViewToggle view={view} />
+          <ViewToggle view={view} />
         </div>
 
         {view === "map" ? (

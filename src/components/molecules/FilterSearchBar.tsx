@@ -4,7 +4,7 @@ import { isExploreTab } from "@/places/exploreTab";
 import { generateSlug } from "@/utils/geerateSlug";
 // import Image from "next/image";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { IoSearch } from "react-icons/io5";
 import { VscSettings } from "react-icons/vsc";
@@ -49,6 +49,7 @@ function FilterSearchBarContent() {
   // behavior). See the Places spec: search/filter should adapt to whichever
   // tab is selected.
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const tabParam = searchParams.get("tab") ?? undefined;
   const activeTab: "events" | "places" = isExploreTab(tabParam)
     ? tabParam
@@ -57,6 +58,64 @@ function FilterSearchBarContent() {
   const params = useParams();
   const locationSlug =
     typeof params?.location === "string" ? params.location : "";
+
+  // Only true on /explore/[location] -- /events and
+  // /events/location/[location] also render this component but must keep
+  // routing Events-filter submits to /search unchanged.
+  const isExplorePage = pathname?.startsWith("/explore/") ?? false;
+  const exploreEventsBasePath =
+    isExplorePage && activeTab === "events"
+      ? `/explore/${locationSlug}`
+      : undefined;
+  const initialEventCategory =
+    exploreEventsBasePath != null
+      ? (searchParams.get("eventCategory") ?? "")
+      : "";
+
+  const numericParam = (key: string): number | undefined => {
+    const raw = searchParams.get(key);
+    if (!raw) return undefined;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  const initialEventMinPrice =
+    exploreEventsBasePath != null ? numericParam("eventMinPrice") : undefined;
+  const initialEventMaxPrice =
+    exploreEventsBasePath != null ? numericParam("eventMaxPrice") : undefined;
+  const initialEventFromDate =
+    exploreEventsBasePath != null
+      ? (searchParams.get("eventFrom") ?? undefined)
+      : undefined;
+  const initialEventToDate =
+    exploreEventsBasePath != null
+      ? (searchParams.get("eventTo") ?? undefined)
+      : undefined;
+  const initialEventMinRating =
+    exploreEventsBasePath != null ? numericParam("eventRating") : undefined;
+  const initialEventMaxDistanceKm =
+    exploreEventsBasePath != null ? numericParam("eventDistance") : undefined;
+
+  // Small "filters are active" indicator on the Filters button -- the
+  // standard discovery-app cue (Airbnb, Eventbrite) that something beyond
+  // the default view is already applied, so a user reopening the modal (or
+  // never opening it) still notices the current result set is filtered.
+  const activeFilterKeys = !isExplorePage
+    ? []
+    : activeTab === "events"
+      ? [
+          "eventCategory",
+          "eventMinPrice",
+          "eventMaxPrice",
+          "eventFrom",
+          "eventTo",
+          "eventRating",
+          "eventDistance",
+        ]
+      : ["category", "categoryId", "openNow", "rating", "distance"];
+  const hasActiveFilters = activeFilterKeys.some((key) =>
+    searchParams.get(key),
+  );
 
   const handleShowPopup = (state: boolean) => {
     setShowPopup(state);
@@ -83,14 +142,33 @@ function FilterSearchBarContent() {
         />
       </div>
 
-      <button type="button" onClick={() => handleShowPopup(true)}>
+      <button
+        type="button"
+        onClick={() => handleShowPopup(true)}
+        className="relative"
+        aria-label={hasActiveFilters ? "Filters (active)" : "Filters"}
+      >
         <VscSettings className="text-3xl md:text-4xl text-muted-foreground" />
+        {hasActiveFilters && (
+          <span
+            aria-hidden
+            className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-muted"
+          />
+        )}
       </button>
 
       {showPopup && (
         <FilterModalPopup
           handlePopup={handleShowPopup}
           contentType={activeTab}
+          exploreEventsBasePath={exploreEventsBasePath}
+          initialCategory={initialEventCategory}
+          initialMinPrice={initialEventMinPrice}
+          initialMaxPrice={initialEventMaxPrice}
+          initialFromDate={initialEventFromDate}
+          initialToDate={initialEventToDate}
+          initialMinRating={initialEventMinRating}
+          initialMaxDistanceKm={initialEventMaxDistanceKm}
         />
       )}
     </div>
