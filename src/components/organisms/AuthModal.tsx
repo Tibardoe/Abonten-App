@@ -1,17 +1,20 @@
 "use client";
 
-import sendPhoneOtp from "@/actions/sendPhoneOtp";
+import requestPhoneVerification from "@/actions/requestPhoneVerification";
+import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
-import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
+import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
+import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { IoChevronBack } from "react-icons/io5";
-import { LiaTimesSolid } from "react-icons/lia";
 import GoogleAuthButton from "../atoms/GoogleAuthButton";
+import OtpInput from "../molecules/OtpInput";
 import PhoneInput from "../molecules/PhoneInput";
+import ResendOtpButton from "../molecules/ResendOtpButton";
 import { Button } from "../ui/button";
 
 type PopupProp = {
@@ -25,16 +28,15 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
   const location = useGetUserLocation();
 
   const [countryCode, setCountryCode] = useState("");
-
   const [phone, setPhone] = useState("");
-
+  const [phoneE164, setPhoneE164] = useState("");
   const [otp, setOtp] = useState("");
-
   const [step, setStep] = useState(1);
 
-  const [otpArray, setOtpArray] = useState(["", "", "", "", "", ""]);
-
-  const [otpErrorMessageShown, setOtpErrorMessageShown] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [sendErrorMessage, setSendErrorMessage] = useState<string | null>(null);
+  const [otpErrorMessage, setOtpErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -46,77 +48,72 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
       ? "/assets/images/abonten-logo-white.svg"
       : "/assets/images/abonten-logo-black.svg";
 
-  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-
-  const setInputRef = (el: HTMLInputElement | null, index: number) => {
-    inputRefs.current[index] = el;
-  };
-
-  const fullPhoneNumber = `${countryCode}${phone}`;
-
   useEffect(() => {
     if (callingCode) {
       setCountryCode(callingCode);
     }
   }, [callingCode]);
 
-  const handlePhoneSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const sendCode = async () => {
+    setIsSendingOtp(true);
+    setSendErrorMessage(null);
 
     try {
-      await sendPhoneOtp(`${countryCode}${phone}`);
-      setStep(2);
+      const result = await requestPhoneVerification(
+        countryCode,
+        phone,
+        "sign-in",
+      );
+
+      if (result.status !== 200) {
+        setSendErrorMessage(result.message);
+        return false;
+      }
+
+      setPhoneE164(result.phoneE164);
+      return true;
     } catch (error) {
       console.error("Phone Sign-In Error:", error);
+      setSendErrorMessage("Something went wrong. Please try again.");
+      return false;
+    } finally {
+      setIsSendingOtp(false);
     }
+  };
+
+  const handlePhoneSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setOtp("");
+    setOtpErrorMessage(null);
+
+    const sent = await sendCode();
+    if (sent) setStep(2);
   };
 
   const handleOtpsubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsVerifying(true);
+    setOtpErrorMessage(null);
 
     try {
-      // await verifyPhoneOtp(requestId, prefix, otp); — see src/actions/verifyPhoneOtp.ts
+      const result = await verifyPhoneSignIn(phoneE164, otp);
+
+      if (result.status !== 200) {
+        setOtpErrorMessage(result.message);
+        return;
+      }
+
       router.push(next || "/events");
     } catch (error) {
       console.error("OTP Verification Error:", error);
-      setOtpErrorMessageShown(true);
+      setOtpErrorMessage(t("otpIncorrect"));
+    } finally {
+      setIsVerifying(false);
     }
   };
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return; // Allow only single digit input
-
-    const newOtpArray = [...otpArray];
-    newOtpArray[index] = value;
-    setOtpArray(newOtpArray);
-    setOtp(newOtpArray.join(""));
-
-    // Move focus to next input
-    if (value && index < otpArray.length - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleBackspace = (index: number, event: React.KeyboardEvent) => {
-    if (event.key === "Backspace" && !otpArray[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (event: React.ClipboardEvent) => {
-    event.preventDefault();
-    const pastedData = event.clipboardData.getData("text").trim();
-    if (/^\d{6}$/.test(pastedData)) {
-      const newOtpArray = pastedData.split("");
-      setOtpArray(newOtpArray);
-      setOtp(pastedData);
-      inputRefs.current[5]?.focus(); // Move focus to last input
-    }
-  };
-
-  const handleChange = async (phoneNumber: string) => {
-    const formattedPhone = phoneNumberFormatter(phoneNumber);
-    setPhone(formattedPhone);
+  const handleChange = (phoneNumber: string) => {
+    setPhone(phoneNumber);
   };
 
   return step === 1 ? (
@@ -148,8 +145,17 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
               onChange={handleChange}
             />
 
-            <Button className="w-full rounded-md text-lg font-medium py-6 absolute bottom-0 md:relative">
-              {t("continue")}
+            {sendErrorMessage && (
+              <p className="text-destructive text-sm md:text-base">
+                {sendErrorMessage}
+              </p>
+            )}
+
+            <Button
+              disabled={isSendingOtp}
+              className="w-full rounded-md text-lg font-medium py-6 absolute bottom-0 md:relative"
+            >
+              {isSendingOtp ? t("sendingCode") : t("continue")}
             </Button>
           </form>
         </div>
@@ -161,7 +167,7 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
         <button
           type="button"
           className="mr-auto mb-10 flex items-center"
-          onClick={() => setStep((prev) => Math.max(1, prev - 1))}
+          onClick={() => setStep(1)}
         >
           <IoChevronBack className="text-2xl" />
 
@@ -172,42 +178,48 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
           {t("enterCode")}
         </h1>
 
-        <div className="text-muted-foreground text-lg mb-20">
+        <div className="text-muted-foreground text-lg mb-10 text-center">
           <p>
-            {t("codeSentTo")} <br /> {fullPhoneNumber}
+            {t("codeSentTo")} <br /> {maskPhoneNumber(phoneE164)}
           </p>
         </div>
 
         <form onSubmit={handleOtpsubmit} className="w-full space-y-5">
-          <div className="flex flex-col gap-3 items-center">
-            <div className="flex gap-3 w-full" onPaste={handlePaste}>
-              {otpArray.map((digit, index) => (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-                  key={index}
-                  className="w-[70px] h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl"
-                >
-                  <input
-                    type="text"
-                    value={digit}
-                    maxLength={1}
-                    className="w-full h-full text-center outline-none rounded-2xl bg-transparent"
-                    ref={(el) => setInputRef(el, index)}
-                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleBackspace(index, e)}
-                  />
-                </div>
-              ))}
-            </div>
+          <OtpInput
+            value={otp}
+            onChange={setOtp}
+            disabled={isVerifying}
+            error={otpErrorMessage}
+          />
 
-            {otpErrorMessageShown && (
-              <p className="text-destructive text-lg">{t("otpIncorrect")}</p>
-            )}
-          </div>
-
-          <Button className="w-full rounded-md text-xl font-bold py-7">
-            {t("continue")}
+          <Button
+            disabled={isVerifying || otp.length !== HUBTEL_OTP_CODE_LENGTH}
+            className="w-full rounded-md text-xl font-bold py-7"
+          >
+            {isVerifying ? t("verifying") : t("continue")}
           </Button>
+
+          <div className="flex flex-col items-center gap-2 pt-2">
+            <p className="text-sm text-muted-foreground">
+              {t("didntReceiveCode")}
+            </p>
+
+            <div className="flex items-center gap-4">
+              <ResendOtpButton
+                onResend={sendCode}
+                readyLabel={t("resendCode")}
+                cooldownLabel={(seconds) => t("resendCodeIn", { seconds })}
+              />
+
+              <button
+                type="button"
+                className="text-sm md:text-base font-medium text-muted-foreground"
+                onClick={() => setStep(1)}
+              >
+                {t("changeNumber")}
+              </button>
+            </div>
+          </div>
         </form>
       </div>
     </div>

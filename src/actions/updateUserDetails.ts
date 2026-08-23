@@ -21,9 +21,13 @@ export async function updateUserDetails(formData: UserDetailsFormType) {
     return { status: 401, message: t("errors.notAuthenticated") };
   }
 
+  // Saving the Edit Profile form is the only place a username change
+  // happens, so submitting it counts as the user having customized their
+  // username -- it stops counting as the system-assigned default for
+  // profile-completion purposes (see src/utils/profileCompletion.ts).
   const { error } = await supabase
     .from("user_info")
-    .update(formData)
+    .update({ ...formData, username_is_generated: false })
     .eq("id", user.user.id);
 
   if (error) {

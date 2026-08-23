@@ -38,37 +38,12 @@ export const fetchAuthenticatedUser = async () => {
   }
 };
 
-// Phone sign-in OTP send/verify now live server-side in
-// src/actions/sendPhoneOtp.ts and src/actions/verifyPhoneOtp.ts —
-// the Hubtel credentials must never be readable from the browser bundle.
-// (Supabase session creation after OTP verification is still commented out
-// there, same as before this change — phone sign-in remains incomplete.)
-
-export const updatePhoneNumberInUserTable = async (phone: string) => {
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !userData?.user) {
-    console.error(
-      "Could not authenticate user before updating phone.",
-      userError?.message,
-    );
-    return { status: 401, message: "User not authenticated." };
-  }
-
-  const { error: updatePhoneNumberError } = await supabase.auth.updateUser({
-    phone: phone,
-  });
-
-  if (updatePhoneNumberError) {
-    console.log(
-      `Error updating user phone number: ${updatePhoneNumberError.message}`,
-    );
-
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  return { status: 200, message: "Phone number updated successfully." };
-};
+// Phone sign-in OTP send/verify + session minting: see
+// src/actions/requestPhoneVerification.ts and
+// src/actions/verifyPhoneSignIn.ts. Settings -> Security's add/change-phone
+// flow: see src/actions/updateVerifiedPhone.ts. All server-side — Hubtel
+// credentials and the Supabase service-role key must never be readable
+// from the browser bundle.
 
 export const signOut = async () => {
   await supabase.auth.signOut();

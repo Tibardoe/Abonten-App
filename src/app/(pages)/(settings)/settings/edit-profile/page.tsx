@@ -2,6 +2,8 @@ import { getUserDetails } from "@/actions/getUserDetails";
 import AvatarUploadButton from "@/components/atoms/AvatarUploadButton";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+import ProfileCompletionChecklist from "@/components/molecules/ProfileCompletionChecklist";
+import ProfileCompletionIndicator from "@/components/molecules/ProfileCompletionIndicator";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getTranslations } from "next-intl/server";
@@ -54,8 +56,13 @@ export default async function page() {
             </div>
           </div>
 
-          <AvatarUploadButton />
+          <div className="flex flex-col items-end gap-2">
+            <AvatarUploadButton />
+            <ProfileCompletionIndicator />
+          </div>
         </div>
+
+        <ProfileCompletionChecklist />
 
         <EditProfileInputFields initialData={userDetails} />
       </div>

@@ -1,25 +1,4 @@
-import { fetchCountryCode, fetchUserCountry } from "@/services/googleApi";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-
-export default function useUserLocation() {
-  const [dialCode, setDialCode] = useState<string | null>(null);
-
-  useEffect(() => {
-    const getUserLocation = async () => {
-      const location = await fetchUserCountry();
-
-      if (location) {
-        const code = await fetchCountryCode(location.lat, location.lng);
-        setDialCode(code);
-      }
-    };
-
-    getUserLocation();
-  }, []);
-
-  return dialCode;
-}
 
 function fetchTownFromGeolocation(): Promise<string | null> {
   return new Promise((resolve) => {

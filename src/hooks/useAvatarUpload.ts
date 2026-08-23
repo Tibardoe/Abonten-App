@@ -36,10 +36,14 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         showMessage("Upload successful!");
         router.refresh();
         // No user id is threaded into this hook, so invalidate every
-        // ["user-details", ...] entry rather than one specific id — this is
-        // still a small, scoped predicate, not an app-wide invalidation.
+        // ["user-details", ...] / ["profile-completion", ...] entry rather
+        // than one specific id — this is still a small, scoped predicate,
+        // not an app-wide invalidation. A new avatar affects profile
+        // completion (see src/utils/profileCompletion.ts).
         queryClient.invalidateQueries({
-          predicate: (query) => query.queryKey[0] === "user-details",
+          predicate: (query) =>
+            query.queryKey[0] === "user-details" ||
+            query.queryKey[0] === "profile-completion",
         });
         onSuccess?.();
       } catch (error) {

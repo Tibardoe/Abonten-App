@@ -1,8 +1,8 @@
 "use client";
 
-import { useCountries } from "@/hooks/useCountries";
-import Image from "next/image";
-import { useState } from "react";
+import { countryDetails } from "@/data/countryDetails";
+import { useClickOutside } from "@/hooks/useClickOutside";
+import { useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
 
 type Props = {
@@ -11,48 +11,49 @@ type Props = {
   onChange: (phoneNumber: string) => void;
 };
 
+// Country list is the same small curated set used for currency handling
+// (src/data/countryDetails.ts) rather than a live restcountries.com fetch --
+// that API's v3.1 endpoint (the version this app previously called) has been
+// deprecated by its provider and now returns an error for every request, so
+// useCountries()/fetchCountries() always resolved to an empty list and this
+// dropdown opened onto nothing. A static list also means no external image
+// host is needed for flags -- emoji render natively.
 export default function PhoneInput({
   selectedCountry,
   onSelectCountry,
   onChange,
 }: Props) {
-  const countries = useCountries();
-
   const [showDropdown, setShowDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleRotate = () => {
-    setShowDropdown((prevState) => !prevState);
-  };
+  useClickOutside([containerRef], () => setShowDropdown(false));
 
   return (
-    <div className="flex w-full gap-2 relative">
+    <div ref={containerRef} className="flex w-full gap-2 relative">
       <div className="bg-muted rounded-md p-2 flex items-center justify-center gap-1 md:gap-2 md:min-w-28 border border-input">
         <span>{selectedCountry}</span>
 
-        <button type="button" onClick={handleRotate}>
+        <button type="button" onClick={() => setShowDropdown((prev) => !prev)}>
           <IoIosArrowDown className="text-muted-foreground text-xl" />
         </button>
       </div>
 
       {showDropdown && (
-        <div className="absolute top-12 left-0 w-full z-10 bg-popover text-popover-foreground shadow-md max-h-60 overflow-y-scroll flex flex-col">
-          {countries.map((country) => (
+        <div className="absolute top-12 left-0 w-full z-10 bg-popover text-popover-foreground shadow-md max-h-60 overflow-y-scroll flex flex-col rounded-md border border-border">
+          {countryDetails.map((country) => (
             <button
-              className="px-2 hover:bg-accent cursor-pointer flex items-center gap-5"
+              className="px-3 py-2 hover:bg-accent cursor-pointer flex items-center gap-3 text-left"
               type="button"
-              key={country.name}
+              key={country.countryCode}
               onClick={() => {
-                onSelectCountry(country.dialCode);
+                onSelectCountry(country.callingCode);
                 setShowDropdown(false);
               }}
             >
-              <Image
-                src={country.flag}
-                alt="Country flag"
-                width={40}
-                height={40}
-              />
-              {country.name} ({country.dialCode})
+              <span className="text-xl" aria-hidden>
+                {country.flag}
+              </span>
+              {country.name} ({country.callingCode})
             </button>
           ))}
         </div>

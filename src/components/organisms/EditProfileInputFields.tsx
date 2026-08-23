@@ -41,6 +41,11 @@ export default function EditProfileInputFields({
       queryClient.invalidateQueries({
         queryKey: ["user-details", initialData.id],
       });
+      // Username customization (and full_name) feed into profile
+      // completion — keep the checklist/indicator in sync immediately.
+      queryClient.invalidateQueries({
+        queryKey: ["profile-completion", initialData.id],
+      });
     },
     onError: (error) => {
       setNotification(error?.message || "Something went wrong.");

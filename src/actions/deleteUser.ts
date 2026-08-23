@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 
 export default async function deleteUser() {
   const supabase = await createClient();
@@ -16,7 +17,14 @@ export default async function deleteUser() {
     return { status: 401, message: "User not Logged in" };
   }
 
-  const { error: deleteUserError } = await supabase.auth.admin.deleteUser(
+  // auth.admin.* requires the service-role key -- the cookie-scoped client
+  // above only carries the anon key + this user's own session, so it's used
+  // here only to authenticate who's calling, not to perform the deletion
+  // itself (same split used by src/actions/verifyPhoneSignIn.ts and
+  // src/actions/updateVerifiedPhone.ts).
+  const serviceClient = getSupabaseServiceClient();
+
+  const { error: deleteUserError } = await serviceClient.auth.admin.deleteUser(
     user.id,
   );
 

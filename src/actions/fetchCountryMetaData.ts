@@ -9,7 +9,12 @@ export async function fetchCountryMetadata() {
     (item) => item.countryCode === fetchedCountry,
   );
 
-  return details;
+  // Falls back to Ghana (also proxy.ts's own default when no IP-country
+  // header is present) rather than leaving the caller with nothing --
+  // otherwise the phone country code goes unselected on a first visit
+  // (before the "country" cookie exists) or for a country outside this
+  // curated list.
+  return details ?? countryDetails.find((item) => item.countryCode === "GH");
 }
 
 // Check cookies for country
