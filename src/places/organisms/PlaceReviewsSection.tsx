@@ -1,6 +1,7 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
+import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -105,6 +106,8 @@ export default function PlaceReviewsSection({
                 {review.comment}
               </p>
             )}
+
+            <ReviewPhotoGrid photos={review.place_review_photo} />
 
             {review.owner_response && (
               <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">

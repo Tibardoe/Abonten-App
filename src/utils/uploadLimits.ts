@@ -7,3 +7,12 @@
 // (next.config.ts) since flyers still go through saveEventFlyerToCloudinary
 // as a raw File argument, same as avatars.
 export const MAX_EVENT_FLYER_SIZE_BYTES = 5 * 1024 * 1024;
+
+// Review photo attachments (place reviews and event reviews share these same
+// limits -- one review media system, not two). Size cap matches every other
+// image upload in the app; the count cap is a new, deliberately modest
+// ceiling (nothing else in this codebase caps a photo gallery's item count)
+// chosen so a review stays a quick add-a-few-photos action, not a full
+// gallery upload.
+export const MAX_REVIEW_PHOTO_SIZE_BYTES = MAX_EVENT_FLYER_SIZE_BYTES;
+export const MAX_REVIEW_PHOTOS = 5;

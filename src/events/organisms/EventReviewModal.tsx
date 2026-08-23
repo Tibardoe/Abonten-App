@@ -1,7 +1,7 @@
 "use client";
 
-import getPlaceReviewPhotoUploadSignature from "@/actions/getPlaceReviewPhotoUploadSignature";
-import { postPlaceReview } from "@/actions/postPlaceReview";
+import getEventReviewPhotoUploadSignature from "@/actions/getEventReviewPhotoUploadSignature";
+import { postEventReview } from "@/actions/postEventReview";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import Notification from "@/components/atoms/Notification";
 import StarRatingInput from "@/components/atoms/StarRatingInput";
@@ -15,19 +15,17 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-type PlaceReviewModalProps = {
-  placeId: string;
+type EventReviewModalProps = {
+  eventId: string;
   handleShowReviewModal: (state: boolean) => void;
   onReviewSubmitted?: () => void;
 };
 
-// Unlike ReviewModal.tsx (event/organizer reviews), title and comment are
-// both optional here -- place_review.title/comment are nullable columns and
-// postPlaceReview.ts's input type marks both optional. There is also no
-// draft support (Places reviews have no review_drafts-equivalent table --
-// confirmed Phase 1 simplification), so this modal skips
-// SaveDraftConfirmDialog entirely: Cancel just closes.
-const placeReviewSchema = z.object({
+// Mirrors PlaceReviewModal.tsx exactly (same optional title/comment shape,
+// same photo picker, no draft support) -- the two content types' review
+// submission UI is deliberately kept identical, only the underlying action
+// (postEventReview vs postPlaceReview) and query keys differ.
+const eventReviewSchema = z.object({
   title: z
     .string()
     .max(150, { message: "Title must be less than 150 characters" })
@@ -38,33 +36,33 @@ const placeReviewSchema = z.object({
     .optional(),
 });
 
-type PlaceReviewFormValues = z.infer<typeof placeReviewSchema>;
+type EventReviewFormValues = z.infer<typeof eventReviewSchema>;
 
-export default function PlaceReviewModal({
-  placeId,
+export default function EventReviewModal({
+  eventId,
   handleShowReviewModal,
   onReviewSubmitted,
-}: PlaceReviewModalProps) {
+}: EventReviewModalProps) {
   useBodyScrollLock(true);
 
   const queryClient = useQueryClient();
 
   const [rating, setRating] = useState(0);
   const [notification, setNotification] = useState<string | null>(null);
-  const photoUpload = useReviewPhotoUpload(getPlaceReviewPhotoUploadSignature);
+  const photoUpload = useReviewPhotoUpload(getEventReviewPhotoUploadSignature);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PlaceReviewFormValues>({
-    resolver: zodResolver(placeReviewSchema),
+  } = useForm<EventReviewFormValues>({
+    resolver: zodResolver(eventReviewSchema),
   });
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (formData: PlaceReviewFormValues) =>
-      postPlaceReview({
-        placeId,
+    mutationFn: (formData: EventReviewFormValues) =>
+      postEventReview({
+        eventId,
         rating,
         ...formData,
         photos: photoUpload.uploadedPhotos,
@@ -76,15 +74,15 @@ export default function PlaceReviewModal({
       if (response.status === 200) {
         handleShowReviewModal(false);
         queryClient.invalidateQueries({
-          queryKey: ["place-reviews", placeId],
+          queryKey: ["event-reviews", eventId],
         });
-        queryClient.invalidateQueries({ queryKey: ["place-rating", placeId] });
+        queryClient.invalidateQueries({ queryKey: ["event-rating", eventId] });
         onReviewSubmitted?.();
       }
     },
   });
 
-  const onSubmit = (formData: PlaceReviewFormValues) => {
+  const onSubmit = (formData: EventReviewFormValues) => {
     if (rating <= 0) {
       setNotification("Please select a rating.");
       setTimeout(() => setNotification(null), 3000);

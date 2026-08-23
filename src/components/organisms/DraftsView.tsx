@@ -7,10 +7,10 @@ import type { PlaceDraftListItem } from "@/actions/getPlaceDrafts";
 import { getReviewDrafts } from "@/actions/getReviewDrafts";
 import type { ReviewDraftListItem } from "@/actions/getReviewDrafts";
 import PostButton from "@/components/atoms/PostButton";
-import { cn } from "@/components/lib/utils";
 import EventDraftCard from "@/components/molecules/EventDraftCard";
 import PlaceDraftCard from "@/components/molecules/PlaceDraftCard";
 import ReviewDraftCard from "@/components/molecules/ReviewDraftCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 
 type DraftsViewProps = {
@@ -20,6 +20,10 @@ type DraftsViewProps = {
 };
 
 type Tab = "event" | "review" | "place";
+
+function isTab(value: string): value is Tab {
+  return value === "event" || value === "review" || value === "place";
+}
 
 export default function DraftsView({
   initialEventDrafts,
@@ -52,33 +56,20 @@ export default function DraftsView({
     if (response.status === 200) setPlaceDrafts(response.data);
   };
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "event", label: "Event Drafts" },
-    { id: "place", label: "Place Drafts" },
-    { id: "review", label: "Review Drafts" },
-  ];
-
   return (
-    <div className="space-y-5">
-      <div className="flex gap-2 border-b border-border">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className={cn(
-              "px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors",
-              activeTab === tab.id
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => isTab(value) && setActiveTab(value)}
+    >
+      <div className="flex justify-center">
+        <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid md:min-w-[360px]">
+          <TabsTrigger value="event">Event Drafts</TabsTrigger>
+          <TabsTrigger value="place">Place Drafts</TabsTrigger>
+          <TabsTrigger value="review">Review Drafts</TabsTrigger>
+        </TabsList>
       </div>
 
-      {activeTab === "event" && (
+      <TabsContent value="event">
         <div className="space-y-4">
           {eventDrafts.length === 0 ? (
             <div className="text-center space-y-4 py-10">
@@ -100,9 +91,9 @@ export default function DraftsView({
             </div>
           )}
         </div>
-      )}
+      </TabsContent>
 
-      {activeTab === "place" && (
+      <TabsContent value="place">
         <div className="space-y-4">
           {placeDrafts.length === 0 ? (
             <p className="text-center text-muted-foreground py-10">
@@ -123,9 +114,9 @@ export default function DraftsView({
             </div>
           )}
         </div>
-      )}
+      </TabsContent>
 
-      {activeTab === "review" && (
+      <TabsContent value="review">
         <div className="space-y-4">
           {reviewDrafts.length === 0 ? (
             <p className="text-center text-muted-foreground py-10">
@@ -146,7 +137,7 @@ export default function DraftsView({
             </div>
           )}
         </div>
-      )}
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }

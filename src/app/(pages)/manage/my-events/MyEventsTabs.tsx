@@ -96,13 +96,15 @@ export default function MyEventsTabs({
 
   return (
     <Tabs value={currentTab} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid md:min-w-[360px]">
-        <TabsTrigger value="active">Active ({counts.active})</TabsTrigger>
-        <TabsTrigger value="cancelled">
-          Cancelled ({counts.cancelled})
-        </TabsTrigger>
-        <TabsTrigger value="refunds">Refunds ({counts.refunds})</TabsTrigger>
-      </TabsList>
+      <div className="flex justify-center">
+        <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-grid md:min-w-[360px]">
+          <TabsTrigger value="active">Active ({counts.active})</TabsTrigger>
+          <TabsTrigger value="cancelled">
+            Cancelled ({counts.cancelled})
+          </TabsTrigger>
+          <TabsTrigger value="refunds">Refunds ({counts.refunds})</TabsTrigger>
+        </TabsList>
+      </div>
 
       <TabsContent value="active">
         <TicketsList

@@ -1,6 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import {
+  type ReviewPhotoInput,
+  insertReviewPhotos,
+} from "@/utils/insertReviewPhotos";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";
@@ -10,6 +14,10 @@ type PostPlaceReviewInput = {
   rating: number;
   title?: string;
   comment?: string;
+  // Already uploaded to Cloudinary (see getPlaceReviewPhotoUploadSignature.ts
+  // + ReviewPhotoPicker.tsx) before this action ever runs -- only their
+  // metadata is passed here, never raw image bytes.
+  photos?: ReviewPhotoInput[];
 };
 
 /**
@@ -38,7 +46,7 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
     return { status: 401, message: "User not authenticated" };
   }
 
-  const { placeId, rating, title, comment } = formData;
+  const { placeId, rating, title, comment, photos } = formData;
 
   const { data: place, error: placeError } = await supabase
     .from("place")
@@ -70,14 +78,18 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
         .join(" ")
     : null;
 
-  const { error: insertError } = await supabase.from("place_review").insert({
-    place_id: placeId,
-    reviewer_id: user.id,
-    rating,
-    title: formattedTitle,
-    comment: comment ?? null,
-    status: "approved",
-  });
+  const { data: review, error: insertError } = await supabase
+    .from("place_review")
+    .insert({
+      place_id: placeId,
+      reviewer_id: user.id,
+      rating,
+      title: formattedTitle,
+      comment: comment ?? null,
+      status: "approved",
+    })
+    .select("id")
+    .single();
 
   if (insertError) {
     if (insertError.code === UNIQUE_VIOLATION) {
@@ -87,6 +99,15 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
     console.log(`Error inserting place review: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
+
+  await insertReviewPhotos(
+    supabase,
+    "place_review_photo",
+    "place_review_id",
+    review.id,
+    `place_review_photos/${user.id}/`,
+    photos,
+  );
 
   return { status: 200, message: "Review posted successfully!" };
 }

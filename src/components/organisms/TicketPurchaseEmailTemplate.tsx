@@ -119,7 +119,7 @@ export default function TicketPurchaseEmailTemplate({
               </Text>
               <Text className="m-0 text-[14px] leading-[2] text-[#747474] font-medium mt-4">
                 Your ticket is attached to this email as a PDF. You can also
-                access it anytime from My Events in Abonten.
+                access it anytime from My Tickets in Abonten.
               </Text>
             </Section>
 
@@ -242,7 +242,7 @@ export default function TicketPurchaseEmailTemplate({
                 href={myEventsUrl}
                 className="bg-brand text-white font-bold text-[14px] rounded-[8px] px-8 py-3 inline-block"
               >
-                View My Events
+                View My Tickets
               </Link>
             </Section>
 

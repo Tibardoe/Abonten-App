@@ -1,15 +1,24 @@
 "use client";
 
 import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { useCarouselAutoplay } from "@/hooks/useCarouselAutoplay";
 import type { PlaceType } from "@/types/placeType";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { FaArrowLeftLong, FaArrowRightLong } from "react-icons/fa6";
+import { useEffect, useRef } from "react";
 import PlaceCard from "../molecules/PlaceCard";
 import SponsoredBadge from "../molecules/SponsoredBadge";
 
 type FeaturedPlacesSliderProps = {
   places: PlaceType[];
 };
+
+const AUTOPLAY_DELAY_MS = 4000;
 
 // "Featured Places" section (Places Phase 2, Milestone 5, paid promotion).
 // Not a reuse of PlacesSlider.tsx (checked first, per the task) -- its shape
@@ -18,34 +27,18 @@ type FeaturedPlacesSliderProps = {
 // supports. PlaceCard.tsx itself is reused completely unmodified, per spec:
 // its own <li> root is wrapped in a plain <div> (not nested inside another
 // <li>/<ul>) purely so the badge can be absolutely positioned over it.
+//
+// Previously a hand-rolled scroll-snap div with manual arrow-visibility
+// tracking; now built on the shared Embla carousel primitive so it gets the
+// same auto-rotate/loop/reduced-motion behavior as FeaturedEventsCarousel,
+// while keeping its own responsive multi-card-per-view sizing (several
+// places already fit on screen at once on wider viewports, unlike the
+// single-slide Events banner).
 export default function FeaturedPlacesSlider({
   places,
 }: FeaturedPlacesSliderProps) {
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { plugin, setApi } = useCarouselAutoplay(AUTOPLAY_DELAY_MS);
   const loggedImpressions = useRef<Set<string>>(new Set());
-
-  const checkScrollPosition = useCallback(() => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 1);
-    }
-  }, []);
-
-  useEffect(() => {
-    const currentRef = scrollRef.current;
-    if (currentRef) {
-      currentRef.addEventListener("scroll", checkScrollPosition);
-      checkScrollPosition();
-    }
-    return () => {
-      if (currentRef) {
-        currentRef.removeEventListener("scroll", checkScrollPosition);
-      }
-    };
-  }, [checkScrollPosition]);
 
   // Fire-and-forget, once per place id -- mirrors the exact pattern
   // PlaceActionButtons.tsx uses for direction_click/phone_click/etc (never
@@ -59,58 +52,32 @@ export default function FeaturedPlacesSlider({
     }
   }, [places]);
 
-  const scroll = (direction: "left" | "right") => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const scrollAmount = container.clientWidth * 0.75;
-    container.scrollBy({
-      left: direction === "left" ? -scrollAmount : scrollAmount,
-      behavior: "smooth",
-    });
-  };
-
   if (places.length === 0) return null;
 
   return (
     <div>
       <h2 className="font-medium text-lg mb-1">Featured Places</h2>
 
-      <div className="relative">
-        {showLeftArrow && (
-          <button
-            type="button"
-            onClick={() => scroll("left")}
-            className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-md hover:bg-popover transition-all hover:scale-110"
-            aria-label="Scroll left"
-          >
-            <FaArrowLeftLong className="text-xl text-popover-foreground" />
-          </button>
-        )}
-
-        <div
-          ref={scrollRef}
-          className="grid grid-flow-col auto-cols-[90%] sm:auto-cols-[45%] md:auto-cols-[35%] lg:auto-cols-[28%] xl:auto-cols-[25%] gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-3"
-        >
+      <Carousel
+        opts={{ loop: true, align: "start" }}
+        plugins={[plugin]}
+        setApi={setApi}
+      >
+        <CarouselContent className="-ml-3 pb-3">
           {places.map((place, index) => (
-            <div key={place.id} className="relative">
+            <CarouselItem
+              key={place.id}
+              className="relative pl-3 basis-[90%] sm:basis-[45%] md:basis-[35%] lg:basis-[28%] xl:basis-[25%]"
+            >
               <SponsoredBadge className="absolute left-3 top-3 z-10" />
               <PlaceCard priority={index < 4} {...place} />
-            </div>
+            </CarouselItem>
           ))}
-        </div>
+        </CarouselContent>
 
-        {showRightArrow && (
-          <button
-            type="button"
-            onClick={() => scroll("right")}
-            className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-30 bg-popover/90 backdrop-blur-sm p-3 rounded-full shadow-lg hover:bg-popover transition-all hover:scale-110"
-            aria-label="Scroll right"
-          >
-            <FaArrowRightLong className="text-xl text-popover-foreground" />
-          </button>
-        )}
-      </div>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
     </div>
   );
 }

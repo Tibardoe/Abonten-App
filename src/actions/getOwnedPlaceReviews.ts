@@ -47,7 +47,7 @@ export async function getOwnedPlaceReviews(
   let query = supabase
     .from("place_review")
     .select(
-      "*, user_info:reviewer_id(username, avatar_public_id, avatar_version), place:place_id!inner(name, slug, owner_id)",
+      "*, user_info:reviewer_id(username, avatar_public_id, avatar_version), place:place_id!inner(name, slug, owner_id), place_review_photo(id, public_id, version, position)",
     )
     .eq("place.owner_id", user.id)
     .eq("status", "approved")

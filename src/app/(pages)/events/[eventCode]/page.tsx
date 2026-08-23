@@ -1,3 +1,5 @@
+import { getEventRating } from "@/actions/getEventRating";
+import { getEventReviews } from "@/actions/getEventReviews";
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
@@ -5,6 +7,7 @@ import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { publicSupabase } from "@/config/supabase/publicClient";
+import EventReviewsSection from "@/events/organisms/EventReviewsSection";
 import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate, getRelativeTime } from "@/utils/dateFormatter";
@@ -96,6 +99,8 @@ export default async function page({
     { data: minTicket },
     averageRating,
     { lat, lng },
+    eventRating,
+    eventReviewsFirstPage,
   ] = await Promise.all([
     // Sums number_of_tickets (one attendance row can represent a
     // multi-ticket purchase) and only counts rows still 'attending' — a
@@ -113,8 +118,12 @@ export default async function page({
       .order("price", { ascending: true })
       .limit(1)
       .single(),
+    // Rates the organizer as a person (generic `review` table) — distinct
+    // from eventRating below, which rates this specific event.
     getUserRating(event.organizer_id),
     geocodeAddress(safeLocation),
+    getEventRating(event.id),
+    getEventReviews(event.id),
   ]);
 
   const attendanceCount = (attendanceRows ?? []).reduce(
@@ -148,6 +157,11 @@ export default async function page({
   );
 
   const tags = parseEventTypes(event.event_type);
+
+  async function fetchEventReviewsPage(cursor: string | null) {
+    "use server";
+    return getEventReviews(event.id, { cursor });
+  }
 
   // Mutually exclusive at creation time (postEvent.ts either creates one
   // "FREE" ticket_type or only paid ones, and updateEvent.ts never touches
@@ -447,6 +461,17 @@ export default async function page({
               </div>
             )}
           </div>
+        </div>
+
+        <div className="mt-6 md:mt-8">
+          <EventReviewsSection
+            eventId={event.id}
+            organizerId={event.organizer_id}
+            avgRating={eventRating.averageRating}
+            reviewCount={eventRating.totalRatings}
+            initialPage={eventReviewsFirstPage}
+            fetchPage={fetchEventReviewsPage}
+          />
         </div>
 
         <EventsSlider

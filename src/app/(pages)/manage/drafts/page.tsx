@@ -23,7 +23,7 @@ export default async function DraftsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="md:text-2xl font-bold">Drafts</h1>
+      <h1 className="sr-only">Drafts</h1>
 
       <DraftsView
         initialEventDrafts={eventDrafts.data}

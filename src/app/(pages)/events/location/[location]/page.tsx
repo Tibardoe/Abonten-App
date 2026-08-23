@@ -1,10 +1,10 @@
 import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
-import Banner from "@/components/molecules/Banner";
 import EventsSlider from "@/components/organisms/EventsSlider";
+import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
 import type { UserPostType } from "@/types/postsType";
-import { getDailyEvent } from "@/utils/dailyEventCache";
+import { getFeaturedEvents } from "@/utils/dailyEventCache";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import AllEventsList from "./AllEventsList";
 
@@ -61,7 +61,7 @@ export default async function page({
     "happening-this-month",
   );
 
-  const selected = getDailyEvent(events, safeLocation);
+  const featuredEvents = getFeaturedEvents(events, safeLocation);
 
   async function fetchAllEventsPage(cursor: string | null) {
     "use server";
@@ -97,7 +97,7 @@ export default async function page({
 
       {eventsWithinLocation.data?.length ? (
         <>
-          <Banner event={selected} />
+          <FeaturedEventsCarousel events={featuredEvents} />
 
           <EventsSlider
             heading="Around-You"

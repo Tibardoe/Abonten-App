@@ -10,21 +10,24 @@ import {
   splitPage,
 } from "@/utils/pagination";
 
-export async function getPlaceReviews(
-  placeId: string,
+// Public list of reviews for one event -- mirrors getPlaceReviews.ts exactly,
+// including the same joined-row `any` (no generated Supabase types exist in
+// this repo, see PROJECT.md).
+export async function getEventReviews(
+  eventId: string,
   options?: { cursor?: string | null; pageSize?: number },
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getUserReviews.ts's convention for a joined review row
+  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- matches getPlaceReviews.ts's convention for a joined review row
 ): Promise<PaginatedResult<any>> {
   const supabase = publicSupabase;
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
   const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
   let query = supabase
-    .from("place_review")
+    .from("event_review")
     .select(
-      "*, user_info:reviewer_id(username, avatar_public_id, avatar_version), place_review_photo(id, public_id, version, position)",
+      "*, user_info:reviewer_id(username, avatar_public_id, avatar_version), event_review_photo(id, public_id, version, position)",
     )
-    .eq("place_id", placeId)
+    .eq("event_id", eventId)
     .eq("status", "approved")
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -37,7 +40,7 @@ export async function getPlaceReviews(
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching place reviews: ${error.message}`);
+    console.log(`Failed fetching event reviews: ${error.message}`);
 
     return {
       status: 500,

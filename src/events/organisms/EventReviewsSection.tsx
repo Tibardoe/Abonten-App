@@ -1,10 +1,11 @@
 "use client";
 
-import { respondToPlaceReview } from "@/actions/respondToPlaceReview";
+import { respondToEventReview } from "@/actions/respondToEventReview";
 import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -12,50 +13,78 @@ import { getRelativeTime } from "@/utils/dateFormatter";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useState } from "react";
+import AddEventReviewButton from "../molecules/AddEventReviewButton";
 
 // No generated Supabase types exist in this repo (see PROJECT.md) --
-// matches getPlaceReviews.ts's own biome-ignore'd `any` return type, same
-// convention PlaceReviewsSection.tsx already uses for this joined row shape.
+// matches getEventReviews.ts's own biome-ignore'd `any` return type.
 // biome-ignore lint/suspicious/noExplicitAny: see above
-type PlaceReviewRow = any;
+type EventReviewRow = any;
 
-type ManagePlaceReviewsSectionProps = {
-  placeId: string;
-  initialPage: PaginatedResult<PlaceReviewRow>;
+type EventReviewsSectionProps = {
+  eventId: string;
+  organizerId: string;
+  avgRating: number;
+  reviewCount: number;
+  initialPage: PaginatedResult<EventReviewRow>;
   fetchPage: (
     cursor: string | null,
-  ) => Promise<PaginatedResult<PlaceReviewRow>>;
+  ) => Promise<PaginatedResult<EventReviewRow>>;
 };
 
-// Owner-facing counterpart to PlaceReviewsSection.tsx (the public detail
-// page's read-only reviews list): same layout and the same "Response from
-// owner" styling convention, plus a Respond action per review that has no
-// owner_response yet.
-export default function ManagePlaceReviewsSection({
-  placeId,
+// Combines the public review list AND the organizer's reply affordance in
+// one component -- unlike Places (which has a separate manage/places/[id]
+// dashboard with its own ManagePlaceReviewsSection), there is no per-event
+// manage page for events, so "Reply" simply appears inline for whichever
+// viewer happens to be this event's organizer, exactly like
+// ManagePlaceReviewsSection's RespondForm but gated by an isOrganizer check
+// instead of living on a separate route. respondToEventReview.ts is the
+// real authorization boundary regardless of what this component shows.
+export default function EventReviewsSection({
+  eventId,
+  organizerId,
+  avgRating,
+  reviewCount,
   initialPage,
   fetchPage,
-}: ManagePlaceReviewsSectionProps) {
+}: EventReviewsSectionProps) {
   const queryClient = useQueryClient();
+  const { data: user } = useCurrentUser();
   const { message: notification, showMessage } = useTimedMessage(3000);
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
 
+  const isOrganizer = user?.id === organizerId;
+
   const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: ["manage-place-reviews", placeId],
-    });
+    queryClient.invalidateQueries({ queryKey: ["event-reviews", eventId] });
 
   return (
-    <div className="space-y-4">
-      <InfiniteList<PlaceReviewRow>
-        queryKey={["manage-place-reviews", placeId]}
+    <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl md:text-2xl font-medium text-card-foreground">
+            Reviews
+          </h2>
+          <div className="flex items-center gap-2 mt-1">
+            <StarRatingDisplay rating={avgRating} />
+            <span className="text-sm text-muted-foreground">
+              {avgRating.toFixed(1)} ({reviewCount}{" "}
+              {reviewCount === 1 ? "review" : "reviews"})
+            </span>
+          </div>
+        </div>
+
+        <AddEventReviewButton eventId={eventId} organizerId={organizerId} />
+      </div>
+
+      <InfiniteList<EventReviewRow>
+        queryKey={["event-reviews", eventId]}
         initialPage={initialPage}
         fetchPage={fetchPage}
         listClassName="flex flex-col gap-6"
         emptyState={
           <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
         }
-        renderItem={(review: PlaceReviewRow) => (
+        renderItem={(review: EventReviewRow) => (
           <li
             key={review.id}
             className="border-b border-border pb-6 last:border-0 last:pb-0"
@@ -101,18 +130,18 @@ export default function ManagePlaceReviewsSection({
               </p>
             )}
 
-            <ReviewPhotoGrid photos={review.place_review_photo} />
+            <ReviewPhotoGrid photos={review.event_review_photo} />
 
-            {review.owner_response ? (
+            {review.organizer_response ? (
               <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
                 <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-                  Response from owner
+                  Organizer reply
                 </p>
                 <p className="text-sm text-foreground">
-                  {review.owner_response}
+                  {review.organizer_response}
                 </p>
               </div>
-            ) : respondingToId === review.id ? (
+            ) : isOrganizer && respondingToId === review.id ? (
               <RespondForm
                 reviewId={review.id}
                 onCancel={() => setRespondingToId(null)}
@@ -123,13 +152,15 @@ export default function ManagePlaceReviewsSection({
                 }}
               />
             ) : (
-              <button
-                type="button"
-                onClick={() => setRespondingToId(review.id)}
-                className="mt-2 text-sm text-primary hover:underline"
-              >
-                Respond
-              </button>
+              isOrganizer && (
+                <button
+                  type="button"
+                  onClick={() => setRespondingToId(review.id)}
+                  className="mt-2 text-sm text-primary hover:underline"
+                >
+                  Reply
+                </button>
+              )
             )}
           </li>
         )}
@@ -156,10 +187,10 @@ function RespondForm({
     if (!response.trim()) return;
     setIsSubmitting(true);
     try {
-      const result = await respondToPlaceReview(reviewId, response.trim());
+      const result = await respondToEventReview(reviewId, response.trim());
       onSubmitted(
         result.status === 200
-          ? "✅ Response posted successfully!"
+          ? "✅ Reply posted successfully!"
           : `❌ ${result.message}`,
       );
     } finally {
@@ -172,7 +203,7 @@ function RespondForm({
       <textarea
         value={response}
         onChange={(e) => setResponse(e.target.value)}
-        placeholder="Write a response to this review..."
+        placeholder="Write a reply to this review..."
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
         rows={2}
       />
@@ -183,7 +214,7 @@ function RespondForm({
           onClick={handleSubmit}
           className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSubmitting ? "Posting..." : "Post response"}
+          {isSubmitting ? "Posting..." : "Post reply"}
         </button>
         <button
           type="button"

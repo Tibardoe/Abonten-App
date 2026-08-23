@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/components/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PaginatedResult } from "@/types/pagination";
 import { useState } from "react";
 import PlaceReviewsList from "./PlaceReviewsList";
@@ -8,10 +8,15 @@ import UserReviewsList from "./UserReviewsList";
 
 type Tab = "event" | "place";
 
+function isTab(value: string): value is Tab {
+  return value === "event" || value === "place";
+}
+
 // Tab switcher between reviews written ABOUT this user as an event
 // organizer (existing behavior, unchanged) and reviews of places this user
-// owns/manages (new) -- mirrors DraftsView.tsx's tab pattern for the same
-// "two related but differently-shaped lists" problem.
+// owns/manages (new) -- uses the same shared Tabs primitive and centered
+// pill styling as ExploreTabs.tsx/MyEventsTabs.tsx for cross-page
+// consistency.
 export default function UserReviewsTabs({
   eventReviewsQueryKey,
   eventReviewsInitialPage,
@@ -42,51 +47,34 @@ export default function UserReviewsTabs({
   const [activeTab, setActiveTab] = useState<Tab>("event");
 
   return (
-    <div className="space-y-5">
-      <div className="flex gap-2 border-b border-border">
-        <button
-          type="button"
-          className={cn(
-            "px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors",
-            activeTab === "event"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => setActiveTab("event")}
-        >
-          Event Reviews
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors",
-            activeTab === "place"
-              ? "border-primary text-foreground"
-              : "border-transparent text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => setActiveTab("place")}
-        >
-          Place Reviews
-        </button>
+    <Tabs
+      value={activeTab}
+      onValueChange={(value) => isTab(value) && setActiveTab(value)}
+    >
+      <div className="flex justify-center">
+        <TabsList className="grid w-full grid-cols-2 md:w-auto md:inline-grid md:min-w-[240px]">
+          <TabsTrigger value="event">Event Reviews</TabsTrigger>
+          <TabsTrigger value="place">Place Reviews</TabsTrigger>
+        </TabsList>
       </div>
 
-      {activeTab === "event" && (
+      <TabsContent value="event">
         <UserReviewsList
           queryKey={eventReviewsQueryKey}
           initialPage={eventReviewsInitialPage}
           fetchPage={fetchEventReviewsPage}
           emptyState={eventReviewsEmptyState}
         />
-      )}
+      </TabsContent>
 
-      {activeTab === "place" && (
+      <TabsContent value="place">
         <PlaceReviewsList
           queryKey={placeReviewsQueryKey}
           initialPage={placeReviewsInitialPage}
           fetchPage={fetchPlaceReviewsPage}
           emptyState={placeReviewsEmptyState}
         />
-      )}
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }

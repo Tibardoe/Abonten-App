@@ -57,7 +57,7 @@ export default async function page({
 
   return (
     <div className="space-y-5">
-      <h1 className="md:text-2xl font-bold">My Events</h1>
+      <h1 className="text-xl md:text-2xl font-bold">My Tickets</h1>
 
       <MyEventsTabs
         initialTab={initialTab}

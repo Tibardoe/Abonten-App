@@ -30,39 +30,52 @@ function meetsBaseEligibility(event: UserPostType): boolean {
   return !soldOut;
 }
 
-// Picks a stable "event of the day" per location without any stored state:
-// the pick is a deterministic function of (location, UTC date), so every
-// instance/request agrees without needing to share a cache. The previous
-// implementation cached this on local disk (os.tmpdir()), which doesn't
-// work across serverless instances (each gets its own ephemeral /tmp) or
-// across replicas of the Docker deployment — different requests for the
-// same location on the same day could get different "daily" events, and
-// the cache silently reset on every cold start/restart anyway.
+// Picks the Featured Events banner's slides for a location without any
+// stored state: which events show, and their order, is a deterministic
+// function of (location, UTC date), so every instance/request agrees
+// without needing to share a cache. The previous implementation cached a
+// single pick on local disk (os.tmpdir()), which doesn't work across
+// serverless instances (each gets its own ephemeral /tmp) or across
+// replicas of the Docker deployment — different requests for the same
+// location on the same day could get different "daily" events, and the
+// cache silently reset on every cold start/restart anyway.
 //
-// Prefers events an organizer explicitly marked `featured`. If none in this
-// location/fetch qualify, falls back to picking among all otherwise-eligible
-// (upcoming, not sold out) events instead of showing nothing — a location
-// with no self-nominated featured events still gets a banner. Either way,
-// nothing is snapshotted: the pick is an index into the caller's live
-// `events` array, re-resolved fresh on every request, so any edit an
-// organizer makes to the picked event (featured or fallback) shows up on
-// the very next banner render with no separate invalidation step needed.
-export function getDailyEvent(
+// Business logic is unchanged from the previous single-pick version: still
+// prefers events an organizer explicitly marked `featured`, still falls
+// back to picking one otherwise-eligible (upcoming, not sold out) event if
+// none are featured, so a location with no self-nominated featured events
+// still gets a banner. What's new is that when MULTIPLE events are
+// featured, all of them are returned (for the carousel) instead of
+// collapsing to one — the fallback case deliberately still returns just
+// one, since a bare "Featured" banner showing arbitrary non-featured events
+// would be misleading. The featured list's starting rotation (which event
+// leads) still rotates daily via the same hash, so no single organizer's
+// featured event always leads. Nothing is snapshotted: this re-filters the
+// caller's live `events` array fresh on every request, so any edit an
+// organizer makes shows up on the very next render with no invalidation.
+export function getFeaturedEvents(
   events: UserPostType[],
   location: string,
-): UserPostType | null {
+): UserPostType[] {
   const eligible = events.filter(meetsBaseEligibility);
 
-  if (!eligible.length) return null;
-
-  const featuredEligible = eligible.filter((event) => event.featured);
-  const pool = featuredEligible.length > 0 ? featuredEligible : eligible;
+  if (!eligible.length) return [];
 
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
   const seed = `${location.toLowerCase()}_${today}`;
-  const index = hashSeed(seed) % pool.length;
 
-  return pool[index];
+  const featuredEligible = eligible.filter((event) => event.featured);
+
+  if (featuredEligible.length === 0) {
+    const index = hashSeed(seed) % eligible.length;
+    return [eligible[index]];
+  }
+
+  const rotation = hashSeed(seed) % featuredEligible.length;
+  return [
+    ...featuredEligible.slice(rotation),
+    ...featuredEligible.slice(0, rotation),
+  ];
 }
 
 function hashSeed(seed: string): number {
