@@ -5,9 +5,8 @@ import React from "react";
 import { useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
 import { MdDateRange } from "react-icons/md";
+import { InlineDateField } from "../atoms/InlineDateField";
 import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 type TicketInputProp = {
   ticketType: string;
@@ -153,53 +152,19 @@ export default function TicketInputs({
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              {/* start date */}
-              <Popover>
-                <PopoverTrigger className="flex items-center gap-1">
-                  <MdDateRange className="text-2xl" />{" "}
-                  {date ? (
-                    date.toLocaleDateString()
-                  ) : (
-                    <p className="text-sm font-bold text-muted-foreground">
-                      Available From
-                    </p>
-                  )}
-                </PopoverTrigger>
-
-                <PopoverContent className="space-y-4">
-                  <Calendar
-                    initialFocus
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                  />
-                </PopoverContent>
-              </Popover>
-              <p className="text-sm font-bold text-muted-foreground">To</p>
-
-              {/* End date */}
-              <Popover>
-                <PopoverTrigger className="flex items-center gap-1">
-                  <MdDateRange className="text-2xl" />{" "}
-                  {endDate ? (
-                    endDate.toLocaleDateString()
-                  ) : (
-                    <p className="text-sm font-bold text-muted-foreground">
-                      Available Until
-                    </p>
-                  )}
-                </PopoverTrigger>
-
-                <PopoverContent className="space-y-4">
-                  <Calendar
-                    initialFocus
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                  />
-                </PopoverContent>
-              </Popover>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <InlineDateField
+                label="Available From"
+                date={date}
+                onSelect={setDate}
+                disabledBefore={new Date()}
+              />
+              <InlineDateField
+                label="Available Until"
+                date={endDate}
+                onSelect={setEndDate}
+                disabledBefore={date ?? new Date()}
+              />
             </div>
 
             <Button

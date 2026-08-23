@@ -10,14 +10,12 @@ import type { ResolvedLocation } from "@/types/resolvedLocation";
 import type { Ticket } from "@/types/ticketType";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
-import { receivingAccountSchema } from "@/utils/receivingAcountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export type DateEntry = { start: Date; end: Date };
 
@@ -83,11 +81,6 @@ export function useEventUploadForm({
     handleSubmit,
     formState: { errors, isDirty: isFormDirty },
   } = form;
-
-  const receivingAccountForm = useForm<z.infer<typeof receivingAccountSchema>>({
-    resolver: zodResolver(receivingAccountSchema),
-    defaultValues: initialValues?.receivingAccountDetails,
-  });
 
   const { message: notification, showMessage } = useTimedMessage(3000);
 
@@ -207,14 +200,6 @@ export function useEventUploadForm({
   const [checked, setChecked] = useState(
     initialValues?.requireRegistration ?? false,
   );
-  const [featured, setFeatured] = useState(initialValues?.featured ?? false);
-  const [paymentOption, setPaymentOption] = useState<string | null>(
-    initialValues?.paymentOption ?? null,
-  );
-  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(
-    initialValues?.selectedNetwork ?? null,
-  );
-  const [showNetworkDropdown, setShowNetworkDropdown] = useState(false);
 
   // Tracks whether the organizer has actually entered anything this
   // session, beyond whatever a continued draft was hydrated with — used to
@@ -264,24 +249,6 @@ export function useEventUploadForm({
     setChecked((prev) => !prev);
   };
 
-  const handleFeatured = () => {
-    markTouched();
-    setFeatured((prev) => !prev);
-  };
-
-  const handlePaymentOption = (option: string) => {
-    markTouched();
-    setPaymentOption(option);
-  };
-
-  const handleSelectedNetwork = (network: string) => {
-    markTouched();
-    setSelectedNetwork(network);
-    setShowNetworkDropdown(false);
-  };
-
-  const handleNetworkDropdown = () => setShowNetworkDropdown((prev) => !prev);
-
   const handleSelectedAddress = (address: string) => {
     markTouched();
     setSelectedAddress(address);
@@ -320,18 +287,10 @@ export function useEventUploadForm({
   // Whether there's anything worth protecting on Cancel — either the form
   // was hydrated from an existing draft, or the organizer has actually
   // entered something this session.
-  const hasMeaningfulContent =
-    Boolean(initialValues) ||
-    touched ||
-    isFormDirty ||
-    receivingAccountForm.formState.isDirty;
+  const hasMeaningfulContent = Boolean(initialValues) || touched || isFormDirty;
 
   const buildDraftPayload = (): EventDraftPayload => {
     const formValues = form.getValues();
-    const receivingAccountValues = receivingAccountForm.getValues();
-    const hasReceivingAccountValues = Object.values(
-      receivingAccountValues,
-    ).some((value) => Boolean(value));
 
     return {
       title: formValues.title || undefined,
@@ -357,12 +316,6 @@ export function useEventUploadForm({
       multipleTickets: multipleTickets.length > 0 ? multipleTickets : undefined,
       promoCodes: promoCodes.length > 0 ? promoCodes : undefined,
       requireRegistration: checked,
-      featured,
-      paymentOption: paymentOption ?? undefined,
-      selectedNetwork: selectedNetwork ?? undefined,
-      receivingAccountDetails: hasReceivingAccountValues
-        ? receivingAccountValues
-        : undefined,
       currency: userCurrency ?? undefined,
     };
   };
@@ -496,21 +449,6 @@ export function useEventUploadForm({
         return;
       }
 
-      const receivingAccountDetails = receivingAccountForm.getValues();
-      const isReceivingAccountEmpty = Object.values(
-        receivingAccountDetails,
-      ).some((value) => !value);
-      const isPaidTicketing =
-        (singleTicket && singleTicketQuantity) ||
-        (multipleTickets && multipleTickets.length > 0);
-
-      if (isPaidTicketing && ticket !== "free" && isReceivingAccountEmpty) {
-        showMessage(
-          "Set up receiving account to receive payment after successfull event!",
-        );
-        return;
-      }
-
       const finalData: PostsType = {
         ...formData,
         address: selectedAddress,
@@ -528,10 +466,6 @@ export function useEventUploadForm({
         multipleTickets,
         currency: userCurrency,
         checked,
-        featured,
-        paymentOption,
-        receivingAccountDetails,
-        selectedNetwork,
         clientRequestId: clientRequestIdRef.current,
         placeId: selectedPlaceId,
         ...eventDates,
@@ -558,7 +492,6 @@ export function useEventUploadForm({
     register,
     handleSubmit,
     errors,
-    receivingAccountForm,
     notification,
     isUploading,
     isResolvingLocation,
@@ -586,18 +519,10 @@ export function useEventUploadForm({
     handleMultipleTickets: handleMultipleTicketsWithTouch,
     checked,
     handleChecked,
-    featured,
-    handleFeatured,
     promoCodes,
     handlePromoCodesChange,
     showPromoCodeFormPopup,
     handlePromoCodeFormPopup,
-    paymentOption,
-    handlePaymentOption,
-    selectedNetwork,
-    handleSelectedNetwork,
-    showNetworkDropdown,
-    handleNetworkDropdown,
     hasMeaningfulContent,
     saveDraft,
     isSavingDraft,

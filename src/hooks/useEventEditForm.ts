@@ -74,7 +74,6 @@ export function useEventEditForm({
   const [types, setTypes] = useState<string[]>([]);
 
   const [checked, setChecked] = useState(false);
-  const [featured, setFeatured] = useState(false);
 
   const [existingFlyer, setExistingFlyer] = useState<{
     publicId: string;
@@ -114,7 +113,6 @@ export function useEventEditForm({
     setTypes(parseEventTypes(event.event_type));
 
     setChecked(!!event.require_registration);
-    setFeatured(!!event.featured);
     setExistingFlyer({
       publicId: event.flyer_public_id,
       version: event.flyer_version,
@@ -160,7 +158,6 @@ export function useEventEditForm({
   };
 
   const handleChecked = () => setChecked((prev) => !prev);
-  const handleFeatured = () => setFeatured((prev) => !prev);
 
   // Previously accepted any file with no validation at all (relying only on
   // the <input accept="image/*"> hint, which a user/browser can bypass) —
@@ -289,7 +286,6 @@ export function useEventEditForm({
         category,
         types,
         checked,
-        featured,
         selectedFile: newFile,
         ...eventDates,
       });
@@ -333,8 +329,6 @@ export function useEventEditForm({
     handleType,
     checked,
     handleChecked,
-    featured,
-    handleFeatured,
     existingFlyer,
     handleFileChange,
   };

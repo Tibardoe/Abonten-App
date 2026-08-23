@@ -4,6 +4,7 @@ import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
 import {
   Carousel,
   CarouselContent,
+  CarouselDots,
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
@@ -11,8 +12,7 @@ import {
 import { useCarouselAutoplay } from "@/hooks/useCarouselAutoplay";
 import type { PlaceType } from "@/types/placeType";
 import { useEffect, useRef } from "react";
-import PlaceCard from "../molecules/PlaceCard";
-import SponsoredBadge from "../molecules/SponsoredBadge";
+import PlaceBanner from "../molecules/PlaceBanner";
 
 type FeaturedPlacesSliderProps = {
   places: PlaceType[];
@@ -21,19 +21,14 @@ type FeaturedPlacesSliderProps = {
 const AUTOPLAY_DELAY_MS = 4000;
 
 // "Featured Places" section (Places Phase 2, Milestone 5, paid promotion).
-// Not a reuse of PlacesSlider.tsx (checked first, per the task) -- its shape
-// doesn't fit, since every card here also needs a "Sponsored" badge overlay
-// and a once-per-card impression log, neither of which PlacesSlider
-// supports. PlaceCard.tsx itself is reused completely unmodified, per spec:
-// its own <li> root is wrapped in a plain <div> (not nested inside another
-// <li>/<ul>) purely so the badge can be absolutely positioned over it.
-//
-// Previously a hand-rolled scroll-snap div with manual arrow-visibility
-// tracking; now built on the shared Embla carousel primitive so it gets the
-// same auto-rotate/loop/reduced-motion behavior as FeaturedEventsCarousel,
-// while keeping its own responsive multi-card-per-view sizing (several
-// places already fit on screen at once on wider viewports, unlike the
-// single-slide Events banner).
+// Mirrors FeaturedEventsCarousel.tsx's exact structure so it gets the same
+// banner presentation and the same zero/one/many handling: nothing for zero
+// places, a plain static PlaceBanner for exactly one (no Carousel/Autoplay
+// instantiated at all -- embla-carousel-autoplay's own init() bails out
+// early for a single-slide carousel without ever setting its `delay`, so
+// calling .play() on it throws; the single-item case simply never reaches
+// a Carousel here), and a looping autoplaying carousel only once there's
+// genuinely more than one to rotate through.
 export default function FeaturedPlacesSlider({
   places,
 }: FeaturedPlacesSliderProps) {
@@ -58,26 +53,28 @@ export default function FeaturedPlacesSlider({
     <div>
       <h2 className="font-medium text-lg mb-1">Featured Places</h2>
 
-      <Carousel
-        opts={{ loop: true, align: "start" }}
-        plugins={[plugin]}
-        setApi={setApi}
-      >
-        <CarouselContent className="-ml-3 pb-3">
-          {places.map((place, index) => (
-            <CarouselItem
-              key={place.id}
-              className="relative pl-3 basis-[90%] sm:basis-[45%] md:basis-[35%] lg:basis-[28%] xl:basis-[25%]"
-            >
-              <SponsoredBadge className="absolute left-3 top-3 z-10" />
-              <PlaceCard priority={index < 4} {...place} />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
+      {places.length === 1 ? (
+        <PlaceBanner place={places[0]} />
+      ) : (
+        <Carousel
+          opts={{ loop: true, align: "start" }}
+          plugins={[plugin]}
+          setApi={setApi}
+          className="w-full"
+        >
+          <CarouselContent>
+            {places.map((place) => (
+              <CarouselItem key={place.id}>
+                <PlaceBanner place={place} />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
 
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+          <CarouselPrevious />
+          <CarouselNext />
+          <CarouselDots className="mt-3" />
+        </Carousel>
+      )}
     </div>
   );
 }

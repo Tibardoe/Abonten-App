@@ -1,5 +1,6 @@
 import type { useTranslations } from "next-intl";
 import { z } from "zod";
+import { WEBSITE_URL_REGEX } from "./urlValidation";
 
 // Simple format check, not a strict international-format validator — good
 // enough to catch obvious typos without rejecting real numbers written in
@@ -25,16 +26,9 @@ export const getPlaceSchema = (
 
     website_url: z
       .string()
-      .refine(
-        (val) =>
-          val === "" ||
-          /^((https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-z]{2,})(\/\S*)?$/.test(
-            val,
-          ),
-        {
-          message: t("validation.invalidUrl"),
-        },
-      )
+      .refine((val) => val === "" || WEBSITE_URL_REGEX.test(val), {
+        message: t("validation.invalidUrl"),
+      })
       .optional(),
 
     phone: z

@@ -18,7 +18,6 @@ export type UpdateEventInput = {
   category: string;
   types: string[];
   checked: boolean;
-  featured?: boolean;
   starts_at?: Date;
   ends_at?: Date;
   specific_dates?: { start: Date; end: Date }[];
@@ -27,7 +26,9 @@ export type UpdateEventInput = {
 
 /**
  * Edits the core, non-ticketing fields of an event an organizer already
- * created — title/description/location/schedule/flyer/category/featured.
+ * created — title/description/location/schedule/flyer/category. Featuring an
+ * event is handled exclusively by the paid Promotion flow (Manage -> Events
+ * -> Promotion), not by this action.
  * Deliberately does NOT touch ticket_type, promo_code, or receiving_account:
  * ticket_type.quantity is a live, compare-and-swap "remaining stock"
  * counter (see ticketInventory.ts), issued `ticket` rows carry no price of
@@ -61,7 +62,6 @@ export async function updateEvent(formData: UpdateEventInput) {
     category,
     types,
     checked,
-    featured,
     starts_at,
     ends_at,
     specific_dates,
@@ -171,7 +171,6 @@ export async function updateEvent(formData: UpdateEventInput) {
       event_category: category,
       event_type: types,
       require_registration: checked,
-      featured: featured ?? false,
       starts_at: eventStartDate,
       ends_at: eventEndDate,
       flyer_public_id: flyerPublicId,

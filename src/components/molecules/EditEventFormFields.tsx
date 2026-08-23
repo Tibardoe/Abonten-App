@@ -8,7 +8,6 @@ import TypeFilter from "@/components/molecules/TypeFilter";
 import type { useEventEditForm } from "@/hooks/useEventEditForm";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import Image from "next/image";
-import { TbWorld } from "react-icons/tb";
 
 type EditEventFormFieldsProps = Pick<
   ReturnType<typeof useEventEditForm>,
@@ -24,8 +23,6 @@ type EditEventFormFieldsProps = Pick<
   | "initialEntries"
   | "checked"
   | "handleChecked"
-  | "featured"
-  | "handleFeatured"
   | "category"
   | "setCategory"
   | "types"
@@ -63,8 +60,6 @@ export default function EditEventFormFields({
   initialEntries,
   checked,
   handleChecked,
-  featured,
-  handleFeatured,
   category,
   setCategory,
   types,
@@ -184,18 +179,11 @@ export default function EditEventFormFields({
             </p>
           )}
 
-          <div className="flex justify-between items-center">
-            <div className="bg-background border border-input rounded-md">
-              <input
-                type="text"
-                placeholder="Website"
-                className="rounded-md p-2 bg-transparent text-base md:text-sm"
-                {...register("website_url")}
-              />
-            </div>
-
-            <TbWorld className="text-2xl" />
-          </div>
+          <PostInput
+            type="text"
+            inputPlaceholder="Website (optional)"
+            {...register("website_url")}
+          />
           {errors.website_url && (
             <p className="text-destructive text-sm">
               {errors.website_url.message}
@@ -204,18 +192,16 @@ export default function EditEventFormFields({
 
           <fieldset
             disabled={restrictedLocked}
-            className={restrictedLocked ? "opacity-60" : undefined}
+            className={restrictedLocked ? "opacity-60 space-y-1" : "space-y-1"}
           >
-            <div className="flex justify-between items-center font-semibold text-foreground">
-              <span>Capacity</span>
-
-              <input
-                type="number"
-                placeholder="0 if any"
-                {...register("capacity", { valueAsNumber: true })}
-                className="border border-input bg-background w-28 p-2 rounded-md text-base md:text-sm"
-              />
-            </div>
+            <PostInput
+              type="number"
+              inputPlaceholder="Capacity"
+              {...register("capacity", { valueAsNumber: true })}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave blank for unlimited capacity
+            </p>
           </fieldset>
           {errors.capacity && (
             <p className="text-destructive text-sm">
@@ -229,16 +215,6 @@ export default function EditEventFormFields({
               type="checkbox"
               checked={checked}
               onChange={handleChecked}
-              className="h-5 w-5 accent-primary"
-            />
-          </label>
-
-          <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
-            <span>Feature this event on the homepage banner</span>
-            <input
-              type="checkbox"
-              checked={featured}
-              onChange={handleFeatured}
               className="h-5 w-5 accent-primary"
             />
           </label>

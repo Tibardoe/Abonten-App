@@ -32,9 +32,6 @@ export async function postEvent(formData: PostsType) {
   const {
     category,
     singleTicket,
-    selectedNetwork,
-    receivingAccountDetails,
-    paymentOption,
     checked,
     multipleTickets,
     types,
@@ -53,7 +50,6 @@ export async function postEvent(formData: PostsType) {
     ends_at,
     promoCodes,
     specific_dates,
-    featured,
     clientRequestId,
     existingFlyer,
     draftId,
@@ -118,26 +114,6 @@ export async function postEvent(formData: PostsType) {
   const specificDatesPayload = isSpecificEvent
     ? specific_dates.map((entry) => ({ start: entry.start, end: entry.end }))
     : null;
-
-  const receivingAccountPayload =
-    paymentOption === "Mobile Money"
-      ? {
-          full_name: receivingAccountDetails?.name,
-          email: receivingAccountDetails?.email,
-          phone: receivingAccountDetails?.phone,
-          network_service_provider: selectedNetwork,
-          payment_option: paymentOption,
-        }
-      : paymentOption === "Bank"
-        ? {
-            full_name: receivingAccountDetails?.name,
-            email: receivingAccountDetails?.email,
-            bank_name: receivingAccountDetails?.bankName,
-            bank_branch: receivingAccountDetails?.branch,
-            bank_account_number: receivingAccountDetails?.bankAccountNumber,
-            payment_option: paymentOption,
-          }
-        : null;
 
   const ticketTypesPayload = isFreeEvent
     ? [
@@ -204,11 +180,17 @@ export async function postEvent(formData: PostsType) {
       p_starts_at: eventStartDate ?? null,
       p_ends_at: eventEndDate ?? null,
       p_require_registration: checked,
-      p_featured: featured ?? false,
+      // Featuring an event now happens exclusively through the paid
+      // Promotion flow (Manage -> Events -> Promotion), not at creation.
+      p_featured: false,
       p_specific_dates: specificDatesPayload,
       p_ticket_types: ticketTypesPayload.length > 0 ? ticketTypesPayload : null,
       p_promo_codes: promoCodesPayload,
-      p_receiving_account: receivingAccountPayload,
+      // Receiving-account collection was removed from Event Creation —
+      // organizers manage payout destinations app-wide via Finance ->
+      // Payout Accounts instead. The RPC param has no SQL default, so it
+      // must still be passed explicitly.
+      p_receiving_account: null,
       p_place_id: placeId ?? null,
     },
   );

@@ -1,5 +1,6 @@
 import type { useTranslations } from "next-intl";
 import { z } from "zod";
+import { WEBSITE_URL_REGEX } from "./urlValidation";
 
 export const getEventSchema = (
   t: ReturnType<typeof useTranslations<"events">>,
@@ -16,16 +17,9 @@ export const getEventSchema = (
 
     website_url: z
       .string()
-      .refine(
-        (val) =>
-          val === "" ||
-          /^((https?:\/\/)?(www\.)?[a-zA-Z0-9\-]+\.[a-z]{2,})(\/\S*)?$/.test(
-            val,
-          ),
-        {
-          message: t("validation.invalidUrl"),
-        },
-      )
+      .refine((val) => val === "" || WEBSITE_URL_REGEX.test(val), {
+        message: t("validation.invalidUrl"),
+      })
       .optional(),
 
     price: z

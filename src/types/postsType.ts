@@ -58,16 +58,6 @@ export type PostsType = {
   // after create_event succeeds — a failed publish leaves the draft intact.
   draftId?: string;
   currency: string | null | undefined;
-  paymentOption?: string | null;
-  selectedNetwork?: string | null;
-  receivingAccountDetails?: {
-    name: string;
-    email: string;
-    phone: string;
-    bankName: string;
-    branch?: string;
-    bankAccountNumber: string;
-  };
   freeEvents: string | null;
   singleTicket: number | null;
   singleTicketQuantity: number | null;
@@ -78,7 +68,6 @@ export type PostsType = {
     maximumUse: number;
     expiryDate: Date;
   }[];
-  featured?: boolean;
   // Generated once per upload-modal session and reused across retries of
   // the same submission, so create_event can recognize a network retry or
   // a double submit and return the already-created event instead of
