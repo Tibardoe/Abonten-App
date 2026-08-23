@@ -4,7 +4,11 @@ export const signInWithGoogle = async (
   location: string | null,
   next?: string | null,
 ) => {
-  const target = next || `/events/location/${location || "unknown"}`;
+  // `location` here is already slugified by the caller (GoogleAuthButton.tsx
+  // passes generateSlug(location ?? "")) -- matches the /explore/[location]
+  // landing pattern used by Header.tsx/SideBar.tsx/MobileNavBar.tsx, not the
+  // old /events/location/[location] route.
+  const target = next || `/explore/${location || ""}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

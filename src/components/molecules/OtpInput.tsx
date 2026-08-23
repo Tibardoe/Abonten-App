@@ -32,6 +32,13 @@ export default function OtpInput({
     setDigits(Array.from({ length }, (_, i) => value[i] ?? ""));
   }, [value, length]);
 
+  // Focus the first box the moment the OTP screen appears, so the user can
+  // start typing (or tap the SMS-autofill suggestion) immediately instead
+  // of having to tap into the field themselves.
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
+  }, []);
+
   const setInputRef = (el: HTMLInputElement | null, index: number) => {
     inputRefs.current[index] = el;
   };
@@ -103,7 +110,7 @@ export default function OtpInput({
               // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length digit boxes, index is a stable identity here
               index
             }`}
-            className="w-[50px] h-[56px] md:w-[60px] md:h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl"
+            className="w-[50px] h-[56px] md:w-[60px] md:h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl ring-1 ring-transparent transition-shadow focus-within:ring-2 focus-within:ring-accent"
           >
             <input
               type="text"

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const next =
-    getSafeRedirectPath(searchParams.get("next") ?? undefined) ?? "/events";
+    getSafeRedirectPath(searchParams.get("next") ?? undefined) ?? "/explore";
 
   if (code) {
     const supabase = await createClient();

@@ -3,12 +3,12 @@
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
+import { generateSlug } from "@/utils/geerateSlug";
 import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoChevronBack } from "react-icons/io5";
 import GoogleAuthButton from "../atoms/GoogleAuthButton";
@@ -35,10 +35,9 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
 
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [sendErrorMessage, setSendErrorMessage] = useState<string | null>(null);
   const [otpErrorMessage, setOtpErrorMessage] = useState<string | null>(null);
-
-  const router = useRouter();
 
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -100,14 +99,28 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
 
       if (result.status !== 200) {
         setOtpErrorMessage(result.message);
+        setIsVerifying(false);
         return;
       }
 
-      router.push(next || "/events");
+      // Switch to a distinct "redirecting" state instead of letting
+      // isVerifying reset back to false -- otherwise the button would flash
+      // back to "Continue" (briefly re-enabled) for the moment between the
+      // action resolving and the navigation below actually taking effect.
+      setIsRedirecting(true);
+
+      // A full navigation (not router.push) is required here, not just a
+      // style choice -- the new session only exists in cookies the browser
+      // just received on this action's response. A client-side transition
+      // would leave every already-fetched React Query cache (useCurrentUser,
+      // user-details, etc.) holding its stale pre-sign-in state, so Header
+      // would keep showing "Sign In" until something else happened to
+      // refetch. Google's OAuth flow avoids this same trap because
+      // /auth/callback issues a real HTTP redirect, which reloads the page.
+      window.location.href = next || `/explore/${generateSlug(location ?? "")}`;
     } catch (error) {
       console.error("OTP Verification Error:", error);
       setOtpErrorMessage(t("otpIncorrect"));
-    } finally {
       setIsVerifying(false);
     }
   };
@@ -193,10 +206,18 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
           />
 
           <Button
-            disabled={isVerifying || otp.length !== HUBTEL_OTP_CODE_LENGTH}
+            disabled={
+              isVerifying ||
+              isRedirecting ||
+              otp.length !== HUBTEL_OTP_CODE_LENGTH
+            }
             className="w-full rounded-md text-xl font-bold py-7"
           >
-            {isVerifying ? t("verifying") : t("continue")}
+            {isRedirecting
+              ? t("redirecting")
+              : isVerifying
+                ? t("verifying")
+                : t("continue")}
           </Button>
 
           <div className="flex flex-col items-center gap-2 pt-2">

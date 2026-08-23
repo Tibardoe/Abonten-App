@@ -29,12 +29,19 @@ type FindOrCreateResult =
 //
 // Session-minting technique: since Supabase has no public "mint a session
 // for this user id" admin endpoint (generateLink is email-only), a random
-// one-time password is set via the Admin API, immediately consumed via
+// one-time password is set via the Admin API and immediately consumed via
 // signInWithPassword through the SSR cookie-writing client (so real auth
 // cookies get set on the response, exactly like exchangeCodeForSession does
-// for Google), then rotated again so the secret can't be reused. The
-// resulting session is issued by Supabase's own token endpoint -- not a
-// forged token.
+// for Google). The resulting session is issued by Supabase's own token
+// endpoint -- not a forged token.
+//
+// Deliberately NOT rotated again after sign-in: confirmed live (see git
+// history for the throwaway repro script) that changing a user's password
+// via the Admin API revokes their existing sessions immediately -- so an
+// extra rotate-right-after-sign-in step was silently invalidating the
+// session on the same request that created it. The password is simply left
+// as this random, never-transmitted-to-any-client value until the next
+// phone sign-in overwrites it.
 export default async function verifyPhoneSignIn(
   phoneE164: string,
   code: string,
@@ -178,21 +185,6 @@ async function mintSessionForUser(
     phone: phoneE164,
     password: oneTimeSecret,
   });
-
-  // Rotate the password again regardless of outcome so the one-time secret
-  // can never be reused, even if sign-in itself failed.
-  const { error: rotateError } = await service.auth.admin.updateUserById(
-    userId,
-    {
-      password: randomBytes(32).toString("hex"),
-    },
-  );
-
-  if (rotateError) {
-    console.error(
-      `mintSessionForUser: failed to rotate one-time password: ${rotateError.message}`,
-    );
-  }
 
   if (signInError) {
     return { ok: false, message: signInError.message };
