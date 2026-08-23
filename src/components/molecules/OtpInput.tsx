@@ -14,8 +14,7 @@ type Props = {
 // Shared OTP box UI (defaults to Hubtel's 4-digit code length) --
 // previously duplicated almost identically between AuthModal.tsx (phone
 // sign-in) and SecurityInputFields.tsx (Settings phone update). Auto-advances
-// between digits, supports
-// backspace-to-previous and full-code paste.
+// between digits, supports backspace-to-previous and full-code paste/autofill.
 export default function OtpInput({
   length = HUBTEL_OTP_CODE_LENGTH,
   value,
@@ -42,14 +41,44 @@ export default function OtpInput({
     onChange(nextDigits.join(""));
   };
 
-  const handleChange = (index: number, digit: string) => {
-    if (!/^\d?$/.test(digit)) return;
+  // Distributes a full (or partial) code across the boxes starting at
+  // `startIndex`. Used for both clipboard paste and the multi-character
+  // value iOS/Android deliver in one go when the user taps the SMS
+  // autofill suggestion above the keyboard -- that fill lands as a single
+  // input event on whichever box is currently focused, not one digit per
+  // box, so it has to be split here rather than relying on per-box typing.
+  const distribute = (rawValue: string, startIndex: number) => {
+    const incomingDigits = rawValue.replace(/\D/g, "").split("");
+    if (incomingDigits.length === 0) return;
 
     const nextDigits = [...digits];
-    nextDigits[index] = digit;
+    let lastFilledIndex = startIndex;
+
+    for (let i = 0; i < incomingDigits.length && startIndex + i < length; i++) {
+      nextDigits[startIndex + i] = incomingDigits[i];
+      lastFilledIndex = startIndex + i;
+    }
+
+    emit(nextDigits);
+    inputRefs.current[Math.min(lastFilledIndex + 1, length - 1)]?.focus();
+  };
+
+  const handleChange = (index: number, rawValue: string) => {
+    // Autofill (or a paste that landed via `input` rather than `paste`)
+    // delivers more than one character at once -- redistribute instead of
+    // treating it as a single keystroke.
+    if (rawValue.length > 1) {
+      distribute(rawValue, index);
+      return;
+    }
+
+    if (!/^\d?$/.test(rawValue)) return;
+
+    const nextDigits = [...digits];
+    nextDigits[index] = rawValue;
     emit(nextDigits);
 
-    if (digit && index < length - 1) {
+    if (rawValue && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -62,11 +91,7 @@ export default function OtpInput({
 
   const handlePaste = (event: React.ClipboardEvent) => {
     event.preventDefault();
-    const pasted = event.clipboardData.getData("text").trim();
-    if (new RegExp(`^\\d{${length}}$`).test(pasted)) {
-      emit(pasted.split(""));
-      inputRefs.current[length - 1]?.focus();
-    }
+    distribute(event.clipboardData.getData("text"), 0);
   };
 
   return (
@@ -85,12 +110,22 @@ export default function OtpInput({
               inputMode="numeric"
               autoComplete="one-time-code"
               value={digit}
-              maxLength={1}
+              // No maxLength: iOS's SMS-autofill suggestion fills the
+              // *entire* code into whichever box is focused as one input
+              // event, and a maxLength={1} attribute lets the browser
+              // truncate that to a single character before this component
+              // ever sees the rest -- handleChange()/distribute() do the
+              // one-digit-per-box enforcement instead.
               disabled={disabled}
               className="w-full h-full text-center outline-none rounded-2xl bg-transparent disabled:opacity-50"
               ref={(el) => setInputRef(el, index)}
               onChange={(event) => handleChange(index, event.target.value)}
               onKeyDown={(event) => handleBackspace(index, event)}
+              // Selecting existing content on focus means retyping over an
+              // already-filled box replaces it instead of appending (which,
+              // without a maxLength, would otherwise push the new digit
+              // into the next box).
+              onFocus={(event) => event.target.select()}
             />
           </div>
         ))}

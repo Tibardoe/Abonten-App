@@ -134,9 +134,15 @@ async function findOrCreateUserByPhone(
     return { error: createError?.message ?? "Unknown error creating user" };
   }
 
+  // Supabase's Auth server strips the leading "+" before storing
+  // auth.users.phone (confirmed against the live table -- e.g. "+233..."
+  // is persisted as "233..."). The Admin API calls above go through that
+  // same normalization automatically either way, but this RPC does a raw
+  // Postgres equality check, so it needs the number in the same
+  // already-stored, plus-less form or it will never match.
   const { data: existingUserId, error: rpcError } = await service.rpc(
     "get_auth_user_id_by_phone",
-    { p_phone: phoneE164 },
+    { p_phone: phoneE164.replace(/^\+/, "") },
   );
 
   if (rpcError || !existingUserId) {
