@@ -40,15 +40,11 @@ export default function OrganizerEventsList({
             className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4 space-y-2"
           >
             <div className="flex justify-between items-center">
-              <Link
-                href={`/manage/attendance/attendance-list?eventId=${event.id}`}
-              >
+              <Link href={`/manage/events/${event.id}`}>
                 <h2 className="font-bold">{event.title}</h2>
               </Link>
 
-              <Link
-                href={`/manage/attendance/attendance-list?eventId=${event.id}`}
-              >
+              <Link href={`/manage/events/${event.id}`}>
                 <FaChevronRight className="md:text-xl" />
               </Link>
             </div>

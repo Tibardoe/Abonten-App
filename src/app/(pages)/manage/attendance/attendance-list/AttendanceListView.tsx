@@ -11,7 +11,7 @@ export default function AttendanceListView({
 }: {
   queryKey: unknown[];
   // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  initialPage: PaginatedResult<any>;
+  initialPage: PaginatedResult<any> | null;
   // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
   fetchPage: (cursor: string | null) => Promise<PaginatedResult<any>>;
   emptyState: React.ReactNode;

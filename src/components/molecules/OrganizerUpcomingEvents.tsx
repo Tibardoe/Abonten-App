@@ -27,7 +27,7 @@ export default function OrganizerUpcomingEvents({
           {events.map((event) => (
             <Link
               key={event.event_id}
-              href={`/manage/attendance/attendance-list?eventId=${event.event_id}`}
+              href={`/manage/events/${event.event_id}?tab=insights`}
               className="border border-border bg-card rounded-md shadow-md p-4 flex items-center justify-between gap-3 hover:border-primary transition-colors"
             >
               <div className="min-w-0">

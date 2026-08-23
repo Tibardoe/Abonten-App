@@ -19,6 +19,7 @@ type CreatePaymentAttemptInput = {
   | { checkoutSessionId: string }
   | { subscriptionCheckoutId: string }
   | { placePromotionCheckoutId: string }
+  | { eventPromotionCheckoutId: string }
 );
 
 type PaystackPaymentInfo =
@@ -100,7 +101,8 @@ export default async function createPaymentAttempt(
   let matchColumn:
     | "checkout_session_id"
     | "subscription_checkout_id"
-    | "place_promotion_checkout_id";
+    | "place_promotion_checkout_id"
+    | "event_promotion_checkout_id";
   let matchValue: string;
   let callbackPath: string;
 
@@ -165,7 +167,7 @@ export default async function createPaymentAttempt(
     matchColumn = "subscription_checkout_id";
     matchValue = input.subscriptionCheckoutId;
     callbackPath = `/checkout/${input.subscriptionCheckoutId}?type=subscription`;
-  } else {
+  } else if ("placePromotionCheckoutId" in input) {
     await supabase.rpc("expire_stale_place_promotion_checkouts");
 
     const { data: checkout, error: checkoutError } = await supabase
@@ -193,6 +195,34 @@ export default async function createPaymentAttempt(
     matchColumn = "place_promotion_checkout_id";
     matchValue = input.placePromotionCheckoutId;
     callbackPath = `/checkout/${input.placePromotionCheckoutId}?type=promotion`;
+  } else {
+    await supabase.rpc("expire_stale_event_promotion_checkouts");
+
+    const { data: checkout, error: checkoutError } = await supabase
+      .from("event_promotion_checkout")
+      .select("total_price, currency")
+      .eq("id", input.eventPromotionCheckoutId)
+      .eq("owner_id", user.id)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (checkoutError) {
+      console.log(`Failed fetching checkout: ${checkoutError.message}`);
+      return { status: 500, message: "Something went wrong!" };
+    }
+
+    if (!checkout) {
+      return {
+        status: 410,
+        message: "This checkout has expired. Please start again.",
+      };
+    }
+
+    amount = checkout.total_price;
+    currency = checkout.currency;
+    matchColumn = "event_promotion_checkout_id";
+    matchValue = input.eventPromotionCheckoutId;
+    callbackPath = `/checkout/${input.eventPromotionCheckoutId}?type=event-promotion`;
   }
 
   const attemptResult = await upsertPaymentAttemptForSession(

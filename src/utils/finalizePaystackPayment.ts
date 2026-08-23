@@ -12,6 +12,7 @@
 // service-role for the webhook) and a payment_attempt id already resolved
 // by the caller — same category as ticketInventory.ts/paymentAttempt.ts.
 
+import activateEventPromotion from "@/actions/activateEventPromotion";
 import activatePlacePromotion from "@/actions/activatePlacePromotion";
 import activateSubscription from "@/actions/activateSubscription";
 import generateTicket from "@/actions/generateTicket";
@@ -30,6 +31,7 @@ type PaymentAttemptFullRow = {
   checkout_session_id: string | null;
   subscription_checkout_id: string | null;
   place_promotion_checkout_id: string | null;
+  event_promotion_checkout_id: string | null;
 };
 
 export type FinalizeResult =
@@ -40,7 +42,7 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id, place_promotion_checkout_id";
+  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id, place_promotion_checkout_id, event_promotion_checkout_id";
 
 export async function finalizePaystackPayment(
   supabase: SupabaseClient,
@@ -383,6 +385,37 @@ export async function finalizePaystackPayment(
       } else {
         console.log(
           `finalizePaystackPayment: activatePlacePromotion failed for attempt ${member.id}: ${result.status} ${result.message}`,
+        );
+        anyFailed = true;
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "failed",
+            failure_reason: result.message ?? "Promotion activation failed",
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      }
+    } else if (member.event_promotion_checkout_id) {
+      const result = await activateEventPromotion(
+        member.event_promotion_checkout_id,
+        authOverride,
+      );
+
+      if (result.status === 200) {
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "succeeded",
+            paid_at: new Date(),
+            verified_at: new Date(),
+            updated_at: new Date(),
+          })
+          .eq("id", member.id);
+      } else {
+        console.log(
+          `finalizePaystackPayment: activateEventPromotion failed for attempt ${member.id}: ${result.status} ${result.message}`,
         );
         anyFailed = true;
         await supabase

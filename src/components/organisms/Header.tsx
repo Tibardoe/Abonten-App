@@ -20,7 +20,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
-import { IoMenuOutline, IoStorefrontOutline } from "react-icons/io5";
+import {
+  IoCalendarOutline,
+  IoMenuOutline,
+  IoStorefrontOutline,
+} from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import {
   MdOutlineAccountBalanceWallet,
@@ -182,6 +186,16 @@ export default function Header() {
                 <MdOutlineManageHistory className="text-2xl" />
                 {t("manageAttendance")}
               </Link>
+
+              {isOrganizer && (
+                <Link
+                  href="/manage/events"
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <IoCalendarOutline className="text-2xl" />
+                  {t("manageEvents")}
+                </Link>
+              )}
 
               {isPlaceOwner && (
                 <Link

@@ -1,3 +1,4 @@
+import getActivePromotedEventIds from "@/actions/getActivePromotedEventIds";
 import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import EventsSlider from "@/components/organisms/EventsSlider";
@@ -61,7 +62,20 @@ export default async function page({
     "happening-this-month",
   );
 
-  const featuredEvents = getFeaturedEvents(events, safeLocation);
+  // A paid Event Promotion (see the Promotion tab in Unified Event
+  // Management) makes an event featured-eligible for its purchased period,
+  // exactly like the free, self-toggled `featured` checkbox already does —
+  // folded in here rather than inside getFeaturedEvents/meetsBaseEligibility
+  // themselves, so every existing eligibility rule there (upcoming, not
+  // sold out) keeps applying unchanged to promoted events too.
+  const promotedEventIds = await getActivePromotedEventIds();
+  const eventsWithPromotion = promotedEventIds.size
+    ? events.map((event) =>
+        promotedEventIds.has(event.id) ? { ...event, featured: true } : event,
+      )
+    : events;
+
+  const featuredEvents = getFeaturedEvents(eventsWithPromotion, safeLocation);
 
   async function fetchAllEventsPage(cursor: string | null) {
     "use server";

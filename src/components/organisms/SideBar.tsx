@@ -19,7 +19,7 @@ import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
-import { IoStorefrontOutline } from "react-icons/io5";
+import { IoCalendarOutline, IoStorefrontOutline } from "react-icons/io5";
 import {
   MdOutlineAccountBalanceWallet,
   MdOutlineDrafts,
@@ -170,6 +170,17 @@ export default function SideBar({
                 <MdOutlineManageHistory className="text-xl" />
                 {t("manageAttendance")}
               </Link>
+
+              {isOrganizer && (
+                <Link
+                  href="/manage/events"
+                  onClick={onNavigate}
+                  className="flex gap-1 items-center hover:text-primary transition-colors"
+                >
+                  <IoCalendarOutline className="text-xl" />
+                  {t("manageEvents")}
+                </Link>
+              )}
 
               {isPlaceOwner && (
                 <Link

@@ -32,7 +32,7 @@ export default function OrganizerNeedsAttention({
         {items.map((item, i) => (
           <Link
             key={`${item.event_id}-${item.rule_type}-${i.toLocaleString()}`}
-            href={`/manage/attendance/attendance-list?eventId=${item.event_id}`}
+            href={`/manage/events/${item.event_id}?tab=insights`}
             className="border border-border bg-card rounded-md shadow-md p-4 flex items-start gap-3 hover:border-primary transition-colors"
           >
             <TbAlertTriangle

@@ -36,6 +36,12 @@ type PaymentMethodSelectorProps =
       placePromotionCheckoutId: string;
       amount: number;
       currency: string;
+    }
+  | {
+      kind: "event-promotion";
+      eventPromotionCheckoutId: string;
+      amount: number;
+      currency: string;
     };
 
 type PaystackPaymentInfo =
@@ -123,13 +129,17 @@ export default function PaymentMethodSelector(
   }, [prepared]);
 
   const amount =
-    props.kind === "subscription" || props.kind === "promotion"
+    props.kind === "subscription" ||
+    props.kind === "promotion" ||
+    props.kind === "event-promotion"
       ? props.amount
       : prepared?.status === 200
         ? prepared.grandTotal
         : 0;
   const currency =
-    props.kind === "subscription" || props.kind === "promotion"
+    props.kind === "subscription" ||
+    props.kind === "promotion" ||
+    props.kind === "event-promotion"
       ? props.currency
       : prepared?.status === 200
         ? prepared.currency
@@ -247,12 +257,34 @@ export default function PaymentMethodSelector(
       setNotification("Failed to start payment. Please try again."),
   });
 
+  const eventPromotionPayMutation = useMutation({
+    mutationFn: (paymentMethodId: string) =>
+      createPaymentAttempt({
+        eventPromotionCheckoutId:
+          props.kind === "event-promotion"
+            ? props.eventPromotionCheckoutId
+            : "",
+        paymentMethodId,
+      }),
+    onSuccess: (response) => {
+      if (response.status !== 200) {
+        setNotification(response.message);
+        return;
+      }
+      handlePaystackInfo(response.data.id, response.data.paystack);
+    },
+    onError: () =>
+      setNotification("Failed to start payment. Please try again."),
+  });
+
   const payMutation =
     props.kind === "ticket"
       ? ticketPayMutation
       : props.kind === "promotion"
         ? promotionPayMutation
-        : subscriptionPayMutation;
+        : props.kind === "event-promotion"
+          ? eventPromotionPayMutation
+          : subscriptionPayMutation;
 
   const verifyMutation = useMutation({
     mutationFn: (primaryAttemptId: string) =>

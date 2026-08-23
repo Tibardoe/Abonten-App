@@ -54,7 +54,7 @@ export default function PendingEarningsList() {
                   {row.currency} {row.amount.toLocaleString()}
                 </p>
                 <Link
-                  href={`/manage/attendance/attendance-list?eventId=${row.event_id}`}
+                  href={`/manage/events/${row.event_id}?tab=insights`}
                   className="text-xs font-medium text-primary hover:underline"
                 >
                   View event

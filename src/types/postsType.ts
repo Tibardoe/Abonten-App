@@ -1,5 +1,5 @@
 import type { Occurrence } from "./occurrenceType";
-import type { Ticket } from "./ticketType";
+import type { CheckoutSessionStatus, Ticket } from "./ticketType";
 
 // export type PostsType = {
 //   id?: string;
@@ -127,4 +127,32 @@ export type UserPostType = {
   status?: string;
   featured?: boolean;
   distance_km?: number | null;
+};
+
+// Row shape for event_promotion_tier -- Unified Event Management, Event
+// Promotion milestone. Field names must match
+// supabase/migrations/20260829090000_add_event_promotions.sql exactly.
+// Mirrors PlacePromotionTier.
+export type EventPromotionTier = {
+  id: number;
+  duration_label: string;
+  duration: string;
+  price: number;
+  currency: string;
+  is_active: boolean;
+};
+
+// Discriminated-union sibling of ticketType.ts's SubscriptionSummaryProps and
+// placeType.ts's PlacePromotionSummaryProps, consumed by the same
+// OrderSummary component -- an Event Promotion purchase is a single,
+// standalone purchase with no basket concept, same shape as a place
+// promotion purchase.
+export type EventPromotionSummaryProps = {
+  type: "event-promotion";
+  eventTitle: string;
+  tierLabel: string;
+  amount: number;
+  totalAmount: number;
+  status: CheckoutSessionStatus;
+  expiresAt: string | null;
 };

@@ -15,7 +15,7 @@ export default function Loading() {
         <Skeleton className="h-9 w-40 rounded-lg shrink-0" />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto border-b border-border pb-px">
+      <div className="flex gap-2 overflow-x-auto border-b border-border pb-px md:justify-center">
         {Array.from({ length: 6 }, (_, i) => (
           <Skeleton
             key={i.toLocaleString()}
@@ -24,7 +24,7 @@ export default function Loading() {
         ))}
       </div>
 
-      <div className="w-full md:w-[70%] space-y-4">
+      <div className="w-full md:w-[70%] md:mx-auto space-y-4">
         <Skeleton className="aspect-video w-full rounded-lg" />
         <Skeleton className="h-10 w-full rounded-md" />
         <Skeleton className="h-10 w-full rounded-md" />

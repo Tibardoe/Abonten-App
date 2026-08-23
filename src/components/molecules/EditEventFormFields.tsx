@@ -34,7 +34,17 @@ type EditEventFormFieldsProps = Pick<
   | "handleFileChange"
   | "handleSubmit"
   | "onSubmit"
-> & { className?: string };
+> & {
+  className?: string;
+  // Set once the event has confirmed tickets (see
+  // getEventHasConfirmedParticipation.ts) — disables date/location/capacity
+  // inputs via a native <fieldset disabled>, which cascades to every
+  // descendant input/button without needing changes to DateTimePicker or
+  // PostAutoComplete themselves. Only used by ManageEventDetailsSection.tsx
+  // (the standalone create-adjacent EditEventModal.tsx never had this
+  // concept and has been superseded by that page).
+  restrictedLocked?: boolean;
+};
 
 // Edit-mode counterpart to EventUploadFormFields. Deliberately omits
 // everything ticketing-related (TicketType/TicketInputs/ReceivingAccountForms
@@ -64,6 +74,7 @@ export default function EditEventFormFields({
   handleSubmit,
   onSubmit,
   className,
+  restrictedLocked = false,
 }: EditEventFormFieldsProps) {
   return (
     <form className={className} onSubmit={handleSubmit(onSubmit)}>
@@ -116,32 +127,45 @@ export default function EditEventFormFields({
           </p>
         )}
 
-        <PostAutoComplete
-          ref={addressInputRef}
-          address={{ address: setSelectedAddress }}
-          onSelectCoordinates={handleSelectCoordinates}
-          value={selectedAddress}
-          placeholderText={{
-            text: "Location",
-            svgUrl: "/assets/images/location.svg",
-          }}
-        />
-        {selectedAddress === "" && (
-          <p className="text-destructive text-sm">Location required</p>
-        )}
+        <fieldset
+          disabled={restrictedLocked}
+          className={restrictedLocked ? "opacity-60 space-y-4" : "space-y-4"}
+        >
+          {restrictedLocked && (
+            <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted px-3 py-2">
+              This event already has confirmed tickets — location, dates and
+              capacity can't be changed to protect people who already have a
+              ticket.
+            </p>
+          )}
 
-        {/* Date and time — dateType is fixed to whatever the event was
-            created with (single/range vs specific dates); switching the
-            schedule TYPE isn't supported from edit, only the dates within it. */}
-        <div className="space-y-4 text-sm">
-          <h2>Date & Time</h2>
-          <DateTimePicker
-            handleDateAndTime={handleDateAndTime}
-            dateType={dateType}
-            initialRange={initialRange}
-            initialEntries={initialEntries}
+          <PostAutoComplete
+            ref={addressInputRef}
+            address={{ address: setSelectedAddress }}
+            onSelectCoordinates={handleSelectCoordinates}
+            value={selectedAddress}
+            placeholderText={{
+              text: "Location",
+              svgUrl: "/assets/images/location.svg",
+            }}
           />
-        </div>
+          {selectedAddress === "" && (
+            <p className="text-destructive text-sm">Location required</p>
+          )}
+
+          {/* Date and time — dateType is fixed to whatever the event was
+              created with (single/range vs specific dates); switching the
+              schedule TYPE isn't supported from edit, only the dates within it. */}
+          <div className="space-y-4 text-sm">
+            <h2>Date & Time</h2>
+            <DateTimePicker
+              handleDateAndTime={handleDateAndTime}
+              dateType={dateType}
+              initialRange={initialRange}
+              initialEntries={initialEntries}
+            />
+          </div>
+        </fieldset>
 
         <div className="space-y-4 text-sm font-normal">
           <CategoryFilter handleCategory={setCategory} category={category} />
@@ -178,16 +202,21 @@ export default function EditEventFormFields({
             </p>
           )}
 
-          <div className="flex justify-between items-center font-semibold text-foreground">
-            <span>Capacity</span>
+          <fieldset
+            disabled={restrictedLocked}
+            className={restrictedLocked ? "opacity-60" : undefined}
+          >
+            <div className="flex justify-between items-center font-semibold text-foreground">
+              <span>Capacity</span>
 
-            <input
-              type="number"
-              placeholder="0 if any"
-              {...register("capacity", { valueAsNumber: true })}
-              className="border border-input bg-background w-28 p-2 rounded-md text-base md:text-sm"
-            />
-          </div>
+              <input
+                type="number"
+                placeholder="0 if any"
+                {...register("capacity", { valueAsNumber: true })}
+                className="border border-input bg-background w-28 p-2 rounded-md text-base md:text-sm"
+              />
+            </div>
+          </fieldset>
           {errors.capacity && (
             <p className="text-destructive text-sm">
               {errors.capacity.message}

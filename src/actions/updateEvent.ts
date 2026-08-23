@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { validateLocationInput } from "@/utils/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
+import getEventHasConfirmedParticipation from "./getEventHasConfirmedParticipation";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
 export type UpdateEventInput = {
@@ -72,18 +73,61 @@ export async function updateEvent(formData: UpdateEventInput) {
     return { status: 400, message: locationCheck.message };
   }
 
+  const isSpecificEvent = specific_dates && specific_dates.length > 0;
+
   // Ownership-scoped fetch first (same pattern as deleteEvent.ts) — also
-  // gives us the current flyer so we only touch Cloudinary when a new file
-  // was actually supplied.
+  // gives us the current flyer (so we only touch Cloudinary when a new file
+  // was actually supplied) and the current schedule/location/capacity, used
+  // below to detect an attempted change to a locked field once the event
+  // has confirmed tickets.
   const { data: existingEvent, error: fetchError } = await supabase
     .from("event")
-    .select("flyer_public_id, flyer_version")
+    .select(
+      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_occurrence(starts_at, ends_at)",
+    )
     .eq("id", eventId)
     .eq("organizer_id", user.id)
     .single();
 
   if (fetchError || !existingEvent) {
     return { status: 404, message: "Event not found or unauthorized" };
+  }
+
+  // Dates, location and capacity could affect people who already hold a
+  // confirmed ticket (a changed venue/time invalidates their purchase
+  // intent; a lowered capacity could invalidate their spot) — locked once
+  // the event has any confirmed ticket (paid or free registration). The
+  // client is expected to disable these fields once locked (see
+  // ManageEventDetailsSection.tsx), but this is the authoritative check —
+  // never trust the client alone (Part 7 of the Unified Event Management
+  // spec).
+  const participation = await getEventHasConfirmedParticipation(eventId);
+  if (participation.status !== 200) {
+    return { status: participation.status, message: participation.message };
+  }
+
+  if (participation.data) {
+    const existingAddress =
+      (existingEvent.address as { full_address?: string } | null)
+        ?.full_address ?? "";
+    const capacityChanged =
+      (capacity ?? null) !== (existingEvent.capacity ?? null);
+    const addressChanged = address !== existingAddress;
+    const datesChanged = haveEventDatesChanged(
+      { starts_at: existingEvent.starts_at, ends_at: existingEvent.ends_at },
+      existingEvent.event_occurrence ?? [],
+      isSpecificEvent ? (specific_dates ?? null) : null,
+      isSpecificEvent ? null : (starts_at ?? null),
+      isSpecificEvent ? null : (ends_at ?? null),
+    );
+
+    if (capacityChanged || addressChanged || datesChanged) {
+      return {
+        status: 409,
+        message:
+          "This event already has confirmed tickets — dates, location and capacity can't be changed.",
+      };
+    }
   }
 
   let flyerPublicId = existingEvent.flyer_public_id;
@@ -112,7 +156,6 @@ export async function updateEvent(formData: UpdateEventInput) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  const isSpecificEvent = specific_dates && specific_dates.length > 0;
   const eventStartDate = isSpecificEvent ? null : (starts_at ?? null);
   const eventEndDate = isSpecificEvent ? null : (ends_at ?? null);
 
@@ -189,4 +232,56 @@ export async function updateEvent(formData: UpdateEventInput) {
   }
 
   return { status: 200, message: "Event updated successfully!" };
+}
+
+/**
+ * Compares the incoming schedule against the event's current schedule,
+ * treating a switch between single-date and specific-dates as a change too
+ * (not just a difference in the times themselves). Times are compared by
+ * value (`getTime()`), not by reference/string, since the DB round-trips
+ * dates as ISO strings.
+ */
+function haveEventDatesChanged(
+  existingSingle: { starts_at: string | null; ends_at: string | null },
+  existingOccurrences: { starts_at: string; ends_at: string }[],
+  incomingSpecificDates: { start: Date; end: Date }[] | null,
+  incomingStartsAt: Date | null,
+  incomingEndsAt: Date | null,
+): boolean {
+  const wasSpecific = existingOccurrences.length > 0;
+  const isSpecific = incomingSpecificDates !== null;
+
+  if (wasSpecific !== isSpecific) return true;
+
+  if (isSpecific) {
+    const incoming = incomingSpecificDates ?? [];
+    if (incoming.length !== existingOccurrences.length) return true;
+
+    const toKey = (start: Date | string, end: Date | string) =>
+      `${new Date(start).getTime()}_${new Date(end).getTime()}`;
+
+    const existingKeys = new Set(
+      existingOccurrences.map((occ) => toKey(occ.starts_at, occ.ends_at)),
+    );
+    const incomingKeys = new Set(
+      incoming.map((entry) => toKey(entry.start, entry.end)),
+    );
+
+    if (existingKeys.size !== incomingKeys.size) return true;
+    for (const key of incomingKeys) {
+      if (!existingKeys.has(key)) return true;
+    }
+    return false;
+  }
+
+  const existingStart = existingSingle.starts_at
+    ? new Date(existingSingle.starts_at).getTime()
+    : null;
+  const existingEnd = existingSingle.ends_at
+    ? new Date(existingSingle.ends_at).getTime()
+    : null;
+  const nextStart = incomingStartsAt ? incomingStartsAt.getTime() : null;
+  const nextEnd = incomingEndsAt ? incomingEndsAt.getTime() : null;
+
+  return existingStart !== nextStart || existingEnd !== nextEnd;
 }

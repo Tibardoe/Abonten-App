@@ -47,7 +47,8 @@ export async function upsertPaymentAttemptForSession(
   matchColumn:
     | "checkout_session_id"
     | "subscription_checkout_id"
-    | "place_promotion_checkout_id",
+    | "place_promotion_checkout_id"
+    | "event_promotion_checkout_id",
   matchValue: string,
   amount: number,
   currency: string,

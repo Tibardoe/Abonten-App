@@ -4,7 +4,11 @@ import { cn } from "@/components/lib/utils";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { IoCalendarOutline, IoStorefrontOutline } from "react-icons/io5";
+import {
+  IoCalendarNumberOutline,
+  IoCalendarOutline,
+  IoStorefrontOutline,
+} from "react-icons/io5";
 import { MdOutlineManageHistory } from "react-icons/md";
 
 type ManageMenuProps = {
@@ -64,6 +68,16 @@ export default function ManageMenu({
           >
             <MdOutlineManageHistory className="text-lg" />
             Attendance
+          </Link>
+
+          <Link
+            href="/manage/events"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+          >
+            <IoCalendarNumberOutline className="text-lg" />
+            Events
           </Link>
 
           <Link

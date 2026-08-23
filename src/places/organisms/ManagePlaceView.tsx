@@ -147,7 +147,7 @@ export default function ManagePlaceView({
         />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto border-b border-border pb-px">
+      <div className="flex gap-2 overflow-x-auto border-b border-border pb-px md:justify-center">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -164,7 +164,7 @@ export default function ManagePlaceView({
         ))}
       </div>
 
-      <div className="w-full md:w-[70%]">
+      <div className="w-full md:w-[70%] md:mx-auto">
         {activeTab === "details" && (
           <ManagePlaceDetailsSection place={place} onSaved={refresh} />
         )}
