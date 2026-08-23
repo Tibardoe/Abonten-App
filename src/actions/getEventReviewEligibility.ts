@@ -22,6 +22,12 @@ export type EventReviewEligibility =
         rating: number;
         title: string | null;
         comment: string | null;
+        event_review_photo: {
+          id: string;
+          public_id: string;
+          version: string;
+          position: number;
+        }[];
       };
     }
   | { canReview: true };
@@ -56,13 +62,22 @@ export async function getEventReviewEligibility(
 
   const { data: ownReview } = await supabase
     .from("event_review")
-    .select("id, rating, title, comment")
+    .select(
+      "id, rating, title, comment, event_review_photo(id, public_id, version, position)",
+    )
     .eq("event_id", eventId)
     .eq("reviewer_id", user.id)
     .maybeSingle();
 
   if (ownReview) {
-    return { canReview: false, reason: "has_review", ownReview };
+    return {
+      canReview: false,
+      reason: "has_review",
+      ownReview: ownReview as unknown as Extract<
+        EventReviewEligibility,
+        { reason: "has_review" }
+      >["ownReview"],
+    };
   }
 
   if (eventStatus === "canceled") {

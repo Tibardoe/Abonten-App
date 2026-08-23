@@ -1,12 +1,19 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import {
+  type ReviewPhotoInput,
+  insertReviewPhotos,
+} from "@/utils/insertReviewPhotos";
 
 type UpdatePlaceReviewInput = {
   reviewId: string;
   rating: number;
   title?: string;
   comment?: string;
+  // Mirrors updateEventReview.ts's photo-edit support exactly.
+  removedPhotoIds?: string[];
+  newPhotos?: ReviewPhotoInput[];
 };
 
 // Ownership-only, mirrors updateEventReview.ts exactly -- place reviews have
@@ -25,7 +32,8 @@ export async function updatePlaceReview(formData: UpdatePlaceReviewInput) {
     return { status: 401, message: "User not authenticated" };
   }
 
-  const { reviewId, rating, title, comment } = formData;
+  const { reviewId, rating, title, comment, removedPhotoIds, newPhotos } =
+    formData;
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return { status: 400, message: "Rating must be between 1 and 5." };
@@ -62,6 +70,31 @@ export async function updatePlaceReview(formData: UpdatePlaceReviewInput) {
 
   if (!updated || updated.length === 0) {
     return { status: 404, message: "Review not found" };
+  }
+
+  if (removedPhotoIds?.length) {
+    await supabase
+      .from("place_review_photo")
+      .delete()
+      .eq("place_review_id", reviewId)
+      .in("id", removedPhotoIds);
+  }
+
+  if (newPhotos?.length) {
+    const { count } = await supabase
+      .from("place_review_photo")
+      .select("id", { count: "exact", head: true })
+      .eq("place_review_id", reviewId);
+
+    await insertReviewPhotos(
+      supabase,
+      "place_review_photo",
+      "place_review_id",
+      reviewId,
+      `place_review_photos/${user.id}/`,
+      newPhotos,
+      count ?? 0,
+    );
   }
 
   return { status: 200, message: "Review updated successfully!" };

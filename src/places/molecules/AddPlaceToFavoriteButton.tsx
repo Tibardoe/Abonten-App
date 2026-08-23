@@ -11,11 +11,19 @@ import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 
 type PlaceProp = {
   placeId: string;
+  // Icon-only on every breakpoint instead of the default icon+label -- used
+  // where the button sits beside other controls in a tight space (the Place
+  // Details hero on mobile) and the "Add to Favorite"/"Remove Favorited"
+  // label would crowd the row. Every other call site keeps the label.
+  compact?: boolean;
 };
 
 // Mirrors src/components/atoms/AddToFavoriteButton.tsx's optimistic-update
 // pattern exactly, for places instead of events.
-export default function AddPlaceToFavoriteButton({ placeId }: PlaceProp) {
+export default function AddPlaceToFavoriteButton({
+  placeId,
+  compact,
+}: PlaceProp) {
   const [error, setError] = useState<string | null>(null);
 
   const requireAuth = useRequireAuth();
@@ -100,7 +108,9 @@ export default function AddPlaceToFavoriteButton({ placeId }: PlaceProp) {
           <MdFavoriteBorder className="text-xl" />
         )}
 
-        {buttonText}
+        <span className={compact ? "hidden md:inline" : undefined}>
+          {buttonText}
+        </span>
       </button>
 
       {error && <Notification notification={error} />}

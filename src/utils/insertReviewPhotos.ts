@@ -21,6 +21,12 @@ export async function insertReviewPhotos(
   reviewId: string,
   folderPrefix: string,
   photos: ReviewPhotoInput[] | undefined,
+  // Where numbering starts -- 0 for a brand-new review (postEventReview.ts/
+  // postPlaceReview.ts), or the count of photos already kept on an existing
+  // review (updateEventReview.ts/updatePlaceReview.ts), so newly added
+  // photos sort after the ones the user chose to keep instead of colliding
+  // with their positions.
+  startPosition = 0,
 ): Promise<void> {
   if (!photos?.length) return;
 
@@ -34,7 +40,7 @@ export async function insertReviewPhotos(
     [reviewIdColumn]: reviewId,
     public_id: photo.publicId,
     version: photo.version,
-    position: index,
+    position: startPosition + index,
   }));
 
   const { error } = await supabase.from(table).insert(rows);

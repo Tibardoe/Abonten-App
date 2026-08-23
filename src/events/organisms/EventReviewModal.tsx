@@ -6,6 +6,7 @@ import { updateEventReview } from "@/actions/updateEventReview";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import Notification from "@/components/atoms/Notification";
 import StarRatingInput from "@/components/atoms/StarRatingInput";
+import ExistingReviewPhotoGrid from "@/components/molecules/ExistingReviewPhotoGrid";
 import ReviewPhotoPicker from "@/components/molecules/ReviewPhotoPicker";
 import { Button } from "@/components/ui/button";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
@@ -16,11 +17,19 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+type ExistingReviewPhoto = {
+  id: string;
+  public_id: string;
+  version: string;
+  position: number;
+};
+
 type ExistingReview = {
   id: string;
   rating: number;
   title: string | null;
   comment: string | null;
+  event_review_photo?: ExistingReviewPhoto[];
 };
 
 type EventReviewModalProps = {
@@ -28,9 +37,7 @@ type EventReviewModalProps = {
   handleShowReviewModal: (state: boolean) => void;
   onReviewSubmitted?: () => void;
   // When present, the modal edits this review (updateEventReview) instead of
-  // creating a new one. Photo editing is out of scope for this pass -- the
-  // photo picker is hidden and existing photos are left as originally
-  // submitted.
+  // creating a new one.
   existingReview?: ExistingReview;
 };
 
@@ -64,7 +71,19 @@ export default function EventReviewModal({
 
   const [rating, setRating] = useState(existingReview?.rating ?? 0);
   const [notification, setNotification] = useState<string | null>(null);
-  const photoUpload = useReviewPhotoUpload(getEventReviewPhotoUploadSignature);
+  const [existingPhotos, setExistingPhotos] = useState<ExistingReviewPhoto[]>(
+    existingReview?.event_review_photo ?? [],
+  );
+  const [removedPhotoIds, setRemovedPhotoIds] = useState<string[]>([]);
+  const photoUpload = useReviewPhotoUpload(
+    getEventReviewPhotoUploadSignature,
+    existingPhotos.length,
+  );
+
+  const removeExistingPhoto = (photoId: string) => {
+    setExistingPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
+    setRemovedPhotoIds((prev) => [...prev, photoId]);
+  };
 
   const {
     register,
@@ -85,6 +104,8 @@ export default function EventReviewModal({
             reviewId: existingReview.id,
             rating,
             ...formData,
+            removedPhotoIds,
+            newPhotos: photoUpload.uploadedPhotos,
           })
         : postEventReview({
             eventId,
@@ -203,14 +224,19 @@ export default function EventReviewModal({
                 </p>
               )}
 
-              {!isEditing && (
-                <ReviewPhotoPicker
-                  items={photoUpload.items}
-                  atLimit={photoUpload.atLimit}
-                  onFilesSelected={photoUpload.addFiles}
-                  onRemove={photoUpload.remove}
+              {isEditing && existingPhotos.length > 0 && (
+                <ExistingReviewPhotoGrid
+                  photos={existingPhotos}
+                  onRemove={removeExistingPhoto}
                 />
               )}
+
+              <ReviewPhotoPicker
+                items={photoUpload.items}
+                atLimit={photoUpload.atLimit}
+                onFilesSelected={photoUpload.addFiles}
+                onRemove={photoUpload.remove}
+              />
 
               <Button
                 type="submit"

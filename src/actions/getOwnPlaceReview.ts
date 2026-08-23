@@ -2,13 +2,28 @@
 
 import { createClient } from "@/config/supabase/server";
 
+export type OwnPlaceReview = {
+  id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  place_review_photo: {
+    id: string;
+    public_id: string;
+    version: string;
+    position: number;
+  }[];
+};
+
 // Whether the current user has already reviewed this place, and the review
 // itself if so -- lets AddPlaceReviewButton.tsx switch between "Add Review"
 // and "Your Review" (Edit/Delete) instead of only discovering a duplicate
 // on submit (postPlaceReview.ts's 409). Places have no attendance/timing
 // gate the way events do, so this is a plain existence check, not a full
 // eligibility computation like getEventReviewEligibility.ts.
-export async function getOwnPlaceReview(placeId: string) {
+export async function getOwnPlaceReview(
+  placeId: string,
+): Promise<OwnPlaceReview | null> {
   const supabase = await createClient();
 
   const {
@@ -19,10 +34,12 @@ export async function getOwnPlaceReview(placeId: string) {
 
   const { data } = await supabase
     .from("place_review")
-    .select("id, rating, title, comment")
+    .select(
+      "id, rating, title, comment, place_review_photo(id, public_id, version, position)",
+    )
     .eq("place_id", placeId)
     .eq("reviewer_id", user.id)
     .maybeSingle();
 
-  return data;
+  return data as unknown as OwnPlaceReview | null;
 }

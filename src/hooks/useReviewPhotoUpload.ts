@@ -42,9 +42,16 @@ type UploadSignatureResponse = {
 // submitted (see insertReviewPhotos.ts).
 export function useReviewPhotoUpload(
   getUploadSignature: () => Promise<UploadSignatureResponse>,
+  // Number of slots already spoken for by photos outside this hook's own
+  // `items` -- specifically, an edit-mode review's existing (not-yet-removed)
+  // photos, which count toward MAX_REVIEW_PHOTOS but aren't tracked here.
+  // Defaults to 0 for the create-review case, where nothing precedes this
+  // hook's own uploads.
+  reservedSlots = 0,
 ) {
   const [items, setItems] = useState<ReviewPhotoUploadItem[]>([]);
   const objectUrls = useRef<Set<string>>(new Set());
+  const effectiveMax = Math.max(MAX_REVIEW_PHOTOS - reservedSlots, 0);
 
   // Object URLs are only released explicitly (on remove/reset) or here on
   // unmount -- never revoked mid-render, so a still-visible preview never
@@ -119,7 +126,7 @@ export function useReviewPhotoUpload(
 
   const addFiles = useCallback(
     (files: File[]) => {
-      const remainingSlots = MAX_REVIEW_PHOTOS - items.length;
+      const remainingSlots = effectiveMax - items.length;
       if (remainingSlots <= 0) return;
 
       const validFiles = files
@@ -153,7 +160,7 @@ export function useReviewPhotoUpload(
         }
       })();
     },
-    [items.length, runItem],
+    [items.length, effectiveMax, runItem],
   );
 
   const remove = useCallback((id: string) => {
@@ -197,6 +204,6 @@ export function useReviewPhotoUpload(
     reset,
     isUploading,
     uploadedPhotos,
-    atLimit: items.length >= MAX_REVIEW_PHOTOS,
+    atLimit: items.length >= effectiveMax,
   };
 }

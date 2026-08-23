@@ -6,6 +6,7 @@ import { updatePlaceReview } from "@/actions/updatePlaceReview";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import Notification from "@/components/atoms/Notification";
 import StarRatingInput from "@/components/atoms/StarRatingInput";
+import ExistingReviewPhotoGrid from "@/components/molecules/ExistingReviewPhotoGrid";
 import ReviewPhotoPicker from "@/components/molecules/ReviewPhotoPicker";
 import { Button } from "@/components/ui/button";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
@@ -16,11 +17,19 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+type ExistingReviewPhoto = {
+  id: string;
+  public_id: string;
+  version: string;
+  position: number;
+};
+
 type ExistingReview = {
   id: string;
   rating: number;
   title: string | null;
   comment: string | null;
+  place_review_photo?: ExistingReviewPhoto[];
 };
 
 type PlaceReviewModalProps = {
@@ -29,7 +38,6 @@ type PlaceReviewModalProps = {
   onReviewSubmitted?: () => void;
   // When present, the modal edits this review (updatePlaceReview) instead of
   // creating a new one -- mirrors EventReviewModal.tsx's existingReview prop.
-  // Photo editing stays out of scope here too.
   existingReview?: ExistingReview;
 };
 
@@ -65,7 +73,19 @@ export default function PlaceReviewModal({
 
   const [rating, setRating] = useState(existingReview?.rating ?? 0);
   const [notification, setNotification] = useState<string | null>(null);
-  const photoUpload = useReviewPhotoUpload(getPlaceReviewPhotoUploadSignature);
+  const [existingPhotos, setExistingPhotos] = useState<ExistingReviewPhoto[]>(
+    existingReview?.place_review_photo ?? [],
+  );
+  const [removedPhotoIds, setRemovedPhotoIds] = useState<string[]>([]);
+  const photoUpload = useReviewPhotoUpload(
+    getPlaceReviewPhotoUploadSignature,
+    existingPhotos.length,
+  );
+
+  const removeExistingPhoto = (photoId: string) => {
+    setExistingPhotos((prev) => prev.filter((photo) => photo.id !== photoId));
+    setRemovedPhotoIds((prev) => [...prev, photoId]);
+  };
 
   const {
     register,
@@ -86,6 +106,8 @@ export default function PlaceReviewModal({
             reviewId: existingReview.id,
             rating,
             ...formData,
+            removedPhotoIds,
+            newPhotos: photoUpload.uploadedPhotos,
           })
         : postPlaceReview({
             placeId,
@@ -204,14 +226,19 @@ export default function PlaceReviewModal({
                 </p>
               )}
 
-              {!isEditing && (
-                <ReviewPhotoPicker
-                  items={photoUpload.items}
-                  atLimit={photoUpload.atLimit}
-                  onFilesSelected={photoUpload.addFiles}
-                  onRemove={photoUpload.remove}
+              {isEditing && existingPhotos.length > 0 && (
+                <ExistingReviewPhotoGrid
+                  photos={existingPhotos}
+                  onRemove={removeExistingPhoto}
                 />
               )}
+
+              <ReviewPhotoPicker
+                items={photoUpload.items}
+                atLimit={photoUpload.atLimit}
+                onFilesSelected={photoUpload.addFiles}
+                onRemove={photoUpload.remove}
+              />
 
               <Button
                 type="submit"

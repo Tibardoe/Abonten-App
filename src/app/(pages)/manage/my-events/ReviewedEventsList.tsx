@@ -129,6 +129,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
             rating: review.rating,
             title: review.title,
             comment: review.comment,
+            event_review_photo: review.event_review_photo,
           }}
           onReviewSubmitted={invalidate}
         />

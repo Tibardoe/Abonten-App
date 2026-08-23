@@ -144,34 +144,34 @@ export default async function page({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 space-y-2 md:space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl">
+        <div className="absolute bottom-0 left-0 right-0 p-3 md:p-8 space-y-1.5 md:space-y-4">
+          <div className="flex items-start justify-between gap-2 md:gap-3">
+            <h1 className="text-xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl line-clamp-2">
               {place.name}
             </h1>
-            <div className="text-white shrink-0 mt-2 flex items-center gap-2">
+            <div className="text-white shrink-0 mt-1 md:mt-2 flex items-center gap-1 md:gap-2">
               <ClaimPlaceButton
                 placeId={place.id}
                 placeName={place.name}
                 ownerId={place.owner_id}
               />
-              <AddPlaceToFavoriteButton placeId={place.id} />
+              <AddPlaceToFavoriteButton placeId={place.id} compact />
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
+          <div className="flex gap-1.5 md:gap-2 items-center overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0 md:flex-wrap">
+            <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-base">
               {categoryName}
             </span>
             {place.verified && (
-              <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-sm md:text-base">
+              <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
                 <VerifiedBadge />
               </span>
             )}
-            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-sm md:text-base">
+            <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
               <PlaceOpenStatusBadge status={openStatus} />
             </span>
-            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-1.5 text-sm md:text-base">
+            <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-1.5 text-xs md:text-base">
               <StarRatingDisplay rating={place.avgRating} />
               <span>
                 {place.avgRating.toFixed(1)} ({place.reviewCount})
@@ -179,9 +179,11 @@ export default async function page({
             </span>
           </div>
 
-          <div className="flex items-start gap-2 text-white/90 text-sm md:text-base max-w-2xl">
+          <div className="flex items-start gap-1.5 md:gap-2 text-white/90 text-xs md:text-base max-w-2xl">
             <IoLocationOutline className="mt-0.5 flex-shrink-0" />
-            <span>{fullAddress}</span>
+            <span className="line-clamp-1 md:line-clamp-none">
+              {fullAddress}
+            </span>
           </div>
         </div>
       </div>

@@ -127,6 +127,7 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
             rating: review.rating,
             title: review.title,
             comment: review.comment,
+            place_review_photo: review.place_review_photo,
           }}
           onReviewSubmitted={invalidate}
         />
