@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { Occurrence } from "@/types/occurrenceType";
+import { resolveEventEndDate } from "@/utils/dateFormatter";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -17,15 +19,23 @@ type PostEventReviewInput = {
   photos?: ReviewPhotoInput[];
 };
 
+type TicketRow = { ticket_type: { event_id: string } | null };
+
 /**
  * Reviews of a specific event (event_review), distinct from the older
  * generic `review` table (postReview.ts), which reviews an organizer as a
  * person across all of their events. Unlike postPlaceReview.ts (any
- * authenticated user may review any published place), this keeps
- * postReview.ts's attendance gate -- only someone who actually attended
- * THIS event may review it, scoped to event_id instead of "any event by
- * this organizer". The DB's UNIQUE(event_id, reviewer_id) constraint
+ * authenticated user may review any published place), this keeps an
+ * attendance gate -- only someone who actually attended THIS event may
+ * review it, scoped to event_id instead of "any event by this organizer".
+ * The DB's UNIQUE(event_id, reviewer_id) constraint
  * (event_review_unique_reviewer) enforces "one review per user per event".
+ *
+ * "Attended" here means a checked-in ('used') ticket, not merely a
+ * purchased/RSVP'd one -- a ticket only reaches 'used' via checkInTicket.ts,
+ * an organizer-confirmed action. This, plus the event-ended check below,
+ * mirrors getEventReviewEligibility.ts's rules exactly so a direct call to
+ * this action can't bypass what the UI already enforces.
  */
 export async function postEventReview(formData: PostEventReviewInput) {
   const supabase = await createClient();
@@ -50,7 +60,9 @@ export async function postEventReview(formData: PostEventReviewInput) {
 
   const { data: event, error: eventError } = await supabase
     .from("event")
-    .select("organizer_id")
+    .select(
+      "organizer_id, status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+    )
     .eq("id", eventId)
     .maybeSingle();
 
@@ -69,14 +81,41 @@ export async function postEventReview(formData: PostEventReviewInput) {
     return { status: 400, message: "You cannot review your own event" };
   }
 
-  const { count } = await supabase
-    .from("attendance")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("event_id", eventId)
-    .eq("status", "attending");
+  if (event.status === "canceled") {
+    return { status: 400, message: "This event was cancelled." };
+  }
 
-  if (!count) {
+  const endDate = resolveEventEndDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence as Occurrence[] | null,
+  );
+
+  if (!endDate || new Date() < endDate) {
+    return {
+      status: 403,
+      message: "You can only review this event after it has ended.",
+    };
+  }
+
+  const { data: rawTickets, error: ticketsError } = await supabase
+    .from("ticket")
+    .select("ticket_type:ticket_type_id(event_id)")
+    .eq("user_id", user.id)
+    .eq("status", "used");
+
+  if (ticketsError) {
+    return {
+      status: 500,
+      message: `Error checking attendance: ${ticketsError.message}`,
+    };
+  }
+
+  const hasVerifiedTicket = (rawTickets as unknown as TicketRow[] | null)?.some(
+    (t) => t.ticket_type?.event_id === eventId,
+  );
+
+  if (!hasVerifiedTicket) {
     return {
       status: 403,
       message: "You can only review events you've attended",
@@ -101,6 +140,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
       title: formattedTitle,
       comment: comment ?? null,
       status: "approved",
+      is_verified_attendee: true,
     })
     .select("id")
     .single();

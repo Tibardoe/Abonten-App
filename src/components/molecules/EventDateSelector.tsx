@@ -39,6 +39,15 @@ export default function EventDateSelector({
   const [selectedOccurrence, setSelectedOccurrence] =
     useState<Occurrence | null>(nearestUpcomingOccurrence);
 
+  // The buy/attend CTA previously had no cancelled-awareness at all for paid
+  // events (CheckoutBtn never received eventStatus) and silently rendered
+  // nothing once every occurrence had ended, instead of saying so. Gating
+  // both CTAs here, once, fixes both: a cancelled event never shows a
+  // working "Buy Ticket"/"I'm Attending" button regardless of its dates, and
+  // a fully-ended event says so instead of leaving blank space.
+  const isCanceled = eventStatus === "canceled";
+  const hasEnded = !nearestUpcomingOccurrence;
+
   const selectedDateTime = selectedOccurrence
     ? formatFullDateTimeRange(
         selectedOccurrence.starts_at,
@@ -89,7 +98,16 @@ export default function EventDateSelector({
       )}
 
       {/* Buy ticket / RSVP btn */}
-      {selectedDateTime &&
+      {isCanceled || hasEnded ? (
+        <button
+          type="button"
+          disabled
+          className="font-bold rounded-lg w-full p-6 text-lg bg-muted text-muted-foreground cursor-not-allowed"
+        >
+          {isCanceled ? "Event Canceled" : "Event Ended"}
+        </button>
+      ) : (
+        selectedDateTime &&
         (isAbsolutelyFreeEvent ? (
           requireRegistration && (
             <AttendingButton
@@ -110,7 +128,8 @@ export default function EventDateSelector({
             time={selectedDateTime.time}
             soldOut={soldOut}
           />
-        ))}
+        ))
+      )}
     </div>
   );
 }

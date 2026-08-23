@@ -7,6 +7,7 @@ import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
+import type { Occurrence } from "@/types/occurrenceType";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
@@ -23,6 +24,10 @@ type EventReviewRow = any;
 type EventReviewsSectionProps = {
   eventId: string;
   organizerId: string;
+  eventStatus: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  occurrences: Occurrence[] | null;
   avgRating: number;
   reviewCount: number;
   initialPage: PaginatedResult<EventReviewRow>;
@@ -42,6 +47,10 @@ type EventReviewsSectionProps = {
 export default function EventReviewsSection({
   eventId,
   organizerId,
+  eventStatus,
+  startsAt,
+  endsAt,
+  occurrences,
   avgRating,
   reviewCount,
   initialPage,
@@ -73,7 +82,14 @@ export default function EventReviewsSection({
           </div>
         </div>
 
-        <AddEventReviewButton eventId={eventId} organizerId={organizerId} />
+        <AddEventReviewButton
+          eventId={eventId}
+          organizerId={organizerId}
+          eventStatus={eventStatus}
+          startsAt={startsAt}
+          endsAt={endsAt}
+          occurrences={occurrences}
+        />
       </div>
 
       <InfiniteList<EventReviewRow>
@@ -115,7 +131,14 @@ export default function EventReviewsSection({
                 </p>
               </div>
 
-              <StarRatingDisplay rating={review.rating} />
+              <div className="flex flex-col items-end gap-1">
+                <StarRatingDisplay rating={review.rating} />
+                {review.is_verified_attendee && (
+                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                    ✓ Verified Attendee
+                  </span>
+                )}
+              </div>
             </div>
 
             {review.title && (

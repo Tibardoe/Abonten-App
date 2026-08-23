@@ -55,7 +55,7 @@ export default async function getAttendanceList(
     let query = supabase
       .from("attendance")
       .select(
-        "*, auth:id(email, phone), user_info:id(username, full_name), ticket_type(type, price, currency)",
+        "*, auth:id(email, phone), user_info:id(username, full_name), ticket_type(type, price, currency), ticket:ticket_id(status, used_at)",
       )
       .eq("event_id", eventId)
       .order("created_at", { ascending: false })

@@ -467,6 +467,10 @@ export default async function page({
           <EventReviewsSection
             eventId={event.id}
             organizerId={event.organizer_id}
+            eventStatus={event.status}
+            startsAt={event.starts_at}
+            endsAt={event.ends_at}
+            occurrences={event.event_occurrence}
             avgRating={eventRating.averageRating}
             reviewCount={eventRating.totalRatings}
             initialPage={eventReviewsFirstPage}
