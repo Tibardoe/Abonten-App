@@ -1,8 +1,8 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import { getUserRating } from "@/actions/getUserRating";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
-import UserAvatar from "@/components/atoms/UserAvatar";
 import UserHighlights from "@/components/molecules/UserHighlights";
+import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import { Button } from "@/components/ui/button";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import Link from "next/link";
@@ -41,6 +41,22 @@ export default async function ProfileDetails({
         height: 150,
       });
 
+  // Larger, aspect-ratio-preserving transform (no `height`, so Cloudinary
+  // uses c_limit rather than the cropped c_fill above) for the full-image
+  // viewer — avoids both re-fetching the tiny avatar thumbnail and
+  // downloading the raw original.
+  const fullAvatarUrl = data?.avatar_public_id
+    ? buildCloudinaryUrl(data.avatar_public_id, data.avatar_version, {
+        width: 1080,
+      })
+    : buildCloudinaryUrl(defaultPublicId, defaulfVersion, { width: 1080 });
+
+  const hasCustomAvatar = !!data?.avatar_public_id;
+
+  const avatarAlt = isCurrentUser
+    ? "View your profile picture"
+    : `View ${data?.username}'s profile picture`;
+
   const averageRating = await getUserRating(userDetails.data.user_id);
 
   return (
@@ -61,7 +77,14 @@ export default async function ProfileDetails({
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex items-start gap-4">
-            <UserAvatar avatarUrl={avatarUrl} width={110} height={110} />
+            <ViewableAvatar
+              avatarUrl={avatarUrl}
+              fullImageUrl={fullAvatarUrl}
+              width={110}
+              height={110}
+              alt={avatarAlt}
+              viewable={hasCustomAvatar}
+            />
 
             <div className="flex flex-col justify-start w-full gap-2">
               <h2 className="font-medium">{data?.full_name}</h2>
@@ -123,7 +146,14 @@ export default async function ProfileDetails({
       {/* On tablet and desktop */}
       <div className="hidden md:flex flex-col gap-7">
         <div className="hidden md:flex gap-10 items-start w-[50%]">
-          <UserAvatar avatarUrl={avatarUrl} width={150} height={150} />
+          <ViewableAvatar
+            avatarUrl={avatarUrl}
+            fullImageUrl={fullAvatarUrl}
+            width={150}
+            height={150}
+            alt={avatarAlt}
+            viewable={hasCustomAvatar}
+          />
           <div className="grid grid-cols-3 gap-3 justify-start items-center">
             <h2 className="font-medium">{data?.username}</h2>
 
