@@ -28,24 +28,27 @@ export function TimeInput({
   className,
 }: TimeInputProps) {
   return (
-    <Input
-      type="time"
-      id={id}
-      aria-label={ariaLabel}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      // "block" overrides the shared Input component's own "flex" -- fine
-      // for a plain text input, but a known WebKit quirk on
-      // <input type="time">/type="date"> is that setting display:flex on
-      // the host element itself (rather than leaving it as a normal
-      // replaced element) makes the browser lay out the control's internal
-      // hour/minute/AM-PM segments along that flex axis too, stretching the
-      // rightmost segment out past the box on focus. Place's original raw
-      // time input (before this shared component existed) never had
-      // "flex" and never showed this. min-w-0 lets this shrink inside a
-      // flex/grid parent instead of forcing it wider; max-w-full is a
-      // second guard against the control rendering wider than its box.
-      className={cn("block min-w-0 max-w-full", className)}
-    />
+    // Mobile Safari has a documented quirk where input[type=time] ignores a
+    // block-level width:100% set on the input itself and renders its
+    // internal hour/minute/AM-PM segments at their own native minimum,
+    // overflowing past the box. Putting the flex context on this wrapper
+    // instead, with flex-1 + min-w-0 on the input, makes the browser
+    // actually shrink the control to the available space (the standard fix
+    // for this exact class of bug) rather than relying on width alone.
+    <div className={cn("flex min-w-0", className)}>
+      <Input
+        type="time"
+        id={id}
+        aria-label={ariaLabel}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        // "block" overrides the shared Input component's own "flex" --
+        // fine for a plain text input, but setting display:flex on
+        // input[type=time]/date itself (rather than a wrapper) is a
+        // separate known WebKit quirk that stretches the rightmost
+        // segment on focus/reveal.
+        className="block min-w-0 max-w-full flex-1"
+      />
+    </div>
   );
 }
