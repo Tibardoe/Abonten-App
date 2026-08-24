@@ -24,11 +24,11 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
           {title}
         </label>
 
-        <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
+        <div className="flex w-full items-center gap-5 rounded-md border border-input bg-background p-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring has-[:disabled]:opacity-50">
           {title === "Bio" ? (
             <textarea
               ref={ref as React.Ref<HTMLTextAreaElement>}
-              className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+              className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-lg lg:text-xl"
               placeholder={inputPlaceholder}
               {...props}
             />
@@ -47,7 +47,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, inputProp>(
               }}
               placeholder={inputPlaceholder}
               disabled={title === "Bio" ? false : inputFieldDisabled}
-              className="bg-transparent outline-none text-md md:textlg lg:text-xl flex-1"
+              className="flex-1 cursor-text bg-transparent text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed md:text-lg lg:text-xl"
               {...props}
             />
           )}

@@ -7,6 +7,7 @@ import { LiaTimesSolid } from "react-icons/lia";
 import { MdDateRange } from "react-icons/md";
 import { InlineDateField } from "../atoms/InlineDateField";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 type TicketInputProp = {
   ticketType: string;
@@ -93,26 +94,25 @@ export default function TicketInputs({
     <>
       {ticketType === "Single Ticket Type" && (
         <div className="flex justify-between items-center gap-2">
-          <div className="flex items-center justify-center gap-2 border rounded-md p-2">
-            <span className="text-green-600 text-sm">{currency}</span>
+          <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+            <span className="text-sm text-green-600">{currency}</span>
 
             <input
               type="number"
               placeholder="Fee"
               value={singleTicketPrice ?? ""}
               onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
-              className="outline-none text-base md:text-sm"
+              className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
             />
           </div>
 
-          <input
+          <Input
             type="number"
             placeholder="Quantity"
             value={singleTicketQuantity ?? ""}
             onChange={(e) =>
               handleSingleTicketQuantity?.(Number(e.target.value))
             }
-            className="border w-full p-2 rounded-md text-base md:text-sm"
           />
         </div>
       )}
@@ -121,34 +121,32 @@ export default function TicketInputs({
         <div className="space-y-2">
           <div className="flex flex-col gap-2">
             <div className="w-full">
-              <input
+              <Input
                 type="text"
                 placeholder="Category name"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
-                className="border w-full p-2 rounded-md text-base md:text-sm"
               />
             </div>
 
             <div className="flex justify-between items-center gap-2">
-              <div className="w-full flex items-center justify-center gap-2 border rounded-md p-2">
-                <span className="text-green-600 text-sm">{currency}</span>
+              <div className="flex h-10 w-full items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+                <span className="text-sm text-green-600">{currency}</span>
 
                 <input
                   type="number"
                   placeholder="Fee"
                   value={newPrice ?? ""}
                   onChange={(e) => setNewPrice(Number(e.target.value))}
-                  className="outline-none text-base md:text-sm"
+                  className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
                 />
               </div>
 
-              <input
+              <Input
                 type="number"
                 placeholder="Quantity"
                 value={quantity ?? ""}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="border p-2 rounded-md text-base md:text-sm w-full"
               />
             </div>
 

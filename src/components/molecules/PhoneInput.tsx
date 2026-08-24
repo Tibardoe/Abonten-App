@@ -30,10 +30,14 @@ export default function PhoneInput({
 
   return (
     <div ref={containerRef} className="flex w-full gap-2 relative">
-      <div className="bg-muted rounded-md p-2 flex items-center justify-center gap-1 md:gap-2 md:min-w-28 border border-input">
+      <div className="bg-muted rounded-md p-2 flex items-center justify-center gap-1 md:gap-2 md:min-w-28 border border-input ring-1 ring-transparent transition-shadow focus-within:ring-ring">
         <span>{selectedCountry}</span>
 
-        <button type="button" onClick={() => setShowDropdown((prev) => !prev)}>
+        <button
+          type="button"
+          onClick={() => setShowDropdown((prev) => !prev)}
+          className="focus-visible:outline-none"
+        >
           <IoIosArrowDown className="text-muted-foreground text-xl" />
         </button>
       </div>
@@ -59,12 +63,12 @@ export default function PhoneInput({
         </div>
       )}
 
-      <div className="bg-muted rounded-md px-2 flex-1 flex items-center border border-input">
+      <div className="bg-muted rounded-md px-2 flex-1 flex items-center border border-input ring-1 ring-transparent transition-shadow focus-within:ring-ring">
         <input
           type="tel"
           onChange={(event) => onChange(event.target.value)}
           placeholder="Phone number"
-          className="bg-transparent outline-none"
+          className="w-full bg-transparent py-2 text-base outline-none placeholder:text-muted-foreground md:text-sm"
         />
       </div>
     </div>

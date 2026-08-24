@@ -12,6 +12,8 @@ import { z } from "zod";
 import Notification from "../atoms/Notification";
 import StarRatingInput from "../atoms/StarRatingInput";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 import SaveDraftConfirmDialog from "./SaveDraftConfirmDialog";
 
 type ShowReviewModalProp = {
@@ -247,10 +249,11 @@ export default function ReviewModal({
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col gap-4"
             >
-              <input
+              <Input
                 type="text"
                 placeholder="Title"
-                className="border border-input bg-background rounded-lg py-4 px-2 font-normal"
+                className="rounded-lg px-2 py-4 font-normal"
+                aria-invalid={!!errors.title}
                 {...register("title")}
               />
               {errors.title && (
@@ -259,10 +262,11 @@ export default function ReviewModal({
                 </p>
               )}
 
-              <textarea
+              <Textarea
                 rows={10}
                 placeholder="Review"
-                className="border border-input bg-background rounded-lg py-4 px-2 font-normal"
+                className="rounded-lg px-2 py-4 font-normal"
+                aria-invalid={!!errors.review}
                 {...register("review")}
               />
               {errors.review && (

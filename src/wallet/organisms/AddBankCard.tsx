@@ -5,6 +5,7 @@ import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import initCardVerification from "@/actions/initCardVerification";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   PAYSTACK_INLINE_SCRIPT_SRC,
   useResumePaystackPopup,
@@ -145,17 +146,14 @@ export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
           <label htmlFor="label" className="text-sm">
             Label (optional)
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="label"
-              type="text"
-              className="outline-none w-full"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Eg. My Visa"
-              disabled={isBusy}
-            />
-          </div>
+          <Input
+            id="label"
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Eg. My Visa"
+            disabled={isBusy}
+          />
         </div>
 
         {state.phase === "awaiting-popup" && (

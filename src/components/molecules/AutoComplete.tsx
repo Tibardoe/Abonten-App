@@ -9,6 +9,11 @@ import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
 import { useRouter } from "next/navigation";
 import { forwardRef, useCallback, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
+import {
+  searchFieldInputClassName,
+  searchFieldWrapperClassName,
+} from "../lib/searchFieldStyles";
+import { cn } from "../lib/utils";
 
 type AddressProp = {
   placeholderText: AutoCompletePlaceholderType;
@@ -199,18 +204,16 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
     return (
       <div
         ref={containerRef}
-        className={`${
-          classname ?? "bg-muted"
-        } rounded-lg flex items-center py-3 px-2 gap-2 relative w-full`}
+        className={cn(searchFieldWrapperClassName, "relative", classname)}
       >
-        <IoLocationOutline className="text-3xl text-foreground" />
+        <IoLocationOutline className="text-3xl text-foreground shrink-0" />
 
         <input
           type="text"
           onChange={handleInputChange}
           value={inputValue}
           placeholder={placeholderText.text}
-          className="text-foreground outline-none w-full bg-transparent text-lg"
+          className={searchFieldInputClassName}
         />
 
         {searchResults.length > 0 && (

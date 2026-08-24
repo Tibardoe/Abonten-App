@@ -6,6 +6,7 @@ import { getEventPromoCodes } from "@/actions/getEventPromoCodes";
 import { updatePromoCode } from "@/actions/updatePromoCode";
 import Notification from "@/components/atoms/Notification";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -167,7 +168,7 @@ export default function ManagePromoCodesModal({
                   {editingId === code.id && editState ? (
                     <div className="space-y-2">
                       <div className="flex gap-2">
-                        <input
+                        <Input
                           type="number"
                           value={editState.discountPercentage}
                           onChange={(e) =>
@@ -177,9 +178,8 @@ export default function ManagePromoCodesModal({
                             })
                           }
                           placeholder="Discount %"
-                          className="border w-full p-2 rounded-md text-sm"
                         />
-                        <input
+                        <Input
                           type="number"
                           value={editState.maxUses ?? ""}
                           onChange={(e) =>
@@ -192,11 +192,10 @@ export default function ManagePromoCodesModal({
                             })
                           }
                           placeholder="Max uses (blank = unlimited)"
-                          className="border w-full p-2 rounded-md text-sm"
                         />
                       </div>
 
-                      <input
+                      <Input
                         type="datetime-local"
                         value={editState.expiresAt}
                         onChange={(e) =>
@@ -205,7 +204,6 @@ export default function ManagePromoCodesModal({
                             expiresAt: e.target.value,
                           })
                         }
-                        className="border w-full p-2 rounded-md text-sm"
                       />
 
                       <label className="flex items-center gap-2 text-sm">

@@ -337,6 +337,7 @@ function EditorFields({
             id="rangeMode"
             checked={isRangeMode}
             onChange={(e) => setIsRangeMode(e.target.checked)}
+            className="h-4 w-4 accent-primary"
           />
           <label htmlFor="rangeMode" className="text-sm">
             Use date range (event spans multiple days)

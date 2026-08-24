@@ -7,6 +7,10 @@ import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
 import { forwardRef, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
+import {
+  searchFieldInputClassName,
+  searchFieldWrapperClassName,
+} from "../lib/searchFieldStyles";
 
 type AddressProp = {
   placeholderText: AutoCompletePlaceholderType;
@@ -178,17 +182,17 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
     return (
       <div
         ref={containerRef}
-        className="bg-muted rounded-lg flex justify-between items-center py-3 md:py-2 gap-2 relative w-full"
+        className={`${searchFieldWrapperClassName} relative justify-between`}
       >
         <input
           type="text"
           onChange={handleInputChange}
           value={inputValue}
           placeholder={placeholderText.text}
-          className="text-foreground outline-none w-full bg-transparent text-base md:text-sm"
+          className={searchFieldInputClassName}
         />
 
-        <IoLocationOutline className="text-2xl" />
+        <IoLocationOutline className="text-2xl shrink-0" />
 
         {searchResults.length > 0 && (
           <ul className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground text-lg border border-border rounded shadow-md mt-1 z-10 overflow-y-auto">

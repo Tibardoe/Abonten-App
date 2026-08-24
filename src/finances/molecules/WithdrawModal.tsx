@@ -137,7 +137,7 @@ export default function WithdrawModal({
               <label htmlFor="amount" className="text-sm">
                 Amount
               </label>
-              <div className="border border-input rounded-md px-4 py-2 bg-background flex items-center gap-2">
+              <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
                 <span className="text-muted-foreground text-sm">
                   {currency}
                 </span>
@@ -146,9 +146,10 @@ export default function WithdrawModal({
                   type="number"
                   step="0.01"
                   min="0"
-                  className="outline-none w-full bg-transparent"
+                  className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
                   placeholder="0.00"
                   {...register("amount")}
+                  aria-invalid={!!errors.amount}
                 />
               </div>
               {errors.amount && (

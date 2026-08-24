@@ -4,6 +4,8 @@ import addPayoutAccount from "@/actions/addPayoutAccount";
 import getPaystackMobileMoneyNetworks from "@/actions/getPaystackMobileMoneyNetworks";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
 import {
   type AddMobileMoneyPayoutAccountInput,
@@ -118,15 +120,13 @@ export default function AddMobileMoneyPayoutForm({
           <label htmlFor="accountHolderName" className="text-sm">
             Account Holder Name
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="accountHolderName"
-              type="text"
-              className="outline-none w-full"
-              {...register("accountHolderName")}
-              placeholder="Eg. Kwame Mensah"
-            />
-          </div>
+          <Input
+            id="accountHolderName"
+            type="text"
+            {...register("accountHolderName")}
+            placeholder="Eg. Kwame Mensah"
+            aria-invalid={!!errors.accountHolderName}
+          />
           {errors.accountHolderName && (
             <p className="text-xs text-destructive">
               {errors.accountHolderName.message}
@@ -138,9 +138,8 @@ export default function AddMobileMoneyPayoutForm({
           <label htmlFor="networkCode" className="text-sm">
             Mobile Money Network
           </label>
-          <select
+          <Select
             id="networkCode"
-            className="border border-input rounded-md px-4 py-2 bg-background outline-none"
             disabled={isNetworksPending || isNetworksError}
             defaultValue=""
             onChange={(e) => {
@@ -165,7 +164,7 @@ export default function AddMobileMoneyPayoutForm({
                 {network.name}
               </option>
             ))}
-          </select>
+          </Select>
           {errors.networkCode && (
             <p className="text-xs text-destructive">
               {errors.networkCode.message}
@@ -177,15 +176,13 @@ export default function AddMobileMoneyPayoutForm({
           <label htmlFor="phone" className="text-sm">
             Mobile Money Number
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="phone"
-              type="tel"
-              className="outline-none w-full"
-              {...register("phone")}
-              placeholder="Eg. 0244123456"
-            />
-          </div>
+          <Input
+            id="phone"
+            type="tel"
+            {...register("phone")}
+            placeholder="Eg. 0244123456"
+            aria-invalid={!!errors.phone}
+          />
           {errors.phone && (
             <p className="text-xs text-destructive">{errors.phone.message}</p>
           )}

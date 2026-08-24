@@ -1,3 +1,5 @@
+import { Input } from "../ui/input";
+
 type AppliedPromo = {
   code: string;
   discountPercentage: number;
@@ -34,10 +36,10 @@ export default function CheckoutPromoCodeBox({
       <span>Promo Code</span>
 
       <div className="space-y-2 flex flex-col">
-        <div className="flex gap-5 justify-between items-center border border-border p-4 rounded-md">
-          <input
+        <div className="flex h-10 items-center justify-between gap-3 rounded-md border border-input bg-background pr-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+          <Input
             type="text"
-            className="outline-none w-full h-full bg-transparent text-base md:text-sm"
+            className="h-full flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
             placeholder="Enter code"
             value={promoCodeInput}
             disabled={!!appliedPromo}

@@ -110,7 +110,7 @@ export default function OtpInput({
               // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length digit boxes, index is a stable identity here
               index
             }`}
-            className="w-[50px] h-[56px] md:w-[60px] md:h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl ring-1 ring-transparent transition-shadow focus-within:ring-2 focus-within:ring-accent"
+            className="w-[50px] h-[56px] md:w-[60px] md:h-[60px] flex justify-center items-center rounded-2xl bg-muted text-xl border border-input ring-1 ring-transparent transition-shadow focus-within:ring-2 focus-within:ring-ring"
           >
             <input
               type="text"

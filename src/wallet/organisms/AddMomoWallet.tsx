@@ -5,6 +5,8 @@ import getPaystackMobileMoneyNetworks from "@/actions/getPaystackMobileMoneyNetw
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import {
   type AddMomoWalletInput,
   addMomoWalletSchema,
@@ -116,9 +118,8 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
           <label htmlFor="networkCode" className="text-sm">
             Mobile Money Network
           </label>
-          <select
+          <Select
             id="networkCode"
-            className="border border-input rounded-md px-4 py-2 bg-background outline-none"
             disabled={isNetworksPending || isNetworksError}
             defaultValue=""
             onChange={(e) => {
@@ -143,7 +144,7 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
                 {network.name}
               </option>
             ))}
-          </select>
+          </Select>
           {errors.networkCode && (
             <p className="text-xs text-destructive">
               {errors.networkCode.message}
@@ -155,15 +156,13 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
           <label htmlFor="phone" className="text-sm">
             Mobile Money Number
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="phone"
-              type="tel"
-              className="outline-none w-full"
-              {...register("phone")}
-              placeholder="Eg. 0244123456"
-            />
-          </div>
+          <Input
+            id="phone"
+            type="tel"
+            {...register("phone")}
+            placeholder="Eg. 0244123456"
+            aria-invalid={!!errors.phone}
+          />
           {errors.phone && (
             <p className="text-xs text-destructive">{errors.phone.message}</p>
           )}
@@ -173,15 +172,12 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
           <label htmlFor="label" className="text-sm">
             Label (optional)
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="label"
-              type="text"
-              className="outline-none w-full"
-              {...register("label")}
-              placeholder="Eg. My MTN MoMo"
-            />
-          </div>
+          <Input
+            id="label"
+            type="text"
+            {...register("label")}
+            placeholder="Eg. My MTN MoMo"
+          />
         </div>
 
         {serverError && (

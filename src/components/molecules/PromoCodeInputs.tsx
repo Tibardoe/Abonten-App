@@ -4,6 +4,7 @@ import { LiaTimesSolid } from "react-icons/lia";
 import { InlineDateField } from "../atoms/InlineDateField";
 import { InlineTimeField } from "../atoms/InlineTimeField";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 function combineDateAndTime(day: Date, time: Date): Date {
   const combined = new Date(day);
@@ -131,7 +132,7 @@ export default function PromoCodeInputs({
   return (
     <div className="space-y-2">
       <div className="flex flex-col gap-2">
-        <input
+        <Input
           type="text"
           placeholder="Promo code"
           value={promoCode}
@@ -139,27 +140,25 @@ export default function PromoCodeInputs({
             setPromoCode(e.target.value);
             setDuplicateError(null);
           }}
-          className="w-full border p-2 rounded-md text-base md:text-sm"
+          aria-invalid={!!duplicateError}
         />
         {duplicateError && (
-          <p className="text-destructive text-sm">{duplicateError}</p>
+          <p className="text-sm text-destructive">{duplicateError}</p>
         )}
 
         <div className="flex justify-between items-center gap-2">
-          <input
+          <Input
             type="number"
             placeholder="Max use"
             value={maximumUse ?? ""}
             onChange={(e) => setMaximumUse(Number(e.target.value))}
-            className="border w-full p-2 rounded-md text-base md:text-sm"
           />
 
-          <input
+          <Input
             type="number"
             placeholder="discount"
             value={discount ?? ""}
             onChange={(e) => setDiscount(Number(e.target.value))}
-            className="border w-full p-2 rounded-md text-base md:text-sm"
           />
         </div>
 

@@ -8,6 +8,7 @@ import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { IoSearch } from "react-icons/io5";
 import { VscSettings } from "react-icons/vsc";
+import { searchFieldInputClassName } from "../lib/searchFieldStyles";
 import FilterModalPopup from "../organisms/FilterModalPopup";
 
 // useSearchParams() (needed to know which Explore tab is active, see below)
@@ -127,8 +128,8 @@ function FilterSearchBarContent() {
       : `/search/${generateSlug(searchText) ?? ""}`;
 
   return (
-    <div className="w-full md:w-fit bg-muted rounded-lg flex justify-between p-3">
-      <div className="flex items-center gap-2">
+    <div className="w-full md:w-fit bg-muted rounded-lg flex justify-between p-3 ring-1 ring-transparent transition-shadow focus-within:ring-ring">
+      <div className="flex items-center gap-2 mr-5">
         <Link href={searchHref}>
           <IoSearch className="text-2xl text-muted-foreground" />
         </Link>
@@ -138,7 +139,7 @@ function FilterSearchBarContent() {
           placeholder="Search events, places, restaurants, activities..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          className="outline-none text-lg bg-transparent mr-5"
+          className={searchFieldInputClassName}
         />
       </div>
 

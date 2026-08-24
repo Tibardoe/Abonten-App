@@ -1,6 +1,10 @@
 "use client";
 
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
+import {
+  searchFieldInputClassName,
+  searchFieldWrapperClassName,
+} from "@/components/lib/searchFieldStyles";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { PlaceType } from "@/types/placeType";
 import debounce from "lodash.debounce";
@@ -89,14 +93,14 @@ export default function PlaceSearchSelect({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="bg-muted rounded-lg flex items-center gap-2 py-3 md:py-2 px-3">
+      <div className={searchFieldWrapperClassName}>
         <IoStorefrontOutline className="text-lg text-muted-foreground shrink-0" />
         <input
           type="text"
           value={query}
           onChange={handleInputChange}
           placeholder="Search an existing Abonten Place (optional)"
-          className="text-foreground outline-none w-full bg-transparent text-base md:text-sm"
+          className={searchFieldInputClassName}
         />
       </div>
 

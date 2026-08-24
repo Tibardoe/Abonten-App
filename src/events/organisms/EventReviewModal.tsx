@@ -9,6 +9,8 @@ import StarRatingInput from "@/components/atoms/StarRatingInput";
 import ExistingReviewPhotoGrid from "@/components/molecules/ExistingReviewPhotoGrid";
 import ReviewPhotoPicker from "@/components/molecules/ReviewPhotoPicker";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useReviewPhotoUpload } from "@/hooks/useReviewPhotoUpload";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -200,10 +202,11 @@ export default function EventReviewModal({
               onSubmit={handleSubmit(onSubmit)}
               className="flex flex-col gap-4"
             >
-              <input
+              <Input
                 type="text"
                 placeholder="Title (optional)"
-                className="border border-input bg-background rounded-lg py-4 px-2 font-normal"
+                className="rounded-lg px-2 py-4 font-normal"
+                aria-invalid={!!errors.title}
                 {...register("title")}
               />
               {errors.title && (
@@ -212,10 +215,11 @@ export default function EventReviewModal({
                 </p>
               )}
 
-              <textarea
+              <Textarea
                 rows={10}
                 placeholder="Review (optional)"
-                className="border border-input bg-background rounded-lg py-4 px-2 font-normal"
+                className="rounded-lg px-2 py-4 font-normal"
+                aria-invalid={!!errors.comment}
                 {...register("comment")}
               />
               {errors.comment && (

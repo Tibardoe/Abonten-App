@@ -3,6 +3,7 @@
 import addPayoutAccount from "@/actions/addPayoutAccount";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
 import {
   type AddBankPayoutAccountInput,
@@ -89,15 +90,13 @@ export default function AddBankPayoutForm({
           <label htmlFor="accountHolderName" className="text-sm">
             Account Holder Name
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="accountHolderName"
-              type="text"
-              className="outline-none w-full"
-              {...register("accountHolderName")}
-              placeholder="Eg. Kwame Mensah"
-            />
-          </div>
+          <Input
+            id="accountHolderName"
+            type="text"
+            {...register("accountHolderName")}
+            placeholder="Eg. Kwame Mensah"
+            aria-invalid={!!errors.accountHolderName}
+          />
           {errors.accountHolderName && (
             <p className="text-xs text-destructive">
               {errors.accountHolderName.message}
@@ -109,15 +108,13 @@ export default function AddBankPayoutForm({
           <label htmlFor="bankName" className="text-sm">
             Bank Name
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="bankName"
-              type="text"
-              className="outline-none w-full"
-              {...register("bankName")}
-              placeholder="Eg. GCB Bank"
-            />
-          </div>
+          <Input
+            id="bankName"
+            type="text"
+            {...register("bankName")}
+            placeholder="Eg. GCB Bank"
+            aria-invalid={!!errors.bankName}
+          />
           {errors.bankName && (
             <p className="text-xs text-destructive">
               {errors.bankName.message}
@@ -129,16 +126,14 @@ export default function AddBankPayoutForm({
           <label htmlFor="accountNumber" className="text-sm">
             Account Number
           </label>
-          <div className="border border-input rounded-md px-4 py-2 bg-background">
-            <input
-              id="accountNumber"
-              type="text"
-              inputMode="numeric"
-              className="outline-none w-full"
-              {...register("accountNumber")}
-              placeholder="Eg. 1234567890"
-            />
-          </div>
+          <Input
+            id="accountNumber"
+            type="text"
+            inputMode="numeric"
+            {...register("accountNumber")}
+            placeholder="Eg. 1234567890"
+            aria-invalid={!!errors.accountNumber}
+          />
           {errors.accountNumber && (
             <p className="text-xs text-destructive">
               {errors.accountNumber.message}

@@ -9,9 +9,9 @@ export default function InputBox({ title, value, placeholder }: InputBoxProp) {
     <div>
       <h2 className="font-bold text-xl">{title}</h2>
 
-      <div className="rounded-md border border-input bg-background text-foreground p-4 flex justify-between w-full">
+      <div className="flex w-full items-center justify-between rounded-md border border-input bg-background p-4 text-foreground shadow-sm opacity-70">
         <input
-          className="bg-transparent outline-none w-full"
+          className="w-full cursor-not-allowed bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
           type="text"
           disabled
           placeholder={placeholder}

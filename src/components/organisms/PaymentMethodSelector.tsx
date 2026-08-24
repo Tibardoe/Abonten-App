@@ -7,6 +7,7 @@ import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import submitPaystackChargeOtp from "@/actions/submitPaystackChargeOtp";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
 import Notification from "@/components/atoms/Notification";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   PAYSTACK_INLINE_SCRIPT_SRC,
@@ -484,13 +485,13 @@ export default function PaymentMethodSelector(
               {uiState.displayMessage ??
                 "Enter the OTP sent to your phone to approve this payment."}
             </p>
-            <input
+            <Input
               type="text"
               inputMode="numeric"
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
               placeholder="Enter OTP"
-              className="w-full border border-input rounded-md px-4 py-2 bg-background outline-none text-center"
+              className="text-center"
             />
             <button
               type="button"
