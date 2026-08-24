@@ -34,13 +34,18 @@ export function TimeInput({
       aria-label={ariaLabel}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      // min-w-0 lets this shrink inside a flex/grid parent instead of
-      // forcing it wider (the default min-width:auto on flex/grid items
-      // blocks shrinking below content size); max-w-full is a second guard
-      // against a mobile browser's native time-picker control rendering
-      // wider than its box, which previously pushed the whole page into
-      // horizontal-scroll territory.
-      className={cn("min-w-0 max-w-full", className)}
+      // "block" overrides the shared Input component's own "flex" -- fine
+      // for a plain text input, but a known WebKit quirk on
+      // <input type="time">/type="date"> is that setting display:flex on
+      // the host element itself (rather than leaving it as a normal
+      // replaced element) makes the browser lay out the control's internal
+      // hour/minute/AM-PM segments along that flex axis too, stretching the
+      // rightmost segment out past the box on focus. Place's original raw
+      // time input (before this shared component existed) never had
+      // "flex" and never showed this. min-w-0 lets this shrink inside a
+      // flex/grid parent instead of forcing it wider; max-w-full is a
+      // second guard against the control rendering wider than its box.
+      className={cn("block min-w-0 max-w-full", className)}
     />
   );
 }
