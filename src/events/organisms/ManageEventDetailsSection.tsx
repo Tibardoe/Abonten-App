@@ -147,7 +147,17 @@ export default function ManageEventDetailsSection({
       ? "Saving..."
       : "Save changes";
 
-  if (isFetchingEvent) {
+  // Wait for prefill to actually finish (isReady), not just for the raw
+  // fetch to settle (isFetchingEvent) -- there's one render in between where
+  // the query has resolved but the hook's own hydration effect hasn't run
+  // yet, so initialRange/initialEntries are still undefined. DateTimePicker
+  // seeds its internal date state from those props only once, at mount
+  // (useState's lazy initializer), so mounting it during that gap
+  // permanently locked its date/time in as empty even once the real values
+  // arrived a moment later -- title/description/category didn't show this
+  // because they're driven by react-hook-form's reset() or passed straight
+  // through as live props instead of being seeded once.
+  if (isFetchingEvent || !isReady) {
     return (
       <div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
         Loading event...

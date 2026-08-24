@@ -2,25 +2,16 @@
 
 // import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
 import MaskIcon from "@/components/atoms/MaskIcon";
-import React from "react";
-import { useState } from "react";
-import RangeSlider from "react-range-slider-input";
-import "react-range-slider-input/dist/style.css";
+import DateRangePickerSheet from "@/components/molecules/DateRangePickerSheet";
+import PriceRangeSlider from "@/components/molecules/PriceRangeSlider";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-// import {
-//   Popover,
-//   PopoverContent,
-//   PopoverTrigger,
-// } from "@/components/ui/popover";
 import { distances, rating } from "@/data/distanceAndRating";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
-// Date moodules
-// import { addDays, format } from "date-fns";
-// import { CalendarIcon } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import React from "react";
+import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { cn } from "../lib/utils";
 import CategoryFilter from "../molecules/CategoryFilter";
@@ -28,7 +19,6 @@ import TypeFilter from "../molecules/TypeFilter";
 
 type FilterModalPopupProp = {
   handlePopup: (state: boolean) => void;
-  className?: React.HTMLAttributes<HTMLDivElement>;
   // Which tab this filter applies to -- the Places spec explicitly requires
   // the filter modal to adapt to the selected tab (Category/Date/Price/
   // Distance for Events vs. Category/Distance/Open now/Rating for Places,
@@ -44,13 +34,14 @@ type FilterModalPopupProp = {
   // caller (e.g. /events, /events/location/[location]) leaves this unset
   // and keeps routing to /search unchanged.
   exploreEventsBasePath?: string;
-  // Preselects every field from Explore's current ?eventCategory=/
-  // eventMinPrice=/eventMaxPrice=/eventFrom=/eventTo=/eventRating=/
-  // eventDistance= when opened from that context, so reopening the modal
-  // never looks like it "forgot" an active filter -- the standard pattern
-  // discovery apps (Airbnb, Eventbrite) use for a filter modal that shares
-  // state with quick-filter chips. Unset ("" / undefined) everywhere else.
+  // Preselects every field from the current filter URL (Explore's
+  // ?eventCategory=/eventMinPrice=/... or /search's ?category=/price=/...)
+  // so reopening the modal never looks like it "forgot" an active filter --
+  // the standard pattern discovery apps (Airbnb, Eventbrite) use for a
+  // filter modal that shares state with quick-filter chips. Unset
+  // ("" / undefined) everywhere else.
   initialCategory?: string;
+  initialTypes?: string[];
   initialMinPrice?: number;
   initialMaxPrice?: number;
   initialFromDate?: string;
@@ -66,12 +57,34 @@ const parseLeadingNumber = (value: string): number | null => {
   return match ? Number(match[0]) : null;
 };
 
+type FilterValues = {
+  date: DateRange | undefined;
+  minMax: [number, number];
+  category: string;
+  types: string[];
+  ratingg: string;
+  distance: string;
+  placeCategoryId: number | null;
+  openNowOnly: boolean;
+};
+
+const CLEARED_VALUES: FilterValues = {
+  date: undefined,
+  minMax: [0, 999],
+  category: "",
+  types: [],
+  ratingg: "",
+  distance: "",
+  placeCategoryId: null,
+  openNowOnly: false,
+};
+
 export default function FilterModalPopup({
   handlePopup,
-  className,
   contentType = "events",
   exploreEventsBasePath,
   initialCategory = "",
+  initialTypes = [],
   initialMinPrice,
   initialMaxPrice,
   initialFromDate,
@@ -107,7 +120,7 @@ export default function FilterModalPopup({
 
   const [category, setCategory] = useState(initialCategory);
 
-  const [types, setTypes] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>(initialTypes);
 
   const [ratingg, setRating] = useState(
     () => rating.find((r) => parseLeadingNumber(r) === initialMinRating) ?? "",
@@ -128,18 +141,23 @@ export default function FilterModalPopup({
 
   const router = useRouter();
 
-  const handleFilter = async () => {
+  // Shared by both "Filter" (apply the fields currently on screen) and
+  // "Reset" (apply a cleared set of fields) -- a single place that builds
+  // the destination URL for whichever tab is active and always closes the
+  // modal + navigates, so applying a filter is never silently a no-op.
+  const applyValues = async (values: FilterValues) => {
     if (contentType === "places") {
       const query = new URLSearchParams({ tab: "places" });
-      if (placeCategoryId !== null) {
-        query.set("categoryId", String(placeCategoryId));
+      if (values.placeCategoryId !== null) {
+        query.set("categoryId", String(values.placeCategoryId));
       }
-      if (openNowOnly) query.set("openNow", "true");
-      const minRating = parseLeadingNumber(ratingg);
+      if (values.openNowOnly) query.set("openNow", "true");
+      const minRating = parseLeadingNumber(values.ratingg);
       if (minRating !== null) query.set("rating", String(minRating));
-      const maxDistanceKm = parseLeadingNumber(distance);
+      const maxDistanceKm = parseLeadingNumber(values.distance);
       if (maxDistanceKm !== null) query.set("distance", String(maxDistanceKm));
 
+      handlePopup(false);
       router.push(`/explore/${locationSlug}?${query.toString()}`);
       return;
     }
@@ -152,55 +170,87 @@ export default function FilterModalPopup({
       // rather than only syncing category and leaving price/date/rating/
       // distance modal-only.
       const query = new URLSearchParams({ tab: "events" });
-      if (category) query.set("eventCategory", category);
-      if (minMax[0] > 0) query.set("eventMinPrice", String(minMax[0]));
-      if (minMax[1] < 999) query.set("eventMaxPrice", String(minMax[1]));
-      if (date?.from) query.set("eventFrom", date.from.toISOString());
-      if (date?.to) query.set("eventTo", date.to.toISOString());
-      const minRating = parseLeadingNumber(ratingg);
+      if (values.category) query.set("eventCategory", values.category);
+      if (values.minMax[0] > 0) {
+        query.set("eventMinPrice", String(values.minMax[0]));
+      }
+      if (values.minMax[1] < 999) {
+        query.set("eventMaxPrice", String(values.minMax[1]));
+      }
+      if (values.date?.from)
+        query.set("eventFrom", values.date.from.toISOString());
+      if (values.date?.to) query.set("eventTo", values.date.to.toISOString());
+      const minRating = parseLeadingNumber(values.ratingg);
       if (minRating !== null) query.set("eventRating", String(minRating));
-      const maxDistanceKm = parseLeadingNumber(distance);
+      const maxDistanceKm = parseLeadingNumber(values.distance);
       if (maxDistanceKm !== null) {
         query.set("eventDistance", String(maxDistanceKm));
       }
 
+      handlePopup(false);
       router.push(`${exploreEventsBasePath}?${query.toString()}`);
       return;
     }
 
-    const coordinates = await getCurrentPosition();
+    // Default/legacy branch (/events, /events/location/[location]): routes
+    // to the dedicated /search results page. Location is "nice to have" for
+    // distance sorting, not required to apply the other filters -- if
+    // geolocation is denied, unsupported, or the browser context is
+    // insecure, getCurrentPosition() rejects, and previously that rejection
+    // was never caught, so the whole function silently aborted before ever
+    // building the query or navigating (the "Filter button does nothing"
+    // bug). Falling back to an omitted lat/lng keeps every other filter
+    // working regardless of geolocation permission.
+    let lat = "";
+    let lng = "";
+    try {
+      const coordinates = await getCurrentPosition();
+      lat = coordinates.coords.latitude.toString();
+      lng = coordinates.coords.longitude.toString();
+    } catch {
+      // Proceed without location -- distance-based sorting just won't apply.
+    }
 
     const query = new URLSearchParams({
-      price: `GHS ${minMax[0]} - GHS ${minMax[1]}`,
-      category,
-      types: types.join(","),
-      from: date?.from?.toISOString() || "",
-      to: date?.to?.toISOString() || "",
-      rating: ratingg,
-      distance: distance,
-      lat: coordinates.coords.latitude.toString(),
-      lng: coordinates.coords.longitude.toString(),
+      price: `GHS ${values.minMax[0]} - GHS ${values.minMax[1]}`,
+      category: values.category,
+      types: values.types.join(","),
+      from: values.date?.from?.toISOString() || "",
+      to: values.date?.to?.toISOString() || "",
+      rating: values.ratingg,
+      distance: values.distance,
+      lat,
+      lng,
     });
 
+    handlePopup(false);
     router.push(`/search?${query.toString()}`);
   };
 
+  const handleFilter = () => {
+    applyValues({
+      date,
+      minMax,
+      category,
+      types,
+      ratingg,
+      distance,
+      placeCategoryId,
+      openNowOnly,
+    });
+  };
+
   const handleReset = () => {
-    setDate(undefined);
+    setDate(CLEARED_VALUES.date);
+    setMinMax(CLEARED_VALUES.minMax);
+    setCategory(CLEARED_VALUES.category);
+    setTypes(CLEARED_VALUES.types);
+    setRating(CLEARED_VALUES.ratingg);
+    setDistance(CLEARED_VALUES.distance);
+    setPlaceCategoryId(CLEARED_VALUES.placeCategoryId);
+    setOpenNowOnly(CLEARED_VALUES.openNowOnly);
 
-    setMinMax([0, 999]);
-
-    setCategory("");
-
-    setTypes([]);
-
-    setRating("");
-
-    setDistance("");
-
-    setPlaceCategoryId(null);
-
-    setOpenNowOnly(false);
+    applyValues(CLEARED_VALUES);
   };
 
   const handleCategory = (categoryName: string) => {
@@ -214,13 +264,6 @@ export default function FilterModalPopup({
           ? prevTypes.filter((t) => t !== selectedType) // Remove if already selected
           : [...prevTypes, selectedType], // Add if not selected
     );
-  };
-
-  const handleInputChange = (index: number, value: string) => {
-    const num = Number(value);
-    const newRange: [number, number] = [...minMax];
-    newRange[index] = Number.isNaN(num) ? minMax[index] : num;
-    setMinMax(newRange);
   };
 
   return (
@@ -271,48 +314,16 @@ export default function FilterModalPopup({
           <div className="space-y-5">
             {contentType === "events" && (
               <div>
-                <div className="space-y-3">
-                  {/* Price and inputs */}
-                  <div className="flex justify-between items-center">
-                    <p>Price</p>
+                <p className="mb-3">Price</p>
 
-                    <div className="flex gap-3 items-center">
-                      <input
-                        type="number"
-                        value={minMax[0]}
-                        min={0}
-                        max={minMax[1]}
-                        onChange={(e) => handleInputChange(0, e.target.value)}
-                        className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
-                      />
-                      <span>-</span>
-                      <input
-                        type="number"
-                        value={minMax[1]}
-                        min={minMax[0]}
-                        max={99999}
-                        onChange={(e) => handleInputChange(1, e.target.value)}
-                        className="w-20 h-8 text-center outline-none bg-muted rounded-lg"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Range slider */}
-                  <div className="flex justify-between items-center gap-3">
-                    <p>${minMax[0]}</p>
-
-                    <RangeSlider
-                      min={0}
-                      max={999}
-                      step={1}
-                      value={minMax}
-                      onInput={(val) => setMinMax(val as [number, number])}
-                      id="range-slider-yellow"
-                    />
-
-                    <p>${minMax[1] === 999 ? "Any" : minMax[1]}</p>
-                  </div>
-                </div>
+                <PriceRangeSlider
+                  min={0}
+                  max={999}
+                  value={minMax}
+                  onChange={setMinMax}
+                  currencyPrefix="GHS "
+                  formatMax={() => "Any"}
+                />
 
                 <hr className="mt-5 border-border" />
               </div>
@@ -374,19 +385,13 @@ export default function FilterModalPopup({
             {/* date -- Events only */}
             {contentType === "events" && (
               <div>
-                <h2 className="font-semibold md:text-lg mb-5">Date</h2>
+                <h2 className="font-semibold md:text-lg mb-3">Date</h2>
 
-                <div className={cn("grid gap-2 border", className)}>
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={date?.from}
-                    selected={date}
-                    onSelect={setDate}
-                    numberOfMonths={1}
-                    classNames={{ root: "w-full" }}
-                  />
-                </div>
+                <DateRangePickerSheet
+                  label="Event date range"
+                  value={date}
+                  onChange={setDate}
+                />
 
                 <hr className="mt-5 border-border" />
               </div>
@@ -402,6 +407,7 @@ export default function FilterModalPopup({
                 <button
                   key={r}
                   type="button"
+                  aria-pressed={r === ratingg}
                   onClick={() => setRating(r)}
                   className={cn(
                     "p-2 bg-muted rounded-md text-sm",
@@ -425,6 +431,7 @@ export default function FilterModalPopup({
                 <button
                   type="button"
                   key={d}
+                  aria-pressed={distance === d}
                   onClick={() => setDistance(d)}
                   className={cn(
                     "p-2 bg-muted rounded-md text-sm",
@@ -442,6 +449,7 @@ export default function FilterModalPopup({
           <div className="gap-2 justify-end pb-3 hidden md:flex">
             <Button
               onClick={handleReset}
+              variant="outline"
               className="text-lg py-5 px-7 rounded-md"
             >
               Reset

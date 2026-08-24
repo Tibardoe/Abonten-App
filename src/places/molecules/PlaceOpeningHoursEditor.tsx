@@ -1,5 +1,6 @@
 "use client";
 
+import { TimeInput } from "@/components/atoms/TimeInput";
 import type { PlaceOpeningHoursInput } from "@/types/placeType";
 import { DISPLAY_DAYS } from "@/utils/dayOfWeek";
 
@@ -82,24 +83,22 @@ export default function PlaceOpeningHoursEditor({
 
               {!hour.isClosed && (
                 <div className="flex items-center gap-2 text-foreground">
-                  <input
-                    type="time"
+                  <TimeInput
                     aria-label={`${label} opening time`}
                     value={hour.openTime ?? ""}
-                    onChange={(event) =>
-                      updateDay(dayOfWeek, { openTime: event.target.value })
+                    onChange={(value) =>
+                      updateDay(dayOfWeek, { openTime: value })
                     }
-                    className="rounded-md border border-input bg-background px-2 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring md:text-sm"
+                    className="w-auto"
                   />
                   <span className="text-muted-foreground">to</span>
-                  <input
-                    type="time"
+                  <TimeInput
                     aria-label={`${label} closing time`}
                     value={hour.closeTime ?? ""}
-                    onChange={(event) =>
-                      updateDay(dayOfWeek, { closeTime: event.target.value })
+                    onChange={(value) =>
+                      updateDay(dayOfWeek, { closeTime: value })
                     }
-                    className="rounded-md border border-input bg-background px-2 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-ring md:text-sm"
+                    className="w-auto"
                   />
                 </div>
               )}

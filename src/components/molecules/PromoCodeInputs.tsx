@@ -176,7 +176,6 @@ export default function PromoCodeInputs({
             label="Expiry time"
             date={expiryTime}
             onChange={setExpiryTime}
-            use12Hour={true}
             seedValue={endOfDay}
           />
         </div>

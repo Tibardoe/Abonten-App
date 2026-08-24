@@ -5,6 +5,11 @@ import { updateEvent } from "@/actions/updateEvent";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
+import {
+  getBufferedNow,
+  validateSingleDateRange,
+  validateSpecificDates,
+} from "@/utils/eventDateValidation";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { isImageFile } from "@/utils/isImageFile";
 import { parseEventTypes } from "@/utils/parseEventTypes";
@@ -221,45 +226,23 @@ export function useEventEditForm({
         ends_at?: Date;
         specific_dates?: DateEntry[];
       };
-      const now = new Date();
-      const bufferMs = 5 * 60 * 60 * 1000; // 5 hours
-      const bufferedNow = new Date(now.getTime() + bufferMs);
+      const bufferedNow = getBufferedNow();
 
       if (dateType === "single") {
-        const start = singleDateRange?.from
-          ? new Date(singleDateRange.from)
-          : undefined;
-        const end = singleDateRange?.to
-          ? new Date(singleDateRange.to)
-          : undefined;
-
-        if (!start || !end) {
-          showMessage("Please select both start and end date");
-          return;
-        }
-        if (start <= bufferedNow || end <= bufferedNow) {
-          showMessage("Start or end time must be at least 5 hours from now");
-          return;
-        }
-        if (start >= end) {
-          showMessage("Start time must be earlier than end time");
+        const result = validateSingleDateRange(singleDateRange, bufferedNow);
+        if (!result.ok) {
+          showMessage(result.message);
           return;
         }
 
-        eventDates = { starts_at: start, ends_at: end };
+        eventDates = {
+          starts_at: new Date(singleDateRange.from as Date),
+          ends_at: new Date(singleDateRange.to as Date),
+        };
       } else if (dateType === "specific") {
-        if (!multipleDates || multipleDates.length === 0) {
-          showMessage("Please select at least one date");
-          return;
-        }
-
-        const invalid = multipleDates.some(
-          (entry) =>
-            new Date(entry.start) <= bufferedNow ||
-            new Date(entry.end) <= bufferedNow,
-        );
-        if (invalid) {
-          showMessage("All selected dates must be at least 5 hours from now");
+        const result = validateSpecificDates(multipleDates, bufferedNow);
+        if (!result.ok) {
+          showMessage(result.message);
           return;
         }
 

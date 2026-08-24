@@ -38,11 +38,15 @@ function nextHalfHour(): Date {
   return date;
 }
 
-const timeLabel = (date: Date, use12Hour: boolean) =>
+// Summary-card display always renders as 12-hour ("3:30 PM") for readability,
+// independent of whatever format the native time input in the editor below
+// shows while editing (that follows the browser/OS locale) -- the two are
+// unrelated, since this only formats an already-committed Date for display.
+const timeLabel = (date: Date) =>
   date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: use12Hour,
+    hour12: true,
   });
 
 export default function DateTimePicker({
@@ -51,7 +55,6 @@ export default function DateTimePicker({
   initialRange,
   initialEntries,
 }: DateAndTimeType) {
-  const [use12Hour, setUse12Hour] = useState(true);
   const [isRangeMode, setIsRangeMode] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,8 +89,7 @@ export default function DateTimePicker({
                 {formatFullDateTimeRange(dateRange.from, dateRange.to).date}
               </p>
               <p className="text-xs text-muted-foreground">
-                {timeLabel(dateRange.from, use12Hour)} –{" "}
-                {timeLabel(dateRange.to, use12Hour)}
+                {timeLabel(dateRange.from)} – {timeLabel(dateRange.to)}
               </p>
             </div>
             <div className="flex gap-2 shrink-0">
@@ -138,8 +140,7 @@ export default function DateTimePicker({
                   {formatSingleDateTime(entry.start).date}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {timeLabel(entry.start, use12Hour)} –{" "}
-                  {timeLabel(entry.end, use12Hour)}
+                  {timeLabel(entry.start)} – {timeLabel(entry.end)}
                 </p>
               </div>
               <div className="flex gap-2 shrink-0">
@@ -199,8 +200,6 @@ export default function DateTimePicker({
           dateType={dateType}
           isRangeMode={isRangeMode}
           setIsRangeMode={setIsRangeMode}
-          use12Hour={use12Hour}
-          setUse12Hour={setUse12Hour}
           initial={
             dateType === "single"
               ? dateRange.from && dateRange.to
@@ -271,8 +270,6 @@ type EditorFieldsProps = {
   dateType: string;
   isRangeMode: boolean;
   setIsRangeMode: (v: boolean) => void;
-  use12Hour: boolean;
-  setUse12Hour: (v: boolean) => void;
   initial?: { from: Date; to: Date };
   error: string | null;
   setError: (e: string | null) => void;
@@ -288,8 +285,6 @@ function EditorFields({
   dateType,
   isRangeMode,
   setIsRangeMode,
-  use12Hour,
-  setUse12Hour,
   initial,
   error,
   setError,
@@ -374,46 +369,18 @@ function EditorFields({
           label="Start time"
           date={fromTime}
           onChange={setFromTime}
-          use12Hour={use12Hour}
           seedValue={nextHalfHour}
         />
         <InlineTimeField
           label="End time"
           date={toTime}
           onChange={setToTime}
-          use12Hour={use12Hour}
           seedValue={() =>
             fromTime
               ? new Date(fromTime.getTime() + 60 * 60 * 1000)
               : new Date(nextHalfHour().getTime() + 60 * 60 * 1000)
           }
         />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Time format</span>
-        <div className="flex rounded-md border border-input overflow-hidden text-xs">
-          {(
-            [
-              { value: true, label: "12-hour" },
-              { value: false, label: "24-hour" },
-            ] as const
-          ).map((option) => (
-            <button
-              key={option.label}
-              type="button"
-              aria-pressed={use12Hour === option.value}
-              onClick={() => setUse12Hour(option.value)}
-              className={`px-2 py-1 font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-                use12Hour === option.value
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground hover:bg-accent"
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {error && <p className="text-destructive text-sm">{error}</p>}

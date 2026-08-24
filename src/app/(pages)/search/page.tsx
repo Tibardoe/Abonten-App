@@ -1,6 +1,7 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import { parseFilters } from "@/utils/parseFilterModalQueries";
+import Link from "next/link";
 import SearchResultsList from "./SearchResultsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -80,61 +81,83 @@ export default async function page({
     </div>
   );
 
+  // /search always carries a ?price= (even at the unfiltered 0-999
+  // default, see FilterModalPopup's default branch), so it's excluded from
+  // "is anything actually active" -- otherwise the chip row and "Clear all"
+  // link would show up on every single visit to this page.
+  const hasActiveFilters = Boolean(
+    (queryParams.price && queryParams.price !== "GHS 0 - GHS 999") ||
+      queryParams.category ||
+      queryParams.types ||
+      (queryParams.from && queryParams.to) ||
+      queryParams.rating ||
+      queryParams.distance,
+  );
+
   return (
     <div className="space-y-5">
       <FilterSearchBar />
 
-      <div className="flex flex-wrap gap-3">
-        {/* Render Price */}
-        {queryParams.price && (
-          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
-            {queryParams.price}
-          </span>
-        )}
-
-        {/* Render Category */}
-        {queryParams.category && (
-          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
-            {queryParams.category}
-          </span>
-        )}
-
-        {/* Render Types (split by comma) */}
-        {queryParams.types
-          ?.toString()
-          .split(",")
-          .map((type: string, _index: number) => (
-            <span
-              key={`type-${type}`}
-              className="bg-muted rounded-lg p-3 flex justify-center items-center"
-            >
-              {type}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Render Price */}
+          {queryParams.price && queryParams.price !== "GHS 0 - GHS 999" && (
+            <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
+              {queryParams.price}
             </span>
-          ))}
+          )}
 
-        {/* Render Combined From and To Dates */}
-        {queryParams.from && queryParams.to && (
-          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
-            {`${formatDate(queryParams.from.toString())} - ${formatDate(
-              queryParams.to.toString(),
-            )}`}
-          </span>
-        )}
+          {/* Render Category */}
+          {queryParams.category && (
+            <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
+              {queryParams.category}
+            </span>
+          )}
 
-        {/* Render Rating */}
-        {queryParams.rating && (
-          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
-            {queryParams.rating}
-          </span>
-        )}
+          {/* Render Types (split by comma) */}
+          {queryParams.types
+            ?.toString()
+            .split(",")
+            .map((type: string, _index: number) => (
+              <span
+                key={`type-${type}`}
+                className="bg-muted rounded-lg p-3 flex justify-center items-center"
+              >
+                {type}
+              </span>
+            ))}
 
-        {/* Render Distance */}
-        {queryParams.distance && (
-          <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
-            {queryParams.distance}
-          </span>
-        )}
-      </div>
+          {/* Render Combined From and To Dates */}
+          {queryParams.from && queryParams.to && (
+            <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
+              {`${formatDate(queryParams.from.toString())} - ${formatDate(
+                queryParams.to.toString(),
+              )}`}
+            </span>
+          )}
+
+          {/* Render Rating */}
+          {queryParams.rating && (
+            <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
+              {queryParams.rating}
+            </span>
+          )}
+
+          {/* Render Distance */}
+          {queryParams.distance && (
+            <span className="bg-muted rounded-lg p-3 flex justify-center items-center">
+              {queryParams.distance}
+            </span>
+          )}
+
+          <Link
+            href="/search"
+            className="text-sm text-primary hover:underline px-1"
+          >
+            Clear all
+          </Link>
+        </div>
+      )}
 
       <SearchResultsList
         key={JSON.stringify(filters)}

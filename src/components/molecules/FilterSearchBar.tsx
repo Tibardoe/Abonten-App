@@ -68,10 +68,13 @@ function FilterSearchBarContent() {
     isExplorePage && activeTab === "events"
       ? `/explore/${locationSlug}`
       : undefined;
-  const initialEventCategory =
-    exploreEventsBasePath != null
-      ? (searchParams.get("eventCategory") ?? "")
-      : "";
+
+  // /search is the default/legacy filter-modal branch's results page (see
+  // FilterModalPopup's default branch) -- reopening the modal there, or
+  // refreshing the page, must restore the filters already baked into the
+  // URL just like Explore does, instead of showing an empty modal on top of
+  // an already-filtered result set.
+  const isLegacySearchPage = pathname === "/search";
 
   const numericParam = (key: string): number | undefined => {
     const raw = searchParams.get(key);
@@ -80,30 +83,75 @@ function FilterSearchBarContent() {
     return Number.isFinite(parsed) ? parsed : undefined;
   };
 
+  // "GHS 0 - GHS 250" -> [0, 250], matching the shape FilterModalPopup's
+  // default branch writes into ?price=.
+  const parseLegacyPriceRange = (
+    raw: string | null,
+  ): { min?: number; max?: number } => {
+    if (!raw) return {};
+    const match = raw.match(/(\d+(?:\.\d+)?)\s*-\s*GHS\s*(\d+(?:\.\d+)?)/i);
+    if (!match) return {};
+    return { min: Number(match[1]), max: Number(match[2]) };
+  };
+
+  const initialEventCategory =
+    exploreEventsBasePath != null
+      ? (searchParams.get("eventCategory") ?? "")
+      : isLegacySearchPage
+        ? (searchParams.get("category") ?? "")
+        : "";
+
+  const initialEventTypes = isLegacySearchPage
+    ? (searchParams.get("types")?.split(",").filter(Boolean) ?? [])
+    : [];
+
+  const legacyPrice = isLegacySearchPage
+    ? parseLegacyPriceRange(searchParams.get("price"))
+    : {};
+
   const initialEventMinPrice =
-    exploreEventsBasePath != null ? numericParam("eventMinPrice") : undefined;
+    exploreEventsBasePath != null
+      ? numericParam("eventMinPrice")
+      : isLegacySearchPage
+        ? legacyPrice.min
+        : undefined;
   const initialEventMaxPrice =
-    exploreEventsBasePath != null ? numericParam("eventMaxPrice") : undefined;
+    exploreEventsBasePath != null
+      ? numericParam("eventMaxPrice")
+      : isLegacySearchPage
+        ? legacyPrice.max
+        : undefined;
   const initialEventFromDate =
     exploreEventsBasePath != null
       ? (searchParams.get("eventFrom") ?? undefined)
-      : undefined;
+      : isLegacySearchPage
+        ? (searchParams.get("from") ?? undefined)
+        : undefined;
   const initialEventToDate =
     exploreEventsBasePath != null
       ? (searchParams.get("eventTo") ?? undefined)
-      : undefined;
+      : isLegacySearchPage
+        ? (searchParams.get("to") ?? undefined)
+        : undefined;
   const initialEventMinRating =
-    exploreEventsBasePath != null ? numericParam("eventRating") : undefined;
+    exploreEventsBasePath != null
+      ? numericParam("eventRating")
+      : isLegacySearchPage
+        ? numericParam("rating")
+        : undefined;
   const initialEventMaxDistanceKm =
-    exploreEventsBasePath != null ? numericParam("eventDistance") : undefined;
+    exploreEventsBasePath != null
+      ? numericParam("eventDistance")
+      : isLegacySearchPage
+        ? numericParam("distance")
+        : undefined;
 
   // Small "filters are active" indicator on the Filters button -- the
   // standard discovery-app cue (Airbnb, Eventbrite) that something beyond
   // the default view is already applied, so a user reopening the modal (or
   // never opening it) still notices the current result set is filtered.
-  const activeFilterKeys = !isExplorePage
-    ? []
-    : activeTab === "events"
+  const activeFilterKeys = isExplorePage
+    ? activeTab === "events"
       ? [
           "eventCategory",
           "eventMinPrice",
@@ -113,10 +161,20 @@ function FilterSearchBarContent() {
           "eventRating",
           "eventDistance",
         ]
-      : ["category", "categoryId", "openNow", "rating", "distance"];
-  const hasActiveFilters = activeFilterKeys.some((key) =>
-    searchParams.get(key),
-  );
+      : ["category", "categoryId", "openNow", "rating", "distance"]
+    : isLegacySearchPage
+      ? ["category", "types", "from", "to", "rating", "distance", "price"]
+      : [];
+  const hasActiveFilters = activeFilterKeys.some((key) => {
+    const value = searchParams.get(key);
+    if (!value) return false;
+    // /search always sets ?price=, even at the "Any" default -- only count
+    // it once the range has actually been narrowed away from [0, 999].
+    if (key === "price") {
+      return value !== "GHS 0 - GHS 999";
+    }
+    return true;
+  });
 
   const handleShowPopup = (state: boolean) => {
     setShowPopup(state);
@@ -164,6 +222,7 @@ function FilterSearchBarContent() {
           contentType={activeTab}
           exploreEventsBasePath={exploreEventsBasePath}
           initialCategory={initialEventCategory}
+          initialTypes={initialEventTypes}
           initialMinPrice={initialEventMinPrice}
           initialMaxPrice={initialEventMaxPrice}
           initialFromDate={initialEventFromDate}

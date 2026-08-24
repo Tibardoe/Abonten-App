@@ -8,6 +8,11 @@ import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { EventDates, PostsType } from "@/types/postsType";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
 import type { Ticket } from "@/types/ticketType";
+import {
+  getBufferedNow,
+  validateSingleDateRange,
+  validateSpecificDates,
+} from "@/utils/eventDateValidation";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -386,45 +391,23 @@ export function useEventUploadForm({
       }
 
       let eventDates: EventDates;
-      const now = new Date();
-      const bufferMs = 5 * 60 * 60 * 1000; // 5 hours
-      const bufferedNow = new Date(now.getTime() + bufferMs);
+      const bufferedNow = getBufferedNow();
 
       if (dateType === "single") {
-        const start = singleDateRange?.from
-          ? new Date(singleDateRange.from)
-          : undefined;
-        const end = singleDateRange?.to
-          ? new Date(singleDateRange.to)
-          : undefined;
-
-        if (!start || !end) {
-          showMessage("Please select both start and end date");
-          return;
-        }
-        if (start <= bufferedNow || end <= bufferedNow) {
-          showMessage("Start or end time must be at least 5 hours from now");
-          return;
-        }
-        if (start >= end) {
-          showMessage("Start time must be earlier than end time");
+        const result = validateSingleDateRange(singleDateRange, bufferedNow);
+        if (!result.ok) {
+          showMessage(result.message);
           return;
         }
 
-        eventDates = { starts_at: start, ends_at: end };
+        eventDates = {
+          starts_at: new Date(singleDateRange.from as Date),
+          ends_at: new Date(singleDateRange.to as Date),
+        };
       } else if (dateType === "specific") {
-        if (!multipleDates || multipleDates.length === 0) {
-          showMessage("Please select at least one date");
-          return;
-        }
-
-        const invalid = multipleDates.some(
-          (entry) =>
-            new Date(entry.start) <= bufferedNow ||
-            new Date(entry.end) <= bufferedNow,
-        );
-        if (invalid) {
-          showMessage("All selected dates must be at least 5 hours from now");
+        const result = validateSpecificDates(multipleDates, bufferedNow);
+        if (!result.ok) {
+          showMessage(result.message);
           return;
         }
 
