@@ -63,3 +63,28 @@ export async function canvasPreview(
 
   ctx.restore();
 }
+
+// Draws `source` down onto a new canvas so its longer edge is at most
+// `maxDimension`, preserving aspect ratio. Returns `source` unchanged if
+// it's already within the limit (never upscales).
+export function downscaleCanvas(
+  source: HTMLCanvasElement,
+  maxDimension: number,
+): HTMLCanvasElement {
+  const scale = Math.min(
+    1,
+    maxDimension / Math.max(source.width, source.height),
+  );
+  if (scale === 1) return source;
+
+  const target = document.createElement("canvas");
+  target.width = Math.round(source.width * scale);
+  target.height = Math.round(source.height * scale);
+
+  const ctx = target.getContext("2d");
+  if (!ctx) return source;
+
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(source, 0, 0, target.width, target.height);
+  return target;
+}

@@ -3,6 +3,7 @@
 import { getUserNotifications } from "@/actions/getUserNotifications";
 import { markAllNotificationsRead } from "@/actions/markAllNotificationsRead";
 import { markNotificationRead } from "@/actions/markNotificationRead";
+import { cn } from "@/components/lib/utils";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -23,7 +24,17 @@ import { IoNotificationsOutline } from "react-icons/io5";
 // codebase has no shadcn Dialog/Popover in active use): click-outside via
 // useClickOutside, Escape-to-close, absolute-positioned panel under the
 // trigger button.
-export default function NotificationBell() {
+type NotificationBellProps = {
+  // Which edge the dropdown panel hangs from. "right" (default) matches the
+  // desktop mount at the far right of the nav; "left" is for the mobile
+  // mount next to the hamburger button at the far left of the header --
+  // right-aligning there would push the panel off-screen.
+  align?: "left" | "right";
+};
+
+export default function NotificationBell({
+  align = "right",
+}: NotificationBellProps = {}) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -96,7 +107,10 @@ export default function NotificationBell() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full mt-2 z-40 w-80 max-h-[28rem] overflow-y-auto rounded-md border border-border bg-popover text-popover-foreground shadow-lg"
+          className={cn(
+            "absolute top-full mt-2 z-40 w-80 max-w-[calc(100vw-2rem)] max-h-[28rem] overflow-y-auto rounded-md border border-border bg-popover text-popover-foreground shadow-lg",
+            align === "left" ? "left-0" : "right-0",
+          )}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-popover">
             <span className="font-medium text-sm">Notifications</span>

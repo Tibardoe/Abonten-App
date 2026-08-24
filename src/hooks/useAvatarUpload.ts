@@ -2,10 +2,9 @@
 
 import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-
-const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 
 type UseAvatarUploadOptions = {
   onSuccess?: () => void;
@@ -26,13 +25,18 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         return;
       }
 
-      if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      if (file.size > MAX_AVATAR_UPLOAD_SIZE_BYTES) {
         showMessage("File is too large. Please upload an image under 5MB.");
         return;
       }
 
       try {
-        await saveAvatarToCloudinary(file);
+        const result = await saveAvatarToCloudinary(file);
+        if (result?.error) {
+          showMessage(result.error);
+          return;
+        }
+
         showMessage("Upload successful!");
         router.refresh();
         // No user id is threaded into this hook, so invalidate every

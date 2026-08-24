@@ -1,4 +1,4 @@
-import { canvasPreview } from "@/utils/canvasPreview";
+import { canvasPreview, downscaleCanvas } from "@/utils/canvasPreview";
 import type React from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import ReactCrop, {
@@ -36,12 +36,23 @@ type ImageCropType = {
   imagePreview: string;
   handleCropped: (croppedFile: File) => void;
   handleCancel: () => void;
+  // Output tuning -- all optional, defaulting to this component's original
+  // lossless-PNG/uncapped-resolution behavior so callers that don't pass
+  // them (event flyer, place photo, highlight uploads) are unaffected.
+  // Avatar upload passes JPEG + a quality + a max dimension to keep the
+  // compressed file well under the upload size limit.
+  outputType?: string;
+  outputQuality?: number;
+  maxOutputDimension?: number;
 };
 
 export default function ImageCropper({
   imagePreview,
   handleCropped,
   handleCancel,
+  outputType = "image/png",
+  outputQuality,
+  maxOutputDimension,
 }: ImageCropType) {
   const imgRef = useRef<HTMLImageElement>(null);
   const cropAreaRef = useRef<HTMLDivElement>(null);
@@ -96,13 +107,23 @@ export default function ImageCropper({
     // and zoom, since CSS transforms don't affect canvas pixel sampling.
     await canvasPreview(image, canvas, completedCrop, scale, rotate);
 
-    canvas.toBlob((blob) => {
-      if (!blob) return;
-      const croppedFile = new File([blob], "cropped-image.png", {
-        type: "image/png",
-      });
-      handleCropped(croppedFile);
-    }, "image/png");
+    const outputCanvas = maxOutputDimension
+      ? downscaleCanvas(canvas, maxOutputDimension)
+      : canvas;
+
+    const extension = outputType === "image/jpeg" ? "jpg" : "png";
+
+    outputCanvas.toBlob(
+      (blob) => {
+        if (!blob) return;
+        const croppedFile = new File([blob], `cropped-image.${extension}`, {
+          type: outputType,
+        });
+        handleCropped(croppedFile);
+      },
+      outputType,
+      outputQuality,
+    );
   }
 
   const aspectOptions = [
@@ -172,6 +193,12 @@ export default function ImageCropper({
                 src={imagePreview}
                 style={{ transform: `scale(${scale}) rotate(${rotate}deg)` }}
                 onLoad={onImageLoad}
+                onError={() => {
+                  alert(
+                    "This image couldn't be loaded. Please try a different photo.",
+                  );
+                  handleCancel();
+                }}
               />
             </ReactCrop>
           </div>

@@ -49,6 +49,13 @@ export default function AvatarUploadModal({
               imagePreview={imgUrl}
               handleCropped={handleCropped}
               handleCancel={() => handleClosePopup(false)}
+              // JPEG + a capped dimension keeps the uploaded avatar well
+              // under MAX_AVATAR_UPLOAD_SIZE_BYTES -- the previous default
+              // (lossless PNG at up to devicePixelRatio x resolution) could
+              // balloon a normal phone photo past 5MB after cropping alone.
+              outputType="image/jpeg"
+              outputQuality={0.85}
+              maxOutputDimension={1440}
             />
           )}
 

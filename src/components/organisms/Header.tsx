@@ -129,18 +129,30 @@ export default function Header() {
       <nav className="w-full flex justify-center fixed bg-sidebar z-20">
         <div className="flex justify-between py-5 w-[95%] border-b border-sidebar-border items-center">
           <div className="mx-auto lg:mx-0 flex items-center w-full">
-            {/* Menu toggle button */}
-            <button
-              type="button"
-              onClick={toggleMenu}
-              className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px] text-sidebar-foreground"
-            >
-              {isMenuClicked ? (
-                <LiaTimesSolid className="text-2xl" />
-              ) : (
-                <IoMenuOutline className="text-2xl" />
+            <div className="flex items-center gap-3">
+              {/* Menu toggle button */}
+              <button
+                type="button"
+                onClick={toggleMenu}
+                className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px] text-sidebar-foreground"
+              >
+                {isMenuClicked ? (
+                  <LiaTimesSolid className="text-2xl" />
+                ) : (
+                  <IoMenuOutline className="text-2xl" />
+                )}
+              </button>
+
+              {/* Desktop nav (below) hides the whole signed-in block under
+              `lg`, and neither MobileNavBar nor SideBar surface
+              notifications -- this is the only place mobile/tablet users
+              can reach them, right next to the menu button. */}
+              {!sessionLoading && userSession && (
+                <div className="lg:hidden text-sidebar-foreground">
+                  <NotificationBell align="left" />
+                </div>
               )}
-            </button>
+            </div>
 
             <Link
               href={`/explore/${generateSlug(location ?? "")}`}

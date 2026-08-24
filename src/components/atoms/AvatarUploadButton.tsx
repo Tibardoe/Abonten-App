@@ -1,6 +1,7 @@
 "use client";
 
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { MAX_AVATAR_SOURCE_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useState } from "react";
 import AvatarUploadModal from "../organisms/AvatarUploadModal";
 import { Button } from "../ui/button";
@@ -15,6 +16,9 @@ export default function AvatarUploadButton() {
     useImageSelection({
       invalidFileMessage:
         "Please select an image file for your profile picture.",
+      // Sanity ceiling on the original picked file -- the real size gate
+      // applies after cropping/compression (see useAvatarUpload.ts).
+      maxSizeBytes: MAX_AVATAR_SOURCE_SIZE_BYTES,
       onInvalidFile: (message) => alert(message),
       onSelect: () => setShowPopup(true),
     });

@@ -3,6 +3,7 @@
 import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
 import { v2 as cloudinary } from "cloudinary";
 import { saveToSupabase } from "./saveAvatarToSupabase";
 
@@ -18,6 +19,13 @@ export async function saveAvatarToCloudinary(selectedFile: File) {
 
   if (!selectedFile.type.startsWith("image/")) {
     return { error: "Only image files are allowed for profile pictures" };
+  }
+
+  // Defense-in-depth: the client already compresses and checks size before
+  // calling this action, but a bypassed/malicious client shouldn't be able
+  // to skip the check -- this keeps the server authoritative.
+  if (selectedFile.size > MAX_AVATAR_UPLOAD_SIZE_BYTES) {
+    return { error: "File is too large. Please upload an image under 5MB." };
   }
 
   try {
