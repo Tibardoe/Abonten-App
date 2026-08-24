@@ -145,7 +145,7 @@ export default function EventUploadModal({
   return (
     <>
       <div className="fixed inset-0 z-30 bg-background md:bg-overlay/50 md:flex md:items-center md:justify-center">
-        <div className="flex flex-col h-full w-full md:h-[95%] md:w-[70%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground py-3 overflow-y-auto">
+        <div className="flex flex-col h-full w-full md:h-[95%] md:w-[70%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground py-3 overflow-y-auto overflow-x-hidden">
           {step === 1 && (
             <div className="flex flex-col flex-1 min-h-0 w-full">
               {showCrop ? (

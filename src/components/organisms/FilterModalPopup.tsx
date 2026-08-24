@@ -308,7 +308,7 @@ export default function FilterModalPopup({
         </div>
 
         {/* Content */}
-        <div className="mt-5 w-[90%] md:w-full mx-auto md:px-5 space-y-5 overflow-y-scroll h-[90%]">
+        <div className="mt-5 w-[90%] md:w-full mx-auto md:px-5 space-y-5 overflow-y-scroll overflow-x-hidden h-[90%]">
           <h2 className="font-semibold md:text-lg">Sort by</h2>
 
           <div className="space-y-5">

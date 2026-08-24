@@ -65,7 +65,7 @@ export default function PlaceOpeningHoursEditor({
           return (
             <div
               key={dayOfWeek}
-              className="flex flex-wrap items-center gap-3 py-2 border-b border-border text-sm"
+              className="flex flex-wrap items-center gap-3 overflow-x-hidden py-2 border-b border-border text-sm"
             >
               <span className="w-24 font-medium text-foreground">{label}</span>
 

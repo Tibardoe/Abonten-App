@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { cn } from "../lib/utils";
 
 type TimeInputProps = {
   value: string; // "HH:MM", 24-hour wall-clock -- native <input type="time">'s own format
@@ -33,7 +34,13 @@ export function TimeInput({
       aria-label={ariaLabel}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={className}
+      // min-w-0 lets this shrink inside a flex/grid parent instead of
+      // forcing it wider (the default min-width:auto on flex/grid items
+      // blocks shrinking below content size); max-w-full is a second guard
+      // against a mobile browser's native time-picker control rendering
+      // wider than its box, which previously pushed the whole page into
+      // horizontal-scroll territory.
+      className={cn("min-w-0 max-w-full", className)}
     />
   );
 }

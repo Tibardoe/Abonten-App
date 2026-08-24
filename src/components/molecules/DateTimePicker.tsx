@@ -324,7 +324,7 @@ function EditorFields({
   };
 
   return (
-    <div className="space-y-4 rounded-md border border-border p-4">
+    <div className="space-y-4 overflow-x-hidden rounded-md border border-border p-4">
       {dateType === "single" && (
         <div className="flex items-center gap-2">
           <input
