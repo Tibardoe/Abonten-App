@@ -1,15 +1,55 @@
 "use client";
 
+import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
+import { useClickOutside } from "@/hooks/useClickOutside";
+import {
+  MIN_SUGGESTION_QUERY_LENGTH,
+  useSearchSuggestions,
+} from "@/hooks/useSearchSuggestions";
 import { isExploreTab } from "@/places/exploreTab";
+import type {
+  SuggestionItem,
+  SuggestionSection,
+} from "@/types/searchSuggestionType";
 import { generateSlug } from "@/utils/geerateSlug";
+import {
+  addRecentSearch,
+  clearRecentSearches,
+  getRecentSearches,
+  removeRecentSearch,
+} from "@/utils/recentSearches";
 // import Image from "next/image";
 import Link from "next/link";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { IoSearch } from "react-icons/io5";
 import { VscSettings } from "react-icons/vsc";
 import { searchFieldInputClassName } from "../lib/searchFieldStyles";
 import FilterModalPopup from "../organisms/FilterModalPopup";
+import SearchSuggestionsDropdown from "../organisms/SearchSuggestionsDropdown";
+
+const EVENT_CATEGORY_SUGGESTION_LIMIT = 4;
+const PLACE_CATEGORY_SUGGESTION_LIMIT = 3;
+const RECENT_SUGGESTION_LIMIT = 5;
+const BROWSE_SHORTCUT_LIMIT = 6;
+
+const EVENT_CATEGORY_NAMES = eventCategoriesAndTypes.map((c) => c.category);
+
+function matchCategoryNames(
+  query: string,
+  names: string[],
+  limit: number,
+): string[] {
+  const lower = query.toLowerCase();
+  return names
+    .filter((name) => name.toLowerCase().includes(lower))
+    .slice(0, limit);
+}
 
 // useSearchParams() (needed to know which Explore tab is active, see below)
 // opts a component out of static rendering unless wrapped in Suspense --
@@ -176,28 +216,259 @@ function FilterSearchBarContent() {
     return true;
   });
 
+  const buildSearchHref = (text: string) =>
+    activeTab === "places"
+      ? `/explore/${locationSlug}?tab=places&q=${encodeURIComponent(text)}`
+      : `/search/${generateSlug(text) ?? ""}`;
+
+  const searchHref = buildSearchHref(searchText);
+
+  // ---- Autocomplete/suggestions ----------------------------------------
+  // Places (and place categories) only make sense where there's a location
+  // context to browse them in -- today that's only /explore/[location] (the
+  // one route with a Places tab at all), same gate `isExplorePage` already
+  // uses above for filter-URL branching.
+  const includePlaces = isExplorePage;
+
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [highlightedKey, setHighlightedKey] = useState<string | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+  }, []);
+
+  useClickOutside([containerRef], () => setIsOpen(false));
+
   const handleShowPopup = (state: boolean) => {
+    setIsOpen(false);
     setShowPopup(state);
   };
 
-  const searchHref =
-    activeTab === "places"
-      ? `/explore/${locationSlug}?tab=places&q=${encodeURIComponent(searchText)}`
-      : `/search/${generateSlug(searchText) ?? ""}`;
+  const rawTrimmedQuery = searchText.trim();
+  const isTyping = rawTrimmedQuery.length >= MIN_SUGGESTION_QUERY_LENGTH;
+
+  const {
+    events,
+    places,
+    placeCategories,
+    isLoading: isLoadingSuggestions,
+    query: debouncedQuery,
+  } = useSearchSuggestions(searchText, includePlaces);
+
+  const sections: SuggestionSection[] = [];
+  let noMatches = false;
+
+  if (!isTyping) {
+    const recentItems: SuggestionItem[] = recentSearches
+      .slice(0, RECENT_SUGGESTION_LIMIT)
+      .map((text) => ({
+        kind: "recent",
+        key: `recent:${encodeURIComponent(text)}`,
+        text,
+      }));
+
+    if (recentItems.length > 0) {
+      sections.push({ label: "Recent", items: recentItems });
+    } else {
+      const shortcutItems: SuggestionItem[] = EVENT_CATEGORY_NAMES.slice(
+        0,
+        BROWSE_SHORTCUT_LIMIT,
+      ).map((category) => ({
+        kind: "eventCategory",
+        key: `browse:${encodeURIComponent(category)}`,
+        category,
+      }));
+      sections.push({ label: "Browse categories", items: shortcutItems });
+    }
+  } else {
+    const eventItems: SuggestionItem[] = events.map((event) => ({
+      kind: "event",
+      key: `event:${event.id}`,
+      event,
+    }));
+    const placeItems: SuggestionItem[] = places.map((place) => ({
+      kind: "place",
+      key: `place:${place.id}`,
+      place,
+    }));
+    const matchedEventCategories = matchCategoryNames(
+      rawTrimmedQuery,
+      EVENT_CATEGORY_NAMES,
+      EVENT_CATEGORY_SUGGESTION_LIMIT,
+    );
+    const matchedPlaceCategories = includePlaces
+      ? placeCategories
+          .filter((category) =>
+            category.name.toLowerCase().includes(rawTrimmedQuery.toLowerCase()),
+          )
+          .slice(0, PLACE_CATEGORY_SUGGESTION_LIMIT)
+      : [];
+    const categoryItems: SuggestionItem[] = [
+      ...matchedEventCategories.map((category) => ({
+        kind: "eventCategory" as const,
+        key: `cat:event:${encodeURIComponent(category)}`,
+        category,
+      })),
+      ...matchedPlaceCategories.map((category) => ({
+        kind: "placeCategory" as const,
+        key: `cat:place:${category.id}`,
+        category: { id: category.id, name: category.name },
+      })),
+    ];
+
+    if (eventItems.length > 0)
+      sections.push({ label: "Events", items: eventItems });
+    if (placeItems.length > 0)
+      sections.push({ label: "Places", items: placeItems });
+    if (categoryItems.length > 0)
+      sections.push({ label: "Categories", items: categoryItems });
+
+    // Still waiting for the debounce to catch up with what's actually in the
+    // box -- hold off on "no matches" until the results we have actually
+    // correspond to the current text, so a fast typist never sees a flash of
+    // "no matches" for a query that hasn't been searched yet.
+    const stillDebouncing = debouncedQuery !== rawTrimmedQuery;
+    noMatches =
+      !isLoadingSuggestions &&
+      !stillDebouncing &&
+      eventItems.length === 0 &&
+      placeItems.length === 0 &&
+      categoryItems.length === 0;
+
+    sections.push({
+      label: "",
+      items: [{ kind: "literal", key: "literal", text: rawTrimmedQuery }],
+    });
+  }
+
+  const flatItems = sections.flatMap((section) => section.items);
+
+  const recordRecentSearch = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setRecentSearches(addRecentSearch(trimmed));
+  };
+
+  const handleLiteralSearch = (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    recordRecentSearch(trimmed);
+    setIsOpen(false);
+    router.push(buildSearchHref(trimmed));
+  };
+
+  const handleSelectItem = (item: SuggestionItem) => {
+    switch (item.kind) {
+      case "event":
+        recordRecentSearch(item.event.title);
+        setIsOpen(false);
+        router.push(`/events/${item.event.event_code.toLowerCase()}`);
+        return;
+      case "place":
+        recordRecentSearch(item.place.name);
+        setIsOpen(false);
+        router.push(`/places/${item.place.slug}`);
+        return;
+      case "eventCategory":
+        setSearchText(item.category);
+        setIsOpen(false);
+        router.push(`/search?category=${encodeURIComponent(item.category)}`);
+        return;
+      case "placeCategory":
+        setSearchText(item.category.name);
+        setIsOpen(false);
+        router.push(
+          `/explore/${locationSlug}?tab=places&categoryId=${item.category.id}`,
+        );
+        return;
+      case "recent":
+        setSearchText(item.text);
+        handleLiteralSearch(item.text);
+        return;
+      case "literal":
+        handleLiteralSearch(item.text);
+        return;
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      setIsOpen(false);
+      return;
+    }
+    if (!isOpen) {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        setIsOpen(true);
+      }
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (flatItems.length === 0) return;
+      const currentIndex = flatItems.findIndex(
+        (item) => item.key === highlightedKey,
+      );
+      const nextIndex =
+        event.key === "ArrowDown"
+          ? currentIndex < flatItems.length - 1
+            ? currentIndex + 1
+            : 0
+          : currentIndex <= 0
+            ? flatItems.length - 1
+            : currentIndex - 1;
+      setHighlightedKey(flatItems[nextIndex].key);
+    } else if (event.key === "Enter") {
+      const highlighted = flatItems.find((item) => item.key === highlightedKey);
+      if (highlighted) {
+        event.preventDefault();
+        handleSelectItem(highlighted);
+      } else if (rawTrimmedQuery) {
+        event.preventDefault();
+        handleLiteralSearch(rawTrimmedQuery);
+      }
+    }
+  };
+
+  const showDropdown =
+    isOpen &&
+    !showPopup &&
+    (sections.length > 0 || isLoadingSuggestions || noMatches);
 
   return (
-    <div className="w-full md:w-fit bg-muted rounded-lg flex justify-between p-3 ring-1 ring-transparent transition-shadow focus-within:ring-ring">
-      <div className="flex items-center gap-2 mr-5">
-        <Link href={searchHref}>
+    <div
+      ref={containerRef}
+      className="relative w-full md:w-fit bg-muted rounded-lg flex justify-between p-3 ring-1 ring-transparent transition-shadow focus-within:ring-ring"
+    >
+      <div className="flex items-center gap-2 mr-5 flex-1 min-w-0">
+        <Link
+          href={searchHref}
+          onClick={() => recordRecentSearch(searchText)}
+          aria-label="Search"
+        >
           <IoSearch className="text-2xl text-muted-foreground" />
         </Link>
 
         <input
           type="text"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls="search-suggestions-listbox"
+          aria-activedescendant={highlightedKey ?? undefined}
+          aria-autocomplete="list"
+          autoComplete="off"
           placeholder="Search events, places, restaurants, activities..."
           value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          className={searchFieldInputClassName}
+          onChange={(e) => {
+            setSearchText(e.target.value);
+            setIsOpen(true);
+            setHighlightedKey(null);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          className={`${searchFieldInputClassName} min-w-0`}
         />
       </div>
 
@@ -215,6 +486,26 @@ function FilterSearchBarContent() {
           />
         )}
       </button>
+
+      {showDropdown && (
+        <div id="search-suggestions-listbox">
+          <SearchSuggestionsDropdown
+            sections={sections}
+            highlightedKey={highlightedKey}
+            onHighlight={setHighlightedKey}
+            onSelect={handleSelectItem}
+            onRemoveRecent={(text) =>
+              setRecentSearches(removeRecentSearch(text))
+            }
+            onClearRecent={() => {
+              clearRecentSearches();
+              setRecentSearches([]);
+            }}
+            isLoading={isLoadingSuggestions}
+            noMatches={noMatches}
+          />
+        </div>
+      )}
 
       {showPopup && (
         <FilterModalPopup
