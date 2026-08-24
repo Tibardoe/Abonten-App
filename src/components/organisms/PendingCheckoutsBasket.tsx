@@ -9,7 +9,10 @@ import getUserPendingTicketCheckouts, {
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
 import Notification from "@/components/atoms/Notification";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
-import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
+import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
+import PaymentMethodSelector, {
+  type PaymentSelectorStatus,
+} from "@/components/organisms/PaymentMethodSelector";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
 import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -48,6 +51,28 @@ export default function PendingCheckoutsBasket({
   );
   const [notification, setNotification] = useState<string | null>(null);
   const [isProceeding, setIsProceeding] = useState(false);
+
+  // Purely a UI affordance — separate from selectedIds/quantities/payment
+  // state above, so collapsing/expanding it can never touch checkout data.
+  const [isPaymentPanelExpanded, setIsPaymentPanelExpanded] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentSelectorStatus>({
+    phase: "selecting",
+    selectedMethodLabel: null,
+  });
+
+  // While a payment attempt is actually in flight, force the panel open and
+  // block collapsing it — collapsing mid-payment would hide OTP/approval
+  // prompts and could look like the payment silently stalled or invite a
+  // duplicate attempt.
+  const isPaymentInFlight =
+    paymentStatus.phase === "awaiting-popup" ||
+    paymentStatus.phase === "awaiting-direct" ||
+    paymentStatus.phase === "verifying" ||
+    paymentStatus.phase === "pending";
+
+  useEffect(() => {
+    if (isPaymentInFlight) setIsPaymentPanelExpanded(true);
+  }, [isPaymentInFlight]);
 
   // Newly-seen sessions (e.g. a fresh checkout just created elsewhere) start
   // selected, matching the old single-session behavior where the only
@@ -299,7 +324,7 @@ export default function PendingCheckoutsBasket({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-36 md:pb-0">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-lg md:text-xl">Order Summary</h2>
         {sessions.length > 1 && (
@@ -339,7 +364,7 @@ export default function PendingCheckoutsBasket({
         />
       ))}
 
-      <div className="sticky bottom-0 border border-border rounded-2xl shadow-lg p-6 space-y-2 bg-card text-card-foreground">
+      <div className="border border-border rounded-2xl shadow-lg p-6 space-y-2 bg-card text-card-foreground">
         <p className="text-xs text-muted-foreground">
           {selectedSessions.length} checkout
           {selectedSessions.length === 1 ? "" : "s"} selected (
@@ -375,13 +400,28 @@ export default function PendingCheckoutsBasket({
             {currency} {selectedGrandTotal.toFixed(2)}
           </p>
         </div>
+      </div>
 
+      <CollapsiblePaymentPanel
+        isExpanded={isPaymentPanelExpanded}
+        onToggle={() => setIsPaymentPanelExpanded((prev) => !prev)}
+        toggleDisabled={isPaymentInFlight}
+        totalLabel={`${currency} ${selectedGrandTotal.toFixed(2)}`.trim()}
+        statusText={
+          selectedSessions.length === 0
+            ? "No checkout selected"
+            : allSelectedAreFree
+              ? "Free — ready to confirm"
+              : (paymentStatus.selectedMethodLabel ?? "Select a payment method")
+        }
+      >
         {selectedSessions.length > 0 && !allSelectedAreFree ? (
           <div className="space-y-3 pt-2">
             <PaymentMethodSelector
               kind="ticket"
               checkoutSessionIds={[...selectedIds]}
               onInvalidSessions={handleInvalidSessions}
+              onStatusChange={setPaymentStatus}
             />
           </div>
         ) : (
@@ -394,7 +434,7 @@ export default function PendingCheckoutsBasket({
             {isProceeding ? "Processing..." : "Proceed to Payment"}
           </button>
         )}
-      </div>
+      </CollapsiblePaymentPanel>
 
       {notification && <Notification notification={notification} />}
     </div>

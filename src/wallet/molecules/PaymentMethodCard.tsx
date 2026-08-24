@@ -17,7 +17,7 @@ type PaymentMethodCardProps = {
   removing?: boolean;
 };
 
-function getDisplay(method: PaymentMethodRow) {
+export function getPaymentMethodDisplay(method: PaymentMethodRow) {
   if (method.method_type === "momo") {
     const details = method.details as MomoPaymentMethodDetails &
       // Wallets saved before real phone numbers/network codes were
@@ -57,7 +57,7 @@ export default function PaymentMethodCard({
   onRemove,
   removing,
 }: PaymentMethodCardProps) {
-  const { title, subtitle } = getDisplay(method);
+  const { title, subtitle } = getPaymentMethodDisplay(method);
   const isSelectable = Boolean(onSelect);
 
   return (

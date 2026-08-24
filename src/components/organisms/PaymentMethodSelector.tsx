@@ -12,14 +12,16 @@ import {
   PAYSTACK_INLINE_SCRIPT_SRC,
   useResumePaystackPopup,
 } from "@/hooks/usePaystackPopup";
-import PaymentMethodCard from "@/wallet/molecules/PaymentMethodCard";
+import PaymentMethodCard, {
+  getPaymentMethodDisplay,
+} from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Script from "next/script";
 import { useEffect, useState } from "react";
 
-type PaymentMethodSelectorProps =
+type PaymentMethodSelectorProps = (
   | {
       kind: "ticket";
       checkoutSessionIds: string[];
@@ -42,7 +44,18 @@ type PaymentMethodSelectorProps =
       eventPromotionCheckoutId: string;
       amount: number;
       currency: string;
-    };
+    }
+) & {
+  // Purely informational — lets a wrapping component (e.g. a collapsible
+  // panel) show the current phase/selected wallet without owning any
+  // payment state itself. Never used to drive payment logic in here.
+  onStatusChange?: (status: PaymentSelectorStatus) => void;
+};
+
+export type PaymentSelectorStatus = {
+  phase: PaymentUiState["phase"];
+  selectedMethodLabel: string | null;
+};
 
 type PaystackPaymentInfo =
   | {
@@ -160,6 +173,18 @@ export default function PaymentMethodSelector(
     const defaultMethod = methods.find((m) => m.is_default) ?? methods[0];
     setSelectedId(defaultMethod.id);
   }, [methods, selectedId]);
+
+  const selectedMethod = methods.find((m) => m.id === selectedId) ?? null;
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only report when the phase or selected wallet actually changes, not on every parent re-render passing a new onStatusChange closure.
+  useEffect(() => {
+    props.onStatusChange?.({
+      phase: uiState.phase,
+      selectedMethodLabel: selectedMethod
+        ? getPaymentMethodDisplay(selectedMethod).title
+        : null,
+    });
+  }, [uiState.phase, selectedMethod]);
 
   const handlePaystackInfo = (
     primaryAttemptId: string,
