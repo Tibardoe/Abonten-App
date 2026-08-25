@@ -47,32 +47,102 @@ export default function WalletManager({
 
   const removeMutation = useMutation({
     mutationFn: (id: string) => removePaymentMethod(id),
-    onMutate: (id) => setRemovingId(id),
+
+    onMutate: async (id) => {
+      setRemovingId(id);
+
+      await queryClient.cancelQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
+
+      const previousMethods = queryClient.getQueryData<PaymentMethodRow[]>(
+        PAYMENT_METHODS_QUERY_KEY,
+      );
+
+      queryClient.setQueryData<PaymentMethodRow[]>(
+        PAYMENT_METHODS_QUERY_KEY,
+        (old) => old?.filter((method) => method.id !== id),
+      );
+
+      return { previousMethods };
+    },
+
+    onSuccess: (response, _id, context) => {
+      if (response.status !== 200) {
+        if (context?.previousMethods) {
+          queryClient.setQueryData(
+            PAYMENT_METHODS_QUERY_KEY,
+            context.previousMethods,
+          );
+        }
+        setNotification(response.message ?? "Failed to remove payment method.");
+      }
+    },
+
+    onError: (_error, _id, context) => {
+      if (context?.previousMethods) {
+        queryClient.setQueryData(
+          PAYMENT_METHODS_QUERY_KEY,
+          context.previousMethods,
+        );
+      }
+      setNotification("Failed to remove payment method.");
+    },
+
     onSettled: () => {
       setRemovingId(null);
       queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
     },
-    onSuccess: (response) => {
-      if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to remove payment method.");
-      }
-    },
-    onError: () => setNotification("Failed to remove payment method."),
   });
 
   const setDefaultMutation = useMutation({
     mutationFn: (id: string) => setDefaultPaymentMethod(id),
-    onMutate: (id) => setSettingDefaultId(id),
+
+    onMutate: async (id) => {
+      setSettingDefaultId(id);
+
+      await queryClient.cancelQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
+
+      const previousMethods = queryClient.getQueryData<PaymentMethodRow[]>(
+        PAYMENT_METHODS_QUERY_KEY,
+      );
+
+      queryClient.setQueryData<PaymentMethodRow[]>(
+        PAYMENT_METHODS_QUERY_KEY,
+        (old) =>
+          old?.map((method) => ({
+            ...method,
+            is_default: method.id === id,
+          })),
+      );
+
+      return { previousMethods };
+    },
+
+    onSuccess: (response, _id, context) => {
+      if (response.status !== 200) {
+        if (context?.previousMethods) {
+          queryClient.setQueryData(
+            PAYMENT_METHODS_QUERY_KEY,
+            context.previousMethods,
+          );
+        }
+        setNotification(response.message ?? "Failed to update default.");
+      }
+    },
+
+    onError: (_error, _id, context) => {
+      if (context?.previousMethods) {
+        queryClient.setQueryData(
+          PAYMENT_METHODS_QUERY_KEY,
+          context.previousMethods,
+        );
+      }
+      setNotification("Failed to update default.");
+    },
+
     onSettled: () => {
       setSettingDefaultId(null);
       queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
     },
-    onSuccess: (response) => {
-      if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to update default.");
-      }
-    },
-    onError: () => setNotification("Failed to update default."),
   });
 
   if (isPending && methods.length === 0) {

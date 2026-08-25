@@ -6,11 +6,13 @@ import { getPlaceDrafts } from "@/actions/getPlaceDrafts";
 import type { PlaceDraftListItem } from "@/actions/getPlaceDrafts";
 import { getReviewDrafts } from "@/actions/getReviewDrafts";
 import type { ReviewDraftListItem } from "@/actions/getReviewDrafts";
+import Notification from "@/components/atoms/Notification";
 import PostButton from "@/components/atoms/PostButton";
 import EventDraftCard from "@/components/molecules/EventDraftCard";
 import PlaceDraftCard from "@/components/molecules/PlaceDraftCard";
 import ReviewDraftCard from "@/components/molecules/ReviewDraftCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { useState } from "react";
 
 type DraftsViewProps = {
@@ -34,6 +36,7 @@ export default function DraftsView({
   const [eventDrafts, setEventDrafts] = useState(initialEventDrafts);
   const [reviewDrafts, setReviewDrafts] = useState(initialReviewDrafts);
   const [placeDrafts, setPlaceDrafts] = useState(initialPlaceDrafts);
+  const { message: notification, showMessage } = useTimedMessage(3000);
 
   // Re-fetch-and-replace, mirroring the local-state approach already used
   // for delete (onDeleted below). Save-and-close and publish only ever call
@@ -85,6 +88,10 @@ export default function DraftsView({
                   onDeleted={(id) =>
                     setEventDrafts((prev) => prev.filter((d) => d.id !== id))
                   }
+                  onRestoreDraft={(restored) =>
+                    setEventDrafts((prev) => [restored, ...prev])
+                  }
+                  onDeleteError={showMessage}
                   onDraftListChanged={refreshEventDrafts}
                 />
               ))}
@@ -108,6 +115,10 @@ export default function DraftsView({
                   onDeleted={(id) =>
                     setPlaceDrafts((prev) => prev.filter((d) => d.id !== id))
                   }
+                  onRestoreDraft={(restored) =>
+                    setPlaceDrafts((prev) => [restored, ...prev])
+                  }
+                  onDeleteError={showMessage}
                   onDraftListChanged={refreshPlaceDrafts}
                 />
               ))}
@@ -131,6 +142,10 @@ export default function DraftsView({
                   onDeleted={(id) =>
                     setReviewDrafts((prev) => prev.filter((d) => d.id !== id))
                   }
+                  onRestoreDraft={(restored) =>
+                    setReviewDrafts((prev) => [restored, ...prev])
+                  }
+                  onDeleteError={showMessage}
                   onDraftListChanged={refreshReviewDrafts}
                 />
               ))}
@@ -138,6 +153,8 @@ export default function DraftsView({
           )}
         </div>
       </TabsContent>
+
+      {notification && <Notification notification={notification} />}
     </Tabs>
   );
 }

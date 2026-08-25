@@ -15,24 +15,34 @@ type EventProp = {
 
 export default function DeleteEventButton({ eventId }: EventProp) {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { message: notification, showMessage } = useTimedMessage(3000);
 
-  const { mutate, isPending } = useMutation({
+  const { mutate } = useMutation({
     mutationFn: () => deleteEvent(eventId),
+
+    // An event can appear in several differently-shaped lists at once
+    // (organizer's own list, home/search feeds, favorites, profile posts —
+    // see EVENT_LIST_KEY_PREFIXES) with no single safe way to splice it out
+    // of all of them locally, so the list itself still waits for
+    // invalidateEventListQueries' refetch rather than guessing. The dialog
+    // closing immediately is what makes this feel instant.
+    onMutate: () => {
+      setShowDeletePopup(false);
+    },
+
     onSuccess: (response) => {
       if (response.status === 200) {
-        setShowDeletePopup(false);
         invalidateEventListQueries(queryClient);
         showMessage(response.message);
       } else {
-        setError(response.message);
+        showMessage(response.message ?? "Couldn't delete this event.");
       }
     },
+
     onError: () => {
-      setError("Something went wrong. Please try again.");
+      showMessage("Something went wrong. Please try again.");
     },
   });
 
@@ -41,10 +51,7 @@ export default function DeleteEventButton({ eventId }: EventProp) {
       <button
         type="button"
         className="flex items-center gap-1 p-1 text-destructive"
-        onClick={() => {
-          setError(null);
-          setShowDeletePopup(true);
-        }}
+        onClick={() => setShowDeletePopup(true)}
       >
         <MdDeleteOutline className="text-xl" />
         Delete Event
@@ -52,8 +59,8 @@ export default function DeleteEventButton({ eventId }: EventProp) {
 
       {showDeletePopup && (
         <ConfirmDeleteModal
-          message={error ?? "Are you sure you want to delete this event?"}
-          isLoading={isPending}
+          message="Are you sure you want to delete this event?"
+          isLoading={false}
           onConfirm={() => mutate()}
           onCancel={() => setShowDeletePopup(false)}
         />

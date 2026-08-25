@@ -14,12 +14,18 @@ import Link from "next/link";
 function TicketCard({
   event,
   showRefundInfo = false,
+  queryKey,
 }: {
   event: UserTicketType;
   // Refund status/amount now only has one home: the Refunds tab. Cancelled
   // just shows "cancelled" — no duplicate refund badge — since the details
   // live in a dedicated section instead of being repeated on every card.
   showRefundInfo?: boolean;
+  // The InfiniteList cache entry this card was rendered from ("active" tab
+  // only, in practice — see the status check below) — threaded through so
+  // CancelUserTicketBtn can optimistically remove this exact card from this
+  // exact list, and put it back if cancellation fails.
+  queryKey: unknown[];
 }) {
   const refundBadge =
     showRefundInfo && event.status === "cancelled" && event.transaction
@@ -112,6 +118,7 @@ function TicketCard({
             <CancelUserTicketBtn
               ticketId={event.id}
               transactionId={event.transaction_id}
+              queryKey={queryKey}
             />
           )}
         </div>
@@ -159,6 +166,7 @@ export default function TicketsList({
           key={event.id}
           event={event}
           showRefundInfo={showRefundInfo}
+          queryKey={queryKey}
         />
       )}
     />

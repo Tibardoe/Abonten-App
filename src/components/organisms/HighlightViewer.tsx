@@ -173,7 +173,14 @@ export default function HighlightViewer({
     return null;
   }
 
+  // Deliberately not optimistic before the await, unlike the group-level
+  // delete in UserHighlights.tsx: removeSlide() also drives which slide the
+  // viewer navigates to next (and can close the whole viewer if this was the
+  // last slide/group — see its own comment), and unwinding that navigation
+  // precisely on a rare failure isn't worth the risk here. The dialog still
+  // closes immediately so the wait doesn't feel like a stall.
   const handleDeleteSlide = async () => {
+    setShowConfirmDelete(false);
     setIsDeleting(true);
     const response = await deleteHighlightSlide(currentSlide.id);
     setIsDeleting(false);
@@ -184,7 +191,6 @@ export default function HighlightViewer({
       return;
     }
 
-    setShowConfirmDelete(false);
     removeSlide(currentSlide.id);
     queryClient.invalidateQueries({ queryKey: ["highlights", username] });
   };

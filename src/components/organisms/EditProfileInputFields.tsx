@@ -31,25 +31,56 @@ export default function EditProfileInputFields({
   const [notification, setNotification] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
+  const userDetailsQueryKey = ["user-details", initialData.id];
+
   const { mutate, isPending } = useMutation({
     mutationFn: updateUserDetails,
-    onSuccess: (profileData) => {
+
+    // Profile text fields are low-risk and easily reversible, so
+    // Header/SideBar/MobileNavBar (all sharing this cache entry) show the
+    // new username/name immediately instead of waiting on the round trip.
+    onMutate: async (formData) => {
+      await queryClient.cancelQueries({ queryKey: userDetailsQueryKey });
+
+      const previousDetails =
+        queryClient.getQueryData<Record<string, unknown>>(userDetailsQueryKey);
+
+      queryClient.setQueryData<Record<string, unknown>>(
+        userDetailsQueryKey,
+        (old) => (old ? { ...old, ...formData } : old),
+      );
+
+      return { previousDetails };
+    },
+
+    // updateUserDetails never throws (see the action) — it returns
+    // {status, message} even on failure, so a rejected update is handled
+    // here rather than in onError below.
+    onSuccess: (profileData, _formData, context) => {
       setNotification(profileData?.message || "Profile updated successfully.");
+
+      if (profileData?.status !== 200 && context?.previousDetails) {
+        queryClient.setQueryData(userDetailsQueryKey, context.previousDetails);
+      }
+
       // Header/SideBar/MobileNavBar all read this shared cache entry for the
       // displayed username/avatar — without this it stays stale for up to
       // its 60s staleTime.
-      queryClient.invalidateQueries({
-        queryKey: ["user-details", initialData.id],
-      });
+      queryClient.invalidateQueries({ queryKey: userDetailsQueryKey });
       // Username customization (and full_name) feed into profile
       // completion — keep the checklist/indicator in sync immediately.
       queryClient.invalidateQueries({
         queryKey: ["profile-completion", initialData.id],
       });
     },
-    onError: (error) => {
+
+    onError: (error, _formData, context) => {
+      if (context?.previousDetails) {
+        queryClient.setQueryData(userDetailsQueryKey, context.previousDetails);
+      }
       setNotification(error?.message || "Something went wrong.");
     },
+
     onSettled: () => {
       setTimeout(() => {
         setNotification(null);

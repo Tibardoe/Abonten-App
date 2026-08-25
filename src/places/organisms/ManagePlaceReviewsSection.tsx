@@ -9,7 +9,11 @@ import { useTimedMessage } from "@/hooks/useTimedMessage";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -39,16 +43,83 @@ export default function ManagePlaceReviewsSection({
   const queryClient = useQueryClient();
   const { message: notification, showMessage } = useTimedMessage(3000);
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
+  // Repopulates the response textarea with what the owner typed if the
+  // optimistic post below has to roll back — otherwise reopening the form
+  // after a failure would silently drop their draft.
+  const [draftText, setDraftText] = useState<{
+    reviewId: string;
+    text: string;
+  } | null>(null);
+
+  const reviewsQueryKey = ["manage-place-reviews", placeId];
 
   const invalidate = () =>
-    queryClient.invalidateQueries({
-      queryKey: ["manage-place-reviews", placeId],
-    });
+    queryClient.invalidateQueries({ queryKey: reviewsQueryKey });
+
+  const replyMutation = useMutation({
+    mutationFn: ({ reviewId, text }: { reviewId: string; text: string }) =>
+      respondToPlaceReview(reviewId, text),
+
+    // The response is a short, low-stakes text field an owner already chose
+    // to submit, so it appears in place immediately; if the server rejects
+    // it, the cache rolls back and the form reopens with the same text so
+    // nothing typed is lost.
+    onMutate: async ({ reviewId, text }) => {
+      setRespondingToId(null);
+      setDraftText(null);
+
+      await queryClient.cancelQueries({ queryKey: reviewsQueryKey });
+
+      const previousReviews =
+        queryClient.getQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(
+          reviewsQueryKey,
+        );
+
+      queryClient.setQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(
+        reviewsQueryKey,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((row) =>
+                row.id === reviewId ? { ...row, owner_response: text } : row,
+              ),
+            })),
+          },
+      );
+
+      return { previousReviews };
+    },
+
+    onSuccess: (response, vars, context) => {
+      if (response.status === 200) {
+        showMessage("✅ Response posted successfully!");
+        invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+        }
+        showMessage(`❌ ${response.message}`);
+        setDraftText(vars);
+        setRespondingToId(vars.reviewId);
+      }
+    },
+
+    onError: (_error, vars, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+      }
+      showMessage("❌ Something went wrong. Please try again.");
+      setDraftText(vars);
+      setRespondingToId(vars.reviewId);
+    },
+  });
 
   return (
     <div className="space-y-4">
       <InfiniteList<PlaceReviewRow>
-        queryKey={["manage-place-reviews", placeId]}
+        queryKey={reviewsQueryKey}
         initialPage={initialPage}
         fetchPage={fetchPage}
         listClassName="flex flex-col gap-6"
@@ -114,13 +185,22 @@ export default function ManagePlaceReviewsSection({
               </div>
             ) : respondingToId === review.id ? (
               <RespondForm
-                reviewId={review.id}
-                onCancel={() => setRespondingToId(null)}
-                onSubmitted={(message) => {
-                  showMessage(message);
+                initialText={
+                  draftText && draftText.reviewId === review.id
+                    ? draftText.text
+                    : ""
+                }
+                isSubmitting={
+                  replyMutation.isPending &&
+                  replyMutation.variables?.reviewId === review.id
+                }
+                onCancel={() => {
                   setRespondingToId(null);
-                  invalidate();
+                  setDraftText(null);
                 }}
+                onSubmit={(text) =>
+                  replyMutation.mutate({ reviewId: review.id, text })
+                }
               />
             ) : (
               <button
@@ -141,30 +221,22 @@ export default function ManagePlaceReviewsSection({
 }
 
 function RespondForm({
-  reviewId,
+  initialText,
+  isSubmitting,
   onCancel,
-  onSubmitted,
+  onSubmit,
 }: {
-  reviewId: string;
+  initialText: string;
+  isSubmitting: boolean;
   onCancel: () => void;
-  onSubmitted: (message: string) => void;
+  onSubmit: (text: string) => void;
 }) {
-  const [response, setResponse] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [response, setResponse] = useState(initialText);
 
-  const handleSubmit = async () => {
-    if (!response.trim()) return;
-    setIsSubmitting(true);
-    try {
-      const result = await respondToPlaceReview(reviewId, response.trim());
-      onSubmitted(
-        result.status === 200
-          ? "✅ Response posted successfully!"
-          : `❌ ${result.message}`,
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = () => {
+    const trimmed = response.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
   };
 
   return (

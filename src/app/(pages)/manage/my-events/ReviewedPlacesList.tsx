@@ -1,6 +1,7 @@
 "use client";
 
 import { deletePlaceReview } from "@/actions/deletePlaceReview";
+import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
@@ -8,7 +9,11 @@ import PlaceReviewModal from "@/places/organisms/PlaceReviewModal";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -27,13 +32,16 @@ type PlaceReviewRow = any;
 // Mirrors ReviewedEventsList.tsx exactly, one content type over (place_review
 // instead of event_review, updatePlaceReview/deletePlaceReview instead of
 // their event counterparts).
+const REVIEWED_PLACES_QUERY_KEY = ["user-place-reviews"];
+
 function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["user-place-reviews"] });
+    queryClient.invalidateQueries({ queryKey: REVIEWED_PLACES_QUERY_KEY });
     queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });
     queryClient.invalidateQueries({
       queryKey: ["place-reviews", review.place_id],
@@ -48,11 +56,53 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
 
   const { mutate: deleteReview, isPending: isDeleting } = useMutation({
     mutationFn: () => deletePlaceReview(review.id),
-    onSuccess: (response) => {
+
+    onMutate: async () => {
+      setShowDeleteConfirm(false);
+
+      await queryClient.cancelQueries({ queryKey: REVIEWED_PLACES_QUERY_KEY });
+
+      const previousReviews = queryClient.getQueryData<
+        InfiniteData<PaginatedResult<PlaceReviewRow>>
+      >(REVIEWED_PLACES_QUERY_KEY);
+
+      queryClient.setQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(
+        REVIEWED_PLACES_QUERY_KEY,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((row) => row.id !== review.id),
+            })),
+          },
+      );
+
+      return { previousReviews };
+    },
+
+    onSuccess: (response, _vars, context) => {
       if (response.status === 200) {
-        setShowDeleteConfirm(false);
         invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(
+            REVIEWED_PLACES_QUERY_KEY,
+            context.previousReviews,
+          );
+        }
+        setNotification(response.message ?? "Couldn't delete this review.");
       }
+    },
+
+    onError: (_error, _vars, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(
+          REVIEWED_PLACES_QUERY_KEY,
+          context.previousReviews,
+        );
+      }
+      setNotification("Couldn't delete this review. Please try again.");
     },
   });
 
@@ -160,6 +210,8 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
           </div>
         </div>
       )}
+
+      {notification && <Notification notification={notification} />}
     </div>
   );
 }

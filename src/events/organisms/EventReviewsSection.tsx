@@ -12,7 +12,11 @@ import type { Occurrence } from "@/types/occurrenceType";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Image from "next/image";
 import { useState } from "react";
 import AddEventReviewButton from "../molecules/AddEventReviewButton";
@@ -61,11 +65,82 @@ export default function EventReviewsSection({
   const { data: user } = useCurrentUser();
   const { message: notification, showMessage } = useTimedMessage(3000);
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
+  // Repopulates the reply textarea with what the organizer typed if the
+  // optimistic post below has to roll back — otherwise reopening the form
+  // after a failure would silently drop their draft.
+  const [draftText, setDraftText] = useState<{
+    reviewId: string;
+    text: string;
+  } | null>(null);
 
   const isOrganizer = user?.id === organizerId;
 
+  const reviewsQueryKey = ["event-reviews", eventId];
+
   const invalidate = () =>
-    queryClient.invalidateQueries({ queryKey: ["event-reviews", eventId] });
+    queryClient.invalidateQueries({ queryKey: reviewsQueryKey });
+
+  const replyMutation = useMutation({
+    mutationFn: ({ reviewId, text }: { reviewId: string; text: string }) =>
+      respondToEventReview(reviewId, text),
+
+    // The reply is a short, low-stakes text field an organizer already
+    // chose to submit, so it appears in place immediately; if the server
+    // rejects it, the cache rolls back and the form reopens with the same
+    // text so nothing typed is lost.
+    onMutate: async ({ reviewId, text }) => {
+      setRespondingToId(null);
+      setDraftText(null);
+
+      await queryClient.cancelQueries({ queryKey: reviewsQueryKey });
+
+      const previousReviews =
+        queryClient.getQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+          reviewsQueryKey,
+        );
+
+      queryClient.setQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+        reviewsQueryKey,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((row) =>
+                row.id === reviewId
+                  ? { ...row, organizer_response: text }
+                  : row,
+              ),
+            })),
+          },
+      );
+
+      return { previousReviews };
+    },
+
+    onSuccess: (response, vars, context) => {
+      if (response.status === 200) {
+        showMessage("✅ Reply posted successfully!");
+        invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+        }
+        showMessage(`❌ ${response.message}`);
+        setDraftText(vars);
+        setRespondingToId(vars.reviewId);
+      }
+    },
+
+    onError: (_error, vars, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+      }
+      showMessage("❌ Something went wrong. Please try again.");
+      setDraftText(vars);
+      setRespondingToId(vars.reviewId);
+    },
+  });
 
   return (
     <div
@@ -97,7 +172,7 @@ export default function EventReviewsSection({
       </div>
 
       <InfiniteList<EventReviewRow>
-        queryKey={["event-reviews", eventId]}
+        queryKey={reviewsQueryKey}
         initialPage={initialPage}
         fetchPage={fetchPage}
         listClassName="flex flex-col gap-6"
@@ -177,13 +252,22 @@ export default function EventReviewsSection({
               </div>
             ) : isOrganizer && respondingToId === review.id ? (
               <RespondForm
-                reviewId={review.id}
-                onCancel={() => setRespondingToId(null)}
-                onSubmitted={(message) => {
-                  showMessage(message);
+                initialText={
+                  draftText && draftText.reviewId === review.id
+                    ? draftText.text
+                    : ""
+                }
+                isSubmitting={
+                  replyMutation.isPending &&
+                  replyMutation.variables?.reviewId === review.id
+                }
+                onCancel={() => {
                   setRespondingToId(null);
-                  invalidate();
+                  setDraftText(null);
                 }}
+                onSubmit={(text) =>
+                  replyMutation.mutate({ reviewId: review.id, text })
+                }
               />
             ) : (
               isOrganizer && (
@@ -206,30 +290,22 @@ export default function EventReviewsSection({
 }
 
 function RespondForm({
-  reviewId,
+  initialText,
+  isSubmitting,
   onCancel,
-  onSubmitted,
+  onSubmit,
 }: {
-  reviewId: string;
+  initialText: string;
+  isSubmitting: boolean;
   onCancel: () => void;
-  onSubmitted: (message: string) => void;
+  onSubmit: (text: string) => void;
 }) {
-  const [response, setResponse] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [response, setResponse] = useState(initialText);
 
-  const handleSubmit = async () => {
-    if (!response.trim()) return;
-    setIsSubmitting(true);
-    try {
-      const result = await respondToEventReview(reviewId, response.trim());
-      onSubmitted(
-        result.status === 200
-          ? "✅ Reply posted successfully!"
-          : `❌ ${result.message}`,
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSubmit = () => {
+    const trimmed = response.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
   };
 
   return (

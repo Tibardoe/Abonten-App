@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteEventReview } from "@/actions/deleteEventReview";
+import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
@@ -8,7 +9,11 @@ import EventReviewModal from "@/events/organisms/EventReviewModal";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -24,17 +29,20 @@ const noReviewsState = (
 // biome-ignore lint/suspicious/noExplicitAny: see above
 type EventReviewRow = any;
 
+const REVIEWED_EVENTS_QUERY_KEY = ["user-event-reviews"];
+
 function ReviewedEventCard({ review }: { review: EventReviewRow }) {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
   // Invalidates every cache this review could appear in — this list, and
   // (in case the viewer also has the Event Details page open in the same
   // session) the eligibility/rating/list queries EventReviewsSection.tsx
   // and AddEventReviewButton.tsx key off of for this same event.
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["user-event-reviews"] });
+    queryClient.invalidateQueries({ queryKey: REVIEWED_EVENTS_QUERY_KEY });
     queryClient.invalidateQueries({ queryKey: ["events-awaiting-review"] });
     queryClient.invalidateQueries({ queryKey: ["attending-events-counts"] });
     queryClient.invalidateQueries({
@@ -50,11 +58,53 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
 
   const { mutate: deleteReview, isPending: isDeleting } = useMutation({
     mutationFn: () => deleteEventReview(review.id),
-    onSuccess: (response) => {
+
+    onMutate: async () => {
+      setShowDeleteConfirm(false);
+
+      await queryClient.cancelQueries({ queryKey: REVIEWED_EVENTS_QUERY_KEY });
+
+      const previousReviews = queryClient.getQueryData<
+        InfiniteData<PaginatedResult<EventReviewRow>>
+      >(REVIEWED_EVENTS_QUERY_KEY);
+
+      queryClient.setQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+        REVIEWED_EVENTS_QUERY_KEY,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((row) => row.id !== review.id),
+            })),
+          },
+      );
+
+      return { previousReviews };
+    },
+
+    onSuccess: (response, _vars, context) => {
       if (response.status === 200) {
-        setShowDeleteConfirm(false);
         invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(
+            REVIEWED_EVENTS_QUERY_KEY,
+            context.previousReviews,
+          );
+        }
+        setNotification(response.message ?? "Couldn't delete this review.");
       }
+    },
+
+    onError: (_error, _vars, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(
+          REVIEWED_EVENTS_QUERY_KEY,
+          context.previousReviews,
+        );
+      }
+      setNotification("Couldn't delete this review. Please try again.");
     },
   });
 
@@ -162,6 +212,8 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
           </div>
         </div>
       )}
+
+      {notification && <Notification notification={notification} />}
     </div>
   );
 }

@@ -148,20 +148,46 @@ export default function PendingCheckoutsBasket({
       newQuantity: number;
     }) => updateTicketCheckoutQuantity(ticketCheckoutId, newQuantity),
 
-    onMutate: async ({ ticketCheckoutId }) => {
+    // Only the quantity itself moves optimistically — the line's
+    // discount/amount and the session's subtotal are left untouched rather
+    // than guessed, since promo eligibility for the delta units is
+    // server-authoritative (see updateTicketCheckoutQuantity.ts). Those get
+    // patched in from the real response the moment it arrives, below.
+    onMutate: async ({ ticketCheckoutId, newQuantity }) => {
       setPendingLineIds((prev) => new Set(prev).add(ticketCheckoutId));
+
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+
+      const previousSessions =
+        queryClient.getQueryData<PendingCheckoutSession[]>(QUERY_KEY);
+
+      queryClient.setQueryData<PendingCheckoutSession[]>(QUERY_KEY, (old) =>
+        old?.map((session) => ({
+          ...session,
+          lines: session.lines.map((line) =>
+            line.ticketCheckoutId === ticketCheckoutId
+              ? { ...line, quantity: newQuantity }
+              : line,
+          ),
+        })),
+      );
+
+      return { previousSessions };
     },
 
-    onError: (_err, { ticketCheckoutId }) => {
+    onError: (_err, { ticketCheckoutId }, context) => {
       setNotification("Failed to update quantity. Please try again.");
       setPendingLineIds((prev) => {
         const next = new Set(prev);
         next.delete(ticketCheckoutId);
         return next;
       });
+      if (context?.previousSessions) {
+        queryClient.setQueryData(QUERY_KEY, context.previousSessions);
+      }
     },
 
-    onSuccess: (response, { ticketCheckoutId }) => {
+    onSuccess: (response, { ticketCheckoutId }, context) => {
       setPendingLineIds((prev) => {
         const next = new Set(prev);
         next.delete(ticketCheckoutId);
@@ -170,11 +196,49 @@ export default function PendingCheckoutsBasket({
 
       if (response.status !== 200) {
         setNotification(response.message ?? "Failed to update quantity.");
+        if (context?.previousSessions) {
+          queryClient.setQueryData(QUERY_KEY, context.previousSessions);
+        }
+      } else if ("quantity" in response) {
+        // updateTicketCheckoutQuantity's inferred return type doesn't
+        // discriminate cleanly on `status` alone (its no-op-delta branch
+        // also returns status 200), so TS can't narrow these as required
+        // from the `"quantity" in response` check above — but the action
+        // always returns all three together at runtime.
+        const { quantity, discount, amount } = response as {
+          quantity: number;
+          discount: number;
+          amount: number;
+        };
+
+        // The server's recalculated discount/amount for this line, patched
+        // in immediately rather than waiting for the refetch below.
+        queryClient.setQueryData<PendingCheckoutSession[]>(QUERY_KEY, (old) =>
+          old?.map((session) => {
+            if (
+              !session.lines.some(
+                (l) => l.ticketCheckoutId === ticketCheckoutId,
+              )
+            ) {
+              return session;
+            }
+            const lines = session.lines.map((line) =>
+              line.ticketCheckoutId === ticketCheckoutId
+                ? { ...line, quantity, discount, amount }
+                : line,
+            );
+            return {
+              ...session,
+              lines,
+              sessionSubtotal: lines.reduce((sum, l) => sum + l.amount, 0),
+            };
+          }),
+        );
       }
 
       // The server is the source of truth for the recalculated pricing
-      // (promo eligibility, availability) — refetch rather than patch the
-      // cache by hand.
+      // (promo eligibility, availability) — refetch rather than fully trust
+      // the patch above.
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       router.refresh();
     },
@@ -186,6 +250,44 @@ export default function PendingCheckoutsBasket({
 
     onMutate: async (ticketCheckoutId) => {
       setPendingLineIds((prev) => new Set(prev).add(ticketCheckoutId));
+
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+
+      const previousSessions =
+        queryClient.getQueryData<PendingCheckoutSession[]>(QUERY_KEY);
+
+      queryClient.setQueryData<PendingCheckoutSession[]>(QUERY_KEY, (old) =>
+        old
+          ?.map((session) => {
+            const lines = session.lines.filter(
+              (line) => line.ticketCheckoutId !== ticketCheckoutId,
+            );
+            return {
+              ...session,
+              lines,
+              sessionSubtotal: lines.reduce((sum, l) => sum + l.amount, 0),
+            };
+          })
+          .filter((session) => session.lines.length > 0),
+      );
+
+      return { previousSessions };
+    },
+
+    onError: (_err, _ticketCheckoutId, context) => {
+      setNotification("Failed to remove item. Please try again.");
+      if (context?.previousSessions) {
+        queryClient.setQueryData(QUERY_KEY, context.previousSessions);
+      }
+    },
+
+    onSuccess: (response, _ticketCheckoutId, context) => {
+      if (response.status !== 200) {
+        setNotification(response.message ?? "Failed to remove item.");
+        if (context?.previousSessions) {
+          queryClient.setQueryData(QUERY_KEY, context.previousSessions);
+        }
+      }
     },
 
     onSettled: (_data, _err, ticketCheckoutId) => {
@@ -197,10 +299,6 @@ export default function PendingCheckoutsBasket({
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       router.refresh();
     },
-
-    onError: () => {
-      setNotification("Failed to remove item. Please try again.");
-    },
   });
 
   const removeSessionMutation = useMutation({
@@ -209,6 +307,48 @@ export default function PendingCheckoutsBasket({
 
     onMutate: async (checkoutSessionId) => {
       setRemovingSessionIds((prev) => new Set(prev).add(checkoutSessionId));
+
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+
+      const previousSessions =
+        queryClient.getQueryData<PendingCheckoutSession[]>(QUERY_KEY);
+      const wasSelected = selectedIds.has(checkoutSessionId);
+
+      queryClient.setQueryData<PendingCheckoutSession[]>(QUERY_KEY, (old) =>
+        old?.filter(
+          (session) => session.checkoutSessionId !== checkoutSessionId,
+        ),
+      );
+
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(checkoutSessionId);
+        return next;
+      });
+
+      return { previousSessions, wasSelected };
+    },
+
+    onError: (_err, checkoutSessionId, context) => {
+      setNotification("Failed to remove checkout. Please try again.");
+      if (context?.previousSessions) {
+        queryClient.setQueryData(QUERY_KEY, context.previousSessions);
+      }
+      if (context?.wasSelected) {
+        setSelectedIds((prev) => new Set(prev).add(checkoutSessionId));
+      }
+    },
+
+    onSuccess: (response, checkoutSessionId, context) => {
+      if (response.status !== 200) {
+        setNotification(response.message ?? "Failed to remove checkout.");
+        if (context?.previousSessions) {
+          queryClient.setQueryData(QUERY_KEY, context.previousSessions);
+        }
+        if (context?.wasSelected) {
+          setSelectedIds((prev) => new Set(prev).add(checkoutSessionId));
+        }
+      }
     },
 
     onSettled: (_data, _err, checkoutSessionId) => {
@@ -217,17 +357,8 @@ export default function PendingCheckoutsBasket({
         next.delete(checkoutSessionId);
         return next;
       });
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(checkoutSessionId);
-        return next;
-      });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       router.refresh();
-    },
-
-    onError: () => {
-      setNotification("Failed to remove checkout. Please try again.");
     },
   });
 

@@ -188,8 +188,10 @@ export default function UserHighlights({
   // "outside" and closes the menu within the very same gesture.
   const activeAvatarButtonRef = useRef<HTMLButtonElement | null>(null);
 
+  const highlightsQueryKey = ["highlights", username];
+
   const { data: highlights, isLoading } = useQuery({
-    queryKey: ["highlights", username],
+    queryKey: highlightsQueryKey,
     queryFn: async () => {
       const response = await getUserHighlight(username);
 
@@ -297,28 +299,46 @@ export default function UserHighlights({
     setAnchoredMenuStyle({ position: "fixed", top, left });
   }, [menuAnchorRect]);
 
+  // Deleting your own highlight group is a user-confirmed, easily-reversible
+  // action, so the group (and, if it was open, the viewer) closes the
+  // instant the user confirms rather than waiting on the round trip; a
+  // rejected delete puts the group back and explains why via the existing
+  // deleteError toast below.
   const handleDeleteHighlight = async () => {
     if (!pendingDeleteGroupId) return;
-
-    setIsDeleting(true);
-    const response = await deleteHighlight(pendingDeleteGroupId);
-    setIsDeleting(false);
-
-    if (response.status !== 200) {
-      setDeleteError(response.message ?? "Failed to delete highlight.");
-      setTimeout(() => setDeleteError(null), 3000);
-      return;
-    }
+    const groupId = pendingDeleteGroupId;
 
     setShowConfirmDelete(false);
+    setPendingDeleteGroupId(null);
     if (
       openGroupIndex !== null &&
-      highlights?.[openGroupIndex]?.[0]?.group_id === pendingDeleteGroupId
+      highlights?.[openGroupIndex]?.[0]?.group_id === groupId
     ) {
       setOpenGroupIndex(null);
     }
-    setPendingDeleteGroupId(null);
-    queryClient.invalidateQueries({ queryKey: ["highlights", username] });
+
+    await queryClient.cancelQueries({ queryKey: highlightsQueryKey });
+
+    const previousHighlights =
+      queryClient.getQueryData<HighlightGroup[]>(highlightsQueryKey);
+
+    queryClient.setQueryData<HighlightGroup[]>(highlightsQueryKey, (old) =>
+      old?.filter((group) => group[0]?.group_id !== groupId),
+    );
+
+    setIsDeleting(true);
+    const response = await deleteHighlight(groupId);
+    setIsDeleting(false);
+
+    if (response.status !== 200) {
+      if (previousHighlights) {
+        queryClient.setQueryData(highlightsQueryKey, previousHighlights);
+      }
+      setDeleteError(response.message ?? "Failed to delete highlight.");
+      setTimeout(() => setDeleteError(null), 3000);
+    }
+
+    queryClient.invalidateQueries({ queryKey: highlightsQueryKey });
   };
 
   if (highlightError) {

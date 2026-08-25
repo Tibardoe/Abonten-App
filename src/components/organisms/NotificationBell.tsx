@@ -9,11 +9,17 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
 import type { NotificationType } from "@/types/notificationType";
+import type { PaginatedResult } from "@/types/pagination";
 import { getRelativeTime } from "@/utils/dateFormatter";
-import { useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoNotificationsOutline } from "react-icons/io5";
+import Notification from "../atoms/Notification";
 import NotificationRowSkeleton from "../molecules/NotificationRowSkeleton";
 
 // Sitewide, not Places-specific (any signed-in user gets notifications
@@ -37,6 +43,13 @@ export default function NotificationBell({
   align = "right",
 }: NotificationBellProps = {}) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // Guards against a double-click/double-tap firing markNotificationRead
+  // twice for the same row before the optimistic cache update re-renders
+  // the row with its new read_at value.
+  const [pendingReadIds, setPendingReadIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -64,10 +77,155 @@ export default function NotificationBell({
     });
   };
 
-  const handleRowClick = async (notification: NotificationType) => {
-    if (!notification.read_at) {
-      await markNotificationRead(notification.id);
+  type NotificationsCache = InfiniteData<PaginatedResult<NotificationType>>;
+
+  const markReadMutation = useMutation({
+    mutationFn: (notificationId: string) =>
+      markNotificationRead(notificationId),
+
+    onMutate: async (notificationId) => {
+      setPendingReadIds((prev) => new Set(prev).add(notificationId));
+
+      await queryClient.cancelQueries({
+        queryKey: ["notifications", user?.id],
+      });
+      await queryClient.cancelQueries({
+        queryKey: ["unread-notification-count", user?.id],
+      });
+
+      const previousNotifications =
+        queryClient.getQueryData<NotificationsCache>([
+          "notifications",
+          user?.id,
+        ]);
+      const previousCount = queryClient.getQueryData<number>([
+        "unread-notification-count",
+        user?.id,
+      ]);
+
+      queryClient.setQueryData<NotificationsCache>(
+        ["notifications", user?.id],
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((notification) =>
+                notification.id === notificationId && !notification.read_at
+                  ? { ...notification, read_at: new Date().toISOString() }
+                  : notification,
+              ),
+            })),
+          },
+      );
+
+      queryClient.setQueryData<number>(
+        ["unread-notification-count", user?.id],
+        (old) => (old && old > 0 ? old - 1 : 0),
+      );
+
+      return { previousNotifications, previousCount };
+    },
+
+    onError: (_error, _notificationId, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(
+          ["notifications", user?.id],
+          context.previousNotifications,
+        );
+      }
+      if (context?.previousCount !== undefined) {
+        queryClient.setQueryData(
+          ["unread-notification-count", user?.id],
+          context.previousCount,
+        );
+      }
+      setError("Couldn't mark that notification as read. Please try again.");
+    },
+
+    onSettled: (_data, _error, notificationId) => {
+      setPendingReadIds((prev) => {
+        const next = new Set(prev);
+        next.delete(notificationId);
+        return next;
+      });
+      setTimeout(() => setError(null), 3000);
       invalidateNotificationQueries();
+    },
+  });
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => markAllNotificationsRead(),
+
+    onMutate: async () => {
+      await queryClient.cancelQueries({
+        queryKey: ["notifications", user?.id],
+      });
+      await queryClient.cancelQueries({
+        queryKey: ["unread-notification-count", user?.id],
+      });
+
+      const previousNotifications =
+        queryClient.getQueryData<NotificationsCache>([
+          "notifications",
+          user?.id,
+        ]);
+      const previousCount = queryClient.getQueryData<number>([
+        "unread-notification-count",
+        user?.id,
+      ]);
+
+      const now = new Date().toISOString();
+
+      queryClient.setQueryData<NotificationsCache>(
+        ["notifications", user?.id],
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((notification) =>
+                notification.read_at
+                  ? notification
+                  : { ...notification, read_at: now },
+              ),
+            })),
+          },
+      );
+
+      queryClient.setQueryData<number>(
+        ["unread-notification-count", user?.id],
+        0,
+      );
+
+      return { previousNotifications, previousCount };
+    },
+
+    onError: (_error, _vars, context) => {
+      if (context?.previousNotifications) {
+        queryClient.setQueryData(
+          ["notifications", user?.id],
+          context.previousNotifications,
+        );
+      }
+      if (context?.previousCount !== undefined) {
+        queryClient.setQueryData(
+          ["unread-notification-count", user?.id],
+          context.previousCount,
+        );
+      }
+      setError("Couldn't mark all notifications as read. Please try again.");
+    },
+
+    onSettled: () => {
+      setTimeout(() => setError(null), 3000);
+      invalidateNotificationQueries();
+    },
+  });
+
+  const handleRowClick = (notification: NotificationType) => {
+    if (!notification.read_at && !pendingReadIds.has(notification.id)) {
+      markReadMutation.mutate(notification.id);
     }
 
     setOpen(false);
@@ -77,9 +235,9 @@ export default function NotificationBell({
     }
   };
 
-  const handleMarkAllRead = async () => {
-    await markAllNotificationsRead();
-    invalidateNotificationQueries();
+  const handleMarkAllRead = () => {
+    if (markAllReadMutation.isPending) return;
+    markAllReadMutation.mutate();
   };
 
   const hasUnread = !!unreadCount && unreadCount > 0;
@@ -118,9 +276,12 @@ export default function NotificationBell({
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="text-xs font-medium text-primary hover:underline"
+              disabled={markAllReadMutation.isPending}
+              className="text-xs font-medium text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none"
             >
-              Mark all as read
+              {markAllReadMutation.isPending
+                ? "Marking as read..."
+                : "Mark all as read"}
             </button>
           </div>
 
@@ -143,6 +304,7 @@ export default function NotificationBell({
             }
             renderItem={(notification) => {
               const isUnread = !notification.read_at;
+              const isMarking = pendingReadIds.has(notification.id);
 
               return (
                 <li
@@ -152,7 +314,8 @@ export default function NotificationBell({
                   <button
                     type="button"
                     onClick={() => handleRowClick(notification)}
-                    className={`flex w-full items-start gap-2 px-4 py-3 text-left text-sm hover:bg-accent transition-colors ${
+                    disabled={isMarking}
+                    className={`flex w-full items-start gap-2 px-4 py-3 text-left text-sm hover:bg-accent transition-colors disabled:opacity-70 ${
                       isUnread ? "bg-primary/5" : ""
                     }`}
                   >
@@ -190,6 +353,8 @@ export default function NotificationBell({
           />
         </div>
       )}
+
+      {error && <Notification notification={error} />}
     </div>
   );
 }

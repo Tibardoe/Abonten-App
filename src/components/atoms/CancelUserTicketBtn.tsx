@@ -8,8 +8,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
+import type { PaginatedResult } from "@/types/pagination";
+import type { UserTicketType } from "@/types/ticketType";
 import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import Notification from "./Notification";
@@ -17,15 +23,21 @@ import Notification from "./Notification";
 type CancelTicketProp = {
   ticketId: string;
   transactionId: string | null;
+  // The InfiniteList cache entry (["attending-events", "active"]) this
+  // ticket's card was rendered from — needed to optimistically pull the
+  // card out of that exact list and, on failure, put it back.
+  queryKey: unknown[];
 };
+
+type TicketsCache = InfiniteData<PaginatedResult<UserTicketType>>;
 
 export default function CancelUserTicketBtn({
   ticketId,
   transactionId,
+  queryKey,
 }: CancelTicketProp) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { message: notification, showMessage } = useTimedMessage(3000);
@@ -37,17 +49,56 @@ export default function CancelUserTicketBtn({
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => cancelUserTicket(ticketId, transactionId),
-    onSuccess: (response) => {
+
+    // Cancellation is a simple, user-confirmed status flip (see
+    // cancelUserTicket.ts) that's highly likely to succeed and trivial to
+    // undo, so the card leaves the Active list the moment the user
+    // confirms rather than waiting on the round trip.
+    onMutate: async () => {
+      setShowCancelConfirm(false);
+
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData<TicketsCache>(queryKey);
+
+      queryClient.setQueryData<TicketsCache>(
+        queryKey,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((ticket) => ticket.id !== ticketId),
+            })),
+          },
+      );
+
+      return { previousData };
+    },
+
+    onSuccess: (response, _vars, context) => {
       if (response.status === 200) {
-        setShowCancelConfirm(false);
-        invalidateTicketStatusQueries(queryClient);
         showMessage(response.message);
       } else {
-        setError(response.message);
+        // Resolved but rejected server-side (e.g. 404/500) — this action
+        // never throws, so onError never fires for this case; roll back
+        // here instead.
+        if (context?.previousData) {
+          queryClient.setQueryData(queryKey, context.previousData);
+        }
+        showMessage(response.message ?? "Couldn't cancel this ticket.");
       }
     },
-    onError: () => {
-      setError("Something went wrong. Please try again.");
+
+    onError: (_error, _vars, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      showMessage("Couldn't cancel this ticket. Please try again.");
+    },
+
+    onSettled: () => {
+      invalidateTicketStatusQueries(queryClient);
     },
   });
 
@@ -69,7 +120,6 @@ export default function CancelUserTicketBtn({
             className="w-full rounded-md px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
             onClick={() => {
               setMenuOpen(false);
-              setError(null);
               setShowCancelConfirm(true);
             }}
           >
@@ -81,10 +131,9 @@ export default function CancelUserTicketBtn({
       {showCancelConfirm && (
         <ConfirmDeleteModal
           message={
-            error ??
-            (transactionId
+            transactionId
               ? "Are you sure you want to cancel this ticket? A refund will be issued to your original payment method."
-              : "Are you sure you want to cancel this ticket?")
+              : "Are you sure you want to cancel this ticket?"
           }
           isLoading={isPending}
           onConfirm={() => mutate()}

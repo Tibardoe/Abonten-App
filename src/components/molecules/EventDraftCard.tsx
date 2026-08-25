@@ -13,17 +13,22 @@ import { useState } from "react";
 type EventDraftCardProps = {
   draft: EventDraftListItem;
   onDeleted: (draftId: string) => void;
+  // Puts the draft back if the server rejects the delete — the card itself
+  // has already unmounted by then (see handleDelete), so the parent list is
+  // the only place left that can show it again.
+  onRestoreDraft: (draft: EventDraftListItem) => void;
+  onDeleteError: (message: string) => void;
   onDraftListChanged: () => void;
 };
 
 export default function EventDraftCard({
   draft,
   onDeleted,
+  onRestoreDraft,
+  onDeleteError,
   onDraftListChanged,
 }: EventDraftCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const thumbnailUrl = draft.flyerPublicId
     ? buildCloudinaryUrl(draft.flyerPublicId, draft.flyerVersion, {
@@ -32,17 +37,19 @@ export default function EventDraftCard({
       })
     : null;
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    const response = await deleteEventDraft(draft.id);
-    setIsDeleting(false);
+  // Draft deletion is a low-stakes, easily-reversible soft delete, so the
+  // card leaves the list the moment the user confirms rather than waiting
+  // on the round trip; a rejected delete puts it back with an explanation.
+  const handleDelete = () => {
+    setShowDeleteConfirm(false);
+    onDeleted(draft.id);
 
-    if (response.status === 200) {
-      setShowDeleteConfirm(false);
-      onDeleted(draft.id);
-    } else {
-      setError(response.message);
-    }
+    deleteEventDraft(draft.id).then((response) => {
+      if (response.status !== 200) {
+        onRestoreDraft(draft);
+        onDeleteError(response.message ?? "Couldn't delete this draft.");
+      }
+    });
   };
 
   return (
@@ -68,7 +75,6 @@ export default function EventDraftCard({
         <p className="text-xs text-muted-foreground">
           {formatExpiresIn(draft.expiresAt)}
         </p>
-        {error && <p className="text-destructive text-xs mt-1">{error}</p>}
       </div>
 
       <div className="flex flex-col gap-2 shrink-0">
@@ -92,7 +98,7 @@ export default function EventDraftCard({
       {showDeleteConfirm && (
         <ConfirmDeleteModal
           message="Delete this draft? This cannot be undone."
-          isLoading={isDeleting}
+          isLoading={false}
           onConfirm={handleDelete}
           onCancel={() => setShowDeleteConfirm(false)}
         />
