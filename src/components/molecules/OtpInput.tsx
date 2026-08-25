@@ -103,7 +103,11 @@ export default function OtpInput({
 
   return (
     <div className="flex flex-col gap-3 items-center">
-      <div className="flex gap-3 w-full justify-center" onPaste={handlePaste}>
+      <fieldset
+        aria-label="Verification code"
+        className="flex gap-3 w-full justify-center border-0 p-0 m-0 min-w-0"
+        onPaste={handlePaste}
+      >
         {digits.map((digit, index) => (
           <div
             key={`otp-digit-${
@@ -117,6 +121,8 @@ export default function OtpInput({
               inputMode="numeric"
               autoComplete="one-time-code"
               value={digit}
+              aria-label={`Digit ${index + 1} of ${length}`}
+              aria-invalid={!!error}
               // No maxLength: iOS's SMS-autofill suggestion fills the
               // *entire* code into whichever box is focused as one input
               // event, and a maxLength={1} attribute lets the browser
@@ -136,9 +142,13 @@ export default function OtpInput({
             />
           </div>
         ))}
-      </div>
+      </fieldset>
 
-      {error && <p className="text-destructive text-sm md:text-lg">{error}</p>}
+      {error && (
+        <p role="alert" className="text-destructive text-sm md:text-lg">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -47,10 +47,11 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/events") ||
     pathname.startsWith("/places") ||
     pathname.startsWith("/explore") ||
-    pathname.startsWith("/user") ||
+    // "/user/" (trailing slash) so this only matches /user/[username]/...
+    // profile sub-routes -- not "/user-account" (Settings), which needs auth.
+    pathname.startsWith("/user/") ||
     pathname.startsWith("/reviews") ||
     pathname.startsWith("/search") ||
-    pathname.startsWith("/auth") ||
     pathname.startsWith("/auth");
 
   const {
@@ -60,7 +61,12 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/signin";
-    url.searchParams.set("next", pathname);
+    // .clone() carries over the original request's query string (e.g.
+    // ?tab=orders) -- clear it before setting `next`, otherwise it leaks
+    // onto /auth/signin as redundant top-level params alongside the
+    // already-encoded copy inside `next` itself.
+    url.search = "";
+    url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
   }
 

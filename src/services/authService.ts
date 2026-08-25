@@ -42,6 +42,31 @@ export const fetchAuthenticatedUser = async () => {
   }
 };
 
+// Links a Google identity to the currently signed-in user (Settings ->
+// Security's "Link Google account", for phone-only accounts). Uses
+// Supabase's native identity-linking OAuth flow rather than anything
+// custom -- Supabase itself rejects linking a Google account that's already
+// tied to a different Abonten user, which is what makes this safe (it
+// proves ownership via a real OAuth round trip instead of trusting a claim
+// from the client). Reuses /auth/callback: exchangeCodeForSession()
+// completes a link exactly the same way it completes a sign-in, since the
+// linking intent is tracked server-side by Supabase Auth for the
+// already-authenticated session that initiated it.
+export const linkGoogleIdentity = async (next?: string | null) => {
+  const target = next || "/settings/security";
+
+  const { data, error } = await supabase.auth.linkIdentity({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}`,
+    },
+  });
+
+  if (error) throw error;
+
+  return data;
+};
+
 // Phone sign-in OTP send/verify + session minting: see
 // src/actions/requestPhoneVerification.ts and
 // src/actions/verifyPhoneSignIn.ts. Settings -> Security's add/change-phone

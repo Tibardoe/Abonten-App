@@ -20,9 +20,10 @@ import { Button } from "../ui/button";
 type PopupProp = {
   callingCode?: string;
   next?: string | null;
+  authError?: string | null;
 };
 
-export default function AuthModal({ callingCode, next }: PopupProp) {
+export default function AuthModal({ callingCode, next, authError }: PopupProp) {
   const t = useTranslations("auth");
 
   const location = useGetUserLocation();
@@ -36,7 +37,9 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [sendErrorMessage, setSendErrorMessage] = useState<string | null>(null);
+  const [sendErrorMessage, setSendErrorMessage] = useState<string | null>(
+    authError ?? null,
+  );
   const [otpErrorMessage, setOtpErrorMessage] = useState<string | null>(null);
 
   const { resolvedTheme } = useTheme();
@@ -159,7 +162,7 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
             />
 
             {sendErrorMessage && (
-              <p className="text-destructive text-sm md:text-base">
+              <p role="alert" className="text-destructive text-sm md:text-base">
                 {sendErrorMessage}
               </p>
             )}
@@ -170,6 +173,10 @@ export default function AuthModal({ callingCode, next }: PopupProp) {
             >
               {isSendingOtp ? t("sendingCode") : t("continue")}
             </Button>
+
+            <p className="text-center text-sm text-muted-foreground">
+              {t("newToAbonten")}
+            </p>
           </form>
         </div>
       </div>

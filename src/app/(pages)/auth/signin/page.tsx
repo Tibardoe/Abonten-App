@@ -11,7 +11,7 @@ export default async function page({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const [countryMetadata, { next }] = await Promise.all([
+  const [countryMetadata, { next, authError }] = await Promise.all([
     fetchCountryMetadata(),
     searchParams,
   ]);
@@ -20,6 +20,7 @@ export default async function page({
     <AuthModal
       callingCode={countryMetadata?.callingCode}
       next={getSafeRedirectPath(next)}
+      authError={Array.isArray(authError) ? authError[0] : authError}
     />
   );
 }

@@ -1,12 +1,19 @@
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 
-// Cookie-free, service-role Supabase client — used ONLY by the Paystack
-// webhook route (src/app/api/paystack/webhook/route.ts), which has no
-// browser session/cookies to authenticate with (Paystack calls it directly,
-// server-to-server). Authorization for that route comes from verifying the
-// Paystack webhook signature, not from a Supabase user session — this
-// client is what lets the verified webhook write payment/ticket state on
-// the paying user's behalf.
+// Cookie-free, service-role Supabase client. Originally added for the
+// Paystack webhook route (src/app/api/paystack/webhook/route.ts), which has
+// no browser session/cookies to authenticate with (Paystack calls it
+// directly, server-to-server) -- authorization there comes from verifying
+// the Paystack webhook signature, not a Supabase user session.
+//
+// Also now used by the phone-auth Server Actions that need Admin API access
+// auth.getUser() can't provide: verifyPhoneSignIn.ts (find-or-create user by
+// phone, mint session), updateVerifiedPhone.ts (attach a verified phone to
+// the current user), deleteUser.ts (admin.deleteUser), and
+// ensureProfileCompletionNotification.ts (runs before any session cookie
+// exists). Every one of those call sites independently checks
+// auth.getUser() or otherwise proves the caller's identity before using
+// this client -- it is never reachable from an unauthenticated request path.
 //
 // Never import this into a "use client" file or any code path reachable
 // without independent authorization — SUPABASE_SERVICE_ROLE_KEY bypasses

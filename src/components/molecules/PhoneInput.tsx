@@ -37,6 +37,9 @@ export default function PhoneInput({
           type="button"
           onClick={() => setShowDropdown((prev) => !prev)}
           className="focus-visible:outline-none"
+          aria-label="Country code"
+          aria-haspopup="true"
+          aria-expanded={showDropdown}
         >
           <IoIosArrowDown className="text-muted-foreground text-xl" />
         </button>
@@ -46,6 +49,7 @@ export default function PhoneInput({
         <div className="absolute top-12 left-0 w-full z-10 bg-popover text-popover-foreground shadow-md max-h-60 overflow-y-scroll flex flex-col rounded-md border border-border">
           {countryDetails.map((country) => (
             <button
+              aria-current={country.callingCode === selectedCountry}
               className="px-3 py-2 hover:bg-accent cursor-pointer flex items-center gap-3 text-left"
               type="button"
               key={country.countryCode}
@@ -68,6 +72,7 @@ export default function PhoneInput({
           type="tel"
           onChange={(event) => onChange(event.target.value)}
           placeholder="Phone number"
+          aria-label="Phone number"
           className="w-full bg-transparent py-2 text-base outline-none placeholder:text-muted-foreground md:text-sm"
         />
       </div>

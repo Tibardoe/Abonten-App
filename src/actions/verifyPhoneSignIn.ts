@@ -50,14 +50,14 @@ export default async function verifyPhoneSignIn(
     return { status: 400, message: "Enter the code we sent you." };
   }
 
-  if (!getPendingOtp("sign-in", phoneE164)) {
+  if (!(await getPendingOtp("sign-in", phoneE164))) {
     return {
       status: 401,
       message: "That code has expired. Please request a new one.",
     };
   }
 
-  const attemptAllowed = registerVerifyAttempt("sign-in", phoneE164);
+  const attemptAllowed = await registerVerifyAttempt("sign-in", phoneE164);
 
   if (!attemptAllowed) {
     return {
@@ -66,7 +66,7 @@ export default async function verifyPhoneSignIn(
     };
   }
 
-  const pending = getPendingOtp("sign-in", phoneE164);
+  const pending = await getPendingOtp("sign-in", phoneE164);
 
   if (!pending) {
     return {
@@ -85,7 +85,7 @@ export default async function verifyPhoneSignIn(
     return { status: 401, message: verifyResult.message };
   }
 
-  clearPendingOtp("sign-in", phoneE164);
+  await clearPendingOtp("sign-in", phoneE164);
 
   const found = await findOrCreateUserByPhone(phoneE164);
 

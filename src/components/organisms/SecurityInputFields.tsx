@@ -4,8 +4,10 @@ import deleteUser from "@/actions/deleteUser";
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import updateVerifiedPhone from "@/actions/updateVerifiedPhone";
 import { supabase } from "@/config/supabase/client";
+import { linkGoogleIdentity } from "@/services/authService";
 import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
@@ -21,6 +23,7 @@ type Props = {
   initialPhoneVerified: boolean;
   initialEmail: string | null;
   initialEmailVerified: boolean;
+  hasGoogleIdentity: boolean;
   initialCallingCode?: string;
 };
 
@@ -29,9 +32,27 @@ export default function SecurityInputFields({
   initialPhoneVerified,
   initialEmail,
   initialEmailVerified,
+  hasGoogleIdentity,
   initialCallingCode,
 }: Props) {
-  const [notification, setNotification] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const [notification, setNotification] = useState<string | null>(
+    searchParams.get("authError"),
+  );
+  const [isLinkingGoogle, setIsLinkingGoogle] = useState(false);
+
+  const handleLinkGoogle = async () => {
+    setIsLinkingGoogle(true);
+
+    try {
+      await linkGoogleIdentity("/settings/security");
+      // No need to reset isLinkingGoogle -- linkIdentity navigates away.
+    } catch (error) {
+      console.error("Link Google account error:", error);
+      setNotification("Something went wrong. Please try again.");
+      setIsLinkingGoogle(false);
+    }
+  };
 
   // step 1: overview, step 2: enter new phone, step 3: verify OTP
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -178,6 +199,25 @@ export default function SecurityInputFields({
               </button>
             </div>
           </div>
+
+          {!hasGoogleIdentity && (
+            <div className="space-y-2">
+              <span className="font-medium md:text-lg">Google account</span>
+
+              <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
+                <span className="text-muted-foreground">Not linked</span>
+
+                <button
+                  type="button"
+                  className="font-semibold text-foreground/70 disabled:opacity-60"
+                  onClick={handleLinkGoogle}
+                  disabled={isLinkingGoogle}
+                >
+                  {isLinkingGoogle ? "Redirecting..." : "Link"}
+                </button>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleEmailSubmit} className="space-y-2">
             <Input

@@ -7,6 +7,7 @@ export type SecurityDetails = {
   phoneVerified: boolean;
   email: string | null;
   emailVerified: boolean;
+  hasGoogleIdentity: boolean;
 };
 
 export type GetSecurityDetailsResult =
@@ -31,6 +32,8 @@ export default async function getSecurityDetails(): Promise<GetSecurityDetailsRe
       phoneVerified: !!userData.user.phone_confirmed_at,
       email: userData.user.email || null,
       emailVerified: !!userData.user.email_confirmed_at,
+      hasGoogleIdentity:
+        userData.user.identities?.some((i) => i.provider === "google") ?? false,
     },
   };
 }

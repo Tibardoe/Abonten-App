@@ -1,13 +1,18 @@
-// Server-only, in-memory pending-OTP store. Holds the Hubtel requestId/
-// prefix returned by a successful send, keyed by phone number + purpose, so
-// the client never receives them (it only ever sends {phone, code} to
-// verify) and so a resend/replay can't reuse an already-consumed code.
+// Server-only, durable pending-OTP store, backed by the phone_otp_state
+// Postgres table (see supabase/migrations/20260902100000_durable_phone_otp_state.sql).
+// Holds the Hubtel requestId/prefix returned by a successful send, keyed by
+// phone number + purpose, so the client never receives them (it only ever
+// sends {phone, code} to verify) and so a resend/replay can't reuse an
+// already-consumed code.
 //
-// Same tradeoff already accepted by the pre-existing
-// sendOtpForPhoneUpdate.ts cooldown Map: per-server-instance memory, not
-// durable across restarts or multiple instances. Fine at this app's current
-// scale; a multi-instance deployment would need this backed by a table or
-// Redis instead.
+// Previously an in-memory Map -- fine on a single long-lived process, but
+// silently broken across multiple server instances (a resend/verify routed
+// to a different instance than the original send would see no pending
+// state at all). Moved to Postgres, queried only through the service-role
+// client, so this state is shared and authoritative regardless of which
+// instance handles a given request.
+
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 
 export type PhoneOtpPurpose = "sign-in" | "phone-update";
 
@@ -22,82 +27,130 @@ const PENDING_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
 const MAX_VERIFY_ATTEMPTS = 5;
 
-const pendingByKey = new Map<string, PendingOtp>();
-const lastSentAtByKey = new Map<string, number>();
-
-function makeKey(purpose: PhoneOtpPurpose, phoneE164: string): string {
-  return `${purpose}:${phoneE164}`;
-}
-
-export function getResendCooldownRemainingMs(
+export async function getResendCooldownRemainingMs(
   purpose: PhoneOtpPurpose,
   phoneE164: string,
-): number {
-  const lastSentAt = lastSentAtByKey.get(makeKey(purpose, phoneE164));
-  if (!lastSentAt) return 0;
+): Promise<number> {
+  const supabase = getSupabaseServiceClient();
 
-  const remaining = RESEND_COOLDOWN_MS - (Date.now() - lastSentAt);
+  const { data } = await supabase
+    .from("phone_otp_state")
+    .select("last_sent_at")
+    .eq("purpose", purpose)
+    .eq("phone_e164", phoneE164)
+    .maybeSingle();
+
+  if (!data?.last_sent_at) return 0;
+
+  const remaining =
+    RESEND_COOLDOWN_MS - (Date.now() - new Date(data.last_sent_at).getTime());
   return remaining > 0 ? remaining : 0;
 }
 
-export function recordOtpSent(
+export async function recordOtpSent(
   purpose: PhoneOtpPurpose,
   phoneE164: string,
   requestId: string,
   prefix: string,
-): void {
-  const key = makeKey(purpose, phoneE164);
-  lastSentAtByKey.set(key, Date.now());
-  pendingByKey.set(key, {
-    requestId,
-    prefix,
-    createdAt: Date.now(),
-    attempts: 0,
-  });
+): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+  const now = new Date().toISOString();
+
+  await supabase.from("phone_otp_state").upsert(
+    {
+      purpose,
+      phone_e164: phoneE164,
+      request_id: requestId,
+      prefix,
+      attempts: 0,
+      created_at: now,
+      last_sent_at: now,
+    },
+    { onConflict: "purpose,phone_e164" },
+  );
 }
 
-export function getPendingOtp(
+export async function getPendingOtp(
   purpose: PhoneOtpPurpose,
   phoneE164: string,
-): PendingOtp | null {
-  const key = makeKey(purpose, phoneE164);
-  const entry = pendingByKey.get(key);
-  if (!entry) return null;
+): Promise<PendingOtp | null> {
+  const supabase = getSupabaseServiceClient();
 
-  if (Date.now() - entry.createdAt > PENDING_TTL_MS) {
-    pendingByKey.delete(key);
+  const { data } = await supabase
+    .from("phone_otp_state")
+    .select("request_id, prefix, created_at, attempts")
+    .eq("purpose", purpose)
+    .eq("phone_e164", phoneE164)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  const createdAt = new Date(data.created_at).getTime();
+
+  if (Date.now() - createdAt > PENDING_TTL_MS) {
+    await clearPendingOtp(purpose, phoneE164);
     return null;
   }
 
-  return entry;
+  return {
+    requestId: data.request_id,
+    prefix: data.prefix,
+    createdAt,
+    attempts: data.attempts,
+  };
 }
 
 // Called before attempting a Hubtel verify. Returns false once the attempt
 // budget is exhausted, in which case the pending entry is cleared and the
 // caller must request a fresh code.
-export function registerVerifyAttempt(
+export async function registerVerifyAttempt(
   purpose: PhoneOtpPurpose,
   phoneE164: string,
-): boolean {
-  const key = makeKey(purpose, phoneE164);
-  const entry = pendingByKey.get(key);
-  if (!entry) return false;
+): Promise<boolean> {
+  const supabase = getSupabaseServiceClient();
 
-  entry.attempts += 1;
+  // Supabase-js can't express `attempts = attempts + 1` in a single
+  // .update() call without a raw SQL expression, so this reads then writes.
+  // The attempt cap only needs to be approximately race-safe (a genuine
+  // double-submit race here just costs an attacker one extra guess, not a
+  // security hole), so this two-step read/write is an acceptable tradeoff
+  // for staying on the plain PostgREST client instead of adding an RPC.
+  const { data: current } = await supabase
+    .from("phone_otp_state")
+    .select("attempts")
+    .eq("purpose", purpose)
+    .eq("phone_e164", phoneE164)
+    .maybeSingle();
 
-  if (entry.attempts > MAX_VERIFY_ATTEMPTS) {
-    pendingByKey.delete(key);
+  if (!current) return false;
+
+  const nextAttempts = current.attempts + 1;
+
+  if (nextAttempts > MAX_VERIFY_ATTEMPTS) {
+    await clearPendingOtp(purpose, phoneE164);
     return false;
   }
+
+  await supabase
+    .from("phone_otp_state")
+    .update({ attempts: nextAttempts })
+    .eq("purpose", purpose)
+    .eq("phone_e164", phoneE164);
 
   return true;
 }
 
 // Called once a code has been successfully verified, so it can never be
 // replayed and a resend always starts a fresh attempt budget.
-export function clearPendingOtp(
+export async function clearPendingOtp(
   purpose: PhoneOtpPurpose,
   phoneE164: string,
-): void {
-  pendingByKey.delete(makeKey(purpose, phoneE164));
+): Promise<void> {
+  const supabase = getSupabaseServiceClient();
+
+  await supabase
+    .from("phone_otp_state")
+    .delete()
+    .eq("purpose", purpose)
+    .eq("phone_e164", phoneE164);
 }

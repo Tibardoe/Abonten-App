@@ -34,14 +34,14 @@ export default async function updateVerifiedPhone(
     return { status: 400, message: "Enter the code we sent you." };
   }
 
-  if (!getPendingOtp("phone-update", phoneE164)) {
+  if (!(await getPendingOtp("phone-update", phoneE164))) {
     return {
       status: 401,
       message: "That code has expired. Please request a new one.",
     };
   }
 
-  const attemptAllowed = registerVerifyAttempt("phone-update", phoneE164);
+  const attemptAllowed = await registerVerifyAttempt("phone-update", phoneE164);
 
   if (!attemptAllowed) {
     return {
@@ -50,7 +50,7 @@ export default async function updateVerifiedPhone(
     };
   }
 
-  const pending = getPendingOtp("phone-update", phoneE164);
+  const pending = await getPendingOtp("phone-update", phoneE164);
 
   if (!pending) {
     return {
@@ -69,7 +69,7 @@ export default async function updateVerifiedPhone(
     return { status: 401, message: verifyResult.message };
   }
 
-  clearPendingOtp("phone-update", phoneE164);
+  await clearPendingOtp("phone-update", phoneE164);
 
   const service = getSupabaseServiceClient();
 

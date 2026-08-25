@@ -27,6 +27,7 @@ export default async function page() {
         initialPhoneVerified={security.details.phoneVerified}
         initialEmail={security.details.email}
         initialEmailVerified={security.details.emailVerified}
+        hasGoogleIdentity={security.details.hasGoogleIdentity}
         initialCallingCode={countryMetadata?.callingCode}
       />
     </div>
