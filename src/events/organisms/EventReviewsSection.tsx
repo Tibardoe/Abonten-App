@@ -4,6 +4,7 @@ import { respondToEventReview } from "@/actions/respondToEventReview";
 import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
+import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
@@ -100,6 +101,13 @@ export default function EventReviewsSection({
         initialPage={initialPage}
         fetchPage={fetchPage}
         listClassName="flex flex-col gap-6"
+        loadingSkeleton={
+          <ul className="flex flex-col gap-6">
+            {Array.from({ length: 3 }, (_, i) => (
+              <ReviewRowSkeleton key={i.toLocaleString()} />
+            ))}
+          </ul>
+        }
         emptyState={
           <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
         }

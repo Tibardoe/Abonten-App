@@ -2,6 +2,7 @@
 
 import InfiniteList from "@/components/organisms/InfiniteList";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
+import PlaceCardSkeleton from "@/places/molecules/PlaceCardSkeleton";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import Image from "next/image";
@@ -40,6 +41,13 @@ export default function UserPlacesList({
       fetchPage={fetchPage}
       emptyState={emptyState}
       listClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2"
+      loadingSkeleton={
+        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+          {Array.from({ length: 8 }, (_, i) => (
+            <PlaceCardSkeleton key={i.toLocaleString()} />
+          ))}
+        </ul>
+      }
       renderItem={(place, index) => {
         const fullAddress =
           (place.address as { full_address?: string })?.full_address ??

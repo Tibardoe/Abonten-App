@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoNotificationsOutline } from "react-icons/io5";
+import NotificationRowSkeleton from "../molecules/NotificationRowSkeleton";
 
 // Sitewide, not Places-specific (any signed-in user gets notifications
 // regardless of whether they own a place), so this lives alongside
@@ -128,6 +129,13 @@ export default function NotificationBell({
             initialPage={null}
             fetchPage={(cursor) => getUserNotifications({ cursor })}
             listClassName="flex flex-col"
+            loadingSkeleton={
+              <ul className="flex flex-col">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <NotificationRowSkeleton key={i.toLocaleString()} />
+                ))}
+              </ul>
+            }
             emptyState={
               <p className="text-muted-foreground text-sm py-6 text-center">
                 No notifications yet.

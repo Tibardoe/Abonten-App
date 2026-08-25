@@ -1,3 +1,4 @@
+import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import EventsSliderSkeleton from "@/components/organisms/EventsSliderSkeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -74,18 +75,11 @@ export default function Loading() {
             {/* Reviews */}
             <div className="bg-card rounded-xl p-4 md:p-6 shadow-sm space-y-4">
               <Skeleton className="h-6 w-24" />
-              {Array.from({ length: 2 }, (_, i) => (
-                <div
-                  key={i.toLocaleString()}
-                  className="flex items-center gap-3"
-                >
-                  <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-full" />
-                  </div>
-                </div>
-              ))}
+              <ul className="flex flex-col gap-6">
+                {Array.from({ length: 2 }, (_, i) => (
+                  <ReviewRowSkeleton key={i.toLocaleString()} />
+                ))}
+              </ul>
             </div>
           </div>
 

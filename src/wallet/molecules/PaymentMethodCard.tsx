@@ -15,6 +15,7 @@ type PaymentMethodCardProps = {
   onSetDefault?: () => void;
   onRemove?: () => void;
   removing?: boolean;
+  settingDefault?: boolean;
 };
 
 export function getPaymentMethodDisplay(method: PaymentMethodRow) {
@@ -56,6 +57,7 @@ export default function PaymentMethodCard({
   onSetDefault,
   onRemove,
   removing,
+  settingDefault,
 }: PaymentMethodCardProps) {
   const { title, subtitle } = getPaymentMethodDisplay(method);
   const isSelectable = Boolean(onSelect);
@@ -111,12 +113,13 @@ export default function PaymentMethodCard({
               type="button"
               variant="ghost"
               size="sm"
+              disabled={settingDefault}
               onClick={(e) => {
                 e.stopPropagation();
                 onSetDefault();
               }}
             >
-              Set as default
+              {settingDefault ? "Setting..." : "Set as default"}
             </Button>
           )}
           {onRemove && (

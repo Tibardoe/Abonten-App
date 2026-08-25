@@ -36,9 +36,11 @@ export default function AvatarUploadModal({
     onCropped: () => setStep(2),
   });
 
-  const { uploadAvatar, isUploading, notification } = useAvatarUpload({
-    onSuccess: () => handleClosePopup(false),
-  });
+  const { uploadAvatar, isUploading, progress, notification } = useAvatarUpload(
+    {
+      onSuccess: () => handleClosePopup(false),
+    },
+  );
 
   return (
     <>
@@ -65,7 +67,7 @@ export default function AvatarUploadModal({
                 onBack={() => setStep(1)}
                 title="Upload Avatar"
                 primaryAction={{
-                  label: isUploading ? "Uploading..." : "Upload",
+                  label: isUploading ? `Uploading... ${progress}%` : "Upload",
                   onClick: () => uploadAvatar(cropped),
                   disabled: isUploading,
                 }}

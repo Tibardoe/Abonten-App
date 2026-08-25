@@ -1,25 +1,34 @@
 "use client";
 
-import { saveAvatarToCloudinary } from "@/actions/saveAvatarToCloudinary";
+import getAvatarUploadSignature from "@/actions/getAvatarUploadSignature";
+import { saveToSupabase } from "@/actions/saveAvatarToSupabase";
 import { useTimedMessage } from "@/hooks/useTimedMessage";
 import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type UseAvatarUploadOptions = {
   onSuccess?: () => void;
 };
 
-// Shared avatar upload mutation (size check, Cloudinary upload, notification,
-// refresh) previously duplicated between the desktop and mobile avatar
-// upload modals.
+// Shared avatar upload mutation (size check, direct-to-Cloudinary upload
+// with progress, Supabase record save, notification, refresh) previously
+// duplicated between the desktop and mobile avatar upload modals. Uploads
+// direct to Cloudinary (see getAvatarUploadSignature.ts) rather than through
+// a Server Action, so real progress events are available -- the same
+// pipeline useReviewPhotoUpload.ts already uses.
 export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { message: notification, showMessage } = useTimedMessage(3000);
+  const [progress, setProgress] = useState(0);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (file: File | null) => {
+      setProgress(0);
+
       if (!file) {
         showMessage("Please select a photo!");
         return;
@@ -31,11 +40,31 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
       }
 
       try {
-        const result = await saveAvatarToCloudinary(file);
-        if (result?.error) {
-          showMessage(result.error);
+        const signatureResponse = await getAvatarUploadSignature();
+
+        if (signatureResponse.status !== 200 || !signatureResponse.data) {
+          showMessage(signatureResponse.message ?? "Failed to start upload.");
           return;
         }
+
+        const { timestamp, signature, apiKey, cloudName, folder } =
+          signatureResponse.data;
+
+        const { promise } = uploadToCloudinary({
+          file,
+          cloudName: cloudName as string,
+          apiKey: apiKey as string,
+          timestamp,
+          signature,
+          folder,
+          resourceType: "image",
+          onProgress: setProgress,
+        });
+
+        const result = await promise;
+        const transformation = `${result.width}, ${result.height}`;
+
+        await saveToSupabase(result.public_id, result.version, transformation);
 
         showMessage("Upload successful!");
         router.refresh();
@@ -52,10 +81,19 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         onSuccess?.();
       } catch (error) {
         console.error("Error uploading image:", error);
-        showMessage("Upload failed. Please try again.");
+        showMessage(
+          error instanceof Error
+            ? error.message
+            : "Upload failed. Please try again.",
+        );
       }
     },
   });
 
-  return { uploadAvatar: mutate, isUploading: isPending, notification };
+  return {
+    uploadAvatar: mutate,
+    isUploading: isPending,
+    progress,
+    notification,
+  };
 }

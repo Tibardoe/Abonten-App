@@ -2,6 +2,7 @@
 
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
+import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -61,6 +62,13 @@ export default function PlaceReviewsSection({
         initialPage={initialPage}
         fetchPage={fetchPage}
         listClassName="flex flex-col gap-6"
+        loadingSkeleton={
+          <ul className="flex flex-col gap-6">
+            {Array.from({ length: 3 }, (_, i) => (
+              <ReviewRowSkeleton key={i.toLocaleString()} />
+            ))}
+          </ul>
+        }
         emptyState={
           <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
         }

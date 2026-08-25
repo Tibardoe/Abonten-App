@@ -171,10 +171,11 @@ export default function PlaceReviewModal({
 
             <button
               type="submit"
-              className="md:hidden font-bold"
+              className="md:hidden font-bold disabled:opacity-60"
+              disabled={isPending || photoUpload.isUploading}
               onClick={handleSubmit(onSubmit)}
             >
-              Submit
+              {isPending ? "Submitting..." : "Submit"}
             </button>
 
             <button

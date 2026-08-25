@@ -32,6 +32,7 @@ export default function WalletManager({
   const queryClient = useQueryClient();
   const [notification, setNotification] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: PAYMENT_METHODS_QUERY_KEY,
@@ -61,8 +62,11 @@ export default function WalletManager({
 
   const setDefaultMutation = useMutation({
     mutationFn: (id: string) => setDefaultPaymentMethod(id),
-    onSettled: () =>
-      queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY }),
+    onMutate: (id) => setSettingDefaultId(id),
+    onSettled: () => {
+      setSettingDefaultId(null);
+      queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
+    },
     onSuccess: (response) => {
       if (response.status !== 200) {
         setNotification(response.message ?? "Failed to update default.");
@@ -110,6 +114,7 @@ export default function WalletManager({
               onSetDefault={() => setDefaultMutation.mutate(method.id)}
               onRemove={() => removeMutation.mutate(method.id)}
               removing={removingId === method.id}
+              settingDefault={settingDefaultId === method.id}
             />
           ))}
         </div>
