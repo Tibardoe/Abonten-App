@@ -195,7 +195,7 @@ export default async function registerForFreeEvent(
   }
 
   revalidatePath("/manage/my-events");
-  revalidatePath("/manage/attendance/attendance-list");
+  revalidatePath(`/manage/events/${eventId}`);
   revalidatePath("/manage/dashboard");
   // See generateTicket.ts for why the public event page also needs this.
   revalidatePath(`/events/${event.event_code.toLowerCase()}`);

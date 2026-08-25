@@ -5,7 +5,9 @@ import { revalidatePath } from "next/cache";
 
 type TicketRow = {
   status: string;
-  ticket_type: { event: { organizer_id: string } | null } | null;
+  ticket_type: {
+    event: { id: string; organizer_id: string } | null;
+  } | null;
 };
 
 // The only place ticket.status ever moves to/from 'used' — every other
@@ -32,7 +34,9 @@ export default async function checkInTicket(
 
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
-    .select("status, ticket_type:ticket_type_id(event:event_id(organizer_id))")
+    .select(
+      "status, ticket_type:ticket_type_id(event:event_id(id, organizer_id))",
+    )
     .eq("id", ticketId)
     .maybeSingle();
 
@@ -77,7 +81,10 @@ export default async function checkInTicket(
     return { status: 500, message: "Something went wrong!" };
   }
 
-  revalidatePath("/manage/attendance/attendance-list");
+  const eventId = ticket.ticket_type?.event?.id;
+  if (eventId) {
+    revalidatePath(`/manage/events/${eventId}`);
+  }
 
   return {
     status: 200,

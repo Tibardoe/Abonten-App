@@ -308,7 +308,7 @@ export default async function generateTicket(
   revalidatePath("/checkout");
   revalidatePath(`/checkout/${checkoutSessionId}`);
   revalidatePath("/manage/my-events");
-  revalidatePath("/manage/attendance/attendance-list");
+  revalidatePath(`/manage/events/${eventId}`);
   revalidatePath("/manage/dashboard");
   revalidatePath("/transactions");
   // The public event page is ISR-cached (revalidate = 60) and shows

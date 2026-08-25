@@ -92,10 +92,7 @@ export default function OrganizerEventPerformanceList({
         </div>
       )}
 
-      <Link
-        href="/manage/attendance/event-list"
-        className="text-sm text-primary self-start"
-      >
+      <Link href="/manage/events" className="text-sm text-primary self-start">
         View all events
       </Link>
     </section>

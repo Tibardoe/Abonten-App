@@ -14,9 +14,8 @@ const emptyState = (
 
 // "My Managed Events" -- the Events counterpart to manage/places/page.tsx.
 // Reuses getOrganizerEvents.ts unchanged (already owner-scoped,
-// cursor-paginated, same shape /manage/attendance/event-list already uses)
-// -- only the card/list component and link target differ, per the Unified
-// Event Management spec (Part 3/5).
+// cursor-paginated) -- this is the sole entry point into event management,
+// per the Unified Event Management spec (Part 3/5).
 export default async function page() {
   const firstPage = await getOrganizerEvents();
 

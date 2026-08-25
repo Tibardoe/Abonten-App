@@ -1,10 +1,11 @@
 {
   "dashboard": "Panel",
   "finances": "Finanzas",
-  "manageAttendance": "Gestionar asistencia",
+  "manage": "Gestionar",
   "manageEvents": "Eventos",
   "myEvents": "Mis entradas",
   "places": "Lugares",
+  "bookings": "Reservas",
   "drafts": "Borradores",
   "signOut": "Cerrar sesión",
   "signIn": "Iniciar sesión",

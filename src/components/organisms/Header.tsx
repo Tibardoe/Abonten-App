@@ -1,5 +1,6 @@
 "use client";
 
+import ManageMenu from "@/components/molecules/ManageMenu";
 import NotificationBell from "@/components/organisms/NotificationBell";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,16 +21,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
-import {
-  IoCalendarOutline,
-  IoMenuOutline,
-  IoStorefrontOutline,
-} from "react-icons/io5";
+import { IoMenuOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
 import {
   MdOutlineAccountBalanceWallet,
   MdOutlineDrafts,
-  MdOutlineManageHistory,
   MdOutlineSpaceDashboard,
 } from "react-icons/md";
 import EventUploadButton from "../atoms/EventUploadButton";
@@ -69,8 +65,8 @@ export default function Header() {
     data: userDetails,
   } = useCurrentUserDetails();
 
-  // Gates the Organizer Dashboard link specifically — My Events/Manage
-  // Attendance below keep their existing "any signed-in user" visibility.
+  // Gates the Organizer Dashboard link specifically — My Events below keeps
+  // its existing "any signed-in user" visibility.
   const isOrganizer = useIsOrganizer();
   // Gates the Places link (Places feature Milestone 6) — only shown to
   // users who actually own at least one place.
@@ -191,33 +187,12 @@ export default function Header() {
                 </Link>
               )}
 
-              <Link
-                href="/manage/attendance/event-list"
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <MdOutlineManageHistory className="text-2xl" />
-                {t("manageAttendance")}
-              </Link>
-
-              {isOrganizer && (
-                <Link
-                  href="/manage/events"
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <IoCalendarOutline className="text-2xl" />
-                  {t("manageEvents")}
-                </Link>
-              )}
-
-              {isPlaceOwner && (
-                <Link
-                  href="/manage/places"
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <IoStorefrontOutline className="text-2xl" />
-                  {t("places")}
-                </Link>
-              )}
+              <ManageMenu
+                username={profile.username}
+                isOrganizer={isOrganizer}
+                isPlaceOwner={isPlaceOwner}
+                triggerClassName="hover:text-primary transition-colors"
+              />
 
               <Link
                 href="/manage/my-events"

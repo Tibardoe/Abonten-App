@@ -1,10 +1,11 @@
 {
   "dashboard": "Tableau de bord",
   "finances": "Finances",
-  "manageAttendance": "Gérer la présence",
+  "manage": "Gérer",
   "manageEvents": "Événements",
   "myEvents": "Mes billets",
   "places": "Lieux",
+  "bookings": "Réservations",
   "drafts": "Brouillons",
   "signOut": "Déconnexion",
   "signIn": "Connexion",

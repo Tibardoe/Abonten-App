@@ -1,10 +1,11 @@
 {
   "dashboard": "Dashboard",
   "finances": "Sika Nsɛm",
-  "manageAttendance": "Hwɛ Nnipa A Wɔaba",
+  "manage": "Manage",
   "manageEvents": "Events",
   "myEvents": "Me Tikiti",
   "places": "Mmeae",
+  "bookings": "Bookings",
   "drafts": "Drafts",
   "signOut": "Fi Mu",
   "signIn": "Kɔ Mu",

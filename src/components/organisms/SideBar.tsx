@@ -1,8 +1,9 @@
 "use client";
 
+import ManageMenu from "@/components/molecules/ManageMenu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  useCurrentUser,
+  useCurrentUserDetails,
   useIsOrganizer,
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
@@ -19,11 +20,9 @@ import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
 import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
-import { IoCalendarOutline, IoStorefrontOutline } from "react-icons/io5";
 import {
   MdOutlineAccountBalanceWallet,
   MdOutlineDrafts,
-  MdOutlineManageHistory,
   MdOutlineSpaceDashboard,
 } from "react-icons/md";
 import { cn } from "../lib/utils";
@@ -77,11 +76,13 @@ export default function SideBar({
   };
 
   // Shared with Header/MobileNavBar/etc. — one cached fetch instead of
-  // each component independently calling supabase.auth.getUser().
-  const { data: user, isLoading: userLoading } = useCurrentUser();
+  // each component independently calling supabase.auth.getUser(). Needs the
+  // profile details (not just useCurrentUser()) so the Manage menu below has
+  // a username for its Bookings link.
+  const { user, userLoading, data: userDetails } = useCurrentUserDetails();
 
-  // Gates the Organizer Dashboard link specifically — My Events/Manage
-  // Attendance below keep their existing "any signed-in user" visibility.
+  // Gates the Organizer Dashboard link specifically — My Events below keeps
+  // its existing "any signed-in user" visibility.
   const isOrganizer = useIsOrganizer();
   // Gates the Places link (Places feature Milestone 6) — only shown to
   // users who actually own at least one place.
@@ -162,36 +163,13 @@ export default function SideBar({
                 </Link>
               )}
 
-              <Link
-                href="/manage/attendance/event-list"
-                onClick={onNavigate}
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <MdOutlineManageHistory className="text-xl" />
-                {t("manageAttendance")}
-              </Link>
-
-              {isOrganizer && (
-                <Link
-                  href="/manage/events"
-                  onClick={onNavigate}
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <IoCalendarOutline className="text-xl" />
-                  {t("manageEvents")}
-                </Link>
-              )}
-
-              {isPlaceOwner && (
-                <Link
-                  href="/manage/places"
-                  onClick={onNavigate}
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <IoStorefrontOutline className="text-xl" />
-                  {t("places")}
-                </Link>
-              )}
+              <ManageMenu
+                username={userDetails?.username ?? ""}
+                isOrganizer={isOrganizer}
+                isPlaceOwner={isPlaceOwner}
+                onNavigate={onNavigate}
+                triggerClassName="hover:text-primary transition-colors"
+              />
 
               <Link
                 href="/manage/my-events"

@@ -1,10 +1,11 @@
 {
   "dashboard": "Painel",
   "finances": "Finanças",
-  "manageAttendance": "Gerenciar presença",
+  "manage": "Gerenciar",
   "manageEvents": "Eventos",
   "myEvents": "Meus ingressos",
   "places": "Locais",
+  "bookings": "Reservas",
   "drafts": "Rascunhos",
   "signOut": "Sair",
   "signIn": "Entrar",

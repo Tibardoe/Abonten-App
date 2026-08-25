@@ -150,7 +150,9 @@ export default async function cancelUserTicket(
   // the organizer's attendance dashboard depends on it too (previously this
   // cancellation never invalidated the organizer's view at all).
   revalidatePath("/manage/my-events");
-  revalidatePath("/manage/attendance/attendance-list");
+  if (eventId) {
+    revalidatePath(`/manage/events/${eventId}`);
+  }
   revalidatePath("/manage/dashboard");
   revalidatePath("/transactions");
   // See generateTicket.ts for why the public event page also needs this —

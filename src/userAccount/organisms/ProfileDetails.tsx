@@ -8,7 +8,6 @@ import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import Link from "next/link";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
-import ManageMenu from "../molecules/ManageMenu";
 import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
 type LayoutUserProp = {
@@ -68,7 +67,6 @@ export default async function ProfileDetails({
 
           {isCurrentUser ? (
             <div className="flex items-center gap-3">
-              <ManageMenu username={username} />
               <SettingsButton />
             </div>
           ) : (
@@ -165,7 +163,6 @@ export default async function ProfileDetails({
 
             {isCurrentUser ? (
               <div className="flex items-center gap-3">
-                <ManageMenu username={username} />
                 <SettingsButton />
               </div>
             ) : (

@@ -1,10 +1,11 @@
 {
   "dashboard": "Dashboard",
   "finances": "Finanzen",
-  "manageAttendance": "Anwesenheit verwalten",
+  "manage": "Verwalten",
   "manageEvents": "Veranstaltungen",
   "myEvents": "Meine Tickets",
   "places": "Orte",
+  "bookings": "Buchungen",
   "drafts": "Entwürfe",
   "signOut": "Abmelden",
   "signIn": "Anmelden",

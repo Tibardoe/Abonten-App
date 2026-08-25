@@ -11,9 +11,9 @@ const emptyState = (
   <p className="text-muted-foreground text-sm">You don't own any places yet.</p>
 );
 
-// List of the signed-in user's owned places -- mirrors
-// manage/attendance/event-list/page.tsx exactly (getOrganizerPlaces is the
-// Places counterpart to getOrganizerEvents, same InfiniteList shape).
+// List of the signed-in user's owned places -- mirrors manage/events/page.tsx
+// (getOrganizerPlaces is the Places counterpart to getOrganizerEvents, same
+// InfiniteList shape).
 export default async function page() {
   const firstPage = await getOrganizerPlaces();
 

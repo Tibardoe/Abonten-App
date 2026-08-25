@@ -1,18 +1,15 @@
 "use client";
 
 import getAttendanceList from "@/actions/getAttendanceList";
-import AttendanceListView from "@/app/(pages)/manage/attendance/attendance-list/AttendanceListView";
 import EventAnalyticsDashboard from "@/components/organisms/EventAnalyticsDashboard";
+import AttendanceListView from "./AttendanceListView";
 
 const emptyState = <p className="text-sm text-muted-foreground">None</p>;
 
 /**
- * Insights tab of the Unified Event Management page — Part 13 of the spec
- * explicitly asks to reuse the existing event insights functionality rather
- * than rebuild it. This is literally the same content
- * /manage/attendance/attendance-list?eventId= already renders
- * (EventAnalyticsDashboard + the attendee list), just embedded as a tab
- * instead of a standalone route — no duplicate analytics implementation.
+ * Insights tab of the Unified Event Management page — the sole place
+ * attendance/check-in functionality lives (EventAnalyticsDashboard + the
+ * attendee list). There is no separate /manage/attendance route anymore.
  */
 export default function ManageEventInsightsSection({
   eventId,

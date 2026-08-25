@@ -1,10 +1,11 @@
 {
   "dashboard": "Dashboard",
   "finances": "Finances",
-  "manageAttendance": "Manage Attendance",
+  "manage": "Manage",
   "manageEvents": "Events",
   "myEvents": "My Tickets",
   "places": "Places",
+  "bookings": "Bookings",
   "drafts": "Drafts",
   "signOut": "Sign Out",
   "signIn": "Sign In",

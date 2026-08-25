@@ -27,6 +27,31 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // /manage/attendance/* was removed — its functionality was fully absorbed
+  // into /manage/events (list) and /manage/events/[eventId]?tab=insights
+  // (per-event attendance/check-in). These redirects keep old bookmarks and
+  // any external links working.
+  async redirects() {
+    return [
+      {
+        source: "/manage/attendance/event-list",
+        destination: "/manage/events",
+        permanent: true,
+      },
+      {
+        source: "/manage/attendance/attendance-list",
+        has: [{ type: "query", key: "eventId", value: "(?<eventId>.*)" }],
+        destination: "/manage/events/:eventId?tab=insights",
+        permanent: true,
+      },
+      {
+        source: "/manage/attendance/attendance-list",
+        destination: "/manage/events",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 const withNextIntl = createNextIntlPlugin();
