@@ -55,7 +55,7 @@ export default async function getAttendanceList(
     let query = supabase
       .from("attendance")
       .select(
-        "*, auth:id(email, phone), user_info:id(username, full_name), ticket_type(type, price, currency), ticket:ticket_id(status, used_at)",
+        "*, user_info:user_id(username, full_name), ticket_type(type, price, currency), ticket:ticket_id(status, used_at)",
       )
       .eq("event_id", eventId)
       .order("created_at", { ascending: false })
@@ -82,6 +82,35 @@ export default async function getAttendanceList(
     // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
     const { page, hasNextPage } = splitPage<any>(attendanceList, pageSize);
 
+    // auth.users can't be PostgREST-embedded directly (no grants for
+    // anon/authenticated, by design) -- fetch each attendee's real account
+    // email/phone via the organizer-scoped RPC instead, and merge it back
+    // onto each row so the UI's attendee.auth.email/.phone shape still works.
+    const { data: contacts, error: contactsError } = await supabase.rpc(
+      "get_event_attendee_contacts",
+      { p_event_id: eventId },
+    );
+
+    if (contactsError) {
+      console.error(
+        `Failed fetching attendee contacts: ${contactsError.message}`,
+      );
+    }
+
+    const contactsByUserId = new Map(
+      (
+        contacts as
+          | { user_id: string; email: string | null; phone: string | null }[]
+          | null
+      )?.map((c) => [c.user_id, c]) ?? [],
+    );
+
+    // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
+    const pageWithContacts = page.map((attendee: any) => ({
+      ...attendee,
+      auth: contactsByUserId.get(attendee.user_id) ?? null,
+    }));
+
     const last = page[page.length - 1];
     const nextCursor =
       hasNextPage && last
@@ -91,7 +120,7 @@ export default async function getAttendanceList(
           })
         : null;
 
-    return { status: 200, data: page, nextCursor, hasNextPage };
+    return { status: 200, data: pageWithContacts, nextCursor, hasNextPage };
   } catch (error) {
     console.error("Unexpected error:", error);
     return {
