@@ -32,17 +32,25 @@ type PaymentAttemptFullRow = {
   subscription_checkout_id: string | null;
   place_promotion_checkout_id: string | null;
   event_promotion_checkout_id: string | null;
+  transaction_id: string | null;
 };
 
 export type FinalizeResult =
   | { status: "succeeded" }
   | { status: "pending"; message: string }
   | { status: "failed"; message: string }
+  // Payment was verified successful (a `transaction` row exists) but
+  // issuing the purchased thing (ticket/subscription/promotion) failed
+  // afterward — distinct from "failed" so callers never treat this as a
+  // declined/failed charge and never suggest paying again. Retryable via
+  // the same payment_attempt id (see the CAS lock below and
+  // retryPaymentFulfillment.ts).
+  | { status: "fulfillment_failed"; message: string; paymentAttemptId: string }
   | { status: "already_processing" }
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id, place_promotion_checkout_id, event_promotion_checkout_id";
+  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id";
 
 export async function finalizePaystackPayment(
   supabase: SupabaseClient,
@@ -80,7 +88,13 @@ export async function finalizePaystackPayment(
       .from("payment_attempt")
       .select(PAYMENT_ATTEMPT_FULL_SELECT)
       .eq("payment_group_id", primary.payment_group_id)
-      .in("status", ["initiated", "pending", "processing", "succeeded"]);
+      .in("status", [
+        "initiated",
+        "pending",
+        "processing",
+        "succeeded",
+        "fulfillment_failed",
+      ]);
 
     if (siblingsError) {
       console.log(
@@ -94,11 +108,10 @@ export async function finalizePaystackPayment(
     }
   }
 
-  if (groupMembers.some((m) => m.status === "succeeded")) {
-    // Some/all of the group already finalized (e.g. a previous, partially
-    // successful run) — treat the whole group as already handled rather
-    // than re-running ticket generation for members that already have
-    // tickets.
+  if (groupMembers.every((m) => m.status === "succeeded")) {
+    // Every member already finalized (e.g. a previous, fully successful
+    // run) — treat the whole group as already handled rather than
+    // re-running ticket generation for members that already have tickets.
     return { status: "succeeded" };
   }
 
@@ -107,11 +120,14 @@ export async function finalizePaystackPayment(
   // attempt from an open state into 'processing'. Losing this race means
   // another call is already handling (or has already finished handling)
   // this payment — never proceed to verify/issue tickets twice.
+  // 'fulfillment_failed' is included so a retry (webhook redelivery, or the
+  // user-triggered retryPaymentFulfillment.ts) can re-enter the pipeline —
+  // unlike 'failed', which stays permanently terminal (a real decline).
   const { data: locked, error: lockError } = await supabase
     .from("payment_attempt")
     .update({ status: "processing", updated_at: new Date() })
     .eq("id", primary.id)
-    .in("status", ["initiated", "pending"])
+    .in("status", ["initiated", "pending", "fulfillment_failed"])
     .select("id")
     .maybeSingle();
 
@@ -133,7 +149,7 @@ export async function finalizePaystackPayment(
       .from("payment_attempt")
       .update({ status: "processing", updated_at: new Date() })
       .in("id", siblingIds)
-      .in("status", ["initiated", "pending"]);
+      .in("status", ["initiated", "pending", "fulfillment_failed"]);
   }
 
   const markGroup = async (
@@ -241,39 +257,72 @@ export async function finalizePaystackPayment(
       ? "Plan_Purchase"
       : "Promotion_Purchase";
 
-  const { data: transactionRow, error: transactionInsertError } = await supabase
-    .from("transaction")
-    .insert({
-      user_id: primary.user_id,
-      full_name:
-        userInfo?.full_name ??
-        userInfo?.username ??
-        verification.customer.email,
-      email: verification.customer.email,
-      reason,
-      amount: fromPesewas(expectedAmountPesewas),
-      currency: primary.currency,
-      status: "successful",
-      payment_method: "paystack",
-      payment_gateway_response: verification,
-      paystack_reference: primary.provider_reference,
-    })
-    .select("id")
-    .maybeSingle();
+  // On a retry (this attempt previously reached "fulfillment_failed"), the
+  // transaction row was already recorded — reuse it via the FK this table
+  // has always had but never populated, rather than attempting a second
+  // insert. `transaction.paystack_reference` also carries its own unique
+  // constraint as a backstop, but checking first keeps a normal retry from
+  // ever hitting that error path at all.
+  let transactionRow: { id: string } | null = primary.transaction_id
+    ? { id: primary.transaction_id }
+    : null;
 
-  if (transactionInsertError || !transactionRow) {
-    console.log(
-      `finalizePaystackPayment: failed recording transaction for attempt ${primary.id} (${transactionInsertError?.message})`,
-    );
-    await markGroup("failed", {
-      failure_reason: "Failed to record transaction",
-    });
-    return {
-      status: "failed",
-      message:
-        "Payment succeeded but we couldn't record it. Please contact support.",
-    };
+  if (!transactionRow) {
+    const { data: existingTransaction } = await supabase
+      .from("transaction")
+      .select("id")
+      .eq("paystack_reference", primary.provider_reference)
+      .maybeSingle();
+
+    transactionRow = existingTransaction ?? null;
   }
+
+  if (!transactionRow) {
+    const { data: insertedTransaction, error: transactionInsertError } =
+      await supabase
+        .from("transaction")
+        .insert({
+          user_id: primary.user_id,
+          full_name:
+            userInfo?.full_name ??
+            userInfo?.username ??
+            verification.customer.email,
+          email: verification.customer.email,
+          reason,
+          amount: fromPesewas(expectedAmountPesewas),
+          currency: primary.currency,
+          status: "successful",
+          payment_method: "paystack",
+          payment_gateway_response: verification,
+          paystack_reference: primary.provider_reference,
+        })
+        .select("id")
+        .maybeSingle();
+
+    if (transactionInsertError || !insertedTransaction) {
+      console.log(
+        `finalizePaystackPayment: failed recording transaction for attempt ${primary.id} (${transactionInsertError?.message})`,
+      );
+      await markGroup("failed", {
+        failure_reason: "Failed to record transaction",
+      });
+      return {
+        status: "failed",
+        message:
+          "Payment succeeded but we couldn't record it. Please contact support.",
+      };
+    }
+
+    transactionRow = insertedTransaction;
+  }
+
+  await supabase
+    .from("payment_attempt")
+    .update({ transaction_id: transactionRow.id, updated_at: new Date() })
+    .in(
+      "id",
+      groupMembers.map((m) => m.id),
+    );
 
   // Verified — issue tickets / activate the subscription per group member,
   // reusing the existing, unmodified ticket-generation and subscription-
@@ -286,6 +335,12 @@ export async function finalizePaystackPayment(
   let anyFailed = false;
 
   for (const member of groupMembers) {
+    // A retry (this member reached "fulfillment_failed" on a prior run and
+    // is being re-attempted) must never redo a member that already
+    // succeeded within the same group — only the members that actually
+    // failed need re-fulfilling.
+    if (member.status === "succeeded") continue;
+
     // Carrying the already-verified email avoids ticketPurchaseNotification
     // falling back to supabase.auth.admin.getUserById() — that admin API
     // call only works with a service-role client (the webhook path), and
@@ -327,7 +382,7 @@ export async function finalizePaystackPayment(
         await supabase
           .from("payment_attempt")
           .update({
-            status: "failed",
+            status: "fulfillment_failed",
             failure_reason: result.message ?? "Ticket generation failed",
             verified_at: new Date(),
             updated_at: new Date(),
@@ -359,7 +414,7 @@ export async function finalizePaystackPayment(
         await supabase
           .from("payment_attempt")
           .update({
-            status: "failed",
+            status: "fulfillment_failed",
             failure_reason: result.message ?? "Subscription activation failed",
             verified_at: new Date(),
             updated_at: new Date(),
@@ -390,7 +445,7 @@ export async function finalizePaystackPayment(
         await supabase
           .from("payment_attempt")
           .update({
-            status: "failed",
+            status: "fulfillment_failed",
             failure_reason: result.message ?? "Promotion activation failed",
             verified_at: new Date(),
             updated_at: new Date(),
@@ -421,7 +476,7 @@ export async function finalizePaystackPayment(
         await supabase
           .from("payment_attempt")
           .update({
-            status: "failed",
+            status: "fulfillment_failed",
             failure_reason: result.message ?? "Promotion activation failed",
             verified_at: new Date(),
             updated_at: new Date(),
@@ -433,9 +488,10 @@ export async function finalizePaystackPayment(
 
   if (anyFailed) {
     return {
-      status: "failed",
+      status: "fulfillment_failed",
       message:
-        "Payment succeeded but we couldn't finish issuing everything. Please contact support.",
+        "Your payment was successful, but we couldn't finish issuing everything yet. Tap Retry to finish — you won't be charged again.",
+      paymentAttemptId: primary.id,
     };
   }
 

@@ -9,7 +9,10 @@ import issueRefund from "./issueRefund";
 type TicketRow = {
   ticket_type_id: string;
   ticket_checkout_id: string | null;
-  ticket_type: { event_id: string } | null;
+  ticket_type: {
+    event_id: string;
+    event: { event_code: string } | null;
+  } | null;
 };
 
 export default async function cancelUserTicket(
@@ -30,7 +33,7 @@ export default async function cancelUserTicket(
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id(event_id)",
+      "ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id(event_id, event:event_id(event_code))",
     )
     .eq("id", ticketId)
     .eq("user_id", user.id)
@@ -150,6 +153,12 @@ export default async function cancelUserTicket(
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
   revalidatePath("/transactions");
+  // See generateTicket.ts for why the public event page also needs this —
+  // cancelling restores a spot, and that must be visible without a refresh.
+  const eventCode = ticket.ticket_type?.event?.event_code;
+  if (eventCode) {
+    revalidatePath(`/events/${eventCode.toLowerCase()}`);
+  }
 
   return {
     status: 200,

@@ -125,7 +125,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
 
       <div className="p-4 space-y-2">
         <Link
-          href={`/events/${review.event.event_code}#reviews`}
+          href={`/events/${review.event.event_code.toLowerCase()}#reviews`}
           className="font-semibold block"
         >
           {review.event.title}

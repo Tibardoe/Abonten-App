@@ -4,6 +4,10 @@ import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
+import {
+  EventAttendanceHeroBadges,
+  EventCapacityCard,
+} from "@/components/molecules/EventAttendanceStats";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { publicSupabase } from "@/config/supabase/publicClient";
@@ -203,14 +207,12 @@ export default async function page({
                 </span>
               )}
             </span>
-            <span className="px-3 py-1.5 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-sm md:text-base">
-              🎉 {attendanceCount} Attendees
-            </span>
-            {soldOut && (
-              <span className="px-3 py-1.5 md:px-4 md:py-2 bg-red-600 rounded-full text-white font-bold text-sm md:text-base">
-                Sold Out
-              </span>
-            )}
+            <EventAttendanceHeroBadges
+              eventId={event.id}
+              capacity={event.capacity}
+              ticketTypes={event.ticket_type}
+              initialCount={attendanceCount}
+            />
           </div>
         </div>
       </div>
@@ -433,33 +435,12 @@ export default async function page({
             </div>
 
             {/* Capacity */}
-            {event.capacity && (
-              <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-                <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
-                  Event Capacity
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Available</span>
-                    <span>
-                      {event.capacity - (attendanceCount ?? 0)} remaining
-                    </span>
-                  </div>
-                  <div className="relative pt-1">
-                    <div className="overflow-hidden h-2 bg-muted rounded-full">
-                      <div
-                        className="h-2 bg-primary rounded-full transition-all duration-500"
-                        style={{
-                          width: `${
-                            ((attendanceCount ?? 0) / event.capacity) * 100
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            <EventCapacityCard
+              eventId={event.id}
+              capacity={event.capacity}
+              ticketTypes={event.ticket_type}
+              initialCount={attendanceCount}
+            />
           </div>
         </div>
 

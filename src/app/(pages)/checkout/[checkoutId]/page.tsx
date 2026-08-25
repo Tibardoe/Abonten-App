@@ -3,13 +3,17 @@ import getPlacePromotionCheckout from "@/actions/getPlacePromotionCheckout";
 import getSubscriptionCheckout from "@/actions/getSubscriptionCheckout";
 import getTicketCheckout from "@/actions/getTicketCheckout";
 import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
+import CancelPendingCheckoutButton from "@/components/molecules/CancelPendingCheckoutButton";
 import CheckoutExpiryBanner from "@/components/molecules/CheckoutExpiryBanner";
+import FulfillmentRecoveryBanner from "@/components/molecules/FulfillmentRecoveryBanner";
 import OrderSummary from "@/components/molecules/OrderSummary";
 import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
 import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
+import { createClient } from "@/config/supabase/server";
 import type { PlacePromotionSummaryProps } from "@/types/placeType";
 import type { EventPromotionSummaryProps } from "@/types/postsType";
 import type { CheckoutSessionStatus } from "@/types/ticketType";
+import { getLatestPaymentAttemptStatus } from "@/utils/paymentAttempt";
 import Link from "next/link";
 
 // Per-user, request-time data (this specific session's status plus every
@@ -25,6 +29,7 @@ export default async function page({
 }) {
   const { checkoutId } = await params;
   const checkoutType = (await searchParams).type;
+  const supabase = await createClient();
 
   // Subscription checkouts are a single, standalone purchase — not part of
   // the ticket basket — so this branch is unchanged from before.
@@ -130,6 +135,20 @@ export default async function page({
       expiresAt,
     };
 
+    // A payment_attempt can be stuck "fulfillment_failed" here even though
+    // the checkout row itself still reads "pending" (activatePlacePromotion
+    // never flips it to "paid" on failure) — check for that before trusting
+    // the plain pending/paid/expired banners above.
+    const latestAttempt =
+      sessionStatus === "pending"
+        ? await getLatestPaymentAttemptStatus(
+            supabase,
+            "place_promotion_checkout_id",
+            checkoutId,
+          )
+        : null;
+    const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
@@ -161,19 +180,32 @@ export default async function page({
           </div>
         )}
 
-        {sessionStatus === "pending" && expiresAt && (
+        {sessionStatus === "pending" && !isFulfillmentStuck && expiresAt && (
           <CheckoutExpiryBanner expiresAt={expiresAt} />
         )}
 
         <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
 
-        {sessionStatus === "pending" && (
-          <PaymentMethodSelector
-            kind="promotion"
-            placePromotionCheckoutId={checkoutId}
-            amount={orderSummary.totalAmount}
-            currency={data.currency}
+        {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
+          <FulfillmentRecoveryBanner
+            paymentAttemptId={latestAttempt.id}
+            initialMessage="Your payment was successful. We're completing your promotion now — tap Retry to finish."
           />
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && (
+          <>
+            <PaymentMethodSelector
+              kind="promotion"
+              placePromotionCheckoutId={checkoutId}
+              amount={orderSummary.totalAmount}
+              currency={data.currency}
+            />
+            <CancelPendingCheckoutButton
+              checkoutId={checkoutId}
+              kind="promotion"
+            />
+          </>
         )}
       </div>
     );
@@ -211,6 +243,17 @@ export default async function page({
       expiresAt,
     };
 
+    // See the place-promotion branch above for why this check exists.
+    const latestAttempt =
+      sessionStatus === "pending"
+        ? await getLatestPaymentAttemptStatus(
+            supabase,
+            "event_promotion_checkout_id",
+            checkoutId,
+          )
+        : null;
+    const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
@@ -242,19 +285,32 @@ export default async function page({
           </div>
         )}
 
-        {sessionStatus === "pending" && expiresAt && (
+        {sessionStatus === "pending" && !isFulfillmentStuck && expiresAt && (
           <CheckoutExpiryBanner expiresAt={expiresAt} />
         )}
 
         <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
 
-        {sessionStatus === "pending" && (
-          <PaymentMethodSelector
-            kind="event-promotion"
-            eventPromotionCheckoutId={checkoutId}
-            amount={orderSummary.totalAmount}
-            currency={data.currency}
+        {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
+          <FulfillmentRecoveryBanner
+            paymentAttemptId={latestAttempt.id}
+            initialMessage="Your payment was successful. We're completing your promotion now — tap Retry to finish."
           />
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && (
+          <>
+            <PaymentMethodSelector
+              kind="event-promotion"
+              eventPromotionCheckoutId={checkoutId}
+              amount={orderSummary.totalAmount}
+              currency={data.currency}
+            />
+            <CancelPendingCheckoutButton
+              checkoutId={checkoutId}
+              kind="event-promotion"
+            />
+          </>
         )}
       </div>
     );

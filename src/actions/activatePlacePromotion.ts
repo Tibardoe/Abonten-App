@@ -113,7 +113,11 @@ export default async function activatePlacePromotion(
     promotion_checkout_id: checkout.id,
   });
 
-  if (insertError) {
+  // 23505 = unique_violation on place_promotion_checkout_id_unique — a
+  // previous run already created this promotion (e.g. a retried
+  // fulfillment racing a webhook delivery). Treat it as already done rather
+  // than a failure, so a retry can never create a second featured record.
+  if (insertError && insertError.code !== "23505") {
     console.log(`Failed activating place promotion: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }

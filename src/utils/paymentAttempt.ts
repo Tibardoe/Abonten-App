@@ -120,3 +120,78 @@ export async function upsertPaymentAttemptForSession(
 
   return { status: 200, data: attempt as PaymentAttemptRow };
 }
+
+type CheckoutMatchColumn =
+  | "checkout_session_id"
+  | "subscription_checkout_id"
+  | "place_promotion_checkout_id"
+  | "event_promotion_checkout_id";
+
+/**
+ * The Phase 12 payment-race guard: is a payment currently in flight for this
+ * checkout? Cancelling a checkout while Paystack is mid-confirmation could
+ * orphan a successful charge (a paid payment_attempt pointing at a checkout
+ * that was cancelled out from under it), so every checkout-cancellation path
+ * must check this before flipping a checkout to 'cancelled'.
+ */
+export async function hasOpenPaymentAttempt(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  matchColumn: CheckoutMatchColumn,
+  matchValue: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("payment_attempt")
+    .select("id")
+    .eq(matchColumn, matchValue)
+    .in("status", ["initiated", "pending", "processing"])
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.log(`Failed checking open payment attempts: ${error.message}`);
+    // Fail closed: if this can't be verified, don't risk cancelling a
+    // checkout that might actually be mid-payment.
+    return true;
+  }
+
+  return !!data;
+}
+
+export type LatestPaymentAttemptStatus = {
+  id: string;
+  status: PaymentAttemptRow["status"] | "fulfillment_failed";
+  failureReason: string | null;
+};
+
+/**
+ * The most recent payment_attempt for a checkout, regardless of state —
+ * used purely for display (e.g. showing a "payment succeeded, we're
+ * completing your purchase" recovery banner on a checkout page revisit,
+ * instead of relying only on the live component's in-memory state).
+ */
+export async function getLatestPaymentAttemptStatus(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  matchColumn: CheckoutMatchColumn,
+  matchValue: string,
+): Promise<LatestPaymentAttemptStatus | null> {
+  const { data, error } = await supabase
+    .from("payment_attempt")
+    .select("id, status, failure_reason")
+    .eq(matchColumn, matchValue)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    if (error) {
+      console.log(`Failed fetching latest payment attempt: ${error.message}`);
+    }
+    return null;
+  }
+
+  return {
+    id: data.id,
+    status: data.status,
+    failureReason: data.failure_reason ?? null,
+  };
+}

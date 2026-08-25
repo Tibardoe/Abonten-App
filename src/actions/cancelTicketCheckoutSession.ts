@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 import { releasePromoUsage } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
 
@@ -52,6 +53,21 @@ export default async function cancelTicketCheckoutSession(
 
   if (rows.length === 0) {
     return { status: 404, message: "Checkout not found" };
+  }
+
+  // Phase 12 race guard — see deleteTicketSummaryCheckout.ts.
+  if (
+    await hasOpenPaymentAttempt(
+      supabase,
+      "checkout_session_id",
+      checkoutSessionId,
+    )
+  ) {
+    return {
+      status: 409,
+      message:
+        "Payment is currently being processed for this order. Please wait a moment and try again.",
+    };
   }
 
   const { error: updateError } = await supabase

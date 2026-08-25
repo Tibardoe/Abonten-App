@@ -4,6 +4,7 @@ import createMultiCheckoutPaymentAttempt from "@/actions/createMultiCheckoutPaym
 import createPaymentAttempt from "@/actions/createPaymentAttempt";
 import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
+import retryPaymentFulfillment from "@/actions/retryPaymentFulfillment";
 import submitPaystackChargeOtp from "@/actions/submitPaystackChargeOtp";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
 import Notification from "@/components/atoms/Notification";
@@ -13,6 +14,11 @@ import {
   PAYSTACK_INLINE_SCRIPT_SRC,
   useResumePaystackPopup,
 } from "@/hooks/usePaystackPopup";
+import {
+  invalidateEventListQueries,
+  invalidatePlaceListQueries,
+  invalidateTicketStatusQueries,
+} from "@/utils/mutationQueryInvalidation";
 import PaymentMethodCard, {
   getPaymentMethodDisplay,
 } from "@/wallet/molecules/PaymentMethodCard";
@@ -85,6 +91,10 @@ type PaymentUiState =
   | { phase: "pending"; primaryAttemptId: string; message?: string }
   | { phase: "cancelled"; primaryAttemptId: string; accessCode: string }
   | { phase: "failed"; message: string }
+  // Payment succeeded — never treat this like "failed" (which implies the
+  // charge itself was declined and it's safe to try again). Only a Retry
+  // that resumes the SAME payment_attempt is offered here.
+  | { phase: "fulfillment-failed"; paymentAttemptId: string; message: string }
   | { phase: "succeeded" };
 
 const DIRECT_CHARGE_POLL_INTERVAL_MS = 4000;
@@ -312,12 +322,35 @@ export default function PaymentMethodSelector(
           ? eventPromotionPayMutation
           : subscriptionPayMutation;
 
+  // Invalidates the cache families a successful purchase can affect, scoped
+  // to what this payment actually was — kept in one place so both the
+  // initial verify and a later retryFulfillmentMutation success stay in
+  // sync (see mutationQueryInvalidation.ts; targeted, not a full refetch).
+  const invalidateAfterSuccess = () => {
+    if (props.kind === "ticket") {
+      invalidateTicketStatusQueries(queryClient);
+      invalidateEventListQueries(queryClient);
+      // The event-details page's live attendee count/sold-out display
+      // (EventAttendanceStats.tsx) and AttendingButton.tsx both key their
+      // query as ["attendance-count", eventId] — this doesn't know which
+      // event(s) were just paid for, so invalidate the whole family rather
+      // than plumb eventId through every payment kind just for this. Cheap:
+      // it only refetches count queries that are actually mounted/observed.
+      queryClient.invalidateQueries({ queryKey: ["attendance-count"] });
+    } else if (props.kind === "event-promotion") {
+      invalidateEventListQueries(queryClient);
+    } else if (props.kind === "promotion") {
+      invalidatePlaceListQueries(queryClient);
+    }
+  };
+
   const verifyMutation = useMutation({
     mutationFn: (primaryAttemptId: string) =>
       verifyPaystackPayment(primaryAttemptId),
     onSuccess: (response, primaryAttemptId) => {
       if (response.status === 200) {
         setUiState({ phase: "succeeded" });
+        invalidateAfterSuccess();
         return;
       }
       if (response.status === 202) {
@@ -331,6 +364,14 @@ export default function PaymentMethodSelector(
         });
         return;
       }
+      if (response.status === 207) {
+        setUiState({
+          phase: "fulfillment-failed",
+          paymentAttemptId: response.data.paymentAttemptId,
+          message: response.message,
+        });
+        return;
+      }
       setUiState({
         phase: "failed",
         message: response.message ?? "Your payment could not be verified.",
@@ -341,6 +382,39 @@ export default function PaymentMethodSelector(
         phase: "failed",
         message: "The payment could not be verified. Please try again.",
       }),
+  });
+
+  const retryFulfillmentMutation = useMutation({
+    mutationFn: (paymentAttemptId: string) =>
+      retryPaymentFulfillment(paymentAttemptId),
+    onSuccess: (response) => {
+      if (response.status === 200) {
+        setUiState({ phase: "succeeded" });
+        invalidateAfterSuccess();
+        return;
+      }
+      if (response.status === 207) {
+        setUiState({
+          phase: "fulfillment-failed",
+          paymentAttemptId: response.data.paymentAttemptId,
+          message: response.message,
+        });
+        return;
+      }
+      if (response.status === 202) {
+        setNotification(
+          "We're finishing up your payment. Please check back in a moment.",
+        );
+        return;
+      }
+      setNotification(
+        "message" in response && response.message
+          ? response.message
+          : "Still couldn't finish this. Please contact support.",
+      );
+    },
+    onError: () =>
+      setNotification("Still couldn't finish this. Please contact support."),
   });
 
   const otpMutation = useMutation({
@@ -533,6 +607,29 @@ export default function PaymentMethodSelector(
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-muted-foreground text-center">
           <p>Complete your payment in the Paystack window…</p>
         </div>
+      </>
+    );
+  }
+
+  if (uiState.phase === "fulfillment-failed") {
+    const paymentAttemptId = uiState.paymentAttemptId;
+
+    return (
+      <>
+        {paystackScript}
+        <div className="space-y-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-center">
+          <p className="font-semibold">Payment successful</p>
+          <p>{uiState.message}</p>
+          <button
+            type="button"
+            disabled={retryFulfillmentMutation.isPending}
+            onClick={() => retryFulfillmentMutation.mutate(paymentAttemptId)}
+            className="w-full rounded-md p-3 font-bold text-primary-foreground bg-primary text-center disabled:opacity-50"
+          >
+            {retryFulfillmentMutation.isPending ? "Retrying…" : "Retry"}
+          </button>
+        </div>
+        {notification && <Notification notification={notification} />}
       </>
     );
   }

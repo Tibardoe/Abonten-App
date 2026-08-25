@@ -127,7 +127,9 @@ export default function EventCard({
           <div className="flex flex-wrap justify-between gap-2 pt-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="px-2 py-1 bg-muted rounded-full">
-                {capacity && capacity > 0 ? `${capacity} spots` : "Unlimited"}
+                {capacity && capacity > 0
+                  ? `${Math.max(capacity - attendees, 0)} spots left`
+                  : "Unlimited"}
               </span>
               <span className="px-2 py-1 bg-muted rounded-full">
                 {attendees} attending

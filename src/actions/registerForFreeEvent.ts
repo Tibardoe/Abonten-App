@@ -73,7 +73,7 @@ export default async function registerForFreeEvent(
   const { data: event, error: eventFetchError } = await supabase
     .from("event")
     .select(
-      "status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+      "event_code, status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -197,6 +197,8 @@ export default async function registerForFreeEvent(
   revalidatePath("/manage/my-events");
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
+  // See generateTicket.ts for why the public event page also needs this.
+  revalidatePath(`/events/${event.event_code.toLowerCase()}`);
 
   // Runs after this response is sent — see generateTicket.ts for why this
   // is scheduled with after() rather than awaited inline.

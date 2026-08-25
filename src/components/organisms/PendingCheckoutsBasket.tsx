@@ -14,7 +14,10 @@ import PaymentMethodSelector, {
   type PaymentSelectorStatus,
 } from "@/components/organisms/PaymentMethodSelector";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
-import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
+import {
+  invalidateEventListQueries,
+  invalidateTicketStatusQueries,
+} from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -425,6 +428,15 @@ export default function PendingCheckoutsBasket({
       // dashboard stats too, not just this basket — same cache family
       // cancelUserTicket invalidates, since both are ticket-status changes.
       invalidateTicketStatusQueries(queryClient);
+      // ...and the event's own attendance/sold-out numbers shown on cards
+      // and listing surfaces (home/search/explore/around-you), plus any
+      // currently-mounted event-details page's live count (same key
+      // AttendingButton.tsx/EventAttendanceStats.tsx use — see
+      // PaymentMethodSelector.tsx for why this is a prefix invalidation
+      // rather than a specific eventId: a multi-session basket checkout can
+      // span several different events at once).
+      invalidateEventListQueries(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["attendance-count"] });
     }
     setIsProceeding(false);
 

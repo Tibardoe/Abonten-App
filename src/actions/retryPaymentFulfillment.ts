@@ -3,7 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
 
-type VerifyPaystackPaymentResult =
+type RetryPaymentFulfillmentResult =
   | { status: 401 | 403 | 404; message: string }
   | { status: 200; data: { finalized: "succeeded" } }
   | {
@@ -11,26 +11,24 @@ type VerifyPaystackPaymentResult =
       data: { finalized: "pending" | "already_processing" };
       message?: string;
     }
-  | { status: 400; data: { finalized: "failed" }; message: string }
-  // Payment succeeded (Paystack charged the user, a `transaction` row
-  // exists) but issuing the purchased thing failed — never the same as
-  // status 400 above, which means the payment itself failed/declined.
   | {
       status: 207;
       data: { finalized: "fulfillment_failed"; paymentAttemptId: string };
       message: string;
-    };
+    }
+  | { status: 400; data: { finalized: "failed" }; message: string };
 
 /**
- * Optimistic, client-triggered verification step, called right after the
- * Paystack popup reports success — this is a fast path for UI feedback
- * only, never the sole source of truth. It calls the exact same
- * finalizePaystackPayment() the webhook calls, so whichever of the two
- * "wins" the race does the real work, and the other is a no-op.
+ * User-facing recovery action for the "payment succeeded but fulfillment
+ * failed" state (see finalizePaystackPayment.ts's "fulfillment_failed"
+ * status). Never re-charges the user — it re-invokes the exact same
+ * finalize pipeline the webhook and the initial verify step use, which
+ * re-verifies with Paystack (a read, not a charge) and reuses the
+ * already-recorded `transaction` row instead of creating a new one.
  */
-export default async function verifyPaystackPayment(
+export default async function retryPaymentFulfillment(
   paymentAttemptId: string,
-): Promise<VerifyPaystackPaymentResult> {
+): Promise<RetryPaymentFulfillmentResult> {
   const supabase = await createClient();
 
   const {
@@ -57,8 +55,6 @@ export default async function verifyPaystackPayment(
     return { status: 404, message: "Payment attempt not found" };
   }
 
-  // Ownership check — a user can only ever trigger verification of their
-  // own payment attempt, never someone else's by guessing an id.
   if (attempt.user_id !== user.id) {
     return { status: 403, message: "Not authorized" };
   }

@@ -104,7 +104,7 @@ export default function Banner({ event }: BannerProps) {
             </div>
 
             <Link
-              href={`/events/${event.event_code}`}
+              href={`/events/${event.event_code.toLowerCase()}`}
               className="px-3 py-1.5 md:px-4 md:py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md transition-colors flex items-center gap-1 xs:gap-2 text-xs md:text-sm"
             >
               View Details

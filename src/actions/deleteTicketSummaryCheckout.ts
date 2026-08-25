@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 import { adjustPromoUsageUnits } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
 
@@ -25,7 +26,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
   const { data: checkout, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, status",
+      "id, event_id, ticket_type_id, quantity, promo_code, discounted_units, status, checkout_session_id",
     )
     .eq("id", checkoutId)
     .eq("user_id", userData.user.id)
@@ -44,6 +45,23 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     // Already paid/expired/cancelled — nothing reserved to release, and
     // flipping a paid row's status here would corrupt a real purchase.
     return { status: 200, message: "Checkout deleted successfully!" };
+  }
+
+  // Phase 12 race guard: a payment_attempt is scoped to the whole
+  // checkout_session_id, not this one line — never delete a line out from
+  // under a payment that's currently being confirmed for its session.
+  if (
+    await hasOpenPaymentAttempt(
+      supabase,
+      "checkout_session_id",
+      checkout.checkout_session_id,
+    )
+  ) {
+    return {
+      status: 409,
+      message:
+        "Payment is currently being processed for this order. Please wait a moment and try again.",
+    };
   }
 
   const { error: updateError } = await supabase

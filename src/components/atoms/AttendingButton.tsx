@@ -7,7 +7,10 @@ import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import type { Occurrence } from "@/types/occurrenceType";
 import { getEventStatus } from "@/utils/eventStatus";
-import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
+import {
+  invalidateEventListQueries,
+  invalidateTicketStatusQueries,
+} from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FiCheck } from "react-icons/fi";
@@ -135,6 +138,10 @@ export default function AttendingButton({
         queryKey: ["attendance-count", eventId],
       });
       invalidateTicketStatusQueries(queryClient);
+      // The event card/listing surfaces (home/search/explore/around-you)
+      // show their own attendance count fetched independently — this is
+      // the same targeted invalidation DeleteEventButton.tsx already uses.
+      invalidateEventListQueries(queryClient);
     },
   });
 

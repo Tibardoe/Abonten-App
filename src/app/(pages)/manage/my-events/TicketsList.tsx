@@ -54,7 +54,7 @@ function TicketCard({
       <div className="p-4">
         <div className="flex items-center justify-between">
           <Link
-            href={`/events/${event.event.event_code}`}
+            href={`/events/${event.event.event_code.toLowerCase()}`}
             className="text-xl font-semibold mb-2"
           >
             {event.event.title}

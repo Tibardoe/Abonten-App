@@ -165,7 +165,9 @@ export default async function generateTicket(
 
   const { data: event, error: eventFetchError } = await supabase
     .from("event")
-    .select("starts_at, ends_at, event_occurrence(id, starts_at, ends_at)")
+    .select(
+      "event_code, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+    )
     .eq("id", eventId)
     .maybeSingle();
 
@@ -309,6 +311,11 @@ export default async function generateTicket(
   revalidatePath("/manage/attendance/attendance-list");
   revalidatePath("/manage/dashboard");
   revalidatePath("/transactions");
+  // The public event page is ISR-cached (revalidate = 60) and shows
+  // attendance/sold-out status — without this, it can keep showing
+  // pre-purchase numbers for up to a minute, or until a client navigation
+  // happens to land on a stale Router Cache entry.
+  revalidatePath(`/events/${event.event_code.toLowerCase()}`);
 
   // Runs after this response is sent, so PDF generation + email delivery
   // never add to checkout latency. Only ever scheduled once every ticket
