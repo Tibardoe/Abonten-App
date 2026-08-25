@@ -157,7 +157,7 @@ export default function ManagePromoCodesModal({
                     <span
                       className={
                         code.isActive
-                          ? "text-xs font-semibold text-green-600 shrink-0"
+                          ? "text-xs font-semibold text-success shrink-0"
                           : "text-xs font-semibold text-muted-foreground shrink-0"
                       }
                     >

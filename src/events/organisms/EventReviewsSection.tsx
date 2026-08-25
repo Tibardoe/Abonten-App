@@ -137,7 +137,7 @@ export default function EventReviewsSection({
               <div className="flex flex-col items-end gap-1">
                 <StarRatingDisplay rating={review.rating} />
                 {review.is_verified_attendee && (
-                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                  <span className="text-[11px] font-medium text-success whitespace-nowrap">
                     ✓ Verified Attendee
                   </span>
                 )}

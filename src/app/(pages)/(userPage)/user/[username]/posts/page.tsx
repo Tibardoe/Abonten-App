@@ -29,7 +29,7 @@ export default async function page({
 
   if (firstPage.status !== 200) {
     return (
-      <div className="text-center mt-5 text-red-500">
+      <div className="text-center mt-5 text-destructive">
         Failed to load events: {firstPage.message}
       </div>
     );

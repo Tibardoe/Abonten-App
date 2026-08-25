@@ -169,8 +169,8 @@ export default function AttendingButton({
   return (
     <div className="flex flex-col gap-2">
       {isAttending ? (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-600/20 bg-emerald-600/10 p-4">
-          <span className="flex items-center gap-2 font-bold text-emerald-700 dark:text-emerald-400">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-success/20 bg-success/10 p-4">
+          <span className="flex items-center gap-2 font-bold text-success">
             <FiCheck className="text-xl" /> I&apos;m Attending
           </span>
           <button

@@ -25,7 +25,7 @@ const FILTERS: { id: StatusFilter; label: string }[] = [
 ];
 
 const STATUS_STYLES: Record<BookingStatus, string> = {
-  pending: "bg-amber-500/10 text-amber-600",
+  pending: "bg-warning/10 text-warning",
   accepted: "bg-primary/10 text-primary",
   declined: "bg-destructive/10 text-destructive",
   cancelled: "bg-muted text-muted-foreground",

@@ -71,11 +71,11 @@ function TicketCard({
         >
           Status:{" "}
           {event.status === "cancelled" ? (
-            <span className="font-semibold text-red-600">Cancelled</span>
+            <span className="font-semibold text-destructive">Cancelled</span>
           ) : event.status === "used" ? (
-            <span className="font-semibold text-green-600">Checked in</span>
+            <span className="font-semibold text-success">Checked in</span>
           ) : (
-            <span className="font-semibold text-green-600">Active</span>
+            <span className="font-semibold text-success">Active</span>
           )}
         </p>
 

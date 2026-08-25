@@ -74,7 +74,7 @@ function AttendanceRow({
               Cancelled
             </span>
           ) : (
-            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-600/10 text-emerald-700 dark:text-emerald-400">
+            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-success/10 text-success">
               Active
             </span>
           )}
@@ -94,7 +94,7 @@ function AttendanceRow({
               type="button"
               disabled={isPending}
               onClick={() => mutate(false)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-semibold text-success hover:underline disabled:opacity-50"
             >
               <FiCheck /> Checked in — undo
             </button>
