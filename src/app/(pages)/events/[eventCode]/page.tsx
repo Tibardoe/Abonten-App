@@ -99,22 +99,20 @@ export default async function page({
   // depend on `event` (not on each other), so run them concurrently instead
   // of as four sequential round trips.
   const [
-    { data: attendanceRows },
+    { data: attendanceCountResult },
     { data: minTicket },
     averageRating,
     { lat, lng },
     eventRating,
     eventReviewsFirstPage,
   ] = await Promise.all([
-    // Sums number_of_tickets (one attendance row can represent a
-    // multi-ticket purchase) and only counts rows still 'attending' — a
-    // cancelled ticket's attendance row is marked 'cancelled', not deleted
-    // (see cancelUserTicket.ts), so it must be excluded here explicitly.
-    supabase
-      .from("attendance")
-      .select("number_of_tickets")
-      .eq("event_id", event.id)
-      .eq("status", "attending"),
+    // `attendance` has RLS restricting SELECT to the row's owner or the
+    // event's organizer — this cookie-free publicSupabase client always has
+    // auth.uid() = null, so a direct read here would always return zero
+    // rows. get_event_attendance_count is a narrow SECURITY DEFINER RPC
+    // that returns only the aggregate (sums number_of_tickets, only rows
+    // still 'attending' — see 20260902120000_add_public_attendance_count_rpcs.sql).
+    supabase.rpc("get_event_attendance_count", { p_event_id: event.id }),
     supabase
       .from("ticket_type")
       .select("id, type, price, currency")
@@ -130,10 +128,7 @@ export default async function page({
     getEventReviews(event.id),
   ]);
 
-  const attendanceCount = (attendanceRows ?? []).reduce(
-    (sum, row) => sum + (row.number_of_tickets ?? 0),
-    0,
-  );
+  const attendanceCount = Number(attendanceCountResult ?? 0);
 
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,

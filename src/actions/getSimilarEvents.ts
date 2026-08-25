@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getSimilarEvents(
   category: string,
@@ -27,6 +28,14 @@ export async function getSimilarEvents(
     };
   }
 
+  // get_similar_events, unlike get_filtered_events/get_nearby_events, has no
+  // attendance_count column at all — every similar-event card always showed
+  // 0 attending regardless of real ticket sales. Merged in the same way
+  // getUserPosts.ts/getEventsInWindow.ts already do for their own listings.
+  const attendanceCounts = await getEventAttendanceCounts(
+    (similarEvents ?? []).map((event: { id: string }) => event.id),
+  );
+
   // get_similar_events returns ticket_price/ticket_currency, unlike
   // get_filtered_events/get_nearby_events which return min_price/currency —
   // EventCard (via EventsSlider) only reads the latter names, so without
@@ -34,12 +43,14 @@ export async function getSimilarEvents(
   // "undefined undefined" instead of "Free Entry" / the actual price.
   const mappedSimilarEvents = (similarEvents ?? []).map(
     (event: {
+      id: string;
       ticket_price: number | null;
       ticket_currency: string | null;
     }) => ({
       ...event,
       min_price: event.ticket_price,
       currency: event.ticket_currency,
+      attendanceCount: attendanceCounts[event.id] ?? 0,
     }),
   );
 
