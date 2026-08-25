@@ -22,9 +22,7 @@ export default async function layout({ children, params }: LayoutProps) {
         <ProfileDetails username={username} />
       </Suspense>
 
-      <section className="flex flex-col w-full gap-10 min-h-dvh">
-        {children}
-      </section>
+      <section className="flex flex-col w-full gap-10">{children}</section>
     </div>
   );
 }

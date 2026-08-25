@@ -6,9 +6,9 @@ import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSe
 
 export default function page() {
   return (
-    <div className="h-dvh">
+    <div>
       <LocationAndFilterSection />
-      <div className="h-[50%] flex justify-center items-center">
+      <div className="min-h-[50vh] flex justify-center items-center">
         No address set
       </div>
     </div>

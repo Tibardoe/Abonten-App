@@ -172,7 +172,7 @@ export default async function page({
     event.ticket_type.every((t: { price: number }) => t.price === 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       {/* Hero Section */}
       <div className="relative h-72 md:h-[500px] bg-muted">
         <Image

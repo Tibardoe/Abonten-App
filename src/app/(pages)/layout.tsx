@@ -12,13 +12,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <>
+    <div className="flex flex-col min-h-dvh">
       <Header />
-      <main className="w-[95%] mx-auto pt-24 md:pt-28 min-h-dvh mb-20">
+      <main className="w-[95%] mx-auto pt-24 md:pt-28 pb-24 md:pb-8 flex-1">
         {children}
       </main>
       <DesktopFooter />
       <MobileNavBar />
-    </>
+    </div>
   );
 }

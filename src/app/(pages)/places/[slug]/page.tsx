@@ -126,7 +126,7 @@ export default async function page({
     upcomingEventsResponse.status === 200 ? upcomingEventsResponse.data : [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <PlaceViewLogger placeId={place.id} />
 
       {/* Hero Section */}

@@ -9,9 +9,7 @@ export default async function layout({
 }>) {
   return (
     <main>
-      <section className="flex flex-col w-full gap-10 min-h-dvh">
-        {children}
-      </section>
+      <section className="flex flex-col w-full gap-10">{children}</section>
     </main>
   );
 }
