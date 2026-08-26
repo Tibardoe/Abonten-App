@@ -4,6 +4,13 @@ import getOrganizerPayoutAccounts from "@/actions/getOrganizerPayoutAccounts";
 import requestOrganizerPayout from "@/actions/requestOrganizerPayout";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { buildWithdrawAmountSchema } from "@/utils/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
@@ -54,19 +61,14 @@ export default function WithdrawModal({
     [availableBalance],
   );
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm({
+  const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
       amount: undefined as unknown as number,
       payoutAccountId: accounts.find((a) => a.is_default)?.id ?? "",
     },
   });
+  const { control, handleSubmit, watch } = form;
 
   const amount = watch("amount");
   const payoutAccountId = watch("payoutAccountId");
@@ -125,88 +127,91 @@ export default function WithdrawModal({
         </div>
 
         {step === "form" && (
-          <form onSubmit={goToConfirm} className="flex flex-col gap-5">
-            <div className="rounded-md bg-muted p-3 text-sm">
-              Available:{" "}
-              <span className="font-semibold">
-                {currency} {availableBalance.toLocaleString()}
-              </span>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label htmlFor="amount" className="text-sm">
-                Amount
-              </label>
-              <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
-                <span className="text-muted-foreground text-sm">
-                  {currency}
+          <Form {...form}>
+            <form onSubmit={goToConfirm} className="flex flex-col gap-5">
+              <div className="rounded-md bg-muted p-3 text-sm">
+                Available:{" "}
+                <span className="font-semibold">
+                  {currency} {availableBalance.toLocaleString()}
                 </span>
-                <input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
-                  placeholder="0.00"
-                  {...register("amount")}
-                  aria-invalid={!!errors.amount}
-                />
               </div>
-              {errors.amount && (
-                <p className="text-xs text-destructive">
-                  {errors.amount.message}
-                </p>
-              )}
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <p className="text-sm">Send to</p>
+              <FormField
+                control={control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2 space-y-0">
+                    <label htmlFor="amount" className="text-sm">
+                      Amount
+                    </label>
+                    <div className="flex h-10 items-center gap-2 rounded-md border border-input bg-background px-3 shadow-sm transition-colors focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+                      <span className="text-muted-foreground text-sm">
+                        {currency}
+                      </span>
+                      <FormControl>
+                        <input
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          className="w-full bg-transparent text-base outline-none placeholder:text-muted-foreground md:text-sm"
+                          placeholder="0.00"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              {accountsPending ? (
-                <p className="text-sm text-muted-foreground">
-                  Loading accounts…
-                </p>
-              ) : accounts.length === 0 ? (
-                <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground space-y-2">
-                  <p>You haven't added a payout account yet.</p>
-                  <Link
-                    href="/finances/payout-accounts"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Add a payout account
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {accounts.map((account) => (
-                    <PayoutAccountCard
-                      key={account.id}
-                      account={account}
-                      selected={payoutAccountId === account.id}
-                      onSelect={() =>
-                        setValue("payoutAccountId", account.id, {
-                          shouldValidate: true,
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-              {errors.payoutAccountId && (
-                <p className="text-xs text-destructive">
-                  {errors.payoutAccountId.message}
-                </p>
-              )}
-            </div>
+              <FormField
+                control={control}
+                name="payoutAccountId"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2 space-y-0">
+                    <p className="text-sm">Send to</p>
 
-            <Button
-              type="submit"
-              disabled={accounts.length === 0}
-              className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
-            >
-              Continue
-            </Button>
-          </form>
+                    {accountsPending ? (
+                      <p className="text-sm text-muted-foreground">
+                        Loading accounts…
+                      </p>
+                    ) : accounts.length === 0 ? (
+                      <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground space-y-2">
+                        <p>You haven't added a payout account yet.</p>
+                        <Link
+                          href="/finances/payout-accounts"
+                          className="font-medium text-primary hover:underline"
+                        >
+                          Add a payout account
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {accounts.map((account) => (
+                          <PayoutAccountCard
+                            key={account.id}
+                            account={account}
+                            selected={field.value === account.id}
+                            onSelect={() => field.onChange(account.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button
+                type="submit"
+                disabled={accounts.length === 0}
+                className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
+              >
+                Continue
+              </Button>
+            </form>
+          </Form>
         )}
 
         {step === "confirm" && selectedAccount && (

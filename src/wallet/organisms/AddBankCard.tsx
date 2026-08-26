@@ -103,7 +103,7 @@ export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
       <div className="hidden md:flex justify-between items-center">
         <div>
           <h1 className="font-bold text-lg">Add Bank Card</h1>
-          <p className="opacity-50">
+          <p className="text-muted-foreground">
             Save your Visa or Mastercard for faster checkout
           </p>
         </div>

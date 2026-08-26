@@ -7,13 +7,13 @@ import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import retryPaymentFulfillment from "@/actions/retryPaymentFulfillment";
 import submitPaystackChargeOtp from "@/actions/submitPaystackChargeOtp";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
-import Notification from "@/components/atoms/Notification";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   PAYSTACK_INLINE_SCRIPT_SRC,
   useResumePaystackPopup,
 } from "@/hooks/usePaystackPopup";
+import { useToast } from "@/hooks/useToast";
 import {
   invalidateEventListQueries,
   invalidatePlaceListQueries,
@@ -129,8 +129,8 @@ export default function PaymentMethodSelector(
 ) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const toast = useToast();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [notification, setNotification] = useState<string | null>(null);
   const [uiState, setUiState] = useState<PaymentUiState>({
     phase: "selecting",
   });
@@ -242,20 +242,19 @@ export default function PaymentMethodSelector(
       }),
     onSuccess: (response) => {
       if (response.status === 409) {
-        setNotification(response.message);
+        toast.error(response.message);
         if (props.kind === "ticket") {
           props.onInvalidSessions?.(response.invalidSessionIds);
         }
         return;
       }
       if (response.status !== 200) {
-        setNotification(response.message);
+        toast.error(response.message);
         return;
       }
       handlePaystackInfo(response.data.attempts[0].id, response.data.paystack);
     },
-    onError: () =>
-      setNotification("Failed to start payment. Please try again."),
+    onError: () => toast.error("Failed to start payment. Please try again."),
   });
 
   const promotionPayMutation = useMutation({
@@ -267,13 +266,12 @@ export default function PaymentMethodSelector(
       }),
     onSuccess: (response) => {
       if (response.status !== 200) {
-        setNotification(response.message);
+        toast.error(response.message);
         return;
       }
       handlePaystackInfo(response.data.id, response.data.paystack);
     },
-    onError: () =>
-      setNotification("Failed to start payment. Please try again."),
+    onError: () => toast.error("Failed to start payment. Please try again."),
   });
 
   const eventPromotionPayMutation = useMutation({
@@ -287,13 +285,12 @@ export default function PaymentMethodSelector(
       }),
     onSuccess: (response) => {
       if (response.status !== 200) {
-        setNotification(response.message);
+        toast.error(response.message);
         return;
       }
       handlePaystackInfo(response.data.id, response.data.paystack);
     },
-    onError: () =>
-      setNotification("Failed to start payment. Please try again."),
+    onError: () => toast.error("Failed to start payment. Please try again."),
   });
 
   const payMutation =
@@ -396,19 +393,19 @@ export default function PaymentMethodSelector(
         return;
       }
       if (response.status === 202) {
-        setNotification(
+        toast.error(
           "We're finishing up your payment. Please check back in a moment.",
         );
         return;
       }
-      setNotification(
+      toast.error(
         "message" in response && response.message
           ? response.message
           : "Still couldn't finish this. Please contact support.",
       );
     },
     onError: () =>
-      setNotification("Still couldn't finish this. Please contact support."),
+      toast.error("Still couldn't finish this. Please contact support."),
   });
 
   const otpMutation = useMutation({
@@ -416,14 +413,14 @@ export default function PaymentMethodSelector(
       submitPaystackChargeOtp(primaryAttemptId, otp),
     onSuccess: (response, primaryAttemptId) => {
       if (response.status !== 200) {
-        setNotification(response.message);
+        toast.error(response.message);
         return;
       }
       setUiState({ phase: "verifying" });
       verifyMutation.mutate(primaryAttemptId);
     },
     onError: () =>
-      setNotification("That code didn't work. Please check and try again."),
+      toast.error("That code didn't work. Please check and try again."),
   });
 
   useResumePaystackPopup(
@@ -621,7 +618,6 @@ export default function PaymentMethodSelector(
             {retryFulfillmentMutation.isPending ? "Retrying…" : "Retry"}
           </button>
         </div>
-        {notification && <Notification notification={notification} />}
       </>
     );
   }
@@ -702,8 +698,6 @@ export default function PaymentMethodSelector(
           ? "Starting payment…"
           : `Pay ${currency} ${amount.toFixed(2)}`}
       </button>
-
-      {notification && <Notification notification={notification} />}
     </div>
   );
 }

@@ -2,9 +2,8 @@
 
 import { setPlaceTemporaryStatus } from "@/actions/setPlaceTemporaryStatus";
 import { updatePlaceOpeningHours } from "@/actions/updatePlaceOpeningHours";
-import Notification from "@/components/atoms/Notification";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import PlaceOpeningHoursEditor from "@/places/molecules/PlaceOpeningHoursEditor";
 import type { PlaceOpeningHoursInput } from "@/types/placeType";
 import { useState } from "react";
@@ -57,7 +56,7 @@ export default function ManagePlaceHoursSection({
   temporaryStatusNote,
   onChanged,
 }: ManagePlaceHoursSectionProps) {
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const [hours, setHours] = useState<PlaceOpeningHoursInput[]>(
     toInputRows(openingHours),
@@ -76,7 +75,7 @@ export default function ManagePlaceHoursSection({
       (hour) => !hour.isClosed && (!hour.openTime || !hour.closeTime),
     );
     if (hasIncompleteHours) {
-      showMessage("Please set open and close times for every open day");
+      toast.error("Please set open and close times for every open day.");
       return;
     }
 
@@ -84,10 +83,10 @@ export default function ManagePlaceHoursSection({
     try {
       const response = await updatePlaceOpeningHours(placeId, hours);
       if (response.status === 200) {
-        showMessage("✅ Hours updated successfully!");
+        toast.success("Hours updated successfully.");
         onChanged();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't update your hours.");
       }
     } finally {
       setIsSavingHours(false);
@@ -117,10 +116,10 @@ export default function ManagePlaceHoursSection({
       );
       if (response.status === 200) {
         setCurrentStatus(status);
-        showMessage("✅ Status updated successfully!");
+        toast.success("Status updated successfully.");
         onChanged();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't update your status.");
       }
     } finally {
       setIsSavingStatus(false);
@@ -177,18 +176,22 @@ export default function ManagePlaceHoursSection({
 
       {pendingStatus !== undefined && (
         <ConfirmDeleteModal
+          title={
+            pendingStatus === "permanently_closed"
+              ? "Mark as permanently closed?"
+              : "Mark as temporarily closed?"
+          }
           message={
             pendingStatus === "permanently_closed"
               ? "Mark this place as permanently closed? It will stop appearing as open in searches."
               : "Mark this place as temporarily closed? It will show as closed to visitors until you switch it back to Normal hours."
           }
+          confirmLabel="Mark Closed"
           isLoading={isSavingStatus}
           onConfirm={() => applyStatusChange(pendingStatus)}
           onCancel={() => setPendingStatus(undefined)}
         />
       )}
-
-      <Notification notification={notification} />
     </div>
   );
 }

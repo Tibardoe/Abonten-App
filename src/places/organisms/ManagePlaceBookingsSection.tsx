@@ -1,10 +1,9 @@
 "use client";
 
 import { respondToPlaceBooking } from "@/actions/respondToPlaceBooking";
-import Notification from "@/components/atoms/Notification";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { PaginatedResult } from "@/types/pagination";
 import type {
   BookingStatus,
@@ -57,7 +56,7 @@ export default function ManagePlaceBookingsSection({
   fetchPage,
 }: ManagePlaceBookingsSectionProps) {
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
@@ -68,11 +67,13 @@ export default function ManagePlaceBookingsSection({
     setRespondingId(bookingId);
     try {
       const result = await respondToPlaceBooking({ bookingId, decision });
-      showMessage(
-        result.status === 200 ? `✅ ${result.message}` : `❌ ${result.message}`,
-      );
       if (result.status === 200) {
+        toast.success(result.message ?? "Booking request updated.");
         queryClient.invalidateQueries({ queryKey });
+      } else {
+        toast.error(
+          result.message ?? "We couldn't update that booking request.",
+        );
       }
     } finally {
       setRespondingId(null);
@@ -174,9 +175,12 @@ export default function ManagePlaceBookingsSection({
 
               {decliningId === booking.id && (
                 <ConfirmDeleteModal
+                  title="Decline this booking request?"
                   message={`Decline this booking request from ${
                     booking.user_info?.username ?? "this customer"
                   }?`}
+                  confirmLabel="Decline Request"
+                  cancelLabel="Keep Request"
                   isLoading={respondingId === booking.id}
                   onConfirm={() => respond(booking.id, "decline")}
                   onCancel={() => setDecliningId(null)}
@@ -186,8 +190,6 @@ export default function ManagePlaceBookingsSection({
           );
         }}
       />
-
-      <Notification notification={notification} />
     </div>
   );
 }

@@ -3,8 +3,9 @@
 import getOrganizerPayoutAccounts from "@/actions/getOrganizerPayoutAccounts";
 import removePayoutAccount from "@/actions/removePayoutAccount";
 import setDefaultPayoutAccount from "@/actions/setDefaultPayoutAccount";
-import Notification from "@/components/atoms/Notification";
+import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/useToast";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -27,8 +28,9 @@ export default function PayoutAccountManager({
   initialAccounts,
 }: PayoutAccountManagerProps) {
   const queryClient = useQueryClient();
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   const { data, isPending, isError, refetch } = useQuery({
@@ -47,14 +49,21 @@ export default function PayoutAccountManager({
     onMutate: (id) => setRemovingId(id),
     onSettled: () => {
       setRemovingId(null);
+      setPendingRemoveId(null);
       queryClient.invalidateQueries({ queryKey: PAYOUT_ACCOUNTS_QUERY_KEY });
     },
     onSuccess: (response) => {
       if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to remove payout account.");
+        toast.error(
+          response.message ??
+            "We couldn't remove that payout account. Please try again.",
+        );
+      } else {
+        toast.success("Payout account removed.");
       }
     },
-    onError: () => setNotification("Failed to remove payout account."),
+    onError: () =>
+      toast.error("We couldn't remove that payout account. Please try again."),
   });
 
   const setDefaultMutation = useMutation({
@@ -63,10 +72,13 @@ export default function PayoutAccountManager({
       queryClient.invalidateQueries({ queryKey: PAYOUT_ACCOUNTS_QUERY_KEY }),
     onSuccess: (response) => {
       if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to update default.");
+        toast.error(
+          response.message ?? "We couldn't update your default payout account.",
+        );
       }
     },
-    onError: () => setNotification("Failed to update default."),
+    onError: () =>
+      toast.error("We couldn't update your default payout account."),
   });
 
   if (isPending && accounts.length === 0) {
@@ -109,7 +121,7 @@ export default function PayoutAccountManager({
               key={account.id}
               account={account}
               onSetDefault={() => setDefaultMutation.mutate(account.id)}
-              onRemove={() => removeMutation.mutate(account.id)}
+              onRemove={() => setPendingRemoveId(account.id)}
               removing={removingId === account.id}
             />
           ))}
@@ -137,7 +149,17 @@ export default function PayoutAccountManager({
         />
       )}
 
-      {notification && <Notification notification={notification} />}
+      {pendingRemoveId && (
+        <ConfirmDeleteModal
+          title="Remove this payout account?"
+          message="You can add it again later if you change your mind."
+          confirmLabel="Remove"
+          loadingLabel="Removing…"
+          isLoading={removeMutation.isPending}
+          onConfirm={() => removeMutation.mutate(pendingRemoveId)}
+          onCancel={() => setPendingRemoveId(null)}
+        />
+      )}
     </div>
   );
 }

@@ -2,11 +2,11 @@
 
 import updateEventTicketTypes from "@/actions/updateEventTicketTypes";
 import ManagePromoCodesButton from "@/components/atoms/ManagePromoCodesButton";
-import Notification from "@/components/atoms/Notification";
 import EditEventFormFields from "@/components/molecules/EditEventFormFields";
 import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
+import { useToast } from "@/hooks/useToast";
 import type { Ticket } from "@/types/ticketType";
 import { useState } from "react";
 
@@ -82,13 +82,14 @@ export default function ManageEventDetailsSection({
   hasConfirmedParticipation,
   onSaved,
 }: ManageEventDetailsSectionProps) {
+  const toast = useToast();
+
   const eventEditForm = useEventEditForm({
     eventId: event.id,
     onSuccess: onSaved,
   });
 
   const {
-    notification: detailsNotification,
     isSubmitting,
     isResolvingLocation,
     isFetchingEvent,
@@ -114,9 +115,6 @@ export default function ManageEventDetailsSection({
     initialTicketState.multipleTickets,
   );
   const [isSavingTickets, setIsSavingTickets] = useState(false);
-  const [ticketNotification, setTicketNotification] = useState<string | null>(
-    null,
-  );
 
   const handleSaveTicketTypes = async () => {
     setIsSavingTickets(true);
@@ -131,10 +129,10 @@ export default function ManageEventDetailsSection({
       });
 
       if (response.status === 200) {
-        setTicketNotification("✅ Ticket types updated successfully!");
+        toast.success("✅ Ticket types updated successfully!");
         onSaved();
       } else {
-        setTicketNotification(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } finally {
       setIsSavingTickets(false);
@@ -181,8 +179,6 @@ export default function ManageEventDetailsSection({
         >
           {saveButtonLabel}
         </button>
-
-        <Notification notification={detailsNotification} />
       </div>
 
       <hr className="border-border" />
@@ -239,8 +235,6 @@ export default function ManageEventDetailsSection({
             {isSavingTickets ? "Saving..." : "Save ticket types"}
           </button>
         )}
-
-        <Notification notification={ticketNotification} />
       </div>
 
       <hr className="border-border" />

@@ -10,6 +10,7 @@ import {
 } from "@/components/molecules/EventAttendanceStats";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
 import EventsSlider from "@/components/organisms/EventsSlider";
+import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
 import EventReviewsSection from "@/events/organisms/EventReviewsSection";
 import type { UserPostType } from "@/types/postsType";
@@ -290,7 +291,7 @@ export default async function page({
               <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
                 <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
                   <IoLocationOutline className="text-xl md:text-2xl text-foreground" />
-                  <h3 className="text-lg font-medium">Location</h3>
+                  <CardTitle>Location</CardTitle>
                 </div>
                 <p className="text-muted-foreground mb-4 text-sm md:text-base">
                   {event.address.full_address}
@@ -309,7 +310,7 @@ export default async function page({
               <div className="bg-card text-card-foreground p-4 md:p-6 rounded-xl shadow-sm">
                 <div className="flex items-center gap-1 md:gap-4 mb-3 md:mb-4">
                   <MdOutlineDateRange className="text-xl md:text-2xl text-foreground" />
-                  <h3 className="text-lg font-medium">Date & Time</h3>
+                  <CardTitle>Date & Time</CardTitle>
                 </div>
                 <p className="text-muted-foreground text-sm md:text-base">
                   {eventDateAndTime.date}
@@ -322,9 +323,9 @@ export default async function page({
 
             {/* Description */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <h2 className="text-xl md:text-2xl font-medium mb-3 md:mb-4 text-card-foreground">
+              <SectionTitle className="mb-3 md:mb-4 text-card-foreground">
                 About the Event
-              </h2>
+              </SectionTitle>
               <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                 {event.description}
               </p>
@@ -375,9 +376,9 @@ export default async function page({
           <div className="space-y-4 md:space-y-6">
             {/* Event Category */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
-              <h3 className="text-lg font-medium mb-3 md:mb-4 text-card-foreground">
+              <CardTitle className="mb-3 md:mb-4 text-card-foreground">
                 Event Category
-              </h3>
+              </CardTitle>
               <div className="flex">
                 <span className="p-2 text-center border border-border w-full bg-muted text-muted-foreground rounded-full text-xs md:text-sm">
                   {event.event_category}

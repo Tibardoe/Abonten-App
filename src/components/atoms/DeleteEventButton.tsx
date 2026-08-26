@@ -2,12 +2,11 @@
 
 import { deleteEvent } from "@/actions/deleteEvent";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
-import Notification from "./Notification";
 
 type EventProp = {
   eventId: string;
@@ -17,7 +16,7 @@ export default function DeleteEventButton({ eventId }: EventProp) {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const { mutate } = useMutation({
     mutationFn: () => deleteEvent(eventId),
@@ -35,14 +34,16 @@ export default function DeleteEventButton({ eventId }: EventProp) {
     onSuccess: (response) => {
       if (response.status === 200) {
         invalidateEventListQueries(queryClient);
-        showMessage(response.message);
+        toast.success(response.message);
       } else {
-        showMessage(response.message ?? "Couldn't delete this event.");
+        toast.error(
+          response.message ?? "Couldn't delete this event. Please try again.",
+        );
       }
     },
 
     onError: () => {
-      showMessage("Something went wrong. Please try again.");
+      toast.error("Couldn't delete this event. Please try again.");
     },
   });
 
@@ -59,14 +60,15 @@ export default function DeleteEventButton({ eventId }: EventProp) {
 
       {showDeletePopup && (
         <ConfirmDeleteModal
-          message="Are you sure you want to delete this event?"
+          title="Delete this event?"
+          message="This will permanently remove the event and its listing. This cannot be undone."
+          confirmLabel="Delete Event"
+          loadingLabel="Deleting…"
           isLoading={false}
           onConfirm={() => mutate()}
           onCancel={() => setShowDeletePopup(false)}
         />
       )}
-
-      {notification && <Notification notification={notification} />}
     </>
   );
 }

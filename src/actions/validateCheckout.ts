@@ -40,12 +40,27 @@ type PendingCheckoutRow = {
   discounted_units: number;
 };
 
+// Not a strict discriminated union on purpose: `status` is a plain `number`
+// on failure branches (it forwards other functions' numeric statuses), and
+// TypeScript can't narrow a discriminated union whose discriminant isn't a
+// literal on every member. `reason` lets callers (e.g. CheckoutModal.tsx)
+// branch on which specific 300-status case this is without string-matching
+// the display `message`, so the message text can be edited freely without
+// breaking navigation.
+type ValidateCheckoutResult = {
+  status: number;
+  checkoutSessionId?: string;
+  message?: string;
+  reason?: "pending_checkout" | "already_purchased";
+  checkoutId?: string;
+};
+
 export default async function validateCheckout({
   eventId,
   quantities,
   promoCode,
   occurrenceId,
-}: CheckoutDetailsProp) {
+}: CheckoutDetailsProp): Promise<ValidateCheckoutResult> {
   const supabase = await createClient();
 
   const {
@@ -97,6 +112,7 @@ export default async function validateCheckout({
     // still 'pending' here is genuinely still active.
     return {
       status: 300,
+      reason: "pending_checkout" as const,
       checkoutId: pendingRows[0].checkout_session_id,
       message: "You already have a pending ticket checkout for this event",
     };
@@ -123,7 +139,11 @@ export default async function validateCheckout({
   );
 
   if (alreadyBought) {
-    return { status: 300, message: "Ticket for this event already bought" };
+    return {
+      status: 300,
+      reason: "already_purchased" as const,
+      message: "Ticket for this event already bought",
+    };
   }
 
   const { data: event, error: eventError } = await supabase
@@ -176,7 +196,8 @@ export default async function validateCheckout({
     if (promoCodeResponse.status !== 200) {
       return {
         status: promoCodeResponse.status,
-        message: promoCodeResponse.message,
+        message:
+          promoCodeResponse.message ?? "That promo code couldn't be applied.",
       };
     }
 
@@ -232,7 +253,10 @@ export default async function validateCheckout({
 
     if (reservation.status !== 200) {
       await rollbackReservations();
-      return { status: reservation.status, message: reservation.message };
+      return {
+        status: reservation.status,
+        message: reservation.message ?? "That ticket is no longer available.",
+      };
     }
 
     reserved.push({ ticketTypeId, quantity });
@@ -276,7 +300,10 @@ export default async function validateCheckout({
 
     if (claim.status !== 200) {
       await rollbackReservations();
-      return { status: claim.status, message: claim.message };
+      return {
+        status: claim.status,
+        message: claim.message ?? "That promo code couldn't be applied.",
+      };
     }
   }
 

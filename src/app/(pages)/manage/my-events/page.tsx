@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import getMyEventsTabCounts from "@/actions/getMyEventsTabCounts";
 import getUserAttendingEvents from "@/actions/getUserAttendingEvents";
 import getUserTicketRefunds from "@/actions/getUserTicketRefunds";
+import { PageTitle } from "@/components/ui/typography";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
 import type { Metadata } from "next";
@@ -71,7 +72,7 @@ export default async function page({
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl md:text-2xl font-bold">My Tickets</h1>
+      <PageTitle>My Tickets</PageTitle>
 
       <MyEventsTabs
         initialTab={initialTab}

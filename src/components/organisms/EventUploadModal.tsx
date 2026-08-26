@@ -4,6 +4,7 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useToast } from "@/hooks/useToast";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
@@ -11,7 +12,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Notification from "../atoms/Notification";
 import EventUploadFormFields from "../molecules/EventUploadFormFields";
 import ImagePreviewPane from "../molecules/ImagePreviewPane";
 import UploadStepHeader from "../molecules/UploadStepHeader";
@@ -73,6 +73,7 @@ export default function EventUploadModal({
 
   const router = useRouter();
   const queryClient = useQueryClient();
+  const toast = useToast();
   // Skip straight to the details step only when continuing a draft that
   // already has an uploaded flyer (nothing to crop/pick) — a draft with no
   // image yet, or a brand-new event, still goes through the normal
@@ -100,10 +101,7 @@ export default function EventUploadModal({
 
   // A flyer picked to replace the original selection (or a draft's already
   // -uploaded flyer) — stays null until the user acts on the "Change Flyer"
-  // button, so an untouched modal behaves exactly as before. showMessage is
-  // wired up below, once useEventUploadForm exists: onInvalidFile/onSelect
-  // are only ever invoked later, from a file-input change event, by which
-  // point that binding has long since been assigned.
+  // button, so an untouched modal behaves exactly as before.
   const {
     imagePreview: replacementPreview,
     selectedFile: replacementFile,
@@ -113,7 +111,7 @@ export default function EventUploadModal({
   } = useImageSelection({
     invalidFileMessage: "Please select an image file for your event flyer.",
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
-    onInvalidFile: (message) => showMessage(message),
+    onInvalidFile: (message) => toast.error(message),
     onSelect: () => {
       // The previous crop (if any) belonged to the old flyer — clear it so
       // the pending change is the new image, not a leftover crop of the one
@@ -152,8 +150,6 @@ export default function EventUploadModal({
   });
 
   const {
-    notification,
-    showMessage,
     isUploading,
     isResolvingLocation,
     handleSubmit,
@@ -299,8 +295,6 @@ export default function EventUploadModal({
           onContinueEditing={() => setShowCancelConfirm(false)}
         />
       )}
-
-      <Notification notification={notification} />
     </>
   );
 }

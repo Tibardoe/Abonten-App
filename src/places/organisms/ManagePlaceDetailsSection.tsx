@@ -1,8 +1,14 @@
 "use client";
 
-import Notification from "@/components/atoms/Notification";
 import PostAutoComplete from "@/components/atoms/PostAutoComplete";
 import PostInput from "@/components/atoms/PostInput";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { useManagePlaceDetailsForm } from "@/hooks/useManagePlaceDetailsForm";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -43,10 +49,9 @@ export default function ManagePlaceDetailsSection({
   });
 
   const {
-    register,
+    form,
+    control,
     handleSubmit,
-    errors,
-    notification,
     isSaving,
     isResolvingLocation,
     onSubmit,
@@ -86,110 +91,151 @@ export default function ManagePlaceDetailsSection({
 
   return (
     <>
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
-          <Image
-            src={coverPreview}
-            alt="Cover photo"
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="place-cover" className="text-sm font-medium">
-            Replace cover photo (optional)
-          </label>
-          <input
-            id="place-cover"
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleCoverFileChange(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-muted-foreground"
-          />
-        </div>
-
-        <PostInput type="text" inputPlaceholder="Name" {...register("name")} />
-        {errors.name && (
-          <p className="text-destructive text-sm">{errors.name.message}</p>
-        )}
-
-        <PlaceCategoryPicker categoryId={categoryId} onSelect={setCategoryId} />
-
-        <PostInput
-          type="text"
-          inputPlaceholder="Description"
-          {...register("description")}
-        />
-        {errors.description && (
-          <p className="text-destructive text-sm">
-            {errors.description.message}
-          </p>
-        )}
-
-        <PostAutoComplete
-          ref={addressInputRef}
-          address={{ address: setSelectedAddress }}
-          onSelectCoordinates={handleSelectCoordinates}
-          value={selectedAddress}
-          placeholderText={{
-            text: "Address",
-            svgUrl: "/assets/images/location.svg",
-          }}
-        />
-        {selectedAddress === "" && (
-          <p className="text-destructive text-sm">Address is required</p>
-        )}
-
-        <PostInput
-          type="text"
-          inputPlaceholder="Website (optional)"
-          {...register("website_url")}
-        />
-        {errors.website_url && (
-          <p className="text-destructive text-sm">
-            {errors.website_url.message}
-          </p>
-        )}
-
-        <div className="flex justify-between items-center">
-          <div className="bg-background border border-input rounded-md flex-1 mr-2">
-            <input
-              type="text"
-              placeholder="Phone (optional)"
-              className="rounded-md p-2 bg-transparent w-full"
-              {...register("phone")}
+      <Form {...form}>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+            <Image
+              src={coverPreview}
+              alt="Cover photo"
+              fill
+              className="object-cover"
             />
           </div>
-          <TbWorld className="text-2xl" />
-        </div>
-        {errors.phone && (
-          <p className="text-destructive text-sm">{errors.phone.message}</p>
-        )}
 
-        <PostInput
-          type="text"
-          inputPlaceholder="WhatsApp (optional)"
-          {...register("whatsapp")}
-        />
-        {errors.whatsapp && (
-          <p className="text-destructive text-sm">{errors.whatsapp.message}</p>
-        )}
+          <div className="space-y-1">
+            <label htmlFor="place-cover" className="text-sm font-medium">
+              Replace cover photo (optional)
+            </label>
+            <input
+              id="place-cover"
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                handleCoverFileChange(e.target.files?.[0] ?? null)
+              }
+              className="block w-full text-sm text-muted-foreground"
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={isSaving}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
-        >
-          {isResolvingLocation
-            ? "Resolving location..."
-            : isSaving
-              ? "Saving..."
-              : "Save changes"}
-        </button>
-      </form>
+          <FormField
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <PostInput type="text" inputPlaceholder="Name" {...field} />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
+          />
 
-      <Notification notification={notification} />
+          <PlaceCategoryPicker
+            categoryId={categoryId}
+            onSelect={setCategoryId}
+          />
+
+          <FormField
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <PostInput
+                    type="text"
+                    inputPlaceholder="Description"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
+          />
+
+          <PostAutoComplete
+            ref={addressInputRef}
+            address={{ address: setSelectedAddress }}
+            onSelectCoordinates={handleSelectCoordinates}
+            value={selectedAddress}
+            placeholderText={{
+              text: "Address",
+              svgUrl: "/assets/images/location.svg",
+            }}
+          />
+          {selectedAddress === "" && (
+            <p className="text-destructive text-sm">Address is required</p>
+          )}
+
+          <FormField
+            control={control}
+            name="website_url"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <PostInput
+                    type="text"
+                    inputPlaceholder="Website (optional)"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <div className="flex justify-between items-center">
+                  <div className="bg-background border border-input rounded-md flex-1 mr-2">
+                    <FormControl>
+                      <input
+                        type="text"
+                        placeholder="Phone (optional)"
+                        className="rounded-md p-2 bg-transparent w-full"
+                        {...field}
+                      />
+                    </FormControl>
+                  </div>
+                  <TbWorld className="text-2xl" />
+                </div>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="whatsapp"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <PostInput
+                    type="text"
+                    inputPlaceholder="WhatsApp (optional)"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
+          />
+
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-60"
+          >
+            {isResolvingLocation
+              ? "Resolving location..."
+              : isSaving
+                ? "Saving..."
+                : "Save changes"}
+          </button>
+        </form>
+      </Form>
     </>
   );
 }

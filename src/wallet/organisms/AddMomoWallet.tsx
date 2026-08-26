@@ -5,6 +5,13 @@ import getPaystackMobileMoneyNetworks from "@/actions/getPaystackMobileMoneyNetw
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import {
@@ -46,12 +53,7 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
   const networks =
     networksResponse?.status === 200 ? networksResponse.data : [];
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<AddMomoWalletInput>({
+  const form = useForm<AddMomoWalletInput>({
     resolver: zodResolver(addMomoWalletSchema),
     defaultValues: {
       type: "momo",
@@ -61,6 +63,13 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
       label: "",
     },
   });
+  const {
+    control,
+    register,
+    handleSubmit,
+    setValue,
+    formState: { isSubmitting },
+  } = form;
 
   const onSubmit = async (values: AddMomoWalletInput) => {
     setServerError(null);
@@ -113,85 +122,96 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="networkCode" className="text-sm">
-            Mobile Money Network
-          </label>
-          <Select
-            id="networkCode"
-            disabled={isNetworksPending || isNetworksError}
-            defaultValue=""
-            onChange={(e) => {
-              const selected = networks.find((n) => n.code === e.target.value);
-              setValue("networkCode", selected?.code ?? "", {
-                shouldValidate: true,
-              });
-              setValue("networkName", selected?.name ?? "", {
-                shouldValidate: true,
-              });
-            }}
+      <Form {...form}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <FormField
+            control={control}
+            name="networkCode"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-2 space-y-0">
+                <label htmlFor="networkCode" className="text-sm">
+                  Mobile Money Network
+                </label>
+                <FormControl>
+                  <Select
+                    id="networkCode"
+                    disabled={isNetworksPending || isNetworksError}
+                    defaultValue=""
+                    onChange={(e) => {
+                      const selected = networks.find(
+                        (n) => n.code === e.target.value,
+                      );
+                      field.onChange(selected?.code ?? "");
+                      setValue("networkName", selected?.name ?? "", {
+                        shouldValidate: true,
+                      });
+                    }}
+                  >
+                    <option value="" disabled>
+                      {isNetworksPending
+                        ? "Loading networks…"
+                        : isNetworksError
+                          ? "Couldn't load networks"
+                          : "Select mobile network"}
+                    </option>
+                    {networks.map((network) => (
+                      <option key={network.code} value={network.code}>
+                        {network.name}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-2 space-y-0">
+                <label htmlFor="phone" className="text-sm">
+                  Mobile Money Number
+                </label>
+                <FormControl>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    {...field}
+                    placeholder="Eg. 0244123456"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="label" className="text-sm">
+              Label (optional)
+            </label>
+            <Input
+              id="label"
+              type="text"
+              {...register("label")}
+              placeholder="Eg. My MTN MoMo"
+            />
+          </div>
+
+          {serverError && (
+            <p className="text-sm text-destructive">{serverError}</p>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isSubmitting || isNetworksPending || isNetworksError}
+            className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
           >
-            <option value="" disabled>
-              {isNetworksPending
-                ? "Loading networks…"
-                : isNetworksError
-                  ? "Couldn't load networks"
-                  : "Select mobile network"}
-            </option>
-            {networks.map((network) => (
-              <option key={network.code} value={network.code}>
-                {network.name}
-              </option>
-            ))}
-          </Select>
-          {errors.networkCode && (
-            <p className="text-xs text-destructive">
-              {errors.networkCode.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="phone" className="text-sm">
-            Mobile Money Number
-          </label>
-          <Input
-            id="phone"
-            type="tel"
-            {...register("phone")}
-            placeholder="Eg. 0244123456"
-            aria-invalid={!!errors.phone}
-          />
-          {errors.phone && (
-            <p className="text-xs text-destructive">{errors.phone.message}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="label" className="text-sm">
-            Label (optional)
-          </label>
-          <Input
-            id="label"
-            type="text"
-            {...register("label")}
-            placeholder="Eg. My MTN MoMo"
-          />
-        </div>
-
-        {serverError && (
-          <p className="text-sm text-destructive">{serverError}</p>
-        )}
-
-        <Button
-          type="submit"
-          disabled={isSubmitting || isNetworksPending || isNetworksError}
-          className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
-        >
-          {isSubmitting ? "Saving..." : "Save This Wallet"}
-        </Button>
-      </form>
+            {isSubmitting ? "Saving..." : "Save This Wallet"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }

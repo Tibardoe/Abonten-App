@@ -1,10 +1,9 @@
 "use client";
 
 import { reviewPlaceClaimRequest } from "@/actions/reviewPlaceClaimRequest";
-import Notification from "@/components/atoms/Notification";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { PaginatedResult } from "@/types/pagination";
 import type { PlaceClaimRequest } from "@/types/placeType";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,7 +32,7 @@ export default function AdminPlaceClaimsList({
   fetchPage,
 }: AdminPlaceClaimsListProps) {
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(4000);
+  const toast = useToast();
   const [pendingRejectId, setPendingRejectId] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -48,10 +47,10 @@ export default function AdminPlaceClaimsList({
       });
 
       if (response.status === 200) {
-        showMessage("✅ Claim approved.");
+        toast.success("Claim approved.");
         refresh();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't approve that claim.");
       }
     } finally {
       setProcessingId(null);
@@ -69,10 +68,10 @@ export default function AdminPlaceClaimsList({
       });
 
       if (response.status === 200) {
-        showMessage("Claim rejected.");
+        toast.success("Claim rejected.");
         refresh();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't reject that claim.");
       }
     } finally {
       setProcessingId(null);
@@ -148,14 +147,14 @@ export default function AdminPlaceClaimsList({
 
       {pendingRejectId && (
         <ConfirmDeleteModal
+          title="Reject this claim?"
           message="Reject this claim request? The claimant will be notified."
+          confirmLabel="Reject Claim"
           isLoading={processingId === pendingRejectId}
           onConfirm={handleConfirmReject}
           onCancel={() => setPendingRejectId(null)}
         />
       )}
-
-      <Notification notification={notification} />
     </>
   );
 }

@@ -99,7 +99,7 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        euclid: ["var(--font-euclidCircular)", "sans-serif"],
+        sans: ["var(--font-euclid)", "sans-serif"],
       },
     },
   },

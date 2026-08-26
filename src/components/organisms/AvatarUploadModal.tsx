@@ -5,7 +5,6 @@ import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import Notification from "../atoms/Notification";
 import ImagePreviewPane from "../molecules/ImagePreviewPane";
 import UploadStepHeader from "../molecules/UploadStepHeader";
 
@@ -36,11 +35,9 @@ export default function AvatarUploadModal({
     onCropped: () => setStep(2),
   });
 
-  const { uploadAvatar, isUploading, progress, notification } = useAvatarUpload(
-    {
-      onSuccess: () => handleClosePopup(false),
-    },
-  );
+  const { uploadAvatar, isUploading, progress } = useAvatarUpload({
+    onSuccess: () => handleClosePopup(false),
+  });
 
   return (
     <>
@@ -86,8 +83,6 @@ export default function AvatarUploadModal({
           )}
         </div>
       </div>
-
-      {notification && <Notification notification={notification} />}
     </>
   );
 }

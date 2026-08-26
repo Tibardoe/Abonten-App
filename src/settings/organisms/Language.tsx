@@ -1,8 +1,8 @@
 "use client";
 
 import { setUserLocale } from "@/actions/setUserLocale";
-import Notification from "@/components/atoms/Notification";
 import { languages } from "@/data/languages";
+import { useToast } from "@/hooks/useToast";
 import { useLocaleSwitcher } from "@/i18n/LocaleProvider";
 import type { Locale } from "@/i18n/config";
 import { useTranslations } from "next-intl";
@@ -20,7 +20,7 @@ export default function Language({ currentLocale }: LanguageProps) {
   // Selected instantly on click rather than waiting on the server round-trip,
   // so the radio reflects the choice immediately; rolled back on failure.
   const [selectedLocale, setSelectedLocale] = useState<Locale>(currentLocale);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   const router = useRouter();
 
   const handleSelect = (code: Locale) => {
@@ -28,14 +28,13 @@ export default function Language({ currentLocale }: LanguageProps) {
 
     const previousLocale = selectedLocale;
     setSelectedLocale(code);
-    setError(null);
 
     startTransition(async () => {
       const response = await setUserLocale(code);
 
       if (response.status !== 200) {
         setSelectedLocale(previousLocale);
-        setError(t("errors.generic"));
+        toast.error(t("errors.generic"));
         return;
       }
 
@@ -74,8 +73,6 @@ export default function Language({ currentLocale }: LanguageProps) {
           </li>
         ))}
       </ul>
-
-      <Notification notification={error} />
     </>
   );
 }

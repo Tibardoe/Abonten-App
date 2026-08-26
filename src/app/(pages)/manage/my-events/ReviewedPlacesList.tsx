@@ -1,10 +1,10 @@
 "use client";
 
 import { deletePlaceReview } from "@/actions/deletePlaceReview";
-import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
+import { useToast } from "@/hooks/useToast";
 import PlaceReviewModal from "@/places/organisms/PlaceReviewModal";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -36,9 +36,9 @@ const REVIEWED_PLACES_QUERY_KEY = ["user-place-reviews"];
 
 function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: REVIEWED_PLACES_QUERY_KEY });
@@ -91,7 +91,7 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
             context.previousReviews,
           );
         }
-        setNotification(response.message ?? "Couldn't delete this review.");
+        toast.error(response.message ?? "Couldn't delete this review.");
       }
     },
 
@@ -102,7 +102,7 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
           context.previousReviews,
         );
       }
-      setNotification("Couldn't delete this review. Please try again.");
+      toast.error("Couldn't delete this review. Please try again.");
     },
   });
 
@@ -210,8 +210,6 @@ function ReviewedPlaceCard({ review }: { review: PlaceReviewRow }) {
           </div>
         </div>
       )}
-
-      {notification && <Notification notification={notification} />}
     </div>
   );
 }

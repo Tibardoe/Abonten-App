@@ -1,10 +1,9 @@
 "use client";
 
 import { cancelPlaceBooking } from "@/actions/cancelPlaceBooking";
-import Notification from "@/components/atoms/Notification";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { PaginatedResult } from "@/types/pagination";
 import type {
   BookingStatus,
@@ -36,7 +35,7 @@ export default function UserBookingsList({
   emptyState: React.ReactNode;
 }) {
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -44,11 +43,13 @@ export default function UserBookingsList({
     setCancellingId(bookingId);
     try {
       const result = await cancelPlaceBooking(bookingId);
-      showMessage(
-        result.status === 200 ? `✅ ${result.message}` : `❌ ${result.message}`,
-      );
       if (result.status === 200) {
+        toast.success(result.message ?? "Booking request cancelled.");
         queryClient.invalidateQueries({ queryKey });
+      } else {
+        toast.error(
+          result.message ?? "We couldn't cancel that booking request.",
+        );
       }
     } finally {
       setCancellingId(null);
@@ -112,9 +113,12 @@ export default function UserBookingsList({
 
               {confirmingId === booking.id && (
                 <ConfirmDeleteModal
+                  title="Cancel this booking request?"
                   message={`Cancel your booking request for ${
                     booking.place?.name ?? "this place"
                   }?`}
+                  confirmLabel="Cancel Request"
+                  cancelLabel="Keep Request"
                   isLoading={cancellingId === booking.id}
                   onConfirm={() => handleCancel(booking.id)}
                   onCancel={() => setConfirmingId(null)}
@@ -124,8 +128,6 @@ export default function UserBookingsList({
           );
         }}
       />
-
-      <Notification notification={notification} />
     </>
   );
 }

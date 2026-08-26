@@ -3,12 +3,11 @@
 import cancelEventPromotionCheckout from "@/actions/cancelEventPromotionCheckout";
 import cancelPlacePromotionCheckout from "@/actions/cancelPlacePromotionCheckout";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
-import Notification from "../atoms/Notification";
 
 type CancelPendingCheckoutButtonProps = {
   checkoutId: string;
@@ -19,7 +18,7 @@ type CancelPendingCheckoutButtonProps = {
  * Cancels a pending, not-yet-paid promotion checkout (event or place
  * feature purchase) — the promotion-checkout equivalent of
  * DeleteEventButton.tsx's confirm-then-delete shape, reusing the same
- * ConfirmDeleteModal/useTimedMessage pattern rather than inventing a new
+ * ConfirmDeleteModal/useToast pattern rather than inventing a new
  * confirmation UX. Distinct from cancelling an already-active promotion or
  * requesting a refund — this only ever applies while status is "pending".
  */
@@ -29,7 +28,7 @@ export default function CancelPendingCheckoutButton({
 }: CancelPendingCheckoutButtonProps) {
   const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
@@ -40,15 +39,18 @@ export default function CancelPendingCheckoutButton({
     onSuccess: (response) => {
       setShowConfirm(false);
       if (response.status === 200) {
+        toast.success("Order cancelled.");
         router.refresh();
       } else {
-        showMessage(response.message ?? "Couldn't cancel this order.");
+        toast.error(
+          response.message ?? "Couldn't cancel this order. Please try again.",
+        );
       }
     },
 
     onError: () => {
       setShowConfirm(false);
-      showMessage("Something went wrong. Please try again.");
+      toast.error("Couldn't cancel this order. Please try again.");
     },
   });
 
@@ -65,14 +67,16 @@ export default function CancelPendingCheckoutButton({
 
       {showConfirm && (
         <ConfirmDeleteModal
+          title="Cancel this order?"
           message="Are you sure you want to cancel this pending order? This can't be undone."
+          confirmLabel="Cancel Order"
+          cancelLabel="Keep Order"
+          loadingLabel="Cancelling…"
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={() => setShowConfirm(false)}
         />
       )}
-
-      {notification && <Notification notification={notification} />}
     </>
   );
 }

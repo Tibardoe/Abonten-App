@@ -3,15 +3,22 @@ import { saveReviewDraft } from "@/actions/saveReviewDraft";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { supabase } from "@/config/supabase/client";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import { useToast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import Notification from "../atoms/Notification";
 import StarRatingInput from "../atoms/StarRatingInput";
 import { Button } from "../ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import SaveDraftConfirmDialog from "./SaveDraftConfirmDialog";
@@ -59,7 +66,7 @@ export default function ReviewModal({
 
   const [rating, setRating] = useState(initialValues?.rating ?? 0);
 
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
 
   const [currentDraftId, setCurrentDraftId] = useState(draftId);
   const [draftUpdatedAt, setDraftUpdatedAt] = useState(initialUpdatedAt);
@@ -76,10 +83,10 @@ export default function ReviewModal({
   });
 
   const {
-    register,
+    control,
     handleSubmit,
     getValues,
-    formState: { errors, isDirty },
+    formState: { isDirty },
   } = form;
 
   const handleRatingChange = (value: number) => {
@@ -116,10 +123,8 @@ export default function ReviewModal({
       return postReview(finalData);
     },
     onSuccess: (response) => {
-      setNotification(response.message);
-      setTimeout(() => setNotification(null), 3000);
-
       if (response?.status === 200) {
+        toast.success(response.message);
         form.reset();
         setRating(0);
         handleShowReviewModal(false);
@@ -128,13 +133,15 @@ export default function ReviewModal({
         // cache that router.refresh() cannot touch once mounted.
         queryClient.invalidateQueries({ queryKey: ["user-reviews", username] });
         onReviewSubmitted?.();
+      } else {
+        toast.error(response.message);
       }
     },
   });
 
   const onSubmit = async (formData: z.infer<typeof eventSchema>) => {
     if (!reviewedId) {
-      setNotification("User ID not found yet. Please wait...");
+      toast.error("User ID not found yet. Please wait...");
       return;
     }
 
@@ -146,7 +153,7 @@ export default function ReviewModal({
 
   const handleSaveDraft = async () => {
     if (!reviewedId) {
-      setNotification("User ID not found yet. Please wait...");
+      toast.error("User ID not found yet. Please wait...");
       return null;
     }
 
@@ -245,44 +252,56 @@ export default function ReviewModal({
               <p className="text-destructive text-sm">Rating required</p>
             )}
 
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="flex flex-col gap-4"
-            >
-              <Input
-                type="text"
-                placeholder="Title"
-                className="rounded-lg px-2 py-4 font-normal"
-                aria-invalid={!!errors.title}
-                {...register("title")}
-              />
-              {errors.title && (
-                <p className="text-destructive text-sm">
-                  {errors.title.message}
-                </p>
-              )}
-
-              <Textarea
-                rows={10}
-                placeholder="Review"
-                className="rounded-lg px-2 py-4 font-normal"
-                aria-invalid={!!errors.review}
-                {...register("review")}
-              />
-              {errors.review && (
-                <p className="text-destructive text-sm">
-                  {errors.review.message}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
+            <Form {...form}>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="flex flex-col gap-4"
               >
-                {isPending ? "Adding review..." : "Add"}
-              </Button>
-            </form>
+                <FormField
+                  control={control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0">
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Title"
+                          className="rounded-lg px-2 py-4 font-normal"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-sm" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={control}
+                  name="review"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0">
+                      <FormControl>
+                        <Textarea
+                          rows={10}
+                          placeholder="Review"
+                          className="rounded-lg px-2 py-4 font-normal"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-sm" />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
+                >
+                  {isPending ? "Adding review..." : "Add"}
+                </Button>
+              </form>
+            </Form>
           </div>
         </div>
       </div>
@@ -299,8 +318,6 @@ export default function ReviewModal({
           onContinueEditing={() => setShowCancelConfirm(false)}
         />
       )}
-
-      <Notification notification={notification} />
     </>
   );
 }

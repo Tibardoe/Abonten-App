@@ -1,11 +1,10 @@
 "use client";
 
 import { respondToPlaceReview } from "@/actions/respondToPlaceReview";
-import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
@@ -41,7 +40,7 @@ export default function ManagePlaceReviewsSection({
   fetchPage,
 }: ManagePlaceReviewsSectionProps) {
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
   // Repopulates the response textarea with what the owner typed if the
   // optimistic post below has to roll back — otherwise reopening the form
@@ -94,13 +93,13 @@ export default function ManagePlaceReviewsSection({
 
     onSuccess: (response, vars, context) => {
       if (response.status === 200) {
-        showMessage("✅ Response posted successfully!");
+        toast.success("✅ Response posted successfully!");
         invalidate();
       } else {
         if (context?.previousReviews) {
           queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
         }
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
         setDraftText(vars);
         setRespondingToId(vars.reviewId);
       }
@@ -110,7 +109,7 @@ export default function ManagePlaceReviewsSection({
       if (context?.previousReviews) {
         queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
       }
-      showMessage("❌ Something went wrong. Please try again.");
+      toast.error("❌ Something went wrong. Please try again.");
       setDraftText(vars);
       setRespondingToId(vars.reviewId);
     },
@@ -214,8 +213,6 @@ export default function ManagePlaceReviewsSection({
           </li>
         )}
       />
-
-      <Notification notification={notification} />
     </div>
   );
 }

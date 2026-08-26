@@ -3,7 +3,7 @@
 import { getEventForEdit } from "@/actions/getEventForEdit";
 import { updateEvent } from "@/actions/updateEvent";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
 import {
   getBufferedNow,
@@ -41,14 +41,9 @@ export function useEventEditForm({
   const eventSchema = useMemo(() => getEventSchema(t), [t]);
 
   const form = useForm<EventSchema>({ resolver: zodResolver(eventSchema) });
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = form;
+  const { control, handleSubmit, reset } = form;
 
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPrefilled, setIsPrefilled] = useState(false);
@@ -92,7 +87,7 @@ export function useEventEditForm({
     enabled: !!eventId,
   });
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only re-runs when the fetched event or the prefilled flag changes, not on every reset/showMessage identity change.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only re-runs when the fetched event or the prefilled flag changes, not on every reset/toast identity change.
   useEffect(() => {
     if (
       isPrefilled ||
@@ -177,13 +172,13 @@ export function useEventEditForm({
     }
 
     if (!isImageFile(file)) {
-      showMessage("Please select an image file for your event flyer.");
+      toast.error("Please select an image file for your event flyer.");
       return;
     }
 
     if (file.size > MAX_EVENT_FLYER_SIZE_BYTES) {
       const maxMb = Math.round(MAX_EVENT_FLYER_SIZE_BYTES / (1024 * 1024));
-      showMessage(`Image is too large. Maximum size is ${maxMb}MB.`);
+      toast.error(`Image is too large. Maximum size is ${maxMb}MB.`);
       return;
     }
 
@@ -199,17 +194,17 @@ export function useEventEditForm({
       setIsResolvingLocation(false);
 
       if (!resolution || resolution.status === "empty") {
-        showMessage("Please enter a location");
+        toast.error("Please enter a location");
         return;
       }
       if (resolution.status === "unresolved") {
-        showMessage(
+        toast.error(
           "Could not find that location — please check the spelling or pick a suggestion.",
         );
         return;
       }
       if (resolution.status === "error") {
-        showMessage(
+        toast.error(
           "We couldn't verify this location right now. Please try again.",
         );
         return;
@@ -217,7 +212,7 @@ export function useEventEditForm({
 
       const coords = coordsRef.current;
       if (!coords) {
-        showMessage("Could not fetch coordinates");
+        toast.error("Could not fetch coordinates");
         return;
       }
 
@@ -231,7 +226,7 @@ export function useEventEditForm({
       if (dateType === "single") {
         const result = validateSingleDateRange(singleDateRange, bufferedNow);
         if (!result.ok) {
-          showMessage(result.message);
+          toast.error(result.message);
           return;
         }
 
@@ -242,18 +237,18 @@ export function useEventEditForm({
       } else if (dateType === "specific") {
         const result = validateSpecificDates(multipleDates, bufferedNow);
         if (!result.ok) {
-          showMessage(result.message);
+          toast.error(result.message);
           return;
         }
 
         eventDates = { specific_dates: multipleDates };
       } else {
-        showMessage("Invalid date selection");
+        toast.error("Invalid date selection");
         return;
       }
 
       if (!category || types.length === 0) {
-        showMessage("Category and types must be set");
+        toast.error("Category and types must be set");
         return;
       }
 
@@ -274,13 +269,13 @@ export function useEventEditForm({
       });
 
       if (response.status === 200) {
-        showMessage("✅ Event updated successfully!");
+        toast.success("✅ Event updated successfully!");
         onSuccess();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
       setIsResolvingLocation(false);
@@ -288,10 +283,9 @@ export function useEventEditForm({
   };
 
   return {
-    register,
+    form,
+    control,
     handleSubmit,
-    errors,
-    notification,
     isSubmitting,
     isResolvingLocation,
     isFetchingEvent: isFetchingEvent && !isPrefilled,

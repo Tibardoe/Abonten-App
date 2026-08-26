@@ -1,12 +1,19 @@
 import PostAutoComplete from "@/components/atoms/PostAutoComplete";
 import PostInput from "@/components/atoms/PostInput";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import type { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
 import PlaceCategoryPicker from "../molecules/PlaceCategoryPicker";
 
 type PlaceCreateStepBasicInfoProps = Pick<
   ReturnType<typeof usePlaceUploadForm>,
-  | "register"
-  | "errors"
+  | "form"
+  | "control"
   | "categoryId"
   | "setCategoryId"
   | "selectedAddress"
@@ -22,8 +29,8 @@ type PlaceCreateStepBasicInfoProps = Pick<
 // handleSubmit(onSubmit), so an early <form> here would let Enter
 // prematurely attempt a submission this step alone can't satisfy.
 export default function PlaceCreateStepBasicInfo({
-  register,
-  errors,
+  form,
+  control,
   categoryId,
   setCategoryId,
   selectedAddress,
@@ -33,65 +40,107 @@ export default function PlaceCreateStepBasicInfo({
   className,
 }: PlaceCreateStepBasicInfoProps) {
   return (
-    <div className={className}>
-      <PostInput type="text" inputPlaceholder="Name" {...register("name")} />
-      {errors.name && (
-        <p className="text-destructive text-sm">{errors.name.message}</p>
-      )}
+    <Form {...form}>
+      <div className={className}>
+        <FormField
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormControl>
+                <PostInput type="text" inputPlaceholder="Name" {...field} />
+              </FormControl>
+              <FormMessage className="text-sm" />
+            </FormItem>
+          )}
+        />
 
-      <PlaceCategoryPicker categoryId={categoryId} onSelect={setCategoryId} />
-      {categoryId === null && (
-        <p className="text-destructive text-sm">Select a category</p>
-      )}
+        <PlaceCategoryPicker categoryId={categoryId} onSelect={setCategoryId} />
+        {categoryId === null && (
+          <p className="text-destructive text-sm">Select a category</p>
+        )}
 
-      <PostInput
-        type="text"
-        inputPlaceholder="Description"
-        {...register("description")}
-      />
-      {errors.description && (
-        <p className="text-destructive text-sm">{errors.description.message}</p>
-      )}
+        <FormField
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormControl>
+                <PostInput
+                  type="text"
+                  inputPlaceholder="Description"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage className="text-sm" />
+            </FormItem>
+          )}
+        />
 
-      <PostAutoComplete
-        ref={addressInputRef}
-        address={{ address: setSelectedAddress }}
-        onSelectCoordinates={handleSelectCoordinates}
-        placeholderText={{
-          text: "Address",
-          svgUrl: "/assets/images/location.svg",
-        }}
-      />
-      {selectedAddress === "" && (
-        <p className="text-destructive text-sm">Address is required</p>
-      )}
+        <PostAutoComplete
+          ref={addressInputRef}
+          address={{ address: setSelectedAddress }}
+          onSelectCoordinates={handleSelectCoordinates}
+          placeholderText={{
+            text: "Address",
+            svgUrl: "/assets/images/location.svg",
+          }}
+        />
+        {selectedAddress === "" && (
+          <p className="text-destructive text-sm">Address is required</p>
+        )}
 
-      <PostInput
-        type="text"
-        inputPlaceholder="Website (optional)"
-        {...register("website_url")}
-      />
-      {errors.website_url && (
-        <p className="text-destructive text-sm">{errors.website_url.message}</p>
-      )}
+        <FormField
+          control={control}
+          name="website_url"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormControl>
+                <PostInput
+                  type="text"
+                  inputPlaceholder="Website (optional)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage className="text-sm" />
+            </FormItem>
+          )}
+        />
 
-      <PostInput
-        type="text"
-        inputPlaceholder="Phone (optional)"
-        {...register("phone")}
-      />
-      {errors.phone && (
-        <p className="text-destructive text-sm">{errors.phone.message}</p>
-      )}
+        <FormField
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormControl>
+                <PostInput
+                  type="text"
+                  inputPlaceholder="Phone (optional)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage className="text-sm" />
+            </FormItem>
+          )}
+        />
 
-      <PostInput
-        type="text"
-        inputPlaceholder="WhatsApp (optional)"
-        {...register("whatsapp")}
-      />
-      {errors.whatsapp && (
-        <p className="text-destructive text-sm">{errors.whatsapp.message}</p>
-      )}
-    </div>
+        <FormField
+          control={control}
+          name="whatsapp"
+          render={({ field }) => (
+            <FormItem className="space-y-0">
+              <FormControl>
+                <PostInput
+                  type="text"
+                  inputPlaceholder="WhatsApp (optional)"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage className="text-sm" />
+            </FormItem>
+          )}
+        />
+      </div>
+    </Form>
   );
 }

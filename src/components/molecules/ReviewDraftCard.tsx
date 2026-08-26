@@ -81,7 +81,9 @@ export default function ReviewDraftCard({
 
       {showDeleteConfirm && (
         <ConfirmDeleteModal
+          title="Delete this draft?"
           message="Delete this draft? This cannot be undone."
+          confirmLabel="Delete Draft"
           isLoading={false}
           onConfirm={handleDelete}
           onCancel={() => setShowDeleteConfirm(false)}

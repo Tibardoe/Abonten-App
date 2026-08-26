@@ -18,9 +18,9 @@
   },
   "updateSuccess": "Profile updated successfully.",
   "errors": {
-    "notAuthenticated": "User not authenticated",
-    "fetchUserFailed": "Error fetching user",
-    "updateFailed": "Failed to update user details"
+    "notAuthenticated": "You need to be signed in to do that.",
+    "fetchUserFailed": "We couldn't load your account. Please try again.",
+    "updateFailed": "We couldn't update your profile right now. Please try again."
   },
   "security": {
     "phone": {

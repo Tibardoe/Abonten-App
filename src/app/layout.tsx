@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { euclidCircular } from "@/app/fonts";
 import LocaleProvider from "@/i18n/LocaleProvider";
 import { defaultLocale } from "@/i18n/config";
 import { loadMessages } from "@/i18n/messages";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
+import ToastProvider from "@/providers/ToastProvider";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -36,8 +38,7 @@ export default async function RootLayout({
   return (
     <html
       lang={defaultLocale}
-      className="antialiased"
-      style={{ fontFamily: "EuclidCircular, sans-serif" }}
+      className={`${euclidCircular.variable} antialiased`}
       suppressHydrationWarning
     >
       <body>
@@ -49,7 +50,9 @@ export default async function RootLayout({
         >
           <LocaleProvider defaultMessages={messages}>
             <ReactQueryProvider>
-              <main>{children}</main>
+              <ToastProvider>
+                <main>{children}</main>
+              </ToastProvider>
             </ReactQueryProvider>
           </LocaleProvider>
         </ThemeProvider>

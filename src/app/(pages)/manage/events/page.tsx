@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import getOrganizerEvents from "@/actions/getOrganizerEvents";
+import { PageTitle } from "@/components/ui/typography";
 import OrganizerManagedEventsList from "./OrganizerManagedEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -26,7 +27,7 @@ export default async function page() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="font-bold md:text-xl">Your Events</h1>
+      <PageTitle>Your Events</PageTitle>
 
       <OrganizerManagedEventsList
         queryKey={["organizer-events"]}

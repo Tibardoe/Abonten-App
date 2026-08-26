@@ -464,7 +464,10 @@ export default function UserHighlights({
 
         {showConfirmDelete && (
           <ConfirmDeleteModal
+            title="Delete this highlight?"
             message="Are you sure you want to delete this highlight? This will delete all photos and videos in it."
+            confirmLabel="Delete Highlight"
+            loadingLabel="Deleting…"
             isLoading={isDeleting}
             onConfirm={handleDeleteHighlight}
             onCancel={() => {

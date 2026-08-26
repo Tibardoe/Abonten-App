@@ -2,7 +2,7 @@
 
 import { updatePlace } from "@/actions/updatePlace";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { isImageFile } from "@/utils/isImageFile";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
@@ -53,13 +53,9 @@ export function useManagePlaceDetailsForm({
       whatsapp: place.whatsapp ?? "",
     },
   });
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = form;
+  const { control, handleSubmit } = form;
 
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const [isSaving, setIsSaving] = useState(false);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -82,13 +78,13 @@ export function useManagePlaceDetailsForm({
     }
 
     if (!isImageFile(file)) {
-      showMessage("Please select an image file for your cover photo.");
+      toast.error("Please select an image file for your cover photo.");
       return;
     }
 
     if (file.size > MAX_EVENT_FLYER_SIZE_BYTES) {
       const maxMb = Math.round(MAX_EVENT_FLYER_SIZE_BYTES / (1024 * 1024));
-      showMessage(`Image is too large. Maximum size is ${maxMb}MB.`);
+      toast.error(`Image is too large. Maximum size is ${maxMb}MB.`);
       return;
     }
 
@@ -104,17 +100,17 @@ export function useManagePlaceDetailsForm({
       setIsResolvingLocation(false);
 
       if (!resolution || resolution.status === "empty") {
-        showMessage("Please enter an address");
+        toast.error("Please enter an address");
         return;
       }
       if (resolution.status === "unresolved") {
-        showMessage(
+        toast.error(
           "Could not find that location — please check the spelling or pick a suggestion.",
         );
         return;
       }
       if (resolution.status === "error") {
-        showMessage(
+        toast.error(
           "We couldn't verify this location right now. Please try again.",
         );
         return;
@@ -122,7 +118,7 @@ export function useManagePlaceDetailsForm({
 
       const coords = coordsRef.current;
       if (!coords) {
-        showMessage("Could not fetch coordinates");
+        toast.error("Could not fetch coordinates");
         return;
       }
 
@@ -142,14 +138,14 @@ export function useManagePlaceDetailsForm({
       });
 
       if (response.status === 200) {
-        showMessage("✅ Place updated successfully!");
+        toast.success("✅ Place updated successfully!");
         setNewCoverFile(null);
         onSuccess();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSaving(false);
       setIsResolvingLocation(false);
@@ -157,10 +153,9 @@ export function useManagePlaceDetailsForm({
   };
 
   return {
-    register,
+    form,
+    control,
     handleSubmit,
-    errors,
-    notification,
     isSaving,
     isResolvingLocation,
     onSubmit,

@@ -1,4 +1,5 @@
 import getOrganizerPayouts from "@/actions/getOrganizerPayouts";
+import { SectionTitle, SupportingText } from "@/components/ui/typography";
 import FinancesPayoutsList from "@/finances/organisms/FinancesPayoutsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -12,10 +13,8 @@ export default async function FinancesPayoutsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="font-bold md:text-lg">Payouts</h2>
-        <p className="text-sm text-muted-foreground">
-          Your withdrawal history and status.
-        </p>
+        <SectionTitle>Payouts</SectionTitle>
+        <SupportingText>Your withdrawal history and status.</SupportingText>
       </div>
 
       <FinancesPayoutsList initialPayouts={payouts} />

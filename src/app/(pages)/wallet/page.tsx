@@ -1,4 +1,5 @@
 import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
+import { PageTitle, SupportingText } from "@/components/ui/typography";
 import WalletManager from "@/wallet/organisms/WalletManager";
 
 // Per-user, request-time data (this user's saved payment methods) — same
@@ -14,10 +15,10 @@ export default async function page() {
   return (
     <div className="flex flex-col justify-center gap-5">
       <div>
-        <h1 className="font-bold text-xl md:text-2xl">Wallets</h1>
-        <p className="opacity-60 text-sm">
+        <PageTitle>Wallets</PageTitle>
+        <SupportingText>
           Save a payment method so you don't have to enter it every time.
-        </p>
+        </SupportingText>
       </div>
 
       <WalletManager initialPaymentMethods={paymentMethods} />

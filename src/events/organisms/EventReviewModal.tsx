@@ -4,15 +4,22 @@ import getEventReviewPhotoUploadSignature from "@/actions/getEventReviewPhotoUpl
 import { postEventReview } from "@/actions/postEventReview";
 import { updateEventReview } from "@/actions/updateEventReview";
 import MaskIcon from "@/components/atoms/MaskIcon";
-import Notification from "@/components/atoms/Notification";
 import StarRatingInput from "@/components/atoms/StarRatingInput";
 import ExistingReviewPhotoGrid from "@/components/molecules/ExistingReviewPhotoGrid";
 import ReviewPhotoPicker from "@/components/molecules/ReviewPhotoPicker";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useReviewPhotoUpload } from "@/hooks/useReviewPhotoUpload";
+import { useToast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -71,8 +78,8 @@ export default function EventReviewModal({
   const isEditing = !!existingReview;
   const queryClient = useQueryClient();
 
+  const toast = useToast();
   const [rating, setRating] = useState(existingReview?.rating ?? 0);
-  const [notification, setNotification] = useState<string | null>(null);
   const [existingPhotos, setExistingPhotos] = useState<ExistingReviewPhoto[]>(
     existingReview?.event_review_photo ?? [],
   );
@@ -87,17 +94,14 @@ export default function EventReviewModal({
     setRemovedPhotoIds((prev) => [...prev, photoId]);
   };
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<EventReviewFormValues>({
+  const form = useForm<EventReviewFormValues>({
     resolver: zodResolver(eventReviewSchema),
     defaultValues: {
       title: existingReview?.title ?? undefined,
       comment: existingReview?.comment ?? undefined,
     },
   });
+  const { control, handleSubmit } = form;
 
   const { mutate, isPending } = useMutation({
     mutationFn: (formData: EventReviewFormValues) =>
@@ -116,10 +120,8 @@ export default function EventReviewModal({
             photos: photoUpload.uploadedPhotos,
           }),
     onSuccess: (response) => {
-      setNotification(response.message ?? null);
-      setTimeout(() => setNotification(null), 3000);
-
       if (response.status === 200) {
+        if (response.message) toast.success(response.message);
         handleShowReviewModal(false);
         queryClient.invalidateQueries({
           queryKey: ["event-reviews", eventId],
@@ -129,20 +131,20 @@ export default function EventReviewModal({
           queryKey: ["event-review-eligibility", eventId],
         });
         onReviewSubmitted?.();
+      } else if (response.message) {
+        toast.error(response.message);
       }
     },
   });
 
   const onSubmit = (formData: EventReviewFormValues) => {
     if (rating <= 0) {
-      setNotification("Please select a rating.");
-      setTimeout(() => setNotification(null), 3000);
+      toast.error("Please select a rating.");
       return;
     }
 
     if (photoUpload.isUploading) {
-      setNotification("Please wait for photos to finish uploading.");
-      setTimeout(() => setNotification(null), 3000);
+      toast.error("Please wait for photos to finish uploading.");
       return;
     }
 
@@ -199,69 +201,79 @@ export default function EventReviewModal({
               <p className="text-destructive text-sm">Rating required</p>
             )}
 
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="flex flex-col gap-4"
-            >
-              <Input
-                type="text"
-                placeholder="Title (optional)"
-                className="rounded-lg px-2 py-4 font-normal"
-                aria-invalid={!!errors.title}
-                {...register("title")}
-              />
-              {errors.title && (
-                <p className="text-destructive text-sm">
-                  {errors.title.message}
-                </p>
-              )}
-
-              <Textarea
-                rows={10}
-                placeholder="Review (optional)"
-                className="rounded-lg px-2 py-4 font-normal"
-                aria-invalid={!!errors.comment}
-                {...register("comment")}
-              />
-              {errors.comment && (
-                <p className="text-destructive text-sm">
-                  {errors.comment.message}
-                </p>
-              )}
-
-              {isEditing && existingPhotos.length > 0 && (
-                <ExistingReviewPhotoGrid
-                  photos={existingPhotos}
-                  onRemove={removeExistingPhoto}
-                />
-              )}
-
-              <ReviewPhotoPicker
-                items={photoUpload.items}
-                atLimit={photoUpload.atLimit}
-                onFilesSelected={photoUpload.addFiles}
-                onRemove={photoUpload.remove}
-              />
-
-              <Button
-                type="submit"
-                disabled={isPending || photoUpload.isUploading}
-                className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
+            <Form {...form}>
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="flex flex-col gap-4"
               >
-                {isPending
-                  ? isEditing
-                    ? "Saving changes..."
-                    : "Adding review..."
-                  : isEditing
-                    ? "Save Changes"
-                    : "Add"}
-              </Button>
-            </form>
+                <FormField
+                  control={control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0">
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Title (optional)"
+                          className="rounded-lg px-2 py-4 font-normal"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-sm" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={control}
+                  name="comment"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0">
+                      <FormControl>
+                        <Textarea
+                          rows={10}
+                          placeholder="Review (optional)"
+                          className="rounded-lg px-2 py-4 font-normal"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-sm" />
+                    </FormItem>
+                  )}
+                />
+
+                {isEditing && existingPhotos.length > 0 && (
+                  <ExistingReviewPhotoGrid
+                    photos={existingPhotos}
+                    onRemove={removeExistingPhoto}
+                  />
+                )}
+
+                <ReviewPhotoPicker
+                  items={photoUpload.items}
+                  atLimit={photoUpload.atLimit}
+                  onFilesSelected={photoUpload.addFiles}
+                  onRemove={photoUpload.remove}
+                />
+
+                <Button
+                  type="submit"
+                  disabled={isPending || photoUpload.isUploading}
+                  className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
+                >
+                  {isPending
+                    ? isEditing
+                      ? "Saving changes..."
+                      : "Adding review..."
+                    : isEditing
+                      ? "Save Changes"
+                      : "Add"}
+                </Button>
+              </form>
+            </Form>
           </div>
         </div>
       </div>
-
-      <Notification notification={notification} />
     </>
   );
 }

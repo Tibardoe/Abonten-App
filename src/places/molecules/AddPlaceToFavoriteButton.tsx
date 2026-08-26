@@ -3,10 +3,9 @@
 import { addPlaceToFavorite } from "@/actions/addPlaceToFavorite";
 import { checkIfPlaceIsFavorited } from "@/actions/checkIfPlaceIsFavorited";
 import { removePlaceFromFavorite } from "@/actions/removePlaceFromFavorite";
-import Notification from "@/components/atoms/Notification";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 
 type PlaceProp = {
@@ -24,7 +23,7 @@ export default function AddPlaceToFavoriteButton({
   placeId,
   compact,
 }: PlaceProp) {
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const requireAuth = useRequireAuth();
 
@@ -75,11 +74,10 @@ export default function AddPlaceToFavoriteButton({
         ["place-favorited", placeId],
         context?.previousState,
       );
-      setError("Something went wrong. Please try again later.");
+      toast.error("Something went wrong. Please try again later.");
     },
 
     onSettled: () => {
-      setTimeout(() => setError(null), 3000);
       queryClient.invalidateQueries({ queryKey: ["place-favorited", placeId] });
       // The favorite-places list page doesn't exist yet (Milestone 7), but
       // this invalidation is future-proofed the same way
@@ -112,8 +110,6 @@ export default function AddPlaceToFavoriteButton({
           {buttonText}
         </span>
       </button>
-
-      {error && <Notification notification={error} />}
     </>
   );
 }

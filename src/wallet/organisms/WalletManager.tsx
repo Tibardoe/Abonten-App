@@ -5,8 +5,9 @@ import getUserPaymentMethods, {
 } from "@/actions/getUserPaymentMethods";
 import removePaymentMethod from "@/actions/removePaymentMethod";
 import setDefaultPaymentMethod from "@/actions/setDefaultPaymentMethod";
-import Notification from "@/components/atoms/Notification";
+import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/useToast";
 import PaymentMethodCard from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -30,9 +31,10 @@ export default function WalletManager({
   initialPaymentMethods,
 }: WalletManagerProps) {
   const queryClient = useQueryClient();
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: PAYMENT_METHODS_QUERY_KEY,
@@ -73,7 +75,12 @@ export default function WalletManager({
             context.previousMethods,
           );
         }
-        setNotification(response.message ?? "Failed to remove payment method.");
+        toast.error(
+          response.message ??
+            "We couldn't remove that payment method. Please try again.",
+        );
+      } else {
+        toast.success("Payment method removed.");
       }
     },
 
@@ -84,11 +91,12 @@ export default function WalletManager({
           context.previousMethods,
         );
       }
-      setNotification("Failed to remove payment method.");
+      toast.error("We couldn't remove that payment method. Please try again.");
     },
 
     onSettled: () => {
       setRemovingId(null);
+      setPendingRemoveId(null);
       queryClient.invalidateQueries({ queryKey: PAYMENT_METHODS_QUERY_KEY });
     },
   });
@@ -125,7 +133,9 @@ export default function WalletManager({
             context.previousMethods,
           );
         }
-        setNotification(response.message ?? "Failed to update default.");
+        toast.error(
+          response.message ?? "We couldn't update your default payment method.",
+        );
       }
     },
 
@@ -136,7 +146,7 @@ export default function WalletManager({
           context.previousMethods,
         );
       }
-      setNotification("Failed to update default.");
+      toast.error("We couldn't update your default payment method.");
     },
 
     onSettled: () => {
@@ -182,7 +192,7 @@ export default function WalletManager({
               key={method.id}
               method={method}
               onSetDefault={() => setDefaultMutation.mutate(method.id)}
-              onRemove={() => removeMutation.mutate(method.id)}
+              onRemove={() => setPendingRemoveId(method.id)}
               removing={removingId === method.id}
               settingDefault={settingDefaultId === method.id}
             />
@@ -196,7 +206,17 @@ export default function WalletManager({
         }
       />
 
-      {notification && <Notification notification={notification} />}
+      {pendingRemoveId && (
+        <ConfirmDeleteModal
+          title="Remove this payment method?"
+          message="You can add it again later if you change your mind."
+          confirmLabel="Remove"
+          loadingLabel="Removing…"
+          isLoading={removeMutation.isPending}
+          onConfirm={() => removeMutation.mutate(pendingRemoveId)}
+          onCancel={() => setPendingRemoveId(null)}
+        />
+      )}
     </div>
   );
 }

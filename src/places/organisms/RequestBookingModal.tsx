@@ -1,9 +1,8 @@
 "use client";
 
 import { requestPlaceBooking } from "@/actions/requestPlaceBooking";
-import Notification from "@/components/atoms/Notification";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { useState } from "react";
 
 type BookingService = {
@@ -37,7 +36,7 @@ export default function RequestBookingModal({
 }: RequestBookingModalProps) {
   useBodyScrollLock(true);
 
-  const { message: notification, showMessage } = useTimedMessage(4000);
+  const toast = useToast();
 
   const [serviceId, setServiceId] = useState("");
   const [requestedTime, setRequestedTime] = useState("");
@@ -57,7 +56,7 @@ export default function RequestBookingModal({
 
   const handleSubmit = async () => {
     if (!requestedTime) {
-      showMessage("Please choose a date and time.");
+      toast.error("Please choose a date and time.");
       return;
     }
 
@@ -66,7 +65,7 @@ export default function RequestBookingModal({
       Number.isNaN(parsedTime.getTime()) ||
       parsedTime.getTime() <= Date.now()
     ) {
-      showMessage("Please choose a time in the future.");
+      toast.error("Please choose a time in the future.");
       return;
     }
 
@@ -84,7 +83,7 @@ export default function RequestBookingModal({
         setSubmitted(true);
         onSubmitted?.();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -190,8 +189,6 @@ export default function RequestBookingModal({
           )}
         </div>
       </div>
-
-      <Notification notification={notification} />
     </>
   );
 }

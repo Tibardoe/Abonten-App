@@ -1,9 +1,8 @@
 "use client";
 
 import { submitPlaceClaimRequest } from "@/actions/submitPlaceClaimRequest";
-import Notification from "@/components/atoms/Notification";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { useState } from "react";
 
 type ClaimPlaceModalProps = {
@@ -29,7 +28,7 @@ export default function ClaimPlaceModal({
 }: ClaimPlaceModalProps) {
   useBodyScrollLock(true);
 
-  const { message: notification, showMessage } = useTimedMessage(4000);
+  const toast = useToast();
 
   const [note, setNote] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -51,7 +50,7 @@ export default function ClaimPlaceModal({
         setSubmitted(true);
         onSubmitted?.();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } finally {
       setIsSubmitting(false);
@@ -141,8 +140,6 @@ export default function ClaimPlaceModal({
           )}
         </div>
       </div>
-
-      <Notification notification={notification} />
     </>
   );
 }

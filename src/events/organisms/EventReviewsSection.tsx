@@ -1,13 +1,12 @@
 "use client";
 
 import { respondToEventReview } from "@/actions/respondToEventReview";
-import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { Occurrence } from "@/types/occurrenceType";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
@@ -63,7 +62,7 @@ export default function EventReviewsSection({
 }: EventReviewsSectionProps) {
   const queryClient = useQueryClient();
   const { data: user } = useCurrentUser();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
   // Repopulates the reply textarea with what the organizer typed if the
   // optimistic post below has to roll back — otherwise reopening the form
@@ -120,13 +119,13 @@ export default function EventReviewsSection({
 
     onSuccess: (response, vars, context) => {
       if (response.status === 200) {
-        showMessage("✅ Reply posted successfully!");
+        toast.success("✅ Reply posted successfully!");
         invalidate();
       } else {
         if (context?.previousReviews) {
           queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
         }
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
         setDraftText(vars);
         setRespondingToId(vars.reviewId);
       }
@@ -136,7 +135,7 @@ export default function EventReviewsSection({
       if (context?.previousReviews) {
         queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
       }
-      showMessage("❌ Something went wrong. Please try again.");
+      toast.error("❌ Something went wrong. Please try again.");
       setDraftText(vars);
       setRespondingToId(vars.reviewId);
     },
@@ -283,8 +282,6 @@ export default function EventReviewsSection({
           </li>
         )}
       />
-
-      <Notification notification={notification} />
     </div>
   );
 }

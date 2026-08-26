@@ -1,11 +1,11 @@
 "use client";
 
 import { deleteEventReview } from "@/actions/deleteEventReview";
-import Notification from "@/components/atoms/Notification";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import EventReviewModal from "@/events/organisms/EventReviewModal";
+import { useToast } from "@/hooks/useToast";
 import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getRelativeTime } from "@/utils/dateFormatter";
@@ -33,9 +33,9 @@ const REVIEWED_EVENTS_QUERY_KEY = ["user-event-reviews"];
 
 function ReviewedEventCard({ review }: { review: EventReviewRow }) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
 
   // Invalidates every cache this review could appear in — this list, and
   // (in case the viewer also has the Event Details page open in the same
@@ -93,7 +93,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
             context.previousReviews,
           );
         }
-        setNotification(response.message ?? "Couldn't delete this review.");
+        toast.error(response.message ?? "Couldn't delete this review.");
       }
     },
 
@@ -104,7 +104,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
           context.previousReviews,
         );
       }
-      setNotification("Couldn't delete this review. Please try again.");
+      toast.error("Couldn't delete this review. Please try again.");
     },
   });
 
@@ -212,8 +212,6 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
           </div>
         </div>
       )}
-
-      {notification && <Notification notification={notification} />}
     </div>
   );
 }

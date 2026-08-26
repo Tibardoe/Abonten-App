@@ -33,7 +33,7 @@ export default function AddWalletButton({ onAdded }: AddWalletButtonProps) {
         className="text-[0.8rem] md:text-[1rem] flex flex-col gap-2 items-center justify-center w-44 h-44 md:w-52 md:h-52 rounded-2xl border border-border bg-muted"
       >
         <IoMdAddCircle className="text-primary text-3xl md:text-4xl" />
-        <p className="opacity-60">
+        <p className="text-muted-foreground">
           Add a new mobile money wallet or a bank card
         </p>
       </button>

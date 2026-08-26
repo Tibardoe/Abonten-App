@@ -1,6 +1,5 @@
 "use client";
 
-import Notification from "@/components/atoms/Notification";
 import UploadStepHeader from "@/components/molecules/UploadStepHeader";
 import SaveDraftConfirmDialog from "@/components/organisms/SaveDraftConfirmDialog";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
@@ -101,7 +100,6 @@ export default function PlaceUploadModal({
   });
 
   const {
-    notification,
     isUploading,
     isResolvingLocation,
     handleSubmit,
@@ -263,8 +261,6 @@ export default function PlaceUploadModal({
           onContinueEditing={() => setShowCancelConfirm(false)}
         />
       )}
-
-      <Notification notification={notification} />
     </>
   );
 }

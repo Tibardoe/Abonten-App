@@ -11,6 +11,7 @@ import {
   registerVerifyAttempt,
 } from "@/services/phoneOtpStore";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
+import { OTP_MESSAGES } from "@/utils/otpMessages";
 
 export type VerifyPhoneSignInResult =
   | { status: 200 }
@@ -47,32 +48,23 @@ export default async function verifyPhoneSignIn(
   code: string,
 ): Promise<VerifyPhoneSignInResult> {
   if (!new RegExp(`^\\d{${HUBTEL_OTP_CODE_LENGTH}}$`).test(code)) {
-    return { status: 400, message: "Enter the code we sent you." };
+    return { status: 400, message: OTP_MESSAGES.invalidFormat };
   }
 
   if (!(await getPendingOtp("sign-in", phoneE164))) {
-    return {
-      status: 401,
-      message: "That code has expired. Please request a new one.",
-    };
+    return { status: 401, message: OTP_MESSAGES.expired };
   }
 
   const attemptAllowed = await registerVerifyAttempt("sign-in", phoneE164);
 
   if (!attemptAllowed) {
-    return {
-      status: 429,
-      message: "Too many incorrect attempts. Please request a new code.",
-    };
+    return { status: 429, message: OTP_MESSAGES.tooManyAttempts };
   }
 
   const pending = await getPendingOtp("sign-in", phoneE164);
 
   if (!pending) {
-    return {
-      status: 401,
-      message: "That code has expired. Please request a new one.",
-    };
+    return { status: 401, message: OTP_MESSAGES.expired };
   }
 
   const verifyResult = await verifyHubtelOtp(

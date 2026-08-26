@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
 import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
@@ -18,7 +18,6 @@ import {
 } from "@tanstack/react-query";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
-import Notification from "./Notification";
 
 type CancelTicketProp = {
   ticketId: string;
@@ -40,7 +39,7 @@ export default function CancelUserTicketBtn({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   // A ticket only has a transaction to refund if it was actually paid for
   // (free tickets never get a linked transaction — see generateTicket.ts) —
@@ -78,7 +77,7 @@ export default function CancelUserTicketBtn({
 
     onSuccess: (response, _vars, context) => {
       if (response.status === 200) {
-        showMessage(response.message);
+        toast.success(response.message);
       } else {
         // Resolved but rejected server-side (e.g. 404/500) — this action
         // never throws, so onError never fires for this case; roll back
@@ -86,7 +85,9 @@ export default function CancelUserTicketBtn({
         if (context?.previousData) {
           queryClient.setQueryData(queryKey, context.previousData);
         }
-        showMessage(response.message ?? "Couldn't cancel this ticket.");
+        toast.error(
+          response.message ?? "Couldn't cancel this ticket. Please try again.",
+        );
       }
     },
 
@@ -94,7 +95,7 @@ export default function CancelUserTicketBtn({
       if (context?.previousData) {
         queryClient.setQueryData(queryKey, context.previousData);
       }
-      showMessage("Couldn't cancel this ticket. Please try again.");
+      toast.error("Couldn't cancel this ticket. Please try again.");
     },
 
     onSettled: () => {
@@ -130,18 +131,20 @@ export default function CancelUserTicketBtn({
 
       {showCancelConfirm && (
         <ConfirmDeleteModal
+          title="Cancel this ticket?"
           message={
             transactionId
               ? "Are you sure you want to cancel this ticket? A refund will be issued to your original payment method."
               : "Are you sure you want to cancel this ticket?"
           }
+          confirmLabel="Cancel Ticket"
+          cancelLabel="Keep Ticket"
+          loadingLabel="Cancelling…"
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={() => setShowCancelConfirm(false)}
         />
       )}
-
-      {notification && <Notification notification={notification} />}
     </>
   );
 }

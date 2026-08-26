@@ -3,6 +3,13 @@
 import addPayoutAccount from "@/actions/addPayoutAccount";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
 import {
@@ -24,11 +31,7 @@ export default function AddBankPayoutForm({
 }: PopupCloseProp) {
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<AddBankPayoutAccountInput>({
+  const form = useForm<AddBankPayoutAccountInput>({
     resolver: zodResolver(addBankPayoutAccountSchema),
     defaultValues: {
       accountType: "bank",
@@ -37,6 +40,11 @@ export default function AddBankPayoutForm({
       accountNumber: "",
     },
   });
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = form;
 
   const onSubmit = async (values: AddBankPayoutAccountInput) => {
     setServerError(null);
@@ -85,74 +93,85 @@ export default function AddBankPayoutForm({
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="accountHolderName" className="text-sm">
-            Account Holder Name
-          </label>
-          <Input
-            id="accountHolderName"
-            type="text"
-            {...register("accountHolderName")}
-            placeholder="Eg. Kwame Mensah"
-            aria-invalid={!!errors.accountHolderName}
+      <Form {...form}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+          <FormField
+            control={control}
+            name="accountHolderName"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-2 space-y-0">
+                <label htmlFor="accountHolderName" className="text-sm">
+                  Account Holder Name
+                </label>
+                <FormControl>
+                  <Input
+                    id="accountHolderName"
+                    type="text"
+                    {...field}
+                    placeholder="Eg. Kwame Mensah"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.accountHolderName && (
-            <p className="text-xs text-destructive">
-              {errors.accountHolderName.message}
-            </p>
-          )}
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="bankName" className="text-sm">
-            Bank Name
-          </label>
-          <Input
-            id="bankName"
-            type="text"
-            {...register("bankName")}
-            placeholder="Eg. GCB Bank"
-            aria-invalid={!!errors.bankName}
+          <FormField
+            control={control}
+            name="bankName"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-2 space-y-0">
+                <label htmlFor="bankName" className="text-sm">
+                  Bank Name
+                </label>
+                <FormControl>
+                  <Input
+                    id="bankName"
+                    type="text"
+                    {...field}
+                    placeholder="Eg. GCB Bank"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.bankName && (
-            <p className="text-xs text-destructive">
-              {errors.bankName.message}
-            </p>
-          )}
-        </div>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="accountNumber" className="text-sm">
-            Account Number
-          </label>
-          <Input
-            id="accountNumber"
-            type="text"
-            inputMode="numeric"
-            {...register("accountNumber")}
-            placeholder="Eg. 1234567890"
-            aria-invalid={!!errors.accountNumber}
+          <FormField
+            control={control}
+            name="accountNumber"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-2 space-y-0">
+                <label htmlFor="accountNumber" className="text-sm">
+                  Account Number
+                </label>
+                <FormControl>
+                  <Input
+                    id="accountNumber"
+                    type="text"
+                    inputMode="numeric"
+                    {...field}
+                    placeholder="Eg. 1234567890"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.accountNumber && (
-            <p className="text-xs text-destructive">
-              {errors.accountNumber.message}
-            </p>
+
+          {serverError && (
+            <p className="text-sm text-destructive">{serverError}</p>
           )}
-        </div>
 
-        {serverError && (
-          <p className="text-sm text-destructive">{serverError}</p>
-        )}
-
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
-        >
-          {isSubmitting ? "Saving..." : "Save Payout Account"}
-        </Button>
-      </form>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="font-semibold md:self-end rounded-md py-6 text-lg md:text-sm"
+          >
+            {isSubmitting ? "Saving..." : "Save Payout Account"}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 }

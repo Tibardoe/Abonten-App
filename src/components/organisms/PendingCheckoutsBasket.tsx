@@ -7,12 +7,12 @@ import getUserPendingTicketCheckouts, {
   type PendingCheckoutSession,
 } from "@/actions/getUserPendingTicketCheckouts";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
-import Notification from "@/components/atoms/Notification";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
 import PaymentMethodSelector, {
   type PaymentSelectorStatus,
 } from "@/components/organisms/PaymentMethodSelector";
+import { useToast } from "@/hooks/useToast";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
 import {
   invalidateEventListQueries,
@@ -39,6 +39,7 @@ export default function PendingCheckoutsBasket({
 }: PendingCheckoutsBasketProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const toast = useToast();
 
   const { data } = useQuery({
     queryKey: QUERY_KEY,
@@ -58,7 +59,6 @@ export default function PendingCheckoutsBasket({
   const [removingSessionIds, setRemovingSessionIds] = useState<Set<string>>(
     new Set(),
   );
-  const [notification, setNotification] = useState<string | null>(null);
   const [isProceeding, setIsProceeding] = useState(false);
   // Set the moment a paid-through-PaymentMethodSelector session is
   // server-confirmed — the checkout(s) it names are about to drop out of
@@ -113,12 +113,6 @@ export default function PendingCheckoutsBasket({
     });
   }, [sessions]);
 
-  useEffect(() => {
-    if (!notification) return;
-    const timer = setTimeout(() => setNotification(null), 3000);
-    return () => clearTimeout(timer);
-  }, [notification]);
-
   const toggleSelected = (checkoutSessionId: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -149,7 +143,7 @@ export default function PendingCheckoutsBasket({
       for (const id of invalidSessionIds) next.delete(id);
       return next;
     });
-    setNotification(
+    toast.warning(
       "One of your selected checkouts has expired. Please review your order.",
     );
     queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -192,7 +186,7 @@ export default function PendingCheckoutsBasket({
     },
 
     onError: (_err, { ticketCheckoutId }, context) => {
-      setNotification("Failed to update quantity. Please try again.");
+      toast.error("Failed to update quantity. Please try again.");
       setPendingLineIds((prev) => {
         const next = new Set(prev);
         next.delete(ticketCheckoutId);
@@ -211,7 +205,7 @@ export default function PendingCheckoutsBasket({
       });
 
       if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to update quantity.");
+        toast.error(response.message ?? "Failed to update quantity.");
         if (context?.previousSessions) {
           queryClient.setQueryData(QUERY_KEY, context.previousSessions);
         }
@@ -291,7 +285,7 @@ export default function PendingCheckoutsBasket({
     },
 
     onError: (_err, _ticketCheckoutId, context) => {
-      setNotification("Failed to remove item. Please try again.");
+      toast.error("Failed to remove item. Please try again.");
       if (context?.previousSessions) {
         queryClient.setQueryData(QUERY_KEY, context.previousSessions);
       }
@@ -299,7 +293,7 @@ export default function PendingCheckoutsBasket({
 
     onSuccess: (response, _ticketCheckoutId, context) => {
       if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to remove item.");
+        toast.error(response.message ?? "Failed to remove item.");
         if (context?.previousSessions) {
           queryClient.setQueryData(QUERY_KEY, context.previousSessions);
         }
@@ -346,7 +340,7 @@ export default function PendingCheckoutsBasket({
     },
 
     onError: (_err, checkoutSessionId, context) => {
-      setNotification("Failed to remove checkout. Please try again.");
+      toast.error("Failed to remove checkout. Please try again.");
       if (context?.previousSessions) {
         queryClient.setQueryData(QUERY_KEY, context.previousSessions);
       }
@@ -357,7 +351,7 @@ export default function PendingCheckoutsBasket({
 
     onSuccess: (response, checkoutSessionId, context) => {
       if (response.status !== 200) {
-        setNotification(response.message ?? "Failed to remove checkout.");
+        toast.error(response.message ?? "Failed to remove checkout.");
         if (context?.previousSessions) {
           queryClient.setQueryData(QUERY_KEY, context.previousSessions);
         }
@@ -379,7 +373,7 @@ export default function PendingCheckoutsBasket({
   });
 
   const handleExpired = (checkoutSessionId: string) => {
-    setNotification("A pending checkout just expired.");
+    toast.warning("A pending checkout just expired.");
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(checkoutSessionId);
@@ -463,7 +457,7 @@ export default function PendingCheckoutsBasket({
     // already 'paid' server-side and will drop out of the basket on the
     // refetch above; failed ones stay pending and retryable. Don't navigate
     // away, so the user can see what still needs attention.
-    setNotification(
+    toast.error(
       failed.length === results.length
         ? (failed[0].message ?? "Something went wrong.")
         : `${succeeded.length} of ${results.length} completed. "${failed[0].eventTitle}" failed: ${failed[0].message ?? "unknown error"}`,
@@ -603,8 +597,6 @@ export default function PendingCheckoutsBasket({
           </button>
         )}
       </CollapsiblePaymentPanel>
-
-      {notification && <Notification notification={notification} />}
     </div>
   );
 }

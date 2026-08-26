@@ -1,12 +1,11 @@
 "use client";
 
 import { updateUserDetails } from "@/actions/updateUserDetails";
+import { useToast } from "@/hooks/useToast";
 import type { UserDetailsFormType } from "@/types/userProfileType";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
-import Notification from "../atoms/Notification";
 import { Button } from "../ui/button";
 
 type InitialDataProps = {
@@ -28,7 +27,7 @@ export default function EditProfileInputFields({
 
   const { register, handleSubmit } = form;
 
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
   const queryClient = useQueryClient();
 
   const userDetailsQueryKey = ["user-details", initialData.id];
@@ -57,7 +56,13 @@ export default function EditProfileInputFields({
     // {status, message} even on failure, so a rejected update is handled
     // here rather than in onError below.
     onSuccess: (profileData, _formData, context) => {
-      setNotification(profileData?.message || "Profile updated successfully.");
+      const message = profileData?.message || "Profile updated successfully.";
+
+      if (profileData?.status === 200) {
+        toast.success(message);
+      } else {
+        toast.error(message);
+      }
 
       if (profileData?.status !== 200 && context?.previousDetails) {
         queryClient.setQueryData(userDetailsQueryKey, context.previousDetails);
@@ -78,13 +83,7 @@ export default function EditProfileInputFields({
       if (context?.previousDetails) {
         queryClient.setQueryData(userDetailsQueryKey, context.previousDetails);
       }
-      setNotification(error?.message || "Something went wrong.");
-    },
-
-    onSettled: () => {
-      setTimeout(() => {
-        setNotification(null);
-      }, 3000);
+      toast.error(error?.message || "Something went wrong.");
     },
   });
 
@@ -122,8 +121,6 @@ export default function EditProfileInputFields({
           {isPending ? "Submitting..." : "Submit"}
         </Button>
       </form>
-
-      <Notification notification={notification} />
     </>
   );
 }

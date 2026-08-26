@@ -1,7 +1,7 @@
 "use client";
 
 import insertPlacePromotionCheckout from "@/actions/insertPlacePromotionCheckout";
-import Notification from "@/components/atoms/Notification";
+import { useToast } from "@/hooks/useToast";
 import type { PlacePromotionTier } from "@/types/placeType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ export default function ManagePlacePromotionSection({
     tiers[0]?.id ?? null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
 
   const handlePromote = async () => {
     if (!selectedTierId) return;
@@ -48,7 +48,7 @@ export default function ManagePlacePromotionSection({
       );
 
       if (response.status !== 200 || !response.data) {
-        setNotification(response.message ?? "Something went wrong!");
+        toast.error(response.message ?? "Something went wrong!");
         return;
       }
 
@@ -123,8 +123,6 @@ export default function ManagePlacePromotionSection({
       >
         {isSubmitting ? "Starting…" : "Feature this place"}
       </button>
-
-      {notification && <Notification notification={notification} />}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useTimedMessage } from "./useTimedMessage";
+import { useToast } from "./useToast";
 
 type UsePlaceUploadFormOptions = {
   // Owned by the modal (useImageSelection + useCroppedImage) and handed in
@@ -70,13 +70,13 @@ export function usePlaceUploadForm({
     },
   });
   const {
-    register,
+    control,
     handleSubmit,
     getValues,
-    formState: { errors, isDirty: isFormDirty },
+    formState: { isDirty: isFormDirty },
   } = form;
 
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const [isUploading, setIsUploading] = useState(false);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -213,23 +213,23 @@ export function usePlaceUploadForm({
     setIsResolvingLocation(false);
 
     if (!resolution || resolution.status === "empty") {
-      showMessage("Please enter an address");
+      toast.error("Please enter an address");
       return false;
     }
     if (resolution.status === "unresolved") {
-      showMessage(
+      toast.error(
         "Could not find that location — please check the spelling or pick a suggestion.",
       );
       return false;
     }
     if (resolution.status === "error") {
-      showMessage(
+      toast.error(
         "We couldn't verify this location right now. Please try again.",
       );
       return false;
     }
     if (!coordsRef.current) {
-      showMessage("Could not fetch coordinates");
+      toast.error("Could not fetch coordinates");
       return false;
     }
 
@@ -244,12 +244,12 @@ export function usePlaceUploadForm({
       setIsUploading(true);
 
       if (!file && !existingCoverPhoto) {
-        showMessage("Please select a cover photo first!");
+        toast.error("Please select a cover photo first!");
         return;
       }
 
       if (categoryId === null) {
-        showMessage("Please select a category");
+        toast.error("Please select a category");
         return;
       }
 
@@ -257,7 +257,7 @@ export function usePlaceUploadForm({
         (hour) => !hour.isClosed && (!hour.openTime || !hour.closeTime),
       );
       if (hasIncompleteHours) {
-        showMessage("Please set open and close times for every open day");
+        toast.error("Please set open and close times for every open day");
         return;
       }
 
@@ -266,7 +266,7 @@ export function usePlaceUploadForm({
       // by now, so resolveTypedInput() can't be called again here.
       const coords = coordsRef.current;
       if (!selectedAddress || !coords) {
-        showMessage("Please enter an address");
+        toast.error("Please enter an address");
         return;
       }
 
@@ -304,13 +304,13 @@ export function usePlaceUploadForm({
       const response = await postPlace(finalData);
 
       if (response.status === 200) {
-        showMessage("✅ Place published successfully!");
+        toast.success("✅ Place published successfully!");
         onSuccess();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsUploading(false);
       setIsResolvingLocation(false);
@@ -319,11 +319,10 @@ export function usePlaceUploadForm({
   };
 
   return {
-    register,
+    form,
+    control,
     handleSubmit,
-    errors,
     getValues,
-    notification,
     isUploading,
     isResolvingLocation,
     onSubmit,

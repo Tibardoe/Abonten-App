@@ -5,14 +5,21 @@ import PostInput from "@/components/atoms/PostInput";
 import CategoryFilter from "@/components/molecules/CategoryFilter";
 import DateTimePicker from "@/components/molecules/DateTimePicker";
 import TypeFilter from "@/components/molecules/TypeFilter";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import type { useEventEditForm } from "@/hooks/useEventEditForm";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import Image from "next/image";
 
 type EditEventFormFieldsProps = Pick<
   ReturnType<typeof useEventEditForm>,
-  | "register"
-  | "errors"
+  | "form"
+  | "control"
   | "selectedAddress"
   | "setSelectedAddress"
   | "addressInputRef"
@@ -48,8 +55,8 @@ type EditEventFormFieldsProps = Pick<
 // /PromoCodeBtn) — see updateEvent.ts for why ticket types and promo codes
 // aren't editable here.
 export default function EditEventFormFields({
-  register,
-  errors,
+  form,
+  control,
   selectedAddress,
   setSelectedAddress,
   addressInputRef,
@@ -72,156 +79,187 @@ export default function EditEventFormFields({
   restrictedLocked = false,
 }: EditEventFormFieldsProps) {
   return (
-    <form className={className} onSubmit={handleSubmit(onSubmit)}>
-      <div className="space-y-4 py-5 font-normal">
-        {existingFlyer && (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-            <Image
-              src={buildCloudinaryUrl(
-                existingFlyer.publicId,
-                existingFlyer.version,
-                { width: 640, height: 360 },
-              )}
-              alt="Current event flyer"
-              fill
-              className="object-cover"
+    <Form {...form}>
+      <form className={className} onSubmit={handleSubmit(onSubmit)}>
+        <div className="space-y-4 py-5 font-normal">
+          {existingFlyer && (
+            <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+              <Image
+                src={buildCloudinaryUrl(
+                  existingFlyer.publicId,
+                  existingFlyer.version,
+                  { width: 640, height: 360 },
+                )}
+                alt="Current event flyer"
+                fill
+                className="object-cover"
+              />
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <label htmlFor="edit-flyer" className="text-sm font-medium">
+              Replace flyer (optional)
+            </label>
+            <input
+              id="edit-flyer"
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+              className="block w-full text-sm text-muted-foreground"
             />
           </div>
-        )}
 
-        <div className="space-y-1">
-          <label htmlFor="edit-flyer" className="text-sm font-medium">
-            Replace flyer (optional)
-          </label>
-          <input
-            id="edit-flyer"
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-muted-foreground"
+          <FormField
+            control={control}
+            name="title"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <PostInput type="text" inputPlaceholder="Title" {...field} />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <PostInput
-          type="text"
-          inputPlaceholder="Title"
-          {...register("title")}
-        />
-        {errors.title && (
-          <p className="text-destructive text-sm">{errors.title.message}</p>
-        )}
-
-        <PostInput
-          type="text"
-          inputPlaceholder="Description"
-          {...register("description")}
-        />
-        {errors.description && (
-          <p className="text-destructive text-sm">
-            {errors.description.message}
-          </p>
-        )}
-
-        <fieldset
-          disabled={restrictedLocked}
-          className={restrictedLocked ? "opacity-60 space-y-4" : "space-y-4"}
-        >
-          {restrictedLocked && (
-            <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted px-3 py-2">
-              This event already has confirmed tickets — location, dates and
-              capacity can't be changed to protect people who already have a
-              ticket.
-            </p>
-          )}
-
-          <PostAutoComplete
-            ref={addressInputRef}
-            address={{ address: setSelectedAddress }}
-            onSelectCoordinates={handleSelectCoordinates}
-            value={selectedAddress}
-            placeholderText={{
-              text: "Location",
-              svgUrl: "/assets/images/location.svg",
-            }}
+          <FormField
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="space-y-0">
+                <FormControl>
+                  <PostInput
+                    type="text"
+                    inputPlaceholder="Description"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
           />
-          {selectedAddress === "" && (
-            <p className="text-destructive text-sm">Location required</p>
-          )}
-
-          {/* Date and time — dateType is fixed to whatever the event was
-              created with (single/range vs specific dates); switching the
-              schedule TYPE isn't supported from edit, only the dates within it. */}
-          <div className="space-y-4 text-sm">
-            <h2>Date & Time</h2>
-            <DateTimePicker
-              handleDateAndTime={handleDateAndTime}
-              dateType={dateType}
-              initialRange={initialRange}
-              initialEntries={initialEntries}
-            />
-          </div>
-        </fieldset>
-
-        <div className="space-y-4 text-sm font-normal">
-          <CategoryFilter handleCategory={setCategory} category={category} />
-          {category === "" && (
-            <p className="text-destructive text-sm">Select event category</p>
-          )}
-
-          <TypeFilter
-            selectedTypes={types}
-            selectedCategory={category}
-            handleType={handleType}
-          />
-          {types.length === 0 && (
-            <p className="text-destructive text-sm">
-              Select at least one type for event
-            </p>
-          )}
-
-          <PostInput
-            type="text"
-            inputPlaceholder="Website (optional)"
-            {...register("website_url")}
-          />
-          {errors.website_url && (
-            <p className="text-destructive text-sm">
-              {errors.website_url.message}
-            </p>
-          )}
 
           <fieldset
             disabled={restrictedLocked}
-            className={restrictedLocked ? "opacity-60 space-y-1" : "space-y-1"}
+            className={restrictedLocked ? "opacity-60 space-y-4" : "space-y-4"}
           >
-            <PostInput
-              type="number"
-              inputPlaceholder="Capacity"
-              {...register("capacity", { valueAsNumber: true })}
+            {restrictedLocked && (
+              <p className="text-sm text-muted-foreground rounded-md border border-border bg-muted px-3 py-2">
+                This event already has confirmed tickets — location, dates and
+                capacity can't be changed to protect people who already have a
+                ticket.
+              </p>
+            )}
+
+            <PostAutoComplete
+              ref={addressInputRef}
+              address={{ address: setSelectedAddress }}
+              onSelectCoordinates={handleSelectCoordinates}
+              value={selectedAddress}
+              placeholderText={{
+                text: "Location",
+                svgUrl: "/assets/images/location.svg",
+              }}
             />
-            <p className="text-xs text-muted-foreground">
-              Leave blank for unlimited capacity
-            </p>
+            {selectedAddress === "" && (
+              <p className="text-destructive text-sm">Location required</p>
+            )}
+
+            {/* Date and time — dateType is fixed to whatever the event was
+              created with (single/range vs specific dates); switching the
+              schedule TYPE isn't supported from edit, only the dates within it. */}
+            <div className="space-y-4 text-sm">
+              <h2>Date & Time</h2>
+              <DateTimePicker
+                handleDateAndTime={handleDateAndTime}
+                dateType={dateType}
+                initialRange={initialRange}
+                initialEntries={initialEntries}
+              />
+            </div>
           </fieldset>
-          {errors.capacity && (
-            <p className="text-destructive text-sm">
-              {errors.capacity.message}
-            </p>
-          )}
 
-          <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
-            <span>Require registration</span>
-            <input
-              type="checkbox"
-              checked={checked}
-              onChange={handleChecked}
-              className="h-5 w-5 accent-primary"
+          <div className="space-y-4 text-sm font-normal">
+            <CategoryFilter handleCategory={setCategory} category={category} />
+            {category === "" && (
+              <p className="text-destructive text-sm">Select event category</p>
+            )}
+
+            <TypeFilter
+              selectedTypes={types}
+              selectedCategory={category}
+              handleType={handleType}
             />
-          </label>
+            {types.length === 0 && (
+              <p className="text-destructive text-sm">
+                Select at least one type for event
+              </p>
+            )}
 
-          <hr className="border-border" />
+            <FormField
+              control={control}
+              name="website_url"
+              render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <FormControl>
+                    <PostInput
+                      type="text"
+                      inputPlaceholder="Website (optional)"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-sm" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={control}
+              name="capacity"
+              render={({ field }) => (
+                <FormItem className="space-y-0">
+                  <fieldset
+                    disabled={restrictedLocked}
+                    className={
+                      restrictedLocked ? "opacity-60 space-y-1" : "space-y-1"
+                    }
+                  >
+                    <FormControl>
+                      <PostInput
+                        type="number"
+                        inputPlaceholder="Capacity"
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(
+                            (e.target as HTMLInputElement).valueAsNumber,
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Leave blank for unlimited capacity
+                    </p>
+                  </fieldset>
+                  <FormMessage className="text-sm" />
+                </FormItem>
+              )}
+            />
+
+            <label className="flex justify-between items-center font-semibold text-foreground cursor-pointer">
+              <span>Require registration</span>
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={handleChecked}
+                className="h-5 w-5 accent-primary"
+              />
+            </label>
+
+            <hr className="border-border" />
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }

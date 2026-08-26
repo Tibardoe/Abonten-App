@@ -4,11 +4,10 @@ import { deletePromoCode } from "@/actions/deletePromoCode";
 import type { EventPromoCode } from "@/actions/getEventPromoCodes";
 import { getEventPromoCodes } from "@/actions/getEventPromoCodes";
 import { updatePromoCode } from "@/actions/updatePromoCode";
-import Notification from "@/components/atoms/Notification";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -40,7 +39,7 @@ export default function ManagePromoCodesModal({
   useBodyScrollLock(true);
 
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const queryKey = ["event-promo-codes", eventId];
   const { data: response, isLoading } = useQuery({
@@ -71,10 +70,13 @@ export default function ManagePromoCodesModal({
         setEditingId(null);
         setEditState(null);
         invalidate();
+        toast.success(result.message ?? "Promo code updated.");
+      } else {
+        toast.error(result.message ?? "We couldn't update that promo code.");
       }
-      showMessage(result.message ?? "Something went wrong.");
     },
-    onError: () => showMessage("Something went wrong. Please try again."),
+    onError: () =>
+      toast.error("We couldn't update that promo code. Please try again."),
   });
 
   const deleteMutation = useMutation({
@@ -83,10 +85,13 @@ export default function ManagePromoCodesModal({
       if (result.status === 200) {
         setDeletingId(null);
         invalidate();
+        toast.success(result.message ?? "Promo code deleted.");
+      } else {
+        toast.error(result.message ?? "We couldn't delete that promo code.");
       }
-      showMessage(result.message ?? "Something went wrong.");
     },
-    onError: () => showMessage("Something went wrong. Please try again."),
+    onError: () =>
+      toast.error("We couldn't delete that promo code. Please try again."),
   });
 
   const startEdit = (code: EventPromoCode) => {
@@ -285,14 +290,14 @@ export default function ManagePromoCodesModal({
 
       {deletingId && (
         <ConfirmDeleteModal
+          title="Delete this promo code?"
           message="Delete this promo code? If it's already been used, it will be deactivated instead so redemption history is preserved."
+          confirmLabel="Delete Code"
           isLoading={deleteMutation.isPending}
           onConfirm={() => deleteMutation.mutate(deletingId)}
           onCancel={() => setDeletingId(null)}
         />
       )}
-
-      {notification && <Notification notification={notification} />}
     </>
   );
 }

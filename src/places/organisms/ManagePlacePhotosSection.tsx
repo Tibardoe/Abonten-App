@@ -189,7 +189,9 @@ export default function ManagePlacePhotosSection({
 
       {photoPendingRemoval && (
         <ConfirmDeleteModal
+          title="Remove this photo?"
           message="Remove this photo from your gallery? This can't be undone."
+          confirmLabel="Remove Photo"
           isLoading={isRemoving}
           onConfirm={handleConfirmRemove}
           onCancel={() => setPhotoPendingRemoval(null)}

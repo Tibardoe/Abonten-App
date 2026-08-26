@@ -2,7 +2,7 @@
 
 import getAvatarUploadSignature from "@/actions/getAvatarUploadSignature";
 import { saveToSupabase } from "@/actions/saveAvatarToSupabase";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +22,7 @@ type UseAvatarUploadOptions = {
 export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
   const [progress, setProgress] = useState(0);
 
   const { mutate, isPending } = useMutation({
@@ -30,12 +30,12 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
       setProgress(0);
 
       if (!file) {
-        showMessage("Please select a photo!");
+        toast.error("Please select a photo!");
         return;
       }
 
       if (file.size > MAX_AVATAR_UPLOAD_SIZE_BYTES) {
-        showMessage("File is too large. Please upload an image under 5MB.");
+        toast.error("File is too large. Please upload an image under 5MB.");
         return;
       }
 
@@ -43,7 +43,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         const signatureResponse = await getAvatarUploadSignature();
 
         if (signatureResponse.status !== 200 || !signatureResponse.data) {
-          showMessage(signatureResponse.message ?? "Failed to start upload.");
+          toast.error(signatureResponse.message ?? "Failed to start upload.");
           return;
         }
 
@@ -66,7 +66,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
 
         await saveToSupabase(result.public_id, result.version, transformation);
 
-        showMessage("Upload successful!");
+        toast.success("Upload successful!");
         router.refresh();
         // No user id is threaded into this hook, so invalidate every
         // ["user-details", ...] / ["profile-completion", ...] entry rather
@@ -81,7 +81,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         onSuccess?.();
       } catch (error) {
         console.error("Error uploading image:", error);
-        showMessage(
+        toast.error(
           error instanceof Error
             ? error.message
             : "Upload failed. Please try again.",
@@ -94,6 +94,5 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
     uploadAvatar: mutate,
     isUploading: isPending,
     progress,
-    notification,
   };
 }

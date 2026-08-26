@@ -4,6 +4,7 @@ import deleteUser from "@/actions/deleteUser";
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import updateVerifiedPhone from "@/actions/updateVerifiedPhone";
 import { supabase } from "@/config/supabase/client";
+import { useToast } from "@/hooks/useToast";
 import { linkGoogleIdentity } from "@/services/authService";
 import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
@@ -13,7 +14,6 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
 import MaskIcon from "../atoms/MaskIcon";
-import Notification from "../atoms/Notification";
 import OtpInput from "../molecules/OtpInput";
 import PhoneInput from "../molecules/PhoneInput";
 import ResendOtpButton from "../molecules/ResendOtpButton";
@@ -39,10 +39,14 @@ export default function SecurityInputFields({
   const t = useTranslations("settings.security.phone");
   const tAuth = useTranslations("auth");
   const searchParams = useSearchParams();
-  const [notification, setNotification] = useState<string | null>(
-    searchParams.get("authError"),
-  );
+  const toast = useToast();
   const [isLinkingGoogle, setIsLinkingGoogle] = useState(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only meant to run once on mount, to surface a one-time OAuth redirect error carried in the URL.
+  useEffect(() => {
+    const authError = searchParams.get("authError");
+    if (authError) toast.error(authError);
+  }, []);
 
   const handleLinkGoogle = async () => {
     setIsLinkingGoogle(true);
@@ -52,7 +56,7 @@ export default function SecurityInputFields({
       // No need to reset isLinkingGoogle -- linkIdentity navigates away.
     } catch (error) {
       console.error("Link Google account error:", error);
-      setNotification("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
       setIsLinkingGoogle(false);
     }
   };
@@ -86,7 +90,11 @@ export default function SecurityInputFields({
 
   const handleDeleteUser = async () => {
     const response = await deleteUser();
-    setNotification(response.message);
+    if (response.status === 200) {
+      toast.success(response.message);
+    } else {
+      toast.error(response.message);
+    }
   };
 
   const handleEmailSubmit = handleSubmit(async ({ email }) => {
@@ -103,16 +111,16 @@ export default function SecurityInputFields({
       );
 
       if (error) {
-        setNotification(error.message);
+        toast.error(error.message);
         return;
       }
 
-      setNotification(
+      toast.success(
         `We've sent a confirmation link to ${email}. Click it to verify your new email.`,
       );
     } catch (error) {
       console.error("Email update error:", error);
-      setNotification("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsUpdatingEmail(false);
     }
@@ -169,7 +177,7 @@ export default function SecurityInputFields({
 
       setCurrentPhone(phoneE164);
       setCurrentPhoneVerified(true);
-      setNotification(response.message);
+      toast.success(response.message);
       setStep(1);
     } catch (error) {
       console.error("Phone update verify error:", error);
@@ -353,8 +361,6 @@ export default function SecurityInputFields({
           </form>
         </div>
       )}
-
-      <Notification notification={notification} />
     </>
   );
 }

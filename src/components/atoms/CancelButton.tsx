@@ -2,12 +2,11 @@
 
 import cancelEvent from "@/actions/cancelEvent";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
-import Notification from "./Notification";
 
 type CancelProp = {
   eventId: string;
@@ -18,7 +17,7 @@ export default function CancelButton({ eventId }: CancelProp) {
   const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => cancelEvent(eventId),
@@ -26,7 +25,7 @@ export default function CancelButton({ eventId }: CancelProp) {
       if (response.status === 200) {
         setShowCancelConfirm(false);
         invalidateEventListQueries(queryClient);
-        showMessage(response.message);
+        toast.success(response.message);
       } else {
         setError(
           response.message ?? "Failed updating event status. Please try again.",
@@ -54,14 +53,15 @@ export default function CancelButton({ eventId }: CancelProp) {
 
       {showCancelConfirm && (
         <ConfirmDeleteModal
+          title="Cancel this event?"
           message={error ?? "Are you sure you want to cancel this event?"}
+          confirmLabel="Cancel Event"
+          cancelLabel="Keep Event"
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={() => setShowCancelConfirm(false)}
         />
       )}
-
-      {notification && <Notification notification={notification} />}
     </>
   );
 }

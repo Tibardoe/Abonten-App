@@ -2,17 +2,16 @@ import { addEventToFavorite } from "@/actions/addEventToFavorite";
 import { checkIfEventIsFavorited } from "@/actions/checkIfEventIsFavorited";
 import { removeEventFromFavorite } from "@/actions/removeEventFromFavorite";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
 import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
-import Notification from "./Notification";
 
 type EventProp = {
   eventId: string;
 };
 
 export default function AddToFavoriteButton({ eventId }: EventProp) {
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const requireAuth = useRequireAuth();
 
@@ -67,11 +66,10 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
         ["user-favorited", eventId],
         context?.previousState,
       );
-      setError("Something went wrong. Please try again later.");
+      toast.error("Something went wrong. Please try again later.");
     },
 
     onSettled: () => {
-      setTimeout(() => setError(null), 3000);
       queryClient.invalidateQueries({ queryKey: ["user-favorited", eventId] });
       // The favorites list page (["favorites"]) is a separate cache entry
       // from this button's own starred/unstarred state above — without this,
@@ -103,8 +101,6 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
 
         {buttonText}
       </button>
-
-      {error && <Notification notification={error} />}
     </>
   );
 }

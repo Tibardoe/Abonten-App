@@ -5,6 +5,7 @@ import { getEventAttendanceCount } from "@/actions/getAttendace";
 import getUserFreeRegistrationStatus from "@/actions/getUserFreeRegistrationStatus";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
+import { useToast } from "@/hooks/useToast";
 import type { Occurrence } from "@/types/occurrenceType";
 import { getEventStatus } from "@/utils/eventStatus";
 import {
@@ -12,9 +13,7 @@ import {
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { FiCheck } from "react-icons/fi";
-import Notification from "./Notification";
 
 type AttendingButtonProps = {
   eventId: string;
@@ -41,7 +40,7 @@ export default function AttendingButton({
   eventDates,
   soldOut,
 }: AttendingButtonProps) {
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   const requireAuth = useRequireAuth();
   const queryClient = useQueryClient();
@@ -120,17 +119,18 @@ export default function AttendingButton({
         ["attendance-count", eventId],
         context?.previousCount,
       );
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     },
 
     onSuccess: (response) => {
       if (response.status !== 200) {
-        setError(response.message ?? "Something went wrong. Please try again.");
+        toast.error(
+          response.message ?? "Something went wrong. Please try again.",
+        );
       }
     },
 
     onSettled: () => {
-      setTimeout(() => setError(null), 3000);
       queryClient.invalidateQueries({
         queryKey: ["free-registration-status", eventId],
       });
@@ -206,8 +206,6 @@ export default function AttendingButton({
           attending
         </p>
       )}
-
-      {error && <Notification notification={error} />}
     </div>
   );
 }

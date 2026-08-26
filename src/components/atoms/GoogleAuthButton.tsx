@@ -1,9 +1,9 @@
+import { useToast } from "@/hooks/useToast";
 import { signInWithGoogle } from "@/services/authService";
 import { generateSlug } from "@/utils/geerateSlug";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import Notification from "./Notification";
 
 type GoogleTextProp = {
   location: string | null;
@@ -12,7 +12,7 @@ type GoogleTextProp = {
 
 export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
   const t = useTranslations("auth");
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleSignin = async () => {
@@ -25,7 +25,7 @@ export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
     } catch (error) {
       console.error("Google Sign-In Error:", error);
 
-      setNotification(t("googleSignInFailed"));
+      toast.error(t("googleSignInFailed"));
       setIsSigningIn(false);
     }
   };
@@ -44,7 +44,6 @@ export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
           {isSigningIn ? t("redirecting") : t("continueWithGoogle")}
         </p>
       </button>
-      <Notification notification={notification} />
     </>
   );
 }

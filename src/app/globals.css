@@ -1,70 +1,11 @@
-/* Import font weights */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* styles/globals.css */
-/* @font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/EuclidCircularB-Regular.ttf") format("woff2"),
-    url("/fonts/Euclid CircularB-Regular.ttf") format("woff");
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/EuclidCircularB-Bold.ttf") format("woff2"),
-    url("/fonts/EuclidCircularB-Bold.ttf") format("woff");
-  font-weight: 700;
-  font-style: normal;
-} */
-
-@font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/Euclid-Circular-B-Light.woff2") format("woff2");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/Euclid-Circular-B-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/Euclid-Circular-B-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/Euclid-Circular-B-SemiBold.woff2") format("woff2");
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Euclid Circular B";
-  src: url("/fonts/Euclid-Circular-B-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-body {
-  font-family: "Euclid Circular B", sans-serif;
-}
+/* Euclid Circular B is loaded via next/font/local (see src/app/fonts.ts),
+   which generates its own @font-face rules and the --font-euclid variable
+   that tailwind.config.ts's fontFamily.sans references -- so no manual
+   @font-face declarations or Google Fonts import belong here. */
 
 @layer base {
   :root {

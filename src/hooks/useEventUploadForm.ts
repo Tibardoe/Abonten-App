@@ -4,7 +4,7 @@ import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import { postEvent } from "@/actions/postEvent";
 import { saveEventDraft } from "@/actions/saveEventDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import type { EventDates, PostsType } from "@/types/postsType";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
 import type { Ticket } from "@/types/ticketType";
@@ -82,12 +82,12 @@ export function useEventUploadForm({
     },
   });
   const {
-    register,
+    control,
     handleSubmit,
-    formState: { errors, isDirty: isFormDirty },
+    formState: { isDirty: isFormDirty },
   } = form;
 
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const [isUploading, setIsUploading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -370,7 +370,7 @@ export function useEventUploadForm({
       setIsUploading(true);
 
       if (!file && !existingFlyer) {
-        showMessage("Please select a file first!");
+        toast.error("Please select a file first!");
         return;
       }
 
@@ -383,19 +383,19 @@ export function useEventUploadForm({
       setIsResolvingLocation(false);
 
       if (!resolution || resolution.status === "empty") {
-        showMessage("Please enter a location");
+        toast.error("Please enter a location");
         setInvalidSection("location");
         return;
       }
       if (resolution.status === "unresolved") {
-        showMessage(
+        toast.error(
           "Could not find that location — please check the spelling or pick a suggestion.",
         );
         setInvalidSection("location");
         return;
       }
       if (resolution.status === "error") {
-        showMessage(
+        toast.error(
           "We couldn't verify this location right now. Please try again.",
         );
         setInvalidSection("location");
@@ -404,7 +404,7 @@ export function useEventUploadForm({
 
       const coords = coordsRef.current;
       if (!coords) {
-        showMessage("Could not fetch coordinates");
+        toast.error("Could not fetch coordinates");
         setInvalidSection("location");
         return;
       }
@@ -415,7 +415,7 @@ export function useEventUploadForm({
       if (dateType === "single") {
         const result = validateSingleDateRange(singleDateRange, bufferedNow);
         if (!result.ok) {
-          showMessage(result.message);
+          toast.error(result.message);
           setInvalidSection("date");
           return;
         }
@@ -427,20 +427,20 @@ export function useEventUploadForm({
       } else if (dateType === "specific") {
         const result = validateSpecificDates(multipleDates, bufferedNow);
         if (!result.ok) {
-          showMessage(result.message);
+          toast.error(result.message);
           setInvalidSection("date");
           return;
         }
 
         eventDates = { specific_dates: multipleDates };
       } else {
-        showMessage("Invalid date selection");
+        toast.error("Invalid date selection");
         setInvalidSection("date");
         return;
       }
 
       if (!category || !types) {
-        showMessage("Categories and types must be set");
+        toast.error("Categories and types must be set");
         return;
       }
 
@@ -450,7 +450,7 @@ export function useEventUploadForm({
         (!multipleTickets || multipleTickets.length === 0);
 
       if (noTicketingSet) {
-        showMessage("Event ticketing must be set");
+        toast.error("Event ticketing must be set");
         setInvalidSection("tickets");
         return;
       }
@@ -480,13 +480,13 @@ export function useEventUploadForm({
       const response = await postEvent(finalData);
 
       if (response.status === 200) {
-        showMessage("✅ Event posted successfully!");
+        toast.success("✅ Event posted successfully!");
         onSuccess();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(`❌ ${response.message}`);
       }
     } catch (error) {
-      showMessage("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setIsUploading(false);
       setIsResolvingLocation(false);
@@ -495,11 +495,9 @@ export function useEventUploadForm({
   };
 
   return {
-    register,
+    form,
+    control,
     handleSubmit,
-    errors,
-    notification,
-    showMessage,
     isUploading,
     isResolvingLocation,
     hasAttemptedSubmit,

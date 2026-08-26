@@ -5,7 +5,7 @@ import CheckoutOrderTotals from "@/components/molecules/CheckoutOrderTotals";
 import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import {
   allocatePromoEligibility,
   computeCheckoutFee,
@@ -15,7 +15,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
-import Notification from "../atoms/Notification";
 
 type CheckoutProp = {
   handleCheckoutModal: (state: boolean) => void;
@@ -54,7 +53,7 @@ export default function CheckoutModal({
     [ticketTypeId: string]: number;
   }>({});
 
-  const { message: error, showMessage: setError } = useTimedMessage();
+  const toast = useToast();
 
   const router = useRouter();
 
@@ -117,7 +116,7 @@ export default function CheckoutModal({
     mutationFn: (code: string) => getPromoCode(code, eventId),
     onSuccess: (response) => {
       if (response.status !== 200) {
-        setError(response.message ?? "Failed to apply promo code");
+        toast.error(response.message ?? "That promo code couldn't be applied.");
         setAppliedPromo(null);
         return;
       }
@@ -128,12 +127,8 @@ export default function CheckoutModal({
         remainingUses: response.remainingUses ?? null,
       });
     },
-    onError: (mutationError) => {
-      setError(
-        mutationError instanceof Error
-          ? mutationError.message
-          : "Failed to apply promo code. Please try again.",
-      );
+    onError: () => {
+      toast.error("We couldn't apply that promo code. Please try again.");
       setAppliedPromo(null);
     },
   });
@@ -216,38 +211,36 @@ export default function CheckoutModal({
       occurrenceId,
     });
 
-    if (
-      response?.status !== 200 &&
-      response.message ===
-        "You already have a pending ticket checkout for this event"
-    ) {
-      setError(response?.message ?? "Something ocurred");
+    if (response.status !== 200 && response.reason === "pending_checkout") {
+      toast.info(
+        response.message ??
+          "You already have a pending checkout for this event.",
+      );
       router.push(`/checkout/${response.checkoutId}?type=ticket`);
 
       setIsProceeding(false);
       return;
     }
 
-    if (
-      response?.status !== 200 &&
-      response.message === "Ticket for this event already bought"
-    ) {
-      setError(response?.message ?? "Something ocurred");
+    if (response.status !== 200 && response.reason === "already_purchased") {
+      toast.info(
+        response.message ?? "You already own a ticket for this event.",
+      );
       router.push("/manage/my-events");
 
       setIsProceeding(false);
       return;
     }
 
-    if (response?.status !== 200) {
-      setError(response?.message ?? "Something ocurred");
+    if (response.status !== 200 || !response.checkoutSessionId) {
+      toast.error(
+        response.message ?? "We couldn't start checkout. Please try again.",
+      );
       setIsProceeding(false);
       return;
     }
 
-    if (response?.status === 200 && response.checkoutSessionId) {
-      router.push(`/checkout/${response.checkoutSessionId}?type=ticket`);
-    }
+    router.push(`/checkout/${response.checkoutSessionId}?type=ticket`);
   };
 
   const ticketsErrorMessage = isTicketsError
@@ -373,8 +366,6 @@ export default function CheckoutModal({
           </button>
         </div>
       </div>
-
-      {error && <Notification notification={error} />}
     </div>
   );
 }

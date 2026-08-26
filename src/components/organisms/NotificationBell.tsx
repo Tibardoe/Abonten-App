@@ -7,6 +7,7 @@ import { cn } from "@/components/lib/utils";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useToast } from "@/hooks/useToast";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
 import type { NotificationType } from "@/types/notificationType";
 import type { PaginatedResult } from "@/types/pagination";
@@ -19,7 +20,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { IoNotificationsOutline } from "react-icons/io5";
-import Notification from "../atoms/Notification";
 import NotificationRowSkeleton from "../molecules/NotificationRowSkeleton";
 
 // Sitewide, not Places-specific (any signed-in user gets notifications
@@ -43,7 +43,7 @@ export default function NotificationBell({
   align = "right",
 }: NotificationBellProps = {}) {
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
   // Guards against a double-click/double-tap firing markNotificationRead
   // twice for the same row before the optimistic cache update re-renders
   // the row with its new read_at value.
@@ -140,7 +140,7 @@ export default function NotificationBell({
           context.previousCount,
         );
       }
-      setError("Couldn't mark that notification as read. Please try again.");
+      toast.error("Couldn't mark that notification as read. Please try again.");
     },
 
     onSettled: (_data, _error, notificationId) => {
@@ -149,7 +149,6 @@ export default function NotificationBell({
         next.delete(notificationId);
         return next;
       });
-      setTimeout(() => setError(null), 3000);
       invalidateNotificationQueries();
     },
   });
@@ -214,11 +213,10 @@ export default function NotificationBell({
           context.previousCount,
         );
       }
-      setError("Couldn't mark all notifications as read. Please try again.");
+      toast.error("Couldn't mark all notifications as read. Please try again.");
     },
 
     onSettled: () => {
-      setTimeout(() => setError(null), 3000);
       invalidateNotificationQueries();
     },
   });
@@ -353,8 +351,6 @@ export default function NotificationBell({
           />
         </div>
       )}
-
-      {error && <Notification notification={error} />}
     </div>
   );
 }

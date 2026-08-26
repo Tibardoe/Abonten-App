@@ -15,6 +15,7 @@ import OrganizerOverviewCards from "@/components/molecules/OrganizerOverviewCard
 import OrganizerRecentActivity from "@/components/molecules/OrganizerRecentActivity";
 import OrganizerSalesTimelineChart from "@/components/molecules/OrganizerSalesTimelineChart";
 import OrganizerUpcomingEvents from "@/components/molecules/OrganizerUpcomingEvents";
+import { PageTitle, SectionTitle } from "@/components/ui/typography";
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import type {
   DashboardBucket,
@@ -130,9 +131,7 @@ export default function OrganizerDashboard() {
   if (hasNoEvents) {
     return (
       <div className="flex flex-col items-center text-center gap-4 py-16">
-        <h1 className="font-bold text-xl md:text-2xl">
-          Welcome to your Organizer Dashboard
-        </h1>
+        <PageTitle>Welcome to your Organizer Dashboard</PageTitle>
         <p className="text-sm text-muted-foreground max-w-sm">
           Create your first event to start tracking your sales and performance.
         </p>
@@ -146,10 +145,10 @@ export default function OrganizerDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="font-bold text-xl md:text-2xl">
+        <PageTitle>
           {greeting}
           {userDetails?.username ? `, ${userDetails.username}` : ""}
-        </h1>
+        </PageTitle>
       </div>
 
       <DashboardPeriodFilter value={period} onChange={setPeriod} />
@@ -163,7 +162,7 @@ export default function OrganizerDashboard() {
       <OrganizerFinanceSummary />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-bold md:text-lg">Sales Over Time</h2>
+        <SectionTitle>Sales Over Time</SectionTitle>
         <OrganizerSalesTimelineChart
           data={timelineData}
           bucket={timelineBucket}

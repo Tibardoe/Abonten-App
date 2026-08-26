@@ -3,9 +3,8 @@
 import { addPlaceService } from "@/actions/addPlaceService";
 import { removePlaceService } from "@/actions/removePlaceService";
 import { updatePlaceService } from "@/actions/updatePlaceService";
-import Notification from "@/components/atoms/Notification";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
-import { useTimedMessage } from "@/hooks/useTimedMessage";
+import { useToast } from "@/hooks/useToast";
 import { useState } from "react";
 import { IoAddOutline, IoPencilOutline, IoTrashOutline } from "react-icons/io5";
 
@@ -48,7 +47,7 @@ export default function ManagePlaceServicesSection({
   services,
   onChanged,
 }: ManagePlaceServicesSectionProps) {
-  const { message: notification, showMessage } = useTimedMessage(3000);
+  const toast = useToast();
 
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -71,11 +70,11 @@ export default function ManagePlaceServicesSection({
       });
 
       if (response.status === 200) {
-        showMessage("✅ Service added successfully!");
+        toast.success("Service added successfully.");
         setIsAdding(false);
         onChanged();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't add that service.");
       }
     } finally {
       setIsSubmitting(false);
@@ -95,11 +94,11 @@ export default function ManagePlaceServicesSection({
       });
 
       if (response.status === 200) {
-        showMessage("✅ Service updated successfully!");
+        toast.success("Service updated successfully.");
         setEditingServiceId(null);
         onChanged();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't update that service.");
       }
     } finally {
       setIsSubmitting(false);
@@ -112,9 +111,10 @@ export default function ManagePlaceServicesSection({
     try {
       const response = await removePlaceService(servicePendingRemoval);
       if (response.status === 200) {
+        toast.success("Service removed.");
         onChanged();
       } else {
-        showMessage(`❌ ${response.message}`);
+        toast.error(response.message ?? "We couldn't remove that service.");
       }
     } finally {
       setIsRemoving(false);
@@ -215,14 +215,14 @@ export default function ManagePlaceServicesSection({
 
       {servicePendingRemoval && (
         <ConfirmDeleteModal
+          title="Remove this service?"
           message="Remove this service? This can't be undone."
+          confirmLabel="Remove Service"
           isLoading={isRemoving}
           onConfirm={handleConfirmRemove}
           onCancel={() => setServicePendingRemoval(null)}
         />
       )}
-
-      <Notification notification={notification} />
     </div>
   );
 }

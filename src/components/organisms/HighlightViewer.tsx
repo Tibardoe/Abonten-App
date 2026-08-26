@@ -486,9 +486,14 @@ export default function HighlightViewer({
 
       {showConfirmDelete && (
         <ConfirmDeleteModal
+          title={`Delete this ${
+            currentSlide.media_type === "video" ? "video" : "photo"
+          }?`}
           message={`Are you sure you want to delete this ${
             currentSlide.media_type === "video" ? "video" : "photo"
           }?`}
+          confirmLabel="Delete"
+          loadingLabel="Deleting…"
           isLoading={isDeleting}
           onConfirm={handleDeleteSlide}
           onCancel={() => setShowConfirmDelete(false)}

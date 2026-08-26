@@ -1,7 +1,7 @@
 "use client";
 
 import insertEventPromotionCheckout from "@/actions/insertEventPromotionCheckout";
-import Notification from "@/components/atoms/Notification";
+import { useToast } from "@/hooks/useToast";
 import type { EventPromotionTier } from "@/types/postsType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import type { EventStatus } from "@/utils/eventStatus";
@@ -43,7 +43,7 @@ export default function ManageEventPromotionSection({
     tiers[0]?.id ?? null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
+  const toast = useToast();
 
   const ineligibleReason =
     eventStatus === "canceled"
@@ -65,7 +65,7 @@ export default function ManageEventPromotionSection({
       );
 
       if (response.status !== 200 || !response.data) {
-        setNotification(response.message ?? "Something went wrong!");
+        toast.error(response.message ?? "Something went wrong!");
         return;
       }
 
@@ -148,8 +148,6 @@ export default function ManageEventPromotionSection({
           </button>
         </>
       )}
-
-      {notification && <Notification notification={notification} />}
     </div>
   );
 }
