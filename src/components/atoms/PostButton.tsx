@@ -15,6 +15,7 @@ import { Button } from "../ui/button";
 export default function PostButton() {
   const [showPostModal, setShowPostModal] = useState(false);
   const [showChooser, setShowChooser] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
 
   const {
     imagePreview,
@@ -25,8 +26,14 @@ export default function PostButton() {
   } = useImageSelection({
     invalidFileMessage: "Please select an image file for your event flyer.",
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
-    onInvalidFile: (message) => alert(message),
-    onSelect: () => setShowPostModal(true),
+    // A brief inline error rather than the native alert() this used to
+    // call -- consistent with ContinueEventDraftButton's existing pattern
+    // for the same failure.
+    onInvalidFile: (message) => setFileError(message),
+    onSelect: () => {
+      setFileError(null);
+      setShowPostModal(true);
+    },
   });
 
   const closePopup = (state: boolean) => setShowPostModal(state);
@@ -45,6 +52,9 @@ export default function PostButton() {
       <Button className="px-10 font-medium text-sm mt-5" onClick={handleClick}>
         Create Event
       </Button>
+      {fileError && (
+        <p className="text-destructive text-sm mt-1">{fileError}</p>
+      )}
 
       <input
         type="file"

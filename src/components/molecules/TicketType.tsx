@@ -80,7 +80,7 @@ export default function TicketType({
               onClick={() => handleTicket("Single Ticket Type")}
               className="flex justify-between items-center w-full text-sm"
             >
-              Sinlge Ticket Type
+              Single Ticket Type
               <span className="w-[20px] h-[20px] rounded-full grid place-items-center border border-border">
                 <span
                   className={cn("bg-primary w-[10px] h-[10px] rounded-full", {

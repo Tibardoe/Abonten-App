@@ -10,6 +10,7 @@ import TicketType from "@/components/molecules/TicketType";
 import TypeFilter from "@/components/molecules/TypeFilter";
 import type { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import PlaceSearchSelect from "@/places/molecules/PlaceSearchSelect";
+import { useEffect, useRef } from "react";
 
 type EventUploadFormFieldsProps = Pick<
   ReturnType<typeof useEventUploadForm>,
@@ -49,6 +50,8 @@ type EventUploadFormFieldsProps = Pick<
   | "handleSelectPlace"
   | "clearSelectedPlace"
   | "isPlacePreselected"
+  | "hasAttemptedSubmit"
+  | "invalidSection"
 > & { className?: string };
 
 // The event-details fields shared by every step-2 (details) screen of the
@@ -96,8 +99,27 @@ export default function EventUploadFormFields({
   handleSelectPlace,
   clearSelectedPlace,
   isPlacePreselected,
+  hasAttemptedSubmit,
+  invalidSection,
   className,
 }: EventUploadFormFieldsProps) {
+  const dateSectionRef = useRef<HTMLDivElement>(null);
+  const locationSectionRef = useRef<HTMLDivElement>(null);
+  const ticketSectionRef = useRef<HTMLDivElement>(null);
+
+  // Points the organizer at whichever section a failed submit's manual
+  // (non-RHF) validation blamed -- otherwise a 3-second toast is the only
+  // clue, and the offending section may already be scrolled out of view.
+  useEffect(() => {
+    if (!invalidSection) return;
+    const target = {
+      date: dateSectionRef,
+      location: locationSectionRef,
+      tickets: ticketSectionRef,
+    }[invalidSection];
+    target.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [invalidSection]);
+
   return (
     <form className={className} onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-6 py-5 font-normal">
@@ -124,7 +146,7 @@ export default function EventUploadFormFields({
           )}
 
           <CategoryFilter handleCategory={setCategory} category={category} />
-          {category === "" && (
+          {hasAttemptedSubmit && category === "" && (
             <p className="text-destructive text-sm">Select event category</p>
           )}
 
@@ -133,7 +155,7 @@ export default function EventUploadFormFields({
             selectedCategory={category}
             handleType={handleType}
           />
-          {types.length === 0 && (
+          {hasAttemptedSubmit && types.length === 0 && (
             <p className="text-destructive text-sm">
               Select at least one type for event
             </p>
@@ -141,7 +163,7 @@ export default function EventUploadFormFields({
         </div>
 
         {/* Date and time -- when is it? */}
-        <div className="space-y-4 text-sm">
+        <div ref={dateSectionRef} className="space-y-4 text-sm">
           <h2>Date & Time</h2>
           <div className="grid grid-cols-2 gap-4">
             <DateTimeSelectorBtn
@@ -170,7 +192,7 @@ export default function EventUploadFormFields({
         </div>
 
         {/* Location -- where is it? */}
-        <div className="space-y-4 text-sm">
+        <div ref={locationSectionRef} className="space-y-4 text-sm">
           <h2>Location</h2>
 
           <PostAutoComplete
@@ -183,7 +205,7 @@ export default function EventUploadFormFields({
               svgUrl: "/assets/images/location.svg",
             }}
           />
-          {selectedAddress === "" && (
+          {hasAttemptedSubmit && selectedAddress === "" && (
             <p className="text-destructive text-sm">Location required</p>
           )}
 
@@ -233,7 +255,7 @@ export default function EventUploadFormFields({
         </div>
 
         {/* Tickets -- how can people attend? */}
-        <div className="space-y-3 text-sm font-normal">
+        <div ref={ticketSectionRef} className="space-y-3 text-sm font-normal">
           <h2>Tickets</h2>
 
           <TicketType

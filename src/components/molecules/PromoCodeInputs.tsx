@@ -149,6 +149,7 @@ export default function PromoCodeInputs({
         <div className="flex justify-between items-center gap-2">
           <Input
             type="number"
+            min={0}
             placeholder="Max use"
             value={maximumUse ?? ""}
             onChange={(e) => setMaximumUse(Number(e.target.value))}
@@ -156,6 +157,8 @@ export default function PromoCodeInputs({
 
           <Input
             type="number"
+            min={0}
+            max={100}
             placeholder="discount"
             value={discount ?? ""}
             onChange={(e) => setDiscount(Number(e.target.value))}

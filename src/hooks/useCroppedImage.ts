@@ -26,5 +26,10 @@ export function useCroppedImage({ onCropped }: UseCroppedImageOptions = {}) {
     onCropped?.(croppedFile, preview);
   };
 
-  return { cropped, croppedPreview, handleCropped };
+  const reset = () => {
+    setCropped(null);
+    setCroppedPreview(null);
+  };
+
+  return { cropped, croppedPreview, handleCropped, reset };
 }

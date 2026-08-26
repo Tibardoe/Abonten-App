@@ -38,6 +38,8 @@ export default function TicketInputs({
 
   const [newPrice, setNewPrice] = useState<number | null>(null);
 
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
+
   const { data: currency } = useQuery({
     // Same key as useEventUploadForm.ts's identical fetchCountryMetadata()
     // call, so both share one cache entry instead of firing two requests.
@@ -58,6 +60,18 @@ export default function TicketInputs({
       date &&
       endDate
     ) {
+      // Removal below is keyed on category name, so two ticket types
+      // sharing a name would remove each other -- catch that at add time,
+      // the same way PromoCodeInputs guards against duplicate codes.
+      const normalized = newCategory.trim().toUpperCase();
+      const isDuplicate = multipleTickets.some(
+        (t) => t.category?.trim().toUpperCase() === normalized,
+      );
+      if (isDuplicate) {
+        setDuplicateError("This category name has already been added.");
+        return;
+      }
+
       const newTicket = {
         category: newCategory.toUpperCase(),
         price: newPrice,
@@ -76,6 +90,7 @@ export default function TicketInputs({
       setNewPrice(null);
       setDate(undefined);
       setEndDate(undefined);
+      setDuplicateError(null);
     }
   };
 
@@ -99,6 +114,7 @@ export default function TicketInputs({
 
             <input
               type="number"
+              min={0}
               placeholder="Fee"
               value={singleTicketPrice ?? ""}
               onChange={(e) => handleSingleTicket?.(Number(e.target.value))}
@@ -108,6 +124,7 @@ export default function TicketInputs({
 
           <Input
             type="number"
+            min={0}
             placeholder="Quantity"
             value={singleTicketQuantity ?? ""}
             onChange={(e) =>
@@ -125,8 +142,17 @@ export default function TicketInputs({
                 type="text"
                 placeholder="Category name"
                 value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
+                onChange={(e) => {
+                  setNewCategory(e.target.value);
+                  setDuplicateError(null);
+                }}
+                aria-invalid={!!duplicateError}
               />
+              {duplicateError && (
+                <p className="text-destructive text-sm mt-1">
+                  {duplicateError}
+                </p>
+              )}
             </div>
 
             <div className="flex justify-between items-center gap-2">
@@ -135,6 +161,7 @@ export default function TicketInputs({
 
                 <input
                   type="number"
+                  min={0}
                   placeholder="Fee"
                   value={newPrice ?? ""}
                   onChange={(e) => setNewPrice(Number(e.target.value))}
@@ -144,6 +171,7 @@ export default function TicketInputs({
 
               <Input
                 type="number"
+                min={0}
                 placeholder="Quantity"
                 value={quantity ?? ""}
                 onChange={(e) => setQuantity(Number(e.target.value))}

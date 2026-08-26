@@ -3,8 +3,10 @@
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
+import { useImageSelection } from "@/hooks/useImageSelection";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -81,7 +83,12 @@ export default function EventUploadModal({
   const [showCrop, setShowCrop] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  const { cropped, croppedPreview, handleCropped } = useCroppedImage({
+  const {
+    cropped,
+    croppedPreview,
+    handleCropped,
+    reset: resetCrop,
+  } = useCroppedImage({
     onCropped: () => {
       // Leave the crop tool and jump straight to the details step —
       // otherwise navigating Back later would silently reopen the cropper
@@ -91,8 +98,44 @@ export default function EventUploadModal({
     },
   });
 
+  // A flyer picked to replace the original selection (or a draft's already
+  // -uploaded flyer) — stays null until the user acts on the "Change Flyer"
+  // button, so an untouched modal behaves exactly as before. showMessage is
+  // wired up below, once useEventUploadForm exists: onInvalidFile/onSelect
+  // are only ever invoked later, from a file-input change event, by which
+  // point that binding has long since been assigned.
+  const {
+    imagePreview: replacementPreview,
+    selectedFile: replacementFile,
+    fileInputRef: replaceFileInputRef,
+    openFilePicker: openReplaceFilePicker,
+    handleFileChange: handleReplaceFileChange,
+  } = useImageSelection({
+    invalidFileMessage: "Please select an image file for your event flyer.",
+    maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
+    onInvalidFile: (message) => showMessage(message),
+    onSelect: () => {
+      // The previous crop (if any) belonged to the old flyer — clear it so
+      // the pending change is the new image, not a leftover crop of the one
+      // being replaced.
+      resetCrop();
+      setStep(1);
+      setShowCrop(false);
+    },
+  });
+
+  // The flyer currently being worked with, before any crop is applied: the
+  // original pick/draft flyer, or a replacement once one has been chosen.
+  const sourceFile = replacementFile ?? selectedFile;
+  const sourcePreview = replacementPreview ?? imgUrl;
+
+  // What's actually shown and submitted: a crop result takes priority over
+  // its (replacement or original) source image.
+  const effectiveFile = cropped ?? sourceFile;
+  const effectivePreview = croppedPreview ?? sourcePreview;
+
   const eventUploadForm = useEventUploadForm({
-    file: cropped ?? selectedFile,
+    file: effectiveFile,
     onSuccess: () => {
       router.refresh();
       invalidateEventListQueries(queryClient);
@@ -110,6 +153,7 @@ export default function EventUploadModal({
 
   const {
     notification,
+    showMessage,
     isUploading,
     isResolvingLocation,
     handleSubmit,
@@ -133,6 +177,16 @@ export default function EventUploadModal({
     }
   };
 
+  // Step 2's Back button steps back to the flyer preview/crop screen rather
+  // than closing the whole modal -- otherwise there's no way back to it once
+  // past step 1, e.g. to change or crop the flyer after already filling in
+  // event details. Closing the modal entirely is still one Back tap away
+  // from there, via step 1's own onBack (requestClose).
+  const goBackToPreview = () => {
+    setShowCrop(false);
+    setStep(1);
+  };
+
   const handleSaveDraftAndClose = async () => {
     const response = await saveDraft();
     setShowCancelConfirm(false);
@@ -151,7 +205,7 @@ export default function EventUploadModal({
               {showCrop ? (
                 <div className="relative flex flex-col items-center w-full md:w-[90%] flex-1 min-h-0 overflow-y-auto mx-auto">
                   <ImageCropper
-                    imagePreview={imgUrl}
+                    imagePreview={sourcePreview}
                     handleCropped={handleCropped}
                     handleCancel={() => setShowCrop(false)}
                   />
@@ -169,11 +223,18 @@ export default function EventUploadModal({
 
                   <div className="relative flex-1 min-h-0 w-full md:w-[40%] mx-auto">
                     <ImagePreviewPane
-                      src={croppedPreview ?? imgUrl}
+                      src={effectivePreview}
                       alt="Selected flyer"
                       className="w-full h-full"
                       onCropToggle={() => setShowCrop(true)}
                     />
+                    <button
+                      type="button"
+                      onClick={openReplaceFilePicker}
+                      className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full"
+                    >
+                      Change Flyer
+                    </button>
                   </div>
                 </>
               )}
@@ -183,8 +244,8 @@ export default function EventUploadModal({
           {step === 2 && (
             <>
               <UploadStepHeader
-                onBack={requestClose}
-                title="Create new post"
+                onBack={goBackToPreview}
+                title="Create Event"
                 primaryAction={{
                   label: uploadButtonLabel,
                   onClick: handleSubmit(onSubmit),
@@ -195,10 +256,17 @@ export default function EventUploadModal({
               <div className="flex flex-col md:flex-row w-full flex-1 min-h-0 md:h-[90%] gap-3 overflow-y-auto md:overflow-hidden">
                 <div className="relative w-full md:w-1/2 aspect-square md:aspect-auto md:h-full mx-auto md:mx-0 md:rounded-bl-2xl overflow-hidden shrink-0">
                   <ImagePreviewPane
-                    src={croppedPreview ?? imgUrl}
+                    src={effectivePreview}
                     alt="Selected flyer"
                     className="w-full h-full"
                   />
+                  <button
+                    type="button"
+                    onClick={openReplaceFilePicker}
+                    className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-white text-sm px-4 py-2 rounded-full"
+                  >
+                    Change Flyer
+                  </button>
                 </div>
 
                 <EventUploadFormFields
@@ -210,6 +278,14 @@ export default function EventUploadModal({
           )}
         </div>
       </div>
+
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        ref={replaceFileInputRef}
+        onChange={handleReplaceFileChange}
+      />
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog

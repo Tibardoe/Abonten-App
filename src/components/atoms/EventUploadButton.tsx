@@ -1,11 +1,13 @@
 "use client";
 
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useTimedMessage } from "@/hooks/useTimedMessage";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useState } from "react";
 import EventUploadModal from "../organisms/EventUploadModal";
+import Notification from "./Notification";
 
 // Desktop nav-link trigger for creating an Event or a Place (rendered only
 // inside the desktop header). "Create" replaces the old single-purpose
@@ -16,6 +18,8 @@ import EventUploadModal from "../organisms/EventUploadModal";
 export default function EventUploadButton() {
   const [showPopup, setShowPopup] = useState(false);
   const [showPlaceModal, setShowPlaceModal] = useState(false);
+  const { message: fileError, showMessage: showFileError } =
+    useTimedMessage(4000);
 
   const {
     imagePreview,
@@ -26,7 +30,7 @@ export default function EventUploadButton() {
   } = useImageSelection({
     invalidFileMessage: "Please select an image file for your event flyer.",
     maxSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
-    onInvalidFile: (message) => alert(message),
+    onInvalidFile: (message) => showFileError(message),
     onSelect: () => setShowPopup(true),
   });
 
@@ -61,6 +65,8 @@ export default function EventUploadButton() {
         onSelectPlace={() => setShowPlaceModal(true)}
         iconClassName="text-3xl"
       />
+
+      <Notification notification={fileError} />
     </>
   );
 }

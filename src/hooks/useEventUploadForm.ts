@@ -93,6 +93,19 @@ export function useEventUploadForm({
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
 
+  // Gates the manually-rendered validation messages (category, types,
+  // location -- none of which are RHF-registered fields) so they stay
+  // silent until the first submit attempt, matching how RHF's own
+  // errors.* messages already behave for title/description/capacity/website.
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+  // Which non-RHF section a failed submit's validation blamed, so the form
+  // can scroll the organizer to it instead of leaving them to hunt for what
+  // a 3-second toast referred to.
+  const [invalidSection, setInvalidSection] = useState<
+    "date" | "location" | "tickets" | null
+  >(null);
+
   const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
     draftId,
   );
@@ -350,6 +363,8 @@ export function useEventUploadForm({
   const onSubmit = async (formData: EventSchema) => {
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
+    setHasAttemptedSubmit(true);
+    setInvalidSection(null);
 
     try {
       setIsUploading(true);
@@ -369,24 +384,28 @@ export function useEventUploadForm({
 
       if (!resolution || resolution.status === "empty") {
         showMessage("Please enter a location");
+        setInvalidSection("location");
         return;
       }
       if (resolution.status === "unresolved") {
         showMessage(
           "Could not find that location — please check the spelling or pick a suggestion.",
         );
+        setInvalidSection("location");
         return;
       }
       if (resolution.status === "error") {
         showMessage(
           "We couldn't verify this location right now. Please try again.",
         );
+        setInvalidSection("location");
         return;
       }
 
       const coords = coordsRef.current;
       if (!coords) {
         showMessage("Could not fetch coordinates");
+        setInvalidSection("location");
         return;
       }
 
@@ -397,6 +416,7 @@ export function useEventUploadForm({
         const result = validateSingleDateRange(singleDateRange, bufferedNow);
         if (!result.ok) {
           showMessage(result.message);
+          setInvalidSection("date");
           return;
         }
 
@@ -408,12 +428,14 @@ export function useEventUploadForm({
         const result = validateSpecificDates(multipleDates, bufferedNow);
         if (!result.ok) {
           showMessage(result.message);
+          setInvalidSection("date");
           return;
         }
 
         eventDates = { specific_dates: multipleDates };
       } else {
         showMessage("Invalid date selection");
+        setInvalidSection("date");
         return;
       }
 
@@ -429,6 +451,7 @@ export function useEventUploadForm({
 
       if (noTicketingSet) {
         showMessage("Event ticketing must be set");
+        setInvalidSection("tickets");
         return;
       }
 
@@ -476,8 +499,11 @@ export function useEventUploadForm({
     handleSubmit,
     errors,
     notification,
+    showMessage,
     isUploading,
     isResolvingLocation,
+    hasAttemptedSubmit,
+    invalidSection,
     onSubmit,
     dateType,
     setDateType: handleDateTypeWithTouch,

@@ -44,16 +44,24 @@ export function useSearchSuggestions(query: string, includePlaces: boolean) {
   // getPlaceCategories.ts) — fetched once with a long staleTime and matched
   // client-side against the query, same as the hardcoded event category
   // list, rather than re-querying it per keystroke.
+  //
+  // queryFn must unwrap the { status, data } action response the same way
+  // PlaceCategoryPicker/PlaceCreateStepReview's identical "place-categories"
+  // queries do -- all three share one cache entry keyed only on
+  // ["place-categories"], so whichever query populates the cache first sets
+  // the shape every consumer gets. Caching the raw response here (as this
+  // used to) fed those callers `{ status, data }` instead of an array
+  // whenever this query ran first, crashing their `.map()`.
   const { data: placeCategoriesResult } = useQuery({
     queryKey: ["place-categories"],
-    queryFn: () => getPlaceCategories(),
+    queryFn: async () => {
+      const response = await getPlaceCategories();
+      return response.status === 200 ? (response.data ?? []) : [];
+    },
     enabled: includePlaces,
     staleTime: 5 * 60_000,
   });
-  const placeCategories =
-    placeCategoriesResult?.status === 200
-      ? (placeCategoriesResult.data ?? [])
-      : [];
+  const placeCategories = placeCategoriesResult ?? [];
 
   const hasQuery = trimmed.length >= MIN_QUERY_LENGTH;
 
