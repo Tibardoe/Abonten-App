@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { validateLocationInput } from "@/utils/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
+import { revalidatePath } from "next/cache";
 import getEventHasConfirmedParticipation from "./getEventHasConfirmedParticipation";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
@@ -83,7 +84,7 @@ export async function updateEvent(formData: UpdateEventInput) {
   const { data: existingEvent, error: fetchError } = await supabase
     .from("event")
     .select(
-      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_occurrence(starts_at, ends_at)",
+      "flyer_public_id, flyer_version, starts_at, ends_at, address, capacity, event_code, event_occurrence(starts_at, ends_at)",
     )
     .eq("id", eventId)
     .eq("organizer_id", user.id)
@@ -229,6 +230,16 @@ export async function updateEvent(formData: UpdateEventInput) {
       // Not failing the whole update if cleanup of the old flyer fails.
     }
   }
+
+  revalidatePath("/manage/my-events");
+  revalidatePath(`/manage/events/${eventId}`);
+  revalidatePath("/manage/dashboard");
+  // The public event page is ISR-cached (revalidate = 60) and shows the
+  // title/description/capacity/schedule/flyer this action just changed —
+  // without this it can keep showing pre-edit values for up to a minute.
+  // Same reasoning as generateTicket.ts/registerForFreeEvent.ts's identical
+  // call for the same route.
+  revalidatePath(`/events/${existingEvent.event_code.toLowerCase()}`);
 
   return { status: 200, message: "Event updated successfully!" };
 }

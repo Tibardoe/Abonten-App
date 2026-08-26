@@ -40,36 +40,31 @@ function meetsBaseEligibility(event: UserPostType): boolean {
 // location on the same day could get different "daily" events, and the
 // cache silently reset on every cold start/restart anyway.
 //
-// Business logic is unchanged from the previous single-pick version: still
-// prefers events an organizer explicitly marked `featured`, still falls
-// back to picking one otherwise-eligible (upcoming, not sold out) event if
-// none are featured, so a location with no self-nominated featured events
-// still gets a banner. What's new is that when MULTIPLE events are
-// featured, all of them are returned (for the carousel) instead of
-// collapsing to one — the fallback case deliberately still returns just
-// one, since a bare "Featured" banner showing arbitrary non-featured events
-// would be misleading. The featured list's starting rotation (which event
-// leads) still rotates daily via the same hash, so no single organizer's
-// featured event always leads. Nothing is snapshotted: this re-filters the
-// caller's live `events` array fresh on every request, so any edit an
-// organizer makes shows up on the very next render with no invalidation.
+// Only returns events an organizer explicitly marked `featured` (which
+// includes an active paid Promotion — see events/location/[location]/page.tsx,
+// which folds promotion into the `featured` flag before calling this) —
+// an empty result means FeaturedEventsCarousel renders nothing. There is no
+// fallback to an arbitrary non-featured event: a banner badged "FEATURED"
+// showing an event nobody paid to promote or opted into is misleading, so a
+// location with no featured/promoted events simply gets no banner. When
+// MULTIPLE events are featured, all of them are returned (for the
+// carousel); the starting rotation (which event leads) still rotates daily
+// via the date-seeded hash, so no single organizer's featured event always
+// leads. Nothing is snapshotted: this re-filters the caller's live `events`
+// array fresh on every request, so any edit an organizer makes shows up on
+// the very next render with no invalidation.
 export function getFeaturedEvents(
   events: UserPostType[],
   location: string,
 ): UserPostType[] {
-  const eligible = events.filter(meetsBaseEligibility);
+  const featuredEligible = events
+    .filter(meetsBaseEligibility)
+    .filter((event) => event.featured);
 
-  if (!eligible.length) return [];
+  if (featuredEligible.length === 0) return [];
 
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
   const seed = `${location.toLowerCase()}_${today}`;
-
-  const featuredEligible = eligible.filter((event) => event.featured);
-
-  if (featuredEligible.length === 0) {
-    const index = hashSeed(seed) % eligible.length;
-    return [eligible[index]];
-  }
 
   const rotation = hashSeed(seed) % featuredEligible.length;
   return [
