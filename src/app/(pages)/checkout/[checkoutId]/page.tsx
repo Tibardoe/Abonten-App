@@ -1,6 +1,5 @@
 import getEventPromotionCheckout from "@/actions/getEventPromotionCheckout";
 import getPlacePromotionCheckout from "@/actions/getPlacePromotionCheckout";
-import getSubscriptionCheckout from "@/actions/getSubscriptionCheckout";
 import getTicketCheckout from "@/actions/getTicketCheckout";
 import getUserPendingTicketCheckouts from "@/actions/getUserPendingTicketCheckouts";
 import CancelPendingCheckoutButton from "@/components/molecules/CancelPendingCheckoutButton";
@@ -31,84 +30,8 @@ export default async function page({
   const checkoutType = (await searchParams).type;
   const supabase = await createClient();
 
-  // Subscription checkouts are a single, standalone purchase — not part of
-  // the ticket basket — so this branch is unchanged from before.
-  if (checkoutType === "subscription") {
-    const response = await getSubscriptionCheckout(checkoutId);
-
-    if (response.status !== 200 || !response.data?.length) {
-      return (
-        <div>
-          <p>Order processed successfully!</p>
-        </div>
-      );
-    }
-
-    const data = response.data[0];
-    const sessionStatus: CheckoutSessionStatus =
-      data.status === "pending"
-        ? "pending"
-        : data.status === "paid"
-          ? "paid"
-          : "expired";
-    const expiresAt = sessionStatus === "pending" ? data.expires_at : null;
-
-    const orderSummary = {
-      planName: data.subscription_plan.name,
-      amount: data.subscription_plan.unit_price,
-      features: data.features,
-      totalAmount: data.total_price,
-      status: sessionStatus,
-      expiresAt,
-      type: "subscription" as const,
-    };
-
-    return (
-      <div className="flex flex-col justify-center gap-5">
-        <div>
-          <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
-        </div>
-
-        {sessionStatus === "paid" && (
-          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
-            Subscription activated successfully —{" "}
-            <Link href="/settings/membership" className="underline">
-              view your subscription
-            </Link>
-            .
-          </div>
-        )}
-
-        {sessionStatus === "expired" && (
-          <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
-            <p>This checkout has expired and can no longer be completed.</p>
-            <Link href="/plans" className="inline-block underline font-medium">
-              Start a new checkout
-            </Link>
-          </div>
-        )}
-
-        {sessionStatus === "pending" && expiresAt && (
-          <CheckoutExpiryBanner expiresAt={expiresAt} />
-        )}
-
-        <OrderSummary orderSummary={orderSummary} checkoutId={checkoutId} />
-
-        {sessionStatus === "pending" && (
-          <PaymentMethodSelector
-            kind="subscription"
-            subscriptionCheckoutId={checkoutId}
-            amount={orderSummary.totalAmount}
-            currency="GHS"
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Featured Places promotions are a single, standalone purchase — same
-  // reasoning as the subscription branch above — not part of the ticket
-  // basket.
+  // Featured Places promotions are a single, standalone purchase — not part
+  // of the ticket basket.
   if (checkoutType === "promotion") {
     const response = await getPlacePromotionCheckout(checkoutId);
 
@@ -216,7 +139,7 @@ export default async function page({
   }
 
   // Event promotions are a single, standalone purchase — same reasoning as
-  // the subscription/place-promotion branches above.
+  // the place-promotion branch above.
   if (checkoutType === "event-promotion") {
     const response = await getEventPromotionCheckout(checkoutId);
 

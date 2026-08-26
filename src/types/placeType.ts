@@ -135,10 +135,10 @@ export type PlacePromotionTier = {
   is_active: boolean;
 };
 
-// Discriminated-union sibling of ticketType.ts's SubscriptionSummaryProps,
+// Discriminated-union sibling of postsType.ts's EventPromotionSummaryProps,
 // consumed by the same OrderSummary component -- a Featured Places purchase
-// is a single, standalone purchase with no basket concept, same shape as a
-// subscription purchase.
+// is a single, standalone purchase with no basket concept, same shape as an
+// event promotion purchase.
 export type PlacePromotionSummaryProps = {
   type: "promotion";
   placeName: string;

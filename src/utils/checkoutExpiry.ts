@@ -1,6 +1,7 @@
-// Shared by both ticket checkout (validateCheckout.ts) and subscription
-// checkout (insertSubscriptionCheckout.ts) so the two reservation windows
-// can't silently drift apart. Not a "use server" file — this is a plain
+// Shared by ticket checkout (validateCheckout.ts), Featured Places checkout
+// (insertPlacePromotionCheckout.ts), and Event Promotion checkout
+// (insertEventPromotionCheckout.ts) so their reservation windows can't
+// silently drift apart. Not a "use server" file — this is a plain
 // constant/helper, not an action.
 export const CHECKOUT_RESERVATION_MINUTES = 30;
 

@@ -4,8 +4,8 @@ import { createClient } from "@/config/supabase/server";
 import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
 
 /**
- * Reserve step for a Featured Places purchase — the promotion equivalent of
- * insertSubscriptionCheckout.ts. Never trusts a client-supplied price: the
+ * Reserve step for a Featured Places purchase — the place equivalent of
+ * insertEventPromotionCheckout.ts. Never trusts a client-supplied price: the
  * unit/total price always comes from the already-seeded place_promotion_tier
  * row, never from the request.
  */

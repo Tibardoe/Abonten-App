@@ -87,13 +87,3 @@ export type CheckoutSessionStatus =
   | "paid"
   | "expired"
   | "cancelled";
-
-export type SubscriptionSummaryProps = {
-  type: "subscription";
-  planName: string;
-  amount: number;
-  features: string[];
-  totalAmount: number;
-  status: CheckoutSessionStatus;
-  expiresAt: string | null;
-};

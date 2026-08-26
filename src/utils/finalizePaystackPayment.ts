@@ -14,7 +14,6 @@
 
 import activateEventPromotion from "@/actions/activateEventPromotion";
 import activatePlacePromotion from "@/actions/activatePlacePromotion";
-import activateSubscription from "@/actions/activateSubscription";
 import generateTicket from "@/actions/generateTicket";
 import { verifyTransaction } from "@/services/paystackService";
 import { fromPesewas, toPesewas } from "@/utils/paystackAmount";
@@ -29,7 +28,6 @@ type PaymentAttemptFullRow = {
   provider_reference: string | null;
   payment_group_id: string | null;
   checkout_session_id: string | null;
-  subscription_checkout_id: string | null;
   place_promotion_checkout_id: string | null;
   event_promotion_checkout_id: string | null;
   transaction_id: string | null;
@@ -40,8 +38,8 @@ export type FinalizeResult =
   | { status: "pending"; message: string }
   | { status: "failed"; message: string }
   // Payment was verified successful (a `transaction` row exists) but
-  // issuing the purchased thing (ticket/subscription/promotion) failed
-  // afterward — distinct from "failed" so callers never treat this as a
+  // issuing the purchased thing (ticket/promotion) failed afterward —
+  // distinct from "failed" so callers never treat this as a
   // declined/failed charge and never suggest paying again. Retryable via
   // the same payment_attempt id (see the CAS lock below and
   // retryPaymentFulfillment.ts).
@@ -50,7 +48,7 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, subscription_checkout_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id";
+  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id";
 
 export async function finalizePaystackPayment(
   supabase: SupabaseClient,
@@ -240,11 +238,10 @@ export async function finalizePaystackPayment(
   // several payment_attempt rows, and that reference is unique per
   // transaction row, so all tickets issued from this charge point at the
   // same transaction. Every member in a group is always the same kind
-  // (all ticket checkouts, or one subscription, or one promotion —
-  // createMultiCheckoutPaymentAttempt never mixes them; a promotion
-  // purchase is never grouped in practice, but the reason derivation stays
-  // correct even if it ever were), so a single `reason` value is correct
-  // here.
+  // (all ticket checkouts, or one promotion — createMultiCheckoutPaymentAttempt
+  // never mixes them; a promotion purchase is never grouped in practice, but
+  // the reason derivation stays correct even if it ever were), so a single
+  // `reason` value is correct here.
   const { data: userInfo } = await supabase
     .from("user_info")
     .select("username, full_name")
@@ -253,9 +250,7 @@ export async function finalizePaystackPayment(
 
   const reason = primary.checkout_session_id
     ? "Ticket_Purchase"
-    : primary.subscription_checkout_id
-      ? "Plan_Purchase"
-      : "Promotion_Purchase";
+    : "Promotion_Purchase";
 
   // On a retry (this attempt previously reached "fulfillment_failed"), the
   // transaction row was already recorded — reuse it via the FK this table
@@ -324,8 +319,8 @@ export async function finalizePaystackPayment(
       groupMembers.map((m) => m.id),
     );
 
-  // Verified — issue tickets / activate the subscription per group member,
-  // reusing the existing, unmodified ticket-generation and subscription-
+  // Verified — issue tickets / activate the promotion per group member,
+  // reusing the existing, unmodified ticket-generation and promotion-
   // activation logic. Each member is independent: if one session's ticket
   // issuance fails (e.g. a transient Cloudinary error) after a shared
   // Paystack payment already succeeded, that member is left in a retryable
@@ -384,38 +379,6 @@ export async function finalizePaystackPayment(
           .update({
             status: "fulfillment_failed",
             failure_reason: result.message ?? "Ticket generation failed",
-            verified_at: new Date(),
-            updated_at: new Date(),
-          })
-          .eq("id", member.id);
-      }
-    } else if (member.subscription_checkout_id) {
-      const result = await activateSubscription(
-        member.subscription_checkout_id,
-        authOverride,
-        transactionRow.id,
-      );
-
-      if (result.status === 200) {
-        await supabase
-          .from("payment_attempt")
-          .update({
-            status: "succeeded",
-            paid_at: new Date(),
-            verified_at: new Date(),
-            updated_at: new Date(),
-          })
-          .eq("id", member.id);
-      } else {
-        console.log(
-          `finalizePaystackPayment: activateSubscription failed for attempt ${member.id}: ${result.status} ${result.message}`,
-        );
-        anyFailed = true;
-        await supabase
-          .from("payment_attempt")
-          .update({
-            status: "fulfillment_failed",
-            failure_reason: result.message ?? "Subscription activation failed",
             verified_at: new Date(),
             updated_at: new Date(),
           })

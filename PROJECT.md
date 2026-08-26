@@ -10,6 +10,8 @@ This document describes the current, verified state of the codebase for future d
 
 > **Revision note (2026-08-25):** An authentication/session-management audit found that every "no RLS policies exist" statement in this document (§7.1, §7.2's `notification` row, §7.6 items 6a/6c, §8's Needs Investigation, §17, §19) was stale — RLS was enabled on most tables via seven `enable_rls_*`/`security_cleanup_*` migrations dated 2026-08-25, after this document's previous revision. All affected passages were corrected in place rather than left standing; §7.1 and §8 carry the fullest explanation. Also fixed and documented: the middleware's duplicate `/auth` allowlist entry and its unintended `/user-account` public-route exposure (§7.6 item 7, §8). §8's description of phone/OTP as "incomplete" and of a `src/context/authContext.tsx` provider is also now out of date (phone/OTP is complete; there is no `authContext.tsx`) — flagged inline in §8 but not rewritten in full, as that was out of scope for this pass.
 
+> **Revision note (2026-08-26):** The generic Membership/Plans product (a `/plans` page selling `subscription_plan` rows — "Daily/Weekly/Monthly/Unlimited" — via `/settings/membership`) was removed from the application layer. It is superseded by two already-existing, resource-specific promotion systems documented in §18/§20 and a newer one not previously written up here: **Event Promotion** (`event_promotion`/`event_promotion_checkout`/`event_promotion_tier`, migration `20260829090000_add_event_promotions.sql`, mirroring Featured Places exactly), purchased from `Manage → Events → [event] → Promotion`, same pattern as Featured Places' `Manage → Places → [place] → Promotion`. Neither promotion system ever shared code with Membership/Plans beyond generic payment plumbing (`payment_attempt`, `PaymentMethodSelector`, `finalizePaystackPayment.ts`, `/checkout/[checkoutId]`), so removal was a clean extraction, not an untangling. **What changed:** `/plans` and `/settings/membership` now redirect to `/settings/overview` instead of rendering the old UI (kept as thin redirect routes so old bookmarks/links don't 404); the `/settings` and `/settings/overview` pages' old "Plan Details" block was replaced by a new `PromotionDetails` organism (`src/settings/organisms/PromotionDetails.tsx`) backed by a new action, `getUserActivePromotions.ts`, which aggregates the signed-in user's currently-active `event_promotion`/`place_promotion` rows across every Event/Place they own; the Membership sidebar nav link, its `nav.membership` translation key (all 6 locales), `SubscriptionPlans.tsx`/`PlanContainer.tsx`/`src/data/plans.ts`, and the subscription-purchase actions (`getUserSubscription.ts`, `activateSubscription.ts`, `insertSubscriptionCheckout.ts`, `getSubscriptionCheckout.ts`) and type (`subscriptionType.ts`) were deleted; the `"subscription"` checkout kind was removed from `PaymentMethodSelector.tsx`, `/checkout/[checkoutId]/page.tsx`, `createPaymentAttempt.ts`, `paymentAttempt.ts`'s match-column unions, `paymentStatusCopy.ts`, `OrderSummary.tsx`, and `finalizePaystackPayment.ts`'s fulfillment branch (see trade-off below). **What was deliberately preserved (no DB migration was made — see §7.6 discrepancy #2's `Plan_Purchase`/`Promotion_Purchase` reason values, still both valid on `transaction`):** the `subscription`/`subscription_plan`/`subscription_checkout` tables, their RLS policies, and their RPCs (`compute_subscription_end_date`, `expire_stale_subscription_checkouts`) were left completely untouched at the database level — this was an application-layer-only removal (Phase 12 Option A). `/transactions`, `/transactions/[kind]/[id]`, `TransactionsHistoryList.tsx`, `TransactionsSummaryCards.tsx`, and their backing actions still read historical `subscription_checkout` rows via the existing `get_user_transaction_history`/`get_user_transaction_summary` RPCs — a past Membership purchase remains fully visible in a user's transaction history, unchanged. **Known, deliberate trade-off:** `finalizePaystackPayment.ts` no longer has a branch to activate a subscription upon Paystack verification — if any `payment_attempt` row from before this change is still sitting in `initiated`/`pending`/`fulfillment_failed` with a populated `subscription_checkout_id` and a delayed webhook delivery arrives for it, that payment will no longer be completable via the normal flow (it was judged low-probability given Paystack has only ever run in test mode, and is documented here rather than silently accepted).
+
 ---
 
 ## 1. Project Purpose & Overview
@@ -21,7 +23,7 @@ This document describes the current, verified state of the codebase for future d
 
 **Needs Investigation**
 - No product requirements document exists — [PRD.md](PRD.md) only contains "Coming Soon...".
-- Business model (free platform, commission on tickets, subscription plans) — a `plans`/`subscription` feature exists in code (see §5, §6) but the actual pricing/business terms are not documented in-repo.
+- Business model (free platform, commission on tickets, paid resource promotion) — the generic Membership/Plans subscription product was removed 2026-08-26 (see the revision note above); the current purchasable product is paid Event/Place promotion (§18, §20), but the actual pricing/business terms behind it are not documented in-repo beyond the seeded tier tables.
 
 ---
 
@@ -75,7 +77,7 @@ src/
       (settings)/          Settings route group + its own layout
       (transactions)/      Transactions route group + its own layout
       (userPage)/           /user/[username]/* route group + its own layout
-      around-you/, auth/, events/, manage/, plans/, search/, user-account/, wallet/
+      around-you/, auth/, events/, manage/, plans/ (redirect-only, see revision note), search/, user-account/, wallet/
     api/                   geocode, upload-profile-picture, user-profile route handlers
     layout.tsx, globals.css
   actions/                 ~50 "use server" Server Actions — the app's data/mutation layer
@@ -117,9 +119,9 @@ cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 - **Favorites**: `addEventToFavorite`, `removeEventFromFavorite`, `checkIfEventIsFavorited` (React Query optimistic update per recent commit history).
 - **Wallet / saved payment methods**: `/wallet` — independent of checkout, lists/adds/removes the user's saved payment methods (`payment_method` table) via `getUserPaymentMethods`/`addPaymentMethod`/`removePaymentMethod`/`setDefaultPaymentMethod`; components `WalletManager`, `PaymentMethodCard`, `AddMomoWallet`, `AddBankCard`, `AddPaymentMethodPopup`. Only non-sensitive display data is collected (network/brand, last 4 digits, expiry, label) — there is no tokenization provider integrated yet, so no full card/PIN/mobile-money number is ever stored. Distinct from the separate `wallet` table (a cash/store-credit balance concept, unused by the app). Payout accounts (organizer side) remain a separate concept — `postEvent` inserts into `receiving_account` (Mobile Money or Bank).
 - **Checkout / order basket**: `/checkout`, `/checkout/[checkoutId]` (moved from `/wallet/[checkoutId]` — see §16 item 18) — the pending-checkout "basket" (`PendingCheckoutsBasket`) and single-session order summary/payment step, shared by ticket and subscription checkout via `PaymentMethodSelector`.
-- **Subscriptions/plans**: `/plans`; actions `getSubscriptionCheckout`, `insertSubscriptionCheckout`, `getUserSubscription`; data in `src/data/plans.ts`.
+- **Subscriptions/plans**: removed 2026-08-26 (see the revision note above) — `/plans` and `/settings/membership` are now thin redirects to `/settings/overview`, and the `subscription`/`subscription_checkout`/`subscription_plan` tables are no longer written to by the application, though they remain in the schema for historical transaction reads.
 - **Transactions**: `/transactions` — redesigned 2026-08-17 into an analytics overview (period-filterable stat tiles: Total/Successful/Pending/Failed/Tickets Purchased/Subscriptions + Amount Spent, DB-aggregated) plus an independently-paginated history list, `/transactions/[kind]/[id]` (`kind` = `ticket`|`subscription`) for detail. **Sourced from `ticket_checkout`/`subscription_checkout`, not the `transaction` table** — see §7.6 discrepancy #2: nothing in this codebase ever inserts a `transaction` row, so the page that used to read from it (`/transactions/[transactionId]`, `/transactions/date/[date]`, actions `getUserTransactions`/`getTransactionsByDate`/`getTransactionById`) was always empty and has been removed. New actions: `getUserTransactionSummary` (RPC `get_user_transaction_summary`), `getUserTransactionHistory` (RPC `get_user_transaction_history`, a `UNION ALL` merge of both checkout tables with SQL-side keyset pagination), `getUserTransactionDetail`. RPCs + `(user_id, created_at, id)` indexes on both checkout tables added in `supabase/migrations/20260817090000_add_user_transaction_history_analytics.sql`. User/attendee view only — no organizer-facing transactions view exists (organizer revenue stays on `/manage/dashboard`, a separate feature). No refund tracking exists anywhere (`issueRefund` is still a stub), so a cancelled ticket's originating `ticket_checkout` row is never reversed and still counts as a successful transaction — a known, documented limitation, not a bug in the new page.
-- **Settings**: `/settings`, `/settings/edit-profile`, `/settings/language`, `/settings/membership`, `/settings/overview`, `/settings/security`, `/settings/switch-appearance`.
+- **Settings**: `/settings`, `/settings/edit-profile`, `/settings/language`, `/settings/membership` (redirect only, see revision note above), `/settings/overview`, `/settings/security`, `/settings/switch-appearance`.
 - **Auth**: `/auth/signin`.
 - **Avatar/media management**: direct-to-Cloudinary upload with progress (`getAvatarUploadSignature` + `uploadToCloudinary.ts`, mirroring the review-photo/highlight upload pipeline), `saveAvatarToSupabase`, `ImageCropper.tsx`, `AvatarUploadModal.tsx`, `AvatarUploadButton.tsx`, `useAvatarUpload.ts`.
 
@@ -132,7 +134,7 @@ cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 (pages)/(settings)/settings/                       /settings
 (pages)/(settings)/settings/edit-profile           /settings/edit-profile
 (pages)/(settings)/settings/language               /settings/language
-(pages)/(settings)/settings/membership             /settings/membership
+(pages)/(settings)/settings/membership             /settings/membership (redirects to /settings/overview)
 (pages)/(settings)/settings/overview               /settings/overview
 (pages)/(settings)/settings/security               /settings/security
 (pages)/(settings)/settings/switch-appearance      /settings/switch-appearance
@@ -152,7 +154,7 @@ cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 (pages)/manage/attendance/event-list               /manage/attendance/event-list
 (pages)/manage/dashboard                           /manage/dashboard
 (pages)/manage/my-events                           /manage/my-events
-(pages)/plans                                      /plans
+(pages)/plans                                      /plans (redirects to /settings/overview)
 (pages)/search                                     /search
 (pages)/search/[searchTitle]                       /search/:searchTitle
 (pages)/user-account                               /user-account
@@ -420,7 +422,7 @@ Also note: §8 items 2 and 5 above (phone/OTP as "incomplete" with commented-out
 
 **Transactions**: `TransactionsPeriodFilter`, `TransactionsSummaryCards`, `TransactionStatusIcon`, `TransactionsHistoryList`, `TransactionsPageClient`.
 
-**Plans**: `PlanContainer`, `SubscriptionPlans`.
+**Promotion Details**: `PromotionDetails` (`src/settings/organisms/`) — replaced the old Plans-era `PlanContainer`/`SubscriptionPlans` components (deleted 2026-08-26), backed by `getUserActivePromotions.ts`.
 
 ---
 

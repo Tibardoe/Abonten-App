@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 
-export default function SettingsPlanCardSkeleton() {
+export default function SettingsPromotionCardSkeleton() {
   return (
     <div className="space-y-2">
       <Skeleton className="h-5 w-28" />

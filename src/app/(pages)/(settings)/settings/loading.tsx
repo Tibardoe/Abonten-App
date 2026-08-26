@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import SettingsLinkListCardSkeleton from "@/settings/molecules/SettingsLinkListCardSkeleton";
-import SettingsPlanCardSkeleton from "@/settings/molecules/SettingsPlanCardSkeleton";
+import SettingsPromotionCardSkeleton from "@/settings/molecules/SettingsPromotionCardSkeleton";
 
 export default function Loading() {
   return (
@@ -15,7 +15,7 @@ export default function Loading() {
       </div>
 
       <div className="w-full flex-col gap-14 hidden lg:flex">
-        <SettingsPlanCardSkeleton />
+        <SettingsPromotionCardSkeleton />
         <SettingsLinkListCardSkeleton rows={2} />
       </div>
     </>

@@ -5,15 +5,15 @@ import { createClient } from "@/config/supabase/server";
 import type { AuthOverride } from "@/types/authOverrideType";
 
 /**
- * Commit step for a Featured Places purchase — the promotion equivalent of
- * activateSubscription.ts. Called only by src/utils/finalizePaystackPayment.ts
+ * Commit step for a Featured Places purchase — the place equivalent of
+ * activateEventPromotion.ts. Called only by src/utils/finalizePaystackPayment.ts
  * once it has independently verified payment for the given checkout. Never
  * trusts a client-supplied duration/price — everything comes from the
  * already-priced place_promotion_checkout row and the tier it references.
  *
  * `authOverride` lets the Paystack webhook (no cookies/session) call this
  * without a browser session — see src/types/authOverrideType.ts, same
- * precedent as activateSubscription.ts/generateTicket.ts.
+ * precedent as activateEventPromotion.ts/generateTicket.ts.
  */
 export default async function activatePlacePromotion(
   checkoutId: string,
@@ -40,7 +40,7 @@ export default async function activatePlacePromotion(
 
   // Distinguish "never existed / wrong user" (404) from "existed but timed
   // out" (410) by checking existence BEFORE running the expiry sweep below —
-  // mirrors activateSubscription.ts's initial-then-post-sweep read.
+  // mirrors activateEventPromotion.ts's initial-then-post-sweep read.
   const { data: existingCheckout, error: existingCheckoutError } =
     await supabase
       .from("place_promotion_checkout")

@@ -2,9 +2,9 @@
 
 import { createClient } from "@/config/supabase/server";
 
-// Mirrors getSubscriptionCheckout.ts exactly -- same self-heal-then-read
+// Mirrors getEventPromotionCheckout.ts exactly -- same self-heal-then-read
 // shape, just scoped by place_promotion_checkout's owner_id column instead
-// of subscription_checkout's user_id.
+// of event_promotion_checkout's owner_id.
 export default async function getPlacePromotionCheckout(checkoutId: string) {
   const supabase = await createClient();
 
@@ -18,9 +18,9 @@ export default async function getPlacePromotionCheckout(checkoutId: string) {
   }
 
   // Self-heal: reclaim this checkout if its reservation window has passed,
-  // the same way getSubscriptionCheckout does for subscription checkouts, so
-  // a page load always reflects an accurate status instead of a stale
-  // 'pending'.
+  // the same way getEventPromotionCheckout does for event promotion
+  // checkouts, so a page load always reflects an accurate status instead of
+  // a stale 'pending'.
   await supabase.rpc("expire_stale_place_promotion_checkouts");
 
   const { data: checkoutData, error: checkoutDataError } = await supabase

@@ -35,8 +35,9 @@ type UpsertPaymentAttemptResult =
 
 /**
  * Records that the user has chosen a saved payment method to pay for one
- * still-pending checkout (or subscription) — it does NOT complete the
- * purchase. Retrying with the same method reuses the still-open attempt
+ * still-pending checkout (ticket, place promotion, or event promotion) — it
+ * does NOT complete the purchase. Retrying with the same method reuses the
+ * still-open attempt
  * instead of spawning duplicates; switching methods cancels the old attempt
  * and opens a new one. When paymentGroupId is given, it tags the row (new or
  * reused) as belonging to that combined pay action, so several sessions paid
@@ -46,7 +47,6 @@ export async function upsertPaymentAttemptForSession(
   userId: string,
   matchColumn:
     | "checkout_session_id"
-    | "subscription_checkout_id"
     | "place_promotion_checkout_id"
     | "event_promotion_checkout_id",
   matchValue: string,
@@ -123,7 +123,6 @@ export async function upsertPaymentAttemptForSession(
 
 type CheckoutMatchColumn =
   | "checkout_session_id"
-  | "subscription_checkout_id"
   | "place_promotion_checkout_id"
   | "event_promotion_checkout_id";
 

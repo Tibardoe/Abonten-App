@@ -40,7 +40,7 @@ export default function TransactionsPageClient({
       <p className="text-sm text-muted-foreground">
         {hasAnyHistoryEver
           ? "No transactions for this period."
-          : "You have no transactions yet. Purchases and subscriptions you make will show up here."}
+          : "You have no transactions yet. Purchases and promotions you pay for will show up here."}
       </p>
     </div>
   );

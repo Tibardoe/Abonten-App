@@ -15,9 +15,9 @@ type CheckoutExpiryBannerProps = {
 /**
  * Countdown for a pending checkout, driven entirely by the server's
  * expires_at timestamp (see useCheckoutCountdown). When the countdown
- * reaches zero this refreshes the current route once — the wallet page's
- * getTicketCheckout/getSubscriptionCheckout self-heal by re-running the
- * expiry sweep on every read, so the refresh re-renders straight into the
+ * reaches zero this refreshes the current route once — getTicketCheckout and
+ * the promotion checkout actions all self-heal by re-running their expiry
+ * sweep on every read, so the refresh re-renders straight into the
  * "expired" state server-side, instead of this component trying to disable
  * sibling payment buttons it has no reference to.
  */

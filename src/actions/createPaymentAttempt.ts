@@ -17,7 +17,6 @@ type CreatePaymentAttemptInput = {
   paymentMethodId: string;
 } & (
   | { checkoutSessionId: string }
-  | { subscriptionCheckoutId: string }
   | { placePromotionCheckoutId: string }
   | { eventPromotionCheckoutId: string }
 );
@@ -54,7 +53,8 @@ type TicketCheckoutLine = {
  * payment gateway integrated yet, so this deliberately leaves the attempt at
  * 'initiated' rather than faking a 'succeeded' result; a future gateway
  * webhook/verify step is what should ever move an attempt to 'succeeded' and
- * then call generateTicket/activateSubscription. Retrying with the same
+ * then call generateTicket/activateEventPromotion/activatePlacePromotion.
+ * Retrying with the same
  * method reuses the still-open attempt instead of spawning duplicates;
  * switching methods cancels the old attempt and opens a new one.
  */
@@ -100,7 +100,6 @@ export default async function createPaymentAttempt(
   let currency: string;
   let matchColumn:
     | "checkout_session_id"
-    | "subscription_checkout_id"
     | "place_promotion_checkout_id"
     | "event_promotion_checkout_id";
   let matchValue: string;
@@ -139,34 +138,6 @@ export default async function createPaymentAttempt(
     matchColumn = "checkout_session_id";
     matchValue = input.checkoutSessionId;
     callbackPath = `/checkout/${input.checkoutSessionId}?type=ticket`;
-  } else if ("subscriptionCheckoutId" in input) {
-    await supabase.rpc("expire_stale_subscription_checkouts");
-
-    const { data: checkout, error: checkoutError } = await supabase
-      .from("subscription_checkout")
-      .select("total_price")
-      .eq("id", input.subscriptionCheckoutId)
-      .eq("user_id", user.id)
-      .eq("status", "pending")
-      .maybeSingle();
-
-    if (checkoutError) {
-      console.log(`Failed fetching checkout: ${checkoutError.message}`);
-      return { status: 500, message: "Something went wrong!" };
-    }
-
-    if (!checkout) {
-      return {
-        status: 410,
-        message: "This checkout has expired. Please start again.",
-      };
-    }
-
-    amount = checkout.total_price;
-    currency = "GHS";
-    matchColumn = "subscription_checkout_id";
-    matchValue = input.subscriptionCheckoutId;
-    callbackPath = `/checkout/${input.subscriptionCheckoutId}?type=subscription`;
   } else if ("placePromotionCheckoutId" in input) {
     await supabase.rpc("expire_stale_place_promotion_checkouts");
 

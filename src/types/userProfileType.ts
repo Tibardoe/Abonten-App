@@ -111,7 +111,6 @@ export type userProfileSettingsDetailsType = {
   bio: string;
   phone: number;
   email: string;
-  subscriptionName: string;
   website: string;
   avatarPublicId: string;
   avatarVersion: string;

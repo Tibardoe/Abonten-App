@@ -1,9 +1,9 @@
-import SubscriptionPlans from "@/components/molecules/SubscriptionPlans";
+import { redirect } from "next/navigation";
 
-// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
-// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
-// export const instant = false;
-
+// The Plans/Membership product was removed — purchasable packages are now
+// resource-specific promotions bought from Manage → Events/Places → Promotion.
+// This route is kept only so old bookmarks/links land somewhere useful
+// instead of 404ing.
 export default function page() {
-  return <SubscriptionPlans />;
+  redirect("/settings/overview");
 }

@@ -1,7 +1,7 @@
-import { userSubscription } from "@/actions/getUserSubscription";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
+import PromotionDetails from "@/settings/organisms/PromotionDetails";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
@@ -10,84 +10,18 @@ import Link from "next/link";
 // export const instant = false;
 
 export default async function page() {
-  const [subscription, t] = await Promise.all([
-    userSubscription(),
-    getTranslations("settings"),
-  ]);
+  const t = await getTranslations("settings");
 
   return (
     <div className="w-full flex flex-col gap-10">
       <MobileSettingsHeaderNav title={t("nav.overview")} />
 
-      <div className="space-y-2">
-        <h1>Plan Details</h1>
-        <DetailsContainer>
-          {subscription.status === 200 ? (
-            <div>
-              <h2 className="font-medium text-lg md:text-xl">
-                {subscription.data?.subscription_plan.name}
-              </h2>
-
-              {subscription.data?.subscription_plan.name === "Daily" && (
-                <p>Post 2 flyers and unlimited stories</p>
-              )}
-
-              {subscription.data?.subscription_plan.name === "Weekly" && (
-                <p>Post 5 flyers and unlimited stories</p>
-              )}
-
-              {subscription.data?.subscription_plan.name === "Monthly" && (
-                <p>Post 10 flyers and unlimited stories</p>
-              )}
-
-              {subscription.data?.subscription_plan.name === "Unlimited" && (
-                <p>Post unlimited flyers and stories</p>
-              )}
-            </div>
-          ) : (
-            <div>
-              <h2 className="font-bold text-lg md:text-xl">
-                No active subscription found
-              </h2>
-
-              <p>
-                Purchase a subscription to post flyers, stories and highlight
-              </p>
-            </div>
-          )}
-
-          <hr />
-
-          <div className="flex justify-between items-center">
-            <p className="font-medium">Manage plan</p>
-            <Link href="/settings/membership">
-              <MaskIcon
-                src="/assets/images/arrowRight.svg"
-                alt="Arrow right"
-                className="w-6 h-6 md:w-8 md:h-8"
-              />
-            </Link>
-          </div>
-        </DetailsContainer>
-      </div>
+      <PromotionDetails />
 
       <div className="space-y-2">
         <h1>Quick Links</h1>
 
         <DetailsContainer>
-          <div className="flex justify-between items-center">
-            <p className="font-medium md:text-lg">Change plan</p>
-            <Link href="/plans">
-              <MaskIcon
-                src="/assets/images/arrowRight.svg"
-                alt="Arrow right"
-                className="w-6 h-6 md:w-8 md:h-8"
-              />
-            </Link>
-          </div>
-
-          <hr />
-
           <div className="flex justify-between items-center">
             <p className="font-medium md:text-lg">Manage payment method</p>
             <Link href="/wallet">

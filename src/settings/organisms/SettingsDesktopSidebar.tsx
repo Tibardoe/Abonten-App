@@ -21,13 +21,6 @@ export default async function SettingsDesktopSideBar() {
       />
 
       <SettingsNavLinks
-        href="/settings/membership"
-        imgUrl="/assets/images/membership.svg"
-        arrowUrl="/assets/images/arrowRight.svg"
-        text={t("nav.membership")}
-      />
-
-      <SettingsNavLinks
         href="/settings/security"
         imgUrl="/assets/images/security.svg"
         arrowUrl="/assets/images/arrowRight.svg"

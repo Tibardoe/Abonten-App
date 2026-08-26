@@ -38,12 +38,6 @@ type PaymentMethodSelectorProps = (
       onInvalidSessions?: (invalidSessionIds: string[]) => void;
     }
   | {
-      kind: "subscription";
-      subscriptionCheckoutId: string;
-      amount: number;
-      currency: string;
-    }
-  | {
       kind: "promotion";
       placePromotionCheckoutId: string;
       amount: number;
@@ -110,8 +104,8 @@ type PaymentUiState =
 const DIRECT_CHARGE_POLL_INTERVAL_MS = 4000;
 
 /**
- * Shared "select a payment method and pay" step for both ticket and
- * subscription checkout. The server decides HOW to charge based on the
+ * Shared "select a payment method and pay" step for ticket and promotion
+ * checkout. The server decides HOW to charge based on the
  * selected method (see paystackInit.ts's initiatePaystackChargeForAttempt):
  *  - a saved card/mobile money wallet with a real, usable token charges
  *    directly (`mode: "direct"`) — no popup, this component just shows the
@@ -164,17 +158,13 @@ export default function PaymentMethodSelector(
   }, [prepared]);
 
   const amount =
-    props.kind === "subscription" ||
-    props.kind === "promotion" ||
-    props.kind === "event-promotion"
+    props.kind === "promotion" || props.kind === "event-promotion"
       ? props.amount
       : prepared?.status === 200
         ? prepared.grandTotal
         : 0;
   const currency =
-    props.kind === "subscription" ||
-    props.kind === "promotion" ||
-    props.kind === "event-promotion"
+    props.kind === "promotion" || props.kind === "event-promotion"
       ? props.currency
       : prepared?.status === 200
         ? prepared.currency
@@ -268,24 +258,6 @@ export default function PaymentMethodSelector(
       setNotification("Failed to start payment. Please try again."),
   });
 
-  const subscriptionPayMutation = useMutation({
-    mutationFn: (paymentMethodId: string) =>
-      createPaymentAttempt({
-        subscriptionCheckoutId:
-          props.kind === "subscription" ? props.subscriptionCheckoutId : "",
-        paymentMethodId,
-      }),
-    onSuccess: (response) => {
-      if (response.status !== 200) {
-        setNotification(response.message);
-        return;
-      }
-      handlePaystackInfo(response.data.id, response.data.paystack);
-    },
-    onError: () =>
-      setNotification("Failed to start payment. Please try again."),
-  });
-
   const promotionPayMutation = useMutation({
     mutationFn: (paymentMethodId: string) =>
       createPaymentAttempt({
@@ -329,9 +301,7 @@ export default function PaymentMethodSelector(
       ? ticketPayMutation
       : props.kind === "promotion"
         ? promotionPayMutation
-        : props.kind === "event-promotion"
-          ? eventPromotionPayMutation
-          : subscriptionPayMutation;
+        : eventPromotionPayMutation;
 
   // Invalidates the cache families a successful purchase can affect, scoped
   // to what this payment actually was — kept in one place so both the
