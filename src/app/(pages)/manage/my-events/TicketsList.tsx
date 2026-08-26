@@ -1,6 +1,7 @@
 "use client";
 
 import CancelUserTicketBtn from "@/components/atoms/CancelUserTicketBtn";
+import RetryRefundBtn from "@/components/atoms/RetryRefundBtn";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
 import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
@@ -37,6 +38,14 @@ function TicketCard({
   // Only set when this card came from the Refunds tab (TICKET_REFUND_SELECT)
   // — Active/Cancelled fetch a lighter transaction shape without it.
   const refundAmount = event.transaction?.amount;
+  // Distinguishes "the organizer cancelled the whole event" from "you
+  // cancelled this ticket yourself" — both land on ticket.status='cancelled',
+  // but event.status is already fetched on every card (TICKET_WITH_EVENT_SELECT/
+  // TICKET_REFUND_SELECT both select event:event_id(*, ...)), so no extra
+  // query is needed to tell them apart.
+  const cancelledByOrganizer = event.event.status === "canceled";
+  const canRetryRefund =
+    refundBadge?.label === "Refund failed" && event.transaction_id;
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
       <div className="relative h-48 w-full">
@@ -77,7 +86,9 @@ function TicketCard({
         >
           Status:{" "}
           {event.status === "cancelled" ? (
-            <span className="font-semibold text-destructive">Cancelled</span>
+            <span className="font-semibold text-destructive">
+              {cancelledByOrganizer ? "Cancelled by organizer" : "Cancelled"}
+            </span>
           ) : event.status === "used" ? (
             <span className="font-semibold text-success">Checked in</span>
           ) : (
@@ -99,6 +110,12 @@ function TicketCard({
               <p className="text-xs text-muted-foreground">
                 {refundBadge.description}
               </p>
+            )}
+            {canRetryRefund && event.transaction_id && (
+              <RetryRefundBtn
+                transactionId={event.transaction_id}
+                queryKey={queryKey}
+              />
             )}
           </div>
         )}

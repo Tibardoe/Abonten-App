@@ -93,6 +93,7 @@ export default function EventCard({
             eventCode={event_code}
             address={address.full_address}
             organizerId={organizer_id}
+            eventStatus={status}
           />
         </div>
 

@@ -8,17 +8,14 @@ import {
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
 import { useImageSelection } from "@/hooks/useImageSelection";
-import { useGetUserLocation } from "@/hooks/useUserLocation";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { signOut } from "@/services/authService";
-import { generateSlug } from "@/utils/geerateSlug";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GiPartyFlags } from "react-icons/gi";
-import { GoHome } from "react-icons/go";
 import { HiOutlineLogin } from "react-icons/hi";
 import {
   MdOutlineAccountBalanceWallet,
@@ -46,8 +43,6 @@ export default function SideBar({
 
   const [showPostModal, setShowPostModal] = useState(false);
   const [showPlaceModal, setShowPlaceModal] = useState(false);
-
-  const location = useGetUserLocation();
 
   const router = useRouter();
 
@@ -124,15 +119,6 @@ export default function SideBar({
             </div>
           ) : user ? (
             <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
-              <Link
-                href={`/explore/${generateSlug(location ?? "")}`}
-                onClick={onNavigate}
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <GoHome className="text-xl" />
-                {t("home")}
-              </Link>
-
               <CreateMenu
                 label={t("create")}
                 onSelectEvent={() => fileInputRef.current?.click()}

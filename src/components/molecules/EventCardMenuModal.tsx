@@ -5,7 +5,6 @@ import CancelButton from "../atoms/CancelButton";
 import DeleteEventButton from "../atoms/DeleteEventButton";
 import EditEventButton from "../atoms/EditEventButton";
 import ManagePromoCodesButton from "../atoms/ManagePromoCodesButton";
-import RefundButton from "../atoms/RefundButton";
 import ShareButton from "../atoms/ShareButton";
 
 type EventProp = {
@@ -14,6 +13,7 @@ type EventProp = {
   eventCode: string;
   address: string;
   organizerId?: string;
+  eventStatus?: string;
 };
 
 export default function EventCardMenuModal({
@@ -22,6 +22,7 @@ export default function EventCardMenuModal({
   address,
   eventCode,
   organizerId,
+  eventStatus,
 }: EventProp) {
   const shareUrl = getEventShareUrl(eventCode, address);
 
@@ -30,6 +31,7 @@ export default function EventCardMenuModal({
   const { data: userData } = useCurrentUser();
 
   const isOrganizer = userData?.id === organizerId;
+  const isCancelled = eventStatus === "canceled";
 
   return (
     <div className="bg-popover absolute right-2 rounded-md border border-border shadow-lg p-3 min-w-60 font-medium flex flex-col gap-3 text-popover-foreground overflow-y-scroll h-36">
@@ -39,19 +41,29 @@ export default function EventCardMenuModal({
 
       <ShareButton title={eventTitle} url={shareUrl} />
 
-      <hr className="border-border" />
-
-      <RefundButton />
-
-      <hr className="border-border" />
-
       {isOrganizer && (
         <>
+          <hr className="border-border" />
           <EditEventButton eventId={eventId} />
-          <hr className="border-border" />
-          <ManagePromoCodesButton eventId={eventId} />
-          <hr className="border-border" />
-          <CancelButton eventId={eventId} />
+
+          {!isCancelled && (
+            <>
+              <hr className="border-border" />
+              <ManagePromoCodesButton eventId={eventId} />
+            </>
+          )}
+
+          {isCancelled ? (
+            <p className="p-1 text-sm text-muted-foreground">
+              This event has been cancelled
+            </p>
+          ) : (
+            <>
+              <hr className="border-border" />
+              <CancelButton eventId={eventId} />
+            </>
+          )}
+
           <hr className="border-border" />
           <DeleteEventButton eventId={eventId} />
           <hr className="border-border" />

@@ -1,10 +1,11 @@
 "use client";
 
 import cancelEvent from "@/actions/cancelEvent";
+import getEventCancellationImpact from "@/actions/getEventCancellationImpact";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { MdOutlineCancel } from "react-icons/md";
 
@@ -12,12 +13,46 @@ type CancelProp = {
   eventId: string;
 };
 
+function buildConfirmMessage(
+  impact:
+    | {
+        paidTicketCount: number;
+        freeTicketCount: number;
+        attendeeCount: number;
+      }
+    | undefined,
+  isLoadingImpact: boolean,
+): string {
+  if (isLoadingImpact || !impact) {
+    return "Checking this event for attendees…";
+  }
+
+  if (impact.paidTicketCount > 0) {
+    return `${impact.attendeeCount} attendee${impact.attendeeCount === 1 ? "" : "s"} who already purchased tickets will be refunded to the payment method used for their ticket. This action cannot be undone.`;
+  }
+
+  if (impact.freeTicketCount > 0) {
+    return `${impact.attendeeCount} registered attendee${impact.attendeeCount === 1 ? "" : "s"} will be notified that the event has been cancelled. This action cannot be undone.`;
+  }
+
+  return "This event will no longer be available to attendees. This action cannot be undone.";
+}
+
 export default function CancelButton({ eventId }: CancelProp) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const toast = useToast();
+
+  const { data: impactResponse, isLoading: isLoadingImpact } = useQuery({
+    queryKey: ["event-cancellation-impact", eventId],
+    queryFn: () => getEventCancellationImpact(eventId),
+    enabled: showCancelConfirm,
+  });
+
+  const impact =
+    impactResponse?.status === 200 ? impactResponse.data : undefined;
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => cancelEvent(eventId),
@@ -54,9 +89,10 @@ export default function CancelButton({ eventId }: CancelProp) {
       {showCancelConfirm && (
         <ConfirmDeleteModal
           title="Cancel this event?"
-          message={error ?? "Are you sure you want to cancel this event?"}
+          message={error ?? buildConfirmMessage(impact, isLoadingImpact)}
           confirmLabel="Cancel Event"
-          cancelLabel="Keep Event"
+          cancelLabel="Go Back"
+          loadingLabel="Cancelling…"
           isLoading={isPending}
           onConfirm={() => mutate()}
           onCancel={() => setShowCancelConfirm(false)}
