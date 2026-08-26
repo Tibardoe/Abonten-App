@@ -1,0 +1,11 @@
+{
+  "validation": {
+    "nameRequired": "Ɛho hia sɛ wode din",
+    "nameTooLong": "Din no ware dodo",
+    "descriptionRequired": "Ɛho hia sɛ wokyerɛkyerɛ mu",
+    "descriptionTooLong": "Nkyerɛkyerɛmu no ware dodo",
+    "invalidUrl": "Fa URL a ɛteɛ (sɛ nhwɛso, www.example.com anaa https://example.com)",
+    "invalidPhone": "Fa telefon nɔmba a ɛteɛ",
+    "invalidWhatsapp": "Fa WhatsApp nɔmba a ɛteɛ"
+  }
+}

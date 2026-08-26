@@ -1,0 +1,11 @@
+{
+  "validation": {
+    "nameRequired": "El nombre es obligatorio",
+    "nameTooLong": "El nombre debe tener menos de 150 caracteres",
+    "descriptionRequired": "La descripción es obligatoria",
+    "descriptionTooLong": "La descripción debe tener menos de 2000 caracteres",
+    "invalidUrl": "Introduce una URL válida (p. ej., www.example.com o https://example.com)",
+    "invalidPhone": "Introduce un número de teléfono válido",
+    "invalidWhatsapp": "Introduce un número de WhatsApp válido"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "validation": {
+    "nameRequired": "Name ist erforderlich",
+    "nameTooLong": "Der Name darf höchstens 150 Zeichen lang sein",
+    "descriptionRequired": "Beschreibung ist erforderlich",
+    "descriptionTooLong": "Die Beschreibung darf höchstens 2000 Zeichen lang sein",
+    "invalidUrl": "Gib eine gültige URL ein (z. B. www.example.com oder https://example.com)",
+    "invalidPhone": "Gib eine gültige Telefonnummer ein",
+    "invalidWhatsapp": "Gib eine gültige WhatsApp-Nummer ein"
+  }
+}
