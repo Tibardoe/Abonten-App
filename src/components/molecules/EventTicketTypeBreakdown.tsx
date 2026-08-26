@@ -2,16 +2,29 @@
 
 import getEventTicketTypeAnalytics from "@/actions/getEventTicketTypeAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 
 export default function EventTicketTypeBreakdown({
   eventId,
+  period,
+  startDate,
+  endDate,
 }: {
   eventId: string;
+  period: DashboardPeriod;
+  startDate: string | null;
+  endDate: string | null;
 }) {
-  const { data: response, isLoading } = useQuery({
-    queryKey: ["event-analytics-ticket-types", eventId],
-    queryFn: () => getEventTicketTypeAnalytics(eventId),
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["event-analytics-ticket-types", eventId, period],
+    queryFn: () => getEventTicketTypeAnalytics(eventId, startDate, endDate),
     staleTime: 20_000,
   });
 
@@ -23,6 +36,11 @@ export default function EventTicketTypeBreakdown({
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={3} />
+      ) : isError ? (
+        <InlineErrorRetry
+          message="We couldn't load ticket type sales."
+          onRetry={() => refetch()}
+        />
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No ticket types set up yet.

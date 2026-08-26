@@ -1,4 +1,4 @@
-import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+import PageHeader from "@/components/molecules/PageHeader";
 import SwitchAppearance from "@/settings/organisms/SwitchAppearance";
 import { getTranslations } from "next-intl/server";
 
@@ -11,7 +11,7 @@ export default async function page() {
 
   return (
     <div className="w-full flex flex-col gap-14">
-      <MobileSettingsHeaderNav title={t("nav.switchAppearance")} />
+      <PageHeader title={t("nav.switchAppearance")} showBackButton />
       <SwitchAppearance />
     </div>
   );

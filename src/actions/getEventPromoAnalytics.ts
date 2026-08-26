@@ -2,7 +2,11 @@
 
 import { createClient } from "@/config/supabase/server";
 
-export default async function getEventPromoAnalytics(eventId: string) {
+export default async function getEventPromoAnalytics(
+  eventId: string,
+  startDate?: string | null,
+  endDate?: string | null,
+) {
   const supabase = await createClient();
 
   const {
@@ -27,6 +31,8 @@ export default async function getEventPromoAnalytics(eventId: string) {
 
   const { data, error } = await supabase.rpc("get_event_promo_analytics", {
     p_event_id: eventId,
+    p_start_date: startDate ?? undefined,
+    p_end_date: endDate ?? undefined,
   });
 
   if (error) {

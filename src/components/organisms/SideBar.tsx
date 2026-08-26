@@ -8,6 +8,7 @@ import {
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { signOut } from "@/services/authService";
@@ -15,31 +16,22 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
-import {
-  MdOutlineAccountBalanceWallet,
-  MdOutlineDrafts,
-  MdOutlineSpaceDashboard,
-} from "react-icons/md";
-import { cn } from "../lib/utils";
 import EventUploadModal from "./EventUploadModal";
 import MobileFooter from "./MobileFooter";
 
-type menuClickedProp = {
-  menuClicked: boolean;
-  onCloseAnimationEnd?: () => void;
+type SideBarProps = {
   onPostSuccess?: () => void;
   onNavigate?: () => void;
 };
 
-export default function SideBar({
-  menuClicked,
-  onCloseAnimationEnd,
-  onPostSuccess,
-  onNavigate,
-}: menuClickedProp) {
+// Rendered as the content of the mobile navigation Sheet (see Header.tsx) --
+// positioning, the overlay, slide animation, focus trap, and Escape/outside-
+// click-to-close all come from Sheet/Radix Dialog now, so this component
+// only owns the nav content itself.
+export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
   const t = useTranslations("navigation");
+  const toast = useToast();
 
   const [showPostModal, setShowPostModal] = useState(false);
   const [showPlaceModal, setShowPlaceModal] = useState(false);
@@ -58,7 +50,7 @@ export default function SideBar({
   const { imagePreview, selectedFile, fileInputRef, handleFileChange } =
     useImageSelection({
       invalidFileMessage: "Please select an image file for your event flyer.",
-      onInvalidFile: (message) => alert(message),
+      onInvalidFile: (message) => toast.error(message),
       onSelect: () => setShowPostModal(true),
     });
 
@@ -101,111 +93,61 @@ export default function SideBar({
         />
       )}
 
-      <div className="bg-overlay/50 w-full flex lg:hidden fixed z-20 left-0 top-[71px] h-[100%]">
-        <div
-          className={cn(
-            "bg-sidebar text-sidebar-foreground w-[80%]",
-            menuClicked ? "animate-slideIn" : "animate-slideOut",
-          )}
-          onAnimationEnd={() => {
-            if (!menuClicked) onCloseAnimationEnd?.();
-          }}
-        >
-          {userLoading ? (
-            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Skeleton key={i.toLocaleString()} className="h-5 w-28" />
-              ))}
-            </div>
-          ) : user ? (
-            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
-              <CreateMenu
-                label={t("create")}
-                onSelectEvent={() => fileInputRef.current?.click()}
-                onSelectPlace={() => setShowPlaceModal(true)}
-                triggerClassName="hover:text-primary transition-colors"
-                iconClassName="text-xl"
-              />
+      <div className="h-full overflow-y-auto">
+        {userLoading ? (
+          <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Skeleton key={i.toLocaleString()} className="h-5 w-28" />
+            ))}
+          </div>
+        ) : user ? (
+          <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
+            <CreateMenu
+              label={t("create")}
+              onSelectEvent={() => fileInputRef.current?.click()}
+              onSelectPlace={() => setShowPlaceModal(true)}
+              triggerClassName="hover:text-primary transition-colors"
+              iconClassName="text-xl"
+            />
 
-              {isOrganizer && (
-                <Link
-                  href="/manage/dashboard"
-                  onClick={onNavigate}
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <MdOutlineSpaceDashboard className="text-xl" />
-                  {t("dashboard")}
-                </Link>
-              )}
+            <ManageMenu
+              username={userDetails?.username ?? ""}
+              isOrganizer={isOrganizer}
+              isPlaceOwner={isPlaceOwner}
+              onNavigate={onNavigate}
+              triggerClassName="hover:text-primary transition-colors"
+            />
 
-              {isOrganizer && (
-                <Link
-                  href="/finances"
-                  onClick={onNavigate}
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <MdOutlineAccountBalanceWallet className="text-xl" />
-                  {t("finances")}
-                </Link>
-              )}
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              ref={fileInputRef}
+              onChange={handleFileChange}
+            />
 
-              <ManageMenu
-                username={userDetails?.username ?? ""}
-                isOrganizer={isOrganizer}
-                isPlaceOwner={isPlaceOwner}
-                onNavigate={onNavigate}
-                triggerClassName="hover:text-primary transition-colors"
-              />
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex gap-1 items-center hover:text-primary transition-colors"
+            >
+              <HiOutlineLogin className="text-2xl opacity-70" />
+              {t("signOut")}
+            </button>
+          </div>
+        ) : (
+          <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
+            <Link href="/auth/signin" onClick={onNavigate}>
+              {t("signIn")}
+            </Link>
 
-              <Link
-                href="/manage/my-events"
-                onClick={onNavigate}
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <GiPartyFlags className="text-xl" />
-                {t("myEvents")}
-              </Link>
+            <Link href="/auth/signin" onClick={onNavigate}>
+              {t("signUp")}
+            </Link>
+          </div>
+        )}
 
-              <Link
-                href="/manage/drafts"
-                onClick={onNavigate}
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <MdOutlineDrafts className="text-xl" />
-                {t("drafts")}
-              </Link>
-
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                ref={fileInputRef}
-                onChange={handleFileChange}
-              />
-
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <HiOutlineLogin className="text-2xl opacity-70" />
-                {t("signOut")}
-              </button>
-            </div>
-          ) : (
-            <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
-              <Link href="/auth/signin" onClick={onNavigate}>
-                {t("signIn")}
-              </Link>
-
-              <Link href="/auth/signin" onClick={onNavigate}>
-                {t("signUp")}
-              </Link>
-            </div>
-          )}
-
-          <MobileFooter />
-        </div>
+        <MobileFooter />
       </div>
     </>
   );

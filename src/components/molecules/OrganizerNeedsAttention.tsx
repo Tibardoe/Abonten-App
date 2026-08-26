@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { TbAlertTriangle } from "react-icons/tb";
+import { TbAlertTriangle, TbCircleCheck } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
+import InlineErrorRetry from "./InlineErrorRetry";
 
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;
@@ -10,9 +11,13 @@ type Row = any;
 export default function OrganizerNeedsAttention({
   items,
   isLoading,
+  isError,
+  onRetry,
 }: {
   items: Row[];
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   if (isLoading) {
     return (
@@ -23,7 +28,29 @@ export default function OrganizerNeedsAttention({
     );
   }
 
-  if (items.length === 0) return null;
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't check what needs attention."
+        onRetry={() => onRetry?.()}
+      />
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="font-bold md:text-lg">Needs Attention</h2>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <TbCircleCheck
+            className="text-lg text-primary shrink-0"
+            aria-hidden="true"
+          />
+          You're all caught up — nothing needs attention right now.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-3">

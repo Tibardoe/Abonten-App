@@ -46,6 +46,7 @@ export default function HighlightModal({
     selectFiles,
     deleteMedia,
     replaceCropped,
+    reorderMedia,
     updateTrim,
     ensureTimelineThumbnails,
     goToOffset,
@@ -283,6 +284,12 @@ export default function HighlightModal({
 
         {!isCropping && step === 2 && currentMedia && (
           <div className="flex items-center gap-2">
+            {mediaItems.length > 1 && (
+              <span className="text-white text-sm backdrop-blur-md border border-white/20 bg-black bg-opacity-75 px-2.5 py-1.5 rounded-full">
+                {currentIndex + 1}/{mediaItems.length} selected
+              </span>
+            )}
+
             {currentMedia.type === "image" && (
               <button
                 type="button"
@@ -411,6 +418,7 @@ export default function HighlightModal({
               activeId={activeId}
               onSelect={goToId}
               onDelete={handleDeleteMedia}
+              onReorder={reorderMedia}
             />
           )}
         </div>

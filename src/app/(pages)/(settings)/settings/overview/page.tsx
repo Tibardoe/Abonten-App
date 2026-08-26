@@ -1,5 +1,5 @@
 import MaskIcon from "@/components/atoms/MaskIcon";
-import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+import PageHeader from "@/components/molecules/PageHeader";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
 import PromotionDetails from "@/settings/organisms/PromotionDetails";
 import { getTranslations } from "next-intl/server";
@@ -14,7 +14,7 @@ export default async function page() {
 
   return (
     <div className="w-full flex flex-col gap-10">
-      <MobileSettingsHeaderNav title={t("nav.overview")} />
+      <PageHeader title={t("nav.overview")} showBackButton />
 
       <PromotionDetails />
 

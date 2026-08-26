@@ -1,3 +1,4 @@
+import PageHeader from "@/components/molecules/PageHeader";
 import FinancesDesktopSidebar from "@/finances/organisms/FinancesDesktopSidebar";
 import FinancesMobileTabs from "@/finances/organisms/FinancesMobileTabs";
 
@@ -12,7 +13,7 @@ export default function FinancesLayout({
 }>) {
   return (
     <main className="flex flex-col gap-6">
-      <h1 className="font-bold text-xl md:text-2xl">Finances</h1>
+      <PageHeader title="Finances" />
 
       <FinancesMobileTabs />
 

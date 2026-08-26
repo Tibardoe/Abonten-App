@@ -3,6 +3,8 @@
 import { updateUserDetails } from "@/actions/updateUserDetails";
 import { useToast } from "@/hooks/useToast";
 import type { UserDetailsFormType } from "@/types/userProfileType";
+import { editProfileSchema } from "@/utils/editProfileSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
@@ -17,15 +19,24 @@ type InitialDataProps = {
     avatar_public_id: string;
     avatar_version: string;
     bio: string;
+    website: string;
   };
 };
 
 export default function EditProfileInputFields({
   initialData,
 }: InitialDataProps) {
-  const form = useForm<UserDetailsFormType>({ defaultValues: initialData });
+  const form = useForm<UserDetailsFormType>({
+    defaultValues: initialData,
+    resolver: zodResolver(editProfileSchema),
+    mode: "onBlur",
+  });
 
-  const { register, handleSubmit } = form;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty, isValid },
+  } = form;
 
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -55,11 +66,15 @@ export default function EditProfileInputFields({
     // updateUserDetails never throws (see the action) — it returns
     // {status, message} even on failure, so a rejected update is handled
     // here rather than in onError below.
-    onSuccess: (profileData, _formData, context) => {
+    onSuccess: (profileData, formData, context) => {
       const message = profileData?.message || "Profile updated successfully.";
 
       if (profileData?.status === 200) {
         toast.success(message);
+        // Re-baseline the form against what was just saved, so isDirty
+        // (and therefore the Save button/"Unsaved changes" hint) reflects
+        // that there's nothing left to save.
+        form.reset(formData);
       } else {
         toast.error(message);
       }
@@ -92,35 +107,77 @@ export default function EditProfileInputFields({
   };
 
   return (
-    <>
+    <div className="space-y-3">
+      <div>
+        <h2 className="font-semibold">Public profile</h2>
+        <p className="text-sm text-muted-foreground">
+          This information is visible to anyone who views your profile.
+        </p>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-        <Input
-          title="Username"
-          inputPlaceholder="Username"
-          {...register("username")}
-        />
+        <div className="space-y-1.5">
+          <Input
+            title="Username"
+            inputPlaceholder="Username"
+            {...register("username")}
+          />
+          {errors.username && (
+            <p className="text-[0.8rem] font-medium text-destructive">
+              {errors.username.message}
+            </p>
+          )}
+        </div>
 
-        <Input
-          title="Name"
-          inputPlaceholder="Name"
-          {...register("full_name")}
-        />
+        <div className="space-y-1.5">
+          <Input
+            title="Name"
+            inputPlaceholder="Name"
+            {...register("full_name")}
+          />
+          {errors.full_name && (
+            <p className="text-[0.8rem] font-medium text-destructive">
+              {errors.full_name.message}
+            </p>
+          )}
+        </div>
 
-        <Input
-          title="Website"
-          inputPlaceholder="Website"
-          {...register("website")}
-        />
+        <div className="space-y-1.5">
+          <Input
+            title="Website"
+            inputPlaceholder="Website"
+            {...register("website")}
+          />
+          {errors.website && (
+            <p className="text-[0.8rem] font-medium text-destructive">
+              {errors.website.message}
+            </p>
+          )}
+        </div>
 
-        <Input title="Bio" inputPlaceholder="Bio" {...register("bio")} />
+        <div className="space-y-1.5">
+          <Input title="Bio" inputPlaceholder="Bio" {...register("bio")} />
+          {errors.bio && (
+            <p className="text-[0.8rem] font-medium text-destructive">
+              {errors.bio.message}
+            </p>
+          )}
+        </div>
 
-        <Button
-          className="self-end font-bold mb-5 md:mb-0 bg-mint"
-          disabled={isPending}
-        >
-          {isPending ? "Submitting..." : "Submit"}
-        </Button>
+        <div className="flex items-center justify-end gap-3 mb-5 md:mb-0">
+          {isDirty && !isPending && (
+            <span className="text-sm text-muted-foreground">
+              Unsaved changes
+            </span>
+          )}
+          <Button
+            className="font-bold bg-mint"
+            disabled={isPending || !isDirty || !isValid}
+          >
+            {isPending ? "Submitting..." : "Submit"}
+          </Button>
+        </div>
       </form>
-    </>
+    </div>
   );
 }

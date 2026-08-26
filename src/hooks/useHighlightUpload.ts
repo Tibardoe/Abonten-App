@@ -31,6 +31,9 @@ export function useHighlightUpload(username: string) {
   // Media items are kept alongside their upload item so a retry doesn't
   // need the caller to still be holding onto the original selection.
   const mediaItemsRef = useRef<Map<string, MediaItem>>(new Map());
+  // Only holds an entry while that item's Cloudinary upload is in flight --
+  // lets cancel() abort it instead of leaving a permanent spinner.
+  const xhrRefs = useRef<Map<string, XMLHttpRequest>>(new Map());
 
   const runItem = useCallback(
     async (id: string, mediaItem: MediaItem, groupId: string) => {
@@ -60,7 +63,7 @@ export function useHighlightUpload(username: string) {
       >;
 
       try {
-        const { promise } = uploadToCloudinary({
+        const { promise, xhr } = uploadToCloudinary({
           file: mediaItem.file,
           cloudName: cloudName as string,
           apiKey: apiKey as string,
@@ -71,8 +74,13 @@ export function useHighlightUpload(username: string) {
           onProgress: (percent) => patch(setItems, id, { progress: percent }),
         });
 
+        xhrRefs.current.set(id, xhr);
         cloudinaryResult = await promise;
       } catch (error) {
+        // cancel() already removed this item from state -- nothing to patch.
+        if (error instanceof Error && error.message === "Upload cancelled.") {
+          return;
+        }
         patch(setItems, id, {
           status: "error",
           errorMessage:
@@ -81,6 +89,8 @@ export function useHighlightUpload(username: string) {
               : "We couldn't upload this highlight. Please try again.",
         });
         return;
+      } finally {
+        xhrRefs.current.delete(id);
       }
 
       patch(setItems, id, { status: "saving", progress: 100 });
@@ -182,9 +192,19 @@ export function useHighlightUpload(username: string) {
     setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
+  // For an item still signing/uploading -- aborts the in-flight request (if
+  // any has started yet) and removes it immediately rather than waiting for
+  // it to land in an error state first.
+  const cancel = useCallback((id: string) => {
+    xhrRefs.current.get(id)?.abort();
+    xhrRefs.current.delete(id);
+    mediaItemsRef.current.delete(id);
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }, []);
+
   const isUploading = items.some(
     (item) => item.status !== "success" && item.status !== "error",
   );
 
-  return { items, start, retry, dismiss, isUploading };
+  return { items, start, retry, dismiss, cancel, isUploading };
 }

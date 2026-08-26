@@ -1,7 +1,12 @@
 "use client";
 
 import type { MediaItem } from "@/types/mediaItemType";
-import { AnimatePresence, type PanInfo, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  type PanInfo,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -31,6 +36,14 @@ const slideVariants = {
   }),
 };
 
+// A user with prefers-reduced-motion still benefits from the crossfade (it
+// signals "this changed"), just without the large sliding transform.
+const reducedMotionVariants = {
+  enter: { opacity: 0 },
+  center: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
 type MediaStageProps = {
   activeItem: MediaItem;
   direction: 1 | -1;
@@ -53,6 +66,7 @@ export default function MediaStage({
 }: MediaStageProps) {
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < mediaItemsLength - 1;
+  const prefersReducedMotion = useReducedMotion();
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
@@ -91,14 +105,20 @@ export default function MediaStage({
         <motion.div
           key={activeItem.id}
           custom={direction}
-          variants={slideVariants}
+          variants={
+            prefersReducedMotion ? reducedMotionVariants : slideVariants
+          }
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 300, damping: 32 },
-            opacity: { duration: 0.15 },
-          }}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0.1 }
+              : {
+                  x: { type: "spring", stiffness: 300, damping: 32 },
+                  opacity: { duration: 0.15 },
+                }
+          }
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.6}

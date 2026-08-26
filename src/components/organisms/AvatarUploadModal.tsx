@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import ImagePreviewPane from "../molecules/ImagePreviewPane";
 import UploadStepHeader from "../molecules/UploadStepHeader";
+import { Progress } from "../ui/progress";
 
 // Dynamically imported so react-image-crop only loads once a user
 // actually reaches the cropping step.
@@ -35,9 +36,11 @@ export default function AvatarUploadModal({
     onCropped: () => setStep(2),
   });
 
-  const { uploadAvatar, isUploading, progress } = useAvatarUpload({
-    onSuccess: () => handleClosePopup(false),
-  });
+  const { uploadAvatar, isUploading, progress, cancelUpload } = useAvatarUpload(
+    {
+      onSuccess: () => handleClosePopup(false),
+    },
+  );
 
   return (
     <>
@@ -61,7 +64,7 @@ export default function AvatarUploadModal({
           {step === 2 && croppedPreview && (
             <>
               <UploadStepHeader
-                onBack={() => setStep(1)}
+                onBack={isUploading ? undefined : () => setStep(1)}
                 title="Upload Avatar"
                 primaryAction={{
                   label: isUploading ? `Uploading... ${progress}%` : "Upload",
@@ -78,6 +81,19 @@ export default function AvatarUploadModal({
                     className="w-full h-full"
                   />
                 </div>
+
+                {isUploading && (
+                  <div className="w-full max-w-sm mt-4 space-y-2">
+                    <Progress value={progress} />
+                    <button
+                      type="button"
+                      onClick={cancelUpload}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors mx-auto block"
+                    >
+                      Cancel upload
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}

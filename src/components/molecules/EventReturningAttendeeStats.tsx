@@ -1,17 +1,30 @@
 "use client";
 
 import getEventReturningAttendeeStats from "@/actions/getEventReturningAttendeeStats";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
+import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 
 export default function EventReturningAttendeeStats({
   eventId,
+  period,
+  startDate,
+  endDate,
 }: {
   eventId: string;
+  period: DashboardPeriod;
+  startDate: string | null;
+  endDate: string | null;
 }) {
-  const { data: response, isLoading } = useQuery({
-    queryKey: ["event-analytics-returning", eventId],
-    queryFn: () => getEventReturningAttendeeStats(eventId),
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["event-analytics-returning", eventId, period],
+    queryFn: () => getEventReturningAttendeeStats(eventId, startDate, endDate),
     staleTime: 20_000,
   });
 
@@ -26,6 +39,11 @@ export default function EventReturningAttendeeStats({
 
       {isLoading ? (
         <StatTilesSkeleton count={2} />
+      ) : isError ? (
+        <InlineErrorRetry
+          message="We couldn't load attendee behavior."
+          onRetry={() => refetch()}
+        />
       ) : !stats || total === 0 ? (
         <p className="text-sm text-muted-foreground">
           Not enough attendees yet to calculate returning vs. first-time.

@@ -23,12 +23,27 @@ export async function updateUserDetails(formData: UserDetailsFormType) {
   }
 
   // Saving the Edit Profile form is the only place a username change
-  // happens, so submitting it counts as the user having customized their
+  // happens, so changing it counts as the user having customized their
   // username -- it stops counting as the system-assigned default for
   // profile-completion purposes (see src/utils/profileCompletion.ts).
+  // Only flip that flag when the username actually changed, so re-saving
+  // e.g. just the bio doesn't wrongly mark an untouched auto-generated
+  // username as customized.
+  const { data: currentInfo } = await supabase
+    .from("user_info")
+    .select("username")
+    .eq("id", user.user.id)
+    .single();
+
+  const usernameChanged = currentInfo?.username !== formData.username;
+
   const { error } = await supabase
     .from("user_info")
-    .update({ ...formData, username_is_generated: false })
+    .update(
+      usernameChanged
+        ? { ...formData, username_is_generated: false }
+        : formData,
+    )
     .eq("id", user.user.id);
 
   if (error) {

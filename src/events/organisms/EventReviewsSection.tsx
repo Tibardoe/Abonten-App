@@ -1,22 +1,19 @@
 "use client";
 
 import { respondToEventReview } from "@/actions/respondToEventReview";
-import StarRatingDisplay from "@/components/atoms/Rating";
-import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
+import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
+import ReviewsSectionHeader from "@/components/molecules/ReviewsSectionHeader";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import type { Occurrence } from "@/types/occurrenceType";
 import type { PaginatedResult } from "@/types/pagination";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getRelativeTime } from "@/utils/dateFormatter";
 import {
   type InfiniteData,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import Image from "next/image";
 import { useState } from "react";
 import AddEventReviewButton from "../molecules/AddEventReviewButton";
 
@@ -146,29 +143,20 @@ export default function EventReviewsSection({
       id="reviews"
       className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-4 scroll-mt-20"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl md:text-2xl font-medium text-card-foreground">
-            Reviews
-          </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <StarRatingDisplay rating={avgRating} />
-            <span className="text-sm text-muted-foreground">
-              {avgRating.toFixed(1)} ({reviewCount}{" "}
-              {reviewCount === 1 ? "review" : "reviews"})
-            </span>
-          </div>
-        </div>
-
-        <AddEventReviewButton
-          eventId={eventId}
-          organizerId={organizerId}
-          eventStatus={eventStatus}
-          startsAt={startsAt}
-          endsAt={endsAt}
-          occurrences={occurrences}
-        />
-      </div>
+      <ReviewsSectionHeader
+        avgRating={avgRating}
+        reviewCount={reviewCount}
+        addReviewButton={
+          <AddEventReviewButton
+            eventId={eventId}
+            organizerId={organizerId}
+            eventStatus={eventStatus}
+            startsAt={startsAt}
+            endsAt={endsAt}
+            occurrences={occurrences}
+          />
+        }
+      />
 
       <InfiniteList<EventReviewRow>
         queryKey={reviewsQueryKey}
@@ -186,90 +174,42 @@ export default function EventReviewsSection({
           <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
         }
         renderItem={(review: EventReviewRow) => (
-          <li
+          <ReviewListItem
             key={review.id}
-            className="border-b border-border pb-6 last:border-0 last:pb-0"
+            avatarPublicId={review.user_info?.avatar_public_id}
+            avatarVersion={review.user_info?.avatar_version}
+            username={review.user_info?.username}
+            createdAt={review.created_at}
+            rating={review.rating}
+            title={review.title}
+            comment={review.comment}
+            isVerifiedAttendee={review.is_verified_attendee}
+            photos={review.event_review_photo}
+            responseLabel="Organizer reply"
+            responseText={review.organizer_response}
           >
-            <div className="flex items-center gap-3">
-              {review.user_info?.avatar_public_id ? (
-                <Image
-                  src={buildCloudinaryUrl(
-                    review.user_info.avatar_public_id,
-                    review.user_info.avatar_version,
-                    { width: 40, height: 40 },
-                  )}
-                  alt={review.user_info?.username ?? "Reviewer"}
-                  width={40}
-                  height={40}
-                  className="rounded-full border border-border"
+            {!review.organizer_response &&
+              isOrganizer &&
+              (respondingToId === review.id ? (
+                <RespondForm
+                  initialText={
+                    draftText && draftText.reviewId === review.id
+                      ? draftText.text
+                      : ""
+                  }
+                  isSubmitting={
+                    replyMutation.isPending &&
+                    replyMutation.variables?.reviewId === review.id
+                  }
+                  onCancel={() => {
+                    setRespondingToId(null);
+                    setDraftText(null);
+                  }}
+                  onSubmit={(text) =>
+                    replyMutation.mutate({ reviewId: review.id, text })
+                  }
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-muted" />
-              )}
-
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-card-foreground truncate">
-                  {review.user_info?.username ?? "Anonymous"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {getRelativeTime(review.created_at)}
-                </p>
-              </div>
-
-              <div className="flex flex-col items-end gap-1">
-                <StarRatingDisplay rating={review.rating} />
-                {review.is_verified_attendee && (
-                  <span className="text-[11px] font-medium text-success whitespace-nowrap">
-                    ✓ Verified Attendee
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {review.title && (
-              <h4 className="font-medium text-card-foreground mt-2">
-                {review.title}
-              </h4>
-            )}
-
-            {review.comment && (
-              <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
-                {review.comment}
-              </p>
-            )}
-
-            <ReviewPhotoGrid photos={review.event_review_photo} />
-
-            {review.organizer_response ? (
-              <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-                  Organizer reply
-                </p>
-                <p className="text-sm text-foreground">
-                  {review.organizer_response}
-                </p>
-              </div>
-            ) : isOrganizer && respondingToId === review.id ? (
-              <RespondForm
-                initialText={
-                  draftText && draftText.reviewId === review.id
-                    ? draftText.text
-                    : ""
-                }
-                isSubmitting={
-                  replyMutation.isPending &&
-                  replyMutation.variables?.reviewId === review.id
-                }
-                onCancel={() => {
-                  setRespondingToId(null);
-                  setDraftText(null);
-                }}
-                onSubmit={(text) =>
-                  replyMutation.mutate({ reviewId: review.id, text })
-                }
-              />
-            ) : (
-              isOrganizer && (
                 <button
                   type="button"
                   onClick={() => setRespondingToId(review.id)}
@@ -277,9 +217,8 @@ export default function EventReviewsSection({
                 >
                   Reply
                 </button>
-              )
-            )}
-          </li>
+              ))}
+          </ReviewListItem>
         )}
       />
     </div>

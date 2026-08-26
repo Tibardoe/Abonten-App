@@ -4,6 +4,7 @@ import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { getPlaceUpcomingEvents } from "@/actions/getPlaceUpcomingEvents";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import EventCard from "@/components/molecules/EventCard";
+import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
 import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
@@ -142,7 +143,7 @@ export default async function page({
           priority
           sizes="(max-width: 768px) 100vw, 80vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-overlay/80 via-overlay/40 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 p-3 md:p-8 space-y-1.5 md:space-y-4">
           <div className="flex items-start justify-between gap-2 md:gap-3">
@@ -325,6 +326,7 @@ export default async function page({
               <p className="text-muted-foreground mb-4 text-sm md:text-base">
                 {fullAddress}
               </p>
+              <LocationMapPreview location={place.location} />
             </div>
 
             {/* Contact */}

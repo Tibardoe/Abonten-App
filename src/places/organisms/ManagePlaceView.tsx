@@ -57,6 +57,7 @@ type ManagePlaceViewProps = {
     cursor: string | null,
   ) => Promise<PaginatedResult<OwnerPlaceBooking>>;
   insights: Record<string, number>;
+  insightsError: boolean;
   promotionTiers: PlacePromotionTier[];
   currentPromotion: { ends_at: string; tier_label: string | null } | null;
 };
@@ -97,6 +98,7 @@ export default function ManagePlaceView({
   bookingsFirstPage,
   fetchBookingsPage,
   insights,
+  insightsError,
   promotionTiers,
   currentPromotion,
 }: ManagePlaceViewProps) {
@@ -212,7 +214,11 @@ export default function ManagePlaceView({
         )}
 
         {activeTab === "insights" && (
-          <ManagePlaceInsightsSection insights={insights} />
+          <ManagePlaceInsightsSection
+            insights={insights}
+            isError={insightsError}
+            onRetry={refresh}
+          />
         )}
 
         {activeTab === "promotion" && (

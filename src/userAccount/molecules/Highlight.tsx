@@ -56,6 +56,7 @@ export default function Higlight({ username }: HighlightProps) {
         items={upload.items}
         onRetry={upload.retry}
         onDismiss={upload.dismiss}
+        onCancel={upload.cancel}
       />
     </>
   );

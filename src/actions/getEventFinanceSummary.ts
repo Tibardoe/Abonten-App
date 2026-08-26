@@ -28,6 +28,8 @@ type GetEventFinanceSummaryResult =
  */
 export default async function getEventFinanceSummary(
   eventId: string,
+  startDate?: string | null,
+  endDate?: string | null,
 ): Promise<GetEventFinanceSummaryResult> {
   const supabase = await createClient();
 
@@ -51,7 +53,11 @@ export default async function getEventFinanceSummary(
     return { status: 403, message: "Not authorized to view this event" };
   }
 
-  const { data: ledgerRows, error: ledgerError } = await supabase
+  // pendingRefunds/completedRefunds/settled below come from get_event_refund_
+  // breakdown/is_event_settled, which are lifetime/current-state facts (an
+  // event either is or isn't settled) — not date-scoped by design, even
+  // when a period is passed here for the ticketSales/refunds/netSales figures.
+  let ledgerQuery = supabase
     .from("organizer_ledger_entry")
     .select("entry_type, amount, gross_amount, fee_amount, currency")
     .eq("event_id", eventId)
@@ -61,6 +67,11 @@ export default async function getEventFinanceSummary(
       "refund_hold",
       "refund_release",
     ]);
+
+  if (startDate) ledgerQuery = ledgerQuery.gte("created_at", startDate);
+  if (endDate) ledgerQuery = ledgerQuery.lte("created_at", endDate);
+
+  const { data: ledgerRows, error: ledgerError } = await ledgerQuery;
 
   if (ledgerError) {
     console.log(`Failed fetching event ledger rows: ${ledgerError.message}`);

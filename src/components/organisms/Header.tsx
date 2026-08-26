@@ -3,6 +3,12 @@
 import ManageMenu from "@/components/molecules/ManageMenu";
 import NotificationBell from "@/components/organisms/NotificationBell";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCurrentUserDetails,
@@ -19,15 +25,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { GiPartyFlags } from "react-icons/gi";
 import { HiOutlineLogin } from "react-icons/hi";
 import { IoMenuOutline } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
-import {
-  MdOutlineAccountBalanceWallet,
-  MdOutlineDrafts,
-  MdOutlineSpaceDashboard,
-} from "react-icons/md";
 import EventUploadButton from "../atoms/EventUploadButton";
 import UserAvatar from "../atoms/UserAvatar";
 import { cn } from "../lib/utils";
@@ -40,10 +40,7 @@ const defaulfVersion = "1743533914";
 export default function Header() {
   const t = useTranslations("navigation");
 
-  const [isMenuClicked, setIsMenuClicked] = useState(false);
-  // Kept mounted through the close animation so `animate-slideOut` gets a
-  // chance to play; unmounted only once `onAnimationEnd` confirms it finished.
-  const [isSidebarMounted, setIsSidebarMounted] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const pathname = usePathname();
 
@@ -98,46 +95,40 @@ export default function Header() {
     }
   };
 
-  const toggleMenu = () => {
-    if (isMenuClicked) {
-      setIsMenuClicked(false);
-    } else {
-      setIsSidebarMounted(true);
-      setIsMenuClicked(true);
-    }
-  };
-
-  const closeSidebar = () => {
-    setIsMenuClicked(false);
-  };
+  const closeSidebar = () => setIsMenuOpen(false);
 
   return (
     <>
-      {isSidebarMounted && (
-        <SideBar
-          menuClicked={isMenuClicked}
-          onCloseAnimationEnd={() => setIsSidebarMounted(false)}
-          onPostSuccess={closeSidebar}
-          onNavigate={closeSidebar}
-        />
-      )}
-
       <nav className="w-full flex justify-center fixed bg-sidebar z-20">
         <div className="flex justify-between py-5 w-[95%] border-b border-sidebar-border items-center">
           <div className="mx-auto lg:mx-0 flex items-center w-full">
             <div className="flex items-center gap-3">
-              {/* Menu toggle button */}
-              <button
-                type="button"
-                onClick={toggleMenu}
-                className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px] text-sidebar-foreground"
-              >
-                {isMenuClicked ? (
-                  <LiaTimesSolid className="text-2xl" />
-                ) : (
-                  <IoMenuOutline className="text-2xl" />
-                )}
-              </button>
+              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+                    className="lg:hidden w-[30px] h-[30px] md:w-[40px] md:h-[40px] text-sidebar-foreground"
+                  >
+                    {isMenuOpen ? (
+                      <LiaTimesSolid className="text-2xl" />
+                    ) : (
+                      <IoMenuOutline className="text-2xl" />
+                    )}
+                  </button>
+                </SheetTrigger>
+
+                <SheetContent
+                  side="left"
+                  className="w-[80%] sm:max-w-none p-0 bg-sidebar text-sidebar-foreground border-sidebar-border"
+                >
+                  <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+                  <SideBar
+                    onPostSuccess={closeSidebar}
+                    onNavigate={closeSidebar}
+                  />
+                </SheetContent>
+              </Sheet>
 
               {/* Desktop nav (below) hides the whole signed-in block under
               `lg`, and neither MobileNavBar nor SideBar surface
@@ -167,48 +158,12 @@ export default function Header() {
             </div>
           ) : userSession ? (
             <div className="hidden lg:flex items-center gap-7 min-w-fit text-sidebar-foreground">
-              {isOrganizer && (
-                <Link
-                  href="/manage/dashboard"
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <MdOutlineSpaceDashboard className="text-2xl" />
-                  {t("dashboard")}
-                </Link>
-              )}
-
-              {isOrganizer && (
-                <Link
-                  href="/finances"
-                  className="flex gap-1 items-center hover:text-primary transition-colors"
-                >
-                  <MdOutlineAccountBalanceWallet className="text-2xl" />
-                  {t("finances")}
-                </Link>
-              )}
-
               <ManageMenu
                 username={profile.username}
                 isOrganizer={isOrganizer}
                 isPlaceOwner={isPlaceOwner}
                 triggerClassName="hover:text-primary transition-colors"
               />
-
-              <Link
-                href="/manage/my-events"
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <GiPartyFlags className="text-2xl" />
-                {t("myEvents")}
-              </Link>
-
-              <Link
-                href="/manage/drafts"
-                className="flex gap-1 items-center hover:text-primary transition-colors"
-              >
-                <MdOutlineDrafts className="text-2xl" />
-                {t("drafts")}
-              </Link>
 
               <EventUploadButton />
 

@@ -1,6 +1,7 @@
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
+import InlineErrorRetry from "./InlineErrorRetry";
 
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;
@@ -8,9 +9,13 @@ type Row = any;
 export default function OrganizerUpcomingEvents({
   events,
   isLoading,
+  isError,
+  onRetry,
 }: {
   events: Row[];
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -18,6 +23,11 @@ export default function OrganizerUpcomingEvents({
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={3} />
+      ) : isError ? (
+        <InlineErrorRetry
+          message="We couldn't load upcoming events."
+          onRetry={() => onRetry?.()}
+        />
       ) : events.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No upcoming events in the next while.

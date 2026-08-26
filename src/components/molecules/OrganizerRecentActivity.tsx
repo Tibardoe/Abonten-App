@@ -1,6 +1,7 @@
 import { getRelativeTime } from "@/utils/dateFormatter";
 import { TbCalendarPlus, TbTicket, TbTicketOff } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
+import InlineErrorRetry from "./InlineErrorRetry";
 
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;
@@ -14,9 +15,13 @@ const ACTIVITY_ICON: Record<string, typeof TbTicket> = {
 export default function OrganizerRecentActivity({
   items,
   isLoading,
+  isError,
+  onRetry,
 }: {
   items: Row[];
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   if (isLoading) {
     return (
@@ -28,7 +33,23 @@ export default function OrganizerRecentActivity({
     );
   }
 
-  if (items.length === 0) return null;
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't load recent activity."
+        onRetry={() => onRetry?.()}
+      />
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="font-bold md:text-lg">Recent Activity</h2>
+        <p className="text-sm text-muted-foreground">No recent activity yet.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-3">

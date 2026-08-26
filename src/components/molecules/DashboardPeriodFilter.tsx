@@ -9,15 +9,17 @@ const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 export default function DashboardPeriodFilter({
   value,
   onChange,
+  ariaLabel = "Dashboard time period",
 }: {
   value: DashboardPeriod;
   onChange: (period: DashboardPeriod) => void;
+  ariaLabel?: string;
 }) {
   return (
     <div
       className="flex gap-2 overflow-x-scroll md:overflow-x-hidden"
       role="tablist"
-      aria-label="Dashboard time period"
+      aria-label={ariaLabel}
     >
       {PERIODS.map((period) => (
         <button

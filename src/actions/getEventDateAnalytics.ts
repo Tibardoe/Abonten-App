@@ -2,7 +2,11 @@
 
 import { createClient } from "@/config/supabase/server";
 
-export default async function getEventDateAnalytics(eventId: string) {
+export default async function getEventDateAnalytics(
+  eventId: string,
+  startDate?: string | null,
+  endDate?: string | null,
+) {
   const supabase = await createClient();
 
   const {
@@ -44,6 +48,8 @@ export default async function getEventDateAnalytics(eventId: string) {
 
   const { data, error } = await supabase.rpc("get_event_date_analytics", {
     p_event_id: eventId,
+    p_start_date: startDate ?? undefined,
+    p_end_date: endDate ?? undefined,
   });
 
   if (error) {

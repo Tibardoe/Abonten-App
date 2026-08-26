@@ -2,20 +2,45 @@
 
 import getEventPromoAnalytics from "@/actions/getEventPromoAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
+import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 
 export default function EventPromoBreakdown({
   eventId,
+  period,
+  startDate,
+  endDate,
 }: {
   eventId: string;
+  period: DashboardPeriod;
+  startDate: string | null;
+  endDate: string | null;
 }) {
-  const { data: response, isLoading } = useQuery({
-    queryKey: ["event-analytics-promo", eventId],
-    queryFn: () => getEventPromoAnalytics(eventId),
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["event-analytics-promo", eventId, period],
+    queryFn: () => getEventPromoAnalytics(eventId, startDate, endDate),
     staleTime: 20_000,
   });
 
   const rows = response?.data ?? [];
+
+  if (!isLoading && isError) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="font-bold md:text-lg">Promo Codes</h2>
+        <InlineErrorRetry
+          message="We couldn't load promo code usage."
+          onRetry={() => refetch()}
+        />
+      </section>
+    );
+  }
 
   if (!isLoading && rows.length === 0) {
     return (

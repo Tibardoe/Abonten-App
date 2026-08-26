@@ -256,7 +256,7 @@ export default function VideoTrimEditor({
           aria-valuemax={endTime}
           aria-valuenow={startTime}
           aria-orientation="horizontal"
-          className="absolute top-0 bottom-0 w-8 -translate-x-1/2 flex items-center justify-center cursor-ew-resize touch-none z-20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-mint rounded"
+          className="absolute top-0 bottom-0 w-10 -translate-x-1/2 flex items-center justify-center cursor-ew-resize touch-none z-20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-mint rounded"
           style={{ left: `${startPct}%` }}
           onPointerDown={(e) => handlePointerDown("start", e)}
           onPointerMove={handlePointerMove}
@@ -276,7 +276,7 @@ export default function VideoTrimEditor({
           aria-valuemax={duration}
           aria-valuenow={endTime}
           aria-orientation="horizontal"
-          className="absolute top-0 bottom-0 w-8 -translate-x-1/2 flex items-center justify-center cursor-ew-resize touch-none z-20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-mint rounded"
+          className="absolute top-0 bottom-0 w-10 -translate-x-1/2 flex items-center justify-center cursor-ew-resize touch-none z-20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-mint rounded"
           style={{ left: `${endPct}%` }}
           onPointerDown={(e) => handlePointerDown("end", e)}
           onPointerMove={handlePointerMove}

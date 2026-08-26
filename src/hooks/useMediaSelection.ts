@@ -2,6 +2,7 @@ import type { MediaItem } from "@/types/mediaItemType";
 import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
 import { generateVideoThumbnailStrip } from "@/utils/generateVideoThumbnailStrip";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useToast } from "./useToast";
 
 // Cloudinary's free-tier non-chunked upload ceiling is 100MB; 90MB leaves
 // headroom so users see our own clear error instead of a raw Cloudinary
@@ -54,6 +55,7 @@ function getVideoDuration(url: string): Promise<number> {
 // All CRUD is id-based -- never array index -- so delete/select/trim can't
 // desync from a stale position.
 export function useMediaSelection() {
+  const toast = useToast();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [direction, setDirection] = useState<1 | -1>(1);
@@ -83,117 +85,124 @@ export function useMediaSelection() {
   const currentIndex = mediaItems.findIndex((item) => item.id === activeId);
   const currentMedia = currentIndex >= 0 ? mediaItems[currentIndex] : null;
 
-  const selectFiles = useCallback(async (files: FileList): Promise<boolean> => {
-    const newMediaItems: MediaItem[] = [];
-    const filesToProcess = Array.from(files);
+  const selectFiles = useCallback(
+    async (files: FileList): Promise<boolean> => {
+      const newMediaItems: MediaItem[] = [];
+      const filesToProcess = Array.from(files);
 
-    for (const file of filesToProcess) {
-      const isVideo = file.type.startsWith("video");
-      const isImage = file.type.startsWith("image");
+      for (const file of filesToProcess) {
+        const isVideo = file.type.startsWith("video");
+        const isImage = file.type.startsWith("image");
 
-      if (!isVideo && !isImage) {
-        alert(`"${file.name}" isn't a supported file type.`);
-        continue;
-      }
-
-      if (isVideo && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
-        alert(
-          `"${file.name}" isn't a supported video format. Please use MP4, MOV, or WebM.`,
-        );
-        continue;
-      }
-
-      if (isImage && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        alert(`"${file.name}" isn't a supported image format.`);
-        continue;
-      }
-
-      if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
-        alert(
-          `"${file.name}" is too large. Maximum video size is ${
-            MAX_VIDEO_SIZE_BYTES / (1024 * 1024)
-          }MB.`,
-        );
-        continue;
-      }
-
-      if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
-        alert(
-          `"${file.name}" is too large. Maximum image size is ${
-            MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
-          }MB.`,
-        );
-        continue;
-      }
-
-      const url = URL.createObjectURL(file);
-      const id = crypto.randomUUID();
-
-      if (isVideo) {
-        let duration = 0;
-        let thumbnail = "";
-
-        try {
-          duration = await getVideoDuration(url);
-
-          if (Number.isNaN(duration)) {
-            throw new Error("Invalid video duration");
-          }
-
-          thumbnail = await generateVideoThumbnail(file);
-        } catch (e) {
-          console.error("Skipping video due to metadata error:", file.name, e);
-          URL.revokeObjectURL(url);
+        if (!isVideo && !isImage) {
+          toast.error(`"${file.name}" isn't a supported file type.`);
           continue;
         }
 
-        if (duration > MAX_VIDEO_UPLOAD_DURATION) {
-          alert(
-            `Video "${file.name}" is longer than ${MAX_VIDEO_UPLOAD_DURATION} seconds and will be trimmed to the first ${MAX_VIDEO_UPLOAD_DURATION} seconds.`,
+        if (isVideo && !ALLOWED_VIDEO_TYPES.includes(file.type)) {
+          toast.error(
+            `"${file.name}" isn't a supported video format. Please use MP4, MOV, or WebM.`,
           );
-          newMediaItems.push({
-            id,
-            url,
-            file,
-            type: "video",
-            duration,
-            startTime: 0,
-            endTime: MAX_VIDEO_UPLOAD_DURATION,
-            thumbnail,
-          });
-        } else {
-          newMediaItems.push({
-            id,
-            url,
-            file,
-            type: "video",
-            duration,
-            startTime: 0,
-            endTime: duration,
-            thumbnail,
-          });
+          continue;
         }
-      } else {
-        newMediaItems.push({ id, url, file, type: "image" });
+
+        if (isImage && !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+          toast.error(`"${file.name}" isn't a supported image format.`);
+          continue;
+        }
+
+        if (isVideo && file.size > MAX_VIDEO_SIZE_BYTES) {
+          toast.error(
+            `"${file.name}" is too large. Maximum video size is ${
+              MAX_VIDEO_SIZE_BYTES / (1024 * 1024)
+            }MB.`,
+          );
+          continue;
+        }
+
+        if (isImage && file.size > MAX_IMAGE_SIZE_BYTES) {
+          toast.error(
+            `"${file.name}" is too large. Maximum image size is ${
+              MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
+            }MB.`,
+          );
+          continue;
+        }
+
+        const url = URL.createObjectURL(file);
+        const id = crypto.randomUUID();
+
+        if (isVideo) {
+          let duration = 0;
+          let thumbnail = "";
+
+          try {
+            duration = await getVideoDuration(url);
+
+            if (Number.isNaN(duration)) {
+              throw new Error("Invalid video duration");
+            }
+
+            thumbnail = await generateVideoThumbnail(file);
+          } catch (e) {
+            console.error(
+              "Skipping video due to metadata error:",
+              file.name,
+              e,
+            );
+            URL.revokeObjectURL(url);
+            continue;
+          }
+
+          if (duration > MAX_VIDEO_UPLOAD_DURATION) {
+            toast.warning(
+              `Video "${file.name}" is longer than ${MAX_VIDEO_UPLOAD_DURATION} seconds and will be trimmed to the first ${MAX_VIDEO_UPLOAD_DURATION} seconds.`,
+            );
+            newMediaItems.push({
+              id,
+              url,
+              file,
+              type: "video",
+              duration,
+              startTime: 0,
+              endTime: MAX_VIDEO_UPLOAD_DURATION,
+              thumbnail,
+            });
+          } else {
+            newMediaItems.push({
+              id,
+              url,
+              file,
+              type: "video",
+              duration,
+              startTime: 0,
+              endTime: duration,
+              thumbnail,
+            });
+          }
+        } else {
+          newMediaItems.push({ id, url, file, type: "image" });
+        }
       }
-    }
 
-    if (newMediaItems.length === 0) {
-      return false;
-    }
+      if (newMediaItems.length === 0) {
+        return false;
+      }
 
-    // Each file-picker invocation replaces the whole selection (there's
-    // no "add more" entry point today), so the previous batch's URLs are
-    // safe to revoke here.
-    for (const item of mediaItemsRef.current) {
-      URL.revokeObjectURL(item.url);
-    }
+      // Each file-picker invocation replaces the whole selection (there's
+      // no "add more" entry point today), so the previous batch's URLs are
+      // safe to revoke here.
+      for (const item of mediaItemsRef.current) {
+        URL.revokeObjectURL(item.url);
+      }
 
-    setMediaItems(newMediaItems);
-    setTimelineStatus({});
-    setActiveId(newMediaItems[0].id);
-    return true;
-  }, []);
+      setMediaItems(newMediaItems);
+      setTimelineStatus({});
+      setActiveId(newMediaItems[0].id);
+      return true;
+    },
+    [toast],
+  );
 
   const deleteMedia = useCallback((id: string) => {
     setMediaItems((prev) => {
@@ -271,6 +280,22 @@ export function useMediaSelection() {
     [mediaItems],
   );
 
+  // Moves the item `fromId` to sit at wherever `toId` currently is.
+  const reorderMedia = useCallback((fromId: string, toId: string) => {
+    setMediaItems((prev) => {
+      const fromIndex = prev.findIndex((item) => item.id === fromId);
+      const toIndex = prev.findIndex((item) => item.id === toId);
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+        return prev;
+      }
+
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
+  }, []);
+
   const updateTrim = useCallback(
     (id: string, startTime: number, endTime: number) => {
       setMediaItems((prev) =>
@@ -319,6 +344,7 @@ export function useMediaSelection() {
     selectFiles,
     deleteMedia,
     replaceCropped,
+    reorderMedia,
     updateTrim,
     ensureTimelineThumbnails,
     goToOffset,

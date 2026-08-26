@@ -106,6 +106,7 @@ export default async function page({
       .maybeSingle(),
   ]);
 
+  const insightsError = insightsResponse.status !== 200;
   const insights =
     insightsResponse.status === 200 ? (insightsResponse.data ?? {}) : {};
   const promotionTiers =
@@ -151,6 +152,7 @@ export default async function page({
       bookingsFirstPage={bookingsFirstPage}
       fetchBookingsPage={fetchBookingsPage}
       insights={insights}
+      insightsError={insightsError}
       promotionTiers={promotionTiers}
       currentPromotion={currentPromotion}
     />

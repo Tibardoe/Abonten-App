@@ -1,14 +1,28 @@
 "use client";
 
 import { cn } from "@/components/lib/utils";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { IoCalendarNumberOutline, IoCalendarOutline } from "react-icons/io5";
-import { IoStorefrontOutline } from "react-icons/io5";
-import { MdOutlineManageHistory } from "react-icons/md";
+import { GiPartyFlags } from "react-icons/gi";
+import {
+  IoCalendarNumberOutline,
+  IoCalendarOutline,
+  IoStorefrontOutline,
+} from "react-icons/io5";
+import {
+  MdOutlineAccountBalanceWallet,
+  MdOutlineDrafts,
+  MdOutlineManageHistory,
+  MdOutlineSpaceDashboard,
+} from "react-icons/md";
 
 type ManageMenuProps = {
   username: string;
@@ -18,12 +32,13 @@ type ManageMenuProps = {
   onNavigate?: () => void;
 };
 
-// Primary "Manage" entry point for the desktop header and mobile sidebar,
-// replacing the old flat Manage Attendance/Events/Places links and the
-// profile-only ManageMenu. Mirrors CreateMenu.tsx's hand-rolled popover
-// exactly (this codebase has no Radix DropdownMenu): a relative trigger
-// button, click-outside/Escape to close, an absolute role="menu" panel of
-// role="menuitem" links.
+// Single entry point for everything management-related, grouped by what
+// it's for rather than split between this menu and flat top-level header
+// links (the previous layout had Dashboard/Finances/My Events/Drafts as
+// separate links right next to this menu, with no clear rule for what
+// belonged where). Built on shadcn/Radix DropdownMenu, which gives real
+// focus trapping, arrow-key navigation, and typeahead for free instead of
+// the hand-rolled click-outside/Escape popover this used to be.
 export default function ManageMenu({
   username,
   isOrganizer,
@@ -33,94 +48,132 @@ export default function ManageMenu({
 }: ManageMenuProps) {
   const t = useTranslations("navigation");
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  useClickOutside([containerRef], () => setOpen(false));
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
-
+  const isDashboardActive = pathname.startsWith("/manage/dashboard");
+  const isFinancesActive = pathname.startsWith("/finances");
   const isEventsActive = pathname.startsWith("/manage/events");
   const isPlacesActive = pathname.startsWith("/manage/places");
-  const isManageActive = isEventsActive || isPlacesActive;
+  const isMyEventsActive = pathname.startsWith("/manage/my-events");
+  const isDraftsActive = pathname.startsWith("/manage/drafts");
+  const isBookingsActive = pathname.startsWith(`/user/${username}/bookings`);
 
-  const close = () => {
-    setOpen(false);
-    onNavigate?.();
-  };
+  const isManageActive =
+    isDashboardActive ||
+    isFinancesActive ||
+    isEventsActive ||
+    isPlacesActive ||
+    isMyEventsActive ||
+    isDraftsActive ||
+    isBookingsActive;
+
+  const itemClass = (active: boolean) => cn("gap-2", active && "text-primary");
 
   return (
-    <div ref={containerRef} className="relative inline-block">
-      <button
-        type="button"
-        className={cn(
-          "flex gap-1 items-center",
-          isManageActive && "text-primary",
-          triggerClassName,
-        )}
-        onClick={() => setOpen((prev) => !prev)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        <MdOutlineManageHistory className="text-2xl" />
-        {t("manage")}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute left-0 top-full mt-2 z-40 w-48 rounded-md border border-border bg-popover text-popover-foreground shadow-lg overflow-hidden"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "flex gap-1 items-center",
+            isManageActive && "text-primary",
+            triggerClassName,
+          )}
         >
-          {isOrganizer && (
+          <MdOutlineManageHistory className="text-2xl" />
+          {t("manage")}
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="start" className="w-52">
+        {isOrganizer && (
+          <>
+            <DropdownMenuItem asChild>
+              <Link
+                href="/manage/dashboard"
+                onClick={onNavigate}
+                className={itemClass(isDashboardActive)}
+              >
+                <MdOutlineSpaceDashboard className="text-lg" />
+                {t("dashboard")}
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem asChild>
+              <Link
+                href="/finances"
+                onClick={onNavigate}
+                className={itemClass(isFinancesActive)}
+              >
+                <MdOutlineAccountBalanceWallet className="text-lg" />
+                {t("finances")}
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {(isOrganizer || isPlaceOwner) && <DropdownMenuSeparator />}
+
+        {isOrganizer && (
+          <DropdownMenuItem asChild>
             <Link
               href="/manage/events"
-              role="menuitem"
-              onClick={close}
-              className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent",
-                isEventsActive && "text-primary",
-              )}
+              onClick={onNavigate}
+              className={itemClass(isEventsActive)}
             >
               <IoCalendarNumberOutline className="text-lg" />
               {t("manageEvents")}
             </Link>
-          )}
+          </DropdownMenuItem>
+        )}
 
-          {isPlaceOwner && (
+        {isPlaceOwner && (
+          <DropdownMenuItem asChild>
             <Link
               href="/manage/places"
-              role="menuitem"
-              onClick={close}
-              className={cn(
-                "flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent",
-                isPlacesActive && "text-primary",
-              )}
+              onClick={onNavigate}
+              className={itemClass(isPlacesActive)}
             >
               <IoStorefrontOutline className="text-lg" />
               {t("places")}
             </Link>
-          )}
+          </DropdownMenuItem>
+        )}
 
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/manage/my-events"
+            onClick={onNavigate}
+            className={itemClass(isMyEventsActive)}
+          >
+            <GiPartyFlags className="text-lg" />
+            {t("myEvents")}
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
+          <Link
+            href="/manage/drafts"
+            onClick={onNavigate}
+            className={itemClass(isDraftsActive)}
+          >
+            <MdOutlineDrafts className="text-lg" />
+            {t("drafts")}
+          </Link>
+        </DropdownMenuItem>
+
+        <DropdownMenuItem asChild>
           <Link
             href={`/user/${username}/bookings`}
-            role="menuitem"
-            onClick={close}
-            className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+            onClick={onNavigate}
+            className={itemClass(isBookingsActive)}
           >
             <IoCalendarOutline className="text-lg" />
             {t("bookings")}
           </Link>
-        </div>
-      )}
-    </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

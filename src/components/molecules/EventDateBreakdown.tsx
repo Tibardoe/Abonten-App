@@ -2,19 +2,38 @@
 
 import getEventDateAnalytics from "@/actions/getEventDateAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { formatFullDateTimeRange } from "@/utils/dateFormatter";
+import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 
-export default function EventDateBreakdown({ eventId }: { eventId: string }) {
-  const { data: response, isLoading } = useQuery({
-    queryKey: ["event-analytics-dates", eventId],
-    queryFn: () => getEventDateAnalytics(eventId),
+export default function EventDateBreakdown({
+  eventId,
+  period,
+  startDate,
+  endDate,
+}: {
+  eventId: string;
+  period: DashboardPeriod;
+  startDate: string | null;
+  endDate: string | null;
+}) {
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["event-analytics-dates", eventId, period],
+    queryFn: () => getEventDateAnalytics(eventId, startDate, endDate),
     staleTime: 20_000,
   });
 
   // Single-date/range events never have event_occurrence rows, which is the
   // common case — render nothing at all (not even a heading) rather than an
-  // empty "Per-Date Breakdown" section.
+  // empty "Per-Date Breakdown" section. Only for a genuinely successful
+  // response, so a failed request below still surfaces as an error instead
+  // of silently vanishing.
   if (!isLoading && response?.status === 200 && !response.hasOccurrences) {
     return null;
   }
@@ -27,6 +46,11 @@ export default function EventDateBreakdown({ eventId }: { eventId: string }) {
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={2} />
+      ) : isError ? (
+        <InlineErrorRetry
+          message="We couldn't load the per-date breakdown."
+          onRetry={() => refetch()}
+        />
       ) : (
         <div className="flex flex-col gap-2">
           {/* biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) */}

@@ -1,6 +1,6 @@
 import { getUserDetails } from "@/actions/getUserDetails";
 import AvatarUploadButton from "@/components/atoms/AvatarUploadButton";
-import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+import PageHeader from "@/components/molecules/PageHeader";
 import ProfileCompletionChecklist from "@/components/molecules/ProfileCompletionChecklist";
 import ProfileCompletionIndicator from "@/components/molecules/ProfileCompletionIndicator";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
@@ -54,7 +54,7 @@ export default async function page() {
 
   return (
     <div className="w-full flex flex-col gap-10">
-      <MobileSettingsHeaderNav title={t("nav.editProfile")} />
+      <PageHeader title={t("nav.editProfile")} showBackButton />
 
       <div className="space-y-10 md:space-y-16">
         <div className="flex justify-between items-center bg-muted rounded-xl p-3 md:p-5">

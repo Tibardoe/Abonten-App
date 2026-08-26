@@ -1,7 +1,10 @@
 import StatTile from "@/components/atoms/StatTile";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 
 type ManagePlaceInsightsSectionProps = {
   insights: Record<string, number>;
+  isError: boolean;
+  onRetry: () => void;
 };
 
 // Owner-facing stat tiles for a place, per the Places spec §26 example
@@ -12,7 +15,18 @@ type ManagePlaceInsightsSectionProps = {
 // useQuery -- this page already fetches everything else up front.
 export default function ManagePlaceInsightsSection({
   insights,
+  isError,
+  onRetry,
 }: ManagePlaceInsightsSectionProps) {
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't load this place's insights."
+        onRetry={onRetry}
+      />
+    );
+  }
+
   const tiles = [
     { label: "Place Views", value: insights.view ?? 0 },
     { label: "Directions", value: insights.direction_click ?? 0 },

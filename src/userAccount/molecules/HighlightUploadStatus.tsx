@@ -6,6 +6,7 @@ type HighlightUploadStatusProps = {
   items: HighlightUploadItem[];
   onRetry: (id: string) => void;
   onDismiss: (id: string) => void;
+  onCancel: (id: string) => void;
 };
 
 const STATUS_LABEL: Record<HighlightUploadItem["status"], string> = {
@@ -20,6 +21,7 @@ export default function HighlightUploadStatus({
   items,
   onRetry,
   onDismiss,
+  onCancel,
 }: HighlightUploadStatusProps) {
   if (items.length === 0) return null;
 
@@ -67,6 +69,15 @@ export default function HighlightUploadStatus({
                     style={{ width: `${item.progress}%` }}
                   />
                 </div>
+              )}
+              {(item.status === "signing" || item.status === "uploading") && (
+                <button
+                  type="button"
+                  onClick={() => onCancel(item.id)}
+                  className="text-sm text-muted-foreground hover:underline self-end"
+                >
+                  Cancel
+                </button>
               )}
             </div>
           )}

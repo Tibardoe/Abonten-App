@@ -1,6 +1,6 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import getSecurityDetails from "@/actions/getSecurityDetails";
-import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+import PageHeader from "@/components/molecules/PageHeader";
 import SecurityInputFields from "@/components/organisms/SecurityInputFields";
 import { getTranslations } from "next-intl/server";
 
@@ -21,7 +21,7 @@ export default async function page() {
 
   return (
     <div className="w-full flex flex-col gap-10">
-      <MobileSettingsHeaderNav title={t("nav.security")} />
+      <PageHeader title={t("nav.security")} showBackButton />
       <SecurityInputFields
         initialPhone={security.details.phone}
         initialPhoneVerified={security.details.phoneVerified}

@@ -3,11 +3,16 @@ export default function StatTile({
   value,
   sublabel,
   icon,
+  footer,
 }: {
   label: string;
   value: string;
   sublabel?: string;
   icon?: React.ReactNode;
+  // Slot for a trend line or other small annotation under the value —
+  // added so callers needing one (e.g. OrganizerOverviewCards) don't have
+  // to hand-roll a duplicate of this card's markup just to add it.
+  footer?: React.ReactNode;
 }) {
   return (
     <div className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4">
@@ -19,6 +24,7 @@ export default function StatTile({
       {sublabel && (
         <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>
       )}
+      {footer}
     </div>
   );
 }

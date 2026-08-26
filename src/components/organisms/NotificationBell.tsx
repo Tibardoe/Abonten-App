@@ -3,9 +3,12 @@
 import { getUserNotifications } from "@/actions/getUserNotifications";
 import { markAllNotificationsRead } from "@/actions/markAllNotificationsRead";
 import { markNotificationRead } from "@/actions/markNotificationRead";
-import { cn } from "@/components/lib/utils";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
@@ -18,7 +21,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { IoNotificationsOutline } from "react-icons/io5";
 import NotificationRowSkeleton from "../molecules/NotificationRowSkeleton";
 
@@ -27,10 +30,11 @@ import NotificationRowSkeleton from "../molecules/NotificationRowSkeleton";
 // Header.tsx/other sitewide nav pieces in components/organisms rather than
 // under src/places -- unlike CreateMenu.tsx, which really is Places-scoped.
 //
-// Hand-rolled anchored popover, same convention as CreateMenu.tsx (this
-// codebase has no shadcn Dialog/Popover in active use): click-outside via
-// useClickOutside, Escape-to-close, absolute-positioned panel under the
-// trigger button.
+// Built on shadcn/Radix DropdownMenu for real focus trapping/Escape/outside-
+// click handling; the panel content (InfiniteList, mutations) is plain
+// interactive markup rather than DropdownMenuItems, since it doesn't want
+// Radix's "select closes the menu" behavior -- open/close stays under this
+// component's own control (see setOpen calls below).
 type NotificationBellProps = {
   // Which edge the dropdown panel hangs from. "right" (default) matches the
   // desktop mount at the far right of the nav; "left" is for the mobile
@@ -50,25 +54,11 @@ export default function NotificationBell({
   const [pendingReadIds, setPendingReadIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
 
   const { data: user } = useCurrentUser();
   const { data: unreadCount } = useUnreadNotificationCount();
-
-  useClickOutside([containerRef], () => setOpen(false));
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
 
   const invalidateNotificationQueries = () => {
     queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
@@ -241,116 +231,110 @@ export default function NotificationBell({
   const hasUnread = !!unreadCount && unreadCount > 0;
 
   return (
-    <div ref={containerRef} className="relative inline-block">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="Notifications"
-        className="relative flex items-center hover:text-primary transition-colors"
-      >
-        <IoNotificationsOutline className="text-2xl" />
-        {hasUnread && (
-          <span
-            aria-hidden
-            className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium leading-none text-destructive-foreground"
-          >
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className={cn(
-            "absolute top-full mt-2 z-40 w-80 max-w-[calc(100vw-2rem)] max-h-[28rem] overflow-y-auto rounded-md border border-border bg-popover text-popover-foreground shadow-lg",
-            align === "left" ? "left-0" : "right-0",
-          )}
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Notifications"
+          className="relative flex items-center hover:text-primary transition-colors"
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-popover">
-            <span className="font-medium text-sm">Notifications</span>
-            <button
-              type="button"
-              onClick={handleMarkAllRead}
-              disabled={markAllReadMutation.isPending}
-              className="text-xs font-medium text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none"
+          <IoNotificationsOutline className="text-2xl" />
+          {hasUnread && (
+            <span
+              aria-hidden
+              className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium leading-none text-destructive-foreground"
             >
-              {markAllReadMutation.isPending
-                ? "Marking as read..."
-                : "Mark all as read"}
-            </button>
-          </div>
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
 
-          <InfiniteList<NotificationType>
-            queryKey={["notifications", user?.id]}
-            initialPage={null}
-            fetchPage={(cursor) => getUserNotifications({ cursor })}
-            listClassName="flex flex-col"
-            loadingSkeleton={
-              <ul className="flex flex-col">
-                {Array.from({ length: 4 }, (_, i) => (
-                  <NotificationRowSkeleton key={i.toLocaleString()} />
-                ))}
-              </ul>
-            }
-            emptyState={
-              <p className="text-muted-foreground text-sm py-6 text-center">
-                No notifications yet.
-              </p>
-            }
-            renderItem={(notification) => {
-              const isUnread = !notification.read_at;
-              const isMarking = pendingReadIds.has(notification.id);
+      <DropdownMenuContent
+        align={align === "left" ? "start" : "end"}
+        className="w-80 max-w-[calc(100vw-2rem)] p-0"
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-popover">
+          <span className="font-medium text-sm">Notifications</span>
+          <button
+            type="button"
+            onClick={handleMarkAllRead}
+            disabled={markAllReadMutation.isPending}
+            className="text-xs font-medium text-primary hover:underline disabled:opacity-50 disabled:pointer-events-none"
+          >
+            {markAllReadMutation.isPending
+              ? "Marking as read..."
+              : "Mark all as read"}
+          </button>
+        </div>
 
-              return (
-                <li
-                  key={notification.id}
-                  className="border-b border-border last:border-0"
+        <InfiniteList<NotificationType>
+          queryKey={["notifications", user?.id]}
+          initialPage={null}
+          fetchPage={(cursor) => getUserNotifications({ cursor })}
+          listClassName="flex flex-col"
+          loadingSkeleton={
+            <ul className="flex flex-col">
+              {Array.from({ length: 4 }, (_, i) => (
+                <NotificationRowSkeleton key={i.toLocaleString()} />
+              ))}
+            </ul>
+          }
+          emptyState={
+            <p className="text-muted-foreground text-sm py-6 text-center">
+              No notifications yet.
+            </p>
+          }
+          renderItem={(notification) => {
+            const isUnread = !notification.read_at;
+            const isMarking = pendingReadIds.has(notification.id);
+
+            return (
+              <li
+                key={notification.id}
+                className="border-b border-border last:border-0"
+              >
+                <button
+                  type="button"
+                  onClick={() => handleRowClick(notification)}
+                  disabled={isMarking}
+                  className={`flex w-full items-start gap-2 px-4 py-3 text-left text-sm hover:bg-accent transition-colors disabled:opacity-70 ${
+                    isUnread ? "bg-primary/5" : ""
+                  }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => handleRowClick(notification)}
-                    disabled={isMarking}
-                    className={`flex w-full items-start gap-2 px-4 py-3 text-left text-sm hover:bg-accent transition-colors disabled:opacity-70 ${
-                      isUnread ? "bg-primary/5" : ""
-                    }`}
-                  >
-                    {/* Unread indicator dot -- shown alongside the tint above,
+                  {/* Unread indicator dot -- shown alongside the tint above,
                     not as the sole signal, per this codebase's existing
                     "not color alone" rule for status indicators. */}
+                  <span
+                    aria-hidden
+                    className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                      isUnread ? "bg-primary" : "bg-transparent"
+                    }`}
+                  />
+
+                  <span className="flex-1 min-w-0">
                     <span
-                      aria-hidden
-                      className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                        isUnread ? "bg-primary" : "bg-transparent"
-                      }`}
-                    />
-
-                    <span className="flex-1 min-w-0">
-                      <span
-                        className={`block truncate ${isUnread ? "font-semibold" : "font-medium"}`}
-                      >
-                        {notification.title}
-                      </span>
-
-                      {notification.body && (
-                        <span className="block text-muted-foreground text-xs mt-0.5 line-clamp-2">
-                          {notification.body}
-                        </span>
-                      )}
-
-                      <span className="block text-muted-foreground text-[11px] mt-1">
-                        {getRelativeTime(notification.created_at)}
-                      </span>
+                      className={`block truncate ${isUnread ? "font-semibold" : "font-medium"}`}
+                    >
+                      {notification.title}
                     </span>
-                  </button>
-                </li>
-              );
-            }}
-          />
-        </div>
-      )}
-    </div>
+
+                    {notification.body && (
+                      <span className="block text-muted-foreground text-xs mt-0.5 line-clamp-2">
+                        {notification.body}
+                      </span>
+                    )}
+
+                    <span className="block text-muted-foreground text-[11px] mt-1">
+                      {getRelativeTime(notification.created_at)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          }}
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

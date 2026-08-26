@@ -9,6 +9,7 @@ import {
   EventCapacityCard,
 } from "@/components/molecules/EventAttendanceStats";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
+import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
@@ -21,7 +22,7 @@ import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
 import { parseEventTypes } from "@/utils/parseEventTypes";
 import Image from "next/image";
 import Link from "next/link";
-import { FiArrowUpRight, FiMail } from "react-icons/fi";
+import { FiArrowUpRight } from "react-icons/fi";
 import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import { PiTicketBold } from "react-icons/pi";
@@ -158,6 +159,16 @@ export default async function page({
 
   const tags = parseEventTypes(event.event_type);
 
+  // Mirrors EventDateSelector's own isCanceled/hasEnded computation (which
+  // only gates the ticket CTA at the bottom of the page) -- this is a
+  // separate, page-level banner so a canceled/ended event is obvious above
+  // the fold instead of only surfacing once a visitor scrolls all the way
+  // down to the buy button.
+  const isEventCanceled = event.status === "canceled";
+  const hasEventEnded = event_dates.every(
+    (occ: { ends_at: string }) => new Date(occ.ends_at) < new Date(),
+  );
+
   async function fetchEventReviewsPage(cursor: string | null) {
     "use server";
     return getEventReviews(event.id, { cursor });
@@ -186,7 +197,7 @@ export default async function page({
           priority
           sizes="(max-width: 768px) 100vw, 80vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-gray-900/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-overlay/80 via-overlay/40 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 space-y-2 md:space-y-4">
           <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-2xl">
@@ -212,6 +223,16 @@ export default async function page({
           </div>
         </div>
       </div>
+
+      {(isEventCanceled || hasEventEnded) && (
+        <div className="max-w-7xl mx-auto px-2 lg:px-8 pt-6">
+          <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm md:text-base font-medium text-destructive text-center">
+            {isEventCanceled
+              ? "This event has been canceled."
+              : "This event has ended."}
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-2 lg:px-8 py-8 md:py-12">
@@ -271,19 +292,12 @@ export default async function page({
             </div>
 
             {/* Action Buttons - Mobile Top */}
-            <div className="lg:hidden grid grid-cols-2 gap-2">
+            <div className="lg:hidden">
               <OutlinedShareBtn
                 title={event.title}
                 address={event.address.full_address}
                 eventCode={event.event_code}
               />
-
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90 transition-colors"
-              >
-                <FiMail /> Contact
-              </button>
             </div>
 
             {/* Event Info Grid */}
@@ -296,6 +310,10 @@ export default async function page({
                 <p className="text-muted-foreground mb-4 text-sm md:text-base">
                   {event.address.full_address}
                 </p>
+                <LocationMapPreview
+                  location={event.location}
+                  className="mb-4"
+                />
                 {event.place && (
                   <Link
                     href={`/places/${event.place.slug}`}
@@ -332,25 +350,21 @@ export default async function page({
             </div>
 
             {/* Action Buttons - Desktop */}
-            <div className="hidden lg:grid grid-cols-3 gap-4">
-              <OutlinedShareBtn
-                title={event.title}
-                address={event.address.full_address}
-                eventCode={event.event_code}
-              />
+            <div className="hidden lg:flex gap-4">
+              <div className="flex-1">
+                <OutlinedShareBtn
+                  title={event.title}
+                  address={event.address.full_address}
+                  eventCode={event.event_code}
+                />
+              </div>
 
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                <FiMail className="text-lg" /> Contact Organizer
-              </button>
               {event.website_url && (
                 <a
                   href={`https://${event.website_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg hover:bg-primary/90 transition-colors"
                 >
                   Website <FiArrowUpRight className="text-lg" />
                 </a>
@@ -421,13 +435,6 @@ export default async function page({
                 address={event.address.full_address}
                 eventCode={event.event_code}
               />
-
-              <button
-                type="button"
-                className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90"
-              >
-                <FiMail /> Contact Organizer
-              </button>
             </div>
 
             {/* Capacity */}

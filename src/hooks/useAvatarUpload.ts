@@ -7,7 +7,7 @@ import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type UseAvatarUploadOptions = {
   onSuccess?: () => void;
@@ -24,6 +24,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
   const queryClient = useQueryClient();
   const toast = useToast();
   const [progress, setProgress] = useState(0);
+  const xhrRef = useRef<XMLHttpRequest | null>(null);
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (file: File | null) => {
@@ -50,7 +51,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         const { timestamp, signature, apiKey, cloudName, folder } =
           signatureResponse.data;
 
-        const { promise } = uploadToCloudinary({
+        const { promise, xhr } = uploadToCloudinary({
           file,
           cloudName: cloudName as string,
           apiKey: apiKey as string,
@@ -60,6 +61,8 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
           resourceType: "image",
           onProgress: setProgress,
         });
+
+        xhrRef.current = xhr;
 
         const result = await promise;
         const transformation = `${result.width}, ${result.height}`;
@@ -80,19 +83,31 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         });
         onSuccess?.();
       } catch (error) {
+        // A user-initiated cancel already rejects via xhr.onabort with this
+        // message (see uploadToCloudinary.ts) — no error toast for that case.
+        if (error instanceof Error && error.message === "Upload cancelled.") {
+          return;
+        }
         console.error("Error uploading image:", error);
         toast.error(
           error instanceof Error
             ? error.message
             : "Upload failed. Please try again.",
         );
+      } finally {
+        xhrRef.current = null;
       }
     },
   });
+
+  const cancelUpload = () => {
+    xhrRef.current?.abort();
+  };
 
   return {
     uploadAvatar: mutate,
     isUploading: isPending,
     progress,
+    cancelUpload,
   };
 }

@@ -1,7 +1,7 @@
 import BackButton from "@/components/atoms/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function MobileSettingsHeaderNavSkeleton() {
+export default function PageHeaderSkeleton() {
   return (
     <div className="flex items-center w-full">
       <BackButton />

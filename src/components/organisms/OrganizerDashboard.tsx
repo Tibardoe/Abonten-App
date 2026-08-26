@@ -157,6 +157,8 @@ export default function OrganizerDashboard() {
         overview={overview}
         period={period}
         isLoading={overviewQuery.isLoading}
+        isError={overviewQuery.isError}
+        onRetry={() => overviewQuery.refetch()}
       />
 
       <OrganizerFinanceSummary />
@@ -168,6 +170,8 @@ export default function OrganizerDashboard() {
           bucket={timelineBucket}
           currency={primaryCurrency}
           isLoading={timelineQuery.isLoading}
+          isError={timelineQuery.isError}
+          onRetry={() => timelineQuery.refetch()}
         />
       </section>
 
@@ -176,21 +180,29 @@ export default function OrganizerDashboard() {
         sort={performanceSort}
         onSortChange={setPerformanceSort}
         isLoading={performanceQuery.isLoading}
+        isError={performanceQuery.isError}
+        onRetry={() => performanceQuery.refetch()}
       />
 
       <OrganizerUpcomingEvents
         events={upcomingEvents}
         isLoading={upcomingQuery.isLoading}
+        isError={upcomingQuery.isError}
+        onRetry={() => upcomingQuery.refetch()}
       />
 
       <OrganizerNeedsAttention
         items={attentionItems}
         isLoading={attentionQuery.isLoading}
+        isError={attentionQuery.isError}
+        onRetry={() => attentionQuery.refetch()}
       />
 
       <OrganizerRecentActivity
         items={activityItems}
         isLoading={activityQuery.isLoading}
+        isError={activityQuery.isError}
+        onRetry={() => activityQuery.refetch()}
       />
     </div>
   );

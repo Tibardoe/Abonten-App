@@ -1,4 +1,4 @@
-import MobileSettingsHeaderNav from "@/components/molecules/MobileSettingsHeaderNav";
+import PageHeader from "@/components/molecules/PageHeader";
 import { getUserLocale } from "@/i18n/locale";
 import Language from "@/settings/organisms/Language";
 import { getTranslations } from "next-intl/server";
@@ -15,7 +15,7 @@ export default async function page() {
 
   return (
     <div className="w-full flex flex-col gap-10">
-      <MobileSettingsHeaderNav title={t("nav.language")} />
+      <PageHeader title={t("nav.language")} showBackButton />
       <Language currentLocale={locale} />
     </div>
   );

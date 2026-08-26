@@ -69,7 +69,7 @@ export function EventAttendanceHeroBadges({
         🎉 {attendanceCount} Attendees
       </span>
       {soldOut && (
-        <span className="px-3 py-1.5 md:px-4 md:py-2 bg-red-600 rounded-full text-white font-bold text-sm md:text-base">
+        <span className="px-3 py-1.5 md:px-4 md:py-2 bg-destructive rounded-full text-destructive-foreground font-bold text-sm md:text-base">
           Sold Out
         </span>
       )}

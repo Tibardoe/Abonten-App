@@ -1,5 +1,6 @@
 import StatTile from "@/components/atoms/StatTile";
 import TrendIndicator from "@/components/atoms/TrendIndicator";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 import {
   DASHBOARD_PERIOD_COMPARISON_LABELS,
@@ -42,13 +43,26 @@ export default function OrganizerOverviewCards({
   overview,
   period,
   isLoading,
+  isError,
+  onRetry,
 }: {
   overview: { current: Row[]; previous: Row[] | null } | null;
   period: DashboardPeriod;
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   if (isLoading) {
     return <StatTilesSkeleton count={4} />;
+  }
+
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't load your overview stats."
+        onRetry={() => onRetry?.()}
+      />
+    );
   }
 
   const current = overview?.current ?? [];
@@ -113,25 +127,21 @@ export default function OrganizerOverviewCards({
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {grossSales > 0 || ticketsSold > 0 ? (
-          <div className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4">
-            <p className="text-sm text-muted-foreground">Gross Sales</p>
-            <p className="font-bold text-xl md:text-2xl mt-1">
-              {money(grossSales, primary.currency)}
-            </p>
+        <StatTile
+          label="Gross Sales"
+          value={money(grossSales, primary.currency)}
+          footer={
             <TrendLine trend={grossTrend} comparisonLabel={comparisonLabel} />
-          </div>
-        ) : (
-          <StatTile label="Gross Sales" value={money(0, primary.currency)} />
-        )}
+          }
+        />
 
-        <div className="border border-border bg-card text-card-foreground rounded-md shadow-md p-4">
-          <p className="text-sm text-muted-foreground">{ticketsLabel}</p>
-          <p className="font-bold text-xl md:text-2xl mt-1">
-            {ticketsValue.toLocaleString()}
-          </p>
-          <TrendLine trend={ticketsTrend} comparisonLabel={comparisonLabel} />
-        </div>
+        <StatTile
+          label={ticketsLabel}
+          value={ticketsValue.toLocaleString()}
+          footer={
+            <TrendLine trend={ticketsTrend} comparisonLabel={comparisonLabel} />
+          }
+        />
 
         <StatTile
           label="Active Events"

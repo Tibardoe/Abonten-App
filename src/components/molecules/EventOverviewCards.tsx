@@ -1,16 +1,30 @@
 import StatTile from "@/components/atoms/StatTile";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 
 export default function EventOverviewCards({
   overview,
   isLoading,
+  isError,
+  onRetry,
 }: {
   // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
   overview: any | null;
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   if (isLoading) {
     return <StatTilesSkeleton count={6} />;
+  }
+
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't load this event's overview stats."
+        onRetry={() => onRetry?.()}
+      />
+    );
   }
 
   if (!overview) {

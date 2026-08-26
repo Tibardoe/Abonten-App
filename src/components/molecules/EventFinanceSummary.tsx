@@ -1,7 +1,9 @@
 "use client";
 
 import getEventFinanceSummary from "@/actions/getEventFinanceSummary";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
@@ -21,10 +23,20 @@ function Row({ label, value }: { label: string; value: string }) {
  * page. Deliberately has no Withdraw button here — the main withdrawal
  * action lives only in Finances > Overview.
  */
-export default function EventFinanceSummary({ eventId }: { eventId: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["event-finance-summary", eventId],
-    queryFn: () => getEventFinanceSummary(eventId),
+export default function EventFinanceSummary({
+  eventId,
+  period,
+  startDate,
+  endDate,
+}: {
+  eventId: string;
+  period: DashboardPeriod;
+  startDate: string | null;
+  endDate: string | null;
+}) {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["event-finance-summary", eventId, period],
+    queryFn: () => getEventFinanceSummary(eventId, startDate, endDate),
     staleTime: 20_000,
   });
 
@@ -34,8 +46,27 @@ export default function EventFinanceSummary({ eventId }: { eventId: string }) {
     return <Skeleton className="h-40 w-full rounded-xl" />;
   }
 
+  if (isError) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="font-bold md:text-lg">Event Revenue</h2>
+        <InlineErrorRetry
+          message="We couldn't load this event's revenue."
+          onRetry={() => refetch()}
+        />
+      </section>
+    );
+  }
+
   if (!summary) {
-    return null;
+    return (
+      <section className="flex flex-col gap-3">
+        <h2 className="font-bold md:text-lg">Event Revenue</h2>
+        <p className="text-sm text-muted-foreground">
+          No revenue data available yet.
+        </p>
+      </section>
+    );
   }
 
   return (
@@ -79,6 +110,13 @@ export default function EventFinanceSummary({ eventId }: { eventId: string }) {
         />
 
         <hr className="border-border" />
+
+        {period !== "all" && (
+          <p className="text-xs text-muted-foreground">
+            Refund breakdown and settlement status below are all-time, not
+            limited to the selected period.
+          </p>
+        )}
 
         {summary.settled ? (
           <div className="space-y-1">

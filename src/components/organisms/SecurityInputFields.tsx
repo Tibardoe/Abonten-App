@@ -190,81 +190,91 @@ export default function SecurityInputFields({
   return (
     <>
       {step === 1 && (
-        <div className="flex flex-col gap-5">
-          <div className="space-y-2">
-            <span className="font-medium md:text-lg">{t("label")}</span>
-
-            <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
-              <span className="text-muted-foreground">
-                {currentPhone
-                  ? `${maskPhoneNumber(currentPhone)}${currentPhoneVerified ? "" : ` ${t("unverified")}`}`
-                  : t("noPhoneAdded")}
-              </span>
-
-              <button
-                type="button"
-                className="font-semibold text-foreground/70"
-                onClick={() => setStep(2)}
-              >
-                {currentPhone ? t("change") : t("add")}
-              </button>
-            </div>
+        <div className="space-y-3">
+          <div>
+            <h2 className="font-semibold">Account & security</h2>
+            <p className="text-sm text-muted-foreground">
+              Used to sign in and verify it's really you — not shown on your
+              public profile.
+            </p>
           </div>
 
-          {!hasGoogleIdentity && (
+          <div className="rounded-xl border border-border bg-card text-card-foreground p-4 md:p-5 flex flex-col gap-5">
             <div className="space-y-2">
-              <span className="font-medium md:text-lg">Google account</span>
+              <span className="font-medium md:text-lg">{t("label")}</span>
 
               <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
-                <span className="text-muted-foreground">Not linked</span>
+                <span className="text-muted-foreground">
+                  {currentPhone
+                    ? `${maskPhoneNumber(currentPhone)}${currentPhoneVerified ? "" : ` ${t("unverified")}`}`
+                    : t("noPhoneAdded")}
+                </span>
 
                 <button
                   type="button"
-                  className="font-semibold text-foreground/70 disabled:opacity-60"
-                  onClick={handleLinkGoogle}
-                  disabled={isLinkingGoogle}
+                  className="font-semibold text-foreground/70"
+                  onClick={() => setStep(2)}
                 >
-                  {isLinkingGoogle ? "Redirecting..." : "Link"}
+                  {currentPhone ? t("change") : t("add")}
                 </button>
               </div>
             </div>
-          )}
 
-          <form onSubmit={handleEmailSubmit} className="space-y-2">
-            <Input
-              title="Email"
-              inputPlaceholder="Email"
-              {...register("email")}
-            />
+            {!hasGoogleIdentity && (
+              <div className="space-y-2">
+                <span className="font-medium md:text-lg">Google account</span>
 
-            {initialEmail && !initialEmailVerified && (
-              <p className="text-sm text-muted-foreground">
-                This email hasn't been verified yet.
-              </p>
+                <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
+                  <span className="text-muted-foreground">Not linked</span>
+
+                  <button
+                    type="button"
+                    className="font-semibold text-foreground/70 disabled:opacity-60"
+                    onClick={handleLinkGoogle}
+                    disabled={isLinkingGoogle}
+                  >
+                    {isLinkingGoogle ? "Redirecting..." : "Link"}
+                  </button>
+                </div>
+              </div>
             )}
 
-            <div className="flex justify-between items-center pt-3">
-              <button
-                type="button"
-                onClick={handleDeleteUser}
-                className="text-destructive flex items-center gap-1 font-bold md:text-lg"
-              >
-                <MaskIcon
-                  src="/assets/images/delete.svg"
-                  alt="Delete icon"
-                  className="w-6 h-6 md:w-8 md:h-8 bg-destructive"
-                />
-                Delete account
-              </button>
+            <form onSubmit={handleEmailSubmit} className="space-y-2">
+              <Input
+                title="Email"
+                inputPlaceholder="Email"
+                {...register("email")}
+              />
 
-              <Button
-                disabled={isUpdatingEmail}
-                className="self-end font-medium"
-              >
-                {isUpdatingEmail ? "Updating..." : "Update"}
-              </Button>
-            </div>
-          </form>
+              {initialEmail && !initialEmailVerified && (
+                <p className="text-sm text-muted-foreground">
+                  This email hasn't been verified yet.
+                </p>
+              )}
+
+              <div className="flex justify-between items-center pt-3">
+                <button
+                  type="button"
+                  onClick={handleDeleteUser}
+                  className="text-destructive flex items-center gap-1 font-bold md:text-lg"
+                >
+                  <MaskIcon
+                    src="/assets/images/delete.svg"
+                    alt="Delete icon"
+                    className="w-6 h-6 md:w-8 md:h-8 bg-destructive"
+                  />
+                  Delete account
+                </button>
+
+                <Button
+                  disabled={isUpdatingEmail}
+                  className="self-end font-medium"
+                >
+                  {isUpdatingEmail ? "Updating..." : "Update"}
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

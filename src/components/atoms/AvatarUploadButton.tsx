@@ -1,6 +1,7 @@
 "use client";
 
 import { useImageSelection } from "@/hooks/useImageSelection";
+import { useToast } from "@/hooks/useToast";
 import { MAX_AVATAR_SOURCE_SIZE_BYTES } from "@/utils/uploadLimits";
 import { useState } from "react";
 import AvatarUploadModal from "../organisms/AvatarUploadModal";
@@ -11,6 +12,7 @@ import { Button } from "../ui/button";
 // which one Tailwind's `hidden`/`flex` classes showed).
 export default function AvatarUploadButton() {
   const [showPopup, setShowPopup] = useState(false);
+  const toast = useToast();
 
   const { imagePreview, fileInputRef, openFilePicker, handleFileChange } =
     useImageSelection({
@@ -19,7 +21,7 @@ export default function AvatarUploadButton() {
       // Sanity ceiling on the original picked file -- the real size gate
       // applies after cropping/compression (see useAvatarUpload.ts).
       maxSizeBytes: MAX_AVATAR_SOURCE_SIZE_BYTES,
-      onInvalidFile: (message) => alert(message),
+      onInvalidFile: (message) => toast.error(message),
       onSelect: () => setShowPopup(true),
     });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import type { DashboardBucket } from "@/utils/organizerDashboardDateRange";
 import {
   Bar,
@@ -58,14 +59,27 @@ export default function OrganizerSalesTimelineChart({
   bucket,
   currency,
   isLoading,
+  isError,
+  onRetry,
 }: {
   data: Row[];
   bucket: DashboardBucket;
   currency: string;
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   if (isLoading) {
     return <Skeleton className="h-64 w-full rounded-md" />;
+  }
+
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't load your sales chart."
+        onRetry={() => onRetry?.()}
+      />
+    );
   }
 
   if (data.length === 0) {

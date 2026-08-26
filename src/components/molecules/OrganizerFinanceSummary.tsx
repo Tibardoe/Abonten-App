@@ -1,6 +1,7 @@
 "use client";
 
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
+import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -13,7 +14,7 @@ import Link from "next/link";
  * stays where money actually moves.
  */
 export default function OrganizerFinanceSummary() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["organizer-finance-overview"],
     queryFn: getOrganizerFinanceOverview,
     staleTime: 20_000,
@@ -23,9 +24,24 @@ export default function OrganizerFinanceSummary() {
     return <Skeleton className="h-20 w-full rounded-xl" />;
   }
 
+  if (isError) {
+    return (
+      <InlineErrorRetry
+        message="We couldn't load your finance summary."
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
   const overview = data?.status === 200 ? data.data[0] : null;
 
-  if (!overview) return null;
+  if (!overview) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No finance data available yet.
+      </p>
+    );
+  }
 
   return (
     <Link

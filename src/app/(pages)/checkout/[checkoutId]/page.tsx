@@ -8,6 +8,7 @@ import FulfillmentRecoveryBanner from "@/components/molecules/FulfillmentRecover
 import OrderSummary from "@/components/molecules/OrderSummary";
 import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector";
 import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
+import { PageTitle } from "@/components/ui/typography";
 import { createClient } from "@/config/supabase/server";
 import type { PlacePromotionSummaryProps } from "@/types/placeType";
 import type { EventPromotionSummaryProps } from "@/types/postsType";
@@ -79,7 +80,7 @@ export default async function page({
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
-          <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
+          <PageTitle>Order Summary</PageTitle>
         </div>
 
         {sessionStatus === "paid" && (
@@ -184,7 +185,7 @@ export default async function page({
     return (
       <div className="flex flex-col justify-center gap-5">
         <div>
-          <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
+          <PageTitle>Order Summary</PageTitle>
         </div>
 
         {sessionStatus === "paid" && (
@@ -281,7 +282,7 @@ export default async function page({
   return (
     <div className="flex flex-col justify-center gap-5">
       <div>
-        <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
+        <PageTitle>Order Summary</PageTitle>
       </div>
 
       {sessionStatus === "expired" && (

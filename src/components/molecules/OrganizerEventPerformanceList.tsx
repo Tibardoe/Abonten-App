@@ -3,6 +3,7 @@
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
+import InlineErrorRetry from "./InlineErrorRetry";
 
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;
@@ -18,11 +19,15 @@ export default function OrganizerEventPerformanceList({
   sort,
   onSortChange,
   isLoading,
+  isError,
+  onRetry,
 }: {
   events: Row[];
   sort: "revenue" | "tickets";
   onSortChange: (sort: "revenue" | "tickets") => void;
   isLoading: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 }) {
   return (
     <section className="flex flex-col gap-3">
@@ -57,6 +62,11 @@ export default function OrganizerEventPerformanceList({
 
       {isLoading ? (
         <AnalyticsRowsSkeleton count={5} />
+      ) : isError ? (
+        <InlineErrorRetry
+          message="We couldn't load event performance."
+          onRetry={() => onRetry?.()}
+        />
       ) : events.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No event sales in this period yet.
