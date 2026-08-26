@@ -7,6 +7,7 @@ import type { OrganizerFinanceOverviewRow } from "@/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import PendingEarningsList from "../molecules/PendingEarningsList";
+import RefundSummary from "../molecules/RefundSummary";
 import WithdrawModal from "../molecules/WithdrawModal";
 
 export const ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY = [
@@ -79,6 +80,10 @@ export default function FinancesOverview({
           <p className="font-bold text-2xl md:text-3xl">
             {primary.currency} {primary.available_balance.toLocaleString()}
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Money available after eligible event proceeds, refunds, and previous
+            withdrawals are accounted for.
+          </p>
         </div>
 
         {primary.available_balance > 0 && (
@@ -119,6 +124,7 @@ export default function FinancesOverview({
       </section>
 
       <PendingEarningsList />
+      <RefundSummary />
 
       {isWithdrawOpen && (
         <WithdrawModal
@@ -126,6 +132,7 @@ export default function FinancesOverview({
           currency={primary.currency}
           onClose={() => setIsWithdrawOpen(false)}
           onSuccess={invalidateAll}
+          onBalanceStale={invalidateAll}
         />
       )}
     </div>

@@ -7,6 +7,10 @@ export type EventFinanceSummary = {
   ticketSales: number;
   platformFee: number;
   refunds: number;
+  netSales: number;
+  pendingRefunds: number;
+  completedRefunds: number;
+  refundRequestCount: number;
   organizerEarnings: number;
   settled: boolean;
 };
@@ -51,7 +55,12 @@ export default async function getEventFinanceSummary(
     .from("organizer_ledger_entry")
     .select("entry_type, amount, gross_amount, fee_amount, currency")
     .eq("event_id", eventId)
-    .in("entry_type", ["earning", "refund_adjustment"]);
+    .in("entry_type", [
+      "earning",
+      "refund_adjustment",
+      "refund_hold",
+      "refund_release",
+    ]);
 
   if (ledgerError) {
     console.log(`Failed fetching event ledger rows: ${ledgerError.message}`);
@@ -59,7 +68,11 @@ export default async function getEventFinanceSummary(
   }
 
   const rows = (ledgerRows ?? []) as {
-    entry_type: "earning" | "refund_adjustment";
+    entry_type:
+      | "earning"
+      | "refund_adjustment"
+      | "refund_hold"
+      | "refund_release";
     amount: number;
     gross_amount: number | null;
     fee_amount: number | null;
@@ -85,12 +98,44 @@ export default async function getEventFinanceSummary(
     { ticketSales: 0, platformFee: 0, refunds: 0, organizerEarnings: 0 },
   );
 
+  // A ledger row alone can't say whether a refund is still pending or
+  // already confirmed — that lives on transaction.status, which the
+  // organizer's own session can't read directly (transaction RLS is
+  // buyer-only). get_event_refund_breakdown is a SECURITY DEFINER RPC
+  // scoped to this organizer's own ledger rows that safely bridges that
+  // gap — see the migration that added it.
+  const { data: refundBreakdownRows, error: refundBreakdownError } =
+    await supabase.rpc("get_event_refund_breakdown", { p_event_id: eventId });
+
+  if (refundBreakdownError) {
+    console.log(
+      `Failed fetching event refund breakdown: ${refundBreakdownError.message}`,
+    );
+  }
+
+  const breakdown = (
+    (refundBreakdownRows ?? []) as {
+      currency: string;
+      refund_request_count: number;
+      pending_refund_amount: number;
+      completed_refund_amount: number;
+    }[]
+  ).find((row) => row.currency === currency);
+
   const { data: settled } = await supabase.rpc("is_event_settled", {
     p_event_id: eventId,
   });
 
   return {
     status: 200,
-    data: { currency, ...summary, settled: Boolean(settled) },
+    data: {
+      currency,
+      ...summary,
+      netSales: summary.ticketSales + summary.refunds,
+      pendingRefunds: breakdown?.pending_refund_amount ?? 0,
+      completedRefunds: breakdown?.completed_refund_amount ?? 0,
+      refundRequestCount: breakdown?.refund_request_count ?? 0,
+      settled: Boolean(settled),
+    },
   };
 }

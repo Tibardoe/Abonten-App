@@ -117,20 +117,25 @@ export async function POST(req: Request) {
           `Paystack webhook: transaction ${updated.id} -> ${newStatus} via ${event.event}`,
         );
 
-        // Only reverse the organizer's earning once the refund is actually
-        // CONFIRMED by Paystack (refund.processed), never at refund_pending
-        // request time — same principle as issueRefund.ts never marking a
-        // refund complete just because the API request was accepted.
-        // Idempotent (organizer_ledger_entry_refund_once).
-        if (newStatus === "refunded") {
-          const { error: ledgerError } = await supabase.rpc(
-            "record_refund_adjustment",
+        // No ledger action needed for "refunded" — the deduction already
+        // happened when issueRefund.ts recorded a refund_hold at
+        // refund_pending request time (see the migration that added
+        // record_refund_hold/record_refund_release). A failed refund
+        // reverts the transaction to `successful`, meaning the money never
+        // actually left the organizer, so the earlier hold must be
+        // reversed — record_refund_release mirrors off the transaction's
+        // own refund_hold rows, and this call site is already guarded by
+        // the `.eq("status","refund_pending")` update above, so a retried
+        // webhook delivery for the same failure never runs this twice.
+        if (newStatus === "successful") {
+          const { error: releaseError } = await supabase.rpc(
+            "record_refund_release",
             { p_transaction_id: updated.id },
           );
 
-          if (ledgerError) {
+          if (releaseError) {
             console.error(
-              `Paystack webhook: failed recording refund ledger adjustment for transaction ${updated.id}: ${ledgerError.message}`,
+              `Paystack webhook: failed recording refund release for transaction ${updated.id}: ${releaseError.message}`,
             );
           }
         }

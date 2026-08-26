@@ -52,11 +52,26 @@ export default function EventFinanceSummary({ eventId }: { eventId: string }) {
           value={`-${summary.currency} ${summary.platformFee.toLocaleString()}`}
         />
         {summary.refunds !== 0 && (
-          <Row
-            label="Refunds"
-            value={`-${summary.currency} ${Math.abs(summary.refunds).toLocaleString()}`}
-          />
+          <div className="space-y-1">
+            <Row
+              label="Refunds"
+              value={`-${summary.currency} ${Math.abs(summary.refunds).toLocaleString()}`}
+            />
+            {(summary.pendingRefunds > 0 || summary.completedRefunds > 0) && (
+              <p className="text-xs text-muted-foreground">
+                {summary.refundRequestCount} request
+                {summary.refundRequestCount === 1 ? "" : "s"} ·{" "}
+                {summary.currency} {summary.pendingRefunds.toLocaleString()}{" "}
+                pending · {summary.currency}{" "}
+                {summary.completedRefunds.toLocaleString()} completed
+              </p>
+            )}
+          </div>
         )}
+        <Row
+          label="Net sales"
+          value={`${summary.currency} ${summary.netSales.toLocaleString()}`}
+        />
         <hr className="border-border" />
         <Row
           label="Organizer earnings"

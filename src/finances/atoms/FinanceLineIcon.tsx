@@ -47,6 +47,7 @@ export const LINE_LABELS: Record<OrganizerLedgerTransactionLine, string> = {
   ticket_sale: "Ticket sale",
   platform_fee: "Abonten fee",
   refund: "Refund",
+  refund_release: "Refund reversed",
   payout: "Organizer payout",
   payout_release: "Payout returned",
 };

@@ -12,10 +12,18 @@ export type OrganizerPendingEarningRow = {
   amount: number;
 };
 
+export type OrganizerRefundSummaryRow = {
+  currency: string;
+  refund_request_count: number;
+  pending_refund_amount: number;
+  completed_refund_amount: number;
+};
+
 export type OrganizerLedgerTransactionLine =
   | "ticket_sale"
   | "platform_fee"
   | "refund"
+  | "refund_release"
   | "payout"
   | "payout_release";
 

@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import { revalidatePath } from "next/cache";
 
 type RequestOrganizerPayoutResult =
-  | { status: 400 | 401 | 500; message: string }
+  | { status: 400 | 401 | 500; message: string; balanceStale?: boolean }
   | { status: 200; data: { payoutId: string; reference: string } };
 
 /**
@@ -47,13 +47,14 @@ export default async function requestOrganizerPayout(
 
   if (error) {
     console.log(`Failed requesting payout: ${error.message}`);
-    const message = error.message.includes("exceeds available balance")
-      ? "That amount exceeds your available balance"
+    const balanceStale = error.message.includes("exceeds available balance");
+    const message = balanceStale
+      ? "Your available balance has changed. Please review your updated balance before withdrawing."
       : error.message.includes("Invalid payout account")
         ? "Select a valid payout account"
         : "Something went wrong. Please try again";
 
-    return { status: 400, message };
+    return { status: 400, message, balanceStale };
   }
 
   const result = data as { payout_id: string; reference: string };

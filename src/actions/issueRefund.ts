@@ -83,18 +83,20 @@ export default async function issueRefund(transactionId: string) {
   // successful just because /transaction/initialize returned. The webhook's
   // refund.processed/refund.failed events (src/app/api/paystack/webhook/route.ts)
   // are what actually confirm completion and move this to `refunded`.
-  const { error: updateError } = await supabase
-    .from("transaction")
-    .update({
-      status: "refund_pending",
-      refund_requested_at: new Date(),
-      updated_at: new Date(),
-    })
-    .eq("id", transaction.id);
+  //
+  // record_refund_hold does the status transition AND the organizer ledger
+  // deduction atomically in one Postgres function — the money is reserved
+  // the instant Paystack accepts the request, not once it's confirmed, so
+  // an organizer can never withdraw a settled event's earnings out from
+  // under a refund that's merely in flight (see the migration that added
+  // this function for the full reasoning).
+  const { error: holdError } = await supabase.rpc("record_refund_hold", {
+    p_transaction_id: transaction.id,
+  });
 
-  if (updateError) {
+  if (holdError) {
     console.log(
-      `Failed marking transaction refund_pending: ${updateError.message}`,
+      `Failed recording refund hold for transaction ${transaction.id}: ${holdError.message}`,
     );
     return {
       status: 500,

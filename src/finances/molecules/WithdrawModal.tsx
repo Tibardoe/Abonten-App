@@ -24,6 +24,11 @@ type WithdrawModalProps = {
   currency: string;
   onClose: () => void;
   onSuccess: () => void;
+  /** Called when the server rejects a withdrawal because the available
+   * balance changed since this modal opened (e.g. a refund was requested in
+   * the meantime) — refetches the figures shown above so a retry uses the
+   * current balance instead of the stale one this modal was opened with. */
+  onBalanceStale: () => void;
 };
 
 type Step = "form" | "confirm" | "success";
@@ -41,6 +46,7 @@ export default function WithdrawModal({
   currency,
   onClose,
   onSuccess,
+  onBalanceStale,
 }: WithdrawModalProps) {
   const [step, setStep] = useState<Step>("form");
   const [serverError, setServerError] = useState<string | null>(null);
@@ -91,6 +97,9 @@ export default function WithdrawModal({
 
     if (response.status !== 200) {
       setServerError(response.message);
+      if (response.balanceStale) {
+        onBalanceStale();
+      }
       return;
     }
 
