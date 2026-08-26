@@ -19,12 +19,15 @@ import {
   invalidatePlaceListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
+import { getFulfillmentMessage } from "@/utils/paymentStatusCopy";
+import { PENDING_CHECKOUTS_QUERY_KEY } from "@/utils/queryKeys";
 import PaymentMethodCard, {
   getPaymentMethodDisplay,
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
 
@@ -57,6 +60,13 @@ type PaymentMethodSelectorProps = (
   // panel) show the current phase/selected wallet without owning any
   // payment state itself. Never used to drive payment logic in here.
   onStatusChange?: (status: PaymentSelectorStatus) => void;
+  // Fired once fulfillment is server-confirmed (status 200 from
+  // verifyPaystackPayment/retryPaymentFulfillment) — lets a parent that owns
+  // its own list of pending checkouts (e.g. PendingCheckoutsBasket) show a
+  // dedicated success state instead of letting the just-paid item silently
+  // disappear from underneath the user when the parent's own cache is
+  // invalidated. Never used to drive payment logic in here.
+  onPurchaseSucceeded?: () => void;
 };
 
 export type PaymentSelectorStatus = {
@@ -124,6 +134,7 @@ export default function PaymentMethodSelector(
   props: PaymentMethodSelectorProps,
 ) {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
   const [uiState, setUiState] = useState<PaymentUiState>({
@@ -337,6 +348,11 @@ export default function PaymentMethodSelector(
       // than plumb eventId through every payment kind just for this. Cheap:
       // it only refetches count queries that are actually mounted/observed.
       queryClient.invalidateQueries({ queryKey: ["attendance-count"] });
+      // Drops the just-paid session(s) out of PendingCheckoutsBasket's own
+      // list — the basket refetches with `status = 'pending'` still applied
+      // server-side, so only the completed session(s) disappear; unrelated
+      // pending checkouts are untouched.
+      queryClient.invalidateQueries({ queryKey: PENDING_CHECKOUTS_QUERY_KEY });
     } else if (props.kind === "event-promotion") {
       invalidateEventListQueries(queryClient);
     } else if (props.kind === "promotion") {
@@ -351,6 +367,12 @@ export default function PaymentMethodSelector(
       if (response.status === 200) {
         setUiState({ phase: "succeeded" });
         invalidateAfterSuccess();
+        props.onPurchaseSucceeded?.();
+        // Re-runs this checkout page's server fetch so the already-correct,
+        // per-kind "purchase complete" state (and the removal of the Pay
+        // button/order summary) takes over immediately instead of waiting
+        // for a manual reload.
+        router.refresh();
         return;
       }
       if (response.status === 202) {
@@ -391,6 +413,8 @@ export default function PaymentMethodSelector(
       if (response.status === 200) {
         setUiState({ phase: "succeeded" });
         invalidateAfterSuccess();
+        props.onPurchaseSucceeded?.();
+        router.refresh();
         return;
       }
       if (response.status === 207) {
@@ -507,9 +531,7 @@ export default function PaymentMethodSelector(
       <>
         {paystackScript}
         <div className="space-y-3 rounded-md border border-border bg-muted px-4 py-3 text-sm text-center">
-          <p className="font-semibold">
-            Payment successful — issuing your tickets now.
-          </p>
+          <p className="font-semibold">{getFulfillmentMessage(props.kind)}</p>
         </div>
       </>
     );

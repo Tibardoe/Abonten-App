@@ -71,7 +71,11 @@ export default async function page({
 
         {sessionStatus === "paid" && (
           <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
-            Purchase complete.
+            Subscription activated successfully —{" "}
+            <Link href="/settings/membership" className="underline">
+              view your subscription
+            </Link>
+            .
           </div>
         )}
 
@@ -317,9 +321,13 @@ export default async function page({
   }
 
   // Resolve THIS session's status purely to show a transient "just now"
-  // banner (paid/expired) — the pending case shows no page-level banner
-  // since each basket card already has its own countdown, and the basket
-  // (not this page) now owns all "how do I pay for a pending session" UI.
+  // expired banner — pending and paid both show no page-level banner here:
+  // pending because each basket card already has its own countdown, paid
+  // because PendingCheckoutsBasket shows its own success panel the moment
+  // fulfillment completes (a page-level banner here would double up with
+  // it, since both render on this same page). The basket (not this page)
+  // owns all "how do I pay for a pending session"/"payment just succeeded"
+  // UI.
   let sessionStatus: CheckoutSessionStatus | null = null;
   let eventCode = "";
 
@@ -352,16 +360,6 @@ export default async function page({
       <div>
         <h1 className="font-bold text-xl md:text-2xl">Order Summary</h1>
       </div>
-
-      {sessionStatus === "paid" && (
-        <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
-          Purchase complete —{" "}
-          <Link href="/manage/my-events" className="underline">
-            view your tickets
-          </Link>
-          .
-        </div>
-      )}
 
       {sessionStatus === "expired" && (
         <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">

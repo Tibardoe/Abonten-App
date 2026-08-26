@@ -18,7 +18,9 @@ import {
   invalidateEventListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
+import { PENDING_CHECKOUTS_QUERY_KEY } from "@/utils/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -26,7 +28,11 @@ type PendingCheckoutsBasketProps = {
   initialSessions: PendingCheckoutSession[];
 };
 
-const QUERY_KEY = ["pending-checkouts"];
+// Shared with PaymentMethodSelector.tsx via utils/queryKeys.ts so a
+// successful ticket payment can invalidate this basket's own cache and drop
+// the just-paid session(s) immediately, without touching unrelated pending
+// checkouts.
+const QUERY_KEY = PENDING_CHECKOUTS_QUERY_KEY;
 
 export default function PendingCheckoutsBasket({
   initialSessions,
@@ -54,6 +60,13 @@ export default function PendingCheckoutsBasket({
   );
   const [notification, setNotification] = useState<string | null>(null);
   const [isProceeding, setIsProceeding] = useState(false);
+  // Set the moment a paid-through-PaymentMethodSelector session is
+  // server-confirmed — the checkout(s) it names are about to drop out of
+  // `sessions` via the query invalidation below, so this is what keeps a
+  // success message on screen instead of the basket just silently shrinking.
+  const [completedCheckout, setCompletedCheckout] = useState<{
+    sessionIds: string[];
+  } | null>(null);
 
   // Purely a UI affordance — separate from selectedIds/quantities/payment
   // state above, so collapsing/expanding it can never touch checkout data.
@@ -459,6 +472,11 @@ export default function PendingCheckoutsBasket({
   };
 
   if (sessions.length === 0) {
+    if (completedCheckout) {
+      return (
+        <TicketPurchaseSuccessPanel sessionIds={completedCheckout.sessionIds} />
+      );
+    }
     return (
       <div className="text-center text-muted-foreground py-8">
         <p>No pending checkouts.</p>
@@ -468,6 +486,10 @@ export default function PendingCheckoutsBasket({
 
   return (
     <div className="space-y-5 pb-36 md:pb-0">
+      {completedCheckout && (
+        <TicketPurchaseSuccessPanel sessionIds={completedCheckout.sessionIds} />
+      )}
+
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-lg md:text-xl">Order Summary</h2>
         {sessions.length > 1 && (
@@ -565,6 +587,9 @@ export default function PendingCheckoutsBasket({
               checkoutSessionIds={[...selectedIds]}
               onInvalidSessions={handleInvalidSessions}
               onStatusChange={setPaymentStatus}
+              onPurchaseSucceeded={() =>
+                setCompletedCheckout({ sessionIds: [...selectedIds] })
+              }
             />
           </div>
         ) : (
@@ -580,6 +605,28 @@ export default function PendingCheckoutsBasket({
       </CollapsiblePaymentPanel>
 
       {notification && <Notification notification={notification} />}
+    </div>
+  );
+}
+
+/**
+ * Shown for exactly the ticket session(s) that were just paid for,
+ * decoupled from the `sessions` list itself so it stays visible even after
+ * the paid session(s) drop out of that list on invalidation.
+ */
+function TicketPurchaseSuccessPanel({ sessionIds }: { sessionIds: string[] }) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-6 text-center">
+      <p className="text-lg font-semibold">Payment successful</p>
+      <p className="text-sm text-muted-foreground">
+        Your ticket{sessionIds.length === 1 ? " is" : "s are"} ready.
+      </p>
+      <Link
+        href="/manage/my-events"
+        className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+      >
+        View tickets
+      </Link>
     </div>
   );
 }

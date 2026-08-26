@@ -1,14 +1,17 @@
+import getActivePromotedEventIds from "@/actions/getActivePromotedEventIds";
 import { filterEventsByWindow } from "@/actions/getFilteredEvents";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import AllEventsList from "@/app/(pages)/events/location/[location]/AllEventsList";
 import ViewToggle from "@/components/molecules/ViewToggle";
 import EventsSlider from "@/components/organisms/EventsSlider";
+import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import EventCategoryChips from "@/events/molecules/EventCategoryChips";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import NoEventsInLocation from "@/events/molecules/NoEventsInLocation";
 import EventsMapView from "@/events/organisms/EventsMapView";
 import type { UserPostType } from "@/types/postsType";
+import { getFeaturedEvents } from "@/utils/dailyEventCache";
 
 // Radius (km) used for the "All Events" section — matches the previous
 // getNearByEvents(lat, lng, 10000) call's 10km/10000m radius exactly
@@ -60,10 +63,12 @@ export default async function EventsTabContent({
   // implementation -- these sliders keep their own fixed, curated semantics
   // regardless of the category/filter modal, same as Places' Around
   // You/Open Now/Top Rated sliders don't honor the filter modal either.
-  const [eventsWithinLocation, eventsAroundYou] = await Promise.all([
-    getNearByEvents(safeLat, safeLng, 10000),
-    getNearByEvents(safeLat, safeLng, 5000),
-  ]);
+  const [eventsWithinLocation, eventsAroundYou, promotedEventIds] =
+    await Promise.all([
+      getNearByEvents(safeLat, safeLng, 10000),
+      getNearByEvents(safeLat, safeLng, 5000),
+      getActivePromotedEventIds(),
+    ]);
 
   const aroundYouEvents: UserPostType[] = eventsAroundYou.data || [];
   const events: UserPostType[] = eventsWithinLocation.data || [];
@@ -71,6 +76,20 @@ export default async function EventsTabContent({
   if (!events.length) {
     return <NoEventsInLocation location={location} />;
   }
+
+  // A paid Event Promotion makes an event featured-eligible for its
+  // purchased period, exactly like the free, self-toggled `featured`
+  // checkbox already does — same fold-in previously only wired into the
+  // now-unlinked /events/location/[location] route; ported here since
+  // /explore/[location]'s Events tab (this component) is the page users
+  // actually land on today (see LocationAndFilterSection.tsx/MobileNavBar.tsx).
+  const eventsWithPromotion = promotedEventIds.size
+    ? events.map((event) =>
+        promotedEventIds.has(event.id) ? { ...event, featured: true } : event,
+      )
+    : events;
+
+  const featuredEvents = getFeaturedEvents(eventsWithPromotion, location);
 
   const topRatedOrganizers = filterEventsByWindow(
     events,
@@ -145,6 +164,8 @@ export default async function EventsTabContent({
 
   return (
     <div className="space-y-6">
+      <FeaturedEventsCarousel events={featuredEvents} />
+
       <EventsSlider
         heading="Around-You"
         events={aroundYouEvents}
