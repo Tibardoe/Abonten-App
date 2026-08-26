@@ -13,8 +13,8 @@ import { useParams, useRouter } from "next/navigation";
 import React from "react";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { cn } from "../lib/utils";
 import CategoryFilter from "../molecules/CategoryFilter";
+import TileSelector from "../molecules/TileSelector";
 import TypeFilter from "../molecules/TypeFilter";
 
 type FilterModalPopupProp = {
@@ -171,6 +171,7 @@ export default function FilterModalPopup({
       // distance modal-only.
       const query = new URLSearchParams({ tab: "events" });
       if (values.category) query.set("eventCategory", values.category);
+      if (values.types.length) query.set("eventTypes", values.types.join(","));
       if (values.minMax[0] > 0) {
         query.set("eventMinPrice", String(values.minMax[0]));
       }
@@ -400,48 +401,28 @@ export default function FilterModalPopup({
 
           {/* Rating */}
           <div>
-            <h2 className="font-semibold md:text-lg mb-5">Rating</h2>
-
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              {rating.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  aria-pressed={r === ratingg}
-                  onClick={() => setRating(r)}
-                  className={cn(
-                    "p-2 bg-muted rounded-md text-sm",
-                    r === ratingg && "bg-primary text-primary-foreground",
-                  )}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
+            <TileSelector
+              mode="single"
+              label="Rating"
+              labelClassName="font-semibold md:text-lg mb-3"
+              options={rating.map((r) => ({ id: r, label: r }))}
+              value={ratingg}
+              onChange={setRating}
+            />
 
             <hr className="mt-5 border-border" />
           </div>
 
           {/* Distance */}
           <div>
-            <h2 className="font-semibold md:text-lg mb-5">Distance</h2>
-
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              {distances.map((d) => (
-                <button
-                  type="button"
-                  key={d}
-                  aria-pressed={distance === d}
-                  onClick={() => setDistance(d)}
-                  className={cn(
-                    "p-2 bg-muted rounded-md text-sm",
-                    distance === d && "bg-primary text-primary-foreground",
-                  )}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
+            <TileSelector
+              mode="single"
+              label="Distance"
+              labelClassName="font-semibold md:text-lg mb-3"
+              options={distances.map((d) => ({ id: d, label: d }))}
+              value={distance}
+              onChange={setDistance}
+            />
 
             <hr className="mt-5 border-border" />
           </div>

@@ -141,9 +141,12 @@ function FilterSearchBarContent() {
         ? (searchParams.get("category") ?? "")
         : "";
 
-  const initialEventTypes = isLegacySearchPage
-    ? (searchParams.get("types")?.split(",").filter(Boolean) ?? [])
-    : [];
+  const initialEventTypes =
+    exploreEventsBasePath != null
+      ? (searchParams.get("eventTypes")?.split(",").filter(Boolean) ?? [])
+      : isLegacySearchPage
+        ? (searchParams.get("types")?.split(",").filter(Boolean) ?? [])
+        : [];
 
   const legacyPrice = isLegacySearchPage
     ? parseLegacyPriceRange(searchParams.get("price"))
@@ -194,6 +197,7 @@ function FilterSearchBarContent() {
     ? activeTab === "events"
       ? [
           "eventCategory",
+          "eventTypes",
           "eventMinPrice",
           "eventMaxPrice",
           "eventFrom",
@@ -205,7 +209,12 @@ function FilterSearchBarContent() {
     : isLegacySearchPage
       ? ["category", "types", "from", "to", "rating", "distance", "price"]
       : [];
-  const hasActiveFilters = activeFilterKeys.some((key) => {
+  // Small "filters are active" indicator on the Filters button -- the
+  // standard discovery-app cue (Airbnb, Eventbrite) that something beyond
+  // the default view is already applied. Shown as a count rather than a
+  // plain dot so reopening the modal isn't the only way to tell *how much*
+  // is currently filtered.
+  const activeFilterCount = activeFilterKeys.filter((key) => {
     const value = searchParams.get(key);
     if (!value) return false;
     // /search always sets ?price=, even at the "Any" default -- only count
@@ -214,7 +223,8 @@ function FilterSearchBarContent() {
       return value !== "GHS 0 - GHS 999";
     }
     return true;
-  });
+  }).length;
+  const hasActiveFilters = activeFilterCount > 0;
 
   const buildSearchHref = (text: string) =>
     activeTab === "places"
@@ -482,8 +492,10 @@ function FilterSearchBarContent() {
         {hasActiveFilters && (
           <span
             aria-hidden
-            className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-muted"
-          />
+            className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold leading-[18px] text-center"
+          >
+            {activeFilterCount}
+          </span>
         )}
       </button>
 

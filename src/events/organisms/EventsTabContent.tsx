@@ -33,6 +33,7 @@ export default async function EventsTabContent({
   lng,
   location,
   eventCategory,
+  eventTypes,
   minPrice,
   maxPrice,
   startDate,
@@ -45,6 +46,7 @@ export default async function EventsTabContent({
   lng: number | null;
   location: string;
   eventCategory: string | null;
+  eventTypes?: string[] | null;
   minPrice?: number | null;
   maxPrice?: number | null;
   startDate?: string | null;
@@ -113,6 +115,7 @@ export default async function EventsTabContent({
     lng: safeLng,
     maxDistanceKm: effectiveMaxDistanceKm,
     category: eventCategory ?? undefined,
+    type: eventTypes ?? undefined,
     minPrice: minPrice ?? undefined,
     maxPrice: maxPrice ?? undefined,
     startDate: startDate ?? undefined,
@@ -122,6 +125,7 @@ export default async function EventsTabContent({
 
   const hasActiveFilters =
     !!eventCategory ||
+    !!eventTypes?.length ||
     minPrice != null ||
     maxPrice != null ||
     !!startDate ||
@@ -219,7 +223,7 @@ export default async function EventsTabContent({
           )
         ) : (
           <AllEventsList
-            key={`${safeLat}-${safeLng}-${eventCategory ?? "all"}-${minPrice ?? ""}-${maxPrice ?? ""}-${startDate ?? ""}-${endDate ?? ""}-${minRating ?? ""}-${effectiveMaxDistanceKm}`}
+            key={`${safeLat}-${safeLng}-${eventCategory ?? "all"}-${(eventTypes ?? []).join(",")}-${minPrice ?? ""}-${maxPrice ?? ""}-${startDate ?? ""}-${endDate ?? ""}-${minRating ?? ""}-${effectiveMaxDistanceKm}`}
             queryKey={[
               "events",
               "filtered",
@@ -227,6 +231,7 @@ export default async function EventsTabContent({
               safeLng,
               effectiveMaxDistanceKm,
               eventCategory ?? null,
+              eventTypes ?? null,
               minPrice ?? null,
               maxPrice ?? null,
               startDate ?? null,

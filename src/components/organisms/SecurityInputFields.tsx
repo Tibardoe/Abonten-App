@@ -7,6 +7,7 @@ import { supabase } from "@/config/supabase/client";
 import { linkGoogleIdentity } from "@/services/authService";
 import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,6 +36,8 @@ export default function SecurityInputFields({
   hasGoogleIdentity,
   initialCallingCode,
 }: Props) {
+  const t = useTranslations("settings.security.phone");
+  const tAuth = useTranslations("auth");
   const searchParams = useSearchParams();
   const [notification, setNotification] = useState<string | null>(
     searchParams.get("authError"),
@@ -181,13 +184,13 @@ export default function SecurityInputFields({
       {step === 1 && (
         <div className="flex flex-col gap-5">
           <div className="space-y-2">
-            <span className="font-medium md:text-lg">Phone</span>
+            <span className="font-medium md:text-lg">{t("label")}</span>
 
             <div className="w-full flex justify-between items-center gap-5 p-3 rounded-md border border-border">
               <span className="text-muted-foreground">
                 {currentPhone
-                  ? `${maskPhoneNumber(currentPhone)}${currentPhoneVerified ? "" : " (unverified)"}`
-                  : "No phone number added"}
+                  ? `${maskPhoneNumber(currentPhone)}${currentPhoneVerified ? "" : ` ${t("unverified")}`}`
+                  : t("noPhoneAdded")}
               </span>
 
               <button
@@ -195,7 +198,7 @@ export default function SecurityInputFields({
                 className="font-semibold text-foreground/70"
                 onClick={() => setStep(2)}
               >
-                {currentPhone ? "Change" : "Add"}
+                {currentPhone ? t("change") : t("add")}
               </button>
             </div>
           </div>
@@ -260,10 +263,10 @@ export default function SecurityInputFields({
       {step === 2 && (
         <div className="md:w-[70%] mx-auto bg-card text-card-foreground p-5 flex-col items-center gap-5 rounded-lg flex shadow-lg">
           <div className="mb-5">
-            <h1 className="font-bold text-3xl">Update phone number</h1>
+            <h1 className="font-bold text-3xl">{t("updateTitle")}</h1>
 
             <p className="text-sm text-muted-foreground">
-              We&apos;ll send an SMS code for verification
+              {t("updateDescription")}
             </p>
           </div>
 
@@ -275,7 +278,7 @@ export default function SecurityInputFields({
             />
 
             {phoneErrorMessage && (
-              <p className="text-destructive text-sm md:text-base">
+              <p role="alert" className="text-destructive text-sm md:text-base">
                 {phoneErrorMessage}
               </p>
             )}
@@ -286,7 +289,7 @@ export default function SecurityInputFields({
                 className="w-full rounded-md md:text-lg font-bold py-6"
                 onClick={() => setStep(1)}
               >
-                Back
+                {tAuth("back")}
               </Button>
 
               <Button
@@ -294,7 +297,7 @@ export default function SecurityInputFields({
                 type="submit"
                 disabled={isSendingOtp}
               >
-                {isSendingOtp ? "Sending..." : "Continue"}
+                {isSendingOtp ? tAuth("sendingCode") : tAuth("continue")}
               </Button>
             </div>
           </form>
@@ -304,10 +307,14 @@ export default function SecurityInputFields({
       {step === 3 && (
         <div className="w-full md:w-[80%] mx-auto bg-card text-card-foreground px-10 py-5 flex-col items-center gap-5 rounded-xl flex shadow-lg">
           <div className="flex flex-col items-center">
-            <h1 className="font-bold text-3xl">Enter Code</h1>
+            <h1 className="font-bold text-3xl">{t("enterCodeTitle")}</h1>
 
             <p>
-              We&apos;ve sent it to <br /> {maskPhoneNumber(phoneE164)}
+              {tAuth("codeSentTo")} <br /> {maskPhoneNumber(phoneE164)}
+            </p>
+
+            <p className="text-sm text-muted-foreground mt-1">
+              {t("codeExpiry")}
             </p>
           </div>
 
@@ -325,19 +332,23 @@ export default function SecurityInputFields({
                 className="w-full rounded-md md:text-lg font-bold py-6"
                 onClick={() => setStep(2)}
               >
-                Edit number
+                {t("editNumber")}
               </Button>
 
               <Button
                 className="w-full rounded-md md:text-lg font-bold py-6"
                 disabled={isVerifying || otp.length !== HUBTEL_OTP_CODE_LENGTH}
               >
-                {isVerifying ? "Verifying..." : "Continue"}
+                {isVerifying ? tAuth("verifying") : tAuth("continue")}
               </Button>
             </div>
 
             <div className="flex justify-center">
-              <ResendOtpButton onResend={sendPhoneCode} />
+              <ResendOtpButton
+                onResend={sendPhoneCode}
+                readyLabel={tAuth("resendCode")}
+                cooldownLabel={(seconds) => tAuth("resendCodeIn", { seconds })}
+              />
             </div>
           </form>
         </div>

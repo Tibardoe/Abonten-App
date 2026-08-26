@@ -21,5 +21,19 @@
     "notAuthenticated": "User not authenticated",
     "fetchUserFailed": "Error fetching user",
     "updateFailed": "Failed to update user details"
+  },
+  "security": {
+    "phone": {
+      "label": "Phone",
+      "noPhoneAdded": "No phone number added",
+      "unverified": "(unverified)",
+      "change": "Change",
+      "add": "Add",
+      "updateTitle": "Update phone number",
+      "updateDescription": "We'll send an SMS code for verification",
+      "enterCodeTitle": "Enter code",
+      "codeExpiry": "The code expires in 5 minutes.",
+      "editNumber": "Edit number"
+    }
   }
 }

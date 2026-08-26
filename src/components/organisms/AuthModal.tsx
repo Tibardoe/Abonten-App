@@ -133,8 +133,8 @@ export default function AuthModal({ callingCode, next, authError }: PopupProp) {
   };
 
   return step === 1 ? (
-    <div className="w-full py-10 flex flex-col bg-background top-0 h-dvh z-30 fixed left-0 items-center">
-      <div className="w-[90%] md:w-[70%] lg:w-[30%] text-foreground h-screen relative">
+    <div className="w-full py-10 flex flex-col bg-background top-0 h-dvh z-30 fixed left-0 items-center overflow-y-auto">
+      <div className="w-[90%] md:w-[70%] lg:w-[30%] text-foreground">
         <Image
           src={logoSrc}
           alt="Abonten Logo"
@@ -169,7 +169,7 @@ export default function AuthModal({ callingCode, next, authError }: PopupProp) {
 
             <Button
               disabled={isSendingOtp}
-              className="w-full rounded-md text-lg font-medium py-6 absolute bottom-0 md:relative"
+              className="w-full rounded-md text-lg font-medium py-6"
             >
               {isSendingOtp ? t("sendingCode") : t("continue")}
             </Button>

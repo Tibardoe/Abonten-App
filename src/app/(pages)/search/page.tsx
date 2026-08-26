@@ -15,7 +15,16 @@ export default async function page({
 }) {
   const queryParams = await searchParams;
 
-  const { category, type } = queryParams;
+  // FilterModalPopup writes the Type selection under the plural `types` key
+  // (comma-joined) -- getQueriedEvents' `type` param expects an array.
+  const { category, types } = queryParams;
+  const type = types
+    ? types
+        .toString()
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : null;
 
   const {
     minPrice,

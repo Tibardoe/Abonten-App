@@ -21,7 +21,7 @@ interface FilterParams {
   endDate?: string | null;
   searchText?: string | null;
   category?: string | string[] | undefined;
-  type?: string | string[] | undefined;
+  type?: string[] | null;
   cursor?: string | null;
   pageSize?: number;
 }
@@ -49,6 +49,12 @@ export async function getQueriedEvents(
 
   const cursor = decodeCursor<FilteredEventsCursor>(rawCursor);
 
+  // get_filtered_events' p_event_type is text[] -- an event matches if ANY
+  // selected type ILIKE-matches (see 20260902130000_multi_type_event_filter.sql).
+  // Pass null rather than [] for "no filter" so the RPC's `p_event_type IS
+  // NULL` short-circuit applies instead of its separate empty-array check.
+  const normalizedType = type && type.length > 0 ? type : null;
+
   const { data, error } = await supabase.rpc("get_filtered_events", {
     p_min_price: minPrice,
     p_max_price: maxPrice,
@@ -60,7 +66,7 @@ export async function getQueriedEvents(
     p_end_date: endDate,
     p_search_text: searchText ?? "",
     p_event_category: category ?? "",
-    p_event_type: type ?? "",
+    p_event_type: normalizedType,
     p_cursor_starts_at: cursor?.startsAt ?? null,
     p_cursor_distance_km: cursor?.distanceKm ?? null,
     p_cursor_id: cursor?.id ?? null,

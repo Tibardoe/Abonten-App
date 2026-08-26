@@ -21,6 +21,7 @@ export default async function page({
     category?: string;
     categoryId?: string;
     eventCategory?: string;
+    eventTypes?: string;
     eventMinPrice?: string;
     eventMaxPrice?: string;
     eventFrom?: string;
@@ -42,6 +43,7 @@ export default async function page({
     category,
     categoryId,
     eventCategory,
+    eventTypes,
     eventMinPrice,
     eventMaxPrice,
     eventFrom,
@@ -87,6 +89,9 @@ export default async function page({
             lng={lng ?? null}
             location={safeLocation}
             eventCategory={eventCategory ?? null}
+            eventTypes={
+              eventTypes ? eventTypes.split(",").filter(Boolean) : null
+            }
             minPrice={eventMinPrice ? Number(eventMinPrice) : null}
             maxPrice={eventMaxPrice ? Number(eventMaxPrice) : null}
             startDate={eventFrom ?? null}
