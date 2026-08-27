@@ -23,6 +23,7 @@ import { getFulfillmentMessage } from "@/utils/paymentStatusCopy";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@/utils/queryKeys";
 import PaymentMethodCard, {
   getPaymentMethodDisplay,
+  NO_PAYMENT_METHODS_MESSAGE,
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
@@ -664,7 +665,7 @@ export default function PaymentMethodSelector(
 
       {methods.length === 0 ? (
         <p className="text-xs text-muted-foreground">
-          You don't have a saved payment method yet.
+          {NO_PAYMENT_METHODS_MESSAGE}
         </p>
       ) : (
         <div className="space-y-2">

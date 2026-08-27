@@ -8,7 +8,7 @@ export type CheckoutKind = "ticket" | "promotion" | "event-promotion";
 // page's own server-rendered "purchase complete" state takes over. Never say
 // "ticket" for a purchase that isn't one.
 const FULFILLMENT_MESSAGE: Record<CheckoutKind, string> = {
-  ticket: "Payment successful. Preparing your ticket…",
+  ticket: "Payment successful. Preparing your tickets…",
   promotion: "Payment successful. Activating your promotion…",
   "event-promotion": "Payment successful. Activating your promotion…",
 };

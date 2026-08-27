@@ -3,6 +3,7 @@
 import cancelEvent from "@/actions/cancelEvent";
 import getEventCancellationImpact from "@/actions/getEventCancellationImpact";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/useToast";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +12,11 @@ import { MdOutlineCancel } from "react-icons/md";
 
 type CancelProp = {
   eventId: string;
+  /** Renders as a DropdownMenuItem (event card menu) instead of a plain button. */
+  asMenuItem?: boolean;
+  /** Closes the parent dropdown once the confirm dialog is dismissed --
+   * required when asMenuItem (see EventCardMenuBtn.tsx). */
+  onRequestClose?: () => void;
 };
 
 function buildConfirmMessage(
@@ -38,7 +44,11 @@ function buildConfirmMessage(
   return "This event will no longer be available to attendees. This action cannot be undone.";
 }
 
-export default function CancelButton({ eventId }: CancelProp) {
+export default function CancelButton({
+  eventId,
+  asMenuItem,
+  onRequestClose,
+}: CancelProp) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,11 +64,16 @@ export default function CancelButton({ eventId }: CancelProp) {
   const impact =
     impactResponse?.status === 200 ? impactResponse.data : undefined;
 
+  const closeConfirm = () => {
+    setShowCancelConfirm(false);
+    onRequestClose?.();
+  };
+
   const { mutate, isPending } = useMutation({
     mutationFn: () => cancelEvent(eventId),
     onSuccess: (response) => {
       if (response.status === 200) {
-        setShowCancelConfirm(false);
+        closeConfirm();
         invalidateEventListQueries(queryClient);
         toast.success(response.message);
       } else {
@@ -72,19 +87,37 @@ export default function CancelButton({ eventId }: CancelProp) {
     },
   });
 
+  const openConfirm = () => {
+    setError(null);
+    setShowCancelConfirm(true);
+  };
+
   return (
     <>
-      <button
-        onClick={() => {
-          setError(null);
-          setShowCancelConfirm(true);
-        }}
-        type="button"
-        className="flex items-center gap-1 p-1 text-destructive"
-      >
-        <MdOutlineCancel className="text-xl " />
-        Cancel Event
-      </button>
+      {asMenuItem ? (
+        <DropdownMenuItem
+          onSelect={(event) => {
+            // Keep the dropdown mounted -- otherwise Radix unmounts this
+            // component (and the confirm-dialog state below) before the
+            // dialog ever renders.
+            event.preventDefault();
+            openConfirm();
+          }}
+          className="gap-2 text-destructive focus:text-destructive"
+        >
+          <MdOutlineCancel className="text-xl" />
+          Cancel Event
+        </DropdownMenuItem>
+      ) : (
+        <button
+          onClick={openConfirm}
+          type="button"
+          className="flex items-center gap-1 p-1 text-destructive"
+        >
+          <MdOutlineCancel className="text-xl " />
+          Cancel Event
+        </button>
+      )}
 
       {showCancelConfirm && (
         <ConfirmDeleteModal
@@ -95,7 +128,7 @@ export default function CancelButton({ eventId }: CancelProp) {
           loadingLabel="Cancelling…"
           isLoading={isPending}
           onConfirm={() => mutate()}
-          onCancel={() => setShowCancelConfirm(false)}
+          onCancel={closeConfirm}
         />
       )}
     </>

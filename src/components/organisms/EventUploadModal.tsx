@@ -1,6 +1,6 @@
 "use client";
 
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import ModalShell from "@/components/atoms/ModalShell";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useEventUploadForm } from "@/hooks/useEventUploadForm";
 import { useImageSelection } from "@/hooks/useImageSelection";
@@ -69,8 +69,6 @@ export default function EventUploadModal({
   preselectedPlaceAddress,
   preselectedPlaceName,
 }: EventUploadModalProps) {
-  useBodyScrollLock(true);
-
   const router = useRouter();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -194,7 +192,12 @@ export default function EventUploadModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-background md:bg-overlay/50 md:flex md:items-center md:justify-center">
+      <ModalShell
+        open
+        onClose={requestClose}
+        title="Create Event"
+        className="bg-background md:bg-transparent"
+      >
         <div className="flex flex-col h-full w-full md:h-[95%] md:w-[70%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground py-3 overflow-y-auto overflow-x-hidden">
           {step === 1 && (
             <div className="flex flex-col flex-1 min-h-0 w-full">
@@ -273,7 +276,7 @@ export default function EventUploadModal({
             </>
           )}
         </div>
-      </div>
+      </ModalShell>
 
       <input
         type="file"

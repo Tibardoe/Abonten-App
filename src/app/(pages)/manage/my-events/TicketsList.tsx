@@ -1,13 +1,16 @@
 "use client";
 
 import CancelUserTicketBtn from "@/components/atoms/CancelUserTicketBtn";
+import RefundStatusBadge from "@/components/atoms/RefundStatusBadge";
 import RetryRefundBtn from "@/components/atoms/RetryRefundBtn";
+import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
 import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imagePlaceholder";
 import { getRefundStatusLabel } from "@/utils/refundStatus";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,7 +51,7 @@ function TicketCard({
     refundBadge?.label === "Refund failed" && event.transaction_id;
   return (
     <div className="bg-card text-card-foreground rounded-2xl shadow-md overflow-hidden border border-border">
-      <div className="relative h-48 w-full">
+      <div className="relative h-36 w-full">
         <Image
           src={buildCloudinaryUrl(
             event.event.flyer_public_id,
@@ -58,54 +61,46 @@ function TicketCard({
           alt={event.event.title}
           fill
           className="object-cover rounded-t-2xl"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          placeholder="blur"
+          blurDataURL={SHIMMER_BLUR_DATA_URL}
         />
       </div>
-      <div className="p-4">
-        <div className="flex items-center justify-between">
+      <div className="p-4 space-y-3">
+        <div className="flex items-start justify-between gap-2">
           <Link
             href={`/events/${event.event.event_code.toLowerCase()}`}
-            className="text-xl font-semibold mb-2"
+            className="text-lg font-semibold line-clamp-2 hover:text-primary transition-colors"
           >
             {event.event.title}
           </Link>
 
-          <p className="text-sm text-muted-foreground mb-2 font-bold">
-            Ticket Type:{" "}
-            <span className="font-mono text-foreground">
-              {event.ticket_type.type}
-            </span>
-          </p>
+          <TicketStatusBadge
+            status={event.status}
+            cancelledByOrganizer={cancelledByOrganizer}
+          />
         </div>
 
-        <p className="text-sm text-muted-foreground mb-2">
-          Ticket Code:{" "}
-          <span className="font-mono text-foreground">{event.ticket_code}</span>
-        </p>
-        <p
-          className={`text-sm text-muted-foreground ${refundBadge ? "mb-1" : "mb-4"}`}
-        >
-          Status:{" "}
-          {event.status === "cancelled" ? (
-            <span className="font-semibold text-destructive">
-              {cancelledByOrganizer ? "Cancelled by organizer" : "Cancelled"}
-            </span>
-          ) : event.status === "used" ? (
-            <span className="font-semibold text-success">Checked in</span>
-          ) : (
-            <span className="font-semibold text-success">Active</span>
-          )}
-        </p>
+        {/* Secondary details -- deliberately smaller/muted than the title
+            and status above, per progressive-disclosure: the event and its
+            status are what a user scans for first. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span>
+            {event.ticket_type.type} ·{" "}
+            <span className="font-mono">{event.ticket_code}</span>
+          </span>
+        </div>
 
         {refundBadge && (
-          <div className="mb-4">
-            {refundAmount !== undefined && (
-              <p className="text-sm font-bold">
-                Refund: {event.transaction?.currency} {refundAmount.toFixed(2)}
-              </p>
-            )}
-            <p className={`text-sm font-semibold ${refundBadge.className}`}>
-              {refundBadge.label}
-            </p>
+          <div className="space-y-1 rounded-lg bg-muted/50 p-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <RefundStatusBadge badge={refundBadge} />
+              {refundAmount !== undefined && (
+                <span className="text-sm font-semibold">
+                  {event.transaction?.currency} {refundAmount.toFixed(2)}
+                </span>
+              )}
+            </div>
             {refundBadge.description && (
               <p className="text-xs text-muted-foreground">
                 {refundBadge.description}
@@ -123,12 +118,12 @@ function TicketCard({
         {showRefundInfo &&
           event.status === "cancelled" &&
           !event.transaction && (
-            <p className="text-sm mb-4 text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               No payment on this ticket — nothing to refund.
             </p>
           )}
 
-        <div className="flex justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 pt-1">
           <ViewTicketBtn event={event} />
 
           {event.status === "active" && (

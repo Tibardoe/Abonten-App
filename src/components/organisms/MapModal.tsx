@@ -1,6 +1,6 @@
 "use client";
 
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import ModalShell from "@/components/atoms/ModalShell";
 import { generateSlug } from "@/utils/geerateSlug";
 // import Image from "next/image";
 import Link from "next/link";
@@ -43,8 +43,6 @@ const MapModal: React.FC<MapModalProps> = ({
 
   const [_selectedAddress, setSelectedAddress] = useState("");
 
-  useBodyScrollLock(isOpen);
-
   const handleConfirm = () => {
     if (currentLocation) {
       onLocationSelect(currentLocation);
@@ -52,10 +50,8 @@ const MapModal: React.FC<MapModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50">
+    <ModalShell open={isOpen} onClose={onClose} title="Set your location">
       <div className="bg-card text-card-foreground md:rounded-xl w-full h-full md:w-[60%] md:h-[80%] lg:w-[40%] relative shadow-lg space-y-4">
         <MapPicker
           defaultCenter={defaultCenter}
@@ -113,7 +109,7 @@ const MapModal: React.FC<MapModalProps> = ({
           <MdCancel />
         </button>
       </div>
-    </div>
+    </ModalShell>
   );
 };
 

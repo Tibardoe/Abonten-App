@@ -1,12 +1,11 @@
 "use client";
 
 // import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
-import MaskIcon from "@/components/atoms/MaskIcon";
+import { BottomSheet } from "@/components/atoms/BottomSheet";
 import DateRangePickerSheet from "@/components/molecules/DateRangePickerSheet";
 import PriceRangeSlider from "@/components/molecules/PriceRangeSlider";
 import { Button } from "@/components/ui/button";
 import { distances, rating } from "@/data/distanceAndRating";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import { useParams, useRouter } from "next/navigation";
@@ -92,8 +91,6 @@ export default function FilterModalPopup({
   initialMinRating,
   initialMaxDistanceKm,
 }: FilterModalPopupProp) {
-  useBodyScrollLock(true);
-
   const params = useParams();
   const locationSlug =
     typeof params?.location === "string" ? params.location : "";
@@ -267,190 +264,147 @@ export default function FilterModalPopup({
     );
   };
 
+  const footer = (
+    <div className="flex gap-2">
+      <Button
+        onClick={handleReset}
+        variant="outline"
+        className="flex-1 rounded-md"
+      >
+        Reset
+      </Button>
+      <Button onClick={handleFilter} className="flex-1 rounded-md">
+        Show results
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="fixed top-0 left-0 bg-overlay/40 h-dvh w-full z-30 flex justify-center items-end md:items-center">
-      {/* Popup */}
-      <div className="w-full h-[95%] md:w-[40%] bg-card text-card-foreground py-5 rounded-t-2xl md:rounded-xl">
-        {/* Top elements */}
-        <div>
-          <div className="flex justify-between items-center w-[90%] md:w-full mx-auto font-semibold md:px-5">
-            <button
-              type="button"
-              className="flex md:hidden"
-              onClick={() => handlePopup(false)}
-            >
-              Cancel
-            </button>
+    <BottomSheet
+      open
+      onClose={() => handlePopup(false)}
+      title="Filter"
+      footer={footer}
+      className="md:w-[32rem]"
+    >
+      <div className="space-y-5">
+        <h2 className="font-semibold md:text-lg">Sort by</h2>
 
-            <h1 className="md:mx-auto text-xl md:text-2xl">Filter</h1>
+        <div className="space-y-5">
+          {contentType === "events" && (
+            <div>
+              <p className="mb-3">Price</p>
 
-            <button
-              onClick={handleReset}
-              type="button"
-              className="flex md:hidden"
-            >
-              Clear
-            </button>
-
-            <button
-              type="button"
-              className="hidden md:flex"
-              onClick={() => handlePopup(false)}
-            >
-              <MaskIcon
-                src="/assets/images/circularCancel.svg"
-                alt="Cancel"
-                className="w-[30px] h-[30px] bg-foreground"
+              <PriceRangeSlider
+                min={0}
+                max={999}
+                value={minMax}
+                onChange={setMinMax}
+                currencyPrefix="GHS "
+                formatMax={() => "Any"}
               />
-            </button>
-          </div>
 
-          <hr className="mt-3 border-border" />
+              <hr className="mt-5 border-border" />
+            </div>
+          )}
+
+          {/* category */}
+          {contentType === "events" ? (
+            <div>
+              <CategoryFilter
+                handleCategory={handleCategory}
+                category={category}
+                classname="font-semibold md:text-lg"
+              />
+
+              <hr className="mt-5 border-border" />
+            </div>
+          ) : (
+            <div>
+              <PlaceCategoryPicker
+                categoryId={placeCategoryId}
+                onSelect={setPlaceCategoryId}
+              />
+
+              <hr className="mt-5 border-border" />
+            </div>
+          )}
+
+          {/* types -- Events only, Places has no "types" concept */}
+          {contentType === "events" && (
+            <div>
+              <TypeFilter
+                selectedTypes={types}
+                selectedCategory={category}
+                handleType={handleType}
+                classname="font-semibold md:text-lg"
+              />
+
+              <hr className="mt-5 border-border" />
+            </div>
+          )}
+
+          {/* Open now -- Places only, per spec no "Event date" shown here */}
+          {contentType === "places" && (
+            <div>
+              <label className="flex items-center justify-between font-semibold md:text-lg cursor-pointer">
+                <span>Open now</span>
+                <input
+                  type="checkbox"
+                  checked={openNowOnly}
+                  onChange={(e) => setOpenNowOnly(e.target.checked)}
+                  className="h-5 w-5 accent-primary"
+                />
+              </label>
+
+              <hr className="mt-5 border-border" />
+            </div>
+          )}
+
+          {/* date -- Events only */}
+          {contentType === "events" && (
+            <div>
+              <h2 className="font-semibold md:text-lg mb-3">Date</h2>
+
+              <DateRangePickerSheet
+                label="Event date range"
+                value={date}
+                onChange={setDate}
+              />
+
+              <hr className="mt-5 border-border" />
+            </div>
+          )}
         </div>
 
-        {/* Content */}
-        <div className="mt-5 w-[90%] md:w-full mx-auto md:px-5 space-y-5 overflow-y-scroll overflow-x-hidden h-[90%]">
-          <h2 className="font-semibold md:text-lg">Sort by</h2>
+        {/* Rating */}
+        <div>
+          <TileSelector
+            mode="single"
+            label="Rating"
+            labelClassName="font-semibold md:text-lg mb-3"
+            options={rating.map((r) => ({ id: r, label: r }))}
+            value={ratingg}
+            onChange={setRating}
+          />
 
-          <div className="space-y-5">
-            {contentType === "events" && (
-              <div>
-                <p className="mb-3">Price</p>
+          <hr className="mt-5 border-border" />
+        </div>
 
-                <PriceRangeSlider
-                  min={0}
-                  max={999}
-                  value={minMax}
-                  onChange={setMinMax}
-                  currencyPrefix="GHS "
-                  formatMax={() => "Any"}
-                />
+        {/* Distance */}
+        <div>
+          <TileSelector
+            mode="single"
+            label="Distance"
+            labelClassName="font-semibold md:text-lg mb-3"
+            options={distances.map((d) => ({ id: d, label: d }))}
+            value={distance}
+            onChange={setDistance}
+          />
 
-                <hr className="mt-5 border-border" />
-              </div>
-            )}
-
-            {/* category */}
-            {contentType === "events" ? (
-              <div>
-                <CategoryFilter
-                  handleCategory={handleCategory}
-                  category={category}
-                  classname="font-semibold md:text-lg"
-                />
-
-                <hr className="mt-5 border-border" />
-              </div>
-            ) : (
-              <div>
-                <PlaceCategoryPicker
-                  categoryId={placeCategoryId}
-                  onSelect={setPlaceCategoryId}
-                />
-
-                <hr className="mt-5 border-border" />
-              </div>
-            )}
-
-            {/* types -- Events only, Places has no "types" concept */}
-            {contentType === "events" && (
-              <div>
-                <TypeFilter
-                  selectedTypes={types}
-                  selectedCategory={category}
-                  handleType={handleType}
-                  classname="font-semibold md:text-lg"
-                />
-
-                <hr className="mt-5 border-border" />
-              </div>
-            )}
-
-            {/* Open now -- Places only, per spec no "Event date" shown here */}
-            {contentType === "places" && (
-              <div>
-                <label className="flex items-center justify-between font-semibold md:text-lg cursor-pointer">
-                  <span>Open now</span>
-                  <input
-                    type="checkbox"
-                    checked={openNowOnly}
-                    onChange={(e) => setOpenNowOnly(e.target.checked)}
-                    className="h-5 w-5 accent-primary"
-                  />
-                </label>
-
-                <hr className="mt-5 border-border" />
-              </div>
-            )}
-
-            {/* date -- Events only */}
-            {contentType === "events" && (
-              <div>
-                <h2 className="font-semibold md:text-lg mb-3">Date</h2>
-
-                <DateRangePickerSheet
-                  label="Event date range"
-                  value={date}
-                  onChange={setDate}
-                />
-
-                <hr className="mt-5 border-border" />
-              </div>
-            )}
-          </div>
-
-          {/* Rating */}
-          <div>
-            <TileSelector
-              mode="single"
-              label="Rating"
-              labelClassName="font-semibold md:text-lg mb-3"
-              options={rating.map((r) => ({ id: r, label: r }))}
-              value={ratingg}
-              onChange={setRating}
-            />
-
-            <hr className="mt-5 border-border" />
-          </div>
-
-          {/* Distance */}
-          <div>
-            <TileSelector
-              mode="single"
-              label="Distance"
-              labelClassName="font-semibold md:text-lg mb-3"
-              options={distances.map((d) => ({ id: d, label: d }))}
-              value={distance}
-              onChange={setDistance}
-            />
-
-            <hr className="mt-5 border-border" />
-          </div>
-
-          <div className="gap-2 justify-end pb-3 hidden md:flex">
-            <Button
-              onClick={handleReset}
-              variant="outline"
-              className="text-lg py-5 px-7 rounded-md"
-            >
-              Reset
-            </Button>
-            <Button
-              onClick={handleFilter}
-              className="text-lg py-5 px-7 rounded-md"
-            >
-              Filter
-            </Button>
-          </div>
-
-          <Button
-            onClick={handleFilter}
-            className="font-bold w-full rounded-md text-lg md:hidden p-6"
-          >
-            Filter
-          </Button>
+          <hr className="mt-5 border-border" />
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 }

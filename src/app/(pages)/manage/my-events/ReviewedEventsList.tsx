@@ -186,7 +186,7 @@ function ReviewedEventCard({ review }: { review: EventReviewRow }) {
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-overlay/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4">
           <div className="bg-card text-card-foreground rounded-lg p-6 w-full max-w-sm space-y-4 shadow-lg">
             <p className="font-medium">Delete your review?</p>
             <p className="text-sm text-muted-foreground">

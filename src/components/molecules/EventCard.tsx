@@ -1,15 +1,16 @@
 "use client";
 
+import { useAttendingEventIds } from "@/hooks/useAttendingEventIds";
 import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
-import Image from "next/image";
-import Link from "next/link";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
-import { MdOutlineDateRange } from "react-icons/md";
+import { MdConfirmationNumber, MdOutlineDateRange } from "react-icons/md";
 import EventCardMenuBtn from "../atoms/EventCardMenuBtn";
+import DiscoveryCardCoverImage from "./DiscoveryCardCoverImage";
+import DiscoveryCardTitleRow from "./DiscoveryCardTitleRow";
 
 export default function EventCard({
   title,
@@ -37,65 +38,64 @@ export default function EventCard({
     capacity,
     attendeeCount: attendees,
   });
+  const eventHref = `/events/${event_code.toLowerCase()}`;
+  const isAttending = useAttendingEventIds().has(id);
 
   return (
     <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
-      {/* Status Overlays */}
-      {(status === "canceled" || soldOut || overlayMessage) && (
-        <div
-          className={`absolute inset-0 z-10 flex items-center justify-center
-          ${status === "canceled" ? "bg-red-900/80" : "bg-black/70"}
-          backdrop-blur-sm text-mint font-bold text-lg md:text-xl p-4 text-center`}
-        >
-          {status === "canceled"
-            ? "Event Canceled"
-            : soldOut
-              ? "Sold Out"
-              : overlayMessage}
-        </div>
-      )}
-
-      {/* Flyer Image */}
-      <Link
-        href={`/events/${event_code.toLowerCase()}`}
-        className="block relative h-64 w-full overflow-hidden"
-      >
-        <Image
-          src={buildCloudinaryUrl(flyer_public_id, flyer_version, {
-            width: 420,
-            height: 256,
-          })}
-          alt={`Flyer for ${title}`}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={priority}
-        />
-
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </Link>
+      <DiscoveryCardCoverImage
+        href={eventHref}
+        src={buildCloudinaryUrl(flyer_public_id, flyer_version, {
+          width: 420,
+          height: 256,
+        })}
+        alt={`Flyer for ${title}`}
+        priority={priority}
+        cornerBadge={
+          isAttending && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-success-foreground shadow-md">
+              <MdConfirmationNumber className="text-sm" />
+              You're Going
+            </span>
+          )
+        }
+        centerOverlay={
+          // Scoped to the flyer image only (not the whole card, which
+          // previously sat on top of the title/menu/metadata below and
+          // silently blocked clicking any of them whenever an event was
+          // Ongoing/Sold Out/Canceled).
+          (status === "canceled" || soldOut || overlayMessage) && (
+            <div
+              className={`absolute inset-0 z-10 flex items-center justify-center pointer-events-none
+              ${status === "canceled" ? "bg-red-900/80" : "bg-black/70"}
+              backdrop-blur-sm text-mint font-bold text-lg md:text-xl p-4 text-center`}
+            >
+              {status === "canceled"
+                ? "Event Canceled"
+                : soldOut
+                  ? "Sold Out"
+                  : overlayMessage}
+            </div>
+          )
+        }
+      />
 
       {/* Card Content */}
       <div className="p-5 space-y-3">
-        <div className="flex justify-between items-start gap-3">
-          <Link
-            href={`/events/${event_code.toLowerCase()}`}
-            className="text-lg font-medium text-card-foreground hover:text-primary transition-colors line-clamp-2"
-            title={title}
-          >
-            {title}
-          </Link>
-
-          <EventCardMenuBtn
-            eventId={id}
-            eventTitle={title}
-            eventCode={event_code}
-            address={address.full_address}
-            organizerId={organizer_id}
-            eventStatus={status}
-          />
-        </div>
+        <DiscoveryCardTitleRow
+          href={eventHref}
+          title={title}
+          action={
+            <EventCardMenuBtn
+              eventId={id}
+              eventTitle={title}
+              eventCode={event_code}
+              address={address.full_address}
+              organizerId={organizer_id}
+              eventStatus={status}
+            />
+          }
+        />
 
         {/* Event Metadata */}
         <div className="space-y-2.5">

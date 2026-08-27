@@ -23,6 +23,7 @@ const TICKET_STATUS_KEY_PREFIXES = [
   "attending-events-counts",
   "attendance-list",
   "organizer-dashboard",
+  "attending-event-ids",
 ];
 
 function matchesAnyPrefix(key: unknown, prefixes: string[]) {

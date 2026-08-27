@@ -1,8 +1,8 @@
 import { postReview } from "@/actions/postReview";
 import { saveReviewDraft } from "@/actions/saveReviewDraft";
 import MaskIcon from "@/components/atoms/MaskIcon";
+import ModalShell from "@/components/atoms/ModalShell";
 import { supabase } from "@/config/supabase/client";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useToast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -59,8 +59,6 @@ export default function ReviewModal({
   onReviewSubmitted,
   onDraftSaved,
 }: ShowReviewModalProp) {
-  useBodyScrollLock(true);
-
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -201,7 +199,7 @@ export default function ReviewModal({
 
   return (
     <>
-      <div className="fixed top-0 left-0 h-dvh w-full bg-overlay/50 z-30 flex justify-center items-center">
+      <ModalShell open onClose={requestClose} title="Add Review">
         <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
           {/* header */}
           <div className="flex justify-between items-center">
@@ -304,7 +302,7 @@ export default function ReviewModal({
             </Form>
           </div>
         </div>
-      </div>
+      </ModalShell>
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog

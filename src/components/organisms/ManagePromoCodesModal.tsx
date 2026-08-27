@@ -4,9 +4,9 @@ import { deletePromoCode } from "@/actions/deletePromoCode";
 import type { EventPromoCode } from "@/actions/getEventPromoCodes";
 import { getEventPromoCodes } from "@/actions/getEventPromoCodes";
 import { updatePromoCode } from "@/actions/updatePromoCode";
+import ModalShell from "@/components/atoms/ModalShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -36,8 +36,6 @@ export default function ManagePromoCodesModal({
   eventId,
   handleClosePopup,
 }: ManagePromoCodesModalProps) {
-  useBodyScrollLock(true);
-
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -123,7 +121,12 @@ export default function ManagePromoCodesModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-background md:bg-overlay/50 md:flex md:items-center md:justify-center">
+      <ModalShell
+        open
+        onClose={() => handleClosePopup(false)}
+        title="Manage Promo Codes"
+        className="bg-background md:bg-transparent"
+      >
         <div className="flex flex-col h-full w-full md:h-[85%] md:w-[50%] lg:w-[40%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground p-4 overflow-y-auto space-y-4">
           <div className="flex items-center justify-between">
             <h1 className="text-lg font-bold">Manage Promo Codes</h1>
@@ -286,7 +289,7 @@ export default function ManagePromoCodesModal({
             </ul>
           )}
         </div>
-      </div>
+      </ModalShell>
 
       {deletingId && (
         <ConfirmDeleteModal

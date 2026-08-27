@@ -57,7 +57,9 @@ export default function PlacesSlider({ heading, places }: PlacesSliderProps) {
 
   return (
     <div>
-      <h2 className="font-medium text-lg mb-1">{heading}</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+        {heading}
+      </h2>
 
       <div className="relative">
         {showLeftArrow && (

@@ -5,8 +5,15 @@ import type {
   MomoPaymentMethodDetails,
   PaymentMethodRow,
 } from "@/actions/getUserPaymentMethods";
+import MaskIcon from "@/components/atoms/MaskIcon";
 import { cn } from "@/components/lib/utils";
 import { Button } from "@/components/ui/button";
+
+// Shared with WalletManager.tsx (the /wallet management list) and
+// PaymentMethodSelector.tsx (checkout) so this copy can't drift between the
+// two contexts a user might see it in.
+export const NO_PAYMENT_METHODS_MESSAGE =
+  "You haven't added a payment method yet.";
 
 type PaymentMethodCardProps = {
   method: PaymentMethodRow;
@@ -93,6 +100,18 @@ export default function PaymentMethodCard({
             )}
           </span>
         )}
+
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-muted">
+          <MaskIcon
+            src={
+              method.method_type === "momo"
+                ? "/assets/images/phone.svg"
+                : "/assets/images/bankCard.svg"
+            }
+            alt=""
+            className="h-4 w-4 bg-muted-foreground"
+          />
+        </span>
 
         <div>
           <p className="font-medium text-sm">{title}</p>

@@ -1,6 +1,7 @@
 import { addEventToFavorite } from "@/actions/addEventToFavorite";
 import { checkIfEventIsFavorited } from "@/actions/checkIfEventIsFavorited";
 import { removeEventFromFavorite } from "@/actions/removeEventFromFavorite";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,9 +9,14 @@ import { MdFavorite, MdFavoriteBorder } from "react-icons/md";
 
 type EventProp = {
   eventId: string;
+  /** Renders as a DropdownMenuItem (event card menu) instead of a plain button. */
+  asMenuItem?: boolean;
 };
 
-export default function AddToFavoriteButton({ eventId }: EventProp) {
+export default function AddToFavoriteButton({
+  eventId,
+  asMenuItem,
+}: EventProp) {
   const toast = useToast();
 
   const requireAuth = useRequireAuth();
@@ -85,22 +91,34 @@ export default function AddToFavoriteButton({ eventId }: EventProp) {
     if (await requireAuth()) mutate();
   };
 
-  return (
-    <>
-      <button
-        type="button"
-        className="flex items-center gap-1 p-1"
-        onClick={handleClick}
-        disabled={isPending}
-      >
-        {isFavorite ? (
-          <MdFavorite className="text-xl text-red-500" />
-        ) : (
-          <MdFavoriteBorder className="text-xl" />
-        )}
+  const icon = isFavorite ? (
+    <MdFavorite className="text-xl text-red-500" />
+  ) : (
+    <MdFavoriteBorder className="text-xl" />
+  );
 
+  if (asMenuItem) {
+    return (
+      <DropdownMenuItem
+        onSelect={handleClick}
+        disabled={isPending}
+        className="gap-2"
+      >
+        {icon}
         {buttonText}
-      </button>
-    </>
+      </DropdownMenuItem>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-1 p-1"
+      onClick={handleClick}
+      disabled={isPending}
+    >
+      {icon}
+      {buttonText}
+    </button>
   );
 }

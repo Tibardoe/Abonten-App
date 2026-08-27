@@ -4,6 +4,7 @@ import getEventReviewPhotoUploadSignature from "@/actions/getEventReviewPhotoUpl
 import { postEventReview } from "@/actions/postEventReview";
 import { updateEventReview } from "@/actions/updateEventReview";
 import MaskIcon from "@/components/atoms/MaskIcon";
+import ModalShell from "@/components/atoms/ModalShell";
 import StarRatingInput from "@/components/atoms/StarRatingInput";
 import ExistingReviewPhotoGrid from "@/components/molecules/ExistingReviewPhotoGrid";
 import ReviewPhotoPicker from "@/components/molecules/ReviewPhotoPicker";
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useReviewPhotoUpload } from "@/hooks/useReviewPhotoUpload";
 import { useToast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,8 +73,6 @@ export default function EventReviewModal({
   onReviewSubmitted,
   existingReview,
 }: EventReviewModalProps) {
-  useBodyScrollLock(true);
-
   const isEditing = !!existingReview;
   const queryClient = useQueryClient();
 
@@ -152,128 +150,130 @@ export default function EventReviewModal({
   };
 
   return (
-    <>
-      <div className="fixed top-0 left-0 h-dvh w-full bg-overlay/50 z-30 flex justify-center items-center">
-        <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
-          {/* header */}
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              className="md:hidden font-bold"
-              onClick={() => handleShowReviewModal(false)}
-            >
-              Cancel
-            </button>
+    <ModalShell
+      open
+      onClose={() => handleShowReviewModal(false)}
+      title={isEditing ? "Edit Review" : "Add Review"}
+    >
+      <div className="w-full self-end md:self-center h-[95%] md:h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
+        {/* header */}
+        <div className="flex justify-between items-center">
+          <button
+            type="button"
+            className="md:hidden font-bold"
+            onClick={() => handleShowReviewModal(false)}
+          >
+            Cancel
+          </button>
 
-            <h1 className="mx-auto text-xl md:text-2xl font-bold">
-              {isEditing ? "Edit Review" : "Add Review"}
-            </h1>
+          <h1 className="mx-auto text-xl md:text-2xl font-bold">
+            {isEditing ? "Edit Review" : "Add Review"}
+          </h1>
 
-            <button
-              type="submit"
-              className="md:hidden font-bold disabled:opacity-60"
-              disabled={isPending || photoUpload.isUploading}
-              onClick={handleSubmit(onSubmit)}
-            >
-              {isPending ? "Submitting..." : "Submit"}
-            </button>
+          <button
+            type="submit"
+            className="md:hidden font-bold disabled:opacity-60"
+            disabled={isPending || photoUpload.isUploading}
+            onClick={handleSubmit(onSubmit)}
+          >
+            {isPending ? "Submitting..." : "Submit"}
+          </button>
 
-            <button
-              type="button"
-              className="hidden md:flex"
-              onClick={() => handleShowReviewModal(false)}
-            >
-              <MaskIcon
-                src="/assets/images/circularCancel.svg"
-                alt="Cancel"
-                className="w-[25px] h-[25px] bg-foreground"
-              />
-            </button>
+          <button
+            type="button"
+            className="hidden md:flex"
+            onClick={() => handleShowReviewModal(false)}
+          >
+            <MaskIcon
+              src="/assets/images/circularCancel.svg"
+              alt="Cancel"
+              className="w-[25px] h-[25px] bg-foreground"
+            />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between md:flex-col md:justify-start md:items-start md:gap-2">
+            <p className="font-normal">Rate</p>
+            <StarRatingInput onChange={setRating} initialRating={rating} />
           </div>
+          {rating <= 0 && (
+            <p className="text-destructive text-sm">Rating required</p>
+          )}
 
-          {/* Content */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between md:flex-col md:justify-start md:items-start md:gap-2">
-              <p className="font-normal">Rate</p>
-              <StarRatingInput onChange={setRating} initialRating={rating} />
-            </div>
-            {rating <= 0 && (
-              <p className="text-destructive text-sm">Rating required</p>
-            )}
-
-            <Form {...form}>
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="flex flex-col gap-4"
-              >
-                <FormField
-                  control={control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0">
-                      <FormControl>
-                        <Input
-                          type="text"
-                          placeholder="Title (optional)"
-                          className="rounded-lg px-2 py-4 font-normal"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-sm" />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={control}
-                  name="comment"
-                  render={({ field }) => (
-                    <FormItem className="space-y-0">
-                      <FormControl>
-                        <Textarea
-                          rows={10}
-                          placeholder="Review (optional)"
-                          className="rounded-lg px-2 py-4 font-normal"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-sm" />
-                    </FormItem>
-                  )}
-                />
-
-                {isEditing && existingPhotos.length > 0 && (
-                  <ExistingReviewPhotoGrid
-                    photos={existingPhotos}
-                    onRemove={removeExistingPhoto}
-                  />
+          <Form {...form}>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-4"
+            >
+              <FormField
+                control={control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem className="space-y-0">
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Title (optional)"
+                        className="rounded-lg px-2 py-4 font-normal"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-sm" />
+                  </FormItem>
                 )}
+              />
 
-                <ReviewPhotoPicker
-                  items={photoUpload.items}
-                  atLimit={photoUpload.atLimit}
-                  onFilesSelected={photoUpload.addFiles}
-                  onRemove={photoUpload.remove}
+              <FormField
+                control={control}
+                name="comment"
+                render={({ field }) => (
+                  <FormItem className="space-y-0">
+                    <FormControl>
+                      <Textarea
+                        rows={10}
+                        placeholder="Review (optional)"
+                        className="rounded-lg px-2 py-4 font-normal"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage className="text-sm" />
+                  </FormItem>
+                )}
+              />
+
+              {isEditing && existingPhotos.length > 0 && (
+                <ExistingReviewPhotoGrid
+                  photos={existingPhotos}
+                  onRemove={removeExistingPhoto}
                 />
+              )}
 
-                <Button
-                  type="submit"
-                  disabled={isPending || photoUpload.isUploading}
-                  className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
-                >
-                  {isPending
-                    ? isEditing
-                      ? "Saving changes..."
-                      : "Adding review..."
-                    : isEditing
-                      ? "Save Changes"
-                      : "Add"}
-                </Button>
-              </form>
-            </Form>
-          </div>
+              <ReviewPhotoPicker
+                items={photoUpload.items}
+                atLimit={photoUpload.atLimit}
+                onFilesSelected={photoUpload.addFiles}
+                onRemove={photoUpload.remove}
+              />
+
+              <Button
+                type="submit"
+                disabled={isPending || photoUpload.isUploading}
+                className="rounded-md px-3 py-3 self-end font-bold hidden md:flex"
+              >
+                {isPending
+                  ? isEditing
+                    ? "Saving changes..."
+                    : "Adding review..."
+                  : isEditing
+                    ? "Save Changes"
+                    : "Add"}
+              </Button>
+            </form>
+          </Form>
         </div>
       </div>
-    </>
+    </ModalShell>
   );
 }

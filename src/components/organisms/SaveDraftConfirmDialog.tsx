@@ -1,4 +1,9 @@
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type SaveDraftConfirmDialogProps = {
   message: string;
@@ -10,7 +15,9 @@ type SaveDraftConfirmDialogProps = {
 
 // Three-way variant of ConfirmDeleteModal's pattern (same presentational,
 // action-agnostic shape) for the "Cancel with unsaved changes" prompt shared
-// by event creation and review authoring.
+// by event creation and review authoring. Escape/outside-click resolve to
+// "Continue Editing" -- the non-destructive, non-committal option -- rather
+// than either saving or discarding on the user's behalf.
 export default function SaveDraftConfirmDialog({
   message,
   isSaving,
@@ -18,25 +25,25 @@ export default function SaveDraftConfirmDialog({
   onDiscard,
   onContinueEditing,
 }: SaveDraftConfirmDialogProps) {
-  useBodyScrollLock(true);
-
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-40">
-      <div className="w-[85%] md:w-[30%] p-4 bg-card text-card-foreground rounded-xl shadow-lg">
-        <h1 className="text-md font-bold text-center pb-3">
+    <AlertDialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !isSaving) onContinueEditing();
+      }}
+    >
+      <AlertDialogContent preventCloseWhileBusy={isSaving}>
+        <AlertDialogTitle className="text-center">
           Save your progress?
-        </h1>
-
-        <hr className="border-border" />
-
-        <p className="text-center py-3 text-sm text-muted-foreground">
+        </AlertDialogTitle>
+        <AlertDialogDescription className="text-center">
           {message}
-        </p>
+        </AlertDialogDescription>
 
-        <div className="flex flex-col gap-2 text-sm">
+        <div className="flex flex-col gap-2 pt-1 text-sm">
           <button
             type="button"
-            className="rounded-md bg-primary text-primary-foreground px-3 py-2 hover:bg-primary/90 transition-colors"
+            className="rounded-md bg-primary px-3 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
             onClick={onSaveDraft}
             disabled={isSaving}
           >
@@ -44,7 +51,7 @@ export default function SaveDraftConfirmDialog({
           </button>
           <button
             type="button"
-            className="rounded-md border border-destructive text-destructive px-3 py-2 hover:bg-destructive/10 transition-colors"
+            className="rounded-md border border-destructive px-3 py-2 text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-60"
             onClick={onDiscard}
             disabled={isSaving}
           >
@@ -52,14 +59,14 @@ export default function SaveDraftConfirmDialog({
           </button>
           <button
             type="button"
-            className="rounded-md border border-border px-3 py-2 hover:bg-accent transition-colors"
+            className="rounded-md border border-border px-3 py-2 transition-colors hover:bg-accent disabled:opacity-60"
             onClick={onContinueEditing}
             disabled={isSaving}
           >
             Continue Editing
           </button>
         </div>
-      </div>
-    </div>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

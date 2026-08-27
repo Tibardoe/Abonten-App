@@ -1,6 +1,6 @@
+import ModalShell from "@/components/atoms/ModalShell";
 import MediaStage from "@/components/molecules/MediaStage";
 import VideoTrimEditor from "@/components/molecules/VideoTrimEditor";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useMediaSelection } from "@/hooks/useMediaSelection";
 import type { MediaItem } from "@/types/mediaItemType";
 import formatDuration from "@/utils/formatVideoDuration";
@@ -34,8 +34,6 @@ export default function HighlightModal({
   handleShowHighlightModal,
   onUpload,
 }: ClosePopupModalType) {
-  useBodyScrollLock(true);
-
   const {
     mediaItems,
     activeId,
@@ -260,7 +258,13 @@ export default function HighlightModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col items-center justify-center">
+    <ModalShell
+      open
+      onClose={handleCancelOrBack}
+      title="New Highlight"
+      overlayClassName="bg-overlay/90"
+      className="flex-col"
+    >
       {/* Header */}
       <div className="w-full flex justify-between items-center p-4 absolute top-0 z-10">
         <button
@@ -423,6 +427,6 @@ export default function HighlightModal({
           )}
         </div>
       </div>
-    </div>
+    </ModalShell>
   );
 }

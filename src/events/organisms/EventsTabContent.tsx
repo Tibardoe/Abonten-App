@@ -207,7 +207,7 @@ export default async function EventsTabContent({
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
-          <h2 className="text-lg font-medium">All Events</h2>
+          <h2 className="text-xl font-bold">All Events</h2>
           <ViewToggle view={view} />
         </div>
 

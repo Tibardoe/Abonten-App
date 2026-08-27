@@ -1,6 +1,6 @@
 "use client";
 
-import MaskIcon from "@/components/atoms/MaskIcon";
+import { BottomSheet } from "@/components/atoms/BottomSheet";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
 import PaymentOptionCard from "@/wallet/molecules/PaymentOptionCard";
 import { useState } from "react";
@@ -10,6 +10,11 @@ import AddMobileMoneyPayoutForm from "../molecules/AddMobileMoneyPayoutForm";
 type PopupCloseProp = {
   onclick: () => void;
   onAdded: (account: PayoutAccountRow) => void;
+};
+
+const STEP_TITLES: Record<string, string> = {
+  "Mobile Money": "Add Mobile Money Account",
+  "Bank Account": "Add Bank Account",
 };
 
 // Mirrors AddPaymentMethodPopup.tsx's exact two-step shell (choose type,
@@ -28,33 +33,18 @@ export default function AddPayoutAccountPopup({
   };
 
   return (
-    <div
-      onClick={onclick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          onclick();
-        }
-      }}
-      className="fixed top-0 left-0 z-30 bg-overlay/30 w-full min-h-dvh flex justify-center items-end md:items-center"
+    <BottomSheet
+      open
+      onClose={onclick}
+      title={
+        step === 1
+          ? "Add a payout account"
+          : (STEP_TITLES[title] ?? "Add payout account")
+      }
+      className="md:w-[30rem]"
     >
       {step === 1 && (
-        // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="w-full md:w-[60%] lg:w-[50%] bg-card text-card-foreground rounded-t-3xl md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
-        >
-          <div className="hidden md:flex justify-between items-center">
-            <h1 className="font-bold text-lg">Add payout account</h1>
-
-            <button type="button" onClick={onclick}>
-              <MaskIcon
-                src="/assets/images/circularCancel.svg"
-                alt="Close"
-                className="w-[25px] h-[25px] bg-foreground"
-              />
-            </button>
-          </div>
-
+        <div className="space-y-3">
           <PaymentOptionCard
             imgUrl="/assets/images/phone.svg"
             optionTitle="Mobile Money"
@@ -72,11 +62,11 @@ export default function AddPayoutAccountPopup({
       )}
 
       {step === 2 && title === "Mobile Money" && (
-        <AddMobileMoneyPayoutForm onclick={onclick} onSaved={onAdded} />
+        <AddMobileMoneyPayoutForm onSaved={onAdded} />
       )}
       {step === 2 && title === "Bank Account" && (
-        <AddBankPayoutForm onclick={onclick} onSaved={onAdded} />
+        <AddBankPayoutForm onSaved={onAdded} />
       )}
-    </div>
+    </BottomSheet>
   );
 }

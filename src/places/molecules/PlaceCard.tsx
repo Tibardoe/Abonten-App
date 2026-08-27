@@ -1,11 +1,11 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
+import DiscoveryCardCoverImage from "@/components/molecules/DiscoveryCardCoverImage";
+import DiscoveryCardTitleRow from "@/components/molecules/DiscoveryCardTitleRow";
 import type { PlaceType } from "@/types/placeType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@/utils/computePlaceOpenStatus";
-import Image from "next/image";
-import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";
 import AddPlaceToFavoriteButton from "./AddPlaceToFavoriteButton";
 import PlaceOpenStatusBadge from "./PlaceOpenStatusBadge";
@@ -31,42 +31,27 @@ export default function PlaceCard({
   const fullAddress =
     (address as { full_address?: string })?.full_address ??
     "Location not specified";
+  const placeHref = `/places/${slug}`;
 
   return (
     <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
-      {/* Cover Image */}
-      <Link
-        href={`/places/${slug}`}
-        className="block relative h-64 w-full overflow-hidden"
-      >
-        <Image
-          src={buildCloudinaryUrl(cover_public_id, cover_version, {
-            width: 420,
-            height: 256,
-          })}
-          alt={`Cover photo for ${name}`}
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={priority}
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </Link>
+      <DiscoveryCardCoverImage
+        href={placeHref}
+        src={buildCloudinaryUrl(cover_public_id, cover_version, {
+          width: 420,
+          height: 256,
+        })}
+        alt={`Cover photo for ${name}`}
+        priority={priority}
+      />
 
       {/* Card Content */}
       <div className="p-5 space-y-3">
-        <div className="flex justify-between items-start gap-3">
-          <Link
-            href={`/places/${slug}`}
-            className="text-lg font-medium text-card-foreground hover:text-primary transition-colors line-clamp-2"
-            title={name}
-          >
-            {name}
-          </Link>
-
-          <AddPlaceToFavoriteButton placeId={id} />
-        </div>
+        <DiscoveryCardTitleRow
+          href={placeHref}
+          title={name}
+          action={<AddPlaceToFavoriteButton placeId={id} />}
+        />
 
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">

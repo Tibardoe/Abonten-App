@@ -1,6 +1,6 @@
 "use client";
 
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import ModalShell from "@/components/atoms/ModalShell";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
 import dynamic from "next/dynamic";
@@ -23,7 +23,6 @@ const MapModal = dynamic(() => import("@/components/organisms/MapModal"), {
 export default function ChangeLocationModal({
   handleShowChangeLocationModal,
 }: ChangeLocationModalProp) {
-  useBodyScrollLock(true);
   const router = useRouter();
   const autoCompleteRef = useRef<AutoCompleteHandle>(null);
   const [isResolvingLocation, setIsResolvingLocation] = useState(false);
@@ -104,7 +103,11 @@ export default function ChangeLocationModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
+    <ModalShell
+      open
+      onClose={() => handleShowChangeLocationModal(false)}
+      title="Set your location"
+    >
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[80%] lg:w-[40%] md:rounded-xl p-5 space-y-10">
         <div className="flex justify-between">
           <h1 className="text-2xl font-bold mx-auto">Set your location</h1>
@@ -171,6 +174,6 @@ export default function ChangeLocationModal({
           onLocationSelect={handleLocationSelect}
         />
       )}
-    </div>
+    </ModalShell>
   );
 }

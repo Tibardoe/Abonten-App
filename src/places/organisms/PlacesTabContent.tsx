@@ -161,7 +161,7 @@ export default async function PlacesTabContent({
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">
-          <h2 className="text-lg font-medium">All Places</h2>
+          <h2 className="text-xl font-bold">All Places</h2>
           <ViewToggle view={view} />
         </div>
 

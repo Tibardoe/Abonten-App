@@ -3,7 +3,6 @@
 import addPaymentMethod from "@/actions/addPaymentMethod";
 import getPaystackMobileMoneyNetworks from "@/actions/getPaystackMobileMoneyNetworks";
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
-import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -25,7 +24,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 type PopupCloseProp = {
-  onclick: () => void;
   onSaved: (method: PaymentMethodRow) => void;
 };
 
@@ -37,7 +35,7 @@ function normalizeGhanaPhone(phone: string): string {
   return `+233${phoneNumberFormatter(trimmed)}`;
 }
 
-export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
+export default function AddMomoWallet({ onSaved }: PopupCloseProp) {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -87,40 +85,10 @@ export default function AddMomoWallet({ onclick, onSaved }: PopupCloseProp) {
   };
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-card text-card-foreground md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
-    >
-      <div className="hidden md:flex justify-between items-center">
-        <h1 className="font-bold text-lg">Add Mobile Money Wallet</h1>
-
-        <button type="button" onClick={onclick}>
-          <MaskIcon
-            src="/assets/images/circularCancel.svg"
-            alt="Close"
-            className="w-[25px] h-[25px] bg-foreground"
-          />
-        </button>
-      </div>
-
-      {/* Mobile header */}
-      <div className="flex flex-col gap-2 md:hidden pb-10">
-        <div className="flex items-center w-full">
-          <button type="button" onClick={onclick}>
-            <MaskIcon
-              src="/assets/images/arrowLeft.svg"
-              alt="Close"
-              className="self-start w-[30px] h-[30px]"
-            />
-          </button>
-          <h1 className="font-bold text-xl m-auto">Add Mobile Money Wallet</h1>
-        </div>
-
-        <p className="text-center text-sm">
-          Save your mobile money wallet for faster checkout
-        </p>
-      </div>
+    <div className="space-y-5">
+      <p className="text-sm text-muted-foreground">
+        Save your mobile money wallet for faster checkout.
+      </p>
 
       <Form {...form}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">

@@ -8,7 +8,9 @@ import setDefaultPaymentMethod from "@/actions/setDefaultPaymentMethod";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
-import PaymentMethodCard from "@/wallet/molecules/PaymentMethodCard";
+import PaymentMethodCard, {
+  NO_PAYMENT_METHODS_MESSAGE,
+} from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -183,7 +185,7 @@ export default function WalletManager({
     <div className="space-y-4">
       {methods.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          You haven't added a payment method yet.
+          {NO_PAYMENT_METHODS_MESSAGE}
         </p>
       ) : (
         <div className="space-y-3">

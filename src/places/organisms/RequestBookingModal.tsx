@@ -1,7 +1,7 @@
 "use client";
 
 import { requestPlaceBooking } from "@/actions/requestPlaceBooking";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import ModalShell from "@/components/atoms/ModalShell";
 import { useToast } from "@/hooks/useToast";
 import { useState } from "react";
 
@@ -34,8 +34,6 @@ export default function RequestBookingModal({
   onClose,
   onSubmitted,
 }: RequestBookingModalProps) {
-  useBodyScrollLock(true);
-
   const toast = useToast();
 
   const [serviceId, setServiceId] = useState("");
@@ -91,104 +89,102 @@ export default function RequestBookingModal({
   };
 
   return (
-    <>
-      <div className="fixed top-0 left-0 h-dvh w-full bg-overlay/50 z-30 flex justify-center items-center">
-        <div className="w-full self-end md:self-center h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
-          <div className="flex justify-between items-center gap-3">
-            <h1 className="text-xl font-bold">Book {placeName}</h1>
+    <ModalShell open onClose={onClose} title={`Book ${placeName}`}>
+      <div className="w-full self-end md:self-center h-fit p-4 md:w-[70%] lg:w-[40%] bg-card text-card-foreground md:p-4 rounded-lg space-y-5">
+        <div className="flex justify-between items-center gap-3">
+          <h1 className="text-xl font-bold">Book {placeName}</h1>
+          <button
+            type="button"
+            onClick={onClose}
+            className="font-bold text-muted-foreground hover:text-foreground shrink-0"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {submitted ? (
+          <div className="space-y-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Your booking request has been sent. The owner will accept or
+              decline it soon.
+            </p>
             <button
               type="button"
               onClick={onClose}
-              className="font-bold text-muted-foreground hover:text-foreground shrink-0"
-              aria-label="Close"
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
             >
-              ✕
+              Close
             </button>
           </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              This is a request only -- payment, if any, is arranged directly
+              with the owner.
+            </p>
 
-          {submitted ? (
-            <div className="space-y-4 text-center">
-              <p className="text-sm text-muted-foreground">
-                Your booking request has been sent. The owner will accept or
-                decline it soon.
-              </p>
+            {services.length > 0 && (
+              <select
+                value={serviceId}
+                onChange={(e) => setServiceId(e.target.value)}
+                className="w-full rounded-md border border-input bg-background p-2 text-sm"
+              >
+                <option value="">No specific service</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <input
+              type="datetime-local"
+              value={requestedTime}
+              min={minDateTime}
+              onChange={(e) => setRequestedTime(e.target.value)}
+              className="w-full rounded-md border border-input bg-background p-2 text-sm"
+            />
+
+            <input
+              type="number"
+              min={1}
+              placeholder="Party size (optional)"
+              value={partySize}
+              onChange={(e) => setPartySize(e.target.value)}
+              className="w-full rounded-md border border-input bg-background p-2 text-sm"
+            />
+
+            <textarea
+              rows={3}
+              placeholder="Note for the owner (optional)"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full rounded-md border border-input bg-background p-2 text-sm"
+            />
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSubmit}
+                className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+              >
+                {isSubmitting ? "Sending..." : "Request Booking"}
+              </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
+                disabled={isSubmitting}
+                className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
               >
-                Close
+                Cancel
               </button>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                This is a request only -- payment, if any, is arranged directly
-                with the owner.
-              </p>
-
-              {services.length > 0 && (
-                <select
-                  value={serviceId}
-                  onChange={(e) => setServiceId(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background p-2 text-sm"
-                >
-                  <option value="">No specific service</option>
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              <input
-                type="datetime-local"
-                value={requestedTime}
-                min={minDateTime}
-                onChange={(e) => setRequestedTime(e.target.value)}
-                className="w-full rounded-md border border-input bg-background p-2 text-sm"
-              />
-
-              <input
-                type="number"
-                min={1}
-                placeholder="Party size (optional)"
-                value={partySize}
-                onChange={(e) => setPartySize(e.target.value)}
-                className="w-full rounded-md border border-input bg-background p-2 text-sm"
-              />
-
-              <textarea
-                rows={3}
-                placeholder="Note for the owner (optional)"
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                className="w-full rounded-md border border-input bg-background p-2 text-sm"
-              />
-
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleSubmit}
-                  className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
-                >
-                  {isSubmitting ? "Sending..." : "Request Booking"}
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                  className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
-    </>
+    </ModalShell>
   );
 }

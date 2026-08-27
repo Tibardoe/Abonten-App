@@ -2,7 +2,7 @@
 
 import getOrganizerPayoutAccounts from "@/actions/getOrganizerPayoutAccounts";
 import requestOrganizerPayout from "@/actions/requestOrganizerPayout";
-import MaskIcon from "@/components/atoms/MaskIcon";
+import { BottomSheet } from "@/components/atoms/BottomSheet";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -109,32 +109,13 @@ export default function WithdrawModal({
   };
 
   return (
-    <div
-      onClick={onClose}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClose();
-      }}
-      className="fixed top-0 left-0 z-30 bg-overlay/30 w-full min-h-dvh flex justify-center items-end md:items-center"
+    <BottomSheet
+      open
+      onClose={onClose}
+      title={step === "success" ? "Withdrawal requested" : "Withdraw funds"}
+      className="md:w-[28rem]"
     >
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="w-full h-screen md:h-fit md:w-[60%] lg:w-[45%] bg-card text-card-foreground rounded-t-3xl md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
-      >
-        <div className="flex justify-between items-center">
-          <h1 className="font-bold text-lg">
-            {step === "success" ? "Withdrawal requested" : "Withdraw funds"}
-          </h1>
-
-          <button type="button" onClick={onClose}>
-            <MaskIcon
-              src="/assets/images/circularCancel.svg"
-              alt="Close"
-              className="w-[25px] h-[25px] bg-foreground"
-            />
-          </button>
-        </div>
-
+      <div className="space-y-5">
         {step === "form" && (
           <Form {...form}>
             <form onSubmit={goToConfirm} className="flex flex-col gap-5">
@@ -295,6 +276,6 @@ export default function WithdrawModal({
           </div>
         )}
       </div>
-    </div>
+    </BottomSheet>
   );
 }

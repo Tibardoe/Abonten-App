@@ -1,10 +1,12 @@
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
+import ModalShell from "@/components/atoms/ModalShell";
+import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
 import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import {
   formatDateWithSuffix,
   getFormattedEventDate,
 } from "@/utils/dateFormatter";
+import { SHIMMER_BLUR_DATA_URL } from "@/utils/imagePlaceholder";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
@@ -26,8 +28,6 @@ export default function TicketModal({
   handleShowTicket,
   event,
 }: ReceiptButtonProp) {
-  useBodyScrollLock(true);
-
   const handleDOwnloadPdf = async () => {
     // Same TicketPdfDocument the purchase-confirmation email attaches
     // server-side — this is the one canonical ticket PDF, just generated
@@ -47,7 +47,11 @@ export default function TicketModal({
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
+    <ModalShell
+      open
+      onClose={() => handleShowTicket(false)}
+      title={`Ticket receipt — ${event.event.title}`}
+    >
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[35%] md:rounded-xl p-3 space-y-5 overflow-y-scroll">
         <button
           type="button"
@@ -77,10 +81,13 @@ export default function TicketModal({
                 alt={event.event.title}
                 fill
                 className="object-cover rounded-t-2xl"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 35vw"
+                placeholder="blur"
+                blurDataURL={SHIMMER_BLUR_DATA_URL}
               />
             </div>
             <div className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between gap-2">
                 <Link
                   href={`/events/${event.event.event_code.toLowerCase()}`}
                   className="text-xl font-semibold mb-2"
@@ -88,31 +95,24 @@ export default function TicketModal({
                   {event.event.title}
                 </Link>
 
-                <p className="text-sm text-muted-foreground mb-2 font-bold">
-                  Ticket Type:{" "}
-                  <span className="font-mono text-foreground">
-                    {event.ticket_type.type}
-                  </span>
-                </p>
+                <TicketStatusBadge
+                  status={event.status}
+                  cancelledByOrganizer={event.event.status === "canceled"}
+                />
               </div>
+
+              <p className="text-sm text-muted-foreground mb-2 font-bold">
+                Ticket Type:{" "}
+                <span className="font-mono text-foreground">
+                  {event.ticket_type.type}
+                </span>
+              </p>
 
               <p className="text-sm text-muted-foreground mb-2">
                 Ticket Code:{" "}
                 <span className="font-mono text-foreground">
                   {event.ticket_code}
                 </span>
-              </p>
-              <p className="text-sm text-muted-foreground mb-2">
-                Status:{" "}
-                {event.status === "cancelled" ? (
-                  <span className="font-semibold text-destructive">
-                    Cancelled
-                  </span>
-                ) : event.status === "used" ? (
-                  <span className="font-semibold text-success">Checked in</span>
-                ) : (
-                  <span className="font-semibold text-success">Active</span>
-                )}
               </p>
 
               <p className="text-sm text-muted-foreground mb-4">
@@ -145,6 +145,7 @@ export default function TicketModal({
                     alt={event.event.title}
                     fill
                     className="object-contain"
+                    sizes="224px"
                   />
                 </div>
               </div>
@@ -161,6 +162,6 @@ export default function TicketModal({
           Download As PDF
         </Button>
       </div>
-    </div>
+    </ModalShell>
   );
 }

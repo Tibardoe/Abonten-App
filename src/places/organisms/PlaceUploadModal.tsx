@@ -1,8 +1,8 @@
 "use client";
 
+import ModalShell from "@/components/atoms/ModalShell";
 import UploadStepHeader from "@/components/molecules/UploadStepHeader";
 import SaveDraftConfirmDialog from "@/components/organisms/SaveDraftConfirmDialog";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useCroppedImage } from "@/hooks/useCroppedImage";
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
@@ -60,8 +60,6 @@ export default function PlaceUploadModal({
   existingCoverPreviewUrl,
   onDraftSaved,
 }: PlaceUploadModalProps) {
-  useBodyScrollLock(true);
-
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -151,7 +149,12 @@ export default function PlaceUploadModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-30 bg-background md:bg-overlay/50 md:flex md:items-center md:justify-center">
+      <ModalShell
+        open
+        onClose={requestClose}
+        title="Create Place"
+        className="bg-background md:bg-transparent"
+      >
         <div className="flex flex-col h-full w-full md:h-[95%] md:w-[70%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground py-3 overflow-y-auto">
           <input
             type="file"
@@ -247,7 +250,7 @@ export default function PlaceUploadModal({
             </>
           )}
         </div>
-      </div>
+      </ModalShell>
 
       {showCancelConfirm && (
         <SaveDraftConfirmDialog

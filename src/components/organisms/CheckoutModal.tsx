@@ -1,10 +1,10 @@
 import getPromoCode from "@/actions/getPromoCode";
 import { getTickets } from "@/actions/getTickets";
 import validateCheckout from "@/actions/validateCheckout";
+import ModalShell from "@/components/atoms/ModalShell";
 import CheckoutOrderTotals from "@/components/molecules/CheckoutOrderTotals";
 import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
-import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { useToast } from "@/hooks/useToast";
 import {
   allocatePromoEligibility,
@@ -41,8 +41,6 @@ export default function CheckoutModal({
   time,
   date,
 }: CheckoutProp) {
-  useBodyScrollLock(true);
-
   const [promoCodeInput, setPromoCodeInput] = useState("");
 
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
@@ -248,7 +246,11 @@ export default function CheckoutModal({
     : null;
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-30">
+    <ModalShell
+      open
+      onClose={() => handleCheckoutModal(false)}
+      title={`Checkout — ${eventTitle}`}
+    >
       <div className="w-full h-full bg-card text-card-foreground md:w-[60%] md:h-[90%] lg:w-[40%] md:rounded-xl py-5 space-y-5">
         {/* Header */}
         <div className="space-y-5">
@@ -366,6 +368,6 @@ export default function CheckoutModal({
           </button>
         </div>
       </div>
-    </div>
+    </ModalShell>
   );
 }

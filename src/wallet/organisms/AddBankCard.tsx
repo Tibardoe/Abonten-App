@@ -3,7 +3,6 @@
 import confirmCardVerification from "@/actions/confirmCardVerification";
 import type { PaymentMethodRow } from "@/actions/getUserPaymentMethods";
 import initCardVerification from "@/actions/initCardVerification";
-import MaskIcon from "@/components/atoms/MaskIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +14,6 @@ import Script from "next/script";
 import { useState } from "react";
 
 type PopupCloseProp = {
-  onclick: () => void;
   onSaved: (method: PaymentMethodRow) => void;
 };
 
@@ -34,7 +32,7 @@ type CardFlowState =
  * only the safe display fields + the authorization token. No card number
  * or CVV is ever collected by this form — there is no form.
  */
-export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
+export default function AddBankCard({ onSaved }: PopupCloseProp) {
   const [label, setLabel] = useState("");
   const [state, setState] = useState<CardFlowState>({ phase: "idle" });
 
@@ -93,47 +91,12 @@ export default function AddBankCard({ onclick, onSaved }: PopupCloseProp) {
     state.phase === "confirming";
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="w-full h-screen md:h-fit md:w-[60%] lg:w-[50%] bg-card text-card-foreground md:rounded-xl pt-5 p-3 md:p-5 space-y-5 pb-16 md:pb-20"
-    >
+    <div className="space-y-5">
       <Script src={PAYSTACK_INLINE_SCRIPT_SRC} strategy="afterInteractive" />
 
-      <div className="hidden md:flex justify-between items-center">
-        <div>
-          <h1 className="font-bold text-lg">Add Bank Card</h1>
-          <p className="text-muted-foreground">
-            Save your Visa or Mastercard for faster checkout
-          </p>
-        </div>
-
-        <button type="button" onClick={onclick}>
-          <MaskIcon
-            src="/assets/images/circularCancel.svg"
-            alt="Close"
-            className="w-[25px] h-[25px] bg-foreground"
-          />
-        </button>
-      </div>
-
-      {/* Mobile header */}
-      <div className="flex flex-col gap-2 md:hidden pb-10">
-        <div className="flex items-center w-full">
-          <button type="button" onClick={onclick}>
-            <MaskIcon
-              src="/assets/images/arrowLeft.svg"
-              alt="Close"
-              className="self-start w-[30px] h-[30px]"
-            />
-          </button>
-          <h1 className="font-bold text-xl m-auto">Add Bank Card</h1>
-        </div>
-
-        <p className="text-center text-sm">
-          Save your Visa or Mastercard for faster checkout
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Save your Visa or Mastercard for faster checkout.
+      </p>
 
       <div className="flex flex-col gap-5">
         <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">

@@ -6,6 +6,10 @@ import DeleteEventButton from "../atoms/DeleteEventButton";
 import EditEventButton from "../atoms/EditEventButton";
 import ManagePromoCodesButton from "../atoms/ManagePromoCodesButton";
 import ShareButton from "../atoms/ShareButton";
+import {
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+} from "../ui/dropdown-menu";
 
 type EventProp = {
   eventId: string;
@@ -14,8 +18,17 @@ type EventProp = {
   address: string;
   organizerId?: string;
   eventStatus?: string;
+  /** Closes the parent dropdown -- passed to the items that open their own
+   * confirmation dialog, so finishing (or backing out of) that dialog also
+   * closes the menu it was opened from. */
+  onRequestClose: () => void;
 };
 
+// Content for EventCardMenuBtn's DropdownMenu -- built on shadcn/Radix
+// DropdownMenu (see ManageMenu.tsx, which established this pattern) instead
+// of a hand-rolled absolutely-positioned div, so this menu gets real focus
+// trapping, arrow-key navigation, typeahead, and outside-click/Escape
+// dismissal for free.
 export default function EventCardMenuModal({
   eventId,
   eventTitle,
@@ -23,6 +36,7 @@ export default function EventCardMenuModal({
   eventCode,
   organizerId,
   eventStatus,
+  onRequestClose,
 }: EventProp) {
   const shareUrl = getEventShareUrl(eventCode, address);
 
@@ -34,41 +48,44 @@ export default function EventCardMenuModal({
   const isCancelled = eventStatus === "canceled";
 
   return (
-    <div className="bg-popover absolute right-2 rounded-md border border-border shadow-lg p-3 min-w-60 font-medium flex flex-col gap-3 text-popover-foreground overflow-y-scroll h-36">
-      <AddToFavoriteButton eventId={eventId} />
+    <DropdownMenuContent align="end" className="w-60 font-medium">
+      <AddToFavoriteButton eventId={eventId} asMenuItem />
 
-      <hr className="border-border" />
-
-      <ShareButton title={eventTitle} url={shareUrl} />
+      <ShareButton title={eventTitle} url={shareUrl} asMenuItem />
 
       {isOrganizer && (
         <>
-          <hr className="border-border" />
-          <EditEventButton eventId={eventId} />
+          <DropdownMenuSeparator />
+          <EditEventButton eventId={eventId} asMenuItem />
 
           {!isCancelled && (
-            <>
-              <hr className="border-border" />
-              <ManagePromoCodesButton eventId={eventId} />
-            </>
+            <ManagePromoCodesButton
+              eventId={eventId}
+              asMenuItem
+              onRequestClose={onRequestClose}
+            />
           )}
 
           {isCancelled ? (
-            <p className="p-1 text-sm text-muted-foreground">
+            <p className="px-2 py-1.5 text-sm text-muted-foreground">
               This event has been cancelled
             </p>
           ) : (
-            <>
-              <hr className="border-border" />
-              <CancelButton eventId={eventId} />
-            </>
+            <CancelButton
+              eventId={eventId}
+              asMenuItem
+              onRequestClose={onRequestClose}
+            />
           )}
 
-          <hr className="border-border" />
-          <DeleteEventButton eventId={eventId} />
-          <hr className="border-border" />
+          <DropdownMenuSeparator />
+          <DeleteEventButton
+            eventId={eventId}
+            asMenuItem
+            onRequestClose={onRequestClose}
+          />
         </>
       )}
-    </div>
+    </DropdownMenuContent>
   );
 }

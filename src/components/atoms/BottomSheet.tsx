@@ -14,13 +14,14 @@ type BottomSheetProps = {
   className?: string;
 };
 
-// Shared iPhone-inspired picker shell: slides up from the bottom on mobile
-// (matching FilterModalPopup's own bottom-sheet convention) and settles into
-// a small centered panel on desktop, instead of every picker (date, date
-// range) reinventing its own overlay/focus/scroll-lock handling. Kept
-// intentionally lighter than a full dialog primitive -- no Radix Dialog
-// dependency exists in this repo yet, and this only needs to trap Escape and
-// return focus, not the full modal stack behavior a generic Dialog would add.
+// Shared mobile-sheet/desktop-centered-panel shell used by date pickers, the
+// discovery filter modal, and the add-payment-method wizard, instead of each
+// one reinventing its own overlay/focus/scroll-lock handling. Kept
+// intentionally lighter than the Radix Dialog primitive (src/components/ui/
+// dialog.tsx) -- this only needs to trap Escape and return focus, not the
+// full modal stack/portal behavior a generic Dialog adds, and every caller
+// here already renders content shaped for a single title + scrollable body
+// + optional footer.
 export function BottomSheet({
   open,
   onClose,
@@ -63,7 +64,7 @@ export function BottomSheet({
         type="button"
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0 bg-overlay/40"
+        className="absolute inset-0 bg-overlay/50"
       />
 
       {/* Rendered open (no showModal()) so it stays in normal flow, sized

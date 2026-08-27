@@ -22,7 +22,7 @@ export default function NewPlaceOrDraftChooser({
   const router = useRouter();
 
   return (
-    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-40">
+    <div className="fixed top-0 left-0 w-full h-dvh bg-overlay/50 flex justify-center items-center z-50">
       <div className="w-[85%] md:w-[30%] p-4 bg-card text-card-foreground rounded-xl shadow-lg">
         <h1 className="text-md font-bold text-center pb-3">Add Place</h1>
         <hr className="border-border" />

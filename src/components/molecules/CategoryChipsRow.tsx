@@ -23,12 +23,18 @@ export default function CategoryChipsRow({
   items: CategoryChipItem[];
 }) {
   return (
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+    <div
+      className={cn(
+        "flex gap-2 overflow-x-auto scroll-smooth scrollbar-hide snap-x snap-proximity pt-1 pb-2",
+        "[mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)]",
+        "[-webkit-mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)]",
+      )}
+    >
       <Link
         href={allHref}
         scroll={false}
         className={cn(
-          "shrink-0 px-3.5 py-1.5 rounded-full text-sm border border-border transition-colors",
+          "shrink-0 snap-start px-4 py-2 rounded-full text-sm border border-border transition-colors",
           allSelected
             ? "bg-primary text-primary-foreground border-primary"
             : "bg-muted text-muted-foreground hover:bg-accent",
@@ -43,7 +49,7 @@ export default function CategoryChipsRow({
           href={item.href}
           scroll={false}
           className={cn(
-            "shrink-0 px-3.5 py-1.5 rounded-full text-sm border border-border transition-colors",
+            "shrink-0 snap-start px-4 py-2 rounded-full text-sm border border-border transition-colors",
             item.selected
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-muted text-muted-foreground hover:bg-accent",
