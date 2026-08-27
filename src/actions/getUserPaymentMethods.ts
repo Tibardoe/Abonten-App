@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export type MomoPaymentMethodDetails = {
   networkCode: string;
@@ -58,7 +59,7 @@ export default async function getUserPaymentMethods(): Promise<GetUserPaymentMet
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.log(`Failed fetching payment methods: ${error.message}`);
+    logger.error(`Failed fetching payment methods: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

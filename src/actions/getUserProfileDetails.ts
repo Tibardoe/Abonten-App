@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export async function getUserProfileDetails(username: string) {
   try {
@@ -36,7 +37,7 @@ export async function getUserProfileDetails(username: string) {
 
     return { status: 200, data, ownUsername };
   } catch (error) {
-    console.error("Error fetching user profile", error);
+    logger.error("Error fetching user profile", error);
     return { status: 500, message: "Internal server error" };
   }
 }

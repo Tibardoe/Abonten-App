@@ -1,6 +1,7 @@
 import type { MediaItem } from "@/types/mediaItemType";
 import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
 import { generateVideoThumbnailStrip } from "@/utils/generateVideoThumbnailStrip";
+import { logger } from "@/utils/logger";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./useToast";
 
@@ -145,11 +146,7 @@ export function useMediaSelection() {
 
             thumbnail = await generateVideoThumbnail(file);
           } catch (e) {
-            console.error(
-              "Skipping video due to metadata error:",
-              file.name,
-              e,
-            );
+            logger.error("Skipping video due to metadata error:", file.name, e);
             URL.revokeObjectURL(url);
             continue;
           }

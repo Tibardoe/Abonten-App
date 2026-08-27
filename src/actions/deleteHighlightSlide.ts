@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -52,14 +53,14 @@ export async function deleteHighlightSlide(slideId: string) {
       });
 
       if (result.result !== "ok" && result.result !== "not found") {
-        console.error("Cloudinary destroy returned unexpected result:", result);
+        logger.error("Cloudinary destroy returned unexpected result:", result);
         return {
           status: 500,
           message: "Failed to delete slide media. Please try again.",
         };
       }
     } catch (cloudError) {
-      console.error("Cloudinary deletion failed:", cloudError);
+      logger.error("Cloudinary deletion failed:", cloudError);
       return {
         status: 500,
         message: "Failed to delete slide media. Please try again.",

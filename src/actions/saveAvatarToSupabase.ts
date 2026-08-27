@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export async function saveToSupabase(
   publicId: string,
@@ -12,7 +13,7 @@ export async function saveToSupabase(
   const { data: user, error: userError } = await supabase.auth.getUser();
 
   if (userError) {
-    console.error("saveAvatarToSupabase: failed to fetch user", userError);
+    logger.error("saveAvatarToSupabase: failed to fetch user", userError);
     return {
       status: 500,
       message: "We couldn't load your account. Please try again.",
@@ -29,7 +30,7 @@ export async function saveToSupabase(
     .eq("id", user.user.id);
 
   if (updateError) {
-    console.error(
+    logger.error(
       "saveAvatarToSupabase: failed to update user_info",
       updateError,
     );
@@ -50,7 +51,7 @@ export async function saveToSupabase(
     .eq("user_id", user.user.id);
 
   if (insertEror) {
-    console.error(
+    logger.error(
       "saveAvatarToSupabase: failed to record image history",
       insertEror,
     );

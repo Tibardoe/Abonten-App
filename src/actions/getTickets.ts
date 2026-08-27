@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export async function getTickets(eventId: string) {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export async function getTickets(eventId: string) {
     .eq("event_id", eventId);
 
   if (!tickets || ticketsError) {
-    console.log(`Error fetching tickets: ${ticketsError?.message}`);
+    logger.error(`Error fetching tickets: ${ticketsError?.message}`);
 
     return {
       status: 500,

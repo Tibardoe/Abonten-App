@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getSimilarEvents(
@@ -20,7 +21,7 @@ export async function getSimilarEvents(
     .limit(20);
 
   if (similarEventsError) {
-    console.log(similarEventsError.message);
+    logger.error(similarEventsError.message);
 
     return {
       status: 500,

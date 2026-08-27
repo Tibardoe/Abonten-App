@@ -3,6 +3,7 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
+import { logger } from "@/utils/logger";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -96,7 +97,7 @@ export default function ChangeLocationModal({
       router.push(`/explore/current-location?lat=${latitude}&lng=${longitude}`);
       handleShowChangeLocationModal(false);
     } catch (error) {
-      console.error("Unable to resolve location:", error);
+      logger.error("Unable to resolve location:", error);
     } finally {
       setIsResolvingLocation(false);
     }

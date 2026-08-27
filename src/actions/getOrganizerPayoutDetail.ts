@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { OrganizerPayoutDetail } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 
 type GetOrganizerPayoutDetailResult =
   | { status: 401 | 403 | 404 | 500; message: string }
@@ -36,7 +37,7 @@ export default async function getOrganizerPayoutDetail(
     .maybeSingle();
 
   if (error) {
-    console.log(`Failed fetching payout detail: ${error.message}`);
+    logger.error(`Failed fetching payout detail: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

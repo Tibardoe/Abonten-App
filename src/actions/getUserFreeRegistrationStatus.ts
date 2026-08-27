@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Whether the current user has an active free-event registration
@@ -33,7 +34,7 @@ export default async function getUserFreeRegistrationStatus(eventId: string) {
     .maybeSingle();
 
   if (error) {
-    console.log(`Failed fetching free registration status: ${error.message}`);
+    logger.error(`Failed fetching free registration status: ${error.message}`);
     return { status: 500, isAttending: false, ticketId: null };
   }
 

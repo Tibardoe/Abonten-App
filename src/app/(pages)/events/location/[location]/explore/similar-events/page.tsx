@@ -3,6 +3,7 @@ import EventCard from "@/components/molecules/EventCard";
 import type { UserPostType } from "@/types/postsType";
 import { undoSlug } from "@/utils/geerateSlug";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { logger } from "@/utils/logger";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -39,7 +40,7 @@ export default async function page({
 
   if (response.status !== 200) {
     errorMessage = response.message;
-    console.log(errorMessage);
+    logger.error(errorMessage);
   }
 
   const events: UserPostType[] = response.similarEvents;

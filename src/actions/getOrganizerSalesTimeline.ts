@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import {
   type DashboardPeriod,
   getDashboardPeriodRange,
@@ -29,7 +30,7 @@ export default async function getOrganizerSalesTimeline(
   });
 
   if (error) {
-    console.error("Supabase error:", error.message);
+    logger.error("Supabase error:", error.message);
     return { status: 500 as const, message: "Something went wrong!" };
   }
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Marks one payment method as the user's default, unsetting any previous
@@ -32,7 +33,7 @@ export default async function setDefaultPaymentMethod(paymentMethodId: string) {
     .maybeSingle();
 
   if (fetchError) {
-    console.log(`Failed fetching payment method: ${fetchError.message}`);
+    logger.error(`Failed fetching payment method: ${fetchError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -48,7 +49,7 @@ export default async function setDefaultPaymentMethod(paymentMethodId: string) {
     .neq("id", paymentMethodId);
 
   if (unsetError) {
-    console.log(`Failed clearing previous default: ${unsetError.message}`);
+    logger.error(`Failed clearing previous default: ${unsetError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -60,7 +61,7 @@ export default async function setDefaultPaymentMethod(paymentMethodId: string) {
     .eq("status", "active");
 
   if (setError) {
-    console.log(`Failed setting default payment method: ${setError.message}`);
+    logger.error(`Failed setting default payment method: ${setError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

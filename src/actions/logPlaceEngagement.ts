@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 // Mirrors place_analytics_event_type_check in the migration exactly --
 // "promotion_impression" added by 20260826090000_add_place_promotions.sql's
@@ -40,7 +41,7 @@ export async function logPlaceEngagement(placeId: string, eventType: string) {
   });
 
   if (error) {
-    console.log(`Error logging place engagement: ${error.message}`);
+    logger.error(`Error logging place engagement: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

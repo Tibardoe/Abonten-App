@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -56,7 +57,7 @@ export async function removePlacePhoto(photoId: string) {
   try {
     await cloudinary.uploader.destroy(typedPhoto.public_id);
   } catch (cloudError) {
-    console.error("Cloudinary deletion of place photo failed:", cloudError);
+    logger.error("Cloudinary deletion of place photo failed:", cloudError);
     // Not failing the whole removal if Cloudinary cleanup fails, same as
     // deleteEvent.ts.
   }

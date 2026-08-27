@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export type EventCancellationImpact = {
   paidTicketCount: number;
@@ -41,7 +42,7 @@ export default async function getEventCancellationImpact(eventId: string) {
     .maybeSingle();
 
   if (error) {
-    console.log(`Error fetching event cancellation impact: ${error.message}`);
+    logger.error(`Error fetching event cancellation impact: ${error.message}`);
     const notOwned = error.message?.includes("not owned");
     return {
       status: notOwned ? 403 : 500,

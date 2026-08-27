@@ -5,6 +5,7 @@ import {
   type EventDraftPayload,
   eventDraftPayloadSchema,
 } from "@/utils/eventDraftSchema";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
@@ -167,7 +168,7 @@ export async function saveEventDraft({
           resource_type: "image",
         });
       } catch (cloudError) {
-        console.error("Failed to clean up replaced draft flyer:", cloudError);
+        logger.error("Failed to clean up replaced draft flyer:", cloudError);
       }
     }
 

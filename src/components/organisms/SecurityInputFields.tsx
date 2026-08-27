@@ -6,6 +6,7 @@ import updateVerifiedPhone from "@/actions/updateVerifiedPhone";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { linkGoogleIdentity } from "@/services/authService";
+import { logger } from "@/utils/logger";
 import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
 import { useTranslations } from "next-intl";
@@ -55,7 +56,7 @@ export default function SecurityInputFields({
       await linkGoogleIdentity("/settings/security");
       // No need to reset isLinkingGoogle -- linkIdentity navigates away.
     } catch (error) {
-      console.error("Link Google account error:", error);
+      logger.error("Link Google account error:", error);
       toast.error("Something went wrong. Please try again.");
       setIsLinkingGoogle(false);
     }
@@ -119,7 +120,7 @@ export default function SecurityInputFields({
         `We've sent a confirmation link to ${email}. Click it to verify your new email.`,
       );
     } catch (error) {
-      console.error("Email update error:", error);
+      logger.error("Email update error:", error);
       toast.error("Something went wrong. Please try again.");
     } finally {
       setIsUpdatingEmail(false);
@@ -145,7 +146,7 @@ export default function SecurityInputFields({
       setPhoneE164(result.phoneE164);
       return true;
     } catch (error) {
-      console.error("Phone update send error:", error);
+      logger.error("Phone update send error:", error);
       setPhoneErrorMessage("Something went wrong. Please try again.");
       return false;
     } finally {
@@ -180,7 +181,7 @@ export default function SecurityInputFields({
       toast.success(response.message);
       setStep(1);
     } catch (error) {
-      console.error("Phone update verify error:", error);
+      logger.error("Phone update verify error:", error);
       setOtpErrorMessage("Verification failed. Please try again.");
     } finally {
       setIsVerifying(false);

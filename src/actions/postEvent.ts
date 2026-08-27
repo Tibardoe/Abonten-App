@@ -4,6 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import type { PostsType } from "@/types/postsType";
 import { generateEventCode } from "@/utils/eventCodeGenerator";
 import { generateSlug } from "@/utils/geerateSlug";
+import { logger } from "@/utils/logger";
 import { validateLocationInput } from "@/utils/validateLocationInput";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
@@ -219,7 +220,7 @@ export async function postEvent(formData: PostsType) {
       };
     }
 
-    console.log(`Error creating event: ${createEventError.message}`);
+    logger.error(`Error creating event: ${createEventError.message}`);
     return {
       status: 500,
       message: "We couldn't post your event. Please try again.",
@@ -239,7 +240,7 @@ export async function postEvent(formData: PostsType) {
       .eq("user_id", user.id);
 
     if (deleteDraftError) {
-      console.error(
+      logger.error(
         `Failed to delete draft ${draftId} after successful publish: ${deleteDraftError.message}`,
       );
     }

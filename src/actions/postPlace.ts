@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import type { PlaceFormType } from "@/types/placeType";
 import { generateSlug } from "@/utils/geerateSlug";
+import { logger } from "@/utils/logger";
 import { validateLocationInput } from "@/utils/validateLocationInput";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
@@ -145,7 +146,7 @@ export async function postPlace(formData: PlaceFormType) {
       };
     }
 
-    console.log(`Error creating place: ${createPlaceError.message}`);
+    logger.error(`Error creating place: ${createPlaceError.message}`);
     return {
       status: 500,
       message: "We couldn't publish your place. Please try again.",
@@ -165,7 +166,7 @@ export async function postPlace(formData: PlaceFormType) {
       .eq("user_id", user.id);
 
     if (deleteDraftError) {
-      console.error(
+      logger.error(
         `Failed to delete draft ${draftId} after successful publish: ${deleteDraftError.message}`,
       );
     }

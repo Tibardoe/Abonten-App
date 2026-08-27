@@ -3,6 +3,7 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { NearbyEventsCursor, PaginatedResult } from "@/types/pagination";
 import type { UserPostType } from "@/types/postsType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -31,7 +32,7 @@ export async function getNearByEvents(
   });
 
   if (error) {
-    console.log(`Error fetching get nearby events: ${error.message}`);
+    logger.error(`Error fetching get nearby events: ${error.message}`);
 
     return { status: 500, data: [], nextCursor: null, hasNextPage: false };
   }

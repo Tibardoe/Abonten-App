@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export async function getUserPlaceRole(userId: string) {
   const supabase = await createClient();
@@ -22,7 +23,7 @@ export async function getUserPlaceRole(userId: string) {
       .limit(1);
 
     if (ownedPlaceError) {
-      console.log(`Error fetching owned places: ${ownedPlaceError.message}`);
+      logger.error(`Error fetching owned places: ${ownedPlaceError.message}`);
 
       return { status: 500, message: "Something went wrong!" };
     }
@@ -33,7 +34,7 @@ export async function getUserPlaceRole(userId: string) {
 
     return { role: "none" };
   } catch (error) {
-    console.error("Error checking user place role:", error);
+    logger.error("Error checking user place role:", error);
     return { role: "none" };
   }
 }

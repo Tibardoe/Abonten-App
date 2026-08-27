@@ -15,6 +15,8 @@ import { IoClose, IoLocationOutline } from "react-icons/io5";
 import PlaceOpenStatusBadge from "../molecules/PlaceOpenStatusBadge";
 import VerifiedBadge from "../molecules/VerifiedBadge";
 
+const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+
 const containerClass =
   "w-full h-[500px] md:h-[600px] rounded-lg overflow-hidden";
 
@@ -50,7 +52,7 @@ export default function PlacesMapView({ places }: { places: PlaceType[] }) {
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    libraries: ["places"],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   // Parsed once per `places` change -- PlaceType.location is a raw PostGIS

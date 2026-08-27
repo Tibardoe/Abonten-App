@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    // next/image rejects any `quality` prop value not listed here (Next 16).
+    // The app requests quality 90 for hero/cover imagery; 75 is the default.
+    qualities: [75, 90],
     remotePatterns: [
       {
         protocol: "https",

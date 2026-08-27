@@ -5,6 +5,7 @@ import {
   type ReviewPhotoInput,
   insertReviewPhotos,
 } from "@/utils/insertReviewPhotos";
+import { logger } from "@/utils/logger";
 
 type UpdateEventReviewInput = {
   reviewId: string;
@@ -68,7 +69,7 @@ export async function updateEventReview(formData: UpdateEventReviewInput) {
     .select("id");
 
   if (updateError) {
-    console.log(`Error updating event review: ${updateError.message}`);
+    logger.error(`Error updating event review: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
+import { logger } from "@/utils/logger";
 
 type RetryPaymentFulfillmentResult =
   | { status: 401 | 403 | 404; message: string }
@@ -47,7 +48,7 @@ export default async function retryPaymentFulfillment(
     .maybeSingle();
 
   if (attemptError) {
-    console.log(`Failed fetching payment attempt: ${attemptError.message}`);
+    logger.error(`Failed fetching payment attempt: ${attemptError.message}`);
     return { status: 404, message: "Payment attempt not found" };
   }
 

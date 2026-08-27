@@ -4,6 +4,7 @@ import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { generateSlug } from "@/utils/geerateSlug";
+import { logger } from "@/utils/logger";
 import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
 import { useTranslations } from "next-intl";
@@ -75,7 +76,7 @@ export default function AuthModal({ callingCode, next, authError }: PopupProp) {
       setPhoneE164(result.phoneE164);
       return true;
     } catch (error) {
-      console.error("Phone Sign-In Error:", error);
+      logger.error("Phone Sign-In Error:", error);
       setSendErrorMessage("Something went wrong. Please try again.");
       return false;
     } finally {
@@ -122,7 +123,7 @@ export default function AuthModal({ callingCode, next, authError }: PopupProp) {
       // /auth/callback issues a real HTTP redirect, which reloads the page.
       window.location.href = next || `/explore/${generateSlug(location ?? "")}`;
     } catch (error) {
-      console.error("OTP Verification Error:", error);
+      logger.error("OTP Verification Error:", error);
       setOtpErrorMessage(t("otpIncorrect"));
       setIsVerifying(false);
     }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export default async function getEventSalesTimeline(eventId: string) {
   const supabase = await createClient();
@@ -30,7 +31,7 @@ export default async function getEventSalesTimeline(eventId: string) {
   });
 
   if (error) {
-    console.error("Supabase error:", error.message);
+    logger.error("Supabase error:", error.message);
     return { status: 500, message: "Something went wrong!" };
   }
 

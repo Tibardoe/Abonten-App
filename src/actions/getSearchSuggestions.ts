@@ -6,6 +6,7 @@ import type {
   PlaceSuggestion,
   SearchSuggestionsResult,
 } from "@/types/searchSuggestionType";
+import { logger } from "@/utils/logger";
 
 const EVENT_SUGGESTION_LIMIT = 5;
 const PLACE_SUGGESTION_LIMIT = 4;
@@ -42,10 +43,10 @@ export async function getSearchSuggestions(
   ]);
 
   if (eventsResponse.error) {
-    console.error("Error fetching event suggestions:", eventsResponse.error);
+    logger.error("Error fetching event suggestions:", eventsResponse.error);
   }
   if (placesResponse.error) {
-    console.error("Error fetching place suggestions:", placesResponse.error);
+    logger.error("Error fetching place suggestions:", placesResponse.error);
   }
 
   return {

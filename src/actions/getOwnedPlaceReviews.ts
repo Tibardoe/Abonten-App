@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -33,7 +34,7 @@ export async function getOwnedPlaceReviews(
     .maybeSingle();
 
   if (!user || userError) {
-    console.log(`Error fetching user id: ${userError?.message}`);
+    logger.error(`Error fetching user id: ${userError?.message}`);
 
     return {
       status: 500,
@@ -62,7 +63,7 @@ export async function getOwnedPlaceReviews(
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching owned-place reviews: ${error.message}`);
+    logger.error(`Failed fetching owned-place reviews: ${error.message}`);
 
     return {
       status: 500,

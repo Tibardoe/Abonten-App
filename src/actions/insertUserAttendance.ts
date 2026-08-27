@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { AuthOverride } from "@/types/authOverrideType";
+import { logger } from "@/utils/logger";
 
 export default async function insertUserAttendance(
   eventId: string,
@@ -22,7 +23,7 @@ export default async function insertUserAttendance(
     } = await supabase.auth.getUser();
 
     if (userError) {
-      console.log(`Failed fetching user: ${userError.message}`);
+      logger.error(`Failed fetching user: ${userError.message}`);
 
       return {
         status: 500,
@@ -53,7 +54,7 @@ export default async function insertUserAttendance(
     .in("id", ticketIds);
 
   if (ticketCountError) {
-    console.log(
+    logger.error(
       `Failed verifying ticket ownership: ${ticketCountError.message}`,
     );
 
@@ -79,7 +80,7 @@ export default async function insertUserAttendance(
   );
 
   if (insertError) {
-    console.log(`Failed inserting attendance: ${insertError.message}`);
+    logger.error(`Failed inserting attendance: ${insertError.message}`);
 
     return { status: 404, message: "Something went wrong!" };
   }

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -69,7 +70,7 @@ export default async function getAttendanceList(
     const { data: attendanceList, error: attendanceListError } = await query;
 
     if (attendanceListError) {
-      console.error("Supabase error:", attendanceListError.message);
+      logger.error("Supabase error:", attendanceListError.message);
       return {
         status: 500,
         data: [],
@@ -92,7 +93,7 @@ export default async function getAttendanceList(
     );
 
     if (contactsError) {
-      console.error(
+      logger.error(
         `Failed fetching attendee contacts: ${contactsError.message}`,
       );
     }
@@ -122,7 +123,7 @@ export default async function getAttendanceList(
 
     return { status: 200, data: pageWithContacts, nextCursor, hasNextPage };
   } catch (error) {
-    console.error("Unexpected error:", error);
+    logger.error("Unexpected error:", error);
     return {
       status: 500,
       data: [],

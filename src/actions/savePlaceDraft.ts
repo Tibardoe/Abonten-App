@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import {
   type PlaceDraftPayload,
   placeDraftPayloadSchema,
@@ -169,7 +170,7 @@ export async function savePlaceDraft({
           resource_type: "image",
         });
       } catch (cloudError) {
-        console.error("Failed to clean up replaced draft cover:", cloudError);
+        logger.error("Failed to clean up replaced draft cover:", cloudError);
       }
     }
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Lightweight companion to getUserAttendingEvents.ts -- returns just the
@@ -31,7 +32,7 @@ export default async function getUserAttendingEventIds(): Promise<{
     .in("status", ["active", "used"]);
 
   if (error) {
-    console.error(`Error fetching user attending event ids: ${error.message}`);
+    logger.error(`Error fetching user attending event ids: ${error.message}`);
     return { status: 500, data: [], message: "Something went wrong" };
   }
 

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { signOut } from "@/services/authService";
+import { logger } from "@/utils/logger";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -43,7 +44,7 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
       await signOut();
       router.push("/");
     } catch (error) {
-      console.error("Error signing out:", error);
+      logger.error("Error signing out:", error);
     }
   };
 

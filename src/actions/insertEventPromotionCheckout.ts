@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
+import { logger } from "@/utils/logger";
 
 /**
  * Reserve step for an Event Promotion purchase — mirrors
@@ -72,7 +73,7 @@ export default async function insertEventPromotionCheckout(
     .single();
 
   if (insertError) {
-    console.log(
+    logger.error(
       `Error inserting event promotion checkout: ${insertError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };

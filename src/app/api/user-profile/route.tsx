@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -19,8 +20,11 @@ export async function GET() {
 
     const userId = user.id;
 
+    // The real database object is the view `user_profile_details` (plural).
+    // `user_profile_detail` does not exist and made every call to this route
+    // 404 — see the discrepancy noted in PROJECT.md.
     const { data, error } = await supabase
-      .from("user_profile_detail")
+      .from("user_profile_details")
       .select("*")
       .eq("user_id", userId)
       .single();
@@ -34,7 +38,7 @@ export async function GET() {
 
     return NextResponse.json({ data }, { status: 200 });
   } catch (error) {
-    console.error("Error fetching user profile", error);
+    logger.error("Error fetching user profile", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 },

@@ -3,6 +3,7 @@
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
+import { logger } from "@/utils/logger";
 import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -62,7 +63,7 @@ export function usePlacesAutocomplete({
         const data = await res.json();
         setCountryCode(data.country_code);
       } catch (error) {
-        console.error("Failed to fetch country code:", error);
+        logger.error("Failed to fetch country code:", error);
       }
     };
 
@@ -178,7 +179,7 @@ export function usePlacesAutocomplete({
 
         return true;
       } catch (error) {
-        console.error(error);
+        logger.error(error);
         alert("Failed to fetch place details.");
         return false;
       }
@@ -259,7 +260,7 @@ export function usePlacesAutocomplete({
         if (!resolvedAddress) alert("No address found.");
       },
       (error) => {
-        console.error("Error getting location:", error);
+        logger.error("Error getting location:", error);
         alert("Unable to retrieve location.");
       },
     );

@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { Occurrence } from "@/types/occurrenceType";
 import { resolveEventEndDate } from "@/utils/dateFormatter";
+import { logger } from "@/utils/logger";
 
 export type EventAwaitingReview = {
   id: string;
@@ -58,7 +59,7 @@ export async function getEventsAwaitingReview(): Promise<{
     .eq("status", "used");
 
   if (ticketsError) {
-    console.log(`Failed fetching checked-in tickets: ${ticketsError.message}`);
+    logger.error(`Failed fetching checked-in tickets: ${ticketsError.message}`);
     return { status: 500, data: [], message: "Something went wrong" };
   }
 
@@ -81,7 +82,7 @@ export async function getEventsAwaitingReview(): Promise<{
     .in("event_id", eventIds);
 
   if (reviewsError) {
-    console.log(`Failed checking existing reviews: ${reviewsError.message}`);
+    logger.error(`Failed checking existing reviews: ${reviewsError.message}`);
     return { status: 500, data: [], message: "Something went wrong" };
   }
 
@@ -102,7 +103,7 @@ export async function getEventsAwaitingReview(): Promise<{
     .in("id", unreviewedEventIds);
 
   if (eventsError) {
-    console.log(
+    logger.error(
       `Failed fetching events awaiting review: ${eventsError.message}`,
     );
     return { status: 500, data: [], message: "Something went wrong" };

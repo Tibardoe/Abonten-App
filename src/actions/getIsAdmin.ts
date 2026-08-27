@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Self-only admin check -- mirrors getUserPlaceRole.ts's "only answer for
 // yourself" guard (user.id !== userId is rejected). Used by useIsAdmin() to
@@ -28,13 +29,13 @@ export async function getIsAdmin(userId: string) {
       .maybeSingle();
 
     if (userInfoError) {
-      console.log(`Error fetching admin status: ${userInfoError.message}`);
+      logger.error(`Error fetching admin status: ${userInfoError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 
     return { role: userInfo?.is_admin ? "admin" : "none" };
   } catch (error) {
-    console.error("Error checking admin status:", error);
+    logger.error("Error checking admin status:", error);
     return { role: "none" };
   }
 }

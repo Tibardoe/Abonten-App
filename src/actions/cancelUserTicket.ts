@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { releasePromoUsage } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
 import { revalidatePath } from "next/cache";
@@ -40,7 +41,7 @@ export default async function cancelUserTicket(
     .maybeSingle();
 
   if (ticketError || !rawTicket) {
-    console.log(`Failed fetching ticket: ${ticketError?.message}`);
+    logger.error(`Failed fetching ticket: ${ticketError?.message}`);
     return { status: 404, message: "Ticket not found" };
   }
 
@@ -55,7 +56,7 @@ export default async function cancelUserTicket(
     .eq("user_id", user.id);
 
   if (updateStatusError) {
-    console.log(`Error updating ticket status:${updateStatusError.message}`);
+    logger.error(`Error updating ticket status:${updateStatusError.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }
@@ -72,7 +73,7 @@ export default async function cancelUserTicket(
       .maybeSingle<{ id: string; amount: number }>();
 
     if (transactionError || !transaction) {
-      console.log(`Failed fetching transaction: ${transactionError?.message}`);
+      logger.error(`Failed fetching transaction: ${transactionError?.message}`);
 
       return { status: 500, message: "Something went wrong!" };
     }
@@ -97,9 +98,7 @@ export default async function cancelUserTicket(
       if (allCancelled) {
         const response = await issueRefund(transaction.id);
 
-        if (response.status !== 200) {
-          console.log(response.message);
-        } else {
+        if (response.status === 200) {
           refundMessage = response.message;
         }
       } else {
@@ -119,7 +118,7 @@ export default async function cancelUserTicket(
     .eq("user_id", user.id);
 
   if (updateAttendanceError) {
-    console.log(
+    logger.error(
       `Error updating user attendance: ${updateAttendanceError.message}`,
     );
 
@@ -187,7 +186,7 @@ async function areAllTicketsForTransactionCancelled(
     .eq("transaction_id", transactionId);
 
   if (siblingTicketsError) {
-    console.log(
+    logger.error(
       `Failed checking sibling tickets for transaction ${transactionId}: ${siblingTicketsError.message}`,
     );
     // Fail closed: if this can't be verified, don't risk refunding a still-
@@ -214,7 +213,7 @@ async function markCheckoutCancelledIfAllTicketsCancelled(
     .eq("ticket_checkout_id", ticketCheckoutId);
 
   if (siblingTicketsError) {
-    console.log(
+    logger.error(
       `Failed checking sibling tickets for checkout ${ticketCheckoutId}: ${siblingTicketsError.message}`,
     );
     return;
@@ -233,7 +232,7 @@ async function markCheckoutCancelledIfAllTicketsCancelled(
     .eq("status", "paid");
 
   if (checkoutUpdateError) {
-    console.log(
+    logger.error(
       `Failed marking checkout ${ticketCheckoutId} cancelled: ${checkoutUpdateError.message}`,
     );
   }
@@ -259,7 +258,7 @@ async function releasePromoUsageIfEventFullyCancelled(
       .in("status", ["active", "used"]);
 
   if (remainingTicketsError) {
-    console.log(
+    logger.error(
       `Failed checking remaining tickets: ${remainingTicketsError.message}`,
     );
     return;
@@ -281,7 +280,7 @@ async function releasePromoUsageIfEventFullyCancelled(
     .maybeSingle();
 
   if (promoUsageError) {
-    console.log(`Failed checking promo usage: ${promoUsageError.message}`);
+    logger.error(`Failed checking promo usage: ${promoUsageError.message}`);
     return;
   }
 
@@ -296,7 +295,7 @@ async function releasePromoUsageIfEventFullyCancelled(
     .not("promo_code", "is", null);
 
   if (paidCheckoutsError) {
-    console.log(
+    logger.error(
       `Failed reading paid checkout discount units: ${paidCheckoutsError.message}`,
     );
     return;

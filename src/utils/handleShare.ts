@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 type ShareData = {
   title: string;
   url: string;
@@ -14,14 +15,14 @@ export async function handleShare({ title, url }: ShareData) {
     try {
       await navigator.share(shareData);
     } catch (err) {
-      console.error("Error sharing:", err);
+      logger.error("Error sharing:", err);
     }
   } else {
     try {
       await navigator.clipboard.writeText(url);
       alert("Link copied to clipboard!");
     } catch (err) {
-      console.error("Clipboard copy failed:", err);
+      logger.error("Clipboard copy failed:", err);
     }
   }
 }

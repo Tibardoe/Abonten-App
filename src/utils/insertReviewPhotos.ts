@@ -1,4 +1,5 @@
 import type { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { MAX_REVIEW_PHOTOS } from "./uploadLimits";
 
 export type ReviewPhotoInput = { publicId: string; version: string };
@@ -46,6 +47,6 @@ export async function insertReviewPhotos(
   const { error } = await supabase.from(table).insert(rows);
 
   if (error) {
-    console.log(`Error attaching photos to ${table}: ${error.message}`);
+    logger.error(`Error attaching photos to ${table}: ${error.message}`);
   }
 }

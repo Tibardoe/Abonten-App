@@ -5,6 +5,7 @@ import AutoComplete, {
 } from "@/components/molecules/AutoComplete";
 import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
+import { logger } from "@/utils/logger";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -42,7 +43,7 @@ export default function LandingLocationSearch() {
         // through to the geolocation branch below would silently ignore
         // whatever the user actually typed, so this needs its own branch
         // even though it degrades the same way "unresolved" does.
-        console.error("Location service unavailable while resolving input.");
+        logger.error("Location service unavailable while resolving input.");
         router.push("/explore");
         return;
       }
@@ -57,7 +58,7 @@ export default function LandingLocationSearch() {
       const { latitude, longitude } = position.coords;
       router.push(`/explore/current-location?lat=${latitude}&lng=${longitude}`);
     } catch (error) {
-      console.error("Unable to resolve location:", error);
+      logger.error("Unable to resolve location:", error);
       router.push("/explore");
     } finally {
       setIsResolvingLocation(false);

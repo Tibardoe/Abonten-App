@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { UserPostType } from "@/types/postsType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -27,7 +28,7 @@ export async function getUserPosts(
     .maybeSingle();
 
   if (!user || userError) {
-    console.log(`Error fetching user id: ${userError?.message}`);
+    logger.error(`Error fetching user id: ${userError?.message}`);
 
     return {
       status: 500,

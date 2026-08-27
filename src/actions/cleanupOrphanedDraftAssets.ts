@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -50,7 +51,7 @@ export async function cleanupOrphanedDraftAssets() {
       });
       processedIds.push(item.id);
     } catch (cloudError) {
-      console.error("Failed to clean up orphaned draft asset:", cloudError);
+      logger.error("Failed to clean up orphaned draft asset:", cloudError);
     }
   }
 

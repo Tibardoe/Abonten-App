@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import createNotification from "./createNotification";
 
 type ReviewPlaceClaimRequestInput = {
@@ -101,7 +102,7 @@ export async function reviewPlaceClaimRequest(
     });
 
     if (rpcError) {
-      console.log(`Error approving place claim: ${rpcError.message}`);
+      logger.error(`Error approving place claim: ${rpcError.message}`);
 
       const isAuthError = rpcError.message?.includes("Not authorized");
       return {
@@ -124,7 +125,7 @@ export async function reviewPlaceClaimRequest(
     );
 
     if (notifyResult.status !== 200) {
-      console.log(
+      logger.error(
         `Failed to notify claimant of approval: ${notifyResult.message}`,
       );
     }
@@ -144,7 +145,7 @@ export async function reviewPlaceClaimRequest(
     .select("id");
 
   if (updateError) {
-    console.log(`Error rejecting place claim: ${updateError.message}`);
+    logger.error(`Error rejecting place claim: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -167,7 +168,7 @@ export async function reviewPlaceClaimRequest(
   );
 
   if (notifyResult.status !== 200) {
-    console.log(
+    logger.error(
       `Failed to notify claimant of rejection: ${notifyResult.message}`,
     );
   }

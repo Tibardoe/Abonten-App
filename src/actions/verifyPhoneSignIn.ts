@@ -10,6 +10,7 @@ import {
   getPendingOtp,
   registerVerifyAttempt,
 } from "@/services/phoneOtpStore";
+import { logger } from "@/utils/logger";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
 import { OTP_MESSAGES } from "@/utils/otpMessages";
 
@@ -82,7 +83,7 @@ export default async function verifyPhoneSignIn(
   const found = await findOrCreateUserByPhone(phoneE164);
 
   if ("error" in found) {
-    console.error(
+    logger.error(
       `verifyPhoneSignIn: findOrCreateUserByPhone failed: ${found.error}`,
     );
     return { status: 500, message: "Something went wrong signing you in." };
@@ -91,7 +92,7 @@ export default async function verifyPhoneSignIn(
   const sessionResult = await mintSessionForUser(phoneE164, found.userId);
 
   if (!sessionResult.ok) {
-    console.error(
+    logger.error(
       `verifyPhoneSignIn: session mint failed: ${sessionResult.message}`,
     );
     return { status: 500, message: "Something went wrong signing you in." };

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export default async function getEventTitle(eventId: string) {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function getEventTitle(eventId: string) {
     .single();
 
   if (eventTitleError) {
-    console.log(`Error fetching event title:${eventTitleError.message}`);
+    logger.error(`Error fetching event title:${eventTitleError.message}`);
 
     return { status: 500, message: "Error fetching event title" };
   }

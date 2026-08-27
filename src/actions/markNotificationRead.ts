@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Marks one notification read — scoped to the caller's own row via the
@@ -27,7 +28,7 @@ export async function markNotificationRead(notificationId: string) {
     .eq("user_id", user.id);
 
   if (error) {
-    console.log(`Failed marking notification read: ${error.message}`);
+    logger.error(`Failed marking notification read: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

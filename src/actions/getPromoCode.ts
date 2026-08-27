@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export default async function getPromoCode(code: string, eventId: string) {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function getPromoCode(code: string, eventId: string) {
     .maybeSingle();
 
   if (promoCodeError) {
-    console.log(`Error fetching promo code: ${promoCodeError.message}`);
+    logger.error(`Error fetching promo code: ${promoCodeError.message}`);
 
     return {
       status: 500,
@@ -56,7 +57,7 @@ export default async function getPromoCode(code: string, eventId: string) {
     .maybeSingle();
 
   if (promoCodeUsageError) {
-    console.log(promoCodeUsageError.message);
+    logger.error(promoCodeUsageError.message);
 
     return {
       status: 500,

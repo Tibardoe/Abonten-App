@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -54,7 +55,7 @@ export async function getUserPlaceReviews(
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching user's place reviews: ${error.message}`);
+    logger.error(`Failed fetching user's place reviews: ${error.message}`);
     return {
       status: 500,
       data: [],

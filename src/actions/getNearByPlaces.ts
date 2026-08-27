@@ -3,6 +3,7 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { PaginatedResult, PlacesCursor } from "@/types/pagination";
 import type { PlaceType } from "@/types/placeType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -30,7 +31,7 @@ export async function getNearByPlaces(
   });
 
   if (error) {
-    console.log(`Error fetching get nearby places: ${error.message}`);
+    logger.error(`Error fetching get nearby places: ${error.message}`);
 
     return { status: 500, data: [], nextCursor: null, hasNextPage: false };
   }

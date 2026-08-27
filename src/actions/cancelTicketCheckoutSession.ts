@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 import { releasePromoUsage } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
@@ -45,7 +46,7 @@ export default async function cancelTicketCheckoutSession(
     .eq("status", "pending");
 
   if (fetchError) {
-    console.log(`Failed fetching checkout session: ${fetchError.message}`);
+    logger.error(`Failed fetching checkout session: ${fetchError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -78,7 +79,7 @@ export default async function cancelTicketCheckoutSession(
     .eq("status", "pending");
 
   if (updateError) {
-    console.log(`Failed cancelling checkout session: ${updateError.message}`);
+    logger.error(`Failed cancelling checkout session: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

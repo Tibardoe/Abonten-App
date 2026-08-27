@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { revalidatePath } from "next/cache";
 
 type TicketRow = {
@@ -75,7 +76,7 @@ export default async function checkInTicket(
     .eq("id", ticketId);
 
   if (updateError) {
-    console.log(
+    logger.error(
       `Error updating ticket check-in status: ${updateError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };

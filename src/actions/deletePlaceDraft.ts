@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -61,7 +62,7 @@ export async function deletePlaceDraft(draftId: string) {
         };
       }
     } catch (cloudError) {
-      console.error("Cloudinary deletion failed:", cloudError);
+      logger.error("Cloudinary deletion failed:", cloudError);
       return {
         status: 500,
         message: "Failed to delete draft image. Please try again.",

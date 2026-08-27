@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { OrganizerFinanceOverviewRow } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 
 type GetOrganizerFinanceOverviewResult =
   | { status: 401 | 500; message: string }
@@ -28,7 +29,9 @@ export default async function getOrganizerFinanceOverview(): Promise<GetOrganize
   const { data, error } = await supabase.rpc("get_organizer_finance_overview");
 
   if (error) {
-    console.log(`Failed fetching organizer finance overview: ${error.message}`);
+    logger.error(
+      `Failed fetching organizer finance overview: ${error.message}`,
+    );
     return { status: 500, message: "Something went wrong!" };
   }
 

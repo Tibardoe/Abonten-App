@@ -7,6 +7,7 @@ import {
   type ReviewPhotoInput,
   insertReviewPhotos,
 } from "@/utils/insertReviewPhotos";
+import { logger } from "@/utils/logger";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";
@@ -150,7 +151,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
       return { status: 409, message: "You've already reviewed this event." };
     }
 
-    console.log(`Error inserting event review: ${insertError.message}`);
+    logger.error(`Error inserting event review: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

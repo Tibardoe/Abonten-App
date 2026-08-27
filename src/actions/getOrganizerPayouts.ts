@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { OrganizerPayoutRow } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 
 type GetOrganizerPayoutsResult =
   | { status: 401 | 500; message: string }
@@ -39,7 +40,7 @@ export default async function getOrganizerPayouts(
     .range(offset, offset + limit - 1);
 
   if (error) {
-    console.log(`Failed fetching payouts: ${error.message}`);
+    logger.error(`Failed fetching payouts: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

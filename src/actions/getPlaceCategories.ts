@@ -2,6 +2,7 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { PlaceCategory } from "@/types/placeType";
+import { logger } from "@/utils/logger";
 
 // place_category is a small, fixed lookup table — a plain unpaginated read
 // is intentional here (see the migration's header comment for why it's a
@@ -16,7 +17,7 @@ export async function getPlaceCategories() {
     .order("name", { ascending: true });
 
   if (error) {
-    console.log(`Error fetching place categories: ${error.message}`);
+    logger.error(`Error fetching place categories: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { after } from "next/server";
 import eventCancellationNotification, {
   type CancelledAttendeeRefund,
@@ -53,7 +54,7 @@ export default async function cancelEvent(eventId: string) {
   );
 
   if (rpcError) {
-    console.log(`Error cancelling event: ${rpcError.message}`);
+    logger.error(`Error cancelling event: ${rpcError.message}`);
 
     if (rpcError.message?.includes("already cancelled")) {
       return {
@@ -102,7 +103,7 @@ export default async function cancelEvent(eventId: string) {
 
     after(() =>
       eventCancellationNotification(eventTitle, attendees).catch((error) =>
-        console.log(`Failed sending event cancellation emails: ${error}`),
+        logger.error(`Failed sending event cancellation emails: ${error}`),
       ),
     );
   }

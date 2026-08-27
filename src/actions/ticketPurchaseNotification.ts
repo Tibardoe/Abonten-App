@@ -7,6 +7,7 @@ import { createClient } from "@/config/supabase/server";
 import type { AuthOverride } from "@/types/authOverrideType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
+import { logger } from "@/utils/logger";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
@@ -37,7 +38,7 @@ export default async function ticketPurchaseNotification(
 ) {
   try {
     if (!process.env.RESEND_API_KEY) {
-      console.log("RESEND_API_KEY is not set; skipping ticket purchase email");
+      logger.warn("RESEND_API_KEY is not set; skipping ticket purchase email");
       return { status: 500, message: "Email service not configured" };
     }
 
@@ -54,7 +55,7 @@ export default async function ticketPurchaseNotification(
         const { data: adminUser, error: adminUserError } =
           await supabase.auth.admin.getUserById(authOverride.userId);
         if (adminUserError || !adminUser.user) {
-          console.log(
+          logger.error(
             `Failed resolving user email: ${adminUserError?.message}`,
           );
           return { status: 500, message: "Could not resolve user email" };
@@ -68,7 +69,7 @@ export default async function ticketPurchaseNotification(
       } = await supabase.auth.getUser();
 
       if (!user || userError) {
-        console.log(`Error fetching user: ${userError?.message}`);
+        logger.error(`Error fetching user: ${userError?.message}`);
         return { status: 401, message: "User not logged in!" };
       }
 
@@ -79,7 +80,7 @@ export default async function ticketPurchaseNotification(
     const ticketsResponse = await getTicketsByIds(ticketIds, authOverride);
 
     if (ticketsResponse.status !== 200 || ticketsResponse.data.length === 0) {
-      console.log(
+      logger.error(
         `Could not load tickets for purchase email: ${ticketsResponse.message}`,
       );
       return { status: 404, message: "Tickets not found" };
@@ -94,7 +95,7 @@ export default async function ticketPurchaseNotification(
       .single();
 
     if (infoError) {
-      console.log(`Error fetching user info: ${infoError.message}`);
+      logger.error(`Error fetching user info: ${infoError.message}`);
       return { status: 500, message: "Error fetching user info" };
     }
 
@@ -146,13 +147,13 @@ export default async function ticketPurchaseNotification(
     });
 
     if (error) {
-      console.log(`Failed sending ticket purchase email: ${error.message}`);
+      logger.error(`Failed sending ticket purchase email: ${error.message}`);
       return { status: 400, message: error.message };
     }
 
     return { status: 200, data };
   } catch (error) {
-    console.log(`Unexpected error sending ticket purchase email: ${error}`);
+    logger.error(`Unexpected error sending ticket purchase email: ${error}`);
     return { status: 500, message: "Something went wrong sending the email" };
   }
 }

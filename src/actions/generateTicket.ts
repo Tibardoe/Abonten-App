@@ -7,6 +7,7 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
+import { logger } from "@/utils/logger";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
@@ -72,7 +73,7 @@ export default async function generateTicket(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.log(`Failed fetching user: ${userError?.message}`);
+      logger.error(`Failed fetching user: ${userError?.message}`);
 
       return {
         status: 401,
@@ -94,7 +95,7 @@ export default async function generateTicket(
       .eq("status", "pending");
 
   if (initialCheckoutError) {
-    console.log(`Failed fetching checkout: ${initialCheckoutError.message}`);
+    logger.error(`Failed fetching checkout: ${initialCheckoutError.message}`);
 
     return { status: 500, message: "Something went wrong" };
   }
@@ -123,7 +124,7 @@ export default async function generateTicket(
     .eq("status", "pending");
 
   if (checkoutError) {
-    console.log(`Failed fetching checkout: ${checkoutError.message}`);
+    logger.error(`Failed fetching checkout: ${checkoutError.message}`);
 
     return { status: 500, message: "Something went wrong" };
   }
@@ -146,7 +147,7 @@ export default async function generateTicket(
     .eq("user_id", userId);
 
   if (ticketDataError || !rawTicketData) {
-    console.log(`Error fetching ticket data: ${ticketDataError?.message}`);
+    logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
 
     return { status: 500, message: "Something went wrong" };
   }
@@ -172,7 +173,7 @@ export default async function generateTicket(
     .maybeSingle();
 
   if (eventFetchError || !event) {
-    console.log(`Failed fetching event: ${eventFetchError?.message}`);
+    logger.error(`Failed fetching event: ${eventFetchError?.message}`);
     return { status: 500, message: "Something went wrong" };
   }
 
@@ -183,7 +184,7 @@ export default async function generateTicket(
   );
 
   if (!eventEndDate) {
-    console.log(`Event ${eventId} has no resolvable start/end date`);
+    logger.error(`Event ${eventId} has no resolvable start/end date`);
     return { status: 500, message: "This event has no scheduled date" };
   }
 
@@ -216,7 +217,7 @@ export default async function generateTicket(
     );
 
     if (failedUpload) {
-      console.log(
+      logger.error(
         `Error saving QR code to cloudinary:${failedUpload.uploadResponse.error}`,
       );
 
@@ -253,7 +254,7 @@ export default async function generateTicket(
       !insertedTickets ||
       insertedTickets.length !== row.quantity
     ) {
-      console.log(`Error inserting ticket: ${insertTicketError?.message}`);
+      logger.error(`Error inserting ticket: ${insertTicketError?.message}`);
 
       await releaseTicketQuantity(row.ticket_type_id, row.quantity);
 
@@ -328,7 +329,7 @@ export default async function generateTicket(
       totalAmount,
       authOverride,
     ).catch((error) =>
-      console.log(`Failed sending ticket purchase email: ${error}`),
+      logger.error(`Failed sending ticket purchase email: ${error}`),
     ),
   );
 

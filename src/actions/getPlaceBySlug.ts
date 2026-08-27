@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 /**
  * Public read for a place's detail page — slug + status='published' scoped,
@@ -20,7 +21,7 @@ export async function getPlaceBySlug(slug: string) {
     .maybeSingle();
 
   if (placeError) {
-    console.log(`Error fetching place: ${placeError.message}`);
+    logger.error(`Error fetching place: ${placeError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -60,7 +61,7 @@ export async function getPlaceBySlug(slug: string) {
     openingHoursError ?? servicesError ?? photosError ?? reviewsError;
 
   if (firstError) {
-    console.log(`Error fetching place details: ${firstError.message}`);
+    logger.error(`Error fetching place details: ${firstError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

@@ -7,6 +7,8 @@ import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { TbLocation } from "react-icons/tb";
 
+const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+
 const containerClass =
   "w-full h-[500px] md:h-[300px] rounded-lg overflow-hidden";
 
@@ -34,7 +36,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    libraries: ["places"], // just in case
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   useEffect(() => {

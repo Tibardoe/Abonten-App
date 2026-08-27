@@ -5,6 +5,7 @@ import {
   type PreparedCheckoutPayment,
   prepareCheckoutPayment,
 } from "@/utils/checkoutPaymentPreparation";
+import { logger } from "@/utils/logger";
 
 type PrepareMultiCheckoutPaymentResult =
   | { status: 400 | 401 | 500; message: string }
@@ -39,7 +40,7 @@ export default async function prepareMultiCheckoutPayment(
     const prepared = await prepareCheckoutPayment(user.id, checkoutSessionIds);
     return { status: 200, ...prepared };
   } catch (error) {
-    console.log(`Failed preparing checkout payment: ${error}`);
+    logger.error(`Failed preparing checkout payment: ${error}`);
     return { status: 500, message: "Something went wrong!" };
   }
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";
@@ -88,7 +89,7 @@ export async function submitPlaceClaimRequest(
       };
     }
 
-    console.log(`Error inserting place claim request: ${insertError.message}`);
+    logger.error(`Error inserting place claim request: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

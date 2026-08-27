@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Soft-deletes a payment method (status -> 'removed') rather than a hard
@@ -30,7 +31,7 @@ export default async function removePaymentMethod(paymentMethodId: string) {
     .maybeSingle();
 
   if (fetchError) {
-    console.log(`Failed fetching payment method: ${fetchError.message}`);
+    logger.error(`Failed fetching payment method: ${fetchError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -45,7 +46,7 @@ export default async function removePaymentMethod(paymentMethodId: string) {
     .eq("user_id", user.id);
 
   if (removeError) {
-    console.log(`Failed removing payment method: ${removeError.message}`);
+    logger.error(`Failed removing payment method: ${removeError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

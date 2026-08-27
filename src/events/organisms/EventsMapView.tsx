@@ -15,6 +15,8 @@ import { IoClose, IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import NoEventsFound from "../molecules/NoEventsFound";
 
+const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+
 const containerClass =
   "w-full h-[500px] md:h-[600px] rounded-lg overflow-hidden";
 
@@ -57,7 +59,7 @@ export default function EventsMapView({
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    libraries: ["places"],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   // Parsed once per `events` change — UserPostType.location is a raw

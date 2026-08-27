@@ -3,6 +3,7 @@
 import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { logger } from "@/utils/logger";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -53,7 +54,7 @@ export async function saveEventFlyerToCloudinary(selectedFile: File) {
       transformation: transformation,
     };
   } catch (error) {
-    console.error(`Cloudinary upload error: ${error}`);
+    logger.error(`Cloudinary upload error: ${error}`);
     return { error: "Upload failed" };
   }
 }

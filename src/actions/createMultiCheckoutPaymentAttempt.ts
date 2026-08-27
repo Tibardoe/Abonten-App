@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import { prepareCheckoutPayment } from "@/utils/checkoutPaymentPreparation";
+import { logger } from "@/utils/logger";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
@@ -88,7 +89,7 @@ export default async function createMultiCheckoutPaymentAttempt(
     .maybeSingle();
 
   if (methodError) {
-    console.log(`Failed fetching payment method: ${methodError.message}`);
+    logger.error(`Failed fetching payment method: ${methodError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -107,7 +108,7 @@ export default async function createMultiCheckoutPaymentAttempt(
   try {
     prepared = await prepareCheckoutPayment(user.id, input.checkoutSessionIds);
   } catch (error) {
-    console.log(`Failed preparing checkout payment: ${error}`);
+    logger.error(`Failed preparing checkout payment: ${error}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

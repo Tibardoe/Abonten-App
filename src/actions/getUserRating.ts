@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 export async function getUserRating(reviewedId: string) {
   const supabase = publicSupabase;
@@ -11,7 +12,7 @@ export async function getUserRating(reviewedId: string) {
     .eq("reviewed_id", reviewedId);
 
   if (error) {
-    console.error("Error fetching ratings:", error);
+    logger.error("Error fetching ratings:", error);
     throw new Error("Could not load ratings");
   }
 

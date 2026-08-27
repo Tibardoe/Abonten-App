@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 import { adjustPromoUsageUnits } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
@@ -33,7 +34,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     .maybeSingle();
 
   if (checkoutError) {
-    console.log(`Failed fetching ticket checkout: ${checkoutError.message}`);
+    logger.error(`Failed fetching ticket checkout: ${checkoutError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -72,7 +73,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     .eq("status", "pending");
 
   if (updateError) {
-    console.log(`Failed cancelling ticket checkout: ${updateError.message}`);
+    logger.error(`Failed cancelling ticket checkout: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

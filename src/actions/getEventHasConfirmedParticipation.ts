@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Whether an event already has at least one confirmed ticket — paid or free
@@ -47,7 +48,7 @@ export default async function getEventHasConfirmedParticipation(
     .eq("event_id", eventId);
 
   if (ticketTypesError) {
-    console.log(
+    logger.error(
       `Failed fetching ticket types for event ${eventId}: ${ticketTypesError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -66,7 +67,7 @@ export default async function getEventHasConfirmedParticipation(
     .neq("status", "cancelled");
 
   if (ticketError) {
-    console.log(
+    logger.error(
       `Failed checking confirmed tickets for event ${eventId}: ${ticketError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -34,7 +35,7 @@ export default async function removePayoutAccount(payoutAccountId: string) {
     .maybeSingle();
 
   if (fetchError) {
-    console.log(`Failed fetching payout account: ${fetchError.message}`);
+    logger.error(`Failed fetching payout account: ${fetchError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -49,7 +50,7 @@ export default async function removePayoutAccount(payoutAccountId: string) {
     .eq("status", "active");
 
   if (countError) {
-    console.log(`Failed counting payout accounts: ${countError.message}`);
+    logger.error(`Failed counting payout accounts: ${countError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -67,7 +68,7 @@ export default async function removePayoutAccount(payoutAccountId: string) {
     .eq("status", "processing");
 
   if (processingError) {
-    console.log(
+    logger.error(
       `Failed checking in-flight payouts: ${processingError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -87,7 +88,7 @@ export default async function removePayoutAccount(payoutAccountId: string) {
     .eq("organizer_id", user.id);
 
   if (removeError) {
-    console.log(`Failed removing payout account: ${removeError.message}`);
+    logger.error(`Failed removing payout account: ${removeError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

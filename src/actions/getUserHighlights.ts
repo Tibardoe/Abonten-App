@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { HighlightGroup, HighlightRow } from "@/types/highlightType";
+import { logger } from "@/utils/logger";
 
 export default async function getUserHighlight(username: string) {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export default async function getUserHighlight(username: string) {
     .single();
 
   if (!userId || userIdError) {
-    console.log(`Error fetching user id: ${userIdError?.message}`);
+    logger.error(`Error fetching user id: ${userIdError?.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }
@@ -26,7 +27,7 @@ export default async function getUserHighlight(username: string) {
     .limit(200);
 
   if (highlightsError) {
-    console.log(`Error fetching highlights: ${highlightsError.message}`);
+    logger.error(`Error fetching highlights: ${highlightsError.message}`);
     return { status: 500, message: "Something went wrong! Try again later" };
   }
 

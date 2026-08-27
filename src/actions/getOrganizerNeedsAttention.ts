@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export default async function getOrganizerNeedsAttention(daysSoon = 7) {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ export default async function getOrganizerNeedsAttention(daysSoon = 7) {
   });
 
   if (error) {
-    console.error("Supabase error:", error.message);
+    logger.error("Supabase error:", error.message);
     return { status: 500 as const, message: "Something went wrong!" };
   }
 

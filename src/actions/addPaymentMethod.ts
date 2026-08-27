@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import {
   type AddPaymentMethodInput,
   addPaymentMethodSchema,
@@ -47,7 +48,7 @@ export default async function addPaymentMethod(
     .eq("status", "active");
 
   if (countError) {
-    console.log(`Failed counting payment methods: ${countError.message}`);
+    logger.error(`Failed counting payment methods: ${countError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -66,7 +67,7 @@ export default async function addPaymentMethod(
     .single();
 
   if (error) {
-    console.log(`Failed saving payment method: ${error.message}`);
+    logger.error(`Failed saving payment method: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

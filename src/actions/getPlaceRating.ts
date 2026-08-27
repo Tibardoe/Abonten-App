@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 export async function getPlaceRating(placeId: string) {
   const supabase = publicSupabase;
@@ -12,7 +13,7 @@ export async function getPlaceRating(placeId: string) {
     .eq("status", "approved");
 
   if (error) {
-    console.error("Error fetching place ratings:", error);
+    logger.error("Error fetching place ratings:", error);
     throw new Error("Could not load ratings");
   }
 

@@ -3,6 +3,7 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { FilteredEventsCursor, PaginatedResult } from "@/types/pagination";
 import type { UserPostType } from "@/types/postsType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -74,7 +75,7 @@ export async function getQueriedEvents(
   });
 
   if (error) {
-    console.error("Error fetching filtered events:", error);
+    logger.error("Error fetching filtered events:", error);
     return { status: 500, data: [], nextCursor: null, hasNextPage: false };
   }
 

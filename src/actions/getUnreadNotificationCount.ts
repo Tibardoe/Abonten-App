@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 type GetUnreadNotificationCountResult =
   | { status: 401 | 500; message: string }
@@ -31,7 +32,7 @@ export async function getUnreadNotificationCount(): Promise<GetUnreadNotificatio
     .is("read_at", null);
 
   if (error) {
-    console.log(`Failed fetching unread notification count: ${error.message}`);
+    logger.error(`Failed fetching unread notification count: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

@@ -19,6 +19,7 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { signOut } from "@/services/authService";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { generateSlug } from "@/utils/geerateSlug";
+import { logger } from "@/utils/logger";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -91,7 +92,7 @@ export default function Header() {
     try {
       await signOut();
     } catch (error) {
-      console.error("Error signing out:", error);
+      logger.error("Error signing out:", error);
     }
   };
 
@@ -143,9 +144,9 @@ export default function Header() {
 
             <Link
               href={`/explore/${generateSlug(location ?? "")}`}
-              className="absolute right-4 transform lg:static lg:translate-x-0 w-12 h-12 md:w-16 md:h-16"
+              className="absolute right-4 transform lg:relative lg:translate-x-0 w-12 h-12 md:w-16 md:h-16"
             >
-              <Image src={logoSrc} alt="Abonten Logo" fill />
+              <Image src={logoSrc} alt="Abonten Logo" fill priority />
             </Link>
           </div>
 

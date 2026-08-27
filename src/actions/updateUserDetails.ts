@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { UserDetailsFormType } from "@/types/userProfileType";
+import { logger } from "@/utils/logger";
 import { getTranslations } from "next-intl/server";
 
 export async function updateUserDetails(formData: UserDetailsFormType) {
@@ -11,7 +12,7 @@ export async function updateUserDetails(formData: UserDetailsFormType) {
   const { data: user, error: userError } = await supabase.auth.getUser();
 
   if (userError) {
-    console.error("updateUserDetails: failed to fetch user", userError);
+    logger.error("updateUserDetails: failed to fetch user", userError);
     return {
       status: 500,
       message: t("errors.fetchUserFailed"),
@@ -47,7 +48,7 @@ export async function updateUserDetails(formData: UserDetailsFormType) {
     .eq("id", user.user.id);
 
   if (error) {
-    console.error("updateUserDetails: failed to update user_info", error);
+    logger.error("updateUserDetails: failed to update user_info", error);
     return {
       status: 500,
       message: t("errors.updateFailed"),

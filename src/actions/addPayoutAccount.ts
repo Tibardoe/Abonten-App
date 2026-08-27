@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 import {
   type AddPayoutAccountInput,
   addPayoutAccountSchema,
@@ -47,7 +48,7 @@ export default async function addPayoutAccount(
     .eq("status", "active");
 
   if (countError) {
-    console.log(`Failed counting payout accounts: ${countError.message}`);
+    logger.error(`Failed counting payout accounts: ${countError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -75,7 +76,7 @@ export default async function addPayoutAccount(
     .single();
 
   if (error) {
-    console.log(`Failed saving payout account: ${error.message}`);
+    logger.error(`Failed saving payout account: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

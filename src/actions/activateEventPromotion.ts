@@ -3,6 +3,7 @@
 import createNotification from "@/actions/createNotification";
 import { createClient } from "@/config/supabase/server";
 import type { AuthOverride } from "@/types/authOverrideType";
+import { logger } from "@/utils/logger";
 
 /**
  * Commit step for an Event Promotion purchase — mirrors
@@ -50,7 +51,7 @@ export default async function activateEventPromotion(
       .maybeSingle();
 
   if (existingCheckoutError) {
-    console.log(
+    logger.error(
       `Failed fetching event promotion checkout: ${existingCheckoutError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -71,7 +72,7 @@ export default async function activateEventPromotion(
     .maybeSingle();
 
   if (checkoutError) {
-    console.log(
+    logger.error(
       `Failed fetching event promotion checkout: ${checkoutError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -101,7 +102,9 @@ export default async function activateEventPromotion(
   );
 
   if (endsAtError || !computedEndsAt) {
-    console.log(`Failed computing promotion end date: ${endsAtError?.message}`);
+    logger.error(
+      `Failed computing promotion end date: ${endsAtError?.message}`,
+    );
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -118,7 +121,7 @@ export default async function activateEventPromotion(
   // fulfillment racing a webhook delivery). Treat it as already done rather
   // than a failure, so a retry can never create a second featured record.
   if (insertError && insertError.code !== "23505") {
-    console.log(`Failed activating event promotion: ${insertError.message}`);
+    logger.error(`Failed activating event promotion: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

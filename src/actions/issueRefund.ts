@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { refundTransaction } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 
 /**
  * Refunds a transaction via Paystack and marks it `refunded`. Takes only an
@@ -30,7 +31,7 @@ export default async function issueRefund(transactionId: string) {
     .maybeSingle();
 
   if (transactionError || !transaction) {
-    console.log(
+    logger.error(
       `Failed fetching transaction for refund: ${transactionError?.message}`,
     );
     return { status: 404, message: "Transaction not found" };
@@ -61,7 +62,7 @@ export default async function issueRefund(transactionId: string) {
   try {
     await refundTransaction(transaction.paystack_reference);
   } catch (error) {
-    console.log(`Refund failed for transaction ${transaction.id}: ${error}`);
+    logger.error(`Refund failed for transaction ${transaction.id}: ${error}`);
 
     // Still record that a request was actually made — refund_requested_at
     // is what lets the UI tell "attempted and failed" apart from "not
@@ -95,7 +96,7 @@ export default async function issueRefund(transactionId: string) {
   });
 
   if (holdError) {
-    console.log(
+    logger.error(
       `Failed recording refund hold for transaction ${transaction.id}: ${holdError.message}`,
     );
     return {

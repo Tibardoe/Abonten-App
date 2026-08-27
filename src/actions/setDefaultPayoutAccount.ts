@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -30,7 +31,7 @@ export default async function setDefaultPayoutAccount(payoutAccountId: string) {
     .maybeSingle();
 
   if (fetchError) {
-    console.log(`Failed fetching payout account: ${fetchError.message}`);
+    logger.error(`Failed fetching payout account: ${fetchError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -46,7 +47,7 @@ export default async function setDefaultPayoutAccount(payoutAccountId: string) {
     .neq("id", payoutAccountId);
 
   if (unsetError) {
-    console.log(`Failed clearing previous default: ${unsetError.message}`);
+    logger.error(`Failed clearing previous default: ${unsetError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -58,7 +59,7 @@ export default async function setDefaultPayoutAccount(payoutAccountId: string) {
     .eq("status", "active");
 
   if (setError) {
-    console.log(`Failed setting default payout account: ${setError.message}`);
+    logger.error(`Failed setting default payout account: ${setError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

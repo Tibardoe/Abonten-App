@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 /**
  * Bulk "Mark all as read" for the NotificationBell panel header. Scoped to
@@ -27,7 +28,7 @@ export async function markAllNotificationsRead() {
     .is("read_at", null);
 
   if (error) {
-    console.log(`Failed marking all notifications read: ${error.message}`);
+    logger.error(`Failed marking all notifications read: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

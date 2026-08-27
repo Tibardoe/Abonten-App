@@ -3,6 +3,7 @@
 import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -44,7 +45,7 @@ export async function saveEventQrCodeToCloudinary(
       secure_url: result.secure_url,
     };
   } catch (error) {
-    console.error(`Cloudinary upload error: ${error}`);
+    logger.error(`Cloudinary upload error: ${error}`);
     return { error: "Upload failed" };
   }
 }

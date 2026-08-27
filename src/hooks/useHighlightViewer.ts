@@ -1,4 +1,5 @@
 import type { HighlightGroup } from "@/types/highlightType";
+import { logger } from "@/utils/logger";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SLIDE_DURATION = 3000;
@@ -181,7 +182,7 @@ export function useHighlightViewer({
     ) {
       videoRef.current
         .play()
-        .catch((error) => console.error("Video play failed:", error));
+        .catch((error) => logger.debug("Video play failed:", error));
     }
     setIsPaused(false);
   }, [currentSlide]);
@@ -337,9 +338,7 @@ export function useHighlightViewer({
     if (videoRef.current && !isPaused) {
       videoRef.current
         .play()
-        .catch((error) =>
-          console.error("Video play failed on canplay:", error),
-        );
+        .catch((error) => logger.debug("Video play failed on canplay:", error));
     }
   }, [isPaused]);
 
@@ -355,7 +354,7 @@ export function useHighlightViewer({
         videoRef.current
           .play()
           .catch((error) =>
-            console.error("Video play failed in useEffect:", error),
+            logger.debug("Video play failed in useEffect:", error),
           );
       }
     }

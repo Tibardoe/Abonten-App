@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
 // for why. These accept an arbitrary userId with no session binding of their
@@ -131,7 +132,7 @@ export async function adjustPromoUsageUnits(
       .select("id");
 
     if (updateError) {
-      console.log(`Failed adjusting promo usage: ${updateError.message}`);
+      logger.error(`Failed adjusting promo usage: ${updateError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 
@@ -193,7 +194,7 @@ export async function releasePromoUsage(
       .select("id");
 
     if (updateError) {
-      console.log(`Failed releasing promo usage: ${updateError.message}`);
+      logger.error(`Failed releasing promo usage: ${updateError.message}`);
       return;
     }
 
@@ -204,7 +205,7 @@ export async function releasePromoUsage(
     // read and write above — retry with a fresh read instead of overwriting it.
   }
 
-  console.log(
+  logger.error(
     `Failed releasing ${unitsToRelease} promo usage unit(s) for ${promoCodeId} after ${MAX_CAS_ATTEMPTS} attempts (contention)`,
   );
 }

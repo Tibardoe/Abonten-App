@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { revalidatePath } from "next/cache";
 
 type RequestOrganizerPayoutResult =
@@ -46,7 +47,7 @@ export default async function requestOrganizerPayout(
     .single();
 
   if (error) {
-    console.log(`Failed requesting payout: ${error.message}`);
+    logger.error(`Failed requesting payout: ${error.message}`);
     const balanceStale = error.message.includes("exceeds available balance");
     const message = balanceStale
       ? "Your available balance has changed. Please review your updated balance before withdrawing."

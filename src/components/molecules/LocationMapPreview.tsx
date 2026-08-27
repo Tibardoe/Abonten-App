@@ -3,6 +3,8 @@
 import { parseWKBHex } from "@/utils/parseWKBHex";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
+const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];
+
 const containerClass =
   "w-full h-[180px] md:h-[220px] rounded-lg overflow-hidden";
 
@@ -29,7 +31,7 @@ export default function LocationMapPreview({
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: apiKey,
-    libraries: ["places"],
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
 
   let center: { lat: number; lng: number };

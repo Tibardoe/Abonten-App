@@ -7,6 +7,7 @@ import {
   allocatePromoEligibility,
   computeLineAmount,
 } from "@/utils/checkoutPricing";
+import { logger } from "@/utils/logger";
 import { claimPromoUsage, releasePromoUsage } from "@/utils/promoUsage";
 import {
   releaseTicketQuantity,
@@ -69,7 +70,7 @@ export default async function validateCheckout({
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.log(`Error fetching user: ${userError?.message}`);
+    logger.error(`Error fetching user: ${userError?.message}`);
 
     return {
       status: 401,
@@ -98,7 +99,7 @@ export default async function validateCheckout({
       .eq("status", "pending");
 
   if (ticketCheckoutDataError) {
-    console.log(
+    logger.error(
       `Error fetching ticket checkout data: ${ticketCheckoutDataError.message}`,
     );
 
@@ -125,7 +126,7 @@ export default async function validateCheckout({
     .eq("user_id", user.id);
 
   if (ticketDataError || !rawTicketData) {
-    console.log(`Error fetching ticket data: ${ticketDataError?.message}`);
+    logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
 
     return { status: 500, message: "Something went wrong" };
   }
@@ -153,7 +154,7 @@ export default async function validateCheckout({
     .maybeSingle();
 
   if (eventError) {
-    console.log(`Failed to fetch event:${eventError.message}`);
+    logger.error(`Failed to fetch event:${eventError.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }
@@ -331,7 +332,7 @@ export default async function validateCheckout({
     );
 
   if (checkoutInsertError) {
-    console.log(`Failed to insert checkout: ${checkoutInsertError.message}`);
+    logger.error(`Failed to insert checkout: ${checkoutInsertError.message}`);
 
     await rollbackReservations();
     if (promoCodeId && totalDiscountedUnits > 0) {

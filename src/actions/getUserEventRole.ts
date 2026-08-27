@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export async function getUserEventRole(userId: string) {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export async function getUserEventRole(userId: string) {
       .eq("organizer_id", userId);
 
     if (organizerEventError) {
-      console.log(
+      logger.error(
         `Error fetching organizer events: ${organizerEventError.message}`,
       );
 
@@ -41,7 +42,7 @@ export async function getUserEventRole(userId: string) {
       .eq("user_id", userId);
 
     if (attendeeEntryError) {
-      console.log(
+      logger.error(
         `Error fetching organizer events: ${attendeeEntryError.message}`,
       );
 
@@ -58,7 +59,7 @@ export async function getUserEventRole(userId: string) {
 
     return { role: roles };
   } catch (error) {
-    console.error("Error checking user event role:", error);
+    logger.error("Error checking user event role:", error);
     return { role: "none" };
   }
 }

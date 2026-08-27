@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { OrganizerRefundSummaryRow } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 
 type GetOrganizerRefundSummaryResult =
   | { status: 401 | 500; message: string }
@@ -27,7 +28,7 @@ export default async function getOrganizerRefundSummary(): Promise<GetOrganizerR
   const { data, error } = await supabase.rpc("get_organizer_refund_breakdown");
 
   if (error) {
-    console.log(`Failed fetching organizer refund summary: ${error.message}`);
+    logger.error(`Failed fetching organizer refund summary: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

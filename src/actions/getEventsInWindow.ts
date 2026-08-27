@@ -3,6 +3,7 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { EventsInWindowCursor, PaginatedResult } from "@/types/pagination";
 import type { UserPostType } from "@/types/postsType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -65,7 +66,7 @@ export async function getEventsInWindow({
   });
 
   if (error) {
-    console.error(`Error fetching events in window "${window}":`, error);
+    logger.error(`Error fetching events in window "${window}":`, error);
     return { status: 500, data: [], nextCursor: null, hasNextPage: false };
   }
 

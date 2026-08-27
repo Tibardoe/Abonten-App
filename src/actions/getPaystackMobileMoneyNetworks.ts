@@ -1,6 +1,7 @@
 "use server";
 
 import { listMobileMoneyProviders } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 
 export type MobileMoneyNetworkOption = {
   code: string;
@@ -26,7 +27,7 @@ export default async function getPaystackMobileMoneyNetworks(): Promise<GetPayst
       data: banks.map((bank) => ({ code: bank.code, name: bank.name })),
     };
   } catch (error) {
-    console.log(`Failed listing Paystack mobile money providers: ${error}`);
+    logger.error(`Failed listing Paystack mobile money providers: ${error}`);
     return { status: 500, message: "Couldn't load mobile money networks" };
   }
 }

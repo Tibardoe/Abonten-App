@@ -2,6 +2,7 @@
 
 import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { logger } from "@/utils/logger";
 import { computeProfileCompletion } from "@/utils/profileCompletion";
 
 // Idempotently creates the "Complete your profile" notification for a user.
@@ -30,7 +31,7 @@ export default async function ensureProfileCompletionNotification(
   ]);
 
   if (authUserError || userInfoError || !authUser.user || !userInfo) {
-    console.error(
+    logger.error(
       `ensureProfileCompletionNotification: could not load user ${userId}`,
       authUserError?.message ?? userInfoError?.message,
     );

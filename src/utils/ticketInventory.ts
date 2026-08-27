@@ -1,4 +1,5 @@
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Deliberately NOT a "use server" Server Action: every exported function in
 // a "use server" file gets a directly POST-able public endpoint regardless
@@ -32,7 +33,7 @@ export async function reserveTicketQuantity(
     .maybeSingle();
 
   if (ticketTypeError || !ticketType) {
-    console.log(`Failed fetching ticket type: ${ticketTypeError?.message}`);
+    logger.error(`Failed fetching ticket type: ${ticketTypeError?.message}`);
 
     return { status: 404, message: "Ticket type not found" };
   }
@@ -56,7 +57,7 @@ export async function reserveTicketQuantity(
     .select("id");
 
   if (updateError) {
-    console.log(`Failed reserving ticket quantity: ${updateError.message}`);
+    logger.error(`Failed reserving ticket quantity: ${updateError.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }
@@ -109,7 +110,7 @@ export async function releaseTicketQuantity(
       .select("id");
 
     if (updateError) {
-      console.log(`Failed releasing ticket quantity: ${updateError.message}`);
+      logger.error(`Failed releasing ticket quantity: ${updateError.message}`);
       return;
     }
 
@@ -120,7 +121,7 @@ export async function releaseTicketQuantity(
     // and write above — retry with a fresh read instead of overwriting it.
   }
 
-  console.log(
+  logger.error(
     `Failed releasing ${quantityToRelease} unit(s) for ticket type ${ticketTypeId} after ${MAX_CAS_ATTEMPTS} attempts (contention)`,
   );
 }

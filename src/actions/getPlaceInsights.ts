@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Owner-only analytics dashboard query. A simple select + reduce in JS is
 // fine here (rather than a Postgres RPC) -- this is a small, infrequently
@@ -53,7 +54,7 @@ export async function getPlaceInsights(placeId: string) {
       eventsResult.error?.message ??
       favoritesResult.error?.message ??
       reviewsResult.error?.message;
-    console.log(`Error fetching place insights: ${message}`);
+    logger.error(`Error fetching place insights: ${message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

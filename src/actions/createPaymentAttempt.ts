@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
+import { logger } from "@/utils/logger";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
@@ -81,7 +82,7 @@ export default async function createPaymentAttempt(
     .maybeSingle();
 
   if (methodError) {
-    console.log(`Failed fetching payment method: ${methodError.message}`);
+    logger.error(`Failed fetching payment method: ${methodError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -116,7 +117,7 @@ export default async function createPaymentAttempt(
       .eq("status", "pending");
 
     if (checkoutError) {
-      console.log(`Failed fetching checkout: ${checkoutError.message}`);
+      logger.error(`Failed fetching checkout: ${checkoutError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 
@@ -150,7 +151,7 @@ export default async function createPaymentAttempt(
       .maybeSingle();
 
     if (checkoutError) {
-      console.log(`Failed fetching checkout: ${checkoutError.message}`);
+      logger.error(`Failed fetching checkout: ${checkoutError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 
@@ -178,7 +179,7 @@ export default async function createPaymentAttempt(
       .maybeSingle();
 
     if (checkoutError) {
-      console.log(`Failed fetching checkout: ${checkoutError.message}`);
+      logger.error(`Failed fetching checkout: ${checkoutError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 

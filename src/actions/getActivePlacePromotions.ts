@@ -2,6 +2,7 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { PlaceType } from "@/types/placeType";
+import { logger } from "@/utils/logger";
 
 const FEATURED_PLACES_LIMIT = 10;
 
@@ -32,7 +33,7 @@ export async function getActivePlacePromotions(
   });
 
   if (error) {
-    console.log(`Error fetching active place promotions: ${error.message}`);
+    logger.error(`Error fetching active place promotions: ${error.message}`);
     return { status: 500, data: [] as PlaceType[] };
   }
 

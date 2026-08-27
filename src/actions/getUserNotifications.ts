@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { NotificationType } from "@/types/notificationType";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -56,7 +57,7 @@ export async function getUserNotifications(options?: {
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching notifications: ${error.message}`);
+    logger.error(`Failed fetching notifications: ${error.message}`);
 
     return {
       status: 500,

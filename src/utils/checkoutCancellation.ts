@@ -11,6 +11,7 @@
 // to use.
 
 import type { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 
 type PromotionCheckoutTable =
@@ -39,7 +40,7 @@ export async function cancelPromotionCheckout(
     .maybeSingle();
 
   if (checkoutError) {
-    console.log(`Failed fetching ${table}: ${checkoutError.message}`);
+    logger.error(`Failed fetching ${table}: ${checkoutError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -72,7 +73,7 @@ export async function cancelPromotionCheckout(
     .eq("status", "pending");
 
   if (updateError) {
-    console.log(`Failed cancelling ${table}: ${updateError.message}`);
+    logger.error(`Failed cancelling ${table}: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

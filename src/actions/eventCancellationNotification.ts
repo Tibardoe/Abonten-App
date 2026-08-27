@@ -2,6 +2,7 @@
 
 import EventCancellationEmailTemplate from "@/components/organisms/EventCancellationEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { logger } from "@/utils/logger";
 import { Resend } from "resend";
 
 export type CancelledAttendeeRefund = {
@@ -31,7 +32,7 @@ export default async function eventCancellationNotification(
   attendees: CancelledAttendeeRefund[],
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.log(
+    logger.warn(
       "RESEND_API_KEY is not set; skipping event cancellation emails",
     );
     return { status: 500, message: "Email service not configured" };
@@ -54,7 +55,7 @@ export default async function eventCancellationNotification(
           await supabase.auth.admin.getUserById(attendee.userId);
 
         if (adminUserError || !adminUser.user?.email) {
-          console.log(
+          logger.error(
             `Could not resolve email for user ${attendee.userId}: ${adminUserError?.message}`,
           );
           failed += 1;
@@ -83,13 +84,13 @@ export default async function eventCancellationNotification(
         });
 
         if (error) {
-          console.log(`Failed sending cancellation email: ${error.message}`);
+          logger.error(`Failed sending cancellation email: ${error.message}`);
           failed += 1;
         } else {
           sent += 1;
         }
       } catch (error) {
-        console.log(`Unexpected error sending cancellation email: ${error}`);
+        logger.error(`Unexpected error sending cancellation email: ${error}`);
         failed += 1;
       }
     }),

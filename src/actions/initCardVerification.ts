@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import { initializeTransaction } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 import { toPesewas } from "@/utils/paystackAmount";
 
 const CARD_VERIFICATION_AMOUNT_GHS = 1;
@@ -54,7 +55,7 @@ export default async function initCardVerification(): Promise<InitCardVerificati
       },
     };
   } catch (error) {
-    console.log(`Failed initializing card verification: ${error}`);
+    logger.error(`Failed initializing card verification: ${error}`);
     return {
       status: 500,
       message: "Couldn't start card verification. Please try again.",

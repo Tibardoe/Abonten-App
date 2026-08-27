@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
@@ -75,7 +76,7 @@ export async function GET(req: Request) {
       { status: 500 },
     );
   } catch (error) {
-    console.error("Geocode error:", error);
+    logger.error("Geocode error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

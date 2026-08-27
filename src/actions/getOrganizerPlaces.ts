@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -53,7 +54,7 @@ export default async function getOrganizerPlaces(options?: {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.error(userError?.message);
+      logger.error(userError?.message);
       return {
         status: 500,
         data: [],
@@ -81,7 +82,7 @@ export default async function getOrganizerPlaces(options?: {
   const { data: places, error: placesError } = await query;
 
   if (placesError) {
-    console.log(`Error fetching organizer's places: ${placesError.message}`);
+    logger.error(`Error fetching organizer's places: ${placesError.message}`);
 
     return {
       status: 500,

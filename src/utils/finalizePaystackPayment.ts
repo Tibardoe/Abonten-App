@@ -16,6 +16,7 @@ import activateEventPromotion from "@/actions/activateEventPromotion";
 import activatePlacePromotion from "@/actions/activatePlacePromotion";
 import generateTicket from "@/actions/generateTicket";
 import { verifyTransaction } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 import { fromPesewas, toPesewas } from "@/utils/paystackAmount";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -61,7 +62,7 @@ export async function finalizePaystackPayment(
     .maybeSingle<PaymentAttemptFullRow>();
 
   if (primaryError || !primary) {
-    console.log(
+    logger.error(
       `finalizePaystackPayment: attempt not found (${primaryError?.message})`,
     );
     return { status: "not_found" };
@@ -95,7 +96,7 @@ export async function finalizePaystackPayment(
       ]);
 
     if (siblingsError) {
-      console.log(
+      logger.error(
         `finalizePaystackPayment: failed fetching group members (${siblingsError.message})`,
       );
       return { status: "failed", message: "Something went wrong" };
@@ -130,7 +131,7 @@ export async function finalizePaystackPayment(
     .maybeSingle();
 
   if (lockError) {
-    console.log(`finalizePaystackPayment: lock failed (${lockError.message})`);
+    logger.error(`finalizePaystackPayment: lock failed (${lockError.message})`);
     return { status: "failed", message: "Something went wrong" };
   }
 
@@ -167,7 +168,7 @@ export async function finalizePaystackPayment(
   try {
     verification = await verifyTransaction(primary.provider_reference);
   } catch (error) {
-    console.log(`finalizePaystackPayment: verify call failed (${error})`);
+    logger.error(`finalizePaystackPayment: verify call failed (${error})`);
     // A transient Paystack/network failure shouldn't permanently fail the
     // payment — leave it retryable so a later webhook delivery (or another
     // manual verify) can try again instead of stranding a real payment.
@@ -185,7 +186,7 @@ export async function finalizePaystackPayment(
   );
 
   if (verification.reference !== primary.provider_reference) {
-    console.log(
+    logger.error(
       `finalizePaystackPayment: reference mismatch for attempt ${primary.id}`,
     );
     await markGroup("failed", { failure_reason: "Reference mismatch" });
@@ -215,7 +216,7 @@ export async function finalizePaystackPayment(
     verification.amount !== expectedAmountPesewas ||
     verification.currency.toUpperCase() !== primary.currency.toUpperCase()
   ) {
-    console.log(
+    logger.error(
       `finalizePaystackPayment: verification mismatch for attempt ${primary.id} (status=${verification.status}, amount=${verification.amount} vs ${expectedAmountPesewas}, currency=${verification.currency} vs ${primary.currency})`,
     );
     await markGroup("failed", {
@@ -295,7 +296,7 @@ export async function finalizePaystackPayment(
         .maybeSingle();
 
     if (transactionInsertError || !insertedTransaction) {
-      console.log(
+      logger.error(
         `finalizePaystackPayment: failed recording transaction for attempt ${primary.id} (${transactionInsertError?.message})`,
       );
       await markGroup("failed", {
@@ -370,7 +371,7 @@ export async function finalizePaystackPayment(
           })
           .eq("id", member.id);
       } else {
-        console.log(
+        logger.error(
           `finalizePaystackPayment: generateTicket failed for attempt ${member.id}: ${result.status} ${result.message}`,
         );
         anyFailed = true;
@@ -401,7 +402,7 @@ export async function finalizePaystackPayment(
           })
           .eq("id", member.id);
       } else {
-        console.log(
+        logger.error(
           `finalizePaystackPayment: activatePlacePromotion failed for attempt ${member.id}: ${result.status} ${result.message}`,
         );
         anyFailed = true;
@@ -432,7 +433,7 @@ export async function finalizePaystackPayment(
           })
           .eq("id", member.id);
       } else {
-        console.log(
+        logger.error(
           `finalizePaystackPayment: activateEventPromotion failed for attempt ${member.id}: ${result.status} ${result.message}`,
         );
         anyFailed = true;

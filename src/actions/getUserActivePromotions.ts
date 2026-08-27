@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export type ActivePromotionSummary = {
   resourceType: "event" | "place";
@@ -66,7 +67,7 @@ export async function getUserActivePromotions() {
   ]);
 
   if (eventPromotions.error || placePromotions.error) {
-    console.log(
+    logger.error(
       `Error fetching user promotions: ${
         eventPromotions.error?.message ?? placePromotions.error?.message
       }`,

@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 /**
  * Public, no-auth lookup of which events currently have an active (paid)
@@ -22,7 +23,7 @@ export default async function getActivePromotedEventIds(): Promise<
     .gt("ends_at", new Date().toISOString());
 
   if (error) {
-    console.log(`Error fetching active event promotions: ${error.message}`);
+    logger.error(`Error fetching active event promotions: ${error.message}`);
     return new Set();
   }
 

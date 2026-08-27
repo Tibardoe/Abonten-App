@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import createNotification from "./createNotification";
 
 type RespondToPlaceBookingInput = {
@@ -78,7 +79,7 @@ export async function respondToPlaceBooking(
     .select("id");
 
   if (updateError) {
-    console.log(`Error responding to booking: ${updateError.message}`);
+    logger.error(`Error responding to booking: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -109,7 +110,7 @@ export async function respondToPlaceBooking(
   );
 
   if (notifyResult.status !== 200) {
-    console.log(
+    logger.error(
       `Failed to notify customer of booking response: ${notifyResult.message}`,
     );
   }

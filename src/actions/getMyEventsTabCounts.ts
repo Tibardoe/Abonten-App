@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export type MyEventsTabCounts = {
   active: number;
@@ -91,7 +92,7 @@ export default async function getMyEventsTabCounts(): Promise<{
     reviewedResult.error ||
     reviewedPlacesResult.error
   ) {
-    console.error(
+    logger.error(
       `Failed fetching My Events tab counts: ${
         activeResult.error?.message ??
         cancelledResult.error?.message ??

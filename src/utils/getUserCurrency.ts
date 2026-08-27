@@ -1,4 +1,5 @@
 "use server";
+import { logger } from "@/utils/logger";
 
 export async function getUserCurrency(): Promise<string> {
   try {
@@ -19,7 +20,7 @@ export async function getUserCurrency(): Promise<string> {
 
     return data.currency || "GHS"; // default to USD if not available
   } catch (error) {
-    console.error("Failed to fetch user currency", error);
+    logger.error("Failed to fetch user currency", error);
     return "USD";
   }
 }

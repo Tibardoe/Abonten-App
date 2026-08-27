@@ -2,6 +2,7 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { UserPostType } from "@/types/postsType";
+import { logger } from "@/utils/logger";
 import { getEventAttendanceCounts } from "./getAttendace";
 
 // Public read (no auth check) -- same "browsable signed-out" reasoning as
@@ -24,7 +25,7 @@ export async function getPlaceUpcomingEvents(placeId: string) {
     .order("starts_at", { ascending: true });
 
   if (error) {
-    console.log(`Error fetching place's upcoming events: ${error.message}`);
+    logger.error(`Error fetching place's upcoming events: ${error.message}`);
     return { status: 500, data: [], message: "Something went wrong!" };
   }
 

@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { supabase } from "../config/supabase/client";
 
 export const signInWithGoogle = async (
@@ -28,7 +29,7 @@ export const fetchAuthenticatedUser = async () => {
     const { data, error } = await supabase.auth.getUser();
 
     if (error || !data?.user) {
-      console.error("Authentication failed:", error?.message);
+      logger.error("Authentication failed:", error?.message);
       throw new Error(error?.message || "No active session");
     }
 
@@ -36,7 +37,7 @@ export const fetchAuthenticatedUser = async () => {
 
     return data.user;
   } catch (error) {
-    console.error("User profile verification failed:", error);
+    logger.error("User profile verification failed:", error);
     await supabase.auth.signOut(); // Prevent partial auth state
     throw error;
   }

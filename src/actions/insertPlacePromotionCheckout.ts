@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
+import { logger } from "@/utils/logger";
 
 /**
  * Reserve step for a Featured Places purchase — the place equivalent of
@@ -72,7 +73,7 @@ export default async function insertPlacePromotionCheckout(
     .single();
 
   if (insertError) {
-    console.log(
+    logger.error(
       `Error inserting place promotion checkout: ${insertError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };

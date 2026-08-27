@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 // Aggregate rating for one event's own reviews (event_review) -- distinct
 // from getUserRating.ts, which averages the generic `review` table's rows
@@ -19,7 +20,7 @@ export async function getEventRating(eventId: string) {
     .eq("status", "approved");
 
   if (error) {
-    console.error("Error fetching event ratings:", error);
+    logger.error("Error fetching event ratings:", error);
     return { averageRating: 0, totalRatings: 0 };
   }
 

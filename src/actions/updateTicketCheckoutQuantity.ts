@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { computeLineAmount } from "@/utils/checkoutPricing";
+import { logger } from "@/utils/logger";
 import { adjustPromoUsageUnits } from "@/utils/promoUsage";
 import {
   releaseTicketQuantity,
@@ -69,7 +70,7 @@ export default async function updateTicketCheckoutQuantity(
     .maybeSingle();
 
   if (checkoutError) {
-    console.log(`Failed fetching checkout line: ${checkoutError.message}`);
+    logger.error(`Failed fetching checkout line: ${checkoutError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -192,7 +193,7 @@ export default async function updateTicketCheckoutQuantity(
     .select("id");
 
   if (updateError) {
-    console.log(`Failed updating checkout quantity: ${updateError.message}`);
+    logger.error(`Failed updating checkout quantity: ${updateError.message}`);
     await rollbackPromo();
     await rollbackInventory();
     return { status: 500, message: "Something went wrong!" };

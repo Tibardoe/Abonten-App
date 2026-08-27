@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { PlaceClaimRequest } from "@/types/placeType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -48,7 +49,7 @@ export async function getPlaceClaimRequests(options?: {
     .maybeSingle();
 
   if (userInfoError) {
-    console.log(`Error checking admin status: ${userInfoError.message}`);
+    logger.error(`Error checking admin status: ${userInfoError.message}`);
     return {
       status: 500,
       data: [],
@@ -87,7 +88,7 @@ export async function getPlaceClaimRequests(options?: {
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching place claim requests: ${error.message}`);
+    logger.error(`Failed fetching place claim requests: ${error.message}`);
 
     return {
       status: 500,

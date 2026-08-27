@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 type FormDataType = {
   title: string;
@@ -96,8 +97,6 @@ export async function postReview(formData: FormDataType) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  console.log(formattedTitle, review, rating, reviewedId);
-
   const { error: insertEror } = await supabase.from("review").insert({
     created_at: new Date(),
     title: formattedTitle,
@@ -109,7 +108,7 @@ export async function postReview(formData: FormDataType) {
   });
 
   if (insertEror) {
-    console.log(`Error inserting review: ${insertEror.message}`);
+    logger.error(`Error inserting review: ${insertEror.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }
@@ -125,7 +124,7 @@ export async function postReview(formData: FormDataType) {
       .eq("user_id", user.id);
 
     if (deleteDraftError) {
-      console.error(
+      logger.error(
         `Failed to delete draft ${draftId} after successful review submission: ${deleteDraftError.message}`,
       );
     }

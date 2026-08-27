@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -63,11 +64,11 @@ export async function deleteHighlight(groupId: string) {
       if (result.result === "ok" || result.result === "not found") {
         deletableIds.push(row.id);
       } else {
-        console.error("Cloudinary destroy returned unexpected result:", result);
+        logger.error("Cloudinary destroy returned unexpected result:", result);
         failedCount += 1;
       }
     } catch (cloudError) {
-      console.error("Cloudinary deletion failed:", cloudError);
+      logger.error("Cloudinary deletion failed:", cloudError);
       failedCount += 1;
     }
   }

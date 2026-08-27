@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { UserTransactionSummaryRow } from "@/types/transactions";
+import { logger } from "@/utils/logger";
 import {
   type TransactionPeriod,
   getTransactionPeriodRange,
@@ -27,7 +28,7 @@ export async function getUserTransactionSummary(period: TransactionPeriod) {
   });
 
   if (error) {
-    console.error("Supabase error:", error.message);
+    logger.error("Supabase error:", error.message);
     return { status: 500 as const, message: "Something went wrong!" };
   }
 

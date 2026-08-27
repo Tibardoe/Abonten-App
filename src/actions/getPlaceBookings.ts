@@ -6,6 +6,7 @@ import type {
   BookingStatus,
   OwnerPlaceBooking,
 } from "@/types/placeBookingType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -106,7 +107,7 @@ export async function getPlaceBookings(
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching place bookings: ${error.message}`);
+    logger.error(`Failed fetching place bookings: ${error.message}`);
 
     return {
       status: 500,

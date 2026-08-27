@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Mirrors getPlacePromotionCheckout.ts exactly -- same self-heal-then-read
 // shape, just scoped by event_promotion_checkout's owner_id column and
@@ -29,7 +30,7 @@ export default async function getEventPromotionCheckout(checkoutId: string) {
     .eq("owner_id", user.id);
 
   if (checkoutDataError) {
-    console.log(`Failed fetching checkout data: ${checkoutDataError.message}`);
+    logger.error(`Failed fetching checkout data: ${checkoutDataError.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }

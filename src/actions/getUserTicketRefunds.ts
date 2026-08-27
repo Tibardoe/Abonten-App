@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -35,7 +36,7 @@ export default async function getUserTicketRefunds(options?: {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error(userError?.message);
+    logger.error(userError?.message);
     return {
       status: 500,
       data: [],
@@ -62,9 +63,7 @@ export default async function getUserTicketRefunds(options?: {
   const { data: tickets, error: ticketsError } = await query;
 
   if (ticketsError) {
-    console.error(
-      `Error fetching user ticket refunds: ${ticketsError.message}`,
-    );
+    logger.error(`Error fetching user ticket refunds: ${ticketsError.message}`);
 
     return {
       status: 500,

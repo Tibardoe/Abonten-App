@@ -3,6 +3,7 @@
 import getAvatarUploadSignature from "@/actions/getAvatarUploadSignature";
 import { saveToSupabase } from "@/actions/saveAvatarToSupabase";
 import { useToast } from "@/hooks/useToast";
+import { logger } from "@/utils/logger";
 import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -88,7 +89,7 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
         if (error instanceof Error && error.message === "Upload cancelled.") {
           return;
         }
-        console.error("Error uploading image:", error);
+        logger.error("Error uploading image:", error);
         toast.error(
           error instanceof Error
             ? error.message

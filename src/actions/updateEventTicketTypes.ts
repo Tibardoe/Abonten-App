@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { Ticket } from "@/types/ticketType";
+import { logger } from "@/utils/logger";
 import getEventHasConfirmedParticipation from "./getEventHasConfirmedParticipation";
 
 export type UpdateEventTicketTypesInput = {
@@ -115,7 +116,7 @@ export default async function updateEventTicketTypes(
     await supabase.from("ticket_type").select("id").eq("event_id", eventId);
 
   if (existingTicketTypesError) {
-    console.log(
+    logger.error(
       `Failed fetching existing ticket types: ${existingTicketTypesError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -136,7 +137,9 @@ export default async function updateEventTicketTypes(
       .eq("status", "pending");
 
     if (pendingError) {
-      console.log(`Failed checking pending checkouts: ${pendingError.message}`);
+      logger.error(
+        `Failed checking pending checkouts: ${pendingError.message}`,
+      );
       return { status: 500, message: "Something went wrong!" };
     }
 
@@ -154,7 +157,7 @@ export default async function updateEventTicketTypes(
       .eq("event_id", eventId);
 
     if (deleteError) {
-      console.log(`Failed deleting old ticket types: ${deleteError.message}`);
+      logger.error(`Failed deleting old ticket types: ${deleteError.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
   }
@@ -164,7 +167,7 @@ export default async function updateEventTicketTypes(
     .insert(ticketTypesPayload.map((t) => ({ ...t, event_id: eventId })));
 
   if (insertError) {
-    console.log(`Failed inserting new ticket types: ${insertError.message}`);
+    logger.error(`Failed inserting new ticket types: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

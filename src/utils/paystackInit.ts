@@ -14,6 +14,7 @@ import {
   initializeTransaction,
   initiateMobileMoneyCharge,
 } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 import type { PaymentAttemptRow } from "@/utils/paymentAttempt";
 import { toPesewas } from "@/utils/paystackAmount";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -73,7 +74,7 @@ export async function ensurePaystackTransaction(
       metadata: { paymentAttemptId: attempt.id },
     });
   } catch (error) {
-    console.log(`Failed initializing Paystack transaction: ${error}`);
+    logger.error(`Failed initializing Paystack transaction: ${error}`);
     return {
       status: 500,
       message: "Failed to start payment. Please try again.",
@@ -93,7 +94,7 @@ export async function ensurePaystackTransaction(
     .eq("id", attempt.id);
 
   if (updateError) {
-    console.log(
+    logger.error(
       `Failed storing Paystack reference on payment_attempt: ${updateError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -155,7 +156,7 @@ async function chargeCardDirect(
       reference,
     });
   } catch (error) {
-    console.log(`Failed charging saved card authorization: ${error}`);
+    logger.error(`Failed charging saved card authorization: ${error}`);
     return {
       status: 500,
       message: "We couldn't charge your saved card. Please try again.",
@@ -172,7 +173,7 @@ async function chargeCardDirect(
     .eq("id", attempt.id);
 
   if (updateError) {
-    console.log(
+    logger.error(
       `Failed storing card-charge reference on payment_attempt: ${updateError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -214,7 +215,7 @@ async function chargeMomoDirect(
       providerCode: networkCode,
     });
   } catch (error) {
-    console.log(`Failed initiating mobile money charge: ${error}`);
+    logger.error(`Failed initiating mobile money charge: ${error}`);
     return {
       status: 500,
       message: "We couldn't start your mobile money payment. Please try again.",
@@ -231,7 +232,7 @@ async function chargeMomoDirect(
     .eq("id", attempt.id);
 
   if (updateError) {
-    console.log(
+    logger.error(
       `Failed storing mobile money charge reference on payment_attempt: ${updateError.message}`,
     );
     return { status: 500, message: "Something went wrong!" };

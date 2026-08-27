@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { validateLocationInput } from "@/utils/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
@@ -140,7 +141,7 @@ export async function updatePlace(formData: UpdatePlaceInput) {
     try {
       await cloudinary.uploader.destroy(previousCoverPublicId);
     } catch (cloudError) {
-      console.error(
+      logger.error(
         "Cloudinary deletion of old cover photo failed:",
         cloudError,
       );

@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { AuthOverride } from "@/types/authOverrideType";
 import type { UserTicketType } from "@/types/ticketType";
+import { logger } from "@/utils/logger";
 import { TICKET_WITH_EVENT_SELECT } from "@/utils/ticketSelect";
 
 /**
@@ -38,7 +39,7 @@ export default async function getTicketsByIds(
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      console.log(`Failed fetching user: ${userError?.message}`);
+      logger.error(`Failed fetching user: ${userError?.message}`);
       return { status: 401, data: [], message: "User not logged in" };
     }
 
@@ -52,7 +53,7 @@ export default async function getTicketsByIds(
     .in("id", ticketIds);
 
   if (ticketsError) {
-    console.log(`Failed fetching tickets: ${ticketsError.message}`);
+    logger.error(`Failed fetching tickets: ${ticketsError.message}`);
     return { status: 500, data: [], message: "Something went wrong" };
   }
 

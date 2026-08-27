@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { OrganizerPendingEarningRow } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 
 type GetOrganizerPendingEarningsResult =
   | { status: 401 | 500; message: string }
@@ -27,7 +28,7 @@ export default async function getOrganizerPendingEarnings(): Promise<GetOrganize
   const { data, error } = await supabase.rpc("get_organizer_pending_earnings");
 
   if (error) {
-    console.log(`Failed fetching pending earnings: ${error.message}`);
+    logger.error(`Failed fetching pending earnings: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

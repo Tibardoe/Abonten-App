@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { HighlightUploadMetadataItem } from "@/types/highlightUploadType";
+import { logger } from "@/utils/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -168,7 +169,7 @@ export default async function uploadHighlight(
   const failed = results.filter((r) => r.status === "rejected");
 
   if (failed.length > 0) {
-    console.error(
+    logger.error(
       "Upload failed for some media:",
       failed.map((f) => f.reason),
     );
@@ -198,7 +199,7 @@ async function cleanupOrphanedAsset(
       resource_type: resourceType,
     });
   } catch (cloudError) {
-    console.error(
+    logger.error(
       "Failed to immediately clean up orphaned highlight asset, queueing:",
       cloudError,
     );
@@ -208,7 +209,7 @@ async function cleanupOrphanedAsset(
       .insert({ public_id: publicId, resource_type: resourceType });
 
     if (queueError) {
-      console.error(
+      logger.error(
         "Failed to queue orphaned highlight asset for cleanup:",
         publicId,
         queueError,

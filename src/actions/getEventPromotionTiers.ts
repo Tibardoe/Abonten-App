@@ -2,6 +2,7 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { EventPromotionTier } from "@/types/postsType";
+import { logger } from "@/utils/logger";
 
 // event_promotion_tier is a small, seeded lookup table (4 rows -- 24 hours/
 // 3 days/7 days/1 month) -- mirrors getPlacePromotionTiers.ts exactly.
@@ -15,7 +16,7 @@ export async function getEventPromotionTiers() {
     .order("id");
 
   if (error) {
-    console.log(`Error fetching event promotion tiers: ${error.message}`);
+    logger.error(`Error fetching event promotion tiers: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

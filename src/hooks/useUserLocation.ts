@@ -1,9 +1,10 @@
+import { logger } from "@/utils/logger";
 import { useQuery } from "@tanstack/react-query";
 
 function fetchTownFromGeolocation(): Promise<string | null> {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      console.error("Geolocation not supported");
+      logger.debug("Geolocation not supported by this browser");
       resolve(null);
       return;
     }
@@ -39,12 +40,14 @@ function fetchTownFromGeolocation(): Promise<string | null> {
             resolve(null);
           }
         } catch (error) {
-          console.error("Error fetching location:", error);
+          logger.error("Error fetching location:", error);
           resolve(null);
         }
       },
       (error) => {
-        console.error("Geolocation error:", error);
+        // Permission denied / unavailable / timeout are all normal outcomes
+        // (the user simply declined) and are handled by resolving null.
+        logger.debug("Geolocation unavailable:", error.message);
         resolve(null);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },

@@ -1,6 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 
 /**
  * Uses the get_event_attendance_count RPC rather than reading `attendance`
@@ -44,7 +45,7 @@ export async function getEventAttendanceCounts(
   });
 
   if (error || !data) {
-    console.error(`Error fetching attendance counts: ${error?.message}`);
+    logger.error(`Error fetching attendance counts: ${error?.message}`);
     return {};
   }
 

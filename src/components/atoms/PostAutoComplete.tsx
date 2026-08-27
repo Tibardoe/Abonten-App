@@ -4,6 +4,7 @@ import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
 import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
 import type { ResolvedLocation } from "@/types/resolvedLocation";
+import { logger } from "@/utils/logger";
 import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
 import { forwardRef, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
@@ -84,7 +85,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
                 ? { status: "resolved" }
                 : { status: "unresolved", rawText: text };
             } catch (error) {
-              console.error("Failed to reverse-geocode coordinates:", error);
+              logger.error("Failed to reverse-geocode coordinates:", error);
               return { status: "error" };
             }
           }
@@ -121,7 +122,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
               );
             });
           } catch (error) {
-            console.error("Places predictions request failed:", error);
+            logger.error("Places predictions request failed:", error);
             return { status: "error" };
           }
 
@@ -138,7 +139,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
                 ? { status: "resolved" }
                 : { status: "unresolved", rawText: text };
             } catch (error) {
-              console.error("Fallback geocoding failed:", error);
+              logger.error("Fallback geocoding failed:", error);
               return { status: "error" };
             }
           }

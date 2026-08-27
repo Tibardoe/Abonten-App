@@ -2,6 +2,7 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { PlacePromotionTier } from "@/types/placeType";
+import { logger } from "@/utils/logger";
 
 // place_promotion_tier is a small, seeded lookup table (4 rows -- 24 hours/
 // 3 days/7 days/1 month) -- mirrors getPlaceCategories.ts's plain
@@ -17,7 +18,7 @@ export async function getPlacePromotionTiers() {
     .order("id");
 
   if (error) {
-    console.log(`Error fetching place promotion tiers: ${error.message}`);
+    logger.error(`Error fetching place promotion tiers: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

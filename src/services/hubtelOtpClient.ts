@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 // Hubtel's dedicated OTP prepare/verify API — kept exactly as already
 // integrated (Hubtel generates and stores the code itself; this app never
 // sees or checks the code value directly, only Hubtel's verdict). Isolated
@@ -48,7 +49,7 @@ export async function sendHubtelOtp(
   const credentials = getHubtelCredentials();
 
   if (!credentials) {
-    console.error("Hubtel API credentials are not configured.");
+    logger.error("Hubtel API credentials are not configured.");
     return { ok: false, message: "Something went wrong. Please try again." };
   }
 
@@ -71,7 +72,7 @@ export async function sendHubtelOtp(
   const data = (await response.json()) as HubtelOtpSendResponse;
 
   if (data.code !== "0000" || !data.data?.requestId || !data.data?.prefix) {
-    console.error(`Hubtel OTP send failed: ${data.message}`);
+    logger.error(`Hubtel OTP send failed: ${data.message}`);
     return {
       ok: false,
       message: "Couldn't send the verification code. Please try again.",
@@ -89,7 +90,7 @@ export async function verifyHubtelOtp(
   const credentials = getHubtelCredentials();
 
   if (!credentials) {
-    console.error("Hubtel API credentials are not configured.");
+    logger.error("Hubtel API credentials are not configured.");
     return { ok: false, message: "Something went wrong. Please try again." };
   }
 

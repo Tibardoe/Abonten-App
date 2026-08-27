@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import createNotification from "./createNotification";
 
 /**
@@ -60,7 +61,7 @@ export async function cancelPlaceBooking(bookingId: string) {
     .select("id");
 
   if (updateError) {
-    console.log(`Error cancelling booking: ${updateError.message}`);
+    logger.error(`Error cancelling booking: ${updateError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -87,7 +88,7 @@ export async function cancelPlaceBooking(bookingId: string) {
     );
 
     if (notifyResult.status !== 200) {
-      console.log(
+      logger.error(
         `Failed to notify owner of booking cancellation: ${notifyResult.message}`,
       );
     }

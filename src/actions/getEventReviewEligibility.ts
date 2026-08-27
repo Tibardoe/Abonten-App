@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { Occurrence } from "@/types/occurrenceType";
 import { resolveEventEndDate } from "@/utils/dateFormatter";
+import { logger } from "@/utils/logger";
 
 export type EventReviewEligibility =
   | {
@@ -96,7 +97,9 @@ export async function getEventReviewEligibility(
     .eq("status", "used");
 
   if (ticketsError) {
-    console.log(`Failed checking verified attendance: ${ticketsError.message}`);
+    logger.error(
+      `Failed checking verified attendance: ${ticketsError.message}`,
+    );
     return { canReview: false, reason: "not_attended" };
   }
 

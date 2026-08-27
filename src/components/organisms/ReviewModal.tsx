@@ -4,6 +4,7 @@ import MaskIcon from "@/components/atoms/MaskIcon";
 import ModalShell from "@/components/atoms/ModalShell";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
+import { logger } from "@/utils/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -104,7 +105,7 @@ export default function ReviewModal({
 
         return user?.id;
       } catch (error) {
-        console.log(error);
+        logger.error(error);
       }
     },
   });

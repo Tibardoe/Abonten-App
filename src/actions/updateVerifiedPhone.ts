@@ -8,6 +8,7 @@ import {
   getPendingOtp,
   registerVerifyAttempt,
 } from "@/services/phoneOtpStore";
+import { logger } from "@/utils/logger";
 import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
 import { OTP_MESSAGES } from "@/utils/otpMessages";
 
@@ -85,7 +86,7 @@ export default async function updateVerifiedPhone(
       return { status: 409, message: "That phone number can't be used." };
     }
 
-    console.error(`updateVerifiedPhone: update failed: ${updateError.message}`);
+    logger.error(`updateVerifiedPhone: update failed: ${updateError.message}`);
     return { status: 500, message: "Something went wrong. Please try again." };
   }
 

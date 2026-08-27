@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { submitChargeOtp } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 
 type SubmitPaystackChargeOtpResult =
   | { status: 400 | 401 | 403 | 404 | 500; message: string }
@@ -37,7 +38,7 @@ export default async function submitPaystackChargeOtp(
     .maybeSingle();
 
   if (attemptError) {
-    console.log(`Failed fetching payment attempt: ${attemptError.message}`);
+    logger.error(`Failed fetching payment attempt: ${attemptError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -57,7 +58,7 @@ export default async function submitPaystackChargeOtp(
     const result = await submitChargeOtp(otp, attempt.provider_reference);
     return { status: 200, data: { chargeStatus: result.status } };
   } catch (error) {
-    console.log(`Failed submitting charge OTP: ${error}`);
+    logger.error(`Failed submitting charge OTP: ${error}`);
     return {
       status: 400,
       message: "That code didn't work. Please check and try again.",

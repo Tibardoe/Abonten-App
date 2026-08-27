@@ -6,6 +6,7 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@/utils/generateTicketCode";
+import { logger } from "@/utils/logger";
 import {
   releaseTicketQuantity,
   reserveTicketQuantity,
@@ -53,7 +54,7 @@ export default async function registerForFreeEvent(
     .eq("user_id", user.id);
 
   if (ticketDataError || !rawTicketData) {
-    console.log(`Error fetching ticket data: ${ticketDataError?.message}`);
+    logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
 
     return { status: 500, message: "Something went wrong" };
   }
@@ -79,7 +80,7 @@ export default async function registerForFreeEvent(
     .maybeSingle();
 
   if (eventFetchError || !event) {
-    console.log(`Failed fetching event: ${eventFetchError?.message}`);
+    logger.error(`Failed fetching event: ${eventFetchError?.message}`);
     return { status: 500, message: "Something went wrong" };
   }
 
@@ -99,7 +100,7 @@ export default async function registerForFreeEvent(
   );
 
   if (!eventEndDate) {
-    console.log(`Event ${eventId} has no resolvable start/end date`);
+    logger.error(`Event ${eventId} has no resolvable start/end date`);
     return { status: 500, message: "This event has no scheduled date" };
   }
 
@@ -146,7 +147,7 @@ export default async function registerForFreeEvent(
   );
 
   if (uploadResponse.error) {
-    console.log(`Error saving QR code to cloudinary:${uploadResponse.error}`);
+    logger.error(`Error saving QR code to cloudinary:${uploadResponse.error}`);
 
     await releaseTicketQuantity(ticketType.id, 1);
 
@@ -174,7 +175,7 @@ export default async function registerForFreeEvent(
     .maybeSingle();
 
   if (insertTicketError || !insertedTicket) {
-    console.log(`Error inserting ticket: ${insertTicketError?.message}`);
+    logger.error(`Error inserting ticket: ${insertTicketError?.message}`);
 
     await releaseTicketQuantity(ticketType.id, 1);
 
@@ -204,7 +205,7 @@ export default async function registerForFreeEvent(
   // is scheduled with after() rather than awaited inline.
   after(() =>
     ticketPurchaseNotification([insertedTicket.id], 0).catch((error) =>
-      console.log(`Failed sending ticket purchase email: ${error}`),
+      logger.error(`Failed sending ticket purchase email: ${error}`),
     ),
   );
 

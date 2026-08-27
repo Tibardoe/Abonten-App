@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -26,7 +27,7 @@ export async function getUserReviews(
     .maybeSingle();
 
   if (!user || userError) {
-    console.log(`Error fetching user id: ${userError?.message}`);
+    logger.error(`Error fetching user id: ${userError?.message}`);
 
     return {
       status: 500,
@@ -52,7 +53,7 @@ export async function getUserReviews(
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching reviews: ${error.message}`);
+    logger.error(`Failed fetching reviews: ${error.message}`);
 
     return {
       status: 500,

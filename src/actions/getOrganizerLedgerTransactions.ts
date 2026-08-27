@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { OrganizerLedgerTransactionRow } from "@/types/organizerFinance";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -50,7 +51,7 @@ export async function getOrganizerLedgerTransactions(options?: {
   );
 
   if (error) {
-    console.log(`Failed fetching organizer transactions: ${error.message}`);
+    logger.error(`Failed fetching organizer transactions: ${error.message}`);
     return {
       status: 500,
       data: [],

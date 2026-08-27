@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { logger } from "@/utils/logger";
 
 export default async function deleteUser() {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export default async function deleteUser() {
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    console.log(`Error fetching user: ${userError?.message}`);
+    logger.error(`Error fetching user: ${userError?.message}`);
 
     return { status: 401, message: "User not Logged in" };
   }
@@ -29,7 +30,7 @@ export default async function deleteUser() {
   );
 
   if (deleteUserError) {
-    console.log(`Error deleting user: ${deleteUserError.message}`);
+    logger.error(`Error deleting user: ${deleteUserError.message}`);
 
     return { status: 500, message: "Something went wrong! Try again" };
   }

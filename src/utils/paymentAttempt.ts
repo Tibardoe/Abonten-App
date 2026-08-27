@@ -8,6 +8,7 @@
 // resolved userId from the caller's own session.
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export type PaymentAttemptRow = {
   id: string;
@@ -68,7 +69,7 @@ export async function upsertPaymentAttemptForSession(
     .maybeSingle();
 
   if (existingError) {
-    console.log(`Failed checking existing attempt: ${existingError.message}`);
+    logger.error(`Failed checking existing attempt: ${existingError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -86,7 +87,9 @@ export async function upsertPaymentAttemptForSession(
         .single();
 
       if (updateError) {
-        console.log(`Failed grouping existing attempt: ${updateError.message}`);
+        logger.error(
+          `Failed grouping existing attempt: ${updateError.message}`,
+        );
         return { status: 500, message: "Something went wrong!" };
       }
 
@@ -114,7 +117,7 @@ export async function upsertPaymentAttemptForSession(
     .single();
 
   if (insertError) {
-    console.log(`Failed creating payment attempt: ${insertError.message}`);
+    logger.error(`Failed creating payment attempt: ${insertError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -147,7 +150,7 @@ export async function hasOpenPaymentAttempt(
     .maybeSingle();
 
   if (error) {
-    console.log(`Failed checking open payment attempts: ${error.message}`);
+    logger.error(`Failed checking open payment attempts: ${error.message}`);
     // Fail closed: if this can't be verified, don't risk cancelling a
     // checkout that might actually be mid-payment.
     return true;
@@ -183,7 +186,7 @@ export async function getLatestPaymentAttemptStatus(
 
   if (error || !data) {
     if (error) {
-      console.log(`Failed fetching latest payment attempt: ${error.message}`);
+      logger.error(`Failed fetching latest payment attempt: ${error.message}`);
     }
     return null;
   }

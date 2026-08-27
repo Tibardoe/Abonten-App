@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 // Ownership-scoped delete; cascades to event_review_photo via its existing
 // FK (event_review_photo_review_id_fkey ... ON DELETE CASCADE).
@@ -24,7 +25,7 @@ export async function deleteEventReview(reviewId: string) {
     .select("id");
 
   if (deleteError) {
-    console.log(`Error deleting event review: ${deleteError.message}`);
+    logger.error(`Error deleting event review: ${deleteError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

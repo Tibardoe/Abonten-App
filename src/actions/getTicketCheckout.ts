@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export default async function getTicketCheckout(checkoutSessionId: string) {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function getTicketCheckout(checkoutSessionId: string) {
     .eq("user_id", user.id);
 
   if (checkoutDataError) {
-    console.log(`Failed fetching checout data: ${checkoutDataError.message}`);
+    logger.error(`Failed fetching checout data: ${checkoutDataError.message}`);
 
     return { status: 500, message: "Something went wrong!" };
   }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 import { validateLocationInput } from "@/utils/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
 import { revalidatePath } from "next/cache";
@@ -226,7 +227,7 @@ export async function updateEvent(formData: UpdateEventInput) {
     try {
       await cloudinary.uploader.destroy(previousFlyerPublicId);
     } catch (cloudError) {
-      console.error("Cloudinary deletion of old flyer failed:", cloudError);
+      logger.error("Cloudinary deletion of old flyer failed:", cloudError);
       // Not failing the whole update if cleanup of the old flyer fails.
     }
   }

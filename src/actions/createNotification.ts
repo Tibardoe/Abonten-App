@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { CreateNotificationInput } from "@/types/notificationType";
+import { logger } from "@/utils/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -36,7 +37,7 @@ export default async function createNotification(
   });
 
   if (error) {
-    console.log(`Failed creating notification: ${error.message}`);
+    logger.error(`Failed creating notification: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

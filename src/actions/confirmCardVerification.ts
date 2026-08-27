@@ -7,6 +7,7 @@ import {
   refundTransaction,
   verifyTransaction,
 } from "@/services/paystackService";
+import { logger } from "@/utils/logger";
 
 type ConfirmCardVerificationResult =
   | { status: 400 | 401 | 500; message: string }
@@ -42,7 +43,7 @@ export default async function confirmCardVerification(
   try {
     verification = await verifyTransaction(reference);
   } catch (error) {
-    console.log(`Failed verifying card verification charge: ${error}`);
+    logger.error(`Failed verifying card verification charge: ${error}`);
     return {
       status: 500,
       message: "Couldn't verify your card. Please try again.",
@@ -50,7 +51,7 @@ export default async function confirmCardVerification(
   }
 
   if (verification.customer.email !== user.email) {
-    console.log(
+    logger.error(
       "confirmCardVerification: verified charge belongs to a different customer email",
     );
     return { status: 401, message: "Not authorized" };
@@ -79,7 +80,7 @@ export default async function confirmCardVerification(
     // Best-effort only — the authorization is already captured and safe to
     // save regardless of whether the refund succeeds. Logged for manual
     // follow-up rather than blocking the user.
-    console.log(
+    logger.error(
       `Card verification refund failed for reference ${reference}: ${error}`,
     );
   }

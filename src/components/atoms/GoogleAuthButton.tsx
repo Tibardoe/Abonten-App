@@ -1,6 +1,7 @@
 import { useToast } from "@/hooks/useToast";
 import { signInWithGoogle } from "@/services/authService";
 import { generateSlug } from "@/utils/geerateSlug";
+import { logger } from "@/utils/logger";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
@@ -23,7 +24,7 @@ export default function GoogleAuthButton({ location, next }: GoogleTextProp) {
       // No need to reset isSigningIn on success -- signInWithOAuth navigates
       // the browser away to Google before this function returns.
     } catch (error) {
-      console.error("Google Sign-In Error:", error);
+      logger.error("Google Sign-In Error:", error);
 
       toast.error(t("googleSignInFailed"));
       setIsSigningIn(false);

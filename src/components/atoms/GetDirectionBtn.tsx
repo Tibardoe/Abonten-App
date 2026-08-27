@@ -1,6 +1,7 @@
 "use client";
 
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
+import { logger } from "@/utils/logger";
 import { parseWKBHex } from "@/utils/parseWKBHex";
 import { IoLocationOutline } from "react-icons/io5";
 
@@ -21,7 +22,7 @@ export default function GetDirectionBtn({ location }: EventDetailsType) {
 
       window.open(url, "_blank");
     } catch (error) {
-      console.error("Failed to get directions:", error);
+      logger.error("Failed to get directions:", error);
 
       alert("Could not get directions. Please enable location services.");
     }

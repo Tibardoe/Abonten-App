@@ -3,6 +3,7 @@
 import { publicSupabase } from "@/config/supabase/publicClient";
 import type { PaginatedResult, PlacesCursor } from "@/types/pagination";
 import type { PlaceFilters, PlaceType } from "@/types/placeType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -43,7 +44,7 @@ export async function getQueriedPlaces(
   });
 
   if (error) {
-    console.error("Error fetching filtered places:", error);
+    logger.error("Error fetching filtered places:", error);
     return { status: 500, data: [], nextCursor: null, hasNextPage: false };
   }
 

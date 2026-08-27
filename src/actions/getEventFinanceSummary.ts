@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@/utils/logger";
 
 export type EventFinanceSummary = {
   currency: string;
@@ -74,7 +75,7 @@ export default async function getEventFinanceSummary(
   const { data: ledgerRows, error: ledgerError } = await ledgerQuery;
 
   if (ledgerError) {
-    console.log(`Failed fetching event ledger rows: ${ledgerError.message}`);
+    logger.error(`Failed fetching event ledger rows: ${ledgerError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
@@ -119,7 +120,7 @@ export default async function getEventFinanceSummary(
     await supabase.rpc("get_event_refund_breakdown", { p_event_id: eventId });
 
   if (refundBreakdownError) {
-    console.log(
+    logger.error(
       `Failed fetching event refund breakdown: ${refundBreakdownError.message}`,
     );
   }

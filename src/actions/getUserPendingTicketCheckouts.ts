@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
+import { logger } from "@/utils/logger";
 
 type PendingCheckoutRow = {
   id: string;
@@ -92,7 +93,7 @@ export default async function getUserPendingTicketCheckouts(): Promise<GetUserPe
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.log(`Failed fetching pending checkouts: ${error.message}`);
+    logger.error(`Failed fetching pending checkouts: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 

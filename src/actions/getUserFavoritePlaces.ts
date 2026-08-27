@@ -5,6 +5,7 @@ import type { FavoritePlaces } from "@/types/favoritePlaceTypes";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { PlaceOpeningHourRow } from "@/utils/computePlaceOpenStatus";
 import { computePlaceOpenStatus } from "@/utils/computePlaceOpenStatus";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -171,7 +172,7 @@ async function getPlaceRatingAggregates(
     .in("place_id", placeIds);
 
   if (error || !data) {
-    console.error(`Error fetching place rating aggregates: ${error?.message}`);
+    logger.error(`Error fetching place rating aggregates: ${error?.message}`);
     return {};
   }
 

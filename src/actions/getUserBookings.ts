@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { CustomerPlaceBooking } from "@/types/placeBookingType";
+import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -58,7 +59,7 @@ export async function getUserBookings(options?: {
   const { data, error } = await query;
 
   if (error) {
-    console.log(`Failed fetching user bookings: ${error.message}`);
+    logger.error(`Failed fetching user bookings: ${error.message}`);
 
     return {
       status: 500,

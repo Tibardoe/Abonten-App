@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import type { PayoutAccountRow } from "@/types/organizerFinance";
+import { logger } from "@/utils/logger";
 
 type GetOrganizerPayoutAccountsResult =
   | { status: 401 | 500; message: string }
@@ -36,7 +37,7 @@ export default async function getOrganizerPayoutAccounts(): Promise<GetOrganizer
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.log(`Failed fetching payout accounts: ${error.message}`);
+    logger.error(`Failed fetching payout accounts: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
