@@ -1,26 +1,11 @@
+import { loadAllNamespaces } from "@abonten/i18n/catalog";
 import type { Locale } from "./config";
-
-const namespaces = [
-  "common",
-  "navigation",
-  "auth",
-  "settings",
-  "events",
-  "places",
-] as const;
 
 export type Messages = Record<string, unknown>;
 
-export async function loadMessages(locale: Locale): Promise<Messages> {
-  const entries = await Promise.all(
-    namespaces.map(
-      async (namespace) =>
-        [
-          namespace,
-          (await import(`../../messages/${locale}/${namespace}.json`)).default,
-        ] as const,
-    ),
-  );
-
-  return Object.fromEntries(entries);
+// The translation catalogs and per-namespace lazy loading now live in
+// @abonten/i18n so the native app can reuse them. This wrapper keeps the
+// existing web call sites (request.ts, LocaleProvider.tsx) unchanged.
+export function loadMessages(locale: Locale): Promise<Messages> {
+  return loadAllNamespaces(locale);
 }
