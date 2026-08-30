@@ -9,11 +9,14 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
-import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
+import {
+  type EventSchema,
+  getEventSchema,
+} from "@abonten/validation/eventSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -38,7 +41,21 @@ export function useEventEditForm({
   onSuccess,
 }: UseEventEditFormOptions) {
   const t = useTranslations("events");
-  const eventSchema = useMemo(() => getEventSchema(t), [t]);
+  const eventSchema = useMemo(
+    () =>
+      getEventSchema({
+        titleRequired: t("validation.titleRequired"),
+        titleTooLong: t("validation.titleTooLong"),
+        descriptionRequired: t("validation.descriptionRequired"),
+        invalidUrl: t("validation.invalidUrl"),
+        priceNotNumber: t("validation.priceNotNumber"),
+        priceNegative: t("validation.priceNegative"),
+        capacityNotNumber: t("validation.capacityNotNumber"),
+        capacityNotWhole: t("validation.capacityNotWhole"),
+        capacityMustBePositive: t("validation.capacityMustBePositive"),
+      }),
+    [t],
+  );
 
   const form = useForm<EventSchema>({ resolver: zodResolver(eventSchema) });
   const { control, handleSubmit, reset } = form;

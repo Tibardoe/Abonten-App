@@ -1,5 +1,4 @@
 import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
-import type { useTranslations } from "next-intl";
 import { z } from "zod";
 
 // Simple format check, not a strict international-format validator — good
@@ -7,41 +6,50 @@ import { z } from "zod";
 // varied local styles (spaces, dashes, parentheses, optional leading +).
 const PHONE_REGEX = /^\+?[0-9\s\-()]{7,20}$/;
 
-export const getPlaceSchema = (
-  t: ReturnType<typeof useTranslations<"places">>,
-) =>
+// Validation messages are injected by the caller — see eventSchema.ts.
+export type PlaceSchemaMessages = {
+  nameRequired: string;
+  nameTooLong: string;
+  descriptionRequired: string;
+  descriptionTooLong: string;
+  invalidUrl: string;
+  invalidPhone: string;
+  invalidWhatsapp: string;
+};
+
+export const getPlaceSchema = (m: PlaceSchemaMessages) =>
   z.object({
     name: z
       .string()
-      .min(1, { message: t("validation.nameRequired") })
-      .max(150, { message: t("validation.nameTooLong") }),
+      .min(1, { message: m.nameRequired })
+      .max(150, { message: m.nameTooLong }),
 
     // Matches place_description_check in
     // supabase/migrations/20260820090000_add_places_feature.sql — keep this
     // max in sync with that constraint.
     description: z
       .string()
-      .min(1, { message: t("validation.descriptionRequired") })
-      .max(2000, { message: t("validation.descriptionTooLong") }),
+      .min(1, { message: m.descriptionRequired })
+      .max(2000, { message: m.descriptionTooLong }),
 
     website_url: z
       .string()
       .refine((val) => val === "" || WEBSITE_URL_REGEX.test(val), {
-        message: t("validation.invalidUrl"),
+        message: m.invalidUrl,
       })
       .optional(),
 
     phone: z
       .string()
       .refine((val) => val === "" || PHONE_REGEX.test(val), {
-        message: t("validation.invalidPhone"),
+        message: m.invalidPhone,
       })
       .optional(),
 
     whatsapp: z
       .string()
       .refine((val) => val === "" || PHONE_REGEX.test(val), {
-        message: t("validation.invalidWhatsapp"),
+        message: m.invalidWhatsapp,
       })
       .optional(),
   });

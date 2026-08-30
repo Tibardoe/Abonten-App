@@ -3,10 +3,13 @@
 import { updatePlace } from "@/actions/updatePlace";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useToast } from "@/hooks/useToast";
-import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import { isImageFile } from "@abonten/core/isImageFile";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
+import {
+  type PlaceSchema,
+  getPlaceSchema,
+} from "@abonten/validation/placeSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
@@ -41,7 +44,19 @@ export function useManagePlaceDetailsForm({
   onSuccess,
 }: ManagePlaceDetailsFormOptions) {
   const t = useTranslations("places");
-  const placeSchema = useMemo(() => getPlaceSchema(t), [t]);
+  const placeSchema = useMemo(
+    () =>
+      getPlaceSchema({
+        nameRequired: t("validation.nameRequired"),
+        nameTooLong: t("validation.nameTooLong"),
+        descriptionRequired: t("validation.descriptionRequired"),
+        descriptionTooLong: t("validation.descriptionTooLong"),
+        invalidUrl: t("validation.invalidUrl"),
+        invalidPhone: t("validation.invalidPhone"),
+        invalidWhatsapp: t("validation.invalidWhatsapp"),
+      }),
+    [t],
+  );
 
   const form = useForm<PlaceSchema>({
     resolver: zodResolver(placeSchema),

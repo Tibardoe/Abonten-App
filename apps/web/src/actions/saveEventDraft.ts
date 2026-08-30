@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   type EventDraftPayload,
   eventDraftPayloadSchema,
-} from "@/utils/eventDraftSchema";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/validation/eventDraftSchema";
 import { v2 as cloudinary } from "cloudinary";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 

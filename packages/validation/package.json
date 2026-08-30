@@ -1,0 +1,21 @@
+{
+  "name": "@abonten/validation",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Zod schemas shared across the Abonten monorepo. Message strings are injected by the caller — no i18n framework dependency.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@abonten/core": "*",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@abonten/config": "*",
+    "typescript": "^5"
+  }
+}

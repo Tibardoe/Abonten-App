@@ -13,11 +13,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
 import {
   type AddMomoWalletInput,
   addMomoWalletSchema,
-} from "@/utils/paymentMethodSchema";
-import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
+} from "@abonten/validation/paymentMethodSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";

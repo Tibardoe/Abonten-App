@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type EventDraftPayload,
   eventDraftPayloadSchema,
-} from "@/utils/eventDraftSchema";
+} from "@abonten/validation/eventDraftSchema";
 
 export type EventDraftDetail = {
   id: string;

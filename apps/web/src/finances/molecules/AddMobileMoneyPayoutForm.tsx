@@ -12,12 +12,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
+import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import {
   type AddMobileMoneyPayoutAccountInput,
   addMobileMoneyPayoutAccountSchema,
-} from "@/utils/payoutAccountSchema";
-import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
-import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
+} from "@abonten/validation/payoutAccountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";

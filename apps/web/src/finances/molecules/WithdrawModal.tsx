@@ -11,7 +11,7 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { buildWithdrawAmountSchema } from "@/utils/payoutSchema";
+import { buildWithdrawAmountSchema } from "@abonten/validation/payoutSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";

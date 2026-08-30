@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type PlaceDraftPayload,
   placeDraftPayloadSchema,
-} from "@/utils/placeDraftSchema";
+} from "@abonten/validation/placeDraftSchema";
 
 export type PlaceDraftDetail = {
   id: string;

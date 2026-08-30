@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type ReviewDraftPayload,
   reviewDraftPayloadSchema,
-} from "@/utils/reviewDraftSchema";
+} from "@abonten/validation/reviewDraftSchema";
 
 type SaveReviewDraftInput = {
   draftId?: string;

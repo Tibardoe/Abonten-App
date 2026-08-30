@@ -10,11 +10,14 @@ import {
   validateSingleDateRange,
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
-import type { EventDraftPayload } from "@/utils/eventDraftSchema";
-import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import type { EventDates, PostsType } from "@abonten/types/postsType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import type { Ticket } from "@abonten/types/ticketType";
+import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
+import {
+  type EventSchema,
+  getEventSchema,
+} from "@abonten/validation/eventSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
@@ -70,7 +73,21 @@ export function useEventUploadForm({
   preselectedPlaceName,
 }: UseEventUploadFormOptions) {
   const t = useTranslations("events");
-  const eventSchema = useMemo(() => getEventSchema(t), [t]);
+  const eventSchema = useMemo(
+    () =>
+      getEventSchema({
+        titleRequired: t("validation.titleRequired"),
+        titleTooLong: t("validation.titleTooLong"),
+        descriptionRequired: t("validation.descriptionRequired"),
+        invalidUrl: t("validation.invalidUrl"),
+        priceNotNumber: t("validation.priceNotNumber"),
+        priceNegative: t("validation.priceNegative"),
+        capacityNotNumber: t("validation.capacityNotNumber"),
+        capacityNotWhole: t("validation.capacityNotWhole"),
+        capacityMustBePositive: t("validation.capacityMustBePositive"),
+      }),
+    [t],
+  );
 
   const form = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),

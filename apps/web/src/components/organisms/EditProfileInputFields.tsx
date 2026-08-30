@@ -2,8 +2,8 @@
 
 import { updateUserDetails } from "@/actions/updateUserDetails";
 import { useToast } from "@/hooks/useToast";
-import { editProfileSchema } from "@/utils/editProfileSchema";
 import type { UserDetailsFormType } from "@abonten/types/userProfileType";
+import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";

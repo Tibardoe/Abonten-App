@@ -13,6 +13,7 @@
   "dependencies": {
     "@abonten/core": "*",
     "@abonten/types": "*",
+    "@abonten/validation": "*",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-dropdown-menu": "^2.1.24",

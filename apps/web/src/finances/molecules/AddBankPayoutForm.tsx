@@ -10,11 +10,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import {
   type AddBankPayoutAccountInput,
   addBankPayoutAccountSchema,
-} from "@/utils/payoutAccountSchema";
-import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
+} from "@abonten/validation/payoutAccountSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

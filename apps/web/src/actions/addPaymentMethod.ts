@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   type AddPaymentMethodInput,
   addPaymentMethodSchema,
-} from "@/utils/paymentMethodSchema";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/validation/paymentMethodSchema";
 import type { PaymentMethodRow } from "./getUserPaymentMethods";
 
 type AddPaymentMethodResult =

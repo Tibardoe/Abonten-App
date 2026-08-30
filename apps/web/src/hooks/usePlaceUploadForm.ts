@@ -3,13 +3,16 @@
 import { postPlace } from "@/actions/postPlace";
 import { savePlaceDraft } from "@/actions/savePlaceDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
-import type { PlaceDraftPayload } from "@/utils/placeDraftSchema";
-import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import type {
   PlaceFormType,
   PlaceOpeningHoursInput,
 } from "@abonten/types/placeType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
+import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
+import {
+  type PlaceSchema,
+  getPlaceSchema,
+} from "@abonten/validation/placeSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";
@@ -60,7 +63,19 @@ export function usePlaceUploadForm({
   existingCoverPhoto,
 }: UsePlaceUploadFormOptions) {
   const t = useTranslations("places");
-  const placeSchema = useMemo(() => getPlaceSchema(t), [t]);
+  const placeSchema = useMemo(
+    () =>
+      getPlaceSchema({
+        nameRequired: t("validation.nameRequired"),
+        nameTooLong: t("validation.nameTooLong"),
+        descriptionRequired: t("validation.descriptionRequired"),
+        descriptionTooLong: t("validation.descriptionTooLong"),
+        invalidUrl: t("validation.invalidUrl"),
+        invalidPhone: t("validation.invalidPhone"),
+        invalidWhatsapp: t("validation.invalidWhatsapp"),
+      }),
+    [t],
+  );
 
   const form = useForm<PlaceSchema>({
     resolver: zodResolver(placeSchema),
