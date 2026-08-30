@@ -1,0 +1,7 @@
+{
+  "name": "@abonten/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared build config (base tsconfig, Biome) for the Abonten monorepo.",
+  "files": ["tsconfig.base.json", "biome.base.json"]
+}
