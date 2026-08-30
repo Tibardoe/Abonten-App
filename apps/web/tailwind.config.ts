@@ -1,4 +1,17 @@
+import {
+  animation,
+  backgroundImage,
+  brandColors,
+  fontFamily,
+  keyframes,
+  radiusScale,
+} from "@abonten/ui-tokens/tailwind";
 import type { Config } from "tailwindcss";
+
+// Literal tokens (brand colours, radius scale, motion, type) come from
+// @abonten/ui-tokens so the native theme can share them. The shadcn
+// semantic colours below stay as `hsl(var(--x))` — their concrete values
+// live in src/app/globals.css (mirrored in @abonten/ui-tokens/palette).
 
 export default {
   darkMode: "class",
@@ -10,29 +23,9 @@ export default {
   ],
   theme: {
     extend: {
-      keyframes: {
-        slideIn: {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(0)" },
-        },
-        slideOut: {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-100%)" },
-        },
-        progressFill: {
-          "0%": { width: "0" },
-          "100%": { width: "100%" },
-        },
-      },
-      animation: {
-        slideIn: "slideIn 0.5s ease-in-out forwards",
-        slideOut: "slideOut 0.5s ease-in-out forwards",
-        // story: "progressFill 3s linear forwards",
-        story: "progressFill var(--animation-duration, 3s) linear forwards",
-      },
-      backgroundImage: {
-        landing: "url('/assets/images/landingpageBackgroound.jpg')",
-      },
+      keyframes,
+      animation,
+      backgroundImage,
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -60,8 +53,7 @@ export default {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        mint: "#4FD9C4",
-        iconGray: "#544F4F",
+        ...brandColors,
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -93,13 +85,9 @@ export default {
           "5": "hsl(var(--chart-5))",
         },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
+      borderRadius: radiusScale,
       fontFamily: {
-        sans: ["var(--font-euclid)", "sans-serif"],
+        sans: [...fontFamily.sans],
       },
     },
   },

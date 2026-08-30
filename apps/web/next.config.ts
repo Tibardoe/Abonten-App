@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
 
   // Workspace packages shipped as raw TypeScript source (no build step) —
   // Next/Turbopack must compile them the same as app code.
-  transpilePackages: ["@abonten/core", "@abonten/types", "@abonten/validation", "@abonten/i18n"],
+  transpilePackages: ["@abonten/core", "@abonten/types", "@abonten/validation", "@abonten/i18n", "@abonten/ui-tokens"],
 
   experimental: {
     serverActions: { bodySizeLimit: "5mb" }, // ✅ Enable Server Actions

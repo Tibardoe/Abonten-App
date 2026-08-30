@@ -62,6 +62,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@abonten/ui-tokens": "*",
     "@abonten/config": "*",
     "@eslint/eslintrc": "^3",
     "@types/lodash.debounce": "^4.0.9",
