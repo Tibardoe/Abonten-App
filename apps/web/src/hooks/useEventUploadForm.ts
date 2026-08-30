@@ -1,0 +1,560 @@
+"use client";
+
+import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
+import { postEvent } from "@/actions/postEvent";
+import { saveEventDraft } from "@/actions/saveEventDraft";
+import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
+import { useToast } from "@/hooks/useToast";
+import {
+  getBufferedNow,
+  validateSingleDateRange,
+  validateSpecificDates,
+} from "@/utils/eventDateValidation";
+import type { EventDates, PostsType } from "@abonten/types/postsType";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
+import type { Ticket } from "@abonten/types/ticketType";
+import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
+import {
+  type EventSchema,
+  getEventSchema,
+} from "@abonten/validation/eventSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
+import { useMemo, useRef, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { useForm } from "react-hook-form";
+
+export type DateEntry = { start: Date; end: Date };
+
+type PromoCode = {
+  promoCode: string;
+  discount: number;
+  maximumUse: number;
+  expiryDate: Date;
+};
+
+type UseEventUploadFormOptions = {
+  file: File | null;
+  onSuccess: () => void;
+  // Draft-continue mode: seeds every piece of state below from a
+  // previously saved draft instead of starting empty.
+  draftId?: string;
+  initialValues?: EventDraftPayload;
+  initialUpdatedAt?: string;
+  // The draft's already-uploaded flyer, reused by postEvent instead of
+  // re-uploading when the user hasn't picked a replacement file.
+  existingFlyer?: { public_id: string; version: string };
+  // Places feature Milestone 6: set when this modal was opened from a
+  // place's management page ("+ Add Upcoming Event"), locking the venue to
+  // that place. When set, EventUploadFormFields skips rendering the venue
+  // picker entirely (per spec) and every submission carries this place id.
+  preselectedPlaceId?: string;
+  // The locked place's own address, used to seed selectedAddress so the
+  // owner doesn't have to retype their own place's address.
+  preselectedPlaceAddress?: string;
+  preselectedPlaceName?: string;
+};
+
+// All state, validation and submit logic for posting an event, previously
+// duplicated verbatim between the desktop and mobile upload modals. The
+// stricter of the two duplicates' date validation (mobile's — it required
+// both a start and end date explicitly) is kept as the single source of
+// truth; the desktop copy had silently allowed a missing date through.
+export function useEventUploadForm({
+  file,
+  onSuccess,
+  draftId,
+  initialValues,
+  initialUpdatedAt,
+  existingFlyer,
+  preselectedPlaceId,
+  preselectedPlaceAddress,
+  preselectedPlaceName,
+}: UseEventUploadFormOptions) {
+  const t = useTranslations("events");
+  const eventSchema = useMemo(
+    () =>
+      getEventSchema({
+        titleRequired: t("validation.titleRequired"),
+        titleTooLong: t("validation.titleTooLong"),
+        descriptionRequired: t("validation.descriptionRequired"),
+        invalidUrl: t("validation.invalidUrl"),
+        priceNotNumber: t("validation.priceNotNumber"),
+        priceNegative: t("validation.priceNegative"),
+        capacityNotNumber: t("validation.capacityNotNumber"),
+        capacityNotWhole: t("validation.capacityNotWhole"),
+        capacityMustBePositive: t("validation.capacityMustBePositive"),
+      }),
+    [t],
+  );
+
+  const form = useForm<EventSchema>({
+    resolver: zodResolver(eventSchema),
+    defaultValues: {
+      title: initialValues?.title,
+      description: initialValues?.description,
+      website_url: initialValues?.websiteUrl,
+      capacity: initialValues?.capacity,
+    },
+  });
+  const {
+    control,
+    handleSubmit,
+    formState: { isDirty: isFormDirty },
+  } = form;
+
+  const toast = useToast();
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
+
+  // Gates the manually-rendered validation messages (category, types,
+  // location -- none of which are RHF-registered fields) so they stay
+  // silent until the first submit attempt, matching how RHF's own
+  // errors.* messages already behave for title/description/capacity/website.
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+
+  // Which non-RHF section a failed submit's validation blamed, so the form
+  // can scroll the organizer to it instead of leaving them to hunt for what
+  // a 3-second toast referred to.
+  const [invalidSection, setInvalidSection] = useState<
+    "date" | "location" | "tickets" | null
+  >(null);
+
+  const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
+    draftId,
+  );
+  const draftUpdatedAtRef = useRef<string | undefined>(initialUpdatedAt);
+
+  // Synchronous lock against double submission (double-click, rapid repeat
+  // clicks): a ref is checked/set on the very first line of onSubmit,
+  // before any await, so it closes the race window that setIsUploading
+  // (a state update, only visible next render) can't -- two fast clicks
+  // can both fire before the button's disabled state re-renders.
+  const isSubmittingRef = useRef(false);
+
+  // Generated once per upload-modal mount and reused across every
+  // postEvent call made during this session (including retries after a
+  // validation error), so the server can recognize a replay of the same
+  // submission (double click that slipped past the lock, network retry)
+  // and return the already-created event instead of inserting a duplicate.
+  const clientRequestIdRef = useRef(crypto.randomUUID());
+
+  const [dateType, setDateType] = useState<string>(
+    initialValues?.dateType ?? "single",
+  );
+  const [singleDateRange, setSingleDateRange] = useState<DateRange>(
+    initialValues?.singleDateRange?.from && initialValues?.singleDateRange?.to
+      ? {
+          from: initialValues.singleDateRange.from,
+          to: initialValues.singleDateRange.to,
+        }
+      : { from: new Date(), to: new Date() },
+  );
+  const [multipleDates, setMultipleDates] = useState<DateEntry[]>(
+    initialValues?.multipleDates ?? [],
+  );
+
+  // Raw hydration values for DateTimePicker's own initialRange/initialEntries
+  // props -- distinct from singleDateRange above, which always has a
+  // (today, today) fallback that would wrongly pre-fill the picker's editor
+  // on a fresh, non-draft create.
+  const initialDateRangeForPicker =
+    initialValues?.singleDateRange?.from && initialValues?.singleDateRange?.to
+      ? {
+          from: initialValues.singleDateRange.from,
+          to: initialValues.singleDateRange.to,
+        }
+      : undefined;
+  const initialDateEntriesForPicker = initialValues?.multipleDates;
+
+  const [selectedAddress, setSelectedAddress] = useState(
+    initialValues?.address ?? preselectedPlaceAddress ?? "",
+  );
+
+  const addressInputRef = useRef<PostAutoCompleteHandle>(null);
+  const coordsRef = useRef<{ lat: number; lng: number } | null>(null);
+  const handleSelectCoordinates = (location: ResolvedLocation) => {
+    coordsRef.current = { lat: location.lat, lng: location.lng };
+  };
+
+  const [category, setCategory] = useState(initialValues?.category ?? "");
+
+  // Places feature Milestone 6: the Abonten Place picked as this event's
+  // venue, either locked in from `preselectedPlaceId` (opened from a
+  // place's management page) or chosen via PlaceSearchSelect in the venue
+  // picker. Plain useState, mirroring every other piece of non-RHF state in
+  // this hook.
+  const [selectedPlaceId, setSelectedPlaceIdState] = useState<string | null>(
+    preselectedPlaceId ?? null,
+  );
+  const [selectedPlaceName, setSelectedPlaceName] = useState<string | null>(
+    preselectedPlaceName ?? null,
+  );
+
+  const handleSelectPlace = (place: {
+    id: string;
+    name: string;
+    address: string;
+  }) => {
+    markTouched();
+    setSelectedPlaceIdState(place.id);
+    setSelectedPlaceName(place.name);
+    setSelectedAddress(place.address);
+  };
+
+  const clearSelectedPlace = () => {
+    markTouched();
+    setSelectedPlaceIdState(null);
+    setSelectedPlaceName(null);
+  };
+  const [types, setTypes] = useState<string[]>(initialValues?.types ?? []);
+
+  const [ticket, setTicket] = useState<string | null>(
+    initialValues?.ticket ?? null,
+  );
+  const [singleTicket, setSingleTicket] = useState<number | null>(
+    initialValues?.singleTicket ?? null,
+  );
+  const [singleTicketQuantity, setSingleTicketQuantity] = useState<
+    number | null
+  >(initialValues?.singleTicketQuantity ?? null);
+  const [multipleTickets, setMultipleTickets] = useState<Ticket[]>(
+    initialValues?.multipleTickets ?? [],
+  );
+
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(
+    initialValues?.promoCodes ?? [],
+  );
+  const [showPromoCodeFormPopup, setShowPromoCodeFormPopup] = useState(
+    (initialValues?.promoCodes?.length ?? 0) > 0,
+  );
+
+  const [checked, setChecked] = useState(
+    initialValues?.requireRegistration ?? false,
+  );
+
+  // Tracks whether the organizer has actually entered anything this
+  // session, beyond whatever a continued draft was hydrated with — used to
+  // decide whether Cancel needs to prompt at all (an untouched fresh form
+  // just closes, per spec).
+  const [touched, setTouched] = useState(false);
+  const markTouched = () => setTouched(true);
+
+  const { data: userCurrency } = useQuery({
+    queryKey: ["user-currency"],
+    queryFn: async () => {
+      const countryMetadata = await fetchCountryMetadata();
+      return countryMetadata?.currency ?? "GHS";
+    },
+    initialData: initialValues?.currency ?? undefined,
+  });
+
+  const handleDateAndTime = (date: DateRange | DateEntry[]) => {
+    markTouched();
+    if (dateType === "single" && !Array.isArray(date)) {
+      setSingleDateRange(date);
+    } else if (dateType === "specific" && Array.isArray(date)) {
+      setMultipleDates(date);
+    }
+  };
+
+  const handleType = (selectedType: string) => {
+    markTouched();
+    setTypes((prevTypes) =>
+      prevTypes.includes(selectedType)
+        ? prevTypes.filter((type) => type !== selectedType)
+        : [...prevTypes, selectedType],
+    );
+  };
+
+  const handlePromoCodesChange = (updatedPromoCodes: PromoCode[]) => {
+    markTouched();
+    setPromoCodes(updatedPromoCodes);
+  };
+
+  const handlePromoCodeFormPopup = () => {
+    setShowPromoCodeFormPopup((prev) => !prev);
+  };
+
+  const handleChecked = () => {
+    markTouched();
+    setChecked((prev) => !prev);
+  };
+
+  const handleSelectedAddress = (address: string) => {
+    markTouched();
+    setSelectedAddress(address);
+  };
+
+  const handleCategory = (selectedCategory: string) => {
+    markTouched();
+    setCategory(selectedCategory);
+  };
+
+  const handleTicketSelection = (selectedTicket: string) => {
+    markTouched();
+    setTicket(selectedTicket);
+  };
+
+  const handleSingleTicketWithTouch = (amount: number) => {
+    markTouched();
+    setSingleTicket(amount);
+  };
+
+  const handleSingleTicketQuantityWithTouch = (quantity: number) => {
+    markTouched();
+    setSingleTicketQuantity(quantity);
+  };
+
+  const handleMultipleTicketsWithTouch = (tickets: Ticket[]) => {
+    markTouched();
+    setMultipleTickets(tickets);
+  };
+
+  const handleDateTypeWithTouch = (nextDateType: string) => {
+    markTouched();
+    setDateType(nextDateType);
+  };
+
+  // Whether there's anything worth protecting on Cancel — either the form
+  // was hydrated from an existing draft, or the organizer has actually
+  // entered something this session.
+  const hasMeaningfulContent = Boolean(initialValues) || touched || isFormDirty;
+
+  const buildDraftPayload = (): EventDraftPayload => {
+    const formValues = form.getValues();
+
+    return {
+      title: formValues.title || undefined,
+      description: formValues.description || undefined,
+      websiteUrl: formValues.website_url || undefined,
+      capacity: Number.isFinite(formValues.capacity)
+        ? formValues.capacity
+        : undefined,
+      category: category || undefined,
+      types: types.length > 0 ? types : undefined,
+      address: selectedAddress || undefined,
+      latitude: undefined,
+      longitude: undefined,
+      dateType: dateType === "specific" ? "specific" : "single",
+      singleDateRange:
+        dateType === "single" && singleDateRange.from && singleDateRange.to
+          ? { from: singleDateRange.from, to: singleDateRange.to }
+          : undefined,
+      multipleDates: dateType === "specific" ? multipleDates : undefined,
+      ticket: ticket ?? undefined,
+      singleTicket: singleTicket ?? undefined,
+      singleTicketQuantity: singleTicketQuantity ?? undefined,
+      multipleTickets: multipleTickets.length > 0 ? multipleTickets : undefined,
+      promoCodes: promoCodes.length > 0 ? promoCodes : undefined,
+      requireRegistration: checked,
+      currency: userCurrency ?? undefined,
+    };
+  };
+
+  const saveDraft = async () => {
+    setIsSavingDraft(true);
+    try {
+      const payload = buildDraftPayload();
+      const response = await saveEventDraft({
+        draftId: currentDraftId,
+        payload,
+        expectedUpdatedAt: draftUpdatedAtRef.current,
+        flyerFile: file,
+      });
+
+      if (response.status === 200 && response.data) {
+        setCurrentDraftId(response.data.draftId);
+        draftUpdatedAtRef.current = response.data.updatedAt;
+      }
+
+      return response;
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const onSubmit = async (formData: EventSchema) => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setHasAttemptedSubmit(true);
+    setInvalidSection(null);
+
+    try {
+      setIsUploading(true);
+
+      if (!file && !existingFlyer) {
+        toast.error("Please select a file first!");
+        return;
+      }
+
+      // The single source of truth for "is there a usable location" —
+      // selectedAddress is only ever set when the user taps a suggestion,
+      // so gating on it here would reject a manually typed address that
+      // this call is about to resolve successfully.
+      setIsResolvingLocation(true);
+      const resolution = await addressInputRef.current?.resolveTypedInput();
+      setIsResolvingLocation(false);
+
+      if (!resolution || resolution.status === "empty") {
+        toast.error("Please enter a location");
+        setInvalidSection("location");
+        return;
+      }
+      if (resolution.status === "unresolved") {
+        toast.error(
+          "Could not find that location — please check the spelling or pick a suggestion.",
+        );
+        setInvalidSection("location");
+        return;
+      }
+      if (resolution.status === "error") {
+        toast.error(
+          "We couldn't verify this location right now. Please try again.",
+        );
+        setInvalidSection("location");
+        return;
+      }
+
+      const coords = coordsRef.current;
+      if (!coords) {
+        toast.error("Could not fetch coordinates");
+        setInvalidSection("location");
+        return;
+      }
+
+      let eventDates: EventDates;
+      const bufferedNow = getBufferedNow();
+
+      if (dateType === "single") {
+        const result = validateSingleDateRange(singleDateRange, bufferedNow);
+        if (!result.ok) {
+          toast.error(result.message);
+          setInvalidSection("date");
+          return;
+        }
+
+        eventDates = {
+          starts_at: new Date(singleDateRange.from as Date),
+          ends_at: new Date(singleDateRange.to as Date),
+        };
+      } else if (dateType === "specific") {
+        const result = validateSpecificDates(multipleDates, bufferedNow);
+        if (!result.ok) {
+          toast.error(result.message);
+          setInvalidSection("date");
+          return;
+        }
+
+        eventDates = { specific_dates: multipleDates };
+      } else {
+        toast.error("Invalid date selection");
+        setInvalidSection("date");
+        return;
+      }
+
+      if (!category || !types) {
+        toast.error("Categories and types must be set");
+        return;
+      }
+
+      const noTicketingSet =
+        !ticket &&
+        (!singleTicket || !singleTicketQuantity) &&
+        (!multipleTickets || multipleTickets.length === 0);
+
+      if (noTicketingSet) {
+        toast.error("Event ticketing must be set");
+        setInvalidSection("tickets");
+        return;
+      }
+
+      const finalData: PostsType = {
+        ...formData,
+        address: selectedAddress,
+        latitude: coords.lat,
+        longitude: coords.lng,
+        category,
+        types,
+        selectedFile: file,
+        existingFlyer: !file ? existingFlyer : undefined,
+        draftId: currentDraftId,
+        promoCodes,
+        freeEvents: ticket,
+        singleTicket,
+        singleTicketQuantity,
+        multipleTickets,
+        currency: userCurrency,
+        checked,
+        clientRequestId: clientRequestIdRef.current,
+        placeId: selectedPlaceId,
+        ...eventDates,
+      };
+
+      const response = await postEvent(finalData);
+
+      if (response.status === 200) {
+        toast.success("✅ Event posted successfully!");
+        onSuccess();
+      } else {
+        toast.error(`❌ ${response.message}`);
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsUploading(false);
+      setIsResolvingLocation(false);
+      isSubmittingRef.current = false;
+    }
+  };
+
+  return {
+    form,
+    control,
+    handleSubmit,
+    isUploading,
+    isResolvingLocation,
+    hasAttemptedSubmit,
+    invalidSection,
+    onSubmit,
+    dateType,
+    setDateType: handleDateTypeWithTouch,
+    handleDateAndTime,
+    initialDateRangeForPicker,
+    initialDateEntriesForPicker,
+    selectedAddress,
+    setSelectedAddress: handleSelectedAddress,
+    addressInputRef,
+    handleSelectCoordinates,
+    category,
+    setCategory: handleCategory,
+    types,
+    handleType,
+    ticket,
+    setTicket: handleTicketSelection,
+    singleTicket,
+    handleSingleTicket: handleSingleTicketWithTouch,
+    singleTicketQuantity,
+    handleSingleTicketQuantity: handleSingleTicketQuantityWithTouch,
+    multipleTickets,
+    handleMultipleTickets: handleMultipleTicketsWithTouch,
+    checked,
+    handleChecked,
+    promoCodes,
+    handlePromoCodesChange,
+    showPromoCodeFormPopup,
+    handlePromoCodeFormPopup,
+    hasMeaningfulContent,
+    saveDraft,
+    isSavingDraft,
+    currentDraftId,
+    selectedPlaceId,
+    selectedPlaceName,
+    handleSelectPlace,
+    clearSelectedPlace,
+    isPlacePreselected: !!preselectedPlaceId,
+  };
+}

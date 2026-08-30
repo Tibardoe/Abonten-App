@@ -1,0 +1,19 @@
+{
+  "name": "@abonten/ui-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Design tokens (brand colours, semantic HSL palette, radius, motion, type) shared by the web Tailwind config and the native theme.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tailwind": "./src/tailwind.ts",
+    "./palette": "./src/palette.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@abonten/config": "*",
+    "typescript": "^5"
+  }
+}

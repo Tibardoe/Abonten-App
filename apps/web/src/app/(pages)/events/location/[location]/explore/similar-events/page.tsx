@@ -1,0 +1,78 @@
+import { getSimilarEvents } from "@/actions/getSimilarEvents";
+import EventCard from "@/components/molecules/EventCard";
+import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { undoSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
+import type { UserPostType } from "@abonten/types/postsType";
+
+// TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
+// See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
+// export const instant = false;
+
+export default async function page({
+  searchParams,
+  params,
+}: {
+  searchParams: Promise<{ category?: string }>;
+  params: Promise<{ location?: string }>;
+}) {
+  const { category = "" } = await searchParams;
+  const { location = "" } = await params;
+
+  const formattedCategory = undoSlug(category);
+
+  // const formattedLocation = undoSlug(location);
+
+  const safeLocation = location ?? "";
+
+  // const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  // const res = await fetch(
+  //   `${baseUrl}/api/geocode?address=${encodeURIComponent(safeLocation)}`,
+  // );
+
+  const res = await geocodeAddress(safeLocation);
+
+  const { lat, lng } = res;
+
+  const response = await getSimilarEvents(formattedCategory, lng, lat);
+
+  let errorMessage: string | undefined = undefined;
+
+  if (response.status !== 200) {
+    errorMessage = response.message;
+    logger.error(errorMessage);
+  }
+
+  const events: UserPostType[] = response.similarEvents;
+
+  return (
+    <div className="space-y-3">
+      <h1 className="font-bold text-xl">Similar Events</h1>
+
+      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 overflow-x-scroll scrollbar-hide gap-2 pb-5">
+        {events?.length
+          ? events.map((event, index) => (
+              <EventCard
+                key={event.title}
+                priority={index < 4}
+                title={event.title}
+                id={event.id}
+                event_code={event.event_code}
+                flyer_public_id={event.flyer_public_id}
+                flyer_version={event.flyer_version}
+                address={event.address}
+                starts_at={event.starts_at}
+                occurrences={event.occurrences}
+                ends_at={event.ends_at}
+                organizer_id={event.organizer_id}
+                min_price={event.ticket_price}
+                currency={event.ticket_currency ?? ""}
+                created_at={event.created_at}
+                attendanceCount={event.attendanceCount ?? 0}
+              />
+            ))
+          : "No Events"}
+      </ul>
+    </div>
+  );
+}

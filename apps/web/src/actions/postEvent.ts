@@ -1,0 +1,254 @@
+"use server";
+
+import { createClient } from "@/config/supabase/server";
+import { generateEventCode } from "@abonten/core/eventCodeGenerator";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
+import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import type { PostsType } from "@abonten/types/postsType";
+import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
+
+// Postgres error code for a unique-constraint violation.
+const UNIQUE_VIOLATION = "23505";
+
+export async function postEvent(formData: PostsType) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    return {
+      status: 500,
+      message: `Error fetching user: ${userError.message} `,
+    };
+  }
+
+  if (!user) {
+    return { status: 401, message: "User not authenticated" };
+  }
+
+  const {
+    category,
+    singleTicket,
+    checked,
+    multipleTickets,
+    types,
+    title,
+    description,
+    latitude,
+    longitude,
+    address,
+    singleTicketQuantity,
+    website_url,
+    freeEvents,
+    currency,
+    capacity,
+    selectedFile,
+    starts_at,
+    ends_at,
+    promoCodes,
+    specific_dates,
+    clientRequestId,
+    existingFlyer,
+    draftId,
+    placeId,
+  } = formData;
+
+  const locationCheck = validateLocationInput({ address, latitude, longitude });
+  if (!locationCheck.valid) {
+    return { status: 400, message: locationCheck.message };
+  }
+
+  const eventCode = generateEventCode(title);
+
+  const isFreeEvent = freeEvents === "Free";
+
+  // A continued draft whose flyer wasn't replaced already has an uploaded
+  // Cloudinary asset — reuse it instead of uploading again.
+  let public_id: string;
+  let version: string | number;
+
+  if (existingFlyer) {
+    public_id = existingFlyer.public_id;
+    version = existingFlyer.version;
+  } else if (selectedFile) {
+    const flyerUpload = await saveEventFlyerToCloudinary(selectedFile);
+
+    if (!flyerUpload?.public_id || !flyerUpload?.version) {
+      return {
+        status: 500,
+        message:
+          (flyerUpload as { error?: string })?.error ??
+          "Flyer upload to Cloudinary failed.",
+      };
+    }
+
+    public_id = flyerUpload.public_id;
+    version = flyerUpload.version;
+  } else {
+    return { status: 400, message: "An event flyer is required." };
+  }
+
+  const formattedTitle = title
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  // generateSlug(title) alone is purely deterministic from the title, so two
+  // events with the same title (any organizer) produced the same slug and
+  // collided on event_slug_key -- surfacing to users as "duplicate title".
+  // eventCode already carries a random suffix, so appending it here makes
+  // the slug collision-resistant without touching the unique constraint
+  // (slug isn't used for routing -- only for ILIKE search -- so the
+  // human-readable prefix still matches search text).
+  const slug = `${generateSlug(title)}-${generateSlug(eventCode)}`;
+
+  // Handle specific dates or start and end times
+  const isSpecificEvent = specific_dates && specific_dates.length > 0;
+
+  const eventStartDate = isSpecificEvent ? null : starts_at;
+  const eventEndDate = isSpecificEvent ? null : ends_at;
+
+  const specificDatesPayload = isSpecificEvent
+    ? specific_dates.map((entry) => ({ start: entry.start, end: entry.end }))
+    : null;
+
+  const ticketTypesPayload = isFreeEvent
+    ? [
+        {
+          type: "FREE",
+          price: 0,
+          currency,
+          quantity: capacity ?? null,
+          available_from: null,
+          available_until: null,
+        },
+      ]
+    : [
+        ...(singleTicket
+          ? [
+              {
+                type: "SINGLE TICKET",
+                price: singleTicket,
+                currency,
+                quantity: singleTicketQuantity,
+                available_from: null,
+                available_until: null,
+              },
+            ]
+          : []),
+        ...(multipleTickets ?? []).map((ticket) => ({
+          type: ticket.category,
+          price: ticket.price,
+          quantity: ticket.quantity,
+          available_from: ticket.availableFrom ?? null,
+          available_until: ticket.availableUntil ?? null,
+          currency,
+        })),
+      ];
+
+  const promoCodesPayload =
+    promoCodes && promoCodes.length > 0
+      ? promoCodes.map((promo) => ({
+          promo_code: promo.promoCode,
+          discount_percentage: promo.discount,
+          expires_at: promo.expiryDate,
+          max_uses: promo.maximumUse,
+        }))
+      : null;
+
+  const { data: eventId, error: createEventError } = await supabase.rpc(
+    "create_event",
+    {
+      p_client_request_id: clientRequestId,
+      p_organizer_id: user.id,
+      p_title: formattedTitle,
+      p_slug: slug,
+      p_description: description,
+      p_event_code: eventCode,
+      p_event_category: category,
+      p_event_type: types,
+      p_latitude: latitude,
+      p_longitude: longitude,
+      p_address: { full_address: address },
+      p_capacity: capacity ?? null,
+      p_website_url: website_url ?? null,
+      p_flyer_public_id: public_id,
+      p_flyer_version: version,
+      p_starts_at: eventStartDate ?? null,
+      p_ends_at: eventEndDate ?? null,
+      p_require_registration: checked,
+      // Featuring an event now happens exclusively through the paid
+      // Promotion flow (Manage -> Events -> Promotion), not at creation.
+      p_featured: false,
+      p_specific_dates: specificDatesPayload,
+      p_ticket_types: ticketTypesPayload.length > 0 ? ticketTypesPayload : null,
+      p_promo_codes: promoCodesPayload,
+      // Receiving-account collection was removed from Event Creation —
+      // organizers manage payout destinations app-wide via Finance ->
+      // Payout Accounts instead. The RPC param has no SQL default, so it
+      // must still be passed explicitly.
+      p_receiving_account: null,
+      p_place_id: placeId ?? null,
+    },
+  );
+
+  if (createEventError) {
+    if (createEventError.code === UNIQUE_VIOLATION) {
+      if (
+        createEventError.message.includes(
+          "promo_code_event_id_normalized_code_key",
+        )
+      ) {
+        return {
+          status: 409,
+          message:
+            "One of your promo codes is already used for this event. Please use a different code.",
+        };
+      }
+
+      // event_client_request_id_key can't fire here (create_event checks
+      // for it before inserting); event_code/slug collisions are now
+      // extremely rare thanks to their random suffixes, so this is a
+      // generic fallback rather than a specific message about any one field.
+      return {
+        status: 500,
+        message: "We couldn't post your event. Please try again.",
+      };
+    }
+
+    logger.error(`Error creating event: ${createEventError.message}`);
+    return {
+      status: 500,
+      message: "We couldn't post your event. Please try again.",
+    };
+  }
+
+  // Only delete the source draft after the event has actually been
+  // created — if create_event had failed above, we'd already have
+  // returned, leaving the draft untouched. Best-effort: a failure here
+  // doesn't affect the publish result the user sees, and a stray draft
+  // just expires naturally in 48h.
+  if (draftId) {
+    const { error: deleteDraftError } = await supabase
+      .from("drafts")
+      .delete()
+      .eq("id", draftId)
+      .eq("user_id", user.id);
+
+    if (deleteDraftError) {
+      logger.error(
+        `Failed to delete draft ${draftId} after successful publish: ${deleteDraftError.message}`,
+      );
+    }
+  }
+
+  return {
+    status: 200,
+    message: "Event posted successfully!",
+    eventId: eventId as string,
+  };
+}

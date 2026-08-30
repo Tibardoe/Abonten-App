@@ -1,0 +1,276 @@
+"use client";
+
+import { respondToEventReview } from "@/actions/respondToEventReview";
+import ReviewListItem from "@/components/molecules/ReviewListItem";
+import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
+import ReviewsSectionHeader from "@/components/molecules/ReviewsSectionHeader";
+import InfiniteList from "@/components/organisms/InfiniteList";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useToast } from "@/hooks/useToast";
+import type { Occurrence } from "@abonten/types/occurrenceType";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import {
+  type InfiniteData,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useState } from "react";
+import AddEventReviewButton from "../molecules/AddEventReviewButton";
+
+// No generated Supabase types exist in this repo (see PROJECT.md) --
+// matches getEventReviews.ts's own biome-ignore'd `any` return type.
+// biome-ignore lint/suspicious/noExplicitAny: see above
+type EventReviewRow = any;
+
+type EventReviewsSectionProps = {
+  eventId: string;
+  organizerId: string;
+  eventStatus: string;
+  startsAt: string | null;
+  endsAt: string | null;
+  occurrences: Occurrence[] | null;
+  avgRating: number;
+  reviewCount: number;
+  initialPage: PaginatedResult<EventReviewRow>;
+  fetchPage: (
+    cursor: string | null,
+  ) => Promise<PaginatedResult<EventReviewRow>>;
+};
+
+// Combines the public review list AND the organizer's reply affordance in
+// one component -- unlike Places (which has a separate manage/places/[id]
+// dashboard with its own ManagePlaceReviewsSection), there is no per-event
+// manage page for events, so "Reply" simply appears inline for whichever
+// viewer happens to be this event's organizer, exactly like
+// ManagePlaceReviewsSection's RespondForm but gated by an isOrganizer check
+// instead of living on a separate route. respondToEventReview.ts is the
+// real authorization boundary regardless of what this component shows.
+export default function EventReviewsSection({
+  eventId,
+  organizerId,
+  eventStatus,
+  startsAt,
+  endsAt,
+  occurrences,
+  avgRating,
+  reviewCount,
+  initialPage,
+  fetchPage,
+}: EventReviewsSectionProps) {
+  const queryClient = useQueryClient();
+  const { data: user } = useCurrentUser();
+  const toast = useToast();
+  const [respondingToId, setRespondingToId] = useState<string | null>(null);
+  // Repopulates the reply textarea with what the organizer typed if the
+  // optimistic post below has to roll back — otherwise reopening the form
+  // after a failure would silently drop their draft.
+  const [draftText, setDraftText] = useState<{
+    reviewId: string;
+    text: string;
+  } | null>(null);
+
+  const isOrganizer = user?.id === organizerId;
+
+  const reviewsQueryKey = ["event-reviews", eventId];
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: reviewsQueryKey });
+
+  const replyMutation = useMutation({
+    mutationFn: ({ reviewId, text }: { reviewId: string; text: string }) =>
+      respondToEventReview(reviewId, text),
+
+    // The reply is a short, low-stakes text field an organizer already
+    // chose to submit, so it appears in place immediately; if the server
+    // rejects it, the cache rolls back and the form reopens with the same
+    // text so nothing typed is lost.
+    onMutate: async ({ reviewId, text }) => {
+      setRespondingToId(null);
+      setDraftText(null);
+
+      await queryClient.cancelQueries({ queryKey: reviewsQueryKey });
+
+      const previousReviews =
+        queryClient.getQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+          reviewsQueryKey,
+        );
+
+      queryClient.setQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+        reviewsQueryKey,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((row) =>
+                row.id === reviewId
+                  ? { ...row, organizer_response: text }
+                  : row,
+              ),
+            })),
+          },
+      );
+
+      return { previousReviews };
+    },
+
+    onSuccess: (response, vars, context) => {
+      if (response.status === 200) {
+        toast.success("✅ Reply posted successfully!");
+        invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+        }
+        toast.error(`❌ ${response.message}`);
+        setDraftText(vars);
+        setRespondingToId(vars.reviewId);
+      }
+    },
+
+    onError: (_error, vars, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+      }
+      toast.error("❌ Something went wrong. Please try again.");
+      setDraftText(vars);
+      setRespondingToId(vars.reviewId);
+    },
+  });
+
+  return (
+    <div
+      id="reviews"
+      className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm space-y-4 scroll-mt-20"
+    >
+      <ReviewsSectionHeader
+        avgRating={avgRating}
+        reviewCount={reviewCount}
+        addReviewButton={
+          <AddEventReviewButton
+            eventId={eventId}
+            organizerId={organizerId}
+            eventStatus={eventStatus}
+            startsAt={startsAt}
+            endsAt={endsAt}
+            occurrences={occurrences}
+          />
+        }
+      />
+
+      <InfiniteList<EventReviewRow>
+        queryKey={reviewsQueryKey}
+        initialPage={initialPage}
+        fetchPage={fetchPage}
+        listClassName="flex flex-col gap-6"
+        loadingSkeleton={
+          <ul className="flex flex-col gap-6">
+            {Array.from({ length: 3 }, (_, i) => (
+              <ReviewRowSkeleton key={i.toLocaleString()} />
+            ))}
+          </ul>
+        }
+        emptyState={
+          <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
+        }
+        renderItem={(review: EventReviewRow) => (
+          <ReviewListItem
+            key={review.id}
+            avatarPublicId={review.user_info?.avatar_public_id}
+            avatarVersion={review.user_info?.avatar_version}
+            username={review.user_info?.username}
+            createdAt={review.created_at}
+            rating={review.rating}
+            title={review.title}
+            comment={review.comment}
+            isVerifiedAttendee={review.is_verified_attendee}
+            photos={review.event_review_photo}
+            responseLabel="Organizer reply"
+            responseText={review.organizer_response}
+          >
+            {!review.organizer_response &&
+              isOrganizer &&
+              (respondingToId === review.id ? (
+                <RespondForm
+                  initialText={
+                    draftText && draftText.reviewId === review.id
+                      ? draftText.text
+                      : ""
+                  }
+                  isSubmitting={
+                    replyMutation.isPending &&
+                    replyMutation.variables?.reviewId === review.id
+                  }
+                  onCancel={() => {
+                    setRespondingToId(null);
+                    setDraftText(null);
+                  }}
+                  onSubmit={(text) =>
+                    replyMutation.mutate({ reviewId: review.id, text })
+                  }
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setRespondingToId(review.id)}
+                  className="mt-2 text-sm text-primary hover:underline"
+                >
+                  Reply
+                </button>
+              ))}
+          </ReviewListItem>
+        )}
+      />
+    </div>
+  );
+}
+
+function RespondForm({
+  initialText,
+  isSubmitting,
+  onCancel,
+  onSubmit,
+}: {
+  initialText: string;
+  isSubmitting: boolean;
+  onCancel: () => void;
+  onSubmit: (text: string) => void;
+}) {
+  const [response, setResponse] = useState(initialText);
+
+  const handleSubmit = () => {
+    const trimmed = response.trim();
+    if (!trimmed) return;
+    onSubmit(trimmed);
+  };
+
+  return (
+    <div className="mt-3 ml-4 md:ml-8 space-y-2">
+      <textarea
+        value={response}
+        onChange={(e) => setResponse(e.target.value)}
+        placeholder="Write a reply to this review..."
+        className="w-full rounded-md border border-input bg-background p-2 text-sm"
+        rows={2}
+      />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={isSubmitting || !response.trim()}
+          onClick={handleSubmit}
+          className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
+        >
+          {isSubmitting ? "Posting..." : "Post reply"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="border border-border px-3 py-1.5 rounded-md text-sm hover:bg-accent transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
