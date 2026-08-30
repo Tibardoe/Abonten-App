@@ -1,5 +1,6 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
+import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { parseFilters } from "@/utils/parseFilterModalQueries";
 import Link from "next/link";
 import SearchResultsList from "./SearchResultsList";
@@ -67,29 +68,6 @@ export default async function page({
     });
   };
 
-  const emptyState = (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
-      <div className="max-w-md mx-auto">
-        <div className="relative w-64 h-64 mx-auto mb-8">
-          <img
-            src="/assets/images/notFound.jpg"
-            alt="No events found"
-            className="w-full h-full object-contain opacity-90"
-          />
-        </div>
-
-        <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
-          No results
-        </h2>
-
-        <p className="text-muted-foreground mb-6 max-w-md">
-          We couldn’t find any events for your queried data. Try adjusting your
-          search queries.
-        </p>
-      </div>
-    </div>
-  );
-
   // /search always carries a ?price= (even at the unfiltered 0-999
   // default, see FilterModalPopup's default branch), so it's excluded from
   // "is anything actually active" -- otherwise the chip row and "Clear all"
@@ -101,6 +79,23 @@ export default async function page({
       (queryParams.from && queryParams.to) ||
       queryParams.rating ||
       queryParams.distance,
+  );
+
+  // Reuses the Explore events/filters empty state so a filtered "no matches"
+  // looks the same everywhere. Copy is filter-aware: when filters are on, it
+  // nudges toward loosening them (with a one-tap clear); otherwise it's a
+  // plain "nothing here" message.
+  const emptyState = hasActiveFilters ? (
+    <NoEventsFound
+      heading="No events match these filters"
+      description="Try widening your price range or date window, or removing a filter or two."
+      action={{ label: "Clear all filters", href: "/search" }}
+    />
+  ) : (
+    <NoEventsFound
+      heading="No events found"
+      description="We couldn't find any events to show here yet. Check back soon."
+    />
   );
 
   return (

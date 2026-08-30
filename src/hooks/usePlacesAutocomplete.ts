@@ -51,10 +51,28 @@ export function usePlacesAutocomplete({
 
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
-  const { isLoaded } = useLoadScript({
+  const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey,
     libraries,
   });
+
+  // A missing key or a failed script load is an operational problem, not
+  // something to surface to end users -- the location field degrades to
+  // plain manual entry either way. Log it once so it's visible in
+  // monitoring instead of only as a broken-looking input.
+  useEffect(() => {
+    if (!googleMapsApiKey) {
+      logger.error(
+        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is not set -- location autocomplete is disabled; manual entry only.",
+      );
+    }
+  }, [googleMapsApiKey]);
+
+  useEffect(() => {
+    if (loadError) {
+      logger.error("Google Maps script failed to load:", loadError);
+    }
+  }, [loadError]);
 
   useEffect(() => {
     const fetchUserCountry = async () => {
@@ -273,6 +291,7 @@ export function usePlacesAutocomplete({
   return {
     googleMapsApiKey,
     isLoaded,
+    loadError,
     inputValue,
     searchResults,
     countryCode,

@@ -1,5 +1,6 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
+import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { undoSlug } from "@/utils/geerateSlug";
 import SearchTitleResultsList from "./SearchTitleResultsList";
 
@@ -29,27 +30,16 @@ export default async function page({
     return getQueriedEvents({ ...filters, cursor });
   }
 
+  // Same empty-state component the Explore events + filters flow uses, so
+  // "nothing matched" looks and behaves the same across the app. The copy
+  // stays search-specific: this is a text query with no matches, so it
+  // points at the search term rather than at filters.
   const emptyState = (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] py-12 px-4 text-center">
-      <div className="max-w-md mx-auto">
-        <div className="relative w-64 h-64 mx-auto mb-8">
-          <img
-            src="/assets/images/notFound.jpg"
-            alt="No events found"
-            className="w-full h-full object-contain opacity-90"
-          />
-        </div>
-
-        <h2 className="text-2xl font-semibold text-muted-foreground mb-2">
-          No results for {formattedSearchTitle}
-        </h2>
-
-        <p className="text-muted-foreground mb-6 max-w-md">
-          We couldn’t find any events for {formattedSearchTitle}. Try adjusting
-          your search input.
-        </p>
-      </div>
-    </div>
+    <NoEventsFound
+      heading={`No results for "${formattedSearchTitle}"`}
+      description="We couldn't find any events matching that search. Try a different or more general term."
+      action={{ label: "Browse all events", href: "/" }}
+    />
   );
 
   return (

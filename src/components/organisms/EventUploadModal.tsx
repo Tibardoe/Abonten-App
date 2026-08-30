@@ -198,7 +198,10 @@ export default function EventUploadModal({
         title="Create Event"
         className="bg-background md:bg-transparent"
       >
-        <div className="flex flex-col h-full w-full md:h-[95%] md:w-[70%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground py-3 overflow-y-auto overflow-x-hidden">
+        {/* px-4 on mobile keeps form content, cards, and controls off the
+            screen edge; md:px-0 restores the flush split-pane layout on
+            desktop where the panel itself already provides the margin. */}
+        <div className="flex flex-col h-full w-full md:h-[95%] md:w-[70%] md:rounded-2xl bg-background md:bg-card text-foreground md:text-card-foreground px-4 py-3 md:px-0 overflow-y-auto overflow-x-hidden">
           {step === 1 && (
             <div className="flex flex-col flex-1 min-h-0 w-full">
               {showCrop ? (

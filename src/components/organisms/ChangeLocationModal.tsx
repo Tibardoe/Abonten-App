@@ -126,7 +126,10 @@ export default function ChangeLocationModal({
         </div>
 
         <div className="flex flex-col gap-5">
-          <div className="flex gap-2 items-center">
+          {/* items-stretch (+ no fixed heights) lets the Set button take its
+              height from the autocomplete field, so the two stay aligned at
+              every breakpoint and regardless of font size. */}
+          <div className="flex items-stretch gap-2">
             <AutoComplete
               ref={autoCompleteRef}
               placeholderText={{
@@ -141,7 +144,7 @@ export default function ChangeLocationModal({
               type="button"
               onClick={handleSetClick}
               disabled={isResolvingLocation}
-              className="bg-primary rounded-lg p-3 md:p-5 w-24 h-full text-primary-foreground grid place-items-center font-bold disabled:opacity-60"
+              className="grid w-20 shrink-0 place-items-center rounded-lg bg-primary px-4 font-bold text-primary-foreground disabled:opacity-60 md:w-24"
             >
               {isResolvingLocation ? "..." : "Set"}
             </button>

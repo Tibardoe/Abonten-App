@@ -21,6 +21,7 @@ import { parseWKBHex } from "@/utils/parseWKBHex";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { FiGlobe, FiMapPin, FiPhone } from "react-icons/fi";
+import { IoIosStar } from "react-icons/io";
 import { IoLocationOutline, IoLogoWhatsapp } from "react-icons/io5";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -160,21 +161,32 @@ export default async function page({
             </div>
           </div>
 
-          <div className="flex gap-1.5 md:gap-2 items-center overflow-x-auto scrollbar-hide -mx-3 px-3 md:mx-0 md:px-0 md:flex-wrap">
-            <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-base">
+          {/* Wraps onto multiple lines on mobile instead of scrolling
+              sideways, so the rating chip is always visible and the banner
+              can't cause page-level horizontal scroll. The full 5-star glyph
+              row is desktop-only; on mobile a single star + the numeric
+              rating carries the same information in far less width. */}
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+            <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-base">
               {categoryName}
             </span>
             {place.verified && (
-              <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
+              <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
                 <VerifiedBadge />
               </span>
             )}
-            <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
+            <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
               <PlaceOpenStatusBadge status={openStatus} />
             </span>
-            <span className="shrink-0 px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-1.5 text-xs md:text-base">
-              <StarRatingDisplay rating={place.avgRating} />
-              <span>
+            <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-white flex items-center gap-1 md:gap-1.5 text-xs md:text-base">
+              <IoIosStar
+                aria-hidden
+                className="text-primary text-sm md:hidden"
+              />
+              <span className="hidden md:flex">
+                <StarRatingDisplay rating={place.avgRating} />
+              </span>
+              <span className="tabular-nums">
                 {place.avgRating.toFixed(1)} ({place.reviewCount})
               </span>
             </span>

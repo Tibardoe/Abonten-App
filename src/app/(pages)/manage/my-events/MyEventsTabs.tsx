@@ -156,30 +156,34 @@ export default function MyEventsTabs({
       onValueChange={handleTabChange}
       activationMode="manual"
     >
-      {/* Down from 5 tabs to 4 (Reviewed now lives behind the combined
-          review trigger below) — the horizontally scrollable strip stays as
-          a fallback for very narrow screens or long translated labels, but
-          no longer needs to scroll just to reach Reviewed. Same
-          overflow-x-auto/scrollbar-hide idiom as CategoryChipsRow.tsx. */}
-      <div className="overflow-x-auto scrollbar-hide -mx-2 px-2 md:mx-0 md:px-0 md:flex md:justify-center">
-        <TabsList className="flex w-max md:w-auto gap-0.5 md:gap-1 bg-muted p-1 rounded-lg">
+      {/* Four tabs (Reviewed lives behind the combined review trigger).
+          Mobile: an even 4-column grid that fills the width, with the label
+          and its count stacked so nothing is clipped on narrow phones.
+          Desktop: the app's standard centered inline tab strip. Matches the
+          `grid w-full grid-cols-N md:w-auto md:inline-grid` idiom used by
+          ExploreTabs / DraftsView / UserReviewsTabs. */}
+      <div className="md:flex md:justify-center">
+        <TabsList className="grid w-full grid-cols-4 gap-0.5 rounded-lg bg-muted p-1 md:inline-grid md:w-auto md:min-w-[26rem] md:gap-1">
           <TabsTrigger
-            className="shrink-0 grow-0 px-2 md:px-3 text-[13px] md:text-sm"
+            className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
             value="active"
           >
-            Active ({counts.active})
+            <span>Active</span>
+            <span className="tabular-nums">({counts.active})</span>
           </TabsTrigger>
           <TabsTrigger
-            className="shrink-0 grow-0 px-2 md:px-3 text-[13px] md:text-sm"
+            className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
             value="cancelled"
           >
-            Cancelled ({counts.cancelled})
+            <span className="truncate">Cancelled</span>
+            <span className="tabular-nums">({counts.cancelled})</span>
           </TabsTrigger>
           <TabsTrigger
-            className="shrink-0 grow-0 px-2 md:px-3 text-[13px] md:text-sm"
+            className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
             value="refunds"
           >
-            Refunds ({counts.refunds})
+            <span className="truncate">Refunds</span>
+            <span className="tabular-nums">({counts.refunds})</span>
           </TabsTrigger>
 
           <Popover open={reviewMenuOpen} onOpenChange={setReviewMenuOpen}>
@@ -191,7 +195,7 @@ export default function MyEventsTabs({
                 positioning. */}
             <PopoverAnchor asChild>
               <TabsTrigger
-                className="shrink-0 grow-0 gap-1 px-2 md:px-3 text-[13px] md:text-sm"
+                className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
                 value={reviewTriggerValue}
                 aria-haspopup={isReviewSection ? "menu" : undefined}
                 aria-expanded={isReviewSection ? reviewMenuOpen : undefined}
@@ -208,18 +212,23 @@ export default function MyEventsTabs({
                   tabJustChangedRef.current = false;
                 }}
               >
-                {currentTab === "reviewed"
-                  ? `Reviewed (${reviewedCount})`
-                  : `To Review (${toReviewCount})`}
-                {isReviewSection && (
-                  <IoChevronDown
-                    aria-hidden
-                    className={cn(
-                      "transition-transform",
-                      reviewMenuOpen && "rotate-180",
-                    )}
-                  />
-                )}
+                <span className="flex items-center gap-0.5">
+                  <span className="truncate">
+                    {currentTab === "reviewed" ? "Reviewed" : "To Review"}
+                  </span>
+                  {isReviewSection && (
+                    <IoChevronDown
+                      aria-hidden
+                      className={cn(
+                        "shrink-0 transition-transform",
+                        reviewMenuOpen && "rotate-180",
+                      )}
+                    />
+                  )}
+                </span>
+                <span className="tabular-nums">
+                  ({currentTab === "reviewed" ? reviewedCount : toReviewCount})
+                </span>
               </TabsTrigger>
             </PopoverAnchor>
             <PopoverContent align="center" className="w-48 p-1">

@@ -7,6 +7,7 @@ import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { generateSlug } from "@/utils/geerateSlug";
 import { logger } from "@/utils/logger";
 import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { forwardRef, useCallback, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
@@ -48,6 +49,7 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
     const {
       googleMapsApiKey,
       isLoaded,
+      loadError,
       inputValue,
       searchResults,
       countryCode,
@@ -112,7 +114,10 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
           }
 
           if (!autocompleteServiceRef.current || !sessionTokenRef.current) {
-            return { status: "error" };
+            // Places hasn't finished loading (or failed to). Rather than
+            // discarding what the user typed, hand it back as unresolved so
+            // the caller can still navigate using the raw text as a slug.
+            return { status: "unresolved", rawText: text };
           }
 
           const request: google.maps.places.AutocompleteRequest = {
@@ -192,20 +197,23 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
       ],
     );
 
-    if (!googleMapsApiKey)
-      return (
-        <div className="text-destructive">Google Maps API key is missing.</div>
-      );
-
-    if (!isLoaded)
-      return (
-        <div className="text-muted-foreground">Loading Google Maps...</div>
-      );
+    // The field shell renders immediately and looks identical whether or not
+    // Google has finished loading -- no layout shift, no "Loading Google
+    // API" text. While Places is still initialising the input stays usable
+    // (typed text is preserved and still resolves to a location on submit
+    // via the slug fallback); once it's ready, suggestions just start
+    // appearing. A hard load failure / missing key degrades silently to the
+    // same manual-entry input.
+    const isEnhancing = !isLoaded && !loadError && Boolean(googleMapsApiKey);
 
     return (
       <div
         ref={containerRef}
-        className={cn(searchFieldWrapperClassName, "relative", classname)}
+        className={cn(
+          searchFieldWrapperClassName,
+          "relative flex-1 min-w-0",
+          classname,
+        )}
       >
         <IoLocationOutline className="text-3xl text-foreground shrink-0" />
 
@@ -214,8 +222,19 @@ const AutoComplete = forwardRef<AutoCompleteHandle, AddressProp>(
           onChange={handleInputChange}
           value={inputValue}
           placeholder={placeholderText.text}
+          aria-busy={isEnhancing}
           className={searchFieldInputClassName}
         />
+
+        {isEnhancing && (
+          <>
+            <Loader2
+              aria-hidden
+              className="shrink-0 animate-spin text-muted-foreground"
+            />
+            <span className="sr-only">Loading location search</span>
+          </>
+        )}
 
         {searchResults.length > 0 && (
           <ul className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground text-lg border border-border rounded shadow-md mt-1 z-10 overflow-y-auto">

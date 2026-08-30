@@ -4,6 +4,7 @@ import { useAttendingEventIds } from "@/hooks/useAttendingEventIds";
 import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
+import { getEventStatus } from "@/utils/eventStatus";
 import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
@@ -39,10 +40,22 @@ export default function EventCard({
     attendeeCount: attendees,
   });
   const eventHref = `/events/${event_code.toLowerCase()}`;
-  const isAttending = useAttendingEventIds().has(id);
+
+  // "You're Going" only makes sense while the event is still actually
+  // attendable: not cancelled, and not already over. `getEventStatus` is the
+  // shared source of truth for the lifecycle state (upcoming/ongoing/ended),
+  // so the badge condition can't drift from the "Event Ended" overlay above.
+  const lifecycleStatus = getEventStatus(starts_at, ends_at, occurrences);
+  const showAttendingBadge =
+    useAttendingEventIds().has(id) &&
+    status !== "canceled" &&
+    lifecycleStatus !== "ended";
 
   return (
-    <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
+    // `isolate` traps the "You're Going" badge's z-index inside the card so
+    // it can never paint over the sticky header, bottom nav, modals, or
+    // dropdowns (all of which live in higher page-level layers).
+    <li className="relative group isolate overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
       <DiscoveryCardCoverImage
         href={eventHref}
         src={buildCloudinaryUrl(flyer_public_id, flyer_version, {
@@ -52,7 +65,7 @@ export default function EventCard({
         alt={`Flyer for ${title}`}
         priority={priority}
         cornerBadge={
-          isAttending && (
+          showAttendingBadge && (
             <span className="inline-flex items-center gap-1 rounded-full bg-success px-2.5 py-1 text-xs font-semibold text-success-foreground shadow-md">
               <MdConfirmationNumber className="text-sm" />
               You're Going

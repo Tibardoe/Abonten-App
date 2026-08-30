@@ -32,22 +32,31 @@ export default function PriceRangeSlider({
   const [low, high] = value;
 
   const handleSliderChange = (next: number[]) => {
-    const [nextLow, nextHigh] = next;
-    onChange([nextLow, nextHigh]);
+    // Radix already keeps the pair sorted and non-crossing, but normalize
+    // defensively so a stray single-element or reversed payload can never
+    // leave the control in an invalid state.
+    const [a = min, b = max] = next;
+    onChange([Math.min(a, b), Math.max(a, b)]);
   };
 
   const handleLowInput = (raw: string) => {
+    // An empty field parses as 0, not NaN -- treat it as "no change yet"
+    // rather than snapping the minimum to 0 mid-edit. `high - step` keeps
+    // the two values from ever colliding (which would make one slider thumb
+    // impossible to separate from the other again).
+    if (raw.trim() === "") return;
     const parsed = Number(raw);
     if (Number.isNaN(parsed)) return;
-    const clamped = Math.min(Math.max(parsed, min), high);
-    onChange([clamped, high]);
+    const clamped = Math.min(Math.max(parsed, min), high - step);
+    onChange([Math.min(clamped, high - step), high]);
   };
 
   const handleHighInput = (raw: string) => {
+    if (raw.trim() === "") return;
     const parsed = Number(raw);
     if (Number.isNaN(parsed)) return;
-    const clamped = Math.max(Math.min(parsed, max), low);
-    onChange([low, clamped]);
+    const clamped = Math.max(Math.min(parsed, max), low + step);
+    onChange([low, Math.max(clamped, low + step)]);
   };
 
   const highLabel = formatMax && high >= max ? formatMax(high) : `${high}`;

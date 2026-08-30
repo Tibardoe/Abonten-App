@@ -57,7 +57,7 @@ export default function DesktopFooter() {
             alt="Copyright"
             className="w-5 h-5"
           />
-          <p>2025 Abonten App</p>
+          <p>{new Date().getFullYear()} Abonten Hub</p>
         </div>
 
         <div className="space-x-5">

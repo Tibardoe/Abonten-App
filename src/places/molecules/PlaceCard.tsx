@@ -34,7 +34,9 @@ export default function PlaceCard({
   const placeHref = `/places/${slug}`;
 
   return (
-    <li className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
+    // `isolate` keeps any pinned cover-image badge/overlay z-index contained
+    // to the card, matching EventCard -- overlays elsewhere always win.
+    <li className="relative group isolate overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 bg-card border border-border hover:border-primary/40">
       <DiscoveryCardCoverImage
         href={placeHref}
         src={buildCloudinaryUrl(cover_public_id, cover_version, {

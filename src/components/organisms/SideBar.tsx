@@ -94,15 +94,19 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
         />
       )}
 
-      <div className="h-full overflow-y-auto">
+      {/* Full-height flex column: the nav block sizes to its content and the
+          footer is pushed to the bottom (mt-auto) instead of being
+          absolutely positioned, so there's no dead space beneath it. pt-14
+          clears the Sheet's close button before the first action. */}
+      <div className="flex h-full flex-col overflow-y-auto pt-14 pb-6">
         {userLoading ? (
-          <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
+          <div className="pl-[5%] md:pl-[10%] flex flex-col gap-5">
             {Array.from({ length: 4 }, (_, i) => (
               <Skeleton key={i.toLocaleString()} className="h-5 w-28" />
             ))}
           </div>
         ) : user ? (
-          <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col gap-5">
+          <div className="pl-[5%] md:pl-[10%] flex flex-col gap-5">
             <CreateMenu
               label={t("create")}
               onSelectEvent={() => fileInputRef.current?.click()}
@@ -137,7 +141,7 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
             </button>
           </div>
         ) : (
-          <div className="pl-[5%] md:pl-[10%] mt-5 flex flex-col items-start gap-2 font-bold">
+          <div className="pl-[5%] md:pl-[10%] flex flex-col items-start gap-2 font-bold">
             <Link href="/auth/signin" onClick={onNavigate}>
               {t("signIn")}
             </Link>

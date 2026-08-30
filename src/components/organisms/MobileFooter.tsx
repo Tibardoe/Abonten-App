@@ -3,7 +3,9 @@ import MaskIcon from "../atoms/MaskIcon";
 
 export default function MobileFooter() {
   return (
-    <div className="w-full mx-auto space-y-3 flex flex-col justify-start absolute bottom-0 mt-0 mb-20">
+    // mt-auto pins this to the bottom of the sidebar's flex column; pt-10
+    // separates it from the nav above without leaving a gap below it.
+    <div className="mt-auto flex w-full flex-col space-y-3 pt-10">
       <div className="flex flex-col gap-3 pl-[5%]">
         <Link href="#">Terms & Conditions</Link>
 
@@ -65,7 +67,7 @@ export default function MobileFooter() {
           alt="Copyright"
           className="w-5 h-5"
         />
-        <p>2025 Abonten App</p>
+        <p>{new Date().getFullYear()} Abonten Hub</p>
       </div>
     </div>
   );

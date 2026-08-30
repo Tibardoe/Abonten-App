@@ -6,12 +6,14 @@ import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholde
 import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { logger } from "@/utils/logger";
 import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
+import { Loader2 } from "lucide-react";
 import { forwardRef, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";
 import {
   searchFieldInputClassName,
   searchFieldWrapperClassName,
 } from "../lib/searchFieldStyles";
+import { cn } from "../lib/utils";
 
 type AddressProp = {
   placeholderText: AutoCompletePlaceholderType;
@@ -47,6 +49,7 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
     const {
       googleMapsApiKey,
       isLoaded,
+      loadError,
       inputValue,
       searchResults,
       countryCode,
@@ -166,34 +169,41 @@ const PostAutoComplete = forwardRef<PostAutoCompleteHandle, AddressProp>(
       ],
     );
 
-    if (!googleMapsApiKey) {
-      return (
-        <div className="text-destructive">
-          Google Maps API key is missing. Please add it to your environment
-          variables.
-        </div>
-      );
-    }
-
-    if (!isLoaded)
-      return (
-        <div className="text-muted-foreground">Loading Google Maps...</div>
-      );
+    // Always render the field itself -- identical whether or not Google
+    // Places has loaded -- so the form never shows raw "Loading Google
+    // API..." text or jumps when the script arrives. Typed text is kept and
+    // still resolves on submit even if Places never loads; a missing key or
+    // load failure just means no live suggestions.
+    const isEnhancing = !isLoaded && !loadError && Boolean(googleMapsApiKey);
 
     return (
       <div
         ref={containerRef}
-        className={`${searchFieldWrapperClassName} relative justify-between`}
+        className={cn(
+          searchFieldWrapperClassName,
+          "relative w-full justify-between",
+        )}
       >
         <input
           type="text"
           onChange={handleInputChange}
           value={inputValue}
           placeholder={placeholderText.text}
+          aria-busy={isEnhancing}
           className={searchFieldInputClassName}
         />
 
-        <IoLocationOutline className="text-2xl shrink-0" />
+        {isEnhancing ? (
+          <>
+            <Loader2
+              aria-hidden
+              className="shrink-0 animate-spin text-muted-foreground"
+            />
+            <span className="sr-only">Loading location search</span>
+          </>
+        ) : (
+          <IoLocationOutline className="text-2xl shrink-0" />
+        )}
 
         {searchResults.length > 0 && (
           <ul className="absolute top-full left-0 w-full max-h-60 bg-popover text-popover-foreground text-lg border border-border rounded shadow-md mt-1 z-10 overflow-y-auto">
