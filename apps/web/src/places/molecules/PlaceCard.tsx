@@ -3,8 +3,8 @@
 import StarRatingDisplay from "@/components/atoms/Rating";
 import DiscoveryCardCoverImage from "@/components/molecules/DiscoveryCardCoverImage";
 import DiscoveryCardTitleRow from "@/components/molecules/DiscoveryCardTitleRow";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { derivePlaceCardOpenStatus } from "@/utils/computePlaceOpenStatus";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import type { PlaceType } from "@abonten/types/placeType";
 import { IoLocationOutline } from "react-icons/io5";
 import AddPlaceToFavoriteButton from "./AddPlaceToFavoriteButton";

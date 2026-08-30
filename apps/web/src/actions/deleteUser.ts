@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 export default async function deleteUser() {
   const supabase = await createClient();

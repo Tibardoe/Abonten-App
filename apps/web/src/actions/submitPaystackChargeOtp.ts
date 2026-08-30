@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { submitChargeOtp } from "@/services/paystackService";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 type SubmitPaystackChargeOtpResult =
   | { status: 400 | 401 | 403 | 404 | 500; message: string }

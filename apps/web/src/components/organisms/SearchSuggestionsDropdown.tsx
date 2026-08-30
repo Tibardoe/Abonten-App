@@ -1,7 +1,7 @@
 "use client";
 
 import SearchSuggestionRow from "@/components/atoms/SearchSuggestionRow";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type {
   SuggestionItem,
   SuggestionSection,

@@ -1,6 +1,6 @@
 "use client";
 
-import { isImageFile } from "@/utils/isImageFile";
+import { isImageFile } from "@abonten/core/isImageFile";
 import { useEffect, useRef, useState } from "react";
 
 type UseImageSelectionOptions = {

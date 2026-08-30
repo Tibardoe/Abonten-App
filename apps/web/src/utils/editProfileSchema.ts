@@ -1,5 +1,5 @@
+import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
 import { z } from "zod";
-import { WEBSITE_URL_REGEX } from "./urlValidation";
 
 // Usernames are used in public URLs (/user/[username]/...), so the allowed
 // character set matches what's safe there: letters, numbers, underscore, period, hyphen.

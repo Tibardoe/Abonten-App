@@ -1,4 +1,4 @@
-import type { PlaceOpenStatus } from "@/utils/computePlaceOpenStatus";
+import type { PlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 
 type PlaceOpenStatusBadgeProps = {
   status: PlaceOpenStatus;

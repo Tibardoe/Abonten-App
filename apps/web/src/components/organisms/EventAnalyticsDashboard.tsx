@@ -9,11 +9,11 @@ import EventPromoBreakdown from "@/components/molecules/EventPromoBreakdown";
 import EventReturningAttendeeStats from "@/components/molecules/EventReturningAttendeeStats";
 import EventTicketTypeBreakdown from "@/components/molecules/EventTicketTypeBreakdown";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatFullDateTimeRange } from "@/utils/dateFormatter";
+import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import {
   type DashboardPeriod,
   getDashboardPeriodRange,
-} from "@/utils/organizerDashboardDateRange";
+} from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 

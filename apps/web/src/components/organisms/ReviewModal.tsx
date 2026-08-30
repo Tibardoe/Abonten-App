@@ -4,7 +4,7 @@ import MaskIcon from "@/components/atoms/MaskIcon";
 import ModalShell from "@/components/atoms/ModalShell";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";

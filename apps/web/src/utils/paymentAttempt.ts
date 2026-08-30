@@ -8,7 +8,7 @@
 // resolved userId from the caller's own session.
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 export type PaymentAttemptRow = {
   id: string;

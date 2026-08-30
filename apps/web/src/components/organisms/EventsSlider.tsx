@@ -1,6 +1,6 @@
 "use client";
 
-import { generateSlug } from "@/utils/geerateSlug";
+import { generateSlug } from "@abonten/core/geerateSlug";
 import type { UserPostType } from "@abonten/types/postsType";
 import Link from "next/link";
 import { useParams } from "next/navigation";

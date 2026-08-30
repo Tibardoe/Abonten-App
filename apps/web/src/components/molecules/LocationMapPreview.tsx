@@ -1,6 +1,6 @@
 "use client";
 
-import { parseWKBHex } from "@/utils/parseWKBHex";
+import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
 const GOOGLE_MAPS_LIBRARIES: "places"[] = ["places"];

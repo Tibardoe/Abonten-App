@@ -1,7 +1,7 @@
 "use client";
 
 import { getEventAttendanceCount } from "@/actions/getAttendace";
-import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
+import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type TicketTypeQuantity = {

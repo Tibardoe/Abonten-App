@@ -14,11 +14,14 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
 import EventReviewsSection from "@/events/organisms/EventReviewsSection";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getFormattedEventDate, getRelativeTime } from "@/utils/dateFormatter";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
-import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
-import { parseEventTypes } from "@/utils/parseEventTypes";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import {
+  getFormattedEventDate,
+  getRelativeTime,
+} from "@abonten/core/dateFormatter";
+import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import type { UserPostType } from "@abonten/types/postsType";
 import Image from "next/image";
 import Link from "next/link";

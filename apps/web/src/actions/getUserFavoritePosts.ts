@@ -7,7 +7,7 @@ import {
   encodeCursor,
   keysetOlderThan,
   splitPage,
-} from "@/utils/pagination";
+} from "@abonten/core/pagination";
 import type {
   FavoriteEvents,
   TicketType,

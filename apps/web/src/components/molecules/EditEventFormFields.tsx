@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { useEventEditForm } from "@/hooks/useEventEditForm";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Image from "next/image";
 
 type EditEventFormFieldsProps = Pick<

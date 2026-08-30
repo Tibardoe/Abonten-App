@@ -1,9 +1,9 @@
 "use client";
 
 import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
-import { generateSlug } from "@/utils/geerateSlug";
-import { logger } from "@/utils/logger";
-import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
+import { parseRawCoordinates } from "@abonten/core/parseRawCoordinates";
 import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
 import type { AutoCompletePlaceholderType } from "@abonten/types/autoCompletePlaceholderType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";

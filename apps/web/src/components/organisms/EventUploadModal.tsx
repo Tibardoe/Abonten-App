@@ -7,7 +7,7 @@ import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { invalidateEventListQueries } from "@/utils/mutationQueryInvalidation";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";

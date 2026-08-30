@@ -1,8 +1,8 @@
 "use client";
 
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
-import { logger } from "@/utils/logger";
-import { parseWKBHex } from "@/utils/parseWKBHex";
+import { logger } from "@abonten/core/logger";
+import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import { IoLocationOutline } from "react-icons/io5";
 
 type EventDetailsType = {

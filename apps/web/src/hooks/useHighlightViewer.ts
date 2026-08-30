@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 

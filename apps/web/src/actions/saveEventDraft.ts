@@ -5,7 +5,7 @@ import {
   type EventDraftPayload,
   eventDraftPayloadSchema,
 } from "@/utils/eventDraftSchema";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { v2 as cloudinary } from "cloudinary";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 

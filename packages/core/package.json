@@ -1,0 +1,21 @@
+{
+  "name": "@abonten/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-free business logic and helpers shared across the Abonten monorepo (no next/*, react, react-native, or DOM).",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@abonten/types": "*",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "@abonten/config": "*",
+    "typescript": "^5"
+  }
+}

@@ -11,6 +11,7 @@
     "lint": "biome check ./src --fix"
   },
   "dependencies": {
+    "@abonten/core": "*",
     "@abonten/types": "*",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.23",

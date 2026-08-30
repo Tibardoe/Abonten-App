@@ -2,7 +2,7 @@
 
 import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
-import { MAX_AVATAR_SOURCE_SIZE_BYTES } from "@/utils/uploadLimits";
+import { MAX_AVATAR_SOURCE_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useState } from "react";
 import AvatarUploadModal from "../organisms/AvatarUploadModal";
 import { Button } from "../ui/button";

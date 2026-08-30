@@ -1,13 +1,13 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
   encodeCursor,
   splitPage,
-} from "@/utils/pagination";
+} from "@abonten/core/pagination";
 import type {
   FilteredEventsCursor,
   PaginatedResult,

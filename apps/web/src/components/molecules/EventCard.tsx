@@ -1,11 +1,11 @@
 "use client";
 
 import { useAttendingEventIds } from "@/hooks/useAttendingEventIds";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getFormattedEventDate } from "@/utils/dateFormatter";
-import { getEventStatus } from "@/utils/eventStatus";
-import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
-import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { getEventStatus } from "@abonten/core/eventStatus";
+import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 import { MdConfirmationNumber, MdOutlineDateRange } from "react-icons/md";

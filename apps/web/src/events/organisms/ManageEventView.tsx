@@ -3,7 +3,7 @@
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
 import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotionSection";
-import type { EventStatus } from "@/utils/eventStatus";
+import type { EventStatus } from "@abonten/core/eventStatus";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 

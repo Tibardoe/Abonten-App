@@ -3,7 +3,7 @@
 import { getOrganizerLedgerTransactions } from "@/actions/getOrganizerLedgerTransactions";
 import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import FinanceLineIcon, {

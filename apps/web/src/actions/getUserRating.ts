@@ -1,7 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 export async function getUserRating(reviewedId: string) {
   const supabase = publicSupabase;

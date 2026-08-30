@@ -5,7 +5,7 @@ import {
   type ReviewPhotoInput,
   insertReviewPhotos,
 } from "@/utils/insertReviewPhotos";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";

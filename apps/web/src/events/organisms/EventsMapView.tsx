@@ -1,9 +1,9 @@
 "use client";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getFormattedEventDate } from "@/utils/dateFormatter";
-import { parseWKBHex } from "@/utils/parseWKBHex";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { UserPostType } from "@abonten/types/postsType";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import Image from "next/image";

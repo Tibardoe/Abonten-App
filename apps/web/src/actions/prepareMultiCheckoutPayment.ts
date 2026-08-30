@@ -5,7 +5,7 @@ import {
   type PreparedCheckoutPayment,
   prepareCheckoutPayment,
 } from "@/utils/checkoutPaymentPreparation";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 type PrepareMultiCheckoutPaymentResult =
   | { status: 400 | 401 | 500; message: string }

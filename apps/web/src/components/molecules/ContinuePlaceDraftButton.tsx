@@ -2,7 +2,7 @@
 
 import { type PlaceDraftDetail, getPlaceDraft } from "@/actions/getPlaceDraft";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";

@@ -1,5 +1,5 @@
 "use server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 export async function getUserCurrency(): Promise<string> {
   try {

@@ -1,8 +1,8 @@
 "use client";
 
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getFormattedEventDate } from "@/utils/dateFormatter";
-import { generateSlug } from "@/utils/geerateSlug";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { generateSlug } from "@abonten/core/geerateSlug";
 // import { allEvents } from "@/data/allEvents";
 import type { UserPostType } from "@abonten/types/postsType";
 import Image from "next/image";

@@ -1,5 +1,5 @@
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { getEventShareUrl } from "@/utils/shareUrl";
+import { getEventShareUrl } from "@abonten/core/shareUrl";
 import AddToFavoriteButton from "../atoms/AddToFavoriteButton";
 import CancelButton from "../atoms/CancelButton";
 import DeleteEventButton from "../atoms/DeleteEventButton";

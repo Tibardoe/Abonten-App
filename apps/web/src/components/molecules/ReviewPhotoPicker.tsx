@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReviewPhotoUploadItem } from "@/hooks/useReviewPhotoUpload";
-import { MAX_REVIEW_PHOTOS } from "@/utils/uploadLimits";
+import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 import Image from "next/image";
 import { useRef } from "react";
 import { FiCamera, FiX } from "react-icons/fi";

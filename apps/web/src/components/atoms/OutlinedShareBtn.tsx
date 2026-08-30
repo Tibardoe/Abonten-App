@@ -1,7 +1,7 @@
 "use client";
 
 import { handleShare } from "@/utils/handleShare";
-import { getEventShareUrl } from "@/utils/shareUrl";
+import { getEventShareUrl } from "@abonten/core/shareUrl";
 import React from "react";
 import { FiShare2 } from "react-icons/fi";
 

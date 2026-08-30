@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getCheckoutExpiryTimestamp } from "@/utils/checkoutExpiry";
-import { logger } from "@/utils/logger";
+import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
+import { logger } from "@abonten/core/logger";
 
 /**
  * Reserve step for an Event Promotion purchase — mirrors

@@ -1,7 +1,7 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import Image from "next/image";
 import Link from "next/link";

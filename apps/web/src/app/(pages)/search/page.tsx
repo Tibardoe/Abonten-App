@@ -1,7 +1,7 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
-import { parseFilters } from "@/utils/parseFilterModalQueries";
+import { parseFilters } from "@abonten/core/parseFilterModalQueries";
 import Link from "next/link";
 import SearchResultsList from "./SearchResultsList";
 

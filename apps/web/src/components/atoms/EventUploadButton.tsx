@@ -4,7 +4,7 @@ import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useState } from "react";
 import EventUploadModal from "../organisms/EventUploadModal";
 

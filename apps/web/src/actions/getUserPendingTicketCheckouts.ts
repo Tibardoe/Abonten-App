@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getFormattedEventDate } from "@/utils/dateFormatter";
-import { logger } from "@/utils/logger";
+import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { logger } from "@abonten/core/logger";
 
 type PendingCheckoutRow = {
   id: string;

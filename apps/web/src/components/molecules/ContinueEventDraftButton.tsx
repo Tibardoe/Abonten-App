@@ -3,7 +3,7 @@
 import { type EventDraftDetail, getEventDraft } from "@/actions/getEventDraft";
 import EventUploadModal from "@/components/organisms/EventUploadModal";
 import { useImageSelection } from "@/hooks/useImageSelection";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";

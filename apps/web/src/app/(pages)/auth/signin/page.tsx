@@ -1,7 +1,7 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import AuthModal from "@/components/organisms/AuthModal";
 import { createClient } from "@/config/supabase/server";
-import { getSafeRedirectPath } from "@/utils/getSafeRedirectPath";
+import { getSafeRedirectPath } from "@abonten/core/getSafeRedirectPath";
 import { redirect } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

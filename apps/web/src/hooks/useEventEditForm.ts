@@ -10,9 +10,9 @@ import {
   validateSpecificDates,
 } from "@/utils/eventDateValidation";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
-import { isImageFile } from "@/utils/isImageFile";
-import { parseEventTypes } from "@/utils/parseEventTypes";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import { isImageFile } from "@abonten/core/isImageFile";
+import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { UserDetailsFormType } from "@abonten/types/userProfileType";
 import { getTranslations } from "next-intl/server";
 

@@ -1,9 +1,9 @@
 "use client";
 
 import ModalShell from "@/components/atoms/ModalShell";
-import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
-import { logger } from "@/utils/logger";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";

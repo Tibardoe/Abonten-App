@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import { signOut } from "@/services/authService";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

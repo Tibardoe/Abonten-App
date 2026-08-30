@@ -1,5 +1,5 @@
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Deliberately NOT a "use server" Server Action: every exported function in
 // a "use server" file gets a directly POST-able public endpoint regardless

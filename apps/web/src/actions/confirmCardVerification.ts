@@ -7,7 +7,7 @@ import {
   refundTransaction,
   verifyTransaction,
 } from "@/services/paystackService";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 type ConfirmCardVerificationResult =
   | { status: 400 | 401 | 500; message: string }

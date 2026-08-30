@@ -1,7 +1,7 @@
 // utils/dailyEventCache.ts
 
-import { getEventStatus } from "@/utils/eventStatus";
-import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
+import { getEventStatus } from "./eventStatus";
+import { getEventSoldOutStatus } from "./getEventSoldOutStatus";
 import type { UserPostType } from "@abonten/types/postsType";
 
 /**

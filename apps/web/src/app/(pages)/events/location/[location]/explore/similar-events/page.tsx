@@ -1,8 +1,8 @@
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import EventCard from "@/components/molecules/EventCard";
-import { undoSlug } from "@/utils/geerateSlug";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
-import { logger } from "@/utils/logger";
+import { undoSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
 import type { UserPostType } from "@abonten/types/postsType";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

@@ -1,6 +1,6 @@
 import StarRatingDisplay from "@/components/atoms/Rating";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getRelativeTime } from "@/utils/dateFormatter";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import ReviewPhotoGrid from "./ReviewPhotoGrid";

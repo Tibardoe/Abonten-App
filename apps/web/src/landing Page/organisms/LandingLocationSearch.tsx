@@ -3,9 +3,9 @@
 import AutoComplete, {
   type AutoCompleteHandle,
 } from "@/components/molecules/AutoComplete";
-import { generateSlug } from "@/utils/geerateSlug";
 import { getCurrentPosition } from "@/utils/getCurrentPosition";
-import { logger } from "@/utils/logger";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";

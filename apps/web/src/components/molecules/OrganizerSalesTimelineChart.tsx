@@ -1,7 +1,7 @@
 "use client";
 
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
-import type { DashboardBucket } from "@/utils/organizerDashboardDateRange";
+import type { DashboardBucket } from "@abonten/core/organizerDashboardDateRange";
 import {
   Bar,
   BarChart,

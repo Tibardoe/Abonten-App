@@ -6,11 +6,11 @@ import getUserFreeRegistrationStatus from "@/actions/getUserFreeRegistrationStat
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
-import { getEventStatus } from "@/utils/eventStatus";
 import {
   invalidateEventListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
+import { getEventStatus } from "@abonten/core/eventStatus";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FiCheck } from "react-icons/fi";

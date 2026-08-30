@@ -1,5 +1,5 @@
 import { createClient } from "@/config/supabase/server";
-import { getSafeRedirectPath } from "@/utils/getSafeRedirectPath";
+import { getSafeRedirectPath } from "@abonten/core/getSafeRedirectPath";
 import { type NextRequest, NextResponse } from "next/server";
 
 // Exchanges the Google OAuth code for a session *server-side* before

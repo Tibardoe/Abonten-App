@@ -1,4 +1,4 @@
-import { SHIMMER_BLUR_DATA_URL } from "@/utils/imagePlaceholder";
+import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";

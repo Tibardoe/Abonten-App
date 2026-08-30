@@ -1,5 +1,5 @@
 import { createClient } from "@/config/supabase/server";
-import { getSignInUrl } from "@/utils/getSignInUrl";
+import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import { redirect } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

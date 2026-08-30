@@ -3,7 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { issueRefundCore } from "@/utils/issueRefundCore";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { after } from "next/server";
 import eventCancellationNotification, {
   type CancelledAttendeeRefund,

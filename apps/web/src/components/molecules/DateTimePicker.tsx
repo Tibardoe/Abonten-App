@@ -3,7 +3,7 @@
 import {
   formatFullDateTimeRange,
   formatSingleDateTime,
-} from "@/utils/dateFormatter";
+} from "@abonten/core/dateFormatter";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { InlineDateField } from "../atoms/InlineDateField";

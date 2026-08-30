@@ -4,7 +4,7 @@ import {
   MAX_TRIM_SEGMENT_DURATION,
   MIN_TRIM_DURATION,
 } from "@/hooks/useMediaSelection";
-import formatDuration from "@/utils/formatVideoDuration";
+import formatDuration from "@abonten/core/formatVideoDuration";
 import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useEffect, useRef, useState } from "react";
 

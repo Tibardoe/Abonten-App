@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { computeProfileCompletion } from "@/utils/profileCompletion";
+import { computeProfileCompletion } from "@abonten/core/profileCompletion";
 
 export type GetProfileCompletionResult =
   | { status: 200; completion: ReturnType<typeof computeProfileCompletion> }

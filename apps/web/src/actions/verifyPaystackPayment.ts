@@ -2,7 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 type VerifyPaystackPaymentResult =
   | { status: 401 | 403 | 404; message: string }

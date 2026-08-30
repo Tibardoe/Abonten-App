@@ -2,7 +2,7 @@
 
 import TransactionsPeriodFilter from "@/components/molecules/TransactionsPeriodFilter";
 import TransactionsSummaryCards from "@/components/molecules/TransactionsSummaryCards";
-import type { TransactionPeriod } from "@/utils/transactionsDateRange";
+import type { TransactionPeriod } from "@abonten/core/transactionsDateRange";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   UserTransactionRow,

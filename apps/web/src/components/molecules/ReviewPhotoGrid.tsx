@@ -1,6 +1,6 @@
 "use client";
 
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Image from "next/image";
 import { useState } from "react";
 import ReviewPhotoLightbox from "./ReviewPhotoLightbox";

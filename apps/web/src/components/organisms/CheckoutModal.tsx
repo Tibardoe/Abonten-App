@@ -11,7 +11,7 @@ import {
   allocatePromoEligibility,
   computeCheckoutFee,
   computeLineAmount,
-} from "@/utils/checkoutPricing";
+} from "@abonten/core/checkoutPricing";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";

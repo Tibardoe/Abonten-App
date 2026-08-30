@@ -1,14 +1,14 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
   encodeCursor,
   keysetOlderThan,
   splitPage,
-} from "@/utils/pagination";
+} from "@abonten/core/pagination";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
 export async function getPlaceReviews(

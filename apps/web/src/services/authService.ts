@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { supabase } from "../config/supabase/client";
 
 export const signInWithGoogle = async (

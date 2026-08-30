@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { useManagePlaceDetailsForm } from "@/hooks/useManagePlaceDetailsForm";
 import PlaceCategoryPicker from "@/places/molecules/PlaceCategoryPicker";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { TbWorld } from "react-icons/tb";

@@ -3,7 +3,7 @@
 import { getEventsAwaitingReview } from "@/actions/getEventsAwaitingReview";
 import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import EventReviewModal from "@/events/organisms/EventReviewModal";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";

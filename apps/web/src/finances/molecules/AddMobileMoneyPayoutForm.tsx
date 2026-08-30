@@ -16,7 +16,7 @@ import {
   type AddMobileMoneyPayoutAccountInput,
   addMobileMoneyPayoutAccountSchema,
 } from "@/utils/payoutAccountSchema";
-import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
+import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
 import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";

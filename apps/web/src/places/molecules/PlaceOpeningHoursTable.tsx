@@ -1,5 +1,5 @@
-import type { PlaceOpeningHourRow } from "@/utils/computePlaceOpenStatus";
-import { DISPLAY_DAYS } from "@/utils/dayOfWeek";
+import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
+import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
 
 type PlaceOpeningHoursTableProps = {
   openingHours: PlaceOpeningHourRow[];

@@ -1,16 +1,16 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getEventStatus } from "@/utils/eventStatus";
-import { logger } from "@/utils/logger";
+import { getEventStatus } from "@abonten/core/eventStatus";
+import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
   encodeCursor,
   keysetOlderThan,
   splitPage,
-} from "@/utils/pagination";
-import { TICKET_WITH_EVENT_SELECT } from "@/utils/ticketSelect";
+} from "@abonten/core/pagination";
+import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 

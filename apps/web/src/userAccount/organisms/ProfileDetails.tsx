@@ -4,7 +4,7 @@ import AddReviewButton from "@/components/atoms/AddReviewButton";
 import UserHighlights from "@/components/molecules/UserHighlights";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import { Button } from "@/components/ui/button";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Link from "next/link";
 import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";

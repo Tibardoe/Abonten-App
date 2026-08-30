@@ -2,7 +2,7 @@
 
 import getOrganizerPayouts from "@/actions/getOrganizerPayouts";
 import { Button } from "@/components/ui/button";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import type { OrganizerPayoutRow } from "@abonten/types/organizerFinance";
 import Link from "next/link";
 import { useState } from "react";

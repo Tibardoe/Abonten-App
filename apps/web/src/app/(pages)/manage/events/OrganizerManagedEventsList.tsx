@@ -1,9 +1,9 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getFormattedEventDate } from "@/utils/dateFormatter";
-import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import Image from "next/image";

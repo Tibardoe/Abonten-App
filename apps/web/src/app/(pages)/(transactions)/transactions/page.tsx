@@ -1,6 +1,6 @@
 import { getUserTransactionHistory } from "@/actions/getUserTransactionHistory";
 import { getUserTransactionSummary } from "@/actions/getUserTransactionSummary";
-import type { TransactionPeriod } from "@/utils/transactionsDateRange";
+import type { TransactionPeriod } from "@abonten/core/transactionsDateRange";
 import TransactionsPageClient from "./TransactionsPageClient";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

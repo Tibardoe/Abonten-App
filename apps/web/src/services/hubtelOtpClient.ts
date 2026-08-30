@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 // Hubtel's dedicated OTP prepare/verify API — kept exactly as already
 // integrated (Hubtel generates and stores the code itself; this app never
 // sees or checks the code value directly, only Hubtel's verdict). Isolated

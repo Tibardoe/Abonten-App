@@ -1,15 +1,15 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   formatDateWithSuffix,
   getFormattedEventDate,
-} from "@/utils/dateFormatter";
-import { SHIMMER_BLUR_DATA_URL } from "@/utils/imagePlaceholder";
+} from "@abonten/core/dateFormatter";
+import { SHIMMER_BLUR_DATA_URL } from "@abonten/core/imagePlaceholder";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
-} from "@/utils/ticketPdfData";
+} from "@abonten/core/ticketPdfData";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { pdf } from "@react-pdf/renderer";
 import Image from "next/image";

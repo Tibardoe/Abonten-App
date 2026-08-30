@@ -19,14 +19,14 @@ import {
   invalidatePlaceListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
-import { getFulfillmentMessage } from "@/utils/paymentStatusCopy";
-import { PENDING_CHECKOUTS_QUERY_KEY } from "@/utils/queryKeys";
 import PaymentMethodCard, {
   getPaymentMethodDisplay,
   NO_PAYMENT_METHODS_MESSAGE,
 } from "@/wallet/molecules/PaymentMethodCard";
 import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
+import { getFulfillmentMessage } from "@abonten/core/paymentStatusCopy";
+import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Script from "next/script";

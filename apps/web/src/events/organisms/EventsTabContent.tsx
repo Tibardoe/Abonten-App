@@ -10,7 +10,7 @@ import EventCategoryChips from "@/events/molecules/EventCategoryChips";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import NoEventsInLocation from "@/events/molecules/NoEventsInLocation";
 import EventsMapView from "@/events/organisms/EventsMapView";
-import { getFeaturedEvents } from "@/utils/dailyEventCache";
+import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import type { UserPostType } from "@abonten/types/postsType";
 
 // Radius (km) used for the "All Events" section — matches the previous

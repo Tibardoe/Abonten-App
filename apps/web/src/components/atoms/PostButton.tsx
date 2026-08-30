@@ -2,7 +2,7 @@
 
 import { getActiveDraftCounts } from "@/actions/getActiveDraftCounts";
 import { useImageSelection } from "@/hooks/useImageSelection";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useState } from "react";
 import NewEventOrDraftChooser from "../molecules/NewEventOrDraftChooser";
 import EventUploadModal from "../organisms/EventUploadModal";

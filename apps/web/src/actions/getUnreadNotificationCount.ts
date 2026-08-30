@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 type GetUnreadNotificationCountResult =
   | { status: 401 | 500; message: string }

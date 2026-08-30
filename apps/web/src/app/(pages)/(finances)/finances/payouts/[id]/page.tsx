@@ -2,8 +2,8 @@ import getOrganizerPayoutDetail from "@/actions/getOrganizerPayoutDetail";
 import FinanceLineIcon, {
   getFinanceStatusMeta,
 } from "@/finances/atoms/FinanceLineIcon";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
-import { maskAccountNumber } from "@/utils/maskAccountNumber";
+import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import { notFound } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

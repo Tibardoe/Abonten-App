@@ -3,7 +3,7 @@
 import getEventPromoAnalytics from "@/actions/getEventPromoAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
-import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
+import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 
 export default function EventPromoBreakdown({

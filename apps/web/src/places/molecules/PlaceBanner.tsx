@@ -1,7 +1,7 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PlaceType } from "@abonten/types/placeType";
 import Image from "next/image";
 import Link from "next/link";

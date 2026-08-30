@@ -1,6 +1,6 @@
 "use client";
 
-import formatDuration from "@/utils/formatVideoDuration";
+import formatDuration from "@abonten/core/formatVideoDuration";
 import type { MediaItem } from "@abonten/types/mediaItemType";
 import { Trash2Icon } from "lucide-react";
 import Image from "next/image";

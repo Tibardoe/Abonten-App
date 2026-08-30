@@ -5,8 +5,8 @@ import type { ReviewDraftListItem } from "@/actions/getReviewDrafts";
 import Rating from "@/components/atoms/Rating";
 import ContinueReviewDraftButton from "@/components/molecules/ContinueReviewDraftButton";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
-import { getRelativeTime } from "@/utils/dateFormatter";
-import { formatExpiresIn } from "@/utils/formatExpiresIn";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { formatExpiresIn } from "@abonten/core/formatExpiresIn";
 import { useState } from "react";
 
 type ReviewDraftCardProps = {

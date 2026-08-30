@@ -1,5 +1,5 @@
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { NextResponse } from "next/server";
 
 export async function GET() {

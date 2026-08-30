@@ -4,7 +4,7 @@ import { respondToPlaceBooking } from "@/actions/respondToPlaceBooking";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useToast } from "@/hooks/useToast";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,

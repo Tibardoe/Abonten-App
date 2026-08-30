@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
 import {
   type PlaceDraftPayload,
   placeDraftPayloadSchema,
 } from "@/utils/placeDraftSchema";
+import { logger } from "@abonten/core/logger";
 import { v2 as cloudinary } from "cloudinary";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 

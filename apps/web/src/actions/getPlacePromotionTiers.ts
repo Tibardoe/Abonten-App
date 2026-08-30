@@ -1,7 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 
 // place_promotion_tier is a small, seeded lookup table (4 rows -- 24 hours/

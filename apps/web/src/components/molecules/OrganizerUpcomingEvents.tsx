@@ -1,4 +1,4 @@
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import Link from "next/link";
 import AnalyticsRowsSkeleton from "./AnalyticsRowsSkeleton";
 import InlineErrorRetry from "./InlineErrorRetry";

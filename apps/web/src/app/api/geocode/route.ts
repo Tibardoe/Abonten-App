@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { NextResponse } from "next/server";
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;

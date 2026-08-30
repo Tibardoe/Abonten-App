@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 type ShareData = {
   title: string;
   url: string;

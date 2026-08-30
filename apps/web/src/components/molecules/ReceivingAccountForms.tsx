@@ -7,8 +7,8 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
-import { networks } from "@/utils/networkProviderData";
 import type { receivingAccountSchema } from "@/utils/receivingAcountSchema";
+import { networks } from "@abonten/core/networkProviderData";
 import Image from "next/image";
 // import { useState } from "react";
 import type { useForm } from "react-hook-form";

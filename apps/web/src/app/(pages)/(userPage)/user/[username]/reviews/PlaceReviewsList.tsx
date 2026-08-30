@@ -2,7 +2,7 @@
 
 import Rating from "@/components/atoms/Rating";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import { getRelativeTime } from "@/utils/dateFormatter";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import { ClockIcon, MapPinIcon, UserIcon } from "lucide-react";
 import Link from "next/link";

@@ -1,6 +1,6 @@
 "use client";
 
-import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
+import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useEffect, useRef, useState } from "react";
 
 type Props = {

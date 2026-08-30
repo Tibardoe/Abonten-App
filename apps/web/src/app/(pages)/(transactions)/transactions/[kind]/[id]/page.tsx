@@ -2,8 +2,8 @@ import { getUserTransactionDetail } from "@/actions/getUserTransactionDetail";
 import TransactionStatusIcon, {
   getTransactionStatusMeta,
 } from "@/components/atoms/TransactionStatusIcon";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
-import { getRefundStatusLabel } from "@/utils/refundStatus";
+import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type {
   TransactionKind,
   TransactionStatus,

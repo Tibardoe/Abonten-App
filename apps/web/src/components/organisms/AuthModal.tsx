@@ -3,10 +3,10 @@
 import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
-import { generateSlug } from "@/utils/geerateSlug";
-import { logger } from "@/utils/logger";
-import { maskPhoneNumber } from "@/utils/normalizePhoneNumber";
-import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
+import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
+import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";

@@ -1,13 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
   encodeCursor,
   splitPage,
-} from "@/utils/pagination";
+} from "@abonten/core/pagination";
 import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 

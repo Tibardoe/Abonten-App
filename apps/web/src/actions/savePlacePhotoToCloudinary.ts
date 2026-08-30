@@ -3,8 +3,8 @@
 import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { logger } from "@/utils/logger";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import { logger } from "@abonten/core/logger";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({

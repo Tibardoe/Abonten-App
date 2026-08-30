@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type {
   PaystackRefundWebhookData,
   PaystackWebhookEvent,

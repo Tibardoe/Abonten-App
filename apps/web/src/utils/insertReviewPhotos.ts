@@ -1,6 +1,6 @@
 import type { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
-import { MAX_REVIEW_PHOTOS } from "./uploadLimits";
+import { logger } from "@abonten/core/logger";
+import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 
 export type ReviewPhotoInput = { publicId: string; version: string };
 

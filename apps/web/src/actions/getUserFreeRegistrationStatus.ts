@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 /**
  * Whether the current user has an active free-event registration

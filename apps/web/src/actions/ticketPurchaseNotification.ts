@@ -4,13 +4,13 @@ import TicketPurchaseEmailTemplate, {
   type EmailTicketLine,
 } from "@/components/organisms/TicketPurchaseEmailTemplate";
 import { createClient } from "@/config/supabase/server";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
-import { logger } from "@/utils/logger";
+import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { logger } from "@abonten/core/logger";
 import {
   buildTicketPdfData,
   buildTicketPdfFilename,
-} from "@/utils/ticketPdfData";
+} from "@abonten/core/ticketPdfData";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import React from "react";
 import { Resend } from "resend";

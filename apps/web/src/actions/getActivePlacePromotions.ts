@@ -1,7 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { PlaceType } from "@abonten/types/placeType";
 
 const FEATURED_PLACES_LIMIT = 10;

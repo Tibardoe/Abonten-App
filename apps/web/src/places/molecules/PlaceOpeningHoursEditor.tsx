@@ -1,7 +1,7 @@
 "use client";
 
 import { TimeInput } from "@/components/atoms/TimeInput";
-import { DISPLAY_DAYS } from "@/utils/dayOfWeek";
+import { DISPLAY_DAYS } from "@abonten/core/dayOfWeek";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 
 type PlaceOpeningHoursEditorProps = {

@@ -1,6 +1,6 @@
 import TicketPdfDocument from "@/components/organisms/TicketPdfDocument";
+import type { TicketPdfData } from "@abonten/core/ticketPdfData";
 import { renderToBuffer } from "@react-pdf/renderer";
-import type { TicketPdfData } from "./ticketPdfData";
 
 /**
  * Server-side counterpart to TicketModal's client-side `pdf().toBlob()` —

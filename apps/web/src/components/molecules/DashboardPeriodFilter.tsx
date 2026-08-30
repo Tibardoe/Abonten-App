@@ -1,7 +1,7 @@
 "use client";
 
-import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
-import { DASHBOARD_PERIOD_LABELS } from "@/utils/organizerDashboardDateRange";
+import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import { DASHBOARD_PERIOD_LABELS } from "@abonten/core/organizerDashboardDateRange";
 import { cn } from "../lib/utils";
 
 const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];

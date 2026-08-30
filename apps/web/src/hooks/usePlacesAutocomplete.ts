@@ -1,7 +1,7 @@
 "use client";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
 import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { useLoadScript } from "@react-google-maps/api";

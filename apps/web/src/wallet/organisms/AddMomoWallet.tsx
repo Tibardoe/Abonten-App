@@ -17,7 +17,7 @@ import {
   type AddMomoWalletInput,
   addMomoWalletSchema,
 } from "@/utils/paymentMethodSchema";
-import { phoneNumberFormatter } from "@/utils/phoneNumberFormatter";
+import { phoneNumberFormatter } from "@abonten/core/phoneNumberFormatter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";

@@ -1,7 +1,7 @@
 "use client";
 
 import { supabase } from "@/config/supabase/client";
-import { getSignInUrl } from "@/utils/getSignInUrl";
+import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 /**

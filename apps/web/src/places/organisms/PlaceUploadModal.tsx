@@ -8,7 +8,7 @@ import { useImageSelection } from "@/hooks/useImageSelection";
 import { usePlaceUploadForm } from "@/hooks/usePlaceUploadForm";
 import { invalidatePlaceListQueries } from "@/utils/mutationQueryInvalidation";
 import type { PlaceDraftPayload } from "@/utils/placeDraftSchema";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";

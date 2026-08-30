@@ -1,6 +1,6 @@
 import type { getTickets } from "@/actions/getTickets";
 import QuantityStepper from "@/components/atoms/QuantityStepper";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
+import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { MdDiscount } from "react-icons/md";
 
 type Ticket = NonNullable<

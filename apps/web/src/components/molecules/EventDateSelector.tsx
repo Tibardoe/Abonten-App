@@ -1,6 +1,9 @@
 "use client";
 
-import { formatFullDateTimeRange, getDateParts } from "@/utils/dateFormatter";
+import {
+  formatFullDateTimeRange,
+  getDateParts,
+} from "@abonten/core/dateFormatter";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import React, { useState } from "react";
 import AttendingButton from "../atoms/AttendingButton";

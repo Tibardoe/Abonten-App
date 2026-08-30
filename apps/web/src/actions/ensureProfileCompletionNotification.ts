@@ -2,8 +2,8 @@
 
 import createNotification from "@/actions/createNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { logger } from "@/utils/logger";
-import { computeProfileCompletion } from "@/utils/profileCompletion";
+import { logger } from "@abonten/core/logger";
+import { computeProfileCompletion } from "@abonten/core/profileCompletion";
 
 // Idempotently creates the "Complete your profile" notification for a user.
 // Safe to call on every sign-in (not just the first one) -- it checks

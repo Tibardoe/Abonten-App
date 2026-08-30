@@ -1,10 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { generateEventCode } from "@/utils/eventCodeGenerator";
-import { generateSlug } from "@/utils/geerateSlug";
-import { logger } from "@/utils/logger";
-import { validateLocationInput } from "@/utils/validateLocationInput";
+import { generateEventCode } from "@abonten/core/eventCodeGenerator";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
+import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { PostsType } from "@abonten/types/postsType";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Ownership-scoped delete; cascades to event_review_photo via its existing
 // FK (event_review_photo_review_id_fkey ... ON DELETE CASCADE).

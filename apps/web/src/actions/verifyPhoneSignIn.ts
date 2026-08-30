@@ -10,9 +10,9 @@ import {
   getPendingOtp,
   registerVerifyAttempt,
 } from "@/services/phoneOtpStore";
-import { logger } from "@/utils/logger";
-import { HUBTEL_OTP_CODE_LENGTH } from "@/utils/otpConstants";
-import { OTP_MESSAGES } from "@/utils/otpMessages";
+import { logger } from "@abonten/core/logger";
+import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { OTP_MESSAGES } from "@abonten/core/otpMessages";
 
 export type VerifyPhoneSignInResult =
   | { status: 200 }

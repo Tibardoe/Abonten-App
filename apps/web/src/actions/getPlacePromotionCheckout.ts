@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Mirrors getEventPromotionCheckout.ts exactly -- same self-heal-then-read
 // shape, just scoped by place_promotion_checkout's owner_id column instead

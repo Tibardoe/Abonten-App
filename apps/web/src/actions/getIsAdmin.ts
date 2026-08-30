@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Self-only admin check -- mirrors getUserPlaceRole.ts's "only answer for
 // yourself" guard (user.id !== userId is rejected). Used by useIsAdmin() to

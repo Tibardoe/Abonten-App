@@ -1,6 +1,6 @@
+import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
 import type { useTranslations } from "next-intl";
 import { z } from "zod";
-import { WEBSITE_URL_REGEX } from "./urlValidation";
 
 export const getEventSchema = (
   t: ReturnType<typeof useTranslations<"events">>,

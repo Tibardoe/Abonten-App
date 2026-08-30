@@ -5,7 +5,7 @@ import ProfileCompletionChecklist from "@/components/molecules/ProfileCompletion
 import ProfileCompletionIndicator from "@/components/molecules/ProfileCompletionIndicator";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import EditProfileInputFields from "@/components/organisms/EditProfileInputFields";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getTranslations } from "next-intl/server";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

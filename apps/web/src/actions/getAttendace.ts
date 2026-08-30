@@ -1,7 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 /**
  * Uses the get_event_attendance_count RPC rather than reading `attendance`

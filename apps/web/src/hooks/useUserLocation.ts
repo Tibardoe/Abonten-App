@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { useQuery } from "@tanstack/react-query";
 
 function fetchTownFromGeolocation(): Promise<string | null> {

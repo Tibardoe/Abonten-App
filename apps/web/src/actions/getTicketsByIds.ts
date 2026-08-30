@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
-import { TICKET_WITH_EVENT_SELECT } from "@/utils/ticketSelect";
+import { logger } from "@abonten/core/logger";
+import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import type { UserTicketType } from "@abonten/types/ticketType";
 

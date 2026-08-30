@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { resolveEventEndDate } from "@/utils/dateFormatter";
-import { logger } from "@/utils/logger";
+import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import { logger } from "@abonten/core/logger";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 
 export type EventReviewEligibility =

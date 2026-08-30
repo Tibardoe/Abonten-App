@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
-import { validateLocationInput } from "@/utils/validateLocationInput";
+import { logger } from "@abonten/core/logger";
+import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import { v2 as cloudinary } from "cloudinary";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 

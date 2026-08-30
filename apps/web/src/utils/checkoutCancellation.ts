@@ -11,8 +11,8 @@
 // to use.
 
 import type { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
 import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
+import { logger } from "@abonten/core/logger";
 
 type PromotionCheckoutTable =
   | "event_promotion_checkout"

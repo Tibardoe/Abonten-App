@@ -12,7 +12,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
-import { getRelativeTime } from "@/utils/dateFormatter";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import {

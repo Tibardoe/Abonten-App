@@ -7,8 +7,8 @@
 // ticketInventory.ts/promoUsage.ts: it takes an already-constructed Supabase
 // client rather than resolving a session of its own.
 
-import { DEFAULT_SERVICE_FEE_RATE } from "@/utils/checkoutPricing";
-import { logger } from "@/utils/logger";
+import { DEFAULT_SERVICE_FEE_RATE } from "@abonten/core/checkoutPricing";
+import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**

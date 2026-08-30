@@ -2,7 +2,7 @@ import ModalShell from "@/components/atoms/ModalShell";
 import MediaStage from "@/components/molecules/MediaStage";
 import VideoTrimEditor from "@/components/molecules/VideoTrimEditor";
 import { useMediaSelection } from "@/hooks/useMediaSelection";
-import formatDuration from "@/utils/formatVideoDuration";
+import formatDuration from "@abonten/core/formatVideoDuration";
 import type { MediaItem } from "@abonten/types/mediaItemType";
 import {
   ChevronLeftIcon,

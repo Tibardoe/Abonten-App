@@ -2,8 +2,8 @@
 
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
-import { generateSlug } from "@/utils/geerateSlug";
-import { getSignInUrl } from "@/utils/getSignInUrl";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

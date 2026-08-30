@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Owner-only analytics dashboard query. A simple select + reduce in JS is
 // fine here (rather than a Postgres RPC) -- this is a small, infrequently

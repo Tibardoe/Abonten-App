@@ -1,5 +1,5 @@
 import { ABONTEN_LOGO_EMAIL_LIGHT_URL } from "@/config/brandAssets";
-import type { TicketPdfData } from "@/utils/ticketPdfData";
+import type { TicketPdfData } from "@abonten/core/ticketPdfData";
 import {
   Document,
   Image,

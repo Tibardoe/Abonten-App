@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getEventStatus } from "@/utils/eventStatus";
-import { logger } from "@/utils/logger";
+import { getEventStatus } from "@abonten/core/eventStatus";
+import { logger } from "@abonten/core/logger";
 
 export type MyEventsTabCounts = {
   active: number;

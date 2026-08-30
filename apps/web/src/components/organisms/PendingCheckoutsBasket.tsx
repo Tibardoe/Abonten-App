@@ -14,12 +14,12 @@ import PaymentMethodSelector, {
 } from "@/components/organisms/PaymentMethodSelector";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
-import { computeCheckoutFee } from "@/utils/checkoutPricing";
 import {
   invalidateEventListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
-import { PENDING_CHECKOUTS_QUERY_KEY } from "@/utils/queryKeys";
+import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

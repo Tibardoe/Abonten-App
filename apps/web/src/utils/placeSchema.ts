@@ -1,6 +1,6 @@
+import { WEBSITE_URL_REGEX } from "@abonten/core/urlValidation";
 import type { useTranslations } from "next-intl";
 import { z } from "zod";
-import { WEBSITE_URL_REGEX } from "./urlValidation";
 
 // Simple format check, not a strict international-format validator — good
 // enough to catch obvious typos without rejecting real numbers written in

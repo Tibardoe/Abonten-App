@@ -3,7 +3,7 @@
 import {
   TRANSACTION_PERIOD_LABELS,
   type TransactionPeriod,
-} from "@/utils/transactionsDateRange";
+} from "@abonten/core/transactionsDateRange";
 import { cn } from "../lib/utils";
 
 const PERIODS: TransactionPeriod[] = [

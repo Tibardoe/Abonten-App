@@ -2,8 +2,8 @@
 
 import insertEventPromotionCheckout from "@/actions/insertEventPromotionCheckout";
 import { useToast } from "@/hooks/useToast";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
-import type { EventStatus } from "@/utils/eventStatus";
+import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import type { EventStatus } from "@abonten/core/eventStatus";
 import type { EventPromotionTier } from "@abonten/types/postsType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

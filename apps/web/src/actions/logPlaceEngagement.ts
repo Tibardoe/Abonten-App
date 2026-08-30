@@ -1,7 +1,7 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Mirrors place_analytics_event_type_check in the migration exactly --
 // "promotion_impression" added by 20260826090000_add_place_promotions.sql's

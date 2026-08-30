@@ -7,7 +7,7 @@ import {
   getResendCooldownRemainingMs,
   recordOtpSent,
 } from "@/services/phoneOtpStore";
-import { normalizePhoneNumber } from "@/utils/normalizePhoneNumber";
+import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import { headers } from "next/headers";
 
 const MAX_SENDS_PER_IP_PER_HOUR = 10;

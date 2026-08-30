@@ -1,6 +1,6 @@
 "use client";
 
-import { undoSlug } from "@/utils/geerateSlug";
+import { undoSlug } from "@abonten/core/geerateSlug";
 // import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState } from "react";

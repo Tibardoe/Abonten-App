@@ -1,4 +1,4 @@
-import { getEventStatus } from "@/utils/eventStatus";
+import { getEventStatus } from "./eventStatus";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 
 /**

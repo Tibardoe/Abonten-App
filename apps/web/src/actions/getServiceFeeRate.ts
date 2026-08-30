@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { DEFAULT_SERVICE_FEE_RATE } from "@/utils/checkoutPricing";
 import { getActiveServiceFeeRate } from "@/utils/platformFee";
+import { DEFAULT_SERVICE_FEE_RATE } from "@abonten/core/checkoutPricing";
 
 type GetServiceFeeRateResult = { status: 200; data: number };
 

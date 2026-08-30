@@ -7,13 +7,13 @@ import {
   useSearchSuggestions,
 } from "@/hooks/useSearchSuggestions";
 import { isExploreTab } from "@/places/exploreTab";
-import { generateSlug } from "@/utils/geerateSlug";
 import {
   addRecentSearch,
   clearRecentSearches,
   getRecentSearches,
   removeRecentSearch,
 } from "@/utils/recentSearches";
+import { generateSlug } from "@abonten/core/geerateSlug";
 import type {
   SuggestionItem,
   SuggestionSection,

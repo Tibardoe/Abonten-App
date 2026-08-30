@@ -5,7 +5,7 @@ import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 import {
   DASHBOARD_PERIOD_COMPARISON_LABELS,
   type DashboardPeriod,
-} from "@/utils/organizerDashboardDateRange";
+} from "@abonten/core/organizerDashboardDateRange";
 
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;

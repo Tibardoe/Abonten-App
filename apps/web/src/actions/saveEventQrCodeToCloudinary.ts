@@ -3,7 +3,7 @@
 import { unlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({

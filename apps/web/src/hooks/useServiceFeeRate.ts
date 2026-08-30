@@ -1,7 +1,7 @@
 "use client";
 
 import getServiceFeeRate from "@/actions/getServiceFeeRate";
-import { DEFAULT_SERVICE_FEE_RATE } from "@/utils/checkoutPricing";
+import { DEFAULT_SERVICE_FEE_RATE } from "@abonten/core/checkoutPricing";
 import { useQuery } from "@tanstack/react-query";
 
 // The customer-paid Abonten service-fee rate for checkout live previews

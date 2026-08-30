@@ -1,5 +1,5 @@
 import { cn } from "@/components/lib/utils";
-import type { getRefundStatusLabel } from "@/utils/refundStatus";
+import type { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import {
   MdCheckCircle,
   MdErrorOutline,

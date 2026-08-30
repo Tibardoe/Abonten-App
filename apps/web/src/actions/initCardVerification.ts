@@ -3,8 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import { initializeTransaction } from "@/services/paystackService";
-import { logger } from "@/utils/logger";
-import { toPesewas } from "@/utils/paystackAmount";
+import { logger } from "@abonten/core/logger";
+import { toPesewas } from "@abonten/core/paystackAmount";
 
 const CARD_VERIFICATION_AMOUNT_GHS = 1;
 

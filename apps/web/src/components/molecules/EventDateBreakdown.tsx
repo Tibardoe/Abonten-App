@@ -3,8 +3,8 @@
 import getEventDateAnalytics from "@/actions/getEventDateAnalytics";
 import AnalyticsRowsSkeleton from "@/components/molecules/AnalyticsRowsSkeleton";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
-import { formatFullDateTimeRange } from "@/utils/dateFormatter";
-import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
+import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
+import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 
 export default function EventDateBreakdown({

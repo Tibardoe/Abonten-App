@@ -3,7 +3,7 @@
 import getEventFinanceSummary from "@/actions/getEventFinanceSummary";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { DashboardPeriod } from "@/utils/organizerDashboardDateRange";
+import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 

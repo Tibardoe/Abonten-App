@@ -3,7 +3,6 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
 import { prepareCheckoutPayment } from "@/utils/checkoutPaymentPreparation";
-import { logger } from "@/utils/logger";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
@@ -12,6 +11,7 @@ import {
   type SelectedPaymentMethod,
   initiatePaystackChargeForAttempt,
 } from "@/utils/paystackInit";
+import { logger } from "@abonten/core/logger";
 
 type CreateMultiCheckoutPaymentAttemptInput = {
   checkoutSessionIds: string[];

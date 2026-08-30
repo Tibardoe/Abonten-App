@@ -8,7 +8,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Image from "next/image";
 import { useEffect } from "react";
 import { FiX } from "react-icons/fi";

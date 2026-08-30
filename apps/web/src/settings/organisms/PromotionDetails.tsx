@@ -1,7 +1,7 @@
 import { getUserActivePromotions } from "@/actions/getUserActivePromotions";
 import MaskIcon from "@/components/atoms/MaskIcon";
 import DetailsContainer from "@/settings/atoms/DetailsContainer";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import Link from "next/link";
 
 // Replaces the old Plan Details block (removed with the Membership/Plans

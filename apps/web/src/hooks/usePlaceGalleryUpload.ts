@@ -2,9 +2,9 @@
 
 import { addPlacePhoto } from "@/actions/addPlacePhoto";
 import getPlacePhotoUploadSignature from "@/actions/getPlacePhotoUploadSignature";
-import { isImageFile } from "@/utils/isImageFile";
-import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { isImageFile } from "@abonten/core/isImageFile";
+import { MAX_EVENT_FLYER_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useCallback, useState } from "react";
 
 export type GalleryUploadItem = {

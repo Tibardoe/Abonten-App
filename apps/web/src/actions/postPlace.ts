@@ -2,9 +2,9 @@
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
-import { generateSlug } from "@/utils/geerateSlug";
-import { logger } from "@/utils/logger";
-import { validateLocationInput } from "@/utils/validateLocationInput";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
+import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { PlaceFormType } from "@abonten/types/placeType";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 

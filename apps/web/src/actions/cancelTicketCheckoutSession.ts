@@ -1,10 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
 import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 import { releasePromoUsage } from "@/utils/promoUsage";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
+import { logger } from "@abonten/core/logger";
 
 type PendingRow = {
   id: string;

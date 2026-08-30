@@ -3,9 +3,9 @@
 import getAvatarUploadSignature from "@/actions/getAvatarUploadSignature";
 import { saveToSupabase } from "@/actions/saveAvatarToSupabase";
 import { useToast } from "@/hooks/useToast";
-import { logger } from "@/utils/logger";
-import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@/utils/uploadLimits";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import { logger } from "@abonten/core/logger";
+import { MAX_AVATAR_UPLOAD_SIZE_BYTES } from "@abonten/core/uploadLimits";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";

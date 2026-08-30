@@ -1,7 +1,7 @@
 "use client";
 
 import ModalShell from "@/components/atoms/ModalShell";
-import { generateSlug } from "@/utils/geerateSlug";
+import { generateSlug } from "@abonten/core/geerateSlug";
 // import Image from "next/image";
 import Link from "next/link";
 import type React from "react";

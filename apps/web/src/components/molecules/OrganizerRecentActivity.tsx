@@ -1,4 +1,4 @@
-import { getRelativeTime } from "@/utils/dateFormatter";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { TbCalendarPlus, TbTicket, TbTicketOff } from "react-icons/tb";
 import { Skeleton } from "../ui/skeleton";
 import InlineErrorRetry from "./InlineErrorRetry";

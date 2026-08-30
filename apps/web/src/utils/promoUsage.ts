@@ -1,5 +1,5 @@
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 // Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
 // for why. These accept an arbitrary userId with no session binding of their

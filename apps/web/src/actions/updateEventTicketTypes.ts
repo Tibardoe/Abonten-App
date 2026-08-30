@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { Ticket } from "@abonten/types/ticketType";
 import getEventHasConfirmedParticipation from "./getEventHasConfirmedParticipation";
 

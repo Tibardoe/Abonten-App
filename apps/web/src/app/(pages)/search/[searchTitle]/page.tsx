@@ -1,7 +1,7 @@
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
-import { undoSlug } from "@/utils/geerateSlug";
+import { undoSlug } from "@abonten/core/geerateSlug";
 import SearchTitleResultsList from "./SearchTitleResultsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

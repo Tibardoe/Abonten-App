@@ -4,7 +4,7 @@ import { removePlacePhoto } from "@/actions/removePlacePhoto";
 import { reorderPlacePhotos } from "@/actions/reorderPlacePhotos";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { usePlaceGalleryUpload } from "@/hooks/usePlaceGalleryUpload";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";

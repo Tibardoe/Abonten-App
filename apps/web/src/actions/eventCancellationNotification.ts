@@ -2,7 +2,7 @@
 
 import EventCancellationEmailTemplate from "@/components/organisms/EventCancellationEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import { Resend } from "resend";
 
 export type CancelledAttendeeRefund = {

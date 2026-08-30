@@ -2,7 +2,7 @@
 
 import createNotification from "@/actions/createNotification";
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 
 /**

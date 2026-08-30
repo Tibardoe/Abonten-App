@@ -5,7 +5,7 @@ import {
   type ReviewPhotoInput,
   insertReviewPhotos,
 } from "@/utils/insertReviewPhotos";
-import { logger } from "@/utils/logger";
+import { logger } from "@abonten/core/logger";
 
 type UpdatePlaceReviewInput = {
   reviewId: string;

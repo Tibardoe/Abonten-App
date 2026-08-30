@@ -5,8 +5,8 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useToast } from "@/hooks/useToast";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
-import { getRelativeTime } from "@/utils/dateFormatter";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import {
   type InfiniteData,

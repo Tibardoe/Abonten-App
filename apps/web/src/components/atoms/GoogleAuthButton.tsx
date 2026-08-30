@@ -1,7 +1,7 @@
 import { useToast } from "@/hooks/useToast";
 import { signInWithGoogle } from "@/services/authService";
-import { generateSlug } from "@/utils/geerateSlug";
-import { logger } from "@/utils/logger";
+import { generateSlug } from "@abonten/core/geerateSlug";
+import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";

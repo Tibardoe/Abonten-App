@@ -2,7 +2,7 @@
 
 import insertPlacePromotionCheckout from "@/actions/insertPlacePromotionCheckout";
 import { useToast } from "@/hooks/useToast";
-import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

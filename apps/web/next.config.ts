@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   // tracing has known issues that break Vercel's onBuildComplete step.
   output: process.env.VERCEL ? undefined : "standalone",
 
+  // Workspace packages shipped as raw TypeScript source (no build step) —
+  // Next/Turbopack must compile them the same as app code.
+  transpilePackages: ["@abonten/core", "@abonten/types"],
+
   experimental: {
     serverActions: { bodySizeLimit: "5mb" }, // ✅ Enable Server Actions
   },

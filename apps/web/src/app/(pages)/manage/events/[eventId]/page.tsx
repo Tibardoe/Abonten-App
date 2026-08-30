@@ -4,8 +4,8 @@ import getEventHasConfirmedParticipation from "@/actions/getEventHasConfirmedPar
 import { getEventPromotionTiers } from "@/actions/getEventPromotionTiers";
 import { createClient } from "@/config/supabase/server";
 import ManageEventView from "@/events/organisms/ManageEventView";
-import { getEventStatus } from "@/utils/eventStatus";
-import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
+import { getEventStatus } from "@abonten/core/eventStatus";
+import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

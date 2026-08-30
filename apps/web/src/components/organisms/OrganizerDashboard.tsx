@@ -20,7 +20,7 @@ import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import type {
   DashboardBucket,
   DashboardPeriod,
-} from "@/utils/organizerDashboardDateRange";
+} from "@abonten/core/organizerDashboardDateRange";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 

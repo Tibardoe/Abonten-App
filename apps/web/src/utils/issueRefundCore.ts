@@ -12,8 +12,8 @@
 // Not a "use server" file — it takes an already-constructed Supabase client.
 
 import { refundTransaction } from "@/services/paystackService";
-import { logger } from "@/utils/logger";
-import { toPesewas } from "@/utils/paystackAmount";
+import { logger } from "@abonten/core/logger";
+import { toPesewas } from "@abonten/core/paystackAmount";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type IssueRefundResult = {
