@@ -10,6 +10,7 @@ import InfiniteList from "@/components/organisms/InfiniteList";
 import type { PaginatedResult } from "@/types/pagination";
 import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import { getEventStatus } from "@/utils/eventStatus";
 import { SHIMMER_BLUR_DATA_URL } from "@/utils/imagePlaceholder";
 import { getRefundStatusLabel } from "@/utils/refundStatus";
 import Image from "next/image";
@@ -47,6 +48,15 @@ function TicketCard({
   // TICKET_REFUND_SELECT both select event:event_id(*, ...)), so no extra
   // query is needed to tell them apart.
   const cancelledByOrganizer = event.event.status === "canceled";
+  // Shared source of truth for the event's lifecycle -- an "active" ticket
+  // for an event that has already ended (or been cancelled) must not keep
+  // reading as "Active" in the list.
+  const eventEnded =
+    getEventStatus(
+      event.event.starts_at,
+      event.event.ends_at,
+      event.event.occurrences,
+    ) === "ended";
   const canRetryRefund =
     refundBadge?.label === "Refund failed" && event.transaction_id;
   return (
@@ -78,6 +88,8 @@ function TicketCard({
           <TicketStatusBadge
             status={event.status}
             cancelledByOrganizer={cancelledByOrganizer}
+            eventCancelled={cancelledByOrganizer}
+            eventEnded={eventEnded}
           />
         </div>
 
@@ -126,13 +138,15 @@ function TicketCard({
         <div className="flex items-center justify-between gap-2 pt-1">
           <ViewTicketBtn event={event} />
 
-          {event.status === "active" && (
-            <CancelUserTicketBtn
-              ticketId={event.id}
-              transactionId={event.transaction_id}
-              queryKey={queryKey}
-            />
-          )}
+          {event.status === "active" &&
+            !cancelledByOrganizer &&
+            !eventEnded && (
+              <CancelUserTicketBtn
+                ticketId={event.id}
+                transactionId={event.transaction_id}
+                queryKey={queryKey}
+              />
+            )}
         </div>
       </div>
     </div>

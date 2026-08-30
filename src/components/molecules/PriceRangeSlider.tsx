@@ -12,6 +12,12 @@ type PriceRangeSliderProps = {
   // uncapped price filter) -- falls back to the raw number otherwise.
   formatMax?: (value: number) => string;
   currencyPrefix?: string;
+  // Smallest allowed distance between the two thumbs, in value units.
+  // Defaults to ~8% of the range: enough that the two handles can never
+  // visually collapse onto each other, which is what made one thumb
+  // impossible to grab again after the other had been dragged next to it
+  // (especially on touch, where the press can't land on a 1px-wide target).
+  minGap?: number;
 };
 
 // Touch-friendly dual-handle range slider for price/rating-style filters,
@@ -28,11 +34,20 @@ export default function PriceRangeSlider({
   onChange,
   formatMax,
   currencyPrefix = "",
+  minGap,
 }: PriceRangeSliderProps) {
   const [low, high] = value;
 
+  // A real, non-zero separation the thumbs must always keep. Expressed in
+  // value units here, then handed to Radix as a count of steps.
+  const gap = Math.max(step, minGap ?? Math.round((max - min) / 12));
+  const minStepsBetweenThumbs = Math.max(1, Math.round(gap / step));
+
+  const clamp = (n: number, lo: number, hi: number) =>
+    Math.min(Math.max(n, lo), hi);
+
   const handleSliderChange = (next: number[]) => {
-    // Radix already keeps the pair sorted and non-crossing, but normalize
+    // Radix already keeps the pair sorted and >= gap apart; normalize
     // defensively so a stray single-element or reversed payload can never
     // leave the control in an invalid state.
     const [a = min, b = max] = next;
@@ -41,22 +56,18 @@ export default function PriceRangeSlider({
 
   const handleLowInput = (raw: string) => {
     // An empty field parses as 0, not NaN -- treat it as "no change yet"
-    // rather than snapping the minimum to 0 mid-edit. `high - step` keeps
-    // the two values from ever colliding (which would make one slider thumb
-    // impossible to separate from the other again).
+    // rather than snapping the minimum to 0 mid-edit.
     if (raw.trim() === "") return;
     const parsed = Number(raw);
     if (Number.isNaN(parsed)) return;
-    const clamped = Math.min(Math.max(parsed, min), high - step);
-    onChange([Math.min(clamped, high - step), high]);
+    onChange([clamp(parsed, min, high - gap), high]);
   };
 
   const handleHighInput = (raw: string) => {
     if (raw.trim() === "") return;
     const parsed = Number(raw);
     if (Number.isNaN(parsed)) return;
-    const clamped = Math.max(Math.min(parsed, max), low + step);
-    onChange([low, Math.max(clamped, low + step)]);
+    onChange([low, clamp(parsed, low + gap, max)]);
   };
 
   const highLabel = formatMax && high >= max ? formatMax(high) : `${high}`;
@@ -76,7 +87,9 @@ export default function PriceRangeSlider({
             min={min}
             max={high}
             onChange={(e) => handleLowInput(e.target.value)}
-            className="h-9 w-20 bg-transparent text-center text-sm outline-none"
+            // text-base (16px) on mobile: anything smaller makes iOS Safari
+            // zoom the page in when the field is focused.
+            className="h-9 w-20 bg-transparent text-center text-base outline-none md:text-sm"
           />
         </label>
 
@@ -96,7 +109,7 @@ export default function PriceRangeSlider({
             min={low}
             max={max}
             onChange={(e) => handleHighInput(e.target.value)}
-            className="h-9 w-20 bg-transparent text-center text-sm outline-none"
+            className="h-9 w-20 bg-transparent text-center text-base outline-none md:text-sm"
           />
         </label>
       </div>
@@ -106,7 +119,7 @@ export default function PriceRangeSlider({
           min={min}
           max={max}
           step={step}
-          minStepsBetweenThumbs={1}
+          minStepsBetweenThumbs={minStepsBetweenThumbs}
           value={[low, high]}
           onValueChange={handleSliderChange}
           aria-label="Price range"

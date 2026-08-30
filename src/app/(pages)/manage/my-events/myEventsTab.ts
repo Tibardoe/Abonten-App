@@ -4,6 +4,11 @@
 // invoked directly from server code (only rendered/passed as a prop).
 export const MY_EVENTS_TAB_VALUES = [
   "active",
+  // "past" shares the primary-row slot with "active" (see the switcher in
+  // MyEventsTabs.tsx) -- tickets you still hold for events that have already
+  // ended or been cancelled, split out of "active" so that tab only ever
+  // shows genuinely upcoming/ongoing ones.
+  "past",
   "cancelled",
   "refunds",
   "toReview",

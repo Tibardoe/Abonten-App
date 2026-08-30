@@ -25,7 +25,20 @@ export const metadata: Metadata = {
 
 async function fetchActivePage(cursor: string | null) {
   "use server";
-  return getUserAttendingEvents({ status: "active", cursor });
+  return getUserAttendingEvents({
+    status: "active",
+    timeframe: "active",
+    cursor,
+  });
+}
+
+async function fetchPastPage(cursor: string | null) {
+  "use server";
+  return getUserAttendingEvents({
+    status: "active",
+    timeframe: "past",
+    cursor,
+  });
 }
 
 async function fetchCancelledPage(cursor: string | null) {
@@ -55,16 +68,20 @@ export default async function page({
   const [counts, selectedTabFirstPage] = await Promise.all([
     getMyEventsTabCounts(),
     initialTab === "active"
-      ? getUserAttendingEvents({ status: "active" })
-      : initialTab === "cancelled"
-        ? getUserAttendingEvents({ status: "cancelled" })
-        : initialTab === "refunds"
-          ? getUserTicketRefunds()
-          : null,
+      ? getUserAttendingEvents({ status: "active", timeframe: "active" })
+      : initialTab === "past"
+        ? getUserAttendingEvents({ status: "active", timeframe: "past" })
+        : initialTab === "cancelled"
+          ? getUserAttendingEvents({ status: "cancelled" })
+          : initialTab === "refunds"
+            ? getUserTicketRefunds()
+            : null,
   ]);
 
   const activeInitialPage: PaginatedResult<UserTicketType> | null =
     initialTab === "active" ? selectedTabFirstPage : null;
+  const pastInitialPage: PaginatedResult<UserTicketType> | null =
+    initialTab === "past" ? selectedTabFirstPage : null;
   const cancelledInitialPage: PaginatedResult<UserTicketType> | null =
     initialTab === "cancelled" ? selectedTabFirstPage : null;
   const refundsInitialPage: PaginatedResult<UserTicketType> | null =
@@ -78,9 +95,11 @@ export default async function page({
         initialTab={initialTab}
         initialCounts={counts.data}
         activeInitialPage={activeInitialPage}
+        pastInitialPage={pastInitialPage}
         cancelledInitialPage={cancelledInitialPage}
         refundsInitialPage={refundsInitialPage}
         fetchActivePage={fetchActivePage}
+        fetchPastPage={fetchPastPage}
         fetchCancelledPage={fetchCancelledPage}
         fetchRefundsPage={fetchRefundsPage}
       />

@@ -12,6 +12,13 @@ type TicketStatusBadgeProps = {
   /** True when the organizer cancelled the whole event (vs. the attendee
    * cancelling just this ticket) -- both land on status="cancelled". */
   cancelledByOrganizer?: boolean;
+  /** The event itself was cancelled by the organizer. A held ticket can
+   * still read as status="active" in that case, so this overrides the
+   * "Active" label -- you're not going to a cancelled event. */
+  eventCancelled?: boolean;
+  /** Every session of the event is now in the past. An un-cancelled,
+   * not-checked-in ticket should read as "Ended", not "Active". */
+  eventEnded?: boolean;
 };
 
 // Status is never color-only: every state pairs an icon with its own label,
@@ -23,6 +30,8 @@ type TicketStatusBadgeProps = {
 export default function TicketStatusBadge({
   status,
   cancelledByOrganizer,
+  eventCancelled,
+  eventEnded,
 }: TicketStatusBadgeProps) {
   const config = (() => {
     switch (status) {
@@ -45,6 +54,22 @@ export default function TicketStatusBadge({
           className: "bg-muted text-muted-foreground",
         };
       default:
+        // status is "active" (or an unrecognised value). The event's own
+        // lifecycle can still make "Active" the wrong thing to say.
+        if (eventCancelled) {
+          return {
+            label: "Event cancelled",
+            icon: MdOutlineCancel,
+            className: "bg-destructive/10 text-destructive",
+          };
+        }
+        if (eventEnded) {
+          return {
+            label: "Ended",
+            icon: MdHistoryToggleOff,
+            className: "bg-muted text-muted-foreground",
+          };
+        }
         return {
           label: "Active",
           icon: MdCheckCircle,

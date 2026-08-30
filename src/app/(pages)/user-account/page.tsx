@@ -1,28 +1,39 @@
-// import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
-// import UserAccountLogin from "@/components/organisms/UserAccountLogin";
 import { createClient } from "@/config/supabase/server";
+import { getSignInUrl } from "@/utils/getSignInUrl";
+import { redirect } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-// import Higlight from "@/userAccount/molecules/Highlight";
-// import ContentArea from "@/userAccount/organisms/ContentArea";
-// import ProfileDetails from "@/userAccount/organisms/ProfileDetails";
-
+// "Go to my profile" entry point. Callers that know they're dealing with a
+// signed-in user but don't (yet) have the username to hand -- e.g.
+// MobileNavBar's account button in the moment right after sign-in, before
+// the client-side profile fetch resolves -- link here and let the server
+// resolve the actual /user/[username]/posts destination. Middleware already
+// guards this path for auth; the check below is a belt-and-braces fallback.
 export default async function page() {
   const supabase = await createClient();
 
-  const { data: user, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (error || !user.user) {
-    // return <UserAccountLogin />;
+  if (!user) {
+    redirect(getSignInUrl("/user-account"));
   }
 
-  return (
-    <div className="flex flex-col gap-7">
-      {/* <ProfileDetails /> */}
-      {/* <ContentArea /> */}
-    </div>
-  );
+  const { data } = await supabase
+    .from("user_info")
+    .select("username")
+    .eq("id", user.id)
+    .single();
+
+  if (data?.username) {
+    redirect(`/user/${data.username}/posts`);
+  }
+
+  // Signed in but no profile row/username yet -- send them to finish setting
+  // up their profile rather than to a dead end.
+  redirect("/settings/edit-profile");
 }

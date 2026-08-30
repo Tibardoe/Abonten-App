@@ -41,6 +41,13 @@ const noCancelledTicketsState = (
   </p>
 );
 
+const noPastTicketsState = (
+  <p className="mx-auto max-w-xs text-center text-muted-foreground text-sm py-10">
+    No past tickets. Tickets for events that have ended or were cancelled show
+    up here.
+  </p>
+);
+
 const noRefundsState = (
   <div className="text-center space-y-1 py-10">
     <p className="font-semibold">No refunds yet</p>
@@ -49,6 +56,16 @@ const noRefundsState = (
     </p>
   </div>
 );
+
+// The count that rides alongside each tab label -- deliberately lighter than
+// the label and kept on the same line, never wrapped beneath it.
+function TabCount({ value }: { value: number }) {
+  return (
+    <span className="shrink-0 text-[0.85em] font-normal text-muted-foreground tabular-nums group-data-[state=active]:text-accent-foreground/80">
+      ({value})
+    </span>
+  );
+}
 
 type TicketPage = PaginatedResult<UserTicketType> | null;
 type FetchTicketPage = (
@@ -59,18 +76,22 @@ export default function MyEventsTabs({
   initialTab,
   initialCounts,
   activeInitialPage,
+  pastInitialPage,
   cancelledInitialPage,
   refundsInitialPage,
   fetchActivePage,
+  fetchPastPage,
   fetchCancelledPage,
   fetchRefundsPage,
 }: {
   initialTab: MyEventsTab;
   initialCounts: MyEventsTabCounts;
   activeInitialPage: TicketPage;
+  pastInitialPage: TicketPage;
   cancelledInitialPage: TicketPage;
   refundsInitialPage: TicketPage;
   fetchActivePage: FetchTicketPage;
+  fetchPastPage: FetchTicketPage;
   fetchCancelledPage: FetchTicketPage;
   fetchRefundsPage: FetchTicketPage;
 }) {
@@ -102,6 +123,15 @@ export default function MyEventsTabs({
   // "Reviewed" is one outer tab covering both Events and Places (see
   // ReviewedTabContent.tsx), so its badge is the combined total.
   const reviewedCount = counts.reviewed + counts.reviewedPlaces;
+
+  // "Active" and "Past" share one primary-row slot the same way "To Review"
+  // and "Reviewed" do below: one trigger, re-click it while active to open a
+  // switcher. Keeps the strip at four columns instead of five.
+  const isActiveSection = currentTab === "active" || currentTab === "past";
+  const activeTriggerValue: MyEventsTab = isActiveSection
+    ? currentTab
+    : "active";
+  const [activeMenuOpen, setActiveMenuOpen] = useState(false);
 
   // "To Review" and "Reviewed" share one primary-row slot (see the Popover
   // below) rather than each getting their own tab — that's what used to push
@@ -146,6 +176,13 @@ export default function MyEventsTabs({
     setReviewMenuOpen(false);
   }
 
+  function selectActiveTab(value: "active" | "past") {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", value);
+    window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+    setActiveMenuOpen(false);
+  }
+
   return (
     // Manual activation mode: with the default ("automatic"), arrow-key
     // focus alone would select a tab and trigger its data fetch -- manual
@@ -157,33 +194,85 @@ export default function MyEventsTabs({
       activationMode="manual"
     >
       {/* Four tabs (Reviewed lives behind the combined review trigger).
-          Mobile: an even 4-column grid that fills the width, with the label
-          and its count stacked so nothing is clipped on narrow phones.
-          Desktop: the app's standard centered inline tab strip. Matches the
+          Mobile: an even 4-column grid that fills the width; label + count
+          stay on one line, label truncates rather than wrapping. Desktop:
+          the app's standard centered inline tab strip. Follows the
           `grid w-full grid-cols-N md:w-auto md:inline-grid` idiom used by
-          ExploreTabs / DraftsView / UserReviewsTabs. */}
+          ExploreTabs / DraftsView / UserReviewsTabs. The active tab reads
+          as a raised, self-contained pill (bg-background + shadow) on the
+          muted track. */}
       <div className="md:flex md:justify-center">
-        <TabsList className="grid w-full grid-cols-4 gap-0.5 rounded-lg bg-muted p-1 md:inline-grid md:w-auto md:min-w-[26rem] md:gap-1">
+        <TabsList className="grid w-full grid-cols-4 gap-1 rounded-lg bg-muted p-1 md:inline-grid md:w-auto md:min-w-[28rem]">
+          <Popover open={activeMenuOpen} onOpenChange={setActiveMenuOpen}>
+            {/* Same re-click-to-open-switcher mechanism as the review slot
+                below -- see that Popover's comment. */}
+            <PopoverAnchor asChild>
+              <TabsTrigger
+                className="group min-w-0 gap-1 rounded-md px-1.5 text-xs md:px-3 md:text-sm"
+                value={activeTriggerValue}
+                aria-haspopup={isActiveSection ? "menu" : undefined}
+                aria-expanded={isActiveSection ? activeMenuOpen : undefined}
+                onClick={() => {
+                  if (isActiveSection && !tabJustChangedRef.current) {
+                    setActiveMenuOpen((open) => !open);
+                  }
+                  tabJustChangedRef.current = false;
+                }}
+              >
+                <span className="truncate">
+                  {currentTab === "past" ? "Past" : "Active"}
+                </span>
+                <TabCount
+                  value={currentTab === "past" ? counts.past : counts.active}
+                />
+                {isActiveSection && (
+                  <IoChevronDown
+                    aria-hidden
+                    className={cn(
+                      "shrink-0 transition-transform",
+                      activeMenuOpen && "rotate-180",
+                    )}
+                  />
+                )}
+              </TabsTrigger>
+            </PopoverAnchor>
+            <PopoverContent align="center" className="w-44 p-1">
+              <button
+                type="button"
+                onClick={() => selectActiveTab("active")}
+                className={cn(
+                  "w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent",
+                  currentTab === "active" && "bg-accent font-medium",
+                )}
+              >
+                Active ({counts.active})
+              </button>
+              <button
+                type="button"
+                onClick={() => selectActiveTab("past")}
+                className={cn(
+                  "w-full rounded-md px-3 py-2 text-left text-sm hover:bg-accent",
+                  currentTab === "past" && "bg-accent font-medium",
+                )}
+              >
+                Past ({counts.past})
+              </button>
+            </PopoverContent>
+          </Popover>
+
           <TabsTrigger
-            className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
-            value="active"
-          >
-            <span>Active</span>
-            <span className="tabular-nums">({counts.active})</span>
-          </TabsTrigger>
-          <TabsTrigger
-            className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
+            className="group min-w-0 gap-1 rounded-md px-1.5 text-xs md:px-3 md:text-sm"
             value="cancelled"
           >
             <span className="truncate">Cancelled</span>
-            <span className="tabular-nums">({counts.cancelled})</span>
+            <TabCount value={counts.cancelled} />
           </TabsTrigger>
           <TabsTrigger
-            className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
+            className="group min-w-0 gap-1 rounded-md px-1.5 text-xs md:px-3 md:text-sm"
             value="refunds"
           >
             <span className="truncate">Refunds</span>
-            <span className="tabular-nums">({counts.refunds})</span>
+            <TabCount value={counts.refunds} />
           </TabsTrigger>
 
           <Popover open={reviewMenuOpen} onOpenChange={setReviewMenuOpen}>
@@ -195,7 +284,7 @@ export default function MyEventsTabs({
                 positioning. */}
             <PopoverAnchor asChild>
               <TabsTrigger
-                className="min-w-0 flex-col gap-0 px-1 text-xs leading-tight md:flex-row md:gap-1 md:px-3 md:text-sm"
+                className="group min-w-0 gap-1 rounded-md px-1.5 text-xs md:px-3 md:text-sm"
                 value={reviewTriggerValue}
                 aria-haspopup={isReviewSection ? "menu" : undefined}
                 aria-expanded={isReviewSection ? reviewMenuOpen : undefined}
@@ -212,23 +301,30 @@ export default function MyEventsTabs({
                   tabJustChangedRef.current = false;
                 }}
               >
-                <span className="flex items-center gap-0.5">
-                  <span className="truncate">
+                <span className="truncate">
+                  {/* Shorter label on mobile so it plus the count still fit
+                      one line in a quarter-width cell. */}
+                  <span className="md:hidden">
+                    {currentTab === "reviewed" ? "Reviewed" : "Review"}
+                  </span>
+                  <span className="hidden md:inline">
                     {currentTab === "reviewed" ? "Reviewed" : "To Review"}
                   </span>
-                  {isReviewSection && (
-                    <IoChevronDown
-                      aria-hidden
-                      className={cn(
-                        "shrink-0 transition-transform",
-                        reviewMenuOpen && "rotate-180",
-                      )}
-                    />
-                  )}
                 </span>
-                <span className="tabular-nums">
-                  ({currentTab === "reviewed" ? reviewedCount : toReviewCount})
-                </span>
+                <TabCount
+                  value={
+                    currentTab === "reviewed" ? reviewedCount : toReviewCount
+                  }
+                />
+                {isReviewSection && (
+                  <IoChevronDown
+                    aria-hidden
+                    className={cn(
+                      "shrink-0 transition-transform",
+                      reviewMenuOpen && "rotate-180",
+                    )}
+                  />
+                )}
               </TabsTrigger>
             </PopoverAnchor>
             <PopoverContent align="center" className="w-48 p-1">
@@ -263,6 +359,15 @@ export default function MyEventsTabs({
           initialPage={activeInitialPage}
           fetchPage={fetchActivePage}
           emptyState={noActiveTicketsState}
+        />
+      </TabsContent>
+
+      <TabsContent value="past">
+        <TicketsList
+          queryKey={["attending-events", "past"]}
+          initialPage={pastInitialPage}
+          fetchPage={fetchPastPage}
+          emptyState={noPastTicketsState}
         />
       </TabsContent>
 
