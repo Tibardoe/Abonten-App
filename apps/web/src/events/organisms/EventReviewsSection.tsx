@@ -7,8 +7,8 @@ import ReviewsSectionHeader from "@/components/molecules/ReviewsSectionHeader";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
-import type { Occurrence } from "@/types/occurrenceType";
-import type { PaginatedResult } from "@/types/pagination";
+import type { Occurrence } from "@abonten/types/occurrenceType";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import {
   type InfiniteData,
   useMutation,

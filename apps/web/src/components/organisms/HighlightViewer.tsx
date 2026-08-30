@@ -7,7 +7,7 @@ import UserAvatar from "@/components/atoms/UserAvatar";
 import type { HighlightMenuAction } from "@/components/molecules/HighlightMenu";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
-import type { HighlightGroup } from "@/types/highlightType";
+import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";

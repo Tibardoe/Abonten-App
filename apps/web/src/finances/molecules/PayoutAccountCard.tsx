@@ -2,8 +2,8 @@
 
 import { cn } from "@/components/lib/utils";
 import { Button } from "@/components/ui/button";
-import type { PayoutAccountRow } from "@/types/organizerFinance";
 import { maskAccountNumber } from "@/utils/maskAccountNumber";
+import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 
 type PayoutAccountCardProps = {
   account: PayoutAccountRow;

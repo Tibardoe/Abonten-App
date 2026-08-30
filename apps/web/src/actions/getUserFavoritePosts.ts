@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { FavoriteEvents, TicketType } from "@/types/favoriteEventTypes";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -10,6 +8,11 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import type {
+  FavoriteEvents,
+  TicketType,
+} from "@abonten/types/favoriteEventTypes";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getUserFavoritePosts(options?: {

@@ -1,8 +1,8 @@
 "use client";
 
 import StarRatingDisplay from "@/components/atoms/Rating";
-import type { PlaceType } from "@/types/placeType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import type { PlaceType } from "@abonten/types/placeType";
 import Image from "next/image";
 import Link from "next/link";
 import { FaArrowRightLong } from "react-icons/fa6";

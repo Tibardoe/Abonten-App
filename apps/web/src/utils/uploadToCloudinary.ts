@@ -1,4 +1,4 @@
-import type { CloudinaryDirectUploadResult } from "@/types/highlightUploadType";
+import type { CloudinaryDirectUploadResult } from "@abonten/types/highlightUploadType";
 
 type UploadToCloudinaryParams = {
   file: File;

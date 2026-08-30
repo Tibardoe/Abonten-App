@@ -4,8 +4,8 @@ import {
   MAX_TRIM_SEGMENT_DURATION,
   MIN_TRIM_DURATION,
 } from "@/hooks/useMediaSelection";
-import type { MediaItem } from "@/types/mediaItemType";
 import formatDuration from "@/utils/formatVideoDuration";
+import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useEffect, useRef, useState } from "react";
 
 type DragHandle = "start" | "end" | "middle" | null;

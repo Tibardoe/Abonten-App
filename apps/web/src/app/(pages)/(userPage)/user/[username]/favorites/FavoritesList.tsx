@@ -2,8 +2,8 @@
 
 import EventCard from "@/components/molecules/EventCard";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { FavoriteEvents } from "@/types/favoriteEventTypes";
-import type { PaginatedResult } from "@/types/pagination";
+import type { FavoriteEvents } from "@abonten/types/favoriteEventTypes";
+import type { PaginatedResult } from "@abonten/types/pagination";
 
 export default function FavoritesList({
   queryKey,

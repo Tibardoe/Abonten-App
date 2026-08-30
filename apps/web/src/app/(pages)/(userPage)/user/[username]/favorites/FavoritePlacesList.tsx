@@ -2,8 +2,8 @@
 
 import InfiniteList from "@/components/organisms/InfiniteList";
 import PlaceCard from "@/places/molecules/PlaceCard";
-import type { FavoritePlaces } from "@/types/favoritePlaceTypes";
-import type { PaginatedResult } from "@/types/pagination";
+import type { FavoritePlaces } from "@abonten/types/favoritePlaceTypes";
+import type { PaginatedResult } from "@abonten/types/pagination";
 
 // Mirrors FavoritesList.tsx exactly (events' InfiniteList usage) for
 // favorited Places instead. getUserFavoritePlaces.ts normalizes each row's

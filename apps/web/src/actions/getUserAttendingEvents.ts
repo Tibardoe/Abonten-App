@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
-import type { UserTicketType } from "@/types/ticketType";
 import { getEventStatus } from "@/utils/eventStatus";
 import { logger } from "@/utils/logger";
 import {
@@ -13,6 +11,8 @@ import {
   splitPage,
 } from "@/utils/pagination";
 import { TICKET_WITH_EVENT_SELECT } from "@/utils/ticketSelect";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { UserTicketType } from "@abonten/types/ticketType";
 
 type TicketRow = UserTicketType & {
   ticket_type: { event: UserTicketType["event"] };

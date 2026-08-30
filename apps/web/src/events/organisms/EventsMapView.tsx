@@ -1,10 +1,10 @@
 "use client";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
-import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { parseWKBHex } from "@/utils/parseWKBHex";
+import type { UserPostType } from "@abonten/types/postsType";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import Image from "next/image";
 import Link from "next/link";

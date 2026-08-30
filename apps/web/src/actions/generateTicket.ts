@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { AuthOverride } from "@/types/authOverrideType";
 import { resolveEventEndDate } from "@/utils/dateFormatter";
 import {
   generateQRCodeDataURL,
@@ -9,6 +8,7 @@ import {
 } from "@/utils/generateTicketCode";
 import { logger } from "@/utils/logger";
 import { releaseTicketQuantity } from "@/utils/ticketInventory";
+import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import insertUserAttendance from "./insertUserAttendance";

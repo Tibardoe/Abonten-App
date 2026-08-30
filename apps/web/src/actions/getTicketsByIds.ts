@@ -1,10 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { AuthOverride } from "@/types/authOverrideType";
-import type { UserTicketType } from "@/types/ticketType";
 import { logger } from "@/utils/logger";
 import { TICKET_WITH_EVENT_SELECT } from "@/utils/ticketSelect";
+import type { AuthOverride } from "@abonten/types/authOverrideType";
+import type { UserTicketType } from "@abonten/types/ticketType";
 
 /**
  * Fetches specific tickets, in the exact same shape getUserAttendingEvents

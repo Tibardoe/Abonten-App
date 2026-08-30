@@ -2,9 +2,9 @@
 
 import getHighlightUploadSignature from "@/actions/getHighlightUploadSignature";
 import uploadHighlight from "@/actions/uploadHighlight";
-import type { HighlightUploadItem } from "@/types/highlightUploadType";
-import type { MediaItem } from "@/types/mediaItemType";
 import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
+import type { HighlightUploadItem } from "@abonten/types/highlightUploadType";
+import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 

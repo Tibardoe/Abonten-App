@@ -1,8 +1,8 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { EventPromotionTier } from "@/types/postsType";
 import { logger } from "@/utils/logger";
+import type { EventPromotionTier } from "@abonten/types/postsType";
 
 // event_promotion_tier is a small, seeded lookup table (4 rows -- 24 hours/
 // 3 days/7 days/1 month) -- mirrors getPlacePromotionTiers.ts exactly.

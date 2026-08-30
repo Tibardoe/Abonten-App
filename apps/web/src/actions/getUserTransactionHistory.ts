@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
-import type { UserTransactionRow } from "@/types/transactions";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
   decodeCursor,
@@ -13,6 +11,8 @@ import {
   type TransactionPeriod,
   getTransactionPeriodRange,
 } from "@/utils/transactionsDateRange";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { UserTransactionRow } from "@abonten/types/transactions";
 
 // Merged, paginated timeline across ticket_checkout + subscription_checkout
 // (get_user_transaction_history RPC does the UNION ALL + keyset filter in

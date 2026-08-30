@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
-import type { UserTicketType } from "@/types/ticketType";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -12,6 +10,8 @@ import {
   splitPage,
 } from "@/utils/pagination";
 import { TICKET_REFUND_SELECT } from "@/utils/ticketSelect";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { UserTicketType } from "@abonten/types/ticketType";
 
 /**
  * Cancelled tickets that actually had money attached — the My Events

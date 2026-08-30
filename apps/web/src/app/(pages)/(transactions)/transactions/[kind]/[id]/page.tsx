@@ -2,9 +2,12 @@ import { getUserTransactionDetail } from "@/actions/getUserTransactionDetail";
 import TransactionStatusIcon, {
   getTransactionStatusMeta,
 } from "@/components/atoms/TransactionStatusIcon";
-import type { TransactionKind, TransactionStatus } from "@/types/transactions";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import { getRefundStatusLabel } from "@/utils/refundStatus";
+import type {
+  TransactionKind,
+  TransactionStatus,
+} from "@abonten/types/transactions";
 import { notFound } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

@@ -1,5 +1,5 @@
-import type { HighlightGroup } from "@/types/highlightType";
 import { logger } from "@/utils/logger";
+import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const SLIDE_DURATION = 3000;

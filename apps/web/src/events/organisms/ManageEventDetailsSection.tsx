@@ -7,7 +7,7 @@ import TicketInputs from "@/components/molecules/TicketInputs";
 import TicketType from "@/components/molecules/TicketType";
 import { useEventEditForm } from "@/hooks/useEventEditForm";
 import { useToast } from "@/hooks/useToast";
-import type { Ticket } from "@/types/ticketType";
+import type { Ticket } from "@abonten/types/ticketType";
 import { useState } from "react";
 
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) — same convention ManagePlaceDetailsSection.tsx uses

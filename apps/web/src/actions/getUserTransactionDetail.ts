@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { TransactionKind } from "@/types/transactions";
+import type { TransactionKind } from "@abonten/types/transactions";
 
 type TransactionRef = {
   id: string;

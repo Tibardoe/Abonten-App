@@ -1,8 +1,8 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
-import type { PlaceType } from "@/types/placeType";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { PlaceType } from "@abonten/types/placeType";
 import PlaceCard from "../molecules/PlaceCard";
 import PlaceCardSkeleton from "../molecules/PlaceCardSkeleton";
 

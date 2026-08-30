@@ -4,9 +4,9 @@ import { getNearByEvents } from "@/actions/getNearByEvents";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import FeaturedEventsCarousel from "@/components/organisms/FeaturedEventsCarousel";
 import LocationAndFilterSection from "@/components/organisms/LocationAndFilterSection";
-import type { UserPostType } from "@/types/postsType";
 import { getFeaturedEvents } from "@/utils/dailyEventCache";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import type { UserPostType } from "@abonten/types/postsType";
 import AllEventsList from "./AllEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

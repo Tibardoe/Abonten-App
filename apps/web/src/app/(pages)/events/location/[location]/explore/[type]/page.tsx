@@ -3,9 +3,9 @@ import {
   getEventsInWindow,
 } from "@/actions/getEventsInWindow";
 import { getNearByEvents } from "@/actions/getNearByEvents";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserPostType } from "@/types/postsType";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserPostType } from "@abonten/types/postsType";
 import ExploreEventsList from "./ExploreEventsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.

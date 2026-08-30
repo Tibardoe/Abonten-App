@@ -1,11 +1,11 @@
 "use client";
 
 import SearchSuggestionRow from "@/components/atoms/SearchSuggestionRow";
+import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import type {
   SuggestionItem,
   SuggestionSection,
-} from "@/types/searchSuggestionType";
-import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+} from "@abonten/types/searchSuggestionType";
 import {
   IoCalendarOutline,
   IoClose,

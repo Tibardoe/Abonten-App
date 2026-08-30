@@ -3,7 +3,7 @@
 // (see PROJECT.md). Field names/shapes here must match
 // supabase/migrations/20260820090000_add_places_feature.sql exactly.
 
-import type { CheckoutSessionStatus } from "@/types/ticketType";
+import type { CheckoutSessionStatus } from "./ticketType";
 
 export type PlaceOpeningHoursInput = {
   dayOfWeek: number; // 0 (Sunday) - 6 (Saturday) — place_opening_hours.day_of_week

@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { AuthOverride } from "@/types/authOverrideType";
 import { logger } from "@/utils/logger";
+import type { AuthOverride } from "@abonten/types/authOverrideType";
 
 export default async function insertUserAttendance(
   eventId: string,

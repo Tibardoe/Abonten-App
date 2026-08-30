@@ -2,10 +2,10 @@
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@/config/supabase/server";
-import type { PlaceFormType } from "@/types/placeType";
 import { generateSlug } from "@/utils/geerateSlug";
 import { logger } from "@/utils/logger";
 import { validateLocationInput } from "@/utils/validateLocationInput";
+import type { PlaceFormType } from "@abonten/types/placeType";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
 // Postgres error code for a unique-constraint violation.

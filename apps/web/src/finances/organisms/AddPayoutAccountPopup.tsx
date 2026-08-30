@@ -1,8 +1,8 @@
 "use client";
 
 import { BottomSheet } from "@/components/atoms/BottomSheet";
-import type { PayoutAccountRow } from "@/types/organizerFinance";
 import PaymentOptionCard from "@/wallet/molecules/PaymentOptionCard";
+import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { useState } from "react";
 import AddBankPayoutForm from "../molecules/AddBankPayoutForm";
 import AddMobileMoneyPayoutForm from "../molecules/AddMobileMoneyPayoutForm";

@@ -6,7 +6,7 @@ import {
   searchFieldWrapperClassName,
 } from "@/components/lib/searchFieldStyles";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import type { PlaceType } from "@/types/placeType";
+import type { PlaceType } from "@abonten/types/placeType";
 import debounce from "lodash.debounce";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { IoStorefrontOutline } from "react-icons/io5";

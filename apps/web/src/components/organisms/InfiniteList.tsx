@@ -3,7 +3,7 @@
 import InfiniteScrollStatus from "@/components/molecules/InfiniteScrollStatus";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
-import type { PaginatedResult } from "@/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 

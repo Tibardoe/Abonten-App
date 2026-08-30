@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import type { UserTicketType } from "@/types/ticketType";
+import type { UserTicketType } from "@abonten/types/ticketType";
 import dynamic from "next/dynamic";
 
 // Dynamically imported so the PDF-generation library (@react-pdf/renderer)

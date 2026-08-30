@@ -4,7 +4,7 @@ import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
 import ReviewsSectionHeader from "@/components/molecules/ReviewsSectionHeader";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import AddPlaceReviewButton from "../molecules/AddPlaceReviewButton";
 
 // No generated Supabase types exist in this repo (see PROJECT.md) --

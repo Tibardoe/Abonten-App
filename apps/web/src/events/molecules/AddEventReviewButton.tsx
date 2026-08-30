@@ -5,7 +5,7 @@ import { getEventReviewEligibility } from "@/actions/getEventReviewEligibility";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import type { Occurrence } from "@/types/occurrenceType";
+import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import EventReviewModal from "../organisms/EventReviewModal";

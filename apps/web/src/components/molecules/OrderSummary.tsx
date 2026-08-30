@@ -1,5 +1,5 @@
-import type { PlacePromotionSummaryProps } from "@/types/placeType";
-import type { EventPromotionSummaryProps } from "@/types/postsType";
+import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
+import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
 
 type OrderSummaryProps = {
   orderSummary: PlacePromotionSummaryProps | EventPromotionSummaryProps;

@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { UserTransactionSummaryRow } from "@/types/transactions";
 import { logger } from "@/utils/logger";
 import {
   type TransactionPeriod,
   getTransactionPeriodRange,
 } from "@/utils/transactionsDateRange";
+import type { UserTransactionSummaryRow } from "@abonten/types/transactions";
 
 export async function getUserTransactionSummary(period: TransactionPeriod) {
   const supabase = await createClient();

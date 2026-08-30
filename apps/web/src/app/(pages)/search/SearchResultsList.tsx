@@ -2,8 +2,8 @@
 
 import EventCard from "@/components/molecules/EventCard";
 import EventsInfiniteGrid from "@/components/organisms/EventsInfiniteGrid";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserPostType } from "@/types/postsType";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserPostType } from "@abonten/types/postsType";
 
 // The renderItem closure below must live in a Client Component — Next.js
 // cannot pass plain functions (only Server Actions or already-rendered

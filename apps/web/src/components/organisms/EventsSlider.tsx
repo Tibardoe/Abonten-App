@@ -1,7 +1,7 @@
 "use client";
 
-import type { UserPostType } from "@/types/postsType";
 import { generateSlug } from "@/utils/geerateSlug";
+import type { UserPostType } from "@abonten/types/postsType";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";

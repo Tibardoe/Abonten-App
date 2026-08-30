@@ -1,6 +1,6 @@
 "use client";
 
-import type { HighlightUploadItem } from "@/types/highlightUploadType";
+import type { HighlightUploadItem } from "@abonten/types/highlightUploadType";
 
 type HighlightUploadStatusProps = {
   items: HighlightUploadItem[];

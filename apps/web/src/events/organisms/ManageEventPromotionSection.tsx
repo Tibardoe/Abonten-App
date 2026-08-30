@@ -2,9 +2,9 @@
 
 import insertEventPromotionCheckout from "@/actions/insertEventPromotionCheckout";
 import { useToast } from "@/hooks/useToast";
-import type { EventPromotionTier } from "@/types/postsType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import type { EventStatus } from "@/utils/eventStatus";
+import type { EventPromotionTier } from "@abonten/types/postsType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoMegaphoneOutline } from "react-icons/io5";

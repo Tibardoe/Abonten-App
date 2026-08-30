@@ -1,11 +1,11 @@
 "use client";
 
 import { usePlacesAutocomplete } from "@/hooks/usePlacesAutocomplete";
-import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
-import type { AutoCompletePlaceholderType } from "@/types/autoCompletePlaceholderType";
-import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { logger } from "@/utils/logger";
 import { parseRawCoordinates } from "@/utils/parseRawCoordinates";
+import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
+import type { AutoCompletePlaceholderType } from "@abonten/types/autoCompletePlaceholderType";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { Loader2 } from "lucide-react";
 import { forwardRef, useImperativeHandle } from "react";
 import { IoLocationOutline } from "react-icons/io5";

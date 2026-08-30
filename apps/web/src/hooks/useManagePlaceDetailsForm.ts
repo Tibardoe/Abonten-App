@@ -3,10 +3,10 @@
 import { updatePlace } from "@/actions/updatePlace";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useToast } from "@/hooks/useToast";
-import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { isImageFile } from "@/utils/isImageFile";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";

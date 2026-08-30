@@ -10,12 +10,12 @@ import ManagePlacePhotosSection from "@/places/organisms/ManagePlacePhotosSectio
 import ManagePlacePromotionSection from "@/places/organisms/ManagePlacePromotionSection";
 import ManagePlaceReviewsSection from "@/places/organisms/ManagePlaceReviewsSection";
 import ManagePlaceServicesSection from "@/places/organisms/ManagePlaceServicesSection";
-import type { PaginatedResult } from "@/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
   OwnerPlaceBooking,
-} from "@/types/placeBookingType";
-import type { PlacePromotionTier } from "@/types/placeType";
+} from "@abonten/types/placeBookingType";
+import type { PlacePromotionTier } from "@abonten/types/placeType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoAddOutline } from "react-icons/io5";

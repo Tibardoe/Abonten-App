@@ -10,10 +10,10 @@ import PaymentMethodSelector from "@/components/organisms/PaymentMethodSelector"
 import PendingCheckoutsBasket from "@/components/organisms/PendingCheckoutsBasket";
 import { PageTitle } from "@/components/ui/typography";
 import { createClient } from "@/config/supabase/server";
-import type { PlacePromotionSummaryProps } from "@/types/placeType";
-import type { EventPromotionSummaryProps } from "@/types/postsType";
-import type { CheckoutSessionStatus } from "@/types/ticketType";
 import { getLatestPaymentAttemptStatus } from "@/utils/paymentAttempt";
+import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
+import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
+import type { CheckoutSessionStatus } from "@abonten/types/ticketType";
 import Link from "next/link";
 
 // Per-user, request-time data (this specific session's status plus every

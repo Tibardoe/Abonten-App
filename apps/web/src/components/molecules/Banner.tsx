@@ -1,10 +1,10 @@
 "use client";
 
-// import { allEvents } from "@/data/allEvents";
-import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { generateSlug } from "@/utils/geerateSlug";
+// import { allEvents } from "@/data/allEvents";
+import type { UserPostType } from "@abonten/types/postsType";
 import Image from "next/image";
 import Link from "next/link";
 // import { useEffect, useState } from "react";

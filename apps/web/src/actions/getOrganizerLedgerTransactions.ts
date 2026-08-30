@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { OrganizerLedgerTransactionRow } from "@/types/organizerFinance";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,6 +8,8 @@ import {
   encodeCursor,
   splitPage,
 } from "@/utils/pagination";
+import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
 /**
  * Paginated Finances > Transactions feed. Follows the exact same

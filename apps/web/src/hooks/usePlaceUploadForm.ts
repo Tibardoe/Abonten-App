@@ -3,10 +3,13 @@
 import { postPlace } from "@/actions/postPlace";
 import { savePlaceDraft } from "@/actions/savePlaceDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
-import type { PlaceFormType, PlaceOpeningHoursInput } from "@/types/placeType";
-import type { ResolvedLocation } from "@/types/resolvedLocation";
 import type { PlaceDraftPayload } from "@/utils/placeDraftSchema";
 import { type PlaceSchema, getPlaceSchema } from "@/utils/placeSchema";
+import type {
+  PlaceFormType,
+  PlaceOpeningHoursInput,
+} from "@abonten/types/placeType";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useMemo, useRef, useState } from "react";

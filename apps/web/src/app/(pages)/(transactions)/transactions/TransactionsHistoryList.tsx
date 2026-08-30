@@ -5,10 +5,10 @@ import TransactionStatusIcon, {
 } from "@/components/atoms/TransactionStatusIcon";
 import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserTransactionRow } from "@/types/transactions";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
 import { getRefundStatusLabel } from "@/utils/refundStatus";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserTransactionRow } from "@abonten/types/transactions";
 import Link from "next/link";
 
 // Only meaningful for ticket rows with at least one cancelled ticket —

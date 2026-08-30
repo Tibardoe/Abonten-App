@@ -8,9 +8,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/useToast";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserTicketType } from "@/types/ticketType";
 import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserTicketType } from "@abonten/types/ticketType";
 import {
   type InfiniteData,
   useMutation,

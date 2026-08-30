@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { Ticket } from "@/types/ticketType";
 import { logger } from "@/utils/logger";
+import type { Ticket } from "@abonten/types/ticketType";
 import getEventHasConfirmedParticipation from "./getEventHasConfirmedParticipation";
 
 export type UpdateEventTicketTypesInput = {

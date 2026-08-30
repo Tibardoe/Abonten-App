@@ -1,6 +1,5 @@
 import ModalShell from "@/components/atoms/ModalShell";
 import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
-import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import {
   formatDateWithSuffix,
@@ -11,6 +10,7 @@ import {
   buildTicketPdfData,
   buildTicketPdfFilename,
 } from "@/utils/ticketPdfData";
+import type { UserTicketType } from "@abonten/types/ticketType";
 import { pdf } from "@react-pdf/renderer";
 import Image from "next/image";
 import Link from "next/link";

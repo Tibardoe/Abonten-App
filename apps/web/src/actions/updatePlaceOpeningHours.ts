@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PlaceOpeningHoursInput } from "@/types/placeType";
+import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 
 // Replaces a place's entire weekly schedule wholesale: no other table has
 // an FK to place_opening_hours.id, so a full delete + reinsert is safe,

@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PostsType } from "@/types/postsType";
 import { generateEventCode } from "@/utils/eventCodeGenerator";
 import { generateSlug } from "@/utils/geerateSlug";
 import { logger } from "@/utils/logger";
 import { validateLocationInput } from "@/utils/validateLocationInput";
+import type { PostsType } from "@abonten/types/postsType";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 
 // Postgres error code for a unique-constraint violation.

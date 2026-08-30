@@ -6,8 +6,8 @@ import HighlightMenu from "@/components/molecules/HighlightMenu";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import HighlightViewer from "@/components/organisms/HighlightViewer";
 import { useLongPress } from "@/hooks/useLongPress";
-import type { HighlightGroup } from "@/types/highlightType";
 import HighlightsRowSkeleton from "@/userAccount/molecules/HighlightsRowSkeleton";
+import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import {

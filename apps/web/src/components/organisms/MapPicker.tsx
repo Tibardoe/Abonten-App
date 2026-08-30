@@ -1,7 +1,7 @@
 "use client";
 
-import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { animateMarkerTo } from "@/utils/animateMarker";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";

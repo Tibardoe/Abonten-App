@@ -1,5 +1,5 @@
 import CategoryChipsRow from "@/components/molecules/CategoryChipsRow";
-import type { PlaceCategory } from "@/types/placeType";
+import type { PlaceCategory } from "@abonten/types/placeType";
 
 // Horizontal row of category pills for the Explore page's Places tab. Each
 // chip links back to the same /explore/[location] page with

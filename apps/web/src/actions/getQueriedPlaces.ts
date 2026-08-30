@@ -1,8 +1,6 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { PaginatedResult, PlacesCursor } from "@/types/pagination";
-import type { PlaceFilters, PlaceType } from "@/types/placeType";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,6 +8,8 @@ import {
   encodeCursor,
   splitPage,
 } from "@/utils/pagination";
+import type { PaginatedResult, PlacesCursor } from "@abonten/types/pagination";
+import type { PlaceFilters, PlaceType } from "@abonten/types/placeType";
 
 export async function getQueriedPlaces(
   queryParams: PlaceFilters,

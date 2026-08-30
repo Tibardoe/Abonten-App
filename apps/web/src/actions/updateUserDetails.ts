@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { UserDetailsFormType } from "@/types/userProfileType";
 import { logger } from "@/utils/logger";
+import type { UserDetailsFormType } from "@abonten/types/userProfileType";
 import { getTranslations } from "next-intl/server";
 
 export async function updateUserDetails(formData: UserDetailsFormType) {

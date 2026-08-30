@@ -4,7 +4,6 @@ import { getEventForEdit } from "@/actions/getEventForEdit";
 import { updateEvent } from "@/actions/updateEvent";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useToast } from "@/hooks/useToast";
-import type { ResolvedLocation } from "@/types/resolvedLocation";
 import {
   getBufferedNow,
   validateSingleDateRange,
@@ -14,6 +13,7 @@ import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
 import { isImageFile } from "@/utils/isImageFile";
 import { parseEventTypes } from "@/utils/parseEventTypes";
 import { MAX_EVENT_FLYER_SIZE_BYTES } from "@/utils/uploadLimits";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";

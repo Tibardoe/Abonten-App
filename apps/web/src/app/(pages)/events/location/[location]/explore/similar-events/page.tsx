@@ -1,9 +1,9 @@
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import EventCard from "@/components/molecules/EventCard";
-import type { UserPostType } from "@/types/postsType";
 import { undoSlug } from "@/utils/geerateSlug";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { logger } from "@/utils/logger";
+import type { UserPostType } from "@abonten/types/postsType";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

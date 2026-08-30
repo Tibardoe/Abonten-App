@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { FavoritePlaces } from "@/types/favoritePlaceTypes";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import type { PlaceOpeningHourRow } from "@/utils/computePlaceOpenStatus";
 import { computePlaceOpenStatus } from "@/utils/computePlaceOpenStatus";
 import { logger } from "@/utils/logger";
@@ -13,6 +11,8 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import type { FavoritePlaces } from "@abonten/types/favoritePlaceTypes";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
 // Raw join shape from Supabase (favorite_place -> place -> place_category /
 // place_opening_hours). No generated Supabase types exist in this repo (see

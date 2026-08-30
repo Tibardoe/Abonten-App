@@ -2,8 +2,8 @@
 
 import getOrganizerPayouts from "@/actions/getOrganizerPayouts";
 import { Button } from "@/components/ui/button";
-import type { OrganizerPayoutRow } from "@/types/organizerFinance";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
+import type { OrganizerPayoutRow } from "@abonten/types/organizerFinance";
 import Link from "next/link";
 import { useState } from "react";
 import FinanceLineIcon, {

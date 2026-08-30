@@ -10,7 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useCarouselAutoplay } from "@/hooks/useCarouselAutoplay";
-import type { UserPostType } from "@/types/postsType";
+import type { UserPostType } from "@abonten/types/postsType";
 
 const AUTOPLAY_DELAY_MS = 4000;
 

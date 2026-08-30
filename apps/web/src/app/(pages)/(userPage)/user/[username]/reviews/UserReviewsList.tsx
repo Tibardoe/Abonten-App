@@ -2,8 +2,8 @@
 
 import Rating from "@/components/atoms/Rating";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
 import { getRelativeTime } from "@/utils/dateFormatter";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import { ClockIcon, UserIcon } from "lucide-react";
 
 export default function UserReviewsList({

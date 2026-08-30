@@ -12,9 +12,9 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
-import type { NotificationType } from "@/types/notificationType";
-import type { PaginatedResult } from "@/types/pagination";
 import { getRelativeTime } from "@/utils/dateFormatter";
+import type { NotificationType } from "@abonten/types/notificationType";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import {
   type InfiniteData,
   useMutation,

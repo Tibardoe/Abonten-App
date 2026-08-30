@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,6 +9,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
 // Reviews of places this user owns/manages — the place-side counterpart to
 // getUserReviews.ts (which shows reviews written ABOUT this user as an

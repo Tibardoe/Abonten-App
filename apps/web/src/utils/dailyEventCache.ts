@@ -1,8 +1,8 @@
 // utils/dailyEventCache.ts
 
-import type { UserPostType } from "@/types/postsType";
 import { getEventStatus } from "@/utils/eventStatus";
 import { getEventSoldOutStatus } from "@/utils/getEventSoldOutStatus";
+import type { UserPostType } from "@abonten/types/postsType";
 
 /**
  * Baseline banner eligibility, independent of the `featured` flag: upcoming

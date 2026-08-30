@@ -2,10 +2,10 @@
 
 import StarRatingDisplay from "@/components/atoms/Rating";
 import { useClickOutside } from "@/hooks/useClickOutside";
-import type { PlaceType } from "@/types/placeType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@/utils/computePlaceOpenStatus";
 import { parseWKBHex } from "@/utils/parseWKBHex";
+import type { PlaceType } from "@abonten/types/placeType";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import Image from "next/image";
 import Link from "next/link";

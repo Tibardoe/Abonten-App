@@ -1,8 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { HighlightGroup, HighlightRow } from "@/types/highlightType";
 import { logger } from "@/utils/logger";
+import type {
+  HighlightGroup,
+  HighlightRow,
+} from "@abonten/types/highlightType";
 
 export default async function getUserHighlight(username: string) {
   const supabase = await createClient();

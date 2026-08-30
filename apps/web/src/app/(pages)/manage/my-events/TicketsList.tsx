@@ -7,12 +7,12 @@ import TicketStatusBadge from "@/components/atoms/TicketStatusBadge";
 import ViewTicketBtn from "@/components/atoms/ViewTicketBtn";
 import TicketCardSkeleton from "@/components/molecules/TicketCardSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserTicketType } from "@/types/ticketType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getEventStatus } from "@/utils/eventStatus";
 import { SHIMMER_BLUR_DATA_URL } from "@/utils/imagePlaceholder";
 import { getRefundStatusLabel } from "@/utils/refundStatus";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserTicketType } from "@abonten/types/ticketType";
 import Image from "next/image";
 import Link from "next/link";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { PlaceType } from "@/types/placeType";
+import type { PlaceType } from "@abonten/types/placeType";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FaArrowLeftLong, FaArrowRightLong } from "react-icons/fa6";
 import PlaceCard from "../molecules/PlaceCard";

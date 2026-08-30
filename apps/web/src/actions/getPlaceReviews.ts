@@ -1,7 +1,6 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,6 +9,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
 export async function getPlaceReviews(
   placeId: string,

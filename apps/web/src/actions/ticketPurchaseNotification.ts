@@ -4,7 +4,6 @@ import TicketPurchaseEmailTemplate, {
   type EmailTicketLine,
 } from "@/components/organisms/TicketPurchaseEmailTemplate";
 import { createClient } from "@/config/supabase/server";
-import type { AuthOverride } from "@/types/authOverrideType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
 import { generateTicketPdfBuffer } from "@/utils/generateTicketPdfBuffer";
 import { logger } from "@/utils/logger";
@@ -12,6 +11,7 @@ import {
   buildTicketPdfData,
   buildTicketPdfFilename,
 } from "@/utils/ticketPdfData";
+import type { AuthOverride } from "@abonten/types/authOverrideType";
 import React from "react";
 import { Resend } from "resend";
 import getTicketsByIds from "./getTicketsByIds";

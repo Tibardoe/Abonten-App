@@ -1,12 +1,12 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
+import { logger } from "@/utils/logger";
 import type {
   EventSuggestion,
   PlaceSuggestion,
   SearchSuggestionsResult,
-} from "@/types/searchSuggestionType";
-import { logger } from "@/utils/logger";
+} from "@abonten/types/searchSuggestionType";
 
 const EVENT_SUGGESTION_LIMIT = 5;
 const PLACE_SUGGESTION_LIMIT = 4;

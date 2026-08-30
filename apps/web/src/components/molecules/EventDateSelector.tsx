@@ -1,7 +1,7 @@
 "use client";
 
-import type { Occurrence } from "@/types/occurrenceType";
 import { formatFullDateTimeRange, getDateParts } from "@/utils/dateFormatter";
+import type { Occurrence } from "@abonten/types/occurrenceType";
 import React, { useState } from "react";
 import AttendingButton from "../atoms/AttendingButton";
 import CheckoutBtn from "../atoms/CheckoutBtn";

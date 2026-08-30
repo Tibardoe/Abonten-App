@@ -5,7 +5,7 @@ import { updatePlaceOpeningHours } from "@/actions/updatePlaceOpeningHours";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
 import PlaceOpeningHoursEditor from "@/places/molecules/PlaceOpeningHoursEditor";
-import type { PlaceOpeningHoursInput } from "@/types/placeType";
+import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 import { useState } from "react";
 
 type TemporaryStatus = "temporarily_closed" | "permanently_closed" | null;

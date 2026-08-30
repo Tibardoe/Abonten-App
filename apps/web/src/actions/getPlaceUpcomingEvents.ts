@@ -1,8 +1,8 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { UserPostType } from "@/types/postsType";
 import { logger } from "@/utils/logger";
+import type { UserPostType } from "@abonten/types/postsType";
 import { getEventAttendanceCounts } from "./getAttendace";
 
 // Public read (no auth check) -- same "browsable signed-out" reasoning as

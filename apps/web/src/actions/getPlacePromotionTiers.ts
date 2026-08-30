@@ -1,8 +1,8 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { PlacePromotionTier } from "@/types/placeType";
 import { logger } from "@/utils/logger";
+import type { PlacePromotionTier } from "@abonten/types/placeType";
 
 // place_promotion_tier is a small, seeded lookup table (4 rows -- 24 hours/
 // 3 days/7 days/1 month) -- mirrors getPlaceCategories.ts's plain

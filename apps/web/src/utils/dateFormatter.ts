@@ -1,4 +1,4 @@
-import type { Occurrence } from "@/types/occurrenceType";
+import type { Occurrence } from "@abonten/types/occurrenceType";
 import { formatDistanceToNow } from "date-fns";
 
 export function formatDateWithSuffix(date: string | Date): string {

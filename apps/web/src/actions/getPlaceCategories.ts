@@ -1,8 +1,8 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { PlaceCategory } from "@/types/placeType";
 import { logger } from "@/utils/logger";
+import type { PlaceCategory } from "@abonten/types/placeType";
 
 // place_category is a small, fixed lookup table — a plain unpaginated read
 // is intentional here (see the migration's header comment for why it's a

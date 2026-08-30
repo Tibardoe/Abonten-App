@@ -4,12 +4,12 @@ import { respondToPlaceBooking } from "@/actions/respondToPlaceBooking";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useToast } from "@/hooks/useToast";
-import type { PaginatedResult } from "@/types/pagination";
+import { formatSingleDateTime } from "@/utils/dateFormatter";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
   OwnerPlaceBooking,
-} from "@/types/placeBookingType";
-import { formatSingleDateTime } from "@/utils/dateFormatter";
+} from "@abonten/types/placeBookingType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 

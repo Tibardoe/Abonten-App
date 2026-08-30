@@ -1,7 +1,7 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { PaginatedResult } from "@/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import { useState } from "react";
 import PlaceReviewsList from "./PlaceReviewsList";
 import UserReviewsList from "./UserReviewsList";

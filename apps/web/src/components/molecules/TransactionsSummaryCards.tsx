@@ -4,8 +4,8 @@ import StatTile from "@/components/atoms/StatTile";
 import TransactionStatusIcon from "@/components/atoms/TransactionStatusIcon";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
-import type { UserTransactionSummaryRow } from "@/types/transactions";
 import type { TransactionPeriod } from "@/utils/transactionsDateRange";
+import type { UserTransactionSummaryRow } from "@abonten/types/transactions";
 import { useQuery } from "@tanstack/react-query";
 
 type SummaryResult =

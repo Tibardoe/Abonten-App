@@ -3,7 +3,7 @@
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { OrganizerFinanceOverviewRow } from "@/types/organizerFinance";
+import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import PendingEarningsList from "../molecules/PendingEarningsList";

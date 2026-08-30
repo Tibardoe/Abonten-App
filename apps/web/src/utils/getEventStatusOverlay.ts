@@ -1,5 +1,5 @@
-import type { Occurrence } from "@/types/occurrenceType";
 import { getEventStatus } from "@/utils/eventStatus";
+import type { Occurrence } from "@abonten/types/occurrenceType";
 
 /**
  * Display-text wrapper around the shared getEventStatus computation. Kept

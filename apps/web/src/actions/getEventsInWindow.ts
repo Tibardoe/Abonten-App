@@ -1,8 +1,6 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import type { EventsInWindowCursor, PaginatedResult } from "@/types/pagination";
-import type { UserPostType } from "@/types/postsType";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -10,6 +8,11 @@ import {
   encodeCursor,
   splitPage,
 } from "@/utils/pagination";
+import type {
+  EventsInWindowCursor,
+  PaginatedResult,
+} from "@abonten/types/pagination";
+import type { UserPostType } from "@abonten/types/postsType";
 import { addDays, endOfDay, endOfMonth, startOfDay } from "date-fns";
 import { getEventAttendanceCounts } from "./getAttendace";
 

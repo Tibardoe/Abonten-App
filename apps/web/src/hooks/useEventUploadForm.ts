@@ -5,9 +5,6 @@ import { postEvent } from "@/actions/postEvent";
 import { saveEventDraft } from "@/actions/saveEventDraft";
 import type { PostAutoCompleteHandle } from "@/components/atoms/PostAutoComplete";
 import { useToast } from "@/hooks/useToast";
-import type { EventDates, PostsType } from "@/types/postsType";
-import type { ResolvedLocation } from "@/types/resolvedLocation";
-import type { Ticket } from "@/types/ticketType";
 import {
   getBufferedNow,
   validateSingleDateRange,
@@ -15,6 +12,9 @@ import {
 } from "@/utils/eventDateValidation";
 import type { EventDraftPayload } from "@/utils/eventDraftSchema";
 import { type EventSchema, getEventSchema } from "@/utils/eventSchema";
+import type { EventDates, PostsType } from "@abonten/types/postsType";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
+import type { Ticket } from "@abonten/types/ticketType";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";

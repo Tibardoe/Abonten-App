@@ -2,12 +2,12 @@
 
 import TransactionsPeriodFilter from "@/components/molecules/TransactionsPeriodFilter";
 import TransactionsSummaryCards from "@/components/molecules/TransactionsSummaryCards";
-import type { PaginatedResult } from "@/types/pagination";
+import type { TransactionPeriod } from "@/utils/transactionsDateRange";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   UserTransactionRow,
   UserTransactionSummaryRow,
-} from "@/types/transactions";
-import type { TransactionPeriod } from "@/utils/transactionsDateRange";
+} from "@abonten/types/transactions";
 import { useState } from "react";
 import TransactionsHistoryList from "./TransactionsHistoryList";
 

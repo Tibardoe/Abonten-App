@@ -1,4 +1,4 @@
-import type { OrganizerLedgerTransactionLine } from "@/types/organizerFinance";
+import type { OrganizerLedgerTransactionLine } from "@abonten/types/organizerFinance";
 import type { IconType } from "react-icons";
 import { BsFillDashCircleFill } from "react-icons/bs";
 import { IoMdCheckmarkCircle, IoMdTime } from "react-icons/io";

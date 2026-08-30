@@ -3,7 +3,7 @@
 import MaskIcon from "@/components/atoms/MaskIcon";
 import HighlightModal from "@/components/organisms/HighlightModal";
 import { useHighlightUpload } from "@/hooks/useHighlightUpload";
-import type { MediaItem } from "@/types/mediaItemType";
+import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useState } from "react";
 import HighlightUploadStatus from "./HighlightUploadStatus";
 

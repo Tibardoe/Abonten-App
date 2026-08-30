@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { CreateNotificationInput } from "@/types/notificationType";
 import { logger } from "@/utils/logger";
+import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**

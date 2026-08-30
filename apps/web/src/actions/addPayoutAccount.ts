@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PayoutAccountRow } from "@/types/organizerFinance";
 import { logger } from "@/utils/logger";
 import {
   type AddPayoutAccountInput,
   addPayoutAccountSchema,
 } from "@/utils/payoutAccountSchema";
+import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { revalidatePath } from "next/cache";
 
 type AddPayoutAccountResult =

@@ -1,8 +1,8 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserPostType } from "@/types/postsType";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserPostType } from "@abonten/types/postsType";
 
 type EventsInfiniteGridProps = {
   queryKey: unknown[];

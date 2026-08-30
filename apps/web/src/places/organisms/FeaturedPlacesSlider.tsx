@@ -10,7 +10,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useCarouselAutoplay } from "@/hooks/useCarouselAutoplay";
-import type { PlaceType } from "@/types/placeType";
+import type { PlaceType } from "@abonten/types/placeType";
 import { useEffect, useRef } from "react";
 import PlaceBanner from "../molecules/PlaceBanner";
 

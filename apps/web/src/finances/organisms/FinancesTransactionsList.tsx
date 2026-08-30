@@ -3,9 +3,9 @@
 import { getOrganizerLedgerTransactions } from "@/actions/getOrganizerLedgerTransactions";
 import TransactionRowSkeleton from "@/components/molecules/TransactionRowSkeleton";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { OrganizerLedgerTransactionRow } from "@/types/organizerFinance";
-import type { PaginatedResult } from "@/types/pagination";
 import { formatSingleDateTime } from "@/utils/dateFormatter";
+import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import FinanceLineIcon, {
   LINE_LABELS,
   getFinanceStatusMeta,

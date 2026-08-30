@@ -12,7 +12,7 @@ import type {
   PaystackChargeResponse,
   PaystackInitializeResponse,
   PaystackVerifyResponse,
-} from "@/types/paystackType";
+} from "@abonten/types/paystackType";
 import { z } from "zod";
 
 const PAYSTACK_BASE_URL = "https://api.paystack.co";

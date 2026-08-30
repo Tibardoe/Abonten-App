@@ -1,4 +1,4 @@
-import type { TransactionStatus } from "@/types/transactions";
+import type { TransactionStatus } from "@abonten/types/transactions";
 import type { IconType } from "react-icons";
 import { BsFillDashCircleFill } from "react-icons/bs";
 import { IoMdCheckmarkCircle, IoMdTime } from "react-icons/io";

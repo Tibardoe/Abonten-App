@@ -1,4 +1,4 @@
-import type { UserTicketType } from "@/types/ticketType";
+import type { UserTicketType } from "@abonten/types/ticketType";
 import { buildCloudinaryUrl } from "./cloudinaryUrl";
 import { formatDateWithSuffix, getFormattedEventDate } from "./dateFormatter";
 

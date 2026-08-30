@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { NotificationType } from "@/types/notificationType";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -11,6 +9,8 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import type { NotificationType } from "@abonten/types/notificationType";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
 /**
  * Cursor-paginated list of the signed-in user's own notifications, newest

@@ -1,5 +1,5 @@
 import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
-import type { Ticket } from "@/types/ticketType";
+import type { Ticket } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { useState } from "react";

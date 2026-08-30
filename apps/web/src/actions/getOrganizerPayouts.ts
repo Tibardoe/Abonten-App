@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { OrganizerPayoutRow } from "@/types/organizerFinance";
 import { logger } from "@/utils/logger";
+import type { OrganizerPayoutRow } from "@abonten/types/organizerFinance";
 
 type GetOrganizerPayoutsResult =
   | { status: 401 | 500; message: string }

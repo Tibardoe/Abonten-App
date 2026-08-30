@@ -11,8 +11,8 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserTicketType } from "@/types/ticketType";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserTicketType } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";

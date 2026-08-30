@@ -6,7 +6,7 @@ import { getPlacePromotionTiers } from "@/actions/getPlacePromotionTiers";
 import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { createClient } from "@/config/supabase/server";
 import ManagePlaceView from "@/places/organisms/ManagePlaceView";
-import type { BookingStatus } from "@/types/placeBookingType";
+import type { BookingStatus } from "@abonten/types/placeBookingType";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components

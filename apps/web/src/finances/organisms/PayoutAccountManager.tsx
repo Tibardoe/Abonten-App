@@ -6,7 +6,7 @@ import setDefaultPayoutAccount from "@/actions/setDefaultPayoutAccount";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/useToast";
-import type { PayoutAccountRow } from "@/types/organizerFinance";
+import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { IoMdAddCircle } from "react-icons/io";

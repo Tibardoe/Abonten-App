@@ -1,7 +1,7 @@
-import type { MediaItem } from "@/types/mediaItemType";
 import { generateVideoThumbnail } from "@/utils/generateVideoThumbnail";
 import { generateVideoThumbnailStrip } from "@/utils/generateVideoThumbnailStrip";
 import { logger } from "@/utils/logger";
+import type { MediaItem } from "@abonten/types/mediaItemType";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./useToast";
 

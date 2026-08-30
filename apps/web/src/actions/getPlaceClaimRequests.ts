@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { PaginatedResult, SimpleCursor } from "@/types/pagination";
-import type { PlaceClaimRequest } from "@/types/placeType";
 import { logger } from "@/utils/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -11,6 +9,8 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@/utils/pagination";
+import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { PlaceClaimRequest } from "@abonten/types/placeType";
 
 /**
  * Admin-only, cursor-paginated list of claim requests, defaulting to

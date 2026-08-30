@@ -1,6 +1,6 @@
 "use client";
 
-import type { MediaItem } from "@/types/mediaItemType";
+import type { MediaItem } from "@abonten/types/mediaItemType";
 import {
   AnimatePresence,
   type PanInfo,

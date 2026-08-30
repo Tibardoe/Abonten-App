@@ -1,8 +1,8 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import Image from "next/image";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";

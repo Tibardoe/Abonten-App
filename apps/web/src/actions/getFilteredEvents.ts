@@ -1,4 +1,4 @@
-import type { UserPostType } from "@/types/postsType";
+import type { UserPostType } from "@abonten/types/postsType";
 
 /**
  * All of an event's session start times — every occurrence's starts_at, or

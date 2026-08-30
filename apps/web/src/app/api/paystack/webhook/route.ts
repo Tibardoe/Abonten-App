@@ -1,11 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
+import { logger } from "@/utils/logger";
 import type {
   PaystackRefundWebhookData,
   PaystackWebhookEvent,
-} from "@/types/paystackType";
-import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
-import { logger } from "@/utils/logger";
+} from "@abonten/types/paystackType";
 import { NextResponse } from "next/server";
 
 // Checked in the order community-documented Paystack integrations use this

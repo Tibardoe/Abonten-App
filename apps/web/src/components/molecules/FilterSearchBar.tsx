@@ -7,10 +7,6 @@ import {
   useSearchSuggestions,
 } from "@/hooks/useSearchSuggestions";
 import { isExploreTab } from "@/places/exploreTab";
-import type {
-  SuggestionItem,
-  SuggestionSection,
-} from "@/types/searchSuggestionType";
 import { generateSlug } from "@/utils/geerateSlug";
 import {
   addRecentSearch,
@@ -18,6 +14,10 @@ import {
   getRecentSearches,
   removeRecentSearch,
 } from "@/utils/recentSearches";
+import type {
+  SuggestionItem,
+  SuggestionSection,
+} from "@abonten/types/searchSuggestionType";
 // import Image from "next/image";
 import Link from "next/link";
 import {

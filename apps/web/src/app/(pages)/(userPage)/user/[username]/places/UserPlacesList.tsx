@@ -3,8 +3,8 @@
 import InfiniteList from "@/components/organisms/InfiniteList";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
 import PlaceCardSkeleton from "@/places/molecules/PlaceCardSkeleton";
-import type { PaginatedResult } from "@/types/pagination";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import Image from "next/image";
 import Link from "next/link";
 import { IoLocationOutline } from "react-icons/io5";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useClickOutside } from "@/hooks/useClickOutside";
-import type { AutoCompleteAddressType } from "@/types/autoCompleteAddressType";
-import type { ResolvedLocation } from "@/types/resolvedLocation";
 import { logger } from "@/utils/logger";
+import type { AutoCompleteAddressType } from "@abonten/types/autoCompleteAddressType";
+import type { ResolvedLocation } from "@abonten/types/resolvedLocation";
 import { useLoadScript } from "@react-google-maps/api";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";

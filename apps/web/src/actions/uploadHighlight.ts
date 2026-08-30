@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { HighlightUploadMetadataItem } from "@/types/highlightUploadType";
 import { logger } from "@/utils/logger";
+import type { HighlightUploadMetadataItem } from "@abonten/types/highlightUploadType";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({

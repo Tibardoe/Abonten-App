@@ -2,7 +2,7 @@
 
 import checkInTicket from "@/actions/checkInTicket";
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiCheck } from "react-icons/fi";
 

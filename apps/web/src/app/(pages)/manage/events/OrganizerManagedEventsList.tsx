@@ -1,11 +1,11 @@
 "use client";
 
 import InfiniteList from "@/components/organisms/InfiniteList";
-import type { PaginatedResult } from "@/types/pagination";
-import type { UserPostType } from "@/types/postsType";
 import { buildCloudinaryUrl } from "@/utils/cloudinaryUrl";
 import { getFormattedEventDate } from "@/utils/dateFormatter";
 import { getEventStatusOverlay } from "@/utils/getEventStatusOverlay";
+import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserPostType } from "@abonten/types/postsType";
 import Image from "next/image";
 import Link from "next/link";
 import { FaChevronRight } from "react-icons/fa";

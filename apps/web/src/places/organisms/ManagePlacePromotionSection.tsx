@@ -2,8 +2,8 @@
 
 import insertPlacePromotionCheckout from "@/actions/insertPlacePromotionCheckout";
 import { useToast } from "@/hooks/useToast";
-import type { PlacePromotionTier } from "@/types/placeType";
 import { formatDateWithSuffix } from "@/utils/dateFormatter";
+import type { PlacePromotionTier } from "@abonten/types/placeType";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoMegaphoneOutline } from "react-icons/io5";

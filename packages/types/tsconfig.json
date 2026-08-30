@@ -1,0 +1,9 @@
+{
+  "extends": "@abonten/config/tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@abonten/types/*": ["./src/*.ts"]
+    }
+  },
+  "include": ["src"]
+}

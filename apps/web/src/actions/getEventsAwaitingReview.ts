@@ -1,9 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import type { Occurrence } from "@/types/occurrenceType";
 import { resolveEventEndDate } from "@/utils/dateFormatter";
 import { logger } from "@/utils/logger";
+import type { Occurrence } from "@abonten/types/occurrenceType";
 
 export type EventAwaitingReview = {
   id: string;
