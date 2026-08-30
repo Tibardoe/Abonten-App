@@ -22,11 +22,9 @@ export default function CheckoutOrderTotals({
         </p>
       </div>
 
-      {/* Fee (2%) */}
+      {/* Customer-paid Abonten service fee */}
       <div className="flex justify-between items-center text-sm text-muted-foreground mb-2">
-        <p>
-          Fee <span className="text-xs text-muted-foreground">(2%)</span>
-        </p>
+        <p>Service fee</p>
         <p>
           <span className="font-medium">{currency}</span>{" "}
           {typeof fee === "number" ? fee.toFixed(2) : "0.00"}

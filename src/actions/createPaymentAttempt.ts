@@ -11,6 +11,7 @@ import {
   type SelectedPaymentMethod,
   initiatePaystackChargeForAttempt,
 } from "@/utils/paystackInit";
+import { getActiveServiceFeeRate } from "@/utils/platformFee";
 
 export type { PaymentAttemptRow };
 
@@ -131,11 +132,14 @@ export default async function createPaymentAttempt(
     }
 
     const ticketAmount = lines.reduce((sum, line) => sum + line.total_price, 0);
-    // A flat service fee applies at payment time, on top of the (already
-    // discounted) ticket total — mirrors CheckoutModal.tsx's preview, using
-    // the same shared computeCheckoutFee so the two can't drift apart.
-    amount = ticketAmount + computeCheckoutFee(ticketAmount);
     currency = lines[0].ticket_type?.currency ?? "GHS";
+    // The customer-paid Abonten service fee, on top of the (already
+    // discounted) ticket total — the organizer still receives 100% of the
+    // ticket price. Rate comes from platform_fee_config (single source of
+    // truth); the same shared computeCheckoutFee is used by CheckoutModal.tsx's
+    // preview so the two can't drift apart.
+    const feeRate = await getActiveServiceFeeRate(supabase, currency);
+    amount = ticketAmount + computeCheckoutFee(ticketAmount, feeRate);
     matchColumn = "checkout_session_id";
     matchValue = input.checkoutSessionId;
     callbackPath = `/checkout/${input.checkoutSessionId}?type=ticket`;

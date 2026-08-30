@@ -1,12 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { issueRefundCore } from "@/utils/issueRefundCore";
 import { logger } from "@/utils/logger";
 import { after } from "next/server";
 import eventCancellationNotification, {
   type CancelledAttendeeRefund,
 } from "./eventCancellationNotification";
-import issueRefund from "./issueRefund";
 
 type RefundableTransactionRow = {
   refund_transaction_id: string;
@@ -32,9 +33,15 @@ type RefundableTransactionRow = {
  * retried request.
  *
  * The actual Paystack refund call happens here, after the RPC, over its
- * returned (deduplicated by transaction) list — issueRefund.ts is reused
- * unchanged and is itself idempotent, so a failure here never leaves the
- * system falsely claiming a refund succeeded, and is safe to retry.
+ * returned (deduplicated by transaction) list. Each refund goes through
+ * issueRefundCore with a service-role client: the transactions belong to
+ * the *attendees*, not the organizer running this action, so the buyer-
+ * scoped issueRefund Server Action would 404 on every one. The
+ * cancel_event_and_release_tickets RPC has already verified this caller
+ * owns the event and returned only that event's refundable transactions, so
+ * identity is proven before this runs. issueRefundCore is idempotent, so a
+ * partial failure here never leaves the system falsely claiming a refund
+ * succeeded and is safe to retry.
  */
 export default async function cancelEvent(eventId: string) {
   const supabase = await createClient();
@@ -78,8 +85,11 @@ export default async function cancelEvent(eventId: string) {
 
   const transactions = (refundable ?? []) as RefundableTransactionRow[];
 
+  const serviceClient = getSupabaseServiceClient();
   const refundResults = await Promise.allSettled(
-    transactions.map((row) => issueRefund(row.refund_transaction_id)),
+    transactions.map((row) =>
+      issueRefundCore(serviceClient, row.refund_transaction_id),
+    ),
   );
 
   let refundsInitiated = 0;

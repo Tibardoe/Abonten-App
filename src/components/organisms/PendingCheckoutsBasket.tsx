@@ -12,6 +12,7 @@ import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPa
 import PaymentMethodSelector, {
   type PaymentSelectorStatus,
 } from "@/components/organisms/PaymentMethodSelector";
+import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
 import {
@@ -399,12 +400,14 @@ export default function PendingCheckoutsBasket({
     (sum, line) => sum + line.amount,
     0,
   );
-  // Same 2% service fee CheckoutModal.tsx previews before the checkout is
-  // even created — computed here (and again, authoritatively, in
-  // createPaymentAttempt.ts) so what's shown here matches what gets charged.
-  const selectedFee = computeCheckoutFee(selectedTotal);
-  const selectedGrandTotal = selectedTotal + selectedFee;
   const currency = selectedLines[0]?.currency ?? "";
+  // Same customer-paid service fee CheckoutModal.tsx previews before the
+  // checkout is even created — computed here (and again, authoritatively, in
+  // createPaymentAttempt.ts / checkoutPaymentPreparation.ts) from the same
+  // platform_fee_config rate so what's shown here matches what gets charged.
+  const serviceFeeRate = useServiceFeeRate(currency || undefined);
+  const selectedFee = computeCheckoutFee(selectedTotal, serviceFeeRate);
+  const selectedGrandTotal = selectedTotal + selectedFee;
 
   const allSelectedAreFree =
     selectedSessions.length > 0 &&
@@ -546,9 +549,7 @@ export default function PendingCheckoutsBasket({
           </p>
         </div>
         <div className="flex justify-between text-sm text-muted-foreground">
-          <p>
-            Fee <span className="text-xs text-muted-foreground">(2%)</span>
-          </p>
+          <p>Service fee</p>
           <p>
             {currency} {selectedFee.toFixed(2)}
           </p>

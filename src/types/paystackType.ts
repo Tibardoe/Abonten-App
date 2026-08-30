@@ -52,6 +52,12 @@ export type PaystackVerifyResponse = {
     amount: number;
     currency: string;
     gateway_response: string;
+    // Paystack's own processing fee for this charge, in the currency's
+    // subunit (pesewas for GHS). Recorded as platform_fee_entry.processing_cost
+    // so Abonten's true net revenue (service fee minus this) is auditable.
+    // Optional/nullable — not every channel/response includes it, and a
+    // missing value means "unknown", never assumed to be 0.
+    fees?: number | null;
     paid_at: string | null;
     created_at: string;
     channel: string;

@@ -64,6 +64,12 @@ const verifyResponseSchema = z.object({
     amount: z.number(),
     currency: z.string(),
     gateway_response: z.string(),
+    // Paystack's own processing fee for this charge, in the currency's
+    // subunit (pesewas for GHS). Used to record Abonten's true net revenue
+    // (service fee minus this) on platform_fee_entry. Not always present on
+    // every channel/response, so treated as optional — a missing value means
+    // "processing cost unknown", never assumed to be 0.
+    fees: z.number().nullable().optional(),
     paid_at: z.string().nullable(),
     created_at: z.string(),
     channel: z.string(),
@@ -411,20 +417,30 @@ export async function listMobileMoneyProviders(): Promise<PaystackBank[]> {
 }
 
 /**
- * Refunds a transaction — used only to reverse the small card-verification
- * charge (confirmCardVerification.ts) right after capturing a reusable
- * authorization. Best-effort: a refund failure is logged by the caller but
- * never blocks saving the card, since the authorization itself is already
- * safely captured.
+ * Refunds a Paystack transaction. Two callers:
+ *   - confirmCardVerification.ts reverses the small card-verification charge
+ *     in full (no `amountInPesewas`).
+ *   - issueRefund.ts passes `amountInPesewas` to refund the ticket revenue
+ *     only, deliberately keeping the customer-paid Abonten service fee (see
+ *     the customer-paid-service-fee migration / issueRefund.ts).
+ * Omitting `amountInPesewas` refunds the whole charge, which is Paystack's
+ * own default when `amount` is not sent.
  */
-export async function refundTransaction(reference: string): Promise<void> {
+export async function refundTransaction(
+  reference: string,
+  amountInPesewas?: number,
+): Promise<void> {
   const response = await fetch(`${PAYSTACK_BASE_URL}/refund`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${getSecretKey()}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ transaction: reference }),
+    body: JSON.stringify(
+      amountInPesewas != null && amountInPesewas > 0
+        ? { transaction: reference, amount: Math.round(amountInPesewas) }
+        : { transaction: reference },
+    ),
   });
 
   if (!response.ok) {

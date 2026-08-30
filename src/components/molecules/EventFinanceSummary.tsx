@@ -78,10 +78,15 @@ export default function EventFinanceSummary({
           label="Ticket sales"
           value={`${summary.currency} ${summary.ticketSales.toLocaleString()}`}
         />
-        <Row
-          label="Abonten fees"
-          value={`-${summary.currency} ${summary.platformFee.toLocaleString()}`}
-        />
+        {/* Under the customer-paid-service-fee model the organizer keeps
+            100% of the ticket price, so there is no fee to deduct here.
+            Older sales that did carry a 2% deduction still show this row. */}
+        {summary.platformFee !== 0 && (
+          <Row
+            label="Abonten fees"
+            value={`-${summary.currency} ${summary.platformFee.toLocaleString()}`}
+          />
+        )}
         {summary.refunds !== 0 && (
           <div className="space-y-1">
             <Row

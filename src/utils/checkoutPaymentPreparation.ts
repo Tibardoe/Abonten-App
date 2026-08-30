@@ -12,6 +12,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { computeCheckoutFee } from "@/utils/checkoutPricing";
+import { getActiveServiceFeeRate } from "@/utils/platformFee";
 
 type CheckoutRow = {
   checkout_session_id: string;
@@ -92,8 +93,10 @@ export async function prepareCheckoutPayment(
     currency = row.ticket_type?.currency ?? currency;
   }
 
+  const feeRate = await getActiveServiceFeeRate(supabase, currency);
+
   for (const session of sessionsById.values()) {
-    session.fee = computeCheckoutFee(session.total);
+    session.fee = computeCheckoutFee(session.total, feeRate);
     session.total += session.fee;
   }
 

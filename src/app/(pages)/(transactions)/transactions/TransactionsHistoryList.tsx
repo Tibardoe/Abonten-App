@@ -107,7 +107,10 @@ export default function TransactionsHistoryList({
 
             <div className="flex items-center gap-2 md:gap-3 font-bold">
               <p>
-                {item.currency} {item.amount}
+                {/* What the customer actually paid — ticket price + service
+                    fee. `total_paid` falls back to `amount` for free/legacy
+                    rows where no fee applies. */}
+                {item.currency} {item.total_paid ?? item.amount}
               </p>
               <span className="sr-only">{statusLabel}</span>
               <TransactionStatusIcon status={item.status} />

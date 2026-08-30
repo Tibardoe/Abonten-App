@@ -46,4 +46,13 @@ export interface UserTransactionRow {
   // deliberately deferred until the rest of the order is cancelled, not
   // that a request failed. See refundStatus.ts.
   refund_requested_at: string | null;
+  // `amount` is the fee-exclusive ticket subtotal (ticket_checkout.total_price).
+  // `service_fee` is the customer-paid Abonten service fee attributed to this
+  // checkout row (proportional share of the charge for a multi-checkout
+  // basket payment), and `total_paid` = amount + service_fee is what the
+  // customer was actually charged. Both are 0 / equal to `amount` for free
+  // registrations, subscriptions, and pre-fee legacy rows with no linked
+  // transaction.
+  service_fee: number;
+  total_paid: number;
 }

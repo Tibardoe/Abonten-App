@@ -459,5 +459,35 @@ export async function finalizePaystackPayment(
     };
   }
 
+  // Record Abonten's service-fee revenue for this charge (ticket purchases
+  // only — a promotion purchase has no organizer/ticket split). One row per
+  // transaction, idempotent, so retries and the webhook+client-verify race
+  // are both safe. `verification.fees` is Paystack's own processing cost for
+  // the charge when it reports it; passed straight through so
+  // platform_fee_entry can record Abonten's true net revenue. Deliberately
+  // after every ticket has been issued so record_platform_fee sees the
+  // complete ticket_revenue for the transaction.
+  if (primary.checkout_session_id) {
+    const processingCost =
+      verification.fees != null ? fromPesewas(verification.fees) : null;
+
+    const { error: platformFeeError } = await supabase.rpc(
+      "record_platform_fee",
+      {
+        p_transaction_id: transactionRow.id,
+        p_processing_cost: processingCost,
+      },
+    );
+
+    if (platformFeeError) {
+      // Non-fatal: the purchase is complete and correct for the buyer and
+      // organizer. A missing fee-revenue row is an internal-accounting gap
+      // to reconcile, not a reason to fail a successful payment.
+      logger.error(
+        `finalizePaystackPayment: record_platform_fee failed for transaction ${transactionRow.id} (${platformFeeError.message})`,
+      );
+    }
+  }
+
   return { status: "succeeded" };
 }

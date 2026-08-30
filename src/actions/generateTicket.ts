@@ -322,7 +322,26 @@ export default async function generateTicket(
   // never add to checkout latency. Only ever scheduled once every ticket
   // row above has actually committed — never on a failed/partial run, since
   // every earlier failure path returns before reaching here.
-  const totalAmount = rows.reduce((sum, row) => sum + row.total_price, 0);
+  //
+  // For a paid purchase the receipt should show what the customer was
+  // actually charged (ticket price + the customer-paid Abonten service fee),
+  // which is transaction.amount — not the fee-exclusive ticket subtotal.
+  // Free registrations have no transaction and fall back to the (zero)
+  // subtotal, which the email renders as "Free".
+  const ticketSubtotal = rows.reduce((sum, row) => sum + row.total_price, 0);
+  let totalAmount = ticketSubtotal;
+
+  if (transactionId) {
+    const { data: transactionRow } = await supabase
+      .from("transaction")
+      .select("amount")
+      .eq("id", transactionId)
+      .maybeSingle();
+
+    if (transactionRow?.amount != null) {
+      totalAmount = Number(transactionRow.amount);
+    }
+  }
   after(() =>
     ticketPurchaseNotification(
       allInsertedTicketIds,

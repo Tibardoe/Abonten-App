@@ -47,6 +47,8 @@ export default async function Page({
         unit_price: number;
         discount: number;
         total_price: number;
+        serviceFee?: number;
+        totalPaid?: number;
         created_at: string;
         expires_at: string | null;
         completed_at: string | null;
@@ -111,7 +113,10 @@ export default async function Page({
       <div className="font-bold text-muted-foreground flex justify-between items-center bg-muted rounded-md p-5">
         <p>Amount</p>
         <p>
-          {currency} {row.total_price}
+          {currency}{" "}
+          {row.kind === "ticket" && typeof row.totalPaid === "number"
+            ? row.totalPaid
+            : row.total_price}
         </p>
       </div>
 
@@ -148,9 +153,22 @@ export default async function Page({
               />
             )}
             <DetailRow
-              label="Total Price"
+              label="Ticket Price"
               value={`${currency} ${row.total_price}`}
             />
+            {typeof row.serviceFee === "number" && row.serviceFee > 0 && (
+              <DetailRow
+                label="Service fee"
+                value={`${currency} ${row.serviceFee}`}
+              />
+            )}
+            {typeof row.totalPaid === "number" &&
+              row.totalPaid !== row.total_price && (
+                <DetailRow
+                  label="Total Paid"
+                  value={`${currency} ${row.totalPaid}`}
+                />
+              )}
             <DetailRow
               label="Date/Time"
               value={`${formatSingleDateTime(row.created_at).date} ${formatSingleDateTime(row.created_at).time}`}

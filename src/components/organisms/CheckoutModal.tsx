@@ -5,6 +5,7 @@ import ModalShell from "@/components/atoms/ModalShell";
 import CheckoutOrderTotals from "@/components/molecules/CheckoutOrderTotals";
 import CheckoutPromoCodeBox from "@/components/molecules/CheckoutPromoCodeBox";
 import CheckoutTicketRow from "@/components/molecules/CheckoutTicketRow";
+import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
 import {
   allocatePromoEligibility,
@@ -195,7 +196,8 @@ export default function CheckoutModal({
       (quantities[ticket.id] || 0) > ticket.quantity,
   );
 
-  const fee = computeCheckoutFee(subTotal);
+  const serviceFeeRate = useServiceFeeRate(ticketList[0]?.currency);
+  const fee = computeCheckoutFee(subTotal, serviceFeeRate);
 
   const total = subTotal + fee;
 
