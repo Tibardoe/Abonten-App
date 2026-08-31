@@ -1,0 +1,21 @@
+{
+  "name": "@abonten/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-free typed client for the Abonten mobile HTTP API (apps/web/src/app/api/mobile/**). No react, react-native, next/*, or supabase — just fetch.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@abonten/types": "*"
+  },
+  "devDependencies": {
+    "@abonten/config": "*",
+    "typescript": "^5"
+  }
+}
