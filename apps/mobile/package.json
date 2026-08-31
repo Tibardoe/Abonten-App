@@ -1,0 +1,36 @@
+{
+  "name": "@abonten/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check ./app ./src --no-errors-on-unmatched"
+  },
+  "dependencies": {
+    "expo": "~57.0.18",
+    "expo-constants": "~57.0.16",
+    "expo-linking": "~57.0.8",
+    "expo-router": "~57.0.17",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-web": "^0.21.2"
+  },
+  "devDependencies": {
+    "@abonten/config": "*",
+    "typescript": "^5"
+  },
+  "expo": {
+    "install": {
+      "exclude": ["typescript", "react", "react-dom", "react-native"]
+    }
+  }
+}
