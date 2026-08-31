@@ -11,6 +11,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.3 | My-tickets (Tickets tab) | direct `ticket` table read (`.eq user_id` + RLS) | `1c060dd` |
 | 5.4 | Event search (Search tab) | direct `supabase.rpc("get_filtered_events")` (anon-granted) | `aca4878` |
 | 5.5 | Nearby places (Places tab, replaces Wallet) | direct `supabase.rpc("get_nearby_places")` (anon-granted) | `aca4878` |
+| 5.6 | Event / place / ticket detail screens (from a tapped card) | direct `event` / `place` / `ticket` reads (RLS public-select / owner-select) | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -58,9 +59,27 @@ and crashes on `expo-secure-store`; web is a dev convenience only.
   open/closed, distance). The **Places** tab replaces the empty Wallet
   placeholder — Wallet returns with the checkout phase.
 
+## 5.6 — detail screens
+
+- `useEventDetail` / `usePlaceDetail` / `useTicketDetail` — plain `useQuery`
+  hooks over direct table reads (no RPC, no endpoint). `event` allows a
+  public select for `status in ('published','canceled')`; `place` and its
+  children for `status = 'published'`; `ticket` is owner-select RLS
+  (`.eq("user_id", …)` kept explicit). Event attendance still comes from the
+  `get_event_attendance_count` SECURITY DEFINER aggregate, same as web.
+- Screens: `app/(app)/event/[id].tsx` (flyer, date/time, venue, attendance,
+  organizer, description, category/tags; ticket CTA disabled — "checkout
+  coming soon"), `app/(app)/place/[id].tsx` (cover, open/closed via
+  `computePlaceOpenStatus`, rating, address/phone/site, opening hours,
+  services), `app/(app)/ticket/[id].tsx` (large lossless QR, valid/used
+  badge, type, date, venue, "View event"). All three registered in
+  `(app)/_layout.tsx` as `href: null` + `headerShown` screens; the
+  event/place per-item title is set from the screen via
+  `navigation.setOptions`. `PlaceCard` now navigates to the place screen,
+  `TicketCard` to the ticket screen (was the event screen).
+
 ## Remaining Phase 5 slices
 
-- **Ticket / event / place detail screens** — from a tapped card.
 - **Checkout + payments** — the deferred `/api/mobile/**` endpoints
   (`validateCheckout`, payment prep/verify, Paystack charge/OTP) wrapping
   the existing Server Actions, then the mobile checkout screens. Do the

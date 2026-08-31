@@ -66,9 +66,22 @@ export default function AppLayout() {
           ),
         }}
       />
-      {/* Reachable by navigation, not shown as tabs. */}
+      {/* Reachable by navigation, not shown as tabs. Detail screens keep a
+          header so the back affordance is visible; their titles are set
+          per-item from inside the screen via navigation.setOptions. */}
       <Tabs.Screen name="notifications" options={{ href: null }} />
-      <Tabs.Screen name="event/[id]" options={{ href: null }} />
+      <Tabs.Screen
+        name="event/[id]"
+        options={{ href: null, headerShown: true, title: "Event" }}
+      />
+      <Tabs.Screen
+        name="place/[id]"
+        options={{ href: null, headerShown: true, title: "Place" }}
+      />
+      <Tabs.Screen
+        name="ticket/[id]"
+        options={{ href: null, headerShown: true, title: "Ticket" }}
+      />
     </Tabs>
   );
 }

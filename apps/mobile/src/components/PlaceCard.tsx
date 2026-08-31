@@ -1,6 +1,7 @@
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type { PlaceType } from "@abonten/types/placeType";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
 function addressText(address: PlaceType["address"]): string {
@@ -11,6 +12,7 @@ function addressText(address: PlaceType["address"]): string {
 }
 
 export function PlaceCard({ place }: { place: PlaceType }) {
+  const router = useRouter();
   const cover =
     place.cover_public_id && place.cover_version
       ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
@@ -20,7 +22,10 @@ export function PlaceCard({ place }: { place: PlaceType }) {
       : null;
 
   return (
-    <Pressable className="overflow-hidden rounded-xl border border-border bg-card active:opacity-90">
+    <Pressable
+      className="overflow-hidden rounded-xl border border-border bg-card active:opacity-90"
+      onPress={() => router.push(`/(app)/place/${place.id}`)}
+    >
       {cover ? (
         <Image
           source={{ uri: cover }}

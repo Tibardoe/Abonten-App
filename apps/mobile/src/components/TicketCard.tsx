@@ -21,7 +21,7 @@ export function TicketCard({ ticket }: { ticket: UserTicketType }) {
   return (
     <Pressable
       className="flex-row gap-3 rounded-xl border border-border bg-card p-3 active:opacity-90"
-      onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
+      onPress={() => router.push(`/(app)/ticket/${ticket.id}`)}
     >
       {qr ? (
         <Image
