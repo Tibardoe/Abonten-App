@@ -9,6 +9,8 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.1 | Nearby-events discovery (home feed) | direct `supabase.rpc("get_nearby_events")` (anon-granted) | `7eb59bf` |
 | 5.2 | Notifications screen | `@abonten/api-client` `notifications.*` (Phase-3 endpoints) | `f2d890c` |
 | 5.3 | My-tickets (Tickets tab) | direct `ticket` table read (`.eq user_id` + RLS) | `1c060dd` |
+| 5.4 | Event search (Search tab) | direct `supabase.rpc("get_filtered_events")` (anon-granted) | `aca4878` |
+| 5.5 | Nearby places (Places tab, replaces Wallet) | direct `supabase.rpc("get_nearby_places")` (anon-granted) | `aca4878` |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -46,13 +48,19 @@ and crashes on `expo-secure-store`; web is a dev convenience only.
 - `TicketCard` — Cloudinary QR (lossless), event title/date, active/used
   badge, `ticket_code`. Lives in the renamed **Tickets** tab.
 
+## 5.4 / 5.5 — search + places
+
+- `useEventSearch` — 350ms debounce, `useInfiniteQuery` over
+  `get_filtered_events` (same params as `getQueriedEvents`), `>=2` chars,
+  in-memory `FilteredEventsCursor`. Search tab = input + `EventCard` list.
+- `useNearbyPlaces` — `useInfiniteQuery` over `get_nearby_places`, in-memory
+  `{ distanceKm, id }` cursor. `PlaceCard` (cover, category, rating,
+  open/closed, distance). The **Places** tab replaces the empty Wallet
+  placeholder — Wallet returns with the checkout phase.
+
 ## Remaining Phase 5 slices
 
-- **Ticket detail** — full QR view / cancel, from a tapped `TicketCard`.
-- **Search** — `get_event_suggestions` / `get_filtered_events` (both
-  anon-granted) into the Search tab.
-- **Places** — `get_nearby_places` / `get_filtered_places` into a places
-  list + detail.
+- **Ticket / event / place detail screens** — from a tapped card.
 - **Checkout + payments** — the deferred `/api/mobile/**` endpoints
   (`validateCheckout`, payment prep/verify, Paystack charge/OTP) wrapping
   the existing Server Actions, then the mobile checkout screens. Do the
