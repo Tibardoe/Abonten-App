@@ -14,6 +14,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.6 | Event / place / ticket detail screens (from a tapped card) | direct `event` / `place` / `ticket` reads (RLS public-select / owner-select) | — |
 | 5.7a | Checkout session: ticket picker → validate → review screen (no payment yet) | `/api/mobile/checkout/{validate,prepare,session/[id],cancel}` wrapping extracted cores | — |
 | 5.7c | Payment methods + Wallet screen (add/list/remove/default mobile money) | `/api/mobile/payment-methods/*` + `/paystack/momo-networks` wrapping extracted cores | — |
+| 5.7b | Paystack payment: attempt → direct charge (phone approval + OTP) / popup → verify | `/api/mobile/checkout/attempt` + `/api/mobile/payments/{verify,charge-otp}` wrapping extracted cores | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -138,9 +139,41 @@ at all (RLS gap) — see `07-checkout-blocker-ticket-type-rls.md`.
   nothing here has been exercised against real Paystack — the networks list
   is a live Paystack call and the saved wallet is only *used* in 5.7b.
 
+## 5.7b — Paystack payment (⚠ NOT device-verified — build/typecheck/export only)
+
+Folds in what was going to be 5.7d (OTP) — one payment-execution commit.
+
+- **Web cores extracted** (behaviour byte-identical): `createMultiCheckoutPaymentAttemptCore`
+  (takes `(supabase, userId, email, input, callbackUrlFor)` — the callback
+  is a web URL on web, an `abonten://checkout/<id>` deep link on mobile,
+  built from the first *valid* session id exactly as before),
+  `verifyPaystackPaymentCore`, `submitPaystackChargeOtpCore`. The 3
+  `"use server"` actions become thin shells. `upsertPaymentAttemptForSession`
+  gained an optional `client?` param (same pattern as `prepareCheckoutPayment`).
+- **Endpoints** (`apps/web/src/app/api/mobile/`, Bearer-scoped): `POST
+  checkout/attempt` (`{checkoutSessionIds, paymentMethodId}` → `{paymentGroupId,
+  attempts, paystack:{mode:"direct"|"popup", …}}`), `POST payments/verify`
+  (200 issued / 202 poll again / 400 failed / 207 paid-but-unfulfilled),
+  `POST payments/charge-otp` (`{paymentAttemptId, otp}`). These use
+  `fromActionResult` (not `apiJson`) to pass the discriminated-union results
+  straight through.
+- **api-client**: `checkout.attempt`, `payments.verify`, `payments.submitChargeOtp`.
+- **Mobile**: `PaymentSection` on the checkout review screen — pick a saved
+  method (default preselected; "Add payment method" → Wallet when none),
+  "Pay {currency} {total}". `mode:"direct"` → "approve on your phone" +
+  poll `verify` every 4s (cap 20), or `send_otp` → inline OTP field →
+  `charge-otp` → resume polling. `mode:"popup"` → `expo-web-browser`
+  `openAuthSessionAsync(authorizationUrl, abonten://checkout/<id>)` → poll.
+  Success → "View my tickets" (Tickets tab).
+- **Not verified**: no real Paystack charge, MoMo phone-approval, OTP,
+  popup redirect, or deep-link return has been exercised. Phone-only
+  accounts with no email get a 400 from `attempt` ("needs a verified email
+  to pay") — an existing web constraint the app inherits.
+
 ## Remaining Phase 5 slices
 
-- **Checkout + payments (5.7b, 5.7d)** — the deferred `/api/mobile/**` endpoints
+- (Phase 5 checkout is code-complete. Everything Paystack still needs a
+  device + test-keys pass.)
   (`validateCheckout`, payment prep/verify, Paystack charge/OTP) wrapping
   the existing Server Actions, then the mobile checkout screens. Do the
   `revoke … from authenticated` migration from `05-security-rpc-audit.md`

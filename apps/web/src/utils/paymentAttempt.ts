@@ -9,6 +9,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type PaymentAttemptRow = {
   id: string;
@@ -55,8 +56,12 @@ export async function upsertPaymentAttemptForSession(
   currency: string,
   paymentMethodId: string,
   paymentGroupId?: string,
+  client?: SupabaseClient,
 ): Promise<UpsertPaymentAttemptResult> {
-  const supabase = await createClient();
+  // `client` lets an already-authenticated caller (the mobile checkout
+  // routes) reuse its own Supabase client; the "use server" actions omit it
+  // and get the cookie client exactly as before.
+  const supabase = client ?? (await createClient());
 
   const { data: existingAttempt, error: existingError } = await supabase
     .from("payment_attempt")

@@ -1,6 +1,8 @@
 import type {
   AddMomoWalletBody,
   ApiEnvelope,
+  CheckoutAttemptBody,
+  CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
   MomoNetwork,
@@ -12,9 +14,11 @@ import type {
   ProfileData,
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
+  SubmitChargeOtpResult,
   UploadSignatureKind,
   ValidateCheckoutBody,
   ValidateCheckoutResult,
+  VerifyPaymentResult,
   VerifyPhoneOtpBody,
 } from "./types";
 
@@ -190,6 +194,32 @@ export function createApiClient(options: ApiClientOptions) {
           body: { checkoutSessionId },
           auth: true,
         });
+      },
+      /** Record a payment_attempt and start the Paystack charge. */
+      attempt(body: CheckoutAttemptBody) {
+        return request<CheckoutAttemptResult>("/api/mobile/checkout/attempt", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+    },
+
+    payments: {
+      /** Optimistically finalize a Paystack payment (races the webhook). */
+      verify(paymentAttemptId: string) {
+        return request<VerifyPaymentResult>("/api/mobile/payments/verify", {
+          method: "POST",
+          body: { paymentAttemptId },
+          auth: true,
+        });
+      },
+      /** Submit an OTP for a direct charge that returned "send_otp". */
+      submitChargeOtp(paymentAttemptId: string, otp: string) {
+        return request<SubmitChargeOtpResult>(
+          "/api/mobile/payments/charge-otp",
+          { method: "POST", body: { paymentAttemptId, otp }, auth: true },
+        );
       },
     },
 

@@ -1,26 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
-import { logger } from "@abonten/core/logger";
-
-type VerifyPaystackPaymentResult =
-  | { status: 401 | 403 | 404; message: string }
-  | { status: 200; data: { finalized: "succeeded" } }
-  | {
-      status: 202;
-      data: { finalized: "pending" | "already_processing" };
-      message?: string;
-    }
-  | { status: 400; data: { finalized: "failed" }; message: string }
-  // Payment succeeded (Paystack charged the user, a `transaction` row
-  // exists) but issuing the purchased thing failed — never the same as
-  // status 400 above, which means the payment itself failed/declined.
-  | {
-      status: 207;
-      data: { finalized: "fulfillment_failed"; paymentAttemptId: string };
-      message: string;
-    };
+import {
+  type VerifyPaystackPaymentCoreResult,
+  verifyPaystackPaymentCore,
+} from "@/utils/verifyPaystackPaymentCore";
 
 /**
  * Optimistic, client-triggered verification step, called right after the
@@ -31,7 +15,7 @@ type VerifyPaystackPaymentResult =
  */
 export default async function verifyPaystackPayment(
   paymentAttemptId: string,
-): Promise<VerifyPaystackPaymentResult> {
+): Promise<VerifyPaystackPaymentCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -43,59 +27,5 @@ export default async function verifyPaystackPayment(
     return { status: 401, message: "User not logged in" };
   }
 
-  const { data: attempt, error: attemptError } = await supabase
-    .from("payment_attempt")
-    .select("id, user_id")
-    .eq("id", paymentAttemptId)
-    .maybeSingle();
-
-  if (attemptError) {
-    logger.error(`Failed fetching payment attempt: ${attemptError.message}`);
-    return { status: 404, message: "Payment attempt not found" };
-  }
-
-  if (!attempt) {
-    return { status: 404, message: "Payment attempt not found" };
-  }
-
-  // Ownership check — a user can only ever trigger verification of their
-  // own payment attempt, never someone else's by guessing an id.
-  if (attempt.user_id !== user.id) {
-    return { status: 403, message: "Not authorized" };
-  }
-
-  const result = await finalizePaystackPayment(supabase, paymentAttemptId);
-
-  if (result.status === "succeeded") {
-    return { status: 200, data: { finalized: "succeeded" } };
-  }
-
-  if (result.status === "pending" || result.status === "already_processing") {
-    return {
-      status: 202,
-      data: { finalized: result.status },
-      message: "message" in result ? result.message : undefined,
-    };
-  }
-
-  if (result.status === "not_found") {
-    return { status: 404, message: "Payment attempt not found" };
-  }
-
-  if (result.status === "fulfillment_failed") {
-    return {
-      status: 207,
-      data: {
-        finalized: "fulfillment_failed",
-        paymentAttemptId: result.paymentAttemptId,
-      },
-      message: result.message,
-    };
-  }
-
-  return {
-    status: 400,
-    data: { finalized: "failed" },
-    message: result.message,
-  };
+  return verifyPaystackPaymentCore(supabase, user.id, paymentAttemptId);
 }

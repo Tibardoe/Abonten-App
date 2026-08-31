@@ -120,3 +120,56 @@ export type AddMomoWalletBody = {
 };
 
 export type MomoNetwork = { code: string; name: string };
+
+// ---- payment attempt + verification ----------------------------------
+
+export type CheckoutAttemptBody = {
+  checkoutSessionIds: string[];
+  paymentMethodId: string;
+};
+
+export type PaystackPaymentInfo =
+  | {
+      mode: "popup";
+      reference: string;
+      accessCode: string;
+      authorizationUrl: string;
+    }
+  | {
+      mode: "direct";
+      reference: string;
+      chargeStatus: string;
+      displayMessage?: string;
+    };
+
+export type CheckoutAttemptResult =
+  | {
+      status: 200;
+      data: {
+        paymentGroupId: string;
+        // payment_attempt rows — only `id` is read by the app
+        attempts: { id: string }[];
+        paystack: PaystackPaymentInfo;
+      };
+    }
+  | { status: 400 | 401 | 404 | 500; message: string }
+  | { status: 409; message: string; invalidSessionIds: string[] };
+
+export type VerifyPaymentResult =
+  | { status: 200; data: { finalized: "succeeded" } }
+  | {
+      status: 202;
+      data: { finalized: "pending" | "already_processing" };
+      message?: string;
+    }
+  | { status: 400; data: { finalized: "failed" }; message: string }
+  | {
+      status: 207;
+      data: { finalized: "fulfillment_failed"; paymentAttemptId: string };
+      message: string;
+    }
+  | { status: 401 | 403 | 404 | 500; message: string };
+
+export type SubmitChargeOtpResult =
+  | { status: 200; data: { chargeStatus: string } }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };

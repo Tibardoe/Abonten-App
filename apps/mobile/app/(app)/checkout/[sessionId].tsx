@@ -1,3 +1,4 @@
+import { PaymentSection } from "@/features/checkout/PaymentSection";
 import {
   useCancelCheckout,
   useCheckoutPrepare,
@@ -132,11 +133,11 @@ export default function CheckoutReviewScreen() {
         </Text>
       ) : null}
 
-      <View className="items-center rounded-xl bg-muted px-4 py-3">
-        <Text className="text-sm font-semibold text-muted-foreground">
-          Card & mobile money payment arrives in the next update
-        </Text>
-      </View>
+      <PaymentSection
+        sessionId={sessionId ?? ""}
+        currency={currency}
+        total={session.total}
+      />
 
       <Pressable
         disabled={cancel.isPending}
