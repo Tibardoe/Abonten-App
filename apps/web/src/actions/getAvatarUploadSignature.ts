@@ -1,14 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
+import {
+  type UploadSignatureResult,
+  buildCloudinaryUploadSignature,
+} from "@/utils/cloudinaryUploadSignature";
 
 // Authorizes a direct browser -> Cloudinary avatar upload, replacing the old
 // saveAvatarToCloudinary.ts server-proxied upload (temp file write + SDK
@@ -17,7 +13,9 @@ cloudinary.config({
 // makes real upload-progress feedback possible, which a Server Action can't
 // report. Scoped to the user's own folder, mirroring
 // getEventReviewPhotoUploadSignature.ts/getPlaceReviewPhotoUploadSignature.ts.
-export default async function getAvatarUploadSignature() {
+// Shared body lives in src/utils/cloudinaryUploadSignature.ts so the mobile
+// /api/mobile/uploads/signature route produces an identical signature.
+export default async function getAvatarUploadSignature(): Promise<UploadSignatureResult> {
   const supabase = await createClient();
 
   const {
@@ -29,22 +27,5 @@ export default async function getAvatarUploadSignature() {
     return { status: 401, message: "Sign in to update your profile photo!" };
   }
 
-  const timestamp = Math.round(Date.now() / 1000);
-  const folder = `user_profiles/${user.id}`;
-
-  const signature = cloudinary.utils.api_sign_request(
-    { timestamp, folder },
-    process.env.CLOUDINARY_API_SECRET as string,
-  );
-
-  return {
-    status: 200,
-    data: {
-      timestamp,
-      signature,
-      apiKey: process.env.CLOUDINARY_API_KEY,
-      cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-      folder,
-    },
-  };
+  return buildCloudinaryUploadSignature(user.id, "avatar");
 }

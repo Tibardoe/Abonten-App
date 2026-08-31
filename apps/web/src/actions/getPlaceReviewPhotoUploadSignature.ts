@@ -1,14 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { v2 as cloudinary } from "cloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
+import {
+  type UploadSignatureResult,
+  buildCloudinaryUploadSignature,
+} from "@/utils/cloudinaryUploadSignature";
 
 // Authorizes a direct browser -> Cloudinary upload for a place review's
 // photo attachments, mirroring getPlacePhotoUploadSignature.ts. The folder
@@ -18,8 +14,9 @@ cloudinary.config({
 // form), so there's nothing else to scope the folder to yet. postPlaceReview.ts
 // re-validates this same folder prefix before inserting each
 // place_review_photo row, once the review (and therefore its owning
-// reviewer_id) actually exists.
-export default async function getPlaceReviewPhotoUploadSignature() {
+// reviewer_id) actually exists. Shared body:
+// src/utils/cloudinaryUploadSignature.ts.
+export default async function getPlaceReviewPhotoUploadSignature(): Promise<UploadSignatureResult> {
   const supabase = await createClient();
 
   const {
@@ -31,22 +28,5 @@ export default async function getPlaceReviewPhotoUploadSignature() {
     return { status: 401, message: "Sign in to attach photos to a review!" };
   }
 
-  const timestamp = Math.round(Date.now() / 1000);
-  const folder = `place_review_photos/${user.id}`;
-
-  const signature = cloudinary.utils.api_sign_request(
-    { timestamp, folder },
-    process.env.CLOUDINARY_API_SECRET as string,
-  );
-
-  return {
-    status: 200,
-    data: {
-      timestamp,
-      signature,
-      apiKey: process.env.CLOUDINARY_API_KEY,
-      cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-      folder,
-    },
-  };
+  return buildCloudinaryUploadSignature(user.id, "place_review_photo");
 }
