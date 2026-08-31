@@ -98,3 +98,25 @@ export type PreparedCheckoutPayment = {
 // One `ticket_checkout` row joined with its event + ticket type. The select
 // is `*, event(...), ticket_type(...)` — broad and DB-driven, kept loose.
 export type CheckoutSessionRow = Record<string, unknown>;
+
+// ---- payment methods ---------------------------------------------------
+
+export type PaymentMethodRow = {
+  id: string;
+  method_type: "momo" | "card";
+  // momo: { networkCode, networkName, phone, label? }
+  // card: { brand, last4, expiryMonth, expiryYear, authorizationCode, bank?, label? }
+  details: Record<string, unknown>;
+  is_default: boolean;
+  created_at: string;
+};
+
+export type AddMomoWalletBody = {
+  type: "momo";
+  networkCode: string;
+  networkName: string;
+  phone: string;
+  label?: string;
+};
+
+export type MomoNetwork = { code: string; name: string };

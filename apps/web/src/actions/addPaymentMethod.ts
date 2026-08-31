@@ -1,35 +1,22 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
 import {
-  type AddPaymentMethodInput,
-  addPaymentMethodSchema,
-} from "@abonten/validation/paymentMethodSchema";
-import type { PaymentMethodRow } from "./getUserPaymentMethods";
-
-type AddPaymentMethodResult =
-  | { status: 400 | 401 | 500; message: string }
-  | { status: 200; data: PaymentMethodRow };
+  type AddPaymentMethodResult,
+  addPaymentMethodCore,
+} from "@/utils/paymentMethodCore";
+import type { AddPaymentMethodInput } from "@abonten/validation/paymentMethodSchema";
 
 /**
  * Saves a new payment method for the current user. Only ever stores the
  * non-sensitive display fields validated by paymentMethodSchema (network/
- * brand, last 4 digits, expiry, label) — never a full card/PIN/mobile-money
- * number, since there is no tokenization provider behind this yet.
+ * brand, last 4 digits, expiry, label) — a card's reusable
+ * `authorizationCode` is captured server-side by a real GHS 1 verification
+ * charge (confirmCardVerification.ts), never typed in.
  */
 export default async function addPaymentMethod(
   input: AddPaymentMethodInput,
-): Promise<AddPaymentMethodResult> {
-  const parsed = addPaymentMethodSchema.safeParse(input);
-
-  if (!parsed.success) {
-    return {
-      status: 400,
-      message: parsed.error.issues[0]?.message ?? "Invalid payment method",
-    };
-  }
-
+): Promise<AddPaymentMethodResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -41,35 +28,5 @@ export default async function addPaymentMethod(
     return { status: 401, message: "User not logged in" };
   }
 
-  const { count, error: countError } = await supabase
-    .from("payment_method")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .eq("status", "active");
-
-  if (countError) {
-    logger.error(`Failed counting payment methods: ${countError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  const { type, ...details } = parsed.data;
-
-  const { data, error } = await supabase
-    .from("payment_method")
-    .insert({
-      user_id: user.id,
-      method_type: type,
-      details,
-      is_default: (count ?? 0) === 0,
-      status: "active",
-    })
-    .select("id, method_type, details, is_default, created_at")
-    .single();
-
-  if (error) {
-    logger.error(`Failed saving payment method: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  return { status: 200, data: data as unknown as PaymentMethodRow };
+  return addPaymentMethodCore(supabase, user.id, input);
 }

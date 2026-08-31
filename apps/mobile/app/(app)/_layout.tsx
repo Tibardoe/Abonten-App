@@ -71,6 +71,10 @@ export default function AppLayout() {
           per-item from inside the screen via navigation.setOptions. */}
       <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen
+        name="wallet"
+        options={{ href: null, headerShown: true, title: "Payment methods" }}
+      />
+      <Tabs.Screen
         name="event/[id]"
         options={{ href: null, headerShown: true, title: "Event" }}
       />

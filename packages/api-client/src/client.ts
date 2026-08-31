@@ -1,9 +1,12 @@
 import type {
+  AddMomoWalletBody,
   ApiEnvelope,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  MomoNetwork,
   NotificationType,
   PaginatedResult,
+  PaymentMethodRow,
   PhoneSession,
   PreparedCheckoutPayment,
   ProfileData,
@@ -187,6 +190,45 @@ export function createApiClient(options: ApiClientOptions) {
           body: { checkoutSessionId },
           auth: true,
         });
+      },
+    },
+
+    paymentMethods: {
+      list() {
+        return request<ApiEnvelope<PaymentMethodRow[]>>(
+          "/api/mobile/payment-methods",
+          { method: "GET", auth: true },
+        );
+      },
+      /** Add a mobile money wallet (network + phone). Cards aren't addable
+       *  from the app — they need a server-captured authorization code. */
+      addMomo(body: AddMomoWalletBody) {
+        return request<ApiEnvelope<PaymentMethodRow>>(
+          "/api/mobile/payment-methods",
+          { method: "POST", body, auth: true },
+        );
+      },
+      remove(paymentMethodId: string) {
+        return request<ApiEnvelope<never>>(
+          "/api/mobile/payment-methods/remove",
+          { method: "POST", body: { paymentMethodId }, auth: true },
+        );
+      },
+      setDefault(paymentMethodId: string) {
+        return request<ApiEnvelope<never>>(
+          "/api/mobile/payment-methods/default",
+          { method: "POST", body: { paymentMethodId }, auth: true },
+        );
+      },
+    },
+
+    paystack: {
+      /** Live Ghana mobile money networks for the add-wallet picker. */
+      momoNetworks() {
+        return request<ApiEnvelope<MomoNetwork[]>>(
+          "/api/mobile/paystack/momo-networks",
+          { method: "GET", auth: true },
+        );
       },
     },
   };

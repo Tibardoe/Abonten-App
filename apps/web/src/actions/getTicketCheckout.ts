@@ -1,9 +1,14 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getTicketCheckoutCore } from "@/utils/getTicketCheckoutCore";
+import {
+  type GetTicketCheckoutCoreResult,
+  getTicketCheckoutCore,
+} from "@/utils/getTicketCheckoutCore";
 
-export default async function getTicketCheckout(checkoutSessionId: string) {
+export default async function getTicketCheckout(
+  checkoutSessionId: string,
+): Promise<GetTicketCheckoutCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {

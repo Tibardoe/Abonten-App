@@ -1,0 +1,33 @@
+import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
+import { apiJson } from "@/app/api/mobile/_lib/response";
+import { removePaymentMethodCore } from "@/utils/paymentMethodCore";
+import { logger } from "@abonten/core/logger";
+
+// POST /api/mobile/payment-methods/remove  { paymentMethodId: string }
+export async function POST(req: Request) {
+  const auth = await getMobileAuth(req);
+  if (auth.response) return auth.response;
+
+  try {
+    const body = (await req.json().catch(() => null)) as {
+      paymentMethodId?: unknown;
+    } | null;
+
+    if (
+      typeof body?.paymentMethodId !== "string" ||
+      body.paymentMethodId.length === 0
+    ) {
+      return apiJson({ status: 400, message: "paymentMethodId is required" });
+    }
+
+    const result = await removePaymentMethodCore(
+      auth.supabase,
+      auth.user.id,
+      body.paymentMethodId,
+    );
+    return apiJson(result);
+  } catch (error) {
+    logger.error("mobile POST /payment-methods/remove failed", error);
+    return apiJson({ status: 500, message: "Something went wrong!" });
+  }
+}

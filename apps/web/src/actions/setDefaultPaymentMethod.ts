@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
+import { setDefaultPaymentMethodCore } from "@/utils/paymentMethodCore";
 
 /**
  * Marks one payment method as the user's default, unsetting any previous
@@ -24,46 +24,5 @@ export default async function setDefaultPaymentMethod(paymentMethodId: string) {
     return { status: 401, message: "User not logged in" };
   }
 
-  const { data: method, error: fetchError } = await supabase
-    .from("payment_method")
-    .select("id")
-    .eq("id", paymentMethodId)
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (fetchError) {
-    logger.error(`Failed fetching payment method: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  if (!method) {
-    return { status: 404, message: "Payment method not found" };
-  }
-
-  const { error: unsetError } = await supabase
-    .from("payment_method")
-    .update({ is_default: false, updated_at: new Date() })
-    .eq("user_id", user.id)
-    .eq("is_default", true)
-    .neq("id", paymentMethodId);
-
-  if (unsetError) {
-    logger.error(`Failed clearing previous default: ${unsetError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  const { error: setError } = await supabase
-    .from("payment_method")
-    .update({ is_default: true, updated_at: new Date() })
-    .eq("id", paymentMethodId)
-    .eq("user_id", user.id)
-    .eq("status", "active");
-
-  if (setError) {
-    logger.error(`Failed setting default payment method: ${setError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  return { status: 200, message: "Default payment method updated" };
+  return setDefaultPaymentMethodCore(supabase, user.id, paymentMethodId);
 }

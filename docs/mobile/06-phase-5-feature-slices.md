@@ -13,6 +13,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.5 | Nearby places (Places tab, replaces Wallet) | direct `supabase.rpc("get_nearby_places")` (anon-granted) | `aca4878` |
 | 5.6 | Event / place / ticket detail screens (from a tapped card) | direct `event` / `place` / `ticket` reads (RLS public-select / owner-select) | — |
 | 5.7a | Checkout session: ticket picker → validate → review screen (no payment yet) | `/api/mobile/checkout/{validate,prepare,session/[id],cancel}` wrapping extracted cores | — |
+| 5.7c | Payment methods + Wallet screen (add/list/remove/default mobile money) | `/api/mobile/payment-methods/*` + `/paystack/momo-networks` wrapping extracted cores | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -112,9 +113,34 @@ at all (RLS gap) — see `07-checkout-blocker-ticket-type-rls.md`.
   `.expo/types` / `expo-env.d.ts` out of `tsconfig.json` and added a
   local `apps/mobile/.gitignore`.
 
+## 5.7c — payment methods (⚠ Paystack flows not device-verified)
+
+- **Web cores extracted** (behaviour byte-identical): `paymentMethodCore.ts`
+  with `list / add / remove / setDefault`; the 4 `"use server"` actions
+  become thin shells. `PaymentMethodRow` + detail types moved to the core
+  and re-exported from `getUserPaymentMethods.ts` for existing web imports.
+  `getTicketCheckoutCore`'s return type was also tightened to an explicit
+  discriminated union (a 5.7a follow-up — the inferred version widened
+  `status` to `number` and broke `.data` narrowing on the web checkout
+  page under a full typecheck).
+- **Endpoints** (`apps/web/src/app/api/mobile/`): `GET/POST payment-methods`
+  (POST accepts **momo only** — a card needs a server-captured
+  authorization code the app has no flow for), `POST payment-methods/remove`,
+  `POST payment-methods/default`, `GET paystack/momo-networks`. All
+  Bearer-scoped via `getMobileAuth`.
+- **api-client**: `paymentMethods.list / addMomo / remove / setDefault`,
+  `paystack.momoNetworks`.
+- **Mobile**: `app/(app)/wallet.tsx` ("Payment methods", reached from
+  Account, not a tab) — list saved methods, make-default, remove, and an
+  inline "add mobile money" form (live network chips + Ghana phone field).
+  Cards direct users to the website.
+- **Not verified**: the add-momo write is a plain DB insert (safe), but
+  nothing here has been exercised against real Paystack — the networks list
+  is a live Paystack call and the saved wallet is only *used* in 5.7b.
+
 ## Remaining Phase 5 slices
 
-- **Checkout + payments (5.7b onward)** — the deferred `/api/mobile/**` endpoints
+- **Checkout + payments (5.7b, 5.7d)** — the deferred `/api/mobile/**` endpoints
   (`validateCheckout`, payment prep/verify, Paystack charge/OTP) wrapping
   the existing Server Actions, then the mobile checkout screens. Do the
   `revoke … from authenticated` migration from `05-security-rpc-audit.md`
