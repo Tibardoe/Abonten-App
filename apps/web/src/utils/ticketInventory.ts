@@ -1,4 +1,4 @@
-import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
 
 // Deliberately NOT a "use server" Server Action: every exported function in
@@ -10,6 +10,14 @@ import { logger } from "@abonten/core/logger";
 // registerForFreeEvent, cancelUserTicket) — never as an
 // independently callable endpoint an attacker could hit directly to drain
 // or inflate a ticket type's stock.
+//
+// Uses the service-role client, not the cookie client: `ticket_type` RLS
+// only allows the event's organizer to UPDATE it (ticket_type_organizer_all),
+// so the compare-and-swap below returns 0 rows when run as the buyer — which
+// is every checkout. The service-role client bypasses RLS; the CAS itself
+// (`WHERE quantity = <value just read>`) is still what guarantees no
+// oversell. Same "prove identity in the caller, then do the privileged write
+// with the service client" pattern as cancelEvent.ts → issueRefundCore.
 
 /**
  * Atomically reserves `requestedQuantity` units of a ticket type by
@@ -24,7 +32,7 @@ export async function reserveTicketQuantity(
   ticketTypeId: string,
   requestedQuantity: number,
 ) {
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
 
   const { data: ticketType, error: ticketTypeError } = await supabase
     .from("ticket_type")
@@ -89,7 +97,7 @@ export async function releaseTicketQuantity(
 ) {
   if (quantityToRelease <= 0) return;
 
-  const supabase = await createClient();
+  const supabase = getSupabaseServiceClient();
 
   for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
     const { data: ticketType, error: ticketTypeError } = await supabase

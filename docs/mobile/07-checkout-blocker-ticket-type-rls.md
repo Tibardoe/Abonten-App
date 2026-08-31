@@ -1,10 +1,23 @@
 # Phase 5.7 blocker — buyer cannot decrement `ticket_type.quantity` (pre-existing web bug)
 
-**Status:** open. Surfaced 2026-08-31 while starting the mobile checkout
-slice. **Not caused by the mobile work** — it is a live web-app bug. The
-mobile checkout phase cannot proceed cleanly until it is resolved, because
-mobile must reuse the same `validateCheckout` path and cannot match web
-behaviour that is itself broken.
+**Status: RESOLVED 2026-08-31.** Fix: `src/utils/ticketInventory.ts`
+(`reserveTicketQuantity` / `releaseTicketQuantity`) now builds the
+**service-role client** (`getSupabaseServiceClient()`) instead of the cookie
+client — that file was already server-only and only reachable through
+Server Actions that do their own auth, so this changes no security posture,
+adds no callable surface, and needs no migration. The compare-and-swap
+`UPDATE` is unchanged and is still what prevents oversell. Verified on the
+live DB (rolled back): a `service_role` reserve `UPDATE` affects 1 row where
+the buyer's affected 0. Web build + typecheck green. Option A below (SD
+RPCs) was considered and rejected — it would have added a buyer-callable
+`reserve_ticket_quantity` RPC, a new stock-drain / oversell surface.
+
+Original report follows.
+
+---
+
+Surfaced 2026-08-31 while starting the mobile checkout slice. **Not caused
+by the mobile work** — it was a live web-app bug.
 
 ## What is broken
 
