@@ -56,6 +56,13 @@
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c0a45056-182f-47c5-b862-de14034a830a"
+      }
+    },
+    "owner": "abonten-hub"
   }
 }

@@ -8,7 +8,7 @@ committed (see "Done in the repo" below).
 
 ---
 
-## Done in the repo (this commit)
+## Done in the repo
 
 | Item | File |
 |---|---|
@@ -17,51 +17,71 @@ committed (see "Done in the repo" below).
 | `expo-splash-screen` + `expo-dev-client` added; `expo-splash-screen` config plugin | `apps/mobile/package.json`, `app.json` |
 | `runtimeVersion.policy = "appVersion"` (pairs with `eas.json` `appVersionSource: "remote"`) | `apps/mobile/app.json` |
 | **TEMP placeholder assets** — solid brand mint (`#4FD9C4`) with a gray inset border so they read as placeholders. **Replace before any store build.** | `apps/mobile/assets/{icon,adaptive-icon,splash-icon,favicon,notification-icon}.png` |
+| `eas init` output — `extra.eas.projectId` (`c0a45056-…`), `extra.router`, `owner: "abonten-hub"` | `apps/mobile/app.json` |
 
-`eas.json` only carries the non-secret `EXPO_PUBLIC_API_BASE_URL`
+## Done on the EAS project
+
+- Linked to `@abonten-hub/abonten` (project id `c0a45056-182f-47c5-b862-de14034a830a`).
+- Env vars `EXPO_PUBLIC_SUPABASE_URL` (plaintext) + `EXPO_PUBLIC_SUPABASE_ANON_KEY` (sensitive) created for **development / preview / production** — see step 3.
+
+`eas.json` carries only the non-secret `EXPO_PUBLIC_API_BASE_URL`
 (`https://abonten-benjamin-tibardoes-projects.vercel.app`, same value as
-`apps/mobile/.env.example`). The two Supabase `EXPO_PUBLIC_*` vars are **not**
-committed — create them as EAS env vars (step 3).
+`apps/mobile/.env.example`).
 
 ---
 
-## 1. Prerequisites
+## 1. Prerequisites — ✅ DONE
 
 ```bash
 npm i -g eas-cli          # or: npx eas-cli@latest
-eas login                 # the Expo account that will own the app
+eas login                 # done — accounts: big_ceo, abonten-hub (both Owner)
 ```
 
-## 2. `eas init` — creates the project (UNBLOCKS PUSH)
+## 2. `eas init` — ✅ DONE (project linked)
 
+Ran `eas login` + `eas init`. Linked to the existing EAS project
+**`@abonten-hub/abonten`**, project id
+**`c0a45056-182f-47c5-b862-de14034a830a`**. `eas init` wrote into
+`app.json`: `extra.eas.projectId`, `extra.router: {}`, `owner: "abonten-hub"`
+(committed). It did **not** write `updates.url` — that comes from
+`eas update:configure` (step 4, optional).
+
+**This armed push notifications (5.10).** `usePushRegistration.ts`'s
+`resolveProjectId()` now returns the real id, so on a real device build
+`getExpoPushTokenAsync({ projectId })` resolves and `device_token`
+registration starts working. (On a bare simulator with no APNs/FCM it still
+throws and is caught silently — expected.)
+
+## 3. EAS environment variables — ✅ DONE
+
+EAS Build does **not** read `apps/mobile/.env`, so the two Supabase
+`EXPO_PUBLIC_*` vars were created as **project-scoped EAS environment
+variables** (all three environments: development, preview, production):
+
+| Variable | Value | Visibility |
+|---|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://sderrexhawjbmsugndcq.supabase.co` | `plaintext` (PUBLIC) |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | the anon/publishable JWT from `apps/mobile/.env` (verified byte-identical by SHA-256) | `sensitive` — still inlined into the bundle at build (`EXPO_PUBLIC_` can't be `secret`), just masked in the EAS UI/logs |
+
+Command used (for reference / re-running):
 ```bash
-cd apps/mobile
-eas init
+eas env:set --name EXPO_PUBLIC_SUPABASE_URL --value "https://sderrexhawjbmsugndcq.supabase.co" \
+  --environment development --environment preview --environment production \
+  --visibility plaintext --type string --non-interactive
+eas env:set --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "<anon key from apps/mobile/.env>" \
+  --environment development --environment preview --environment production \
+  --visibility sensitive --type string --non-interactive
 ```
 
-This writes `extra.eas.projectId`, `owner`, and (with EAS Update) `updates.url`
-into `app.json`. **Until this runs, push notifications (5.10) are dormant** —
-`usePushRegistration.ts` calls `resolveProjectId()`, finds no
-`extra.eas.projectId`, and returns without registering a token (by design,
-no crash). After `eas init`, `getExpoPushTokenAsync({ projectId })` resolves
-and device registration starts working.
+`EXPO_PUBLIC_API_BASE_URL` stays in `eas.json` per profile (single source;
+`eas.json` `env` overrides dashboard vars at build time anyway). If the
+deployment origin ever differs per environment, move it to EAS env vars
+too. **Never** add a service-role key, Paystack secret, or any
+non-`EXPO_PUBLIC_*` value to `eas.json` or the EAS env — those stay
+server-side behind `/api/mobile/**`.
 
-Commit the `app.json` diff `eas init` produces.
-
-## 3. EAS environment variables
-
-EAS Build does **not** read `apps/mobile/.env`. Create these for the build
-profiles that need them (all three, or scope as needed):
-
-```bash
-eas env:create --name EXPO_PUBLIC_SUPABASE_URL       --value "https://sderrexhawjbmsugndcq.supabase.co" --environment development --environment preview --environment production
-eas env:create --name EXPO_PUBLIC_SUPABASE_ANON_KEY  --value "<the anon key from apps/mobile/.env>"     --environment development --environment preview --environment production
-```
-
-`EXPO_PUBLIC_API_BASE_URL` is already in `eas.json`; move it to an EAS env
-var too if the deployment origin changes per environment. **Never** add a
-service-role key, Paystack secret, or any non-`EXPO_PUBLIC_*` value here or
-to `eas.json` — those stay server-side behind `/api/mobile/**`.
+Verify anytime with `eas env:list --environment production` (add
+`--include-sensitive` to see the anon key value).
 
 ## 4. EAS Update (optional but recommended)
 
