@@ -49,11 +49,11 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="wallet"
+        name="places"
         options={{
-          title: "Wallet",
+          title: "Places",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet-outline" color={color} size={size} />
+            <Ionicons name="location-outline" color={color} size={size} />
           ),
         }}
       />
