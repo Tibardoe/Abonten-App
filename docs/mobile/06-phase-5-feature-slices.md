@@ -15,6 +15,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.7a | Checkout session: ticket picker → validate → review screen (no payment yet) | `/api/mobile/checkout/{validate,prepare,session/[id],cancel}` wrapping extracted cores | — |
 | 5.7c | Payment methods + Wallet screen (add/list/remove/default mobile money) | `/api/mobile/payment-methods/*` + `/paystack/momo-networks` wrapping extracted cores | — |
 | 5.7b | Paystack payment: attempt → direct charge (phone approval + OTP) / popup → verify | `/api/mobile/checkout/attempt` + `/api/mobile/payments/{verify,charge-otp}` wrapping extracted cores | — |
+| 5.8 | Organizer read-only surfaces: dashboard KPIs, my-events list, finances (balance + ledger) | `/api/mobile/organizer/{overview,finance,events,ledger}` wrapping extracted cores | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -170,16 +171,58 @@ Folds in what was going to be 5.7d (OTP) — one payment-execution commit.
   accounts with no email get a 400 from `attempt` ("needs a verified email
   to pay") — an existing web constraint the app inherits.
 
+## 5.8 — organizer read-only surfaces
+
+Read-only parity for an organizer's own dashboard / events / finances.
+Nothing here mutates — no payout request, no event cancel (those RPCs are
+audited-safe but out of scope for a read-only slice).
+
+- **Web cores extracted** (behaviour byte-identical): the post-auth bodies
+  of `getOrganizerDashboardOverview`, `getOrganizerFinanceOverview`,
+  `getOrganizerEvents` and `getOrganizerLedgerTransactions` moved to
+  `src/utils/organizerReadQuery.ts` as `(supabase, …)` helpers; the four
+  actions became thin `createClient()` + `getUser()` + delegate shells with
+  explicit return types. `getOrganizerEvents`' pre-existing quirk of
+  returning **500** (not 401) on no-session is preserved.
+- **RPC posture** (verified via MCP, project `sderrexhawjbmsugndcq`):
+  `get_organizer_dashboard_overview` / `get_organizer_finance_overview` are
+  `SECURITY INVOKER` and filter on `auth.uid()` internally;
+  `get_organizer_ledger_transactions` is `SECURITY DEFINER` but scoped to
+  `organizer_ledger_entry.organizer_id = auth.uid()` (audit §"safe"). The
+  events list is a direct `event` read gated by RLS `event_organizer_select`
+  (`auth.uid() = organizer_id`), so drafts are visible to their owner only.
+  No grant/RLS/schema change; no migration.
+- **Endpoints** (`apps/web/src/app/api/mobile/organizer/`, all GET,
+  Bearer-scoped via `getMobileAuth`): `overview?period=today|7d|30d|all`,
+  `finance`, `events?cursor=&pageSize=`, `ledger?cursor=&pageSize=`. Cursor
+  encode/decode stays server-side (Buffer-free client, same as
+  `/notifications`).
+- **api-client**: `organizer.overview / finance / events / ledger`; new
+  types `OrganizerDashboardPeriod`, `OrganizerOverviewRow/Result`,
+  `OrganizerFinanceResult`, re-exported `OrganizerFinanceOverviewRow`,
+  `OrganizerLedgerTransactionRow`, `UserPostType`.
+- **Mobile**: `app/(app)/organizer/{index,events,finance}.tsx` (reached from
+  Account → "Organizer", `href: null` header screens).
+  `src/features/organizer/useOrganizer.ts` — `useOrganizerOverview(period)`
+  (`useQuery`), `useOrganizerFinance`, `useOrganizerEvents` /
+  `useOrganizerLedger` (`useInfiniteQuery`). Dashboard: period chips + Sales
+  / Tickets / Events stat blocks (per-currency money rows) + "no events yet"
+  empty state. Events: paginated status-badged list, taps through to the
+  public event screen. Finances: per-currency balance cards
+  (available / pending / total) as the list header over a paginated ledger
+  feed.
+- **Verified**: `turbo build` + `turbo typecheck --force` (8/8, no cache),
+  `expo export --platform ios`, `biome check` on all touched files, mobile
+  `npm run lint` (44 files) — all clean. Not exercised against a running
+  device; the reads are RLS-gated and side-effect-free.
+
 ## Remaining Phase 5 slices
 
-- (Phase 5 checkout is code-complete. Everything Paystack still needs a
-  device + test-keys pass.)
-  (`validateCheckout`, payment prep/verify, Paystack charge/OTP) wrapping
-  the existing Server Actions, then the mobile checkout screens. Do the
-  `revoke … from authenticated` migration from `05-security-rpc-audit.md`
-  first.
-- **Organizer surfaces** — dashboard, events, finances. `request_organizer_payout`
-  and `cancel_event_and_release_tickets` are safe to call directly (audited);
-  everything else via endpoints.
+- **Organizer write actions** — payout request, event cancel/refresh. Both
+  RPCs are audited-safe for direct calls but still better behind endpoints
+  for consistent error shapes.
 - **Push notifications** — `expo-notifications` + a device-token table +
   server send from the notification-creating Server Actions.
+- **Free-event RSVP** (`registerForFreeEvent`) and **mobile card payment
+  methods** — both still deferred (see 5.7 notes).
+- Everything Paystack (5.7b/c) still needs a device + test-keys pass.

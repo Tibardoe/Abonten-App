@@ -90,6 +90,18 @@ export default function AppLayout() {
         name="checkout/[sessionId]"
         options={{ href: null, headerShown: true, title: "Checkout" }}
       />
+      <Tabs.Screen
+        name="organizer/index"
+        options={{ href: null, headerShown: true, title: "Organizer" }}
+      />
+      <Tabs.Screen
+        name="organizer/events"
+        options={{ href: null, headerShown: true, title: "My events" }}
+      />
+      <Tabs.Screen
+        name="organizer/finance"
+        options={{ href: null, headerShown: true, title: "Finances" }}
+      />
     </Tabs>
   );
 }

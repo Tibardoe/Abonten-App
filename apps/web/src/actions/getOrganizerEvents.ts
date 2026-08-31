@@ -1,15 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { fetchOrganizerEventsPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
-import {
-  DEFAULT_EVENTS_PAGE_SIZE,
-  decodeCursor,
-  encodeCursor,
-  keysetOlderThan,
-  splitPage,
-} from "@abonten/core/pagination";
-import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 
 export default async function getOrganizerEvents(options?: {
@@ -17,8 +11,6 @@ export default async function getOrganizerEvents(options?: {
   pageSize?: number;
 }): Promise<PaginatedResult<UserPostType>> {
   const supabase = await createClient();
-  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
-  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
   const {
     data: { user },
@@ -36,42 +28,5 @@ export default async function getOrganizerEvents(options?: {
     };
   }
 
-  let query = supabase
-    .from("event")
-    .select("*, occurrences:event_occurrence(*)")
-    .eq("organizer_id", user.id)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(pageSize + 1);
-
-  if (cursor) {
-    query = query.or(keysetOlderThan("created_at", "id", cursor));
-  }
-
-  const { data: events, error: eventsError } = await query;
-
-  if (eventsError) {
-    logger.error(`Error fetching organizer's events: ${eventsError.message}`);
-
-    return {
-      status: 500,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: "Something went wrong!",
-    };
-  }
-
-  const { page, hasNextPage } = splitPage<UserPostType>(events, pageSize);
-
-  const last = page[page.length - 1];
-  const nextCursor =
-    hasNextPage && last
-      ? encodeCursor<SimpleCursor>({
-          sortValue: String(last.created_at),
-          id: last.id,
-        })
-      : null;
-
-  return { status: 200, data: page, nextCursor, hasNextPage };
+  return fetchOrganizerEventsPage(supabase, user.id, options);
 }

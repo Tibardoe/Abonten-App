@@ -7,6 +7,10 @@ import type {
   CloudinarySignatureData,
   MomoNetwork,
   NotificationType,
+  OrganizerDashboardPeriod,
+  OrganizerFinanceResult,
+  OrganizerLedgerTransactionRow,
+  OrganizerOverviewResult,
   PaginatedResult,
   PaymentMethodRow,
   PhoneSession,
@@ -16,6 +20,7 @@ import type {
   RequestPhoneOtpData,
   SubmitChargeOtpResult,
   UploadSignatureKind,
+  UserPostType,
   ValidateCheckoutBody,
   ValidateCheckoutResult,
   VerifyPaymentResult,
@@ -257,6 +262,45 @@ export function createApiClient(options: ApiClientOptions) {
       momoNetworks() {
         return request<ApiEnvelope<MomoNetwork[]>>(
           "/api/mobile/paystack/momo-networks",
+          { method: "GET", auth: true },
+        );
+      },
+    },
+
+    organizer: {
+      /** Dashboard KPIs for the period + its comparison window. */
+      overview(period: OrganizerDashboardPeriod = "30d") {
+        return request<OrganizerOverviewResult>(
+          `/api/mobile/organizer/overview?period=${period}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Balance figures per currency (pending / available / total). */
+      finance() {
+        return request<OrganizerFinanceResult>(
+          "/api/mobile/organizer/finance",
+          { method: "GET", auth: true },
+        );
+      },
+      /** The caller's own events, newest first, every status. */
+      events(params?: { cursor?: string | null; pageSize?: number }) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<PaginatedResult<UserPostType>>(
+          `/api/mobile/organizer/events${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Paginated transactions feed (sales, fees, refunds, payouts). */
+      ledger(params?: { cursor?: string | null; pageSize?: number }) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<PaginatedResult<OrganizerLedgerTransactionRow>>(
+          `/api/mobile/organizer/ledger${qs ? `?${qs}` : ""}`,
           { method: "GET", auth: true },
         );
       },

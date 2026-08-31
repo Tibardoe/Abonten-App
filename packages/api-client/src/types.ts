@@ -1,5 +1,10 @@
 import type { NotificationType } from "@abonten/types/notificationType";
+import type {
+  OrganizerFinanceOverviewRow,
+  OrganizerLedgerTransactionRow,
+} from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import type { UserPostType } from "@abonten/types/postsType";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
@@ -9,7 +14,13 @@ export type ApiEnvelope<T> = {
   data?: T;
 };
 
-export type { NotificationType, PaginatedResult };
+export type {
+  NotificationType,
+  OrganizerFinanceOverviewRow,
+  OrganizerLedgerTransactionRow,
+  PaginatedResult,
+  UserPostType,
+};
 
 // ---- auth ----------------------------------------------------------------
 
@@ -173,3 +184,39 @@ export type VerifyPaymentResult =
 export type SubmitChargeOtpResult =
   | { status: 200; data: { chargeStatus: string } }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// ---- organizer (read-only surfaces) ----------------------------------
+
+export type OrganizerDashboardPeriod = "today" | "7d" | "30d" | "all";
+
+// One row of get_organizer_dashboard_overview, one per sales currency (plus
+// a single all-zero row when the organizer has no paid checkouts yet). The
+// *_events_count columns are identical on every row. PostgREST can serialise
+// the bigint columns as strings, so the app coerces with Number() on read.
+export type OrganizerOverviewRow = {
+  currency: string | null;
+  gross_sales: number;
+  total_discount: number;
+  distinct_purchasers: number;
+  paid_orders: number;
+  tickets_sold: number;
+  tickets_cancelled: number;
+  registrations: number;
+  active_events_count: number;
+  upcoming_events_count: number;
+  total_events_count: number;
+};
+
+export type OrganizerOverviewResult =
+  | {
+      status: 200;
+      data: {
+        current: OrganizerOverviewRow[];
+        previous: OrganizerOverviewRow[] | null;
+      };
+    }
+  | { status: 401 | 500; message: string };
+
+export type OrganizerFinanceResult =
+  | { status: 200; data: OrganizerFinanceOverviewRow[] }
+  | { status: 401 | 500; message: string };

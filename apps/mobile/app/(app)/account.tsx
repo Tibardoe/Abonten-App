@@ -59,6 +59,13 @@ export default function Account() {
         </Pressable>
       </Link>
 
+      <Link href="/(app)/organizer" asChild>
+        <Pressable className="flex-row items-center justify-between rounded-md border border-border bg-card px-4 py-3 active:opacity-80">
+          <Text className="text-base text-foreground">Organizer</Text>
+          <Text className="text-muted-foreground">›</Text>
+        </Pressable>
+      </Link>
+
       <Pressable
         className="items-center rounded-md border border-destructive px-4 py-3 active:opacity-80"
         onPress={() => signOut()}

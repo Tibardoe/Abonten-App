@@ -1,12 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
-import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
-
-type GetOrganizerFinanceOverviewResult =
-  | { status: 401 | 500; message: string }
-  | { status: 200; data: OrganizerFinanceOverviewRow[] };
+import {
+  type OrganizerFinanceOverviewResult,
+  fetchOrganizerFinanceOverview,
+} from "@/utils/organizerReadQuery";
 
 /**
  * The single balance figure every surface reads — Finances Overview, the
@@ -14,7 +12,7 @@ type GetOrganizerFinanceOverviewResult =
  * exact action/RPC (get_organizer_finance_overview), so the numbers shown
  * on each can never drift apart.
  */
-export default async function getOrganizerFinanceOverview(): Promise<GetOrganizerFinanceOverviewResult> {
+export default async function getOrganizerFinanceOverview(): Promise<OrganizerFinanceOverviewResult> {
   const supabase = await createClient();
 
   const {
@@ -26,17 +24,5 @@ export default async function getOrganizerFinanceOverview(): Promise<GetOrganize
     return { status: 401, message: "User not logged in" };
   }
 
-  const { data, error } = await supabase.rpc("get_organizer_finance_overview");
-
-  if (error) {
-    logger.error(
-      `Failed fetching organizer finance overview: ${error.message}`,
-    );
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  return {
-    status: 200,
-    data: (data ?? []) as OrganizerFinanceOverviewRow[],
-  };
+  return fetchOrganizerFinanceOverview(supabase);
 }
