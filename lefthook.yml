@@ -1,6 +1,6 @@
 pre-commit:
   commands:
     check:
-      glob: "apps/web/src/**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      glob: "{apps/web/src,apps/mobile/app,apps/mobile/src,packages/*/src}/**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
       run: npx @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
       stage_fixed: true
