@@ -42,9 +42,9 @@ export default function AppLayout() {
       <Tabs.Screen
         name="transactions"
         options={{
-          title: "Transactions",
+          title: "Tickets",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" color={color} size={size} />
+            <Ionicons name="ticket-outline" color={color} size={size} />
           ),
         }}
       />
