@@ -10,7 +10,10 @@
     "typecheck": "turbo run typecheck",
     "web": "npm run -w @abonten/web",
     "web:dev": "npm run dev -w @abonten/web",
-    "web:build": "npm run build -w @abonten/web"
+    "web:build": "npm run build -w @abonten/web",
+    "mobile": "npm run start -w @abonten/mobile",
+    "mobile:android": "npm run android -w @abonten/mobile",
+    "mobile:ios": "npm run ios -w @abonten/mobile"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
