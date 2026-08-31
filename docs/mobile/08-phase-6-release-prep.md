@@ -12,7 +12,7 @@ committed (see "Done in the repo" below).
 
 | Item | File |
 |---|---|
-| EAS build profiles: `development` (dev client), `preview` (internal — Android APK, iOS simulator), `production` (auto-increment) | `apps/mobile/eas.json` |
+| EAS build profiles: `development` (dev client), `preview` (internal — Android APK, iOS simulator), `production` (auto-increment). Each profile sets `"environment"` to its matching EAS environment; no `env` blocks — all `EXPO_PUBLIC_*` come from EAS env vars. | `apps/mobile/eas.json` |
 | App icon / Android adaptive icon / splash / Android notification icon wired | `apps/mobile/app.json` |
 | `expo-splash-screen` + `expo-dev-client` added; `expo-splash-screen` config plugin | `apps/mobile/package.json`, `app.json` |
 | `runtimeVersion.policy = "appVersion"` (pairs with `eas.json` `appVersionSource: "remote"`) | `apps/mobile/app.json` |
@@ -22,11 +22,25 @@ committed (see "Done in the repo" below).
 ## Done on the EAS project
 
 - Linked to `@abonten-hub/abonten` (project id `c0a45056-182f-47c5-b862-de14034a830a`).
-- Env vars `EXPO_PUBLIC_SUPABASE_URL` (plaintext) + `EXPO_PUBLIC_SUPABASE_ANON_KEY` (sensitive) created for **development / preview / production** — see step 3.
+- **All three** `EXPO_PUBLIC_*` vars created for **development / preview / production**
+  (project scope) — this is now the single source of truth; `eas.json` has no
+  `env` blocks:
 
-`eas.json` carries only the non-secret `EXPO_PUBLIC_API_BASE_URL`
-(`https://abonten-benjamin-tibardoes-projects.vercel.app`, same value as
-`apps/mobile/.env.example`).
+  | Variable | Value | Visibility |
+  |---|---|---|
+  | `EXPO_PUBLIC_SUPABASE_URL` | `https://sderrexhawjbmsugndcq.supabase.co` | plaintext |
+  | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | anon JWT (SHA-verified vs `.env`) | sensitive |
+  | `EXPO_PUBLIC_API_BASE_URL` | `https://abontenhub.com` | plaintext |
+
+  `eas config --profile <p>` confirms each profile loads all three from its
+  matching environment.
+
+> **Verify before the first build:** `https://abontenhub.com/api/mobile/profile`
+> must return a JSON `401` (not a Vercel auth wall, HTML, or DNS error). The
+> old `abonten-benjamin-tibardoes-projects.vercel.app` value was the Vercel
+> project domain and may be deployment-protected. If `abontenhub.com` isn't
+> the live origin for this repo's `apps/web`, update the `EXPO_PUBLIC_API_BASE_URL`
+> EAS var(s) with `eas env:set --force`.
 
 ---
 
@@ -54,34 +68,39 @@ throws and is caught silently — expected.)
 
 ## 3. EAS environment variables — ✅ DONE
 
-EAS Build does **not** read `apps/mobile/.env`, so the two Supabase
-`EXPO_PUBLIC_*` vars were created as **project-scoped EAS environment
-variables** (all three environments: development, preview, production):
+EAS Build/Update do **not** read `apps/mobile/.env`. **All three** required
+`EXPO_PUBLIC_*` vars are project-scoped EAS environment variables, attached
+to development / preview / production. `eas.json` has **no `env` blocks** —
+each build profile sets `"environment"` to its matching EAS environment, so
+the vars flow in from one place.
 
-| Variable | Value | Visibility |
-|---|---|---|
-| `EXPO_PUBLIC_SUPABASE_URL` | `https://sderrexhawjbmsugndcq.supabase.co` | `plaintext` (PUBLIC) |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | the anon/publishable JWT from `apps/mobile/.env` (verified byte-identical by SHA-256) | `sensitive` — still inlined into the bundle at build (`EXPO_PUBLIC_` can't be `secret`), just masked in the EAS UI/logs |
+| Variable | Value | Visibility | Read at |
+|---|---|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | `https://sderrexhawjbmsugndcq.supabase.co` | plaintext | `src/lib/supabase.ts` |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | anon JWT (SHA-verified vs `.env`) | sensitive (`EXPO_PUBLIC_` can't be `secret`; inlined into the bundle regardless, just masked in the EAS UI) | `src/lib/supabase.ts` |
+| `EXPO_PUBLIC_API_BASE_URL` | `https://abontenhub.com` | plaintext | `src/lib/api.ts` |
 
-Command used (for reference / re-running):
+All three throw at app startup if missing. Commands used (for re-running /
+changing a value — add `--force` to overwrite):
 ```bash
-eas env:set --name EXPO_PUBLIC_SUPABASE_URL --value "https://sderrexhawjbmsugndcq.supabase.co" \
-  --environment development --environment preview --environment production \
-  --visibility plaintext --type string --non-interactive
+eas env:set --name EXPO_PUBLIC_SUPABASE_URL   --value "https://sderrexhawjbmsugndcq.supabase.co" \
+  --environment development --environment preview --environment production --visibility plaintext --type string --non-interactive
 eas env:set --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "<anon key from apps/mobile/.env>" \
-  --environment development --environment preview --environment production \
-  --visibility sensitive --type string --non-interactive
+  --environment development --environment preview --environment production --visibility sensitive --type string --non-interactive
+eas env:set --name EXPO_PUBLIC_API_BASE_URL   --value "https://abontenhub.com" \
+  --environment development --environment preview --environment production --visibility plaintext --type string --non-interactive
 ```
 
-`EXPO_PUBLIC_API_BASE_URL` stays in `eas.json` per profile (single source;
-`eas.json` `env` overrides dashboard vars at build time anyway). If the
-deployment origin ever differs per environment, move it to EAS env vars
-too. **Never** add a service-role key, Paystack secret, or any
-non-`EXPO_PUBLIC_*` value to `eas.json` or the EAS env — those stay
-server-side behind `/api/mobile/**`.
+Verify: `eas env:list --environment production` (add `--include-sensitive`
+for the anon key), or `eas config --profile production` (shows which vars a
+build would load). `apps/mobile/.env` is the **local-dev mirror** for
+`expo start` only — keep it in sync by hand; point its
+`EXPO_PUBLIC_API_BASE_URL` at a branch/preview deployment while developing
+if needed.
 
-Verify anytime with `eas env:list --environment production` (add
-`--include-sensitive` to see the anon key value).
+**Never** add a service-role key, Paystack secret, or any non-`EXPO_PUBLIC_*`
+value to `eas.json` or the EAS env — those stay server-side behind
+`/api/mobile/**`.
 
 ## 4. EAS Update (optional but recommended)
 
