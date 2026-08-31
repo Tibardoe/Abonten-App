@@ -51,6 +51,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# no tsconfig at the monorepo root — each workspace has its own; the Expo
+# CLI regenerates a stray one at cwd if run from here
+/tsconfig.json
 
 # expo / react native
 .expo/
