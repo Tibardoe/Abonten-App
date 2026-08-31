@@ -1,0 +1,14 @@
+# Force LF in the working tree for this subtree regardless of the machine's
+# core.autocrlf setting. Biome's formatter expects LF, and without this a
+# branch switch on Windows silently rewrites these files to CRLF, breaking
+# `npm run lint` on files that were committed clean.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
