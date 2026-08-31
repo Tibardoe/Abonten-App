@@ -1,0 +1,7 @@
+{
+  "extends": "@abonten/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom"]
+  },
+  "include": ["src"]
+}
