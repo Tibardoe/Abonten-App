@@ -33,22 +33,41 @@ function bearerFrom(req: Request): string | null {
   return match ? match[1].trim() : null;
 }
 
-export function createBearerClient(accessToken: string): SupabaseClient {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+function anonKeys(): { url: string; key: string } {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!url || !key) {
     throw new Error("Missing Supabase environment variables");
   }
 
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  return { url, key };
+}
+
+const SERVER_AUTH_OPTIONS = {
+  autoRefreshToken: false,
+  persistSession: false,
+  detectSessionInUrl: false,
+} as const;
+
+export function createBearerClient(accessToken: string): SupabaseClient {
+  const { url, key } = anonKeys();
+
+  return createClient(url, key, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
+    auth: SERVER_AUTH_OPTIONS,
   });
+}
+
+/**
+ * Session-less anon client for pre-login flows (e.g. consuming the phone
+ * one-time password with `signInWithPassword` to read back the resulting
+ * session tokens). Never persists or refreshes anything.
+ */
+export function createAnonClient(): SupabaseClient {
+  const { url, key } = anonKeys();
+
+  return createClient(url, key, { auth: SERVER_AUTH_OPTIONS });
 }
 
 /**
