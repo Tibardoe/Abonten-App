@@ -55,6 +55,38 @@ from authenticated;
 This is a **pre-existing web posture issue**, not introduced by the mobile
 work. But it should land before Phase 5's payment/refund slices.
 
+### Correction (2026-08-31) — the block above is NOT safe to apply as-is
+
+A closer trace of the runtime `.rpc()` call sites before the checkout slice
+found that **4 of the 6 functions have live web call paths that execute as
+the `authenticated` role**, because those Server Actions use the cookie SSR
+client (`@/config/supabase/server` `createClient()`), not a service-role
+client. Revoking would break them:
+
+| RPC | `authenticated`-context web caller | Effect of revoke |
+|---|---|---|
+| `record_organizer_earning` | `verifyPaystackPayment` → `finalizePaystackPayment` → `generateTicket`; **and** `PendingCheckoutsBasket.tsx` (client component) → `generateTicket` directly (free-event basket) | earning row silently not written on the client/verification path (error is not checked at `generateTicket.ts:297-303`); webhook path still records it |
+| `record_platform_fee` | `verifyPaystackPayment` / `retryPaymentFulfillment` → `finalizePaystackPayment` (`finalizePaystackPayment.ts:475`) | `platform_fee_entry` not written on the client verification path; **error IS logged** (`:487`) but fulfilment continues |
+| `record_refund_hold` | `issueRefund` (admin/organizer action, `issueRefund.ts:19` cookie client) → `issueRefundCore` (`:152`) | **single-transaction refunds break** — `holdError` is checked and returned as a failure |
+| `record_fee_refund_adjustment` | same path (`issueRefundCore.ts:170`) | same |
+
+Only **`record_refund_release`** (webhook, service-role only) and
+**`record_refund_adjustment`** (no runtime caller at all) are safe to revoke
+without a web-side change.
+
+**Doing the revoke safely first requires** converting those 4 call paths to a
+service-role client (`@/config/supabase/serviceClient` `getSupabaseServiceClient()`),
+which is a real change to live payment/refund code with its own review + test
+cycle — out of scope for "add the mobile app without breaking web".
+
+### What actually protects the mobile checkout slice
+
+Not the revoke. The hard rule below (`/api/mobile/**` wrappers of the Server
+Actions, never `supabase.rpc()` for money ops) is the protection, and it
+holds whether or not the grants are tightened. The mobile bundle never calls
+any `record_*` function directly. The revoke is deferred to a separate
+web-hardening task.
+
 ## Hard rule for Phase 5.x mobile
 
 - Money/refund/fee/earning operations on mobile go through **`/api/mobile/**`
