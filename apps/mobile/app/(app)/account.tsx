@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 export default function Account() {
@@ -43,6 +44,13 @@ export default function Account() {
               : `status ${profile.data?.status ?? "?"}`}
         </Text>
       </View>
+
+      <Link href="/(app)/notifications" asChild>
+        <Pressable className="flex-row items-center justify-between rounded-md border border-border bg-card px-4 py-3 active:opacity-80">
+          <Text className="text-base text-foreground">Notifications</Text>
+          <Text className="text-muted-foreground">›</Text>
+        </Pressable>
+      </Link>
 
       <Pressable
         className="items-center rounded-md border border-destructive px-4 py-3 active:opacity-80"
