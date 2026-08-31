@@ -12,6 +12,8 @@ export type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  DeviceRegisterBody,
+  DeviceTokenResult,
   EventCancellationImpact,
   EventCancellationImpactResult,
   MomoNetwork,

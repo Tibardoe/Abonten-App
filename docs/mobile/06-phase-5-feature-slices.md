@@ -17,6 +17,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.7b | Paystack payment: attempt → direct charge (phone approval + OTP) / popup → verify | `/api/mobile/checkout/attempt` + `/api/mobile/payments/{verify,charge-otp}` wrapping extracted cores | — |
 | 5.8 | Organizer read-only surfaces: dashboard KPIs, my-events list, finances (balance + ledger) | `/api/mobile/organizer/{overview,finance,events,ledger}` wrapping extracted cores | — |
 | 5.9 | Organizer write actions: payout accounts CRUD, withdrawal request + history, event cancel | `/api/mobile/organizer/{payout-accounts,payout,payouts,events/cancel,events/cancellation-impact}` wrapping extracted cores | — |
+| 5.10 | Push notifications: device-token registration + server-side send from `createNotification` | new `device_token` table (MCP), `/api/mobile/devices/{register,unregister}`, `expo-notifications` | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -266,12 +267,51 @@ Payout-account management, withdrawal requests, and event cancellation.
   refund fan-out, or attendee email has been sent from the app. The RPC
   guards + idempotency are the protection (see `cancelEventCore` header).
 
+## 5.10 — push notifications (⚠ dormant until Phase 6 EAS)
+
+Registers each device's Expo push token and fires a push whenever an in-app
+notification is written.
+
+- **Migration** (applied via Supabase MCP, project `sderrexhawjbmsugndcq`,
+  `add_device_token_for_push` — **not** a `supabase/migrations/*` file):
+  new `device_token` table (`user_id → auth.users` CASCADE, unique `token`,
+  `platform` check, `created_at`, `last_seen_at`), `user_id` index, RLS on
+  with one `FOR ALL` owner policy. Additive only; verified by read-back
+  (columns / RLS / policy / indexes). See PROJECT.md §7.2.
+- **Web cores**: `src/utils/deviceTokenCore.ts`
+  (`register / unregister`, **service-role** client behind the route's
+  Bearer identity check — so a token that changed device owner can be
+  reassigned past the owner-only RLS `USING` clause, same pattern as
+  `ticketInventory.ts`) and `src/utils/sendPushNotification.ts`
+  (`sendPushToUser` — reads the target's tokens with the service client,
+  POSTs to `exp.host/--/api/v2/push/send` via plain `fetch`, prunes any
+  `DeviceNotRegistered` token). `createNotification.ts` now `await`s
+  `sendPushToUser(...).catch(() => {})` after a successful insert —
+  best-effort, never fails or blocks the in-app write; a no-token user is a
+  cheap no-op. This is the one behavioural change to a shared web action,
+  and it is purely additive.
+- **Endpoints** (`apps/web/src/app/api/mobile/devices/`, Bearer-scoped):
+  `POST register` (`{token, platform}`), `POST unregister` (`{token}`).
+- **api-client**: `devices.register / unregister` + `DeviceRegisterBody`,
+  `DeviceTokenResult`.
+- **Mobile**: `expo-notifications@~57.0.15` added (+ `app.json` plugin).
+  `src/features/notifications/usePushRegistration.ts` — mounted once from
+  `(app)/_layout.tsx`: asks permission, gets the Expo token, registers it
+  while signed in, and routes a tapped notification to its `data.link` deep
+  link; `unregisterPushToken()` runs before sign-out on the Account screen.
+- **⚠ Not functional yet / not verified**: `getExpoPushTokenAsync` needs an
+  EAS `projectId`, which does not exist until Phase 6 (`eas init`). Until
+  then the hook resolves no project id and **returns without registering** —
+  by design, no crash. Nothing here has been exercised on a device: no real
+  token, permission prompt, push delivery, or tap-through. The endpoints +
+  send path build and typecheck; the table is live.
+- **Verified**: `turbo build` (both `devices/*` routes present) +
+  `turbo typecheck --force` (8/8, no cache), `expo export --platform ios`,
+  `biome check` (11 files) + mobile `npm run lint` (50 files) — all clean.
+
 ## Remaining Phase 5 slices
 
-- **Push notifications** — `expo-notifications` + a device-token table +
-  server send from the notification-creating Server Actions (needs a
-  migration).
 - **Free-event RSVP** (`registerForFreeEvent`) and **mobile card payment
   methods** — both still deferred (see 5.7 notes).
-- Everything Paystack / money-path (5.7b/c, 5.9) still needs a device +
-  test-keys pass.
+- Everything Paystack / money-path (5.7b/c, 5.9) plus push delivery (5.10)
+  needs a device + EAS/test-keys pass in Phase 6.

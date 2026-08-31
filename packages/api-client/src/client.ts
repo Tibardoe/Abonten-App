@@ -8,6 +8,8 @@ import type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  DeviceRegisterBody,
+  DeviceTokenResult,
   EventCancellationImpactResult,
   MomoNetwork,
   MutatePayoutAccountResult,
@@ -273,6 +275,25 @@ export function createApiClient(options: ApiClientOptions) {
           "/api/mobile/paystack/momo-networks",
           { method: "GET", auth: true },
         );
+      },
+    },
+
+    devices: {
+      /** Save this device's Expo push token for the signed-in user. */
+      register(body: DeviceRegisterBody) {
+        return request<DeviceTokenResult>("/api/mobile/devices/register", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Drop this device's push token (on sign-out). */
+      unregister(token: string) {
+        return request<DeviceTokenResult>("/api/mobile/devices/unregister", {
+          method: "POST",
+          body: { token },
+          auth: true,
+        });
       },
     },
 

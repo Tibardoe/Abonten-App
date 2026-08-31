@@ -1,3 +1,4 @@
+import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { resolveScheme } from "@abonten/ui-tokens/palette";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
@@ -8,6 +9,9 @@ import { useColorScheme } from "react-native";
 export default function AppLayout() {
   const scheme = useColorScheme() === "dark" ? "dark" : "light";
   const c = resolveScheme(scheme);
+
+  // Register this device for push while the user is in the app.
+  usePushRegistration();
 
   return (
     <Tabs

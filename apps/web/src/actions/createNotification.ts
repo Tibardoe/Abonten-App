@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { sendPushToUser } from "@/utils/sendPushNotification";
 import { logger } from "@abonten/core/logger";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -40,6 +41,15 @@ export default async function createNotification(
     logger.error(`Failed creating notification: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
+
+  // Best-effort mobile push for the same event. Never blocks or fails the
+  // in-app notification write — sendPushToUser swallows all its own errors,
+  // and a no-token user is a cheap no-op.
+  await sendPushToUser(input.userId, {
+    title: input.title,
+    body: input.body ?? null,
+    link: input.link ?? null,
+  }).catch(() => {});
 
   return { status: 200 };
 }

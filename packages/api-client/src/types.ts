@@ -294,3 +294,15 @@ export type CancelEventResult =
       data: { refundsInitiated: number; refundsFailedToStart: number };
     }
   | { status: 400 | 401 | 403 | 409 | 500; message: string };
+
+// ---- devices (push notifications) -----------------------------------
+
+export type DeviceRegisterBody = {
+  token: string;
+  platform: "ios" | "android";
+};
+
+export type DeviceTokenResult = {
+  status: 200 | 400 | 401 | 500;
+  message: string;
+};

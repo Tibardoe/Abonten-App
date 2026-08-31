@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "expo-router";
@@ -6,6 +7,11 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 export default function Account() {
   const { session, signOut } = useSession();
+
+  async function onSignOut() {
+    await unregisterPushToken();
+    await signOut();
+  }
 
   const profile = useQuery({
     queryKey: ["mobile", "profile"],
@@ -68,7 +74,7 @@ export default function Account() {
 
       <Pressable
         className="items-center rounded-md border border-destructive px-4 py-3 active:opacity-80"
-        onPress={() => signOut()}
+        onPress={onSignOut}
       >
         <Text className="text-base font-semibold text-destructive">
           Sign out

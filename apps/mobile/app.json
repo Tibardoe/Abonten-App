@@ -23,7 +23,8 @@
       "expo-status-bar",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-image"
+      "expo-image",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": false
