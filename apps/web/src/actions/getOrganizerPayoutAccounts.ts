@@ -1,12 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
-import type { PayoutAccountRow } from "@abonten/types/organizerFinance";
-
-type GetOrganizerPayoutAccountsResult =
-  | { status: 401 | 500; message: string }
-  | { status: 200; data: PayoutAccountRow[] };
+import {
+  type ListPayoutAccountsResult,
+  listPayoutAccountsCore,
+} from "@/utils/payoutAccountCore";
 
 /**
  * Every active payout destination for the current organizer — separate
@@ -14,7 +12,7 @@ type GetOrganizerPayoutAccountsResult =
  * receiving_account rows, per this feature's explicit "don't mix the two
  * concepts" requirement.
  */
-export default async function getOrganizerPayoutAccounts(): Promise<GetOrganizerPayoutAccountsResult> {
+export default async function getOrganizerPayoutAccounts(): Promise<ListPayoutAccountsResult> {
   const supabase = await createClient();
 
   const {
@@ -26,20 +24,5 @@ export default async function getOrganizerPayoutAccounts(): Promise<GetOrganizer
     return { status: 401, message: "User not logged in" };
   }
 
-  const { data, error } = await supabase
-    .from("payout_account")
-    .select(
-      "id, account_type, account_holder_name, provider, account_number, is_default, created_at",
-    )
-    .eq("organizer_id", user.id)
-    .eq("status", "active")
-    .order("is_default", { ascending: false })
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    logger.error(`Failed fetching payout accounts: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  return { status: 200, data: (data ?? []) as PayoutAccountRow[] };
+  return listPayoutAccountsCore(supabase, user.id);
 }

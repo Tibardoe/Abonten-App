@@ -1,49 +1,23 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { issueRefundCore } from "@/utils/issueRefundCore";
-import { logger } from "@abonten/core/logger";
-import { after } from "next/server";
-import eventCancellationNotification, {
-  type CancelledAttendeeRefund,
-} from "./eventCancellationNotification";
-
-type RefundableTransactionRow = {
-  refund_transaction_id: string;
-  attendee_user_id: string;
-  paystack_reference: string | null;
-  transaction_amount: number;
-  transaction_currency: string;
-  event_title: string;
-};
+import {
+  type CancelEventResult,
+  cancelEventCore,
+} from "@/utils/cancelEventCore";
 
 /**
  * Cancels an event and, atomically, cancels every ticket/attendance/paid
  * checkout row tied to it and notifies every affected attendee — all done
- * inside the cancel_event_and_release_tickets RPC (SECURITY DEFINER, see
- * its migration for why: it needs to write ticket/attendance rows owned by
- * other users, and notification rows for other users, neither of which this
- * action's own session is allowed to touch under RLS).
- *
- * The RPC's status check ("must currently be draft/published") is the
- * idempotency guard — a duplicate/retried call always fails cleanly with
- * "already cancelled" instead of re-running any side effect, so no
- * duplicate refunds or notifications are possible from a double-click or a
- * retried request.
- *
- * The actual Paystack refund call happens here, after the RPC, over its
- * returned (deduplicated by transaction) list. Each refund goes through
- * issueRefundCore with a service-role client: the transactions belong to
- * the *attendees*, not the organizer running this action, so the buyer-
- * scoped issueRefund Server Action would 404 on every one. The
- * cancel_event_and_release_tickets RPC has already verified this caller
- * owns the event and returned only that event's refundable transactions, so
- * identity is proven before this runs. issueRefundCore is idempotent, so a
- * partial failure here never leaves the system falsely claiming a refund
- * succeeded and is safe to retry.
+ * inside the cancel_event_and_release_tickets RPC (SECURITY DEFINER). The
+ * Paystack refunds over the RPC's returned transaction list, and the
+ * attendee-notification fan-out, both live in cancelEventCore so the mobile
+ * /api/mobile/organizer/events/cancel route runs the identical path. See
+ * cancelEventCore's header for the service-role / idempotency rationale.
  */
-export default async function cancelEvent(eventId: string) {
+export default async function cancelEvent(
+  eventId: string,
+): Promise<CancelEventResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -55,79 +29,5 @@ export default async function cancelEvent(eventId: string) {
     return { status: 401, message: "User not Logged in" };
   }
 
-  const { data: refundable, error: rpcError } = await supabase.rpc(
-    "cancel_event_and_release_tickets",
-    { p_event_id: eventId },
-  );
-
-  if (rpcError) {
-    logger.error(`Error cancelling event: ${rpcError.message}`);
-
-    if (rpcError.message?.includes("already cancelled")) {
-      return {
-        status: 409,
-        message: "This event has already been cancelled.",
-      };
-    }
-    if (rpcError.message?.includes("not owned")) {
-      return { status: 403, message: "Not authorized to cancel this event" };
-    }
-    if (rpcError.message?.includes("cannot be cancelled")) {
-      return { status: 409, message: "This event can't be cancelled." };
-    }
-
-    return {
-      status: 500,
-      message:
-        "We couldn't cancel this event right now. No refunds have been issued yet.",
-    };
-  }
-
-  const transactions = (refundable ?? []) as RefundableTransactionRow[];
-
-  const serviceClient = getSupabaseServiceClient();
-  const refundResults = await Promise.allSettled(
-    transactions.map((row) =>
-      issueRefundCore(serviceClient, row.refund_transaction_id),
-    ),
-  );
-
-  let refundsInitiated = 0;
-  let refundsFailedToStart = 0;
-
-  for (const result of refundResults) {
-    if (result.status === "fulfilled" && result.value.status === 200) {
-      refundsInitiated += 1;
-    } else {
-      refundsFailedToStart += 1;
-    }
-  }
-
-  if (transactions.length > 0) {
-    const eventTitle = transactions[0].event_title;
-    const attendees: CancelledAttendeeRefund[] = transactions.map((row) => ({
-      userId: row.attendee_user_id,
-      amount: row.transaction_amount,
-      currency: row.transaction_currency,
-    }));
-
-    after(() =>
-      eventCancellationNotification(eventTitle, attendees).catch((error) =>
-        logger.error(`Failed sending event cancellation emails: ${error}`),
-      ),
-    );
-  }
-
-  const message =
-    refundsFailedToStart > 0
-      ? `Event cancelled. ${refundsInitiated} refund(s) started, but ${refundsFailedToStart} couldn't be started and will need a manual retry.`
-      : refundsInitiated > 0
-        ? `Event cancelled. ${refundsInitiated} refund(s) have been started.`
-        : "Event cancelled successfully.";
-
-  return {
-    status: 200,
-    message,
-    data: { refundsInitiated, refundsFailedToStart },
-  };
+  return cancelEventCore(supabase, eventId);
 }

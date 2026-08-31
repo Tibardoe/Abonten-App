@@ -102,6 +102,22 @@ export default function AppLayout() {
         name="organizer/finance"
         options={{ href: null, headerShown: true, title: "Finances" }}
       />
+      <Tabs.Screen
+        name="organizer/payout-accounts"
+        options={{ href: null, headerShown: true, title: "Payout accounts" }}
+      />
+      <Tabs.Screen
+        name="organizer/payouts"
+        options={{ href: null, headerShown: true, title: "Withdrawals" }}
+      />
+      <Tabs.Screen
+        name="organizer/withdraw"
+        options={{ href: null, headerShown: true, title: "Withdraw" }}
+      />
+      <Tabs.Screen
+        name="organizer/cancel-event"
+        options={{ href: null, headerShown: true, title: "Cancel event" }}
+      />
     </Tabs>
   );
 }

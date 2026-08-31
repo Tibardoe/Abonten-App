@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
+import {
+  type MutatePayoutAccountResult,
+  setDefaultPayoutAccountCore,
+} from "@/utils/payoutAccountCore";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -10,7 +13,9 @@ import { revalidatePath } from "next/cache";
  * setDefaultPaymentMethod.ts, safe under the payout_account_one_default_per_organizer
  * partial unique index.
  */
-export default async function setDefaultPayoutAccount(payoutAccountId: string) {
+export default async function setDefaultPayoutAccount(
+  payoutAccountId: string,
+): Promise<MutatePayoutAccountResult> {
   const supabase = await createClient();
 
   const {
@@ -22,48 +27,15 @@ export default async function setDefaultPayoutAccount(payoutAccountId: string) {
     return { status: 401, message: "User not logged in" };
   }
 
-  const { data: account, error: fetchError } = await supabase
-    .from("payout_account")
-    .select("id")
-    .eq("id", payoutAccountId)
-    .eq("organizer_id", user.id)
-    .eq("status", "active")
-    .maybeSingle();
+  const result = await setDefaultPayoutAccountCore(
+    supabase,
+    user.id,
+    payoutAccountId,
+  );
 
-  if (fetchError) {
-    logger.error(`Failed fetching payout account: ${fetchError.message}`);
-    return { status: 500, message: "Something went wrong!" };
+  if (result.status === 200) {
+    revalidatePath("/finances/payout-accounts");
   }
 
-  if (!account) {
-    return { status: 404, message: "Payout account not found" };
-  }
-
-  const { error: unsetError } = await supabase
-    .from("payout_account")
-    .update({ is_default: false, updated_at: new Date() })
-    .eq("organizer_id", user.id)
-    .eq("is_default", true)
-    .neq("id", payoutAccountId);
-
-  if (unsetError) {
-    logger.error(`Failed clearing previous default: ${unsetError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  const { error: setError } = await supabase
-    .from("payout_account")
-    .update({ is_default: true, updated_at: new Date() })
-    .eq("id", payoutAccountId)
-    .eq("organizer_id", user.id)
-    .eq("status", "active");
-
-  if (setError) {
-    logger.error(`Failed setting default payout account: ${setError.message}`);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  revalidatePath("/finances/payout-accounts");
-
-  return { status: 200, message: "Default payout account updated" };
+  return result;
 }

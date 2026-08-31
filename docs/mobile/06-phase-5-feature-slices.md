@@ -16,6 +16,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.7c | Payment methods + Wallet screen (add/list/remove/default mobile money) | `/api/mobile/payment-methods/*` + `/paystack/momo-networks` wrapping extracted cores | — |
 | 5.7b | Paystack payment: attempt → direct charge (phone approval + OTP) / popup → verify | `/api/mobile/checkout/attempt` + `/api/mobile/payments/{verify,charge-otp}` wrapping extracted cores | — |
 | 5.8 | Organizer read-only surfaces: dashboard KPIs, my-events list, finances (balance + ledger) | `/api/mobile/organizer/{overview,finance,events,ledger}` wrapping extracted cores | — |
+| 5.9 | Organizer write actions: payout accounts CRUD, withdrawal request + history, event cancel | `/api/mobile/organizer/{payout-accounts,payout,payouts,events/cancel,events/cancellation-impact}` wrapping extracted cores | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -216,13 +217,61 @@ audited-safe but out of scope for a read-only slice).
   `npm run lint` (44 files) — all clean. Not exercised against a running
   device; the reads are RLS-gated and side-effect-free.
 
+## 5.9 — organizer write actions (⚠ money path — NOT device-verified)
+
+Payout-account management, withdrawal requests, and event cancellation.
+
+- **Web cores extracted** (behaviour byte-identical): `payoutAccountCore.ts`
+  (`list / add / remove / setDefault / listPayouts`),
+  `requestOrganizerPayoutCore.ts`, `cancelEventCore.ts`
+  (`getEventCancellationImpactCore` + `cancelEventCore` — the latter carries
+  the full path: RPC → per-transaction `issueRefundCore` on a **service-role**
+  client → `after()` attendee-notification fan-out). The 8 actions
+  (`getOrganizerPayoutAccounts`, `addPayoutAccount`, `removePayoutAccount`,
+  `setDefaultPayoutAccount`, `getOrganizerPayouts`, `requestOrganizerPayout`,
+  `getEventCancellationImpact`, `cancelEvent`) are now thin auth + delegate
+  shells; each keeps its `revalidatePath` calls (Next-only) in the wrapper,
+  fired only on a 200 core result. One deliberate reorder: `addPayoutAccount`
+  now checks auth **before** Zod-parsing the body (was parse-first) — the Zod
+  parse moved into the core; unobservable for any real caller (all
+  authenticated), 401-before-400 only for an unauthenticated malformed call.
+- **RPC posture** (audit §"safe for direct authenticated calls"):
+  `request_organizer_payout` re-verifies payout-account ownership + recomputes
+  the available balance from the ledger; `cancel_event_and_release_tickets` +
+  `get_event_cancellation_impact` both `WHERE organizer_id = auth.uid()` and
+  raise otherwise. The payout-account table ops are RLS-scoped
+  `.eq("organizer_id", userId)`. **No grant/RLS/schema change, no migration.**
+- **Endpoints** (`apps/web/src/app/api/mobile/organizer/`, Bearer-scoped):
+  `GET/POST payout-accounts`, `POST payout-accounts/{remove,default}`,
+  `GET payouts?offset=&limit=`, `POST payout`, `GET events/cancellation-impact
+  ?eventId=`, `POST events/cancel`. All return the core result via
+  `fromActionResult`.
+- **api-client**: `organizer.{payoutAccounts, addPayoutAccount,
+  removePayoutAccount, setDefaultPayoutAccount, payouts, requestPayout,
+  eventCancellationImpact, cancelEvent}` + types (`AddPayoutAccountBody` is a
+  dependency-free structural mirror of the Zod schema).
+- **Mobile**: `src/features/organizer/usePayouts.ts` (mutations invalidate the
+  finance/overview/events read caches). Screens:
+  `app/(app)/organizer/payout-accounts.tsx` (list + make-default + remove +
+  momo/bank add form), `withdraw.tsx` (currency + account picker, amount
+  capped at the shown available balance, confirm), `payouts.tsx` (withdrawal
+  history), `cancel-event.tsx` (server-verified impact counts + an explicit
+  "I understand… refunds all buyers" checkbox that gates the destructive
+  button). Reached from the Finances screen's new nav rows; "Cancel event"
+  links from each draft/published row on the events list.
+- **Verified**: `turbo build` (all 11 `organizer/*` routes present) +
+  `turbo typecheck --force` (8/8, no cache), `expo export --platform ios`,
+  `biome check` (35 files) + mobile `npm run lint` (49 files) — all clean.
+  **Not exercised against a device or real Paystack**: no real withdrawal,
+  refund fan-out, or attendee email has been sent from the app. The RPC
+  guards + idempotency are the protection (see `cancelEventCore` header).
+
 ## Remaining Phase 5 slices
 
-- **Organizer write actions** — payout request, event cancel/refresh. Both
-  RPCs are audited-safe for direct calls but still better behind endpoints
-  for consistent error shapes.
 - **Push notifications** — `expo-notifications` + a device-token table +
-  server send from the notification-creating Server Actions.
+  server send from the notification-creating Server Actions (needs a
+  migration).
 - **Free-event RSVP** (`registerForFreeEvent`) and **mobile card payment
   methods** — both still deferred (see 5.7 notes).
-- Everything Paystack (5.7b/c) still needs a device + test-keys pass.
+- Everything Paystack / money-path (5.7b/c, 5.9) still needs a device +
+  test-keys pass.

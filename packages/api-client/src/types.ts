@@ -2,6 +2,10 @@ import type { NotificationType } from "@abonten/types/notificationType";
 import type {
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
+  OrganizerPayoutRow,
+  PayoutAccountRow,
+  PayoutAccountType,
+  PayoutStatus,
 } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -18,7 +22,11 @@ export type {
   NotificationType,
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
+  OrganizerPayoutRow,
   PaginatedResult,
+  PayoutAccountRow,
+  PayoutAccountType,
+  PayoutStatus,
   UserPostType,
 };
 
@@ -220,3 +228,69 @@ export type OrganizerOverviewResult =
 export type OrganizerFinanceResult =
   | { status: 200; data: OrganizerFinanceOverviewRow[] }
   | { status: 401 | 500; message: string };
+
+// ---- organizer write actions ----------------------------------------
+
+export type PayoutAccountsResult =
+  | { status: 200; data: PayoutAccountRow[] }
+  | { status: 401 | 500; message: string };
+
+export type PayoutsResult =
+  | { status: 200; data: OrganizerPayoutRow[] }
+  | { status: 401 | 500; message: string };
+
+export type AddMobileMoneyPayoutBody = {
+  accountType: "mobile_money";
+  accountHolderName: string;
+  networkCode: string;
+  networkName: string;
+  phone: string;
+};
+
+export type AddBankPayoutBody = {
+  accountType: "bank";
+  accountHolderName: string;
+  bankName: string;
+  accountNumber: string;
+};
+
+// Structural mirror of @abonten/validation addPayoutAccountSchema — the
+// route re-validates with the real Zod schema, so this stays dependency-free.
+export type AddPayoutAccountBody = AddMobileMoneyPayoutBody | AddBankPayoutBody;
+
+export type AddPayoutAccountResult =
+  | { status: 200; data: PayoutAccountRow }
+  | { status: 400 | 401 | 500; message: string };
+
+export type MutatePayoutAccountResult = {
+  status: 200 | 400 | 401 | 404 | 500;
+  message: string;
+};
+
+export type RequestPayoutBody = {
+  payoutAccountId: string;
+  amount: number;
+  currency: string;
+};
+
+export type RequestPayoutResult =
+  | { status: 200; data: { payoutId: string; reference: string } }
+  | { status: 400 | 401 | 500; message: string; balanceStale?: boolean };
+
+export type EventCancellationImpact = {
+  paidTicketCount: number;
+  freeTicketCount: number;
+  attendeeCount: number;
+};
+
+export type EventCancellationImpactResult =
+  | { status: 200; data: EventCancellationImpact }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+export type CancelEventResult =
+  | {
+      status: 200;
+      message: string;
+      data: { refundsInitiated: number; refundsFailedToStart: number };
+    }
+  | { status: 400 | 401 | 403 | 409 | 500; message: string };

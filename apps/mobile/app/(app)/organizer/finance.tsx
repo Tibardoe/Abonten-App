@@ -8,14 +8,27 @@ import type {
   OrganizerLedgerTransactionRow,
 } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { Link } from "expo-router";
 import { useCallback } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   RefreshControl,
   Text,
   View,
 } from "react-native";
+
+function NavRow({ href, label }: { href: string; label: string }) {
+  return (
+    <Link href={href} asChild>
+      <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+        <Text className="text-sm text-foreground">{label}</Text>
+        <Text className="text-muted-foreground">›</Text>
+      </Pressable>
+    </Link>
+  );
+}
 
 const LINE_LABEL: Record<OrganizerLedgerTransactionRow["line"], string> = {
   ticket_sale: "Ticket sale",
@@ -121,6 +134,16 @@ export default function OrganizerFinanceScreen() {
       ) : (
         balances.map((b) => <BalanceCard key={b.currency} row={b} />)
       )}
+
+      <View className="gap-2">
+        <NavRow href="/(app)/organizer/withdraw" label="Withdraw" />
+        <NavRow href="/(app)/organizer/payouts" label="Withdrawal history" />
+        <NavRow
+          href="/(app)/organizer/payout-accounts"
+          label="Payout accounts"
+        />
+      </View>
+
       <Text className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Transactions
       </Text>

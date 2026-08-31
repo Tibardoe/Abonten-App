@@ -1,11 +1,16 @@
 import type {
   AddMomoWalletBody,
+  AddPayoutAccountBody,
+  AddPayoutAccountResult,
   ApiEnvelope,
+  CancelEventResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  EventCancellationImpactResult,
   MomoNetwork,
+  MutatePayoutAccountResult,
   NotificationType,
   OrganizerDashboardPeriod,
   OrganizerFinanceResult,
@@ -13,9 +18,13 @@ import type {
   OrganizerOverviewResult,
   PaginatedResult,
   PaymentMethodRow,
+  PayoutAccountsResult,
+  PayoutsResult,
   PhoneSession,
   PreparedCheckoutPayment,
   ProfileData,
+  RequestPayoutBody,
+  RequestPayoutResult,
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
   SubmitChargeOtpResult,
@@ -302,6 +311,68 @@ export function createApiClient(options: ApiClientOptions) {
         return request<PaginatedResult<OrganizerLedgerTransactionRow>>(
           `/api/mobile/organizer/ledger${qs ? `?${qs}` : ""}`,
           { method: "GET", auth: true },
+        );
+      },
+
+      /** Active payout destinations. */
+      payoutAccounts() {
+        return request<PayoutAccountsResult>(
+          "/api/mobile/organizer/payout-accounts",
+          { method: "GET", auth: true },
+        );
+      },
+      /** Add a payout destination (mobile money or bank). */
+      addPayoutAccount(body: AddPayoutAccountBody) {
+        return request<AddPayoutAccountResult>(
+          "/api/mobile/organizer/payout-accounts",
+          { method: "POST", body, auth: true },
+        );
+      },
+      removePayoutAccount(payoutAccountId: string) {
+        return request<MutatePayoutAccountResult>(
+          "/api/mobile/organizer/payout-accounts/remove",
+          { method: "POST", body: { payoutAccountId }, auth: true },
+        );
+      },
+      setDefaultPayoutAccount(payoutAccountId: string) {
+        return request<MutatePayoutAccountResult>(
+          "/api/mobile/organizer/payout-accounts/default",
+          { method: "POST", body: { payoutAccountId }, auth: true },
+        );
+      },
+      /** Withdrawal history, newest first (simple offset pagination). */
+      payouts(params?: { offset?: number; limit?: number }) {
+        const query = new URLSearchParams();
+        if (params?.offset) query.set("offset", String(params.offset));
+        if (params?.limit) query.set("limit", String(params.limit));
+        const qs = query.toString();
+        return request<PayoutsResult>(
+          `/api/mobile/organizer/payouts${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Request a withdrawal to a saved payout account. */
+      requestPayout(body: RequestPayoutBody) {
+        return request<RequestPayoutResult>("/api/mobile/organizer/payout", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Server-verified impact counts for the cancel-event confirm screen. */
+      eventCancellationImpact(eventId: string) {
+        return request<EventCancellationImpactResult>(
+          `/api/mobile/organizer/events/cancellation-impact?eventId=${encodeURIComponent(
+            eventId,
+          )}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Cancel an event: release tickets, start refunds, notify attendees. */
+      cancelEvent(eventId: string) {
+        return request<CancelEventResult>(
+          "/api/mobile/organizer/events/cancel",
+          { method: "POST", body: { eventId }, auth: true },
         );
       },
     },
