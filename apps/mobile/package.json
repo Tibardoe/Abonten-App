@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "@abonten/ui-tokens": "*",
+    "@supabase/supabase-js": "^2.112.4",
     "expo": "~57.0.18",
     "expo-constants": "~57.0.16",
     "expo-linking": "~57.0.8",
     "expo-router": "~57.0.17",
+    "expo-secure-store": "~57.0.2",
     "expo-status-bar": "~57.0.1",
     "nativewind": "^4.2.6",
     "react": "19.2.8",
@@ -25,6 +27,7 @@
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
+    "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "0.10.1",
     "tailwindcss": "^3.4.19"
