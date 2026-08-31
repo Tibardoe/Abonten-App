@@ -66,6 +66,9 @@ export default function AppLayout() {
           ),
         }}
       />
+      {/* Reachable by navigation, not shown as tabs. */}
+      <Tabs.Screen name="notifications" options={{ href: null }} />
+      <Tabs.Screen name="event/[id]" options={{ href: null }} />
     </Tabs>
   );
 }
