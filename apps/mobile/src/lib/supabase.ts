@@ -29,6 +29,9 @@ export const supabase: SupabaseClient = createClient(
       // No URL-based session detection on native — auth is via secure-store
       // and the explicit OAuth deep-link handler.
       detectSessionInUrl: false,
+      // PKCE for the native Google flow: signInWithOAuth returns a `?code=`
+      // on the abonten:// redirect, completed with exchangeCodeForSession.
+      flowType: "pkce",
     },
   },
 );

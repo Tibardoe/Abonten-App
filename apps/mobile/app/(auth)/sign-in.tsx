@@ -1,3 +1,4 @@
+import { signInWithGoogle } from "@/auth/googleSignIn";
 import { api } from "@/lib/api";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -14,12 +15,12 @@ const DEFAULT_DIAL_CODE = "+233";
 export default function SignIn() {
   const router = useRouter();
   const [rawPhone, setRawPhone] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"phone" | "google" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function sendCode() {
     setError(null);
-    setBusy(true);
+    setBusy("phone");
     try {
       const res = await api.auth.requestPhoneOtp({
         dialCode: DEFAULT_DIAL_CODE,
@@ -38,7 +39,19 @@ export default function SignIn() {
     } catch {
       setError("Network error. Check your connection and try again.");
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  async function google() {
+    setError(null);
+    setBusy("google");
+    try {
+      const res = await signInWithGoogle();
+      if (!res.ok) setError(res.message);
+      // On success SessionProvider's onAuthStateChange routes into the app.
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -63,7 +76,7 @@ export default function SignIn() {
           autoComplete="tel"
           value={rawPhone}
           onChangeText={setRawPhone}
-          editable={!busy}
+          editable={busy === null}
         />
       </View>
 
@@ -71,14 +84,34 @@ export default function SignIn() {
 
       <Pressable
         className="items-center rounded-md bg-primary px-4 py-3 active:opacity-80 disabled:opacity-50"
-        disabled={busy || rawPhone.trim().length < 6}
+        disabled={busy !== null || rawPhone.trim().length < 6}
         onPress={sendCode}
       >
-        {busy ? (
+        {busy === "phone" ? (
           <ActivityIndicator color="#fff" />
         ) : (
           <Text className="text-base font-semibold text-primary-foreground">
             Send code
+          </Text>
+        )}
+      </Pressable>
+
+      <View className="flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-border" />
+        <Text className="text-xs uppercase text-muted-foreground">or</Text>
+        <View className="h-px flex-1 bg-border" />
+      </View>
+
+      <Pressable
+        className="items-center rounded-md border border-border px-4 py-3 active:opacity-80 disabled:opacity-50"
+        disabled={busy !== null}
+        onPress={google}
+      >
+        {busy === "google" ? (
+          <ActivityIndicator />
+        ) : (
+          <Text className="text-base font-semibold text-foreground">
+            Continue with Google
           </Text>
         )}
       </Pressable>
