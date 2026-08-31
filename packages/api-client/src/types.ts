@@ -59,3 +59,42 @@ export type CloudinarySignatureData = {
 // The profile route returns the `user_profile_details` view row as-is; its
 // column set is broad and DB-driven, so it is intentionally left loose here.
 export type ProfileData = Record<string, unknown>;
+
+// ---- checkout -------------------------------------------------------------
+
+export type ValidateCheckoutBody = {
+  eventId: string;
+  quantities: Record<string, number>;
+  occurrenceId?: string | null;
+};
+
+// validateCheckoutCore replies flat (not wrapped in `data`): 200 carries
+// `checkoutSessionId`; 300 carries `reason` + (for a pending checkout)
+// `checkoutId`; other statuses carry `message`.
+export type ValidateCheckoutResult = {
+  status: number;
+  message?: string;
+  checkoutSessionId?: string;
+  reason?: "pending_checkout" | "already_purchased";
+  checkoutId?: string;
+};
+
+export type PreparedCheckoutSession = {
+  checkoutSessionId: string;
+  eventTitle: string;
+  subtotal: number;
+  discount: number;
+  fee: number;
+  total: number;
+};
+
+export type PreparedCheckoutPayment = {
+  validSessions: PreparedCheckoutSession[];
+  invalidSessionIds: string[];
+  grandTotal: number;
+  currency: string;
+};
+
+// One `ticket_checkout` row joined with its event + ticket type. The select
+// is `*, event(...), ticket_type(...)` — broad and DB-driven, kept loose.
+export type CheckoutSessionRow = Record<string, unknown>;

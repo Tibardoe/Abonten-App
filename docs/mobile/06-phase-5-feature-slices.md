@@ -12,6 +12,7 @@ Each slice is one commit; `apps/web` untouched. `expo export --platform ios`
 | 5.4 | Event search (Search tab) | direct `supabase.rpc("get_filtered_events")` (anon-granted) | `aca4878` |
 | 5.5 | Nearby places (Places tab, replaces Wallet) | direct `supabase.rpc("get_nearby_places")` (anon-granted) | `aca4878` |
 | 5.6 | Event / place / ticket detail screens (from a tapped card) | direct `event` / `place` / `ticket` reads (RLS public-select / owner-select) | — |
+| 5.7a | Checkout session: ticket picker → validate → review screen (no payment yet) | `/api/mobile/checkout/{validate,prepare,session/[id],cancel}` wrapping extracted cores | — |
 
 ## Running Expo (fix, commit `082d025`)
 
@@ -78,9 +79,42 @@ and crashes on `expo-secure-store`; web is a dev convenience only.
   `navigation.setOptions`. `PlaceCard` now navigates to the place screen,
   `TicketCard` to the ticket screen (was the event screen).
 
+## 5.7a — checkout session (no payment yet)
+
+Prereq fixed first: buyers couldn't reserve `ticket_type` inventory on web
+at all (RLS gap) — see `07-checkout-blocker-ticket-type-rls.md`.
+
+- **Web cores extracted** (behaviour byte-identical, "no logic fork"): the
+  post-auth body of `validateCheckout`, `getTicketCheckout` and
+  `cancelTicketCheckoutSession` moved to `src/utils/*Core.ts` taking
+  `(supabase, userId, …)`; the `"use server"` actions became thin
+  `createClient()` + `getUser()` + delegate shells. `prepareCheckoutPayment`
+  gained an optional `client?` param. No promo-code path on mobile yet
+  (`getPromoCode` / `claimPromoUsage` still assume the cookie SSR context) —
+  the validate route rejects a `promoCode` rather than silently dropping it.
+- **Endpoints** (`apps/web/src/app/api/mobile/checkout/`): `POST validate`
+  (`{eventId, quantities, occurrenceId?}`), `POST prepare`
+  (`{checkoutSessionIds}` → subtotal/discount/**fee**/total + grandTotal),
+  `GET session/[sessionId]`, `POST cancel`. All run on the caller's
+  Bearer-scoped client (RLS still enforced) via `getMobileAuth`.
+- **api-client**: `checkout.validate / prepare / getSession / cancel`.
+- **Mobile**: `TicketPicker` on the event screen (per-type steppers,
+  on-sale / sold-out / “N left” states, occurrence chips when >1 date,
+  live subtotal, "Get tickets" → `validate`). Absolutely-free events show
+  "Free RSVP coming soon" instead (deferred with `registerForFreeEvent`).
+  New `app/(app)/checkout/[sessionId].tsx` review screen — `prepare`
+  breakdown, expired-session handling, "Cancel checkout", Pay button
+  disabled pending 5.7b.
+- `experiments.typedRoutes` **disabled** — in this monorepo the generator
+  emitted cross-package garbage (route entries for `apps/web/src/...` and
+  non-route `src/features/*` files) and misclassified `checkout/[sessionId]`.
+  DX-only feature, no runtime effect. Expo's own sync then trimmed
+  `.expo/types` / `expo-env.d.ts` out of `tsconfig.json` and added a
+  local `apps/mobile/.gitignore`.
+
 ## Remaining Phase 5 slices
 
-- **Checkout + payments** — the deferred `/api/mobile/**` endpoints
+- **Checkout + payments (5.7b onward)** — the deferred `/api/mobile/**` endpoints
   (`validateCheckout`, payment prep/verify, Paystack charge/OTP) wrapping
   the existing Server Actions, then the mobile checkout screens. Do the
   `revoke … from authenticated` migration from `05-security-rpc-audit.md`

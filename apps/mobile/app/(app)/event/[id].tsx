@@ -1,3 +1,4 @@
+import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
@@ -168,14 +169,23 @@ export default function EventDetailScreen() {
           ))}
         </View>
 
-        <Pressable
-          className="items-center rounded-xl bg-muted px-4 py-3"
-          disabled
-        >
-          <Text className="text-sm font-semibold text-muted-foreground">
-            {canceled ? "Tickets unavailable" : "Ticket checkout coming soon"}
-          </Text>
-        </Pressable>
+        {canceled ? (
+          <View className="items-center rounded-xl bg-muted px-4 py-3">
+            <Text className="text-sm font-semibold text-muted-foreground">
+              Tickets unavailable
+            </Text>
+          </View>
+        ) : event.ticket_type.length === 0 ? null : event.ticket_type.every(
+            (t) => t.price === 0,
+          ) ? (
+          <View className="items-center rounded-xl bg-muted px-4 py-3">
+            <Text className="text-sm font-semibold text-muted-foreground">
+              Free RSVP is coming to the app soon
+            </Text>
+          </View>
+        ) : (
+          <TicketPicker event={event} />
+        )}
 
         <Pressable className="items-center py-2" onPress={() => router.back()}>
           <Text className="text-sm text-primary">Back to browsing</Text>

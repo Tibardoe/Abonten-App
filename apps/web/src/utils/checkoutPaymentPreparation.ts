@@ -13,6 +13,7 @@
 import { createClient } from "@/config/supabase/server";
 import { getActiveServiceFeeRate } from "@/utils/platformFee";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type CheckoutRow = {
   checkout_session_id: string;
@@ -48,8 +49,12 @@ export type PreparedCheckoutPayment = {
 export async function prepareCheckoutPayment(
   userId: string,
   checkoutSessionIds: string[],
+  client?: SupabaseClient,
 ): Promise<PreparedCheckoutPayment> {
-  const supabase = await createClient();
+  // `client` lets an already-authenticated caller (the mobile checkout
+  // routes) reuse its own Supabase client; the "use server" actions omit it
+  // and get the cookie client exactly as before.
+  const supabase = client ?? (await createClient());
   const uniqueIds = Array.from(new Set(checkoutSessionIds));
 
   await supabase.rpc("expire_stale_ticket_checkouts");

@@ -82,6 +82,10 @@ export default function AppLayout() {
         name="ticket/[id]"
         options={{ href: null, headerShown: true, title: "Ticket" }}
       />
+      <Tabs.Screen
+        name="checkout/[sessionId]"
+        options={{ href: null, headerShown: true, title: "Checkout" }}
+      />
     </Tabs>
   );
 }

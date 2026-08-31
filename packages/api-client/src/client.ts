@@ -1,13 +1,17 @@
 import type {
   ApiEnvelope,
+  CheckoutSessionRow,
   CloudinarySignatureData,
   NotificationType,
   PaginatedResult,
   PhoneSession,
+  PreparedCheckoutPayment,
   ProfileData,
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
   UploadSignatureKind,
+  ValidateCheckoutBody,
+  ValidateCheckoutResult,
   VerifyPhoneOtpBody,
 } from "./types";
 
@@ -147,6 +151,42 @@ export function createApiClient(options: ApiClientOptions) {
           "/api/mobile/uploads/signature",
           { method: "POST", body: { kind }, auth: true },
         );
+      },
+    },
+
+    checkout: {
+      /** Reserve inventory + open a pending checkout session. */
+      validate(body: ValidateCheckoutBody) {
+        return request<ValidateCheckoutResult>(
+          "/api/mobile/checkout/validate",
+          {
+            method: "POST",
+            body,
+            auth: true,
+          },
+        );
+      },
+      /** Authoritative amount owed for the given pending sessions. */
+      prepare(checkoutSessionIds: string[]) {
+        return request<ApiEnvelope<PreparedCheckoutPayment>>(
+          "/api/mobile/checkout/prepare",
+          { method: "POST", body: { checkoutSessionIds }, auth: true },
+        );
+      },
+      /** The caller's line items for one checkout session. */
+      getSession(checkoutSessionId: string) {
+        return request<ApiEnvelope<CheckoutSessionRow[]>>(
+          `/api/mobile/checkout/session/${encodeURIComponent(checkoutSessionId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Cancel a pending session and release its reservations. */
+      cancel(checkoutSessionId: string) {
+        return request<ApiEnvelope<never>>("/api/mobile/checkout/cancel", {
+          method: "POST",
+          body: { checkoutSessionId },
+          auth: true,
+        });
       },
     },
   };
