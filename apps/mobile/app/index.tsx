@@ -1,29 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 export default function Home() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Abonten</Text>
-      <Text style={styles.subtitle}>Mobile app skeleton — Phase 4.1</Text>
+    <View className="flex-1 items-center justify-center gap-2 bg-background">
+      <Text className="text-3xl font-bold text-mint">Abonten</Text>
+      <Text className="text-sm text-muted-foreground">
+        Mobile app skeleton — Phase 4.2 (NativeWind + shared tokens)
+      </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#0B0B0F",
-    gap: 8,
-  },
-  title: {
-    color: "#4FD9C4",
-    fontSize: 32,
-    fontWeight: "700",
-  },
-  subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
-  },
-});
