@@ -5,8 +5,32 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 
-export function TicketCard({ ticket }: { ticket: UserTicketType }) {
+export function TicketCard({
+  ticket,
+  showRefundInfo = false,
+}: {
+  ticket: UserTicketType;
+  showRefundInfo?: boolean;
+}) {
   const router = useRouter();
+  // Refunds tab (web TicketsList `showRefundInfo`): the paid transaction's
+  // refund state — "Refund requested" until Paystack settles it, else
+  // "Refunded".
+  const txn = (
+    ticket as unknown as {
+      transaction?: {
+        status?: string;
+        refund_requested_at?: string | null;
+      } | null;
+    }
+  ).transaction;
+  const refundLabel = showRefundInfo
+    ? txn?.status === "refunded"
+      ? "Refunded"
+      : txn?.refund_requested_at
+        ? "Refund requested"
+        : "Refund pending"
+    : null;
   const qr =
     ticket.qr_public_id && ticket.qr_version
       ? buildCloudinaryUrl(ticket.qr_public_id, ticket.qr_version, {
@@ -61,6 +85,11 @@ export function TicketCard({ ticket }: { ticket: UserTicketType }) {
             {ticket.ticket_code}
           </Text>
         </View>
+        {refundLabel ? (
+          <Text className="text-[11px] font-medium text-warning">
+            {refundLabel}
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );
