@@ -4,6 +4,8 @@ import type {
   AddPayoutAccountResult,
   ApiEnvelope,
   CancelEventResult,
+  CancelTicketBody,
+  CancelTicketResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,
@@ -264,6 +266,18 @@ export function createApiClient(options: ApiClientOptions) {
         return request<VerifyPaymentResult>("/api/mobile/payments/retry", {
           method: "POST",
           body: { paymentAttemptId },
+          auth: true,
+        });
+      },
+    },
+
+    tickets: {
+      /** Cancel one of the caller's tickets. Pass transactionId (from the
+       *  ticket row) for a paid ticket so the refund can be gated. */
+      cancel(body: CancelTicketBody) {
+        return request<CancelTicketResult>("/api/mobile/tickets/cancel", {
+          method: "POST",
+          body,
           auth: true,
         });
       },

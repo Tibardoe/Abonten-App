@@ -1,3 +1,4 @@
+import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
@@ -6,6 +7,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -16,6 +18,41 @@ export default function TicketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data: ticket, isLoading, isError, refetch } = useTicketDetail(id);
+  const cancel = useCancelTicket();
+
+  function onCancelTicket() {
+    if (!ticket) return;
+    const paid = ticket.transaction_id != null;
+    Alert.alert(
+      "Cancel this ticket?",
+      paid
+        ? "A refund of the ticket price will be issued to your original payment method. The Abonten service fee is not refunded."
+        : "Are you sure you want to cancel this ticket?",
+      [
+        { text: "Keep ticket", style: "cancel" },
+        {
+          text: "Cancel ticket",
+          style: "destructive",
+          onPress: async () => {
+            const res = await cancel.mutateAsync({
+              ticketId: ticket.id,
+              transactionId: ticket.transaction_id,
+            });
+            if (res.status === 200) {
+              Alert.alert("Ticket cancelled", res.message ?? "", [
+                { text: "OK", onPress: () => router.back() },
+              ]);
+            } else {
+              Alert.alert(
+                "Couldn't cancel",
+                res.message ?? "Please try again in a moment.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }
 
   if (isLoading) {
     return (
@@ -118,6 +155,22 @@ export default function TicketDetailScreen() {
           View event
         </Text>
       </Pressable>
+
+      {ticket.status === "active" ? (
+        <Pressable
+          disabled={cancel.isPending}
+          className="w-full items-center rounded-xl border border-border py-3 active:opacity-90"
+          onPress={onCancelTicket}
+        >
+          <Text className="text-sm font-semibold text-destructive">
+            {cancel.isPending
+              ? "Cancelling…"
+              : ticket.transaction_id
+                ? "Cancel ticket & request refund"
+                : "Cancel ticket"}
+          </Text>
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 }
