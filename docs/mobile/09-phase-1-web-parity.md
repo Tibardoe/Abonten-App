@@ -63,7 +63,7 @@ Grouped the way the audit was requested:
 |---|---|---|
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
-| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore + 2b card overlays/favourites **done** (2026-09-01), see below; 2c–2f pending |
+| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore, 2b card overlays/favourites, 2c Profile + tabs **done** (2026-09-01), see below; 2d–2f pending |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
@@ -302,3 +302,53 @@ clean, `biome check` clean on all touched files, web `next build` exit 0
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
 clean, `biome check` clean on touched files. Not device-verified (the
 favourites write path in particular needs a signed-in device check).
+
+---
+
+## WP-2c — Public profile + tabs (done 2026-09-01)
+
+Native equivalent of the web `user/[username]` route group
+(`layout.tsx` + `ProfileDetails` + `posts` / `places` / `favorites` /
+`reviews` pages). New screen `app/(app)/user/[username].tsx` (public,
+`href: null`).
+
+- **`usePublicProfile(username)`** — reads the public `user_profile_details`
+  view + the average of `review.rating` where `reviewed_id = user_id`
+  (the web `getUserRating`). Both anon-readable.
+- **`ProfileHeader`** — avatar + username, full name, bio, and the
+  **Posts / Favorites / Rating** counts, mirroring the web `ProfileDetails`
+  mobile layout. "Edit profile" (own profile only) → `account` for now
+  (points at Settings once WP-2d lands). *Highlights are a placeholder line
+  — deferred.*
+- **Tabs** (`Chip` segmented): **Events / Places / Favorites / Reviews**.
+  - Events — `event` where `organizer_id = user_id` + `ticket_type` +
+    `event_occurrence`, min-price folded in; rendered with the shared
+    `EventCard` (so it gets the WP-2b status overlay).
+  - Places — `place` where `owner_id = user_id` + `place_category`; raw
+    rows have no `is_open` / rating / distance from the list RPCs, so they
+    use a lighter `ProfilePlaceRow` rather than the full `PlaceCard`.
+  - Favorites — inner Events/Places switch. `favorite` / `favorite_place`
+    are RLS-scoped to the viewer, so this tab only has rows on **your own**
+    profile (same constraint as the web pages) and shows a "Sign in to see
+    favourites" state when signed out.
+  - Reviews — `review` where `reviewed_id = user_id` (reviews *received*),
+    with the reviewer's username; `ProfileReviewRow` (stars + title +
+    comment + date).
+- **Wiring** — `account.tsx` profile card is now a `PressableCard` →
+  `/(app)/user/[username]`; `user/[username]` registered in
+  `(app)/_layout.tsx`.
+
+**Known WP-2c gaps (later passes):**
+- Highlights (Instagram-style) not ported.
+- The web Reviews page's event-vs-place sub-tabs are collapsed into one
+  "reviews received" list.
+- `EventCard` still doesn't link to the organizer's profile from the
+  discovery lists / event detail (only the Account card and deep links
+  reach the profile screen so far).
+- All profile tab reads are direct table selects — if `event` / `place`
+  table RLS turns out to block anon SELECT on another user's rows, the
+  Events/Places tabs would be empty for signed-out viewers (web uses the
+  same direct selects via the viewer's session; needs a device check).
+
+**Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
+clean, `biome check` clean on touched files. Not device-verified.
