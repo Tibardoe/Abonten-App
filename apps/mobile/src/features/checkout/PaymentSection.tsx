@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import {
   useCreateAttempt,
+  useRetryFulfillment,
   useSubmitChargeOtp,
   useVerifyPayment,
 } from "./usePayment";
@@ -22,6 +23,10 @@ type Phase =
   | { k: "awaiting"; attemptId: string; hint: string }
   | { k: "otp"; attemptId: string }
   | { k: "succeeded" }
+  // Payment went through but the ticket wasn't issued — recoverable
+  // without re-charging (see api.payments.retry / the web
+  // FulfillmentRecoveryBanner).
+  | { k: "fulfillmentFailed"; attemptId: string; message: string }
   | { k: "failed"; message: string };
 
 const POLL_MS = 4000;
@@ -55,6 +60,7 @@ export function PaymentSection({
   const createAttempt = useCreateAttempt();
   const verify = useVerifyPayment();
   const submitOtp = useSubmitChargeOtp();
+  const retryFulfillment = useRetryFulfillment();
 
   const chosenId = selectedId ?? methods.find((m) => m.is_default)?.id ?? null;
 
@@ -67,9 +73,11 @@ export function PaymentSection({
       }
       if (res.status === 207) {
         setPhase({
-          k: "failed",
+          k: "fulfillmentFailed",
+          attemptId: res.data.paymentAttemptId,
           message:
-            "Payment went through but we couldn't issue your ticket. Contact support with your reference.",
+            res.message ??
+            "Your payment went through but we couldn't issue your ticket. You can retry now — you won't be charged again.",
         });
         return;
       }
@@ -171,6 +179,36 @@ export function PaymentSection({
     void pollVerify(attemptId);
   }
 
+  async function onRetryFulfillment(attemptId: string) {
+    const res = await retryFulfillment.mutateAsync(attemptId);
+    if (res.status === 200) {
+      setPhase({ k: "succeeded" });
+      return;
+    }
+    if (res.status === 207) {
+      setPhase({
+        k: "fulfillmentFailed",
+        attemptId: res.data.paymentAttemptId,
+        message:
+          "Still couldn't issue your ticket. Try again in a moment — your payment is safe.",
+      });
+      return;
+    }
+    if (res.status === 202) {
+      setPhase({
+        k: "fulfillmentFailed",
+        attemptId,
+        message:
+          "We're still working on it. Give it a minute and retry — you won't be charged again.",
+      });
+      return;
+    }
+    setPhase({
+      k: "failed",
+      message: res.message ?? "Something went wrong. Please contact support.",
+    });
+  }
+
   if (phase.k === "succeeded") {
     return (
       <View className="items-center gap-3 rounded-xl border border-border bg-card p-5">
@@ -183,6 +221,40 @@ export function PaymentSection({
         >
           <Text className="text-sm font-semibold text-primary-foreground">
             View my tickets
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  if (phase.k === "fulfillmentFailed") {
+    return (
+      <View className="gap-3 rounded-xl border border-border bg-card p-4">
+        <Text className="text-sm font-semibold text-warning">
+          Payment received — finishing up
+        </Text>
+        <Text className="text-sm text-muted-foreground">{phase.message}</Text>
+        <Pressable
+          disabled={retryFulfillment.isPending}
+          onPress={() => onRetryFulfillment(phase.attemptId)}
+          className={`items-center rounded-lg px-4 py-2.5 ${
+            retryFulfillment.isPending ? "bg-muted" : "bg-primary"
+          }`}
+        >
+          {retryFulfillment.isPending ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-sm font-semibold text-primary-foreground">
+              Retry issuing my ticket
+            </Text>
+          )}
+        </Pressable>
+        <Pressable
+          onPress={() => router.replace("/(app)/tickets")}
+          className="items-center rounded-lg border border-border py-2.5"
+        >
+          <Text className="text-sm font-semibold text-foreground">
+            Check my tickets
           </Text>
         </Pressable>
       </View>

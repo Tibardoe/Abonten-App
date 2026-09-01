@@ -246,6 +246,16 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body: { paymentAttemptId, otp }, auth: true },
         );
       },
+      /** Recover a "paid but ticket issuance failed" (207) payment. Never
+       *  re-charges — re-runs the same finalize pipeline. Same result shape
+       *  as verify(). */
+      retry(paymentAttemptId: string) {
+        return request<VerifyPaymentResult>("/api/mobile/payments/retry", {
+          method: "POST",
+          body: { paymentAttemptId },
+          auth: true,
+        });
+      },
     },
 
     paymentMethods: {
