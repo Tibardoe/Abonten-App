@@ -39,7 +39,7 @@ export default function SettingsOverview() {
         <Divider />
         <Row
           label="View transaction history"
-          onPress={() => router.push("/(app)/tickets")}
+          onPress={() => router.push("/(app)/transactions")}
         />
       </Card>
       <View className="h-2" />

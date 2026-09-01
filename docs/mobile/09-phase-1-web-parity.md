@@ -63,7 +63,7 @@ Grouped the way the audit was requested:
 |---|---|---|
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
-| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore, 2b card overlays/favourites, 2c Profile + tabs, 2d Settings **done** (2026-09-01), see below; 2e–2f pending |
+| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore, 2b card overlays/favourites, 2c Profile + tabs, 2d Settings, 2e transactions/tickets/share **done** (2026-09-01), see below; 2f pending |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
@@ -390,3 +390,40 @@ added to `authRedirect` `PROTECTED_PREFIXES`.
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
 clean, `biome check` clean on touched files. Not device-verified (the
 profile-write path needs a signed-in device check).
+
+---
+
+## WP-2e — Transactions analytics + ticket tabs + share (done 2026-09-01)
+
+- **`/transactions`** (`app/(app)/transactions.tsx`, `href: null`) — native
+  echo of the web `/transactions` page. `useTransactionSummary(period)` +
+  `useTransactionHistory(period)` call the `get_user_transaction_summary` /
+  `get_user_transaction_history` RPCs directly (they scope to `auth.uid()`
+  internally). Period filter chips (`TRANSACTION_PERIOD_LABELS`), four
+  summary tiles (Spent / Transactions / Tickets / Successful), and the
+  merged ticket+subscription history timeline with a status + refund line.
+  Reachable from Account and Settings → Overview.
+- **My-Tickets tab set** — `tickets.tsx` gains **Active / Past / Cancelled**
+  tabs; `useMyTickets(filter)` filters by `ticket.status` and splits
+  active-vs-past client-side on `getEventStatus(...) === "ended"` (the web
+  switcher's split). *Refunds / To Review / Reviewed deferred — they need
+  the transaction-refund join and the attendance-gated review flow.*
+- **Share** — `src/lib/share.ts` (`eventShareUrl` / `placeShareUrl` against
+  the canonical `abontenhub.com` origin + RN `Share.share`).
+  `DetailHeaderActions` (share + favourite) replaces the lone favourite
+  button in the event / place detail `headerRight`.
+
+**Known WP-2e gaps:**
+- Bottom-tab slot 3 stays **"Tickets"**, not web's "Transactions" — the
+  deliberate mobile call (tickets are the more common need); `/transactions`
+  lives one tap away under Account. WP-1's "reconcile" note is resolved this
+  way.
+- Refunds / To Review / Reviewed ticket tabs, and the transaction detail
+  screen (`/transactions/[kind]/[id]` on web), not built.
+- `active`/`past` client-side split can make a fetched page render fewer
+  rows than `PAGE_SIZE` while more exist (web fetches per-tab server-side).
+- Share deep links resolve on the web until native universal links are set
+  up.
+
+**Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
+clean, `biome check` clean on touched files. Not device-verified.

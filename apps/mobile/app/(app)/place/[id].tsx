@@ -1,5 +1,6 @@
-import { FavoriteButton } from "@/components/FavoriteButton";
+import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
+import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,12 +29,20 @@ export default function PlaceDetailScreen() {
   const navigation = useNavigation();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
 
+  const placeSlug = (place as { slug?: string } | undefined)?.slug;
   useEffect(() => {
     navigation.setOptions({
       ...(place?.name ? { title: place.name } : {}),
-      headerRight: () => <FavoriteButton kind="place" id={id} />,
+      headerRight: () => (
+        <DetailHeaderActions
+          kind="place"
+          id={id}
+          shareTitle={place?.name ?? "Place"}
+          shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
+        />
+      ),
     });
-  }, [place?.name, navigation, id]);
+  }, [place?.name, navigation, id, placeSlug]);
 
   if (isLoading) {
     return (
