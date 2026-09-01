@@ -125,6 +125,10 @@ function Layout() {
           options={{ href: null, title: "Notifications" }}
         />
         <Tabs.Screen
+          name="transactions"
+          options={{ href: null, title: "Transactions" }}
+        />
+        <Tabs.Screen
           name="places"
           options={{ href: null, title: t("places") }}
         />

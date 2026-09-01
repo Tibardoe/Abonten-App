@@ -140,6 +140,11 @@ export default function Account() {
           onPress={() => router.push("/(app)/tickets")}
         />
         <NavRow
+          icon="swap-horizontal-outline"
+          label="Transactions"
+          onPress={() => router.push("/(app)/transactions")}
+        />
+        <NavRow
           icon="card-outline"
           label={t("wallets")}
           onPress={() => router.push("/(app)/wallet")}

@@ -1,6 +1,7 @@
-import { FavoriteButton } from "@/components/FavoriteButton";
+import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
+import { eventShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
@@ -31,12 +32,20 @@ export default function EventDetailScreen() {
   const navigation = useNavigation();
   const { data, isLoading, isError, refetch } = useEventDetail(id);
 
+  const eventCode = data?.event.event_code;
   useEffect(() => {
     navigation.setOptions({
       ...(data?.event.title ? { title: data.event.title } : {}),
-      headerRight: () => <FavoriteButton kind="event" id={id} />,
+      headerRight: () => (
+        <DetailHeaderActions
+          kind="event"
+          id={id}
+          shareTitle={data?.event.title ?? "Event"}
+          shareUrl={eventCode ? eventShareUrl(eventCode) : null}
+        />
+      ),
     });
-  }, [data?.event.title, navigation, id]);
+  }, [data?.event.title, navigation, id, eventCode]);
 
   if (isLoading) {
     return (
