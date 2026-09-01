@@ -6,15 +6,9 @@ import {
 } from "@/features/notifications/useNotifications";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
+import { EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
 import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
 function Row({
   item,
@@ -62,52 +56,53 @@ export default function Notifications() {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
+  if (q.isLoading) return <ScreenLoader />;
+
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-center justify-between px-4 pb-2 pt-16">
-        <Text className="text-2xl font-bold text-foreground">
-          Notifications
-        </Text>
-        <Pressable
-          onPress={() => markAll.mutate()}
-          disabled={markAll.isPending || items.every((i) => i.read_at)}
-        >
-          <Text className="text-sm text-primary disabled:opacity-40">
-            Mark all read
-          </Text>
-        </Pressable>
-      </View>
-
-      {q.isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
-      ) : (
-        <FlatList
-          data={items}
-          keyExtractor={(n) => n.id}
-          renderItem={({ item }) => (
-            <Row item={item} onPress={() => markOne.mutate(item.id)} />
-          )}
-          contentContainerClassName="gap-3 px-4 pb-16"
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            <RefreshControl
-              refreshing={q.isRefetching && !q.isFetchingNextPage}
-              onRefresh={() => q.refetch()}
-            />
-          }
-          ListEmptyComponent={
-            <Text className="mt-10 text-center text-sm text-muted-foreground">
-              {q.isError ? "Couldn't load notifications." : "Nothing yet."}
+      {items.some((i) => !i.read_at) ? (
+        <View className="flex-row justify-end px-4 pb-1 pt-3">
+          <Pressable
+            onPress={() => markAll.mutate()}
+            disabled={markAll.isPending}
+          >
+            <Text className="text-sm font-medium text-primary disabled:opacity-40">
+              Mark all read
             </Text>
-          }
-          ListFooterComponent={
-            q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null
-          }
-        />
-      )}
+          </Pressable>
+        </View>
+      ) : null}
+
+      <FlatList
+        data={items}
+        keyExtractor={(n) => n.id}
+        renderItem={({ item }) => (
+          <Row item={item} onPress={() => markOne.mutate(item.id)} />
+        )}
+        contentContainerClassName="gap-3 px-4 pb-16 pt-2"
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={q.isRefetching && !q.isFetchingNextPage}
+            onRefresh={() => q.refetch()}
+          />
+        }
+        ListEmptyComponent={
+          <EmptyState
+            icon="notifications-outline"
+            title={
+              q.isError ? "Couldn't load notifications" : "No notifications yet"
+            }
+            description={
+              q.isError
+                ? "Pull down to try again."
+                : "Updates about your tickets and events show up here."
+            }
+          />
+        }
+        ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
+      />
     </View>
   );
 }

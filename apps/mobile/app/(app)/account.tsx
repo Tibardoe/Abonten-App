@@ -1,85 +1,151 @@
 import { useSession } from "@/auth/SessionProvider";
+import { AppearanceToggle } from "@/components/app/AppearanceToggle";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
-import { api } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "expo-router";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { useProfile } from "@/features/profile/useProfile";
+import {
+  AppText,
+  Avatar,
+  Button,
+  Card,
+  Divider,
+  Icon,
+  type IoniconName,
+  Label,
+} from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
+import { useRouter } from "expo-router";
+import { Pressable, ScrollView, View } from "react-native";
+
+function NavRow({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: IoniconName;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      className="flex-row items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 active:opacity-80"
+    >
+      <Icon name={icon} size={20} tone="muted" />
+      <AppText className="flex-1 text-[15px] text-foreground">{label}</AppText>
+      <Icon name="chevron-forward" size={16} tone="muted" />
+    </Pressable>
+  );
+}
 
 export default function Account() {
   const { session, signOut } = useSession();
+  const { data: profile } = useProfile();
+  const router = useRouter();
+  const t = useTranslations("navigation");
+  const tSettings = useTranslations("settings");
 
   async function onSignOut() {
     await unregisterPushToken();
     await signOut();
   }
 
-  const profile = useQuery({
-    queryKey: ["mobile", "profile"],
-    queryFn: () => api.profile.get(),
-    enabled: !!session,
-  });
+  if (!session) {
+    return (
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="gap-6 px-6 py-10"
+      >
+        <View className="items-center gap-2">
+          <Icon name="person-circle-outline" size={48} tone="muted" />
+          <AppText className="text-[18px] font-bold text-foreground">
+            Sign in to Abonten
+          </AppText>
+          <AppText className="text-center text-[13px] text-muted-foreground">
+            Sign in to buy tickets, save favourites, and manage your events.
+          </AppText>
+        </View>
+        <Button
+          title={t("signIn")}
+          onPress={() => router.push("/(auth)/sign-in")}
+        />
+
+        <View className="gap-2">
+          <Label>{tSettings("appearance.title")}</Label>
+          <AppearanceToggle />
+        </View>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView
       className="flex-1 bg-background"
-      contentContainerClassName="gap-4 px-6 py-16"
+      contentContainerClassName="gap-5 px-4 py-6"
     >
-      <Text className="text-2xl font-bold text-foreground">Account</Text>
+      <Card className="flex-row items-center gap-3">
+        <Avatar
+          publicId={profile?.avatar_public_id}
+          version={profile?.avatar_version}
+          size={52}
+        />
+        <View className="flex-1">
+          <AppText className="text-[16px] font-semibold text-foreground">
+            {profile?.full_name ?? profile?.username ?? "Your account"}
+          </AppText>
+          {profile?.username ? (
+            <AppText className="text-[13px] text-muted-foreground">
+              @{profile.username}
+            </AppText>
+          ) : session.user.phone ? (
+            <AppText className="text-[13px] text-muted-foreground">
+              {session.user.phone}
+            </AppText>
+          ) : null}
+        </View>
+      </Card>
 
-      <View className="gap-1 rounded-md border border-border bg-card p-4">
-        <Text className="text-xs uppercase text-muted-foreground">Session</Text>
-        <Text className="text-sm text-foreground">
-          {session ? session.user.id : "none"}
-        </Text>
-        {session?.user.phone ? (
-          <Text className="text-xs text-muted-foreground">
-            {session.user.phone}
-          </Text>
-        ) : null}
+      <View className="gap-2">
+        <NavRow
+          icon="notifications-outline"
+          label="Notifications"
+          onPress={() => router.push("/(app)/notifications")}
+        />
+        <NavRow
+          icon="receipt-outline"
+          label={t("myEvents")}
+          onPress={() => router.push("/(app)/tickets")}
+        />
+        <NavRow
+          icon="card-outline"
+          label={t("wallets")}
+          onPress={() => router.push("/(app)/wallet")}
+        />
+        <NavRow
+          icon="location-outline"
+          label={t("places")}
+          onPress={() => router.push("/(app)/places")}
+        />
+        <NavRow
+          icon="grid-outline"
+          label="Organizer"
+          onPress={() => router.push("/(app)/organizer")}
+        />
       </View>
 
-      <View className="gap-1 rounded-md border border-border bg-card p-4">
-        <Text className="text-xs uppercase text-muted-foreground">
-          GET /api/mobile/profile
-        </Text>
-        <Text className="text-sm text-foreground">
-          {profile.isLoading
-            ? "loading…"
-            : profile.isError
-              ? "request failed"
-              : `status ${profile.data?.status ?? "?"}`}
-        </Text>
+      <View className="gap-2">
+        <Label>{tSettings("appearance.title")}</Label>
+        <AppearanceToggle />
       </View>
 
-      <Link href="/(app)/notifications" asChild>
-        <Pressable className="flex-row items-center justify-between rounded-md border border-border bg-card px-4 py-3 active:opacity-80">
-          <Text className="text-base text-foreground">Notifications</Text>
-          <Text className="text-muted-foreground">›</Text>
-        </Pressable>
-      </Link>
+      <Divider />
 
-      <Link href="/(app)/wallet" asChild>
-        <Pressable className="flex-row items-center justify-between rounded-md border border-border bg-card px-4 py-3 active:opacity-80">
-          <Text className="text-base text-foreground">Payment methods</Text>
-          <Text className="text-muted-foreground">›</Text>
-        </Pressable>
-      </Link>
-
-      <Link href="/(app)/organizer" asChild>
-        <Pressable className="flex-row items-center justify-between rounded-md border border-border bg-card px-4 py-3 active:opacity-80">
-          <Text className="text-base text-foreground">Organizer</Text>
-          <Text className="text-muted-foreground">›</Text>
-        </Pressable>
-      </Link>
-
-      <Pressable
-        className="items-center rounded-md border border-destructive px-4 py-3 active:opacity-80"
+      <Button
+        title={t("signOut")}
+        variant="outline"
+        className="border-destructive"
         onPress={onSignOut}
-      >
-        <Text className="text-base font-semibold text-destructive">
-          Sign out
-        </Text>
-      </Pressable>
+      />
     </ScrollView>
   );
 }

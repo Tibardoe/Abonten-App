@@ -9,7 +9,13 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: "class",
-  content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    // Shared native primitives use the same token classes — Tailwind must
+    // scan them so those utilities are generated.
+    "../../packages/ui-native/src/**/*.{ts,tsx}",
+  ],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {

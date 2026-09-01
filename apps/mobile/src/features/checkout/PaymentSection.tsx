@@ -178,7 +178,7 @@ export function PaymentSection({
           Payment complete
         </Text>
         <Pressable
-          onPress={() => router.replace("/(app)/transactions")}
+          onPress={() => router.replace("/(app)/tickets")}
           className="rounded-lg bg-primary px-4 py-2.5"
         >
           <Text className="text-sm font-semibold text-primary-foreground">

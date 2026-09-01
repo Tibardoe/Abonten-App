@@ -5,8 +5,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "biome check ./app ./src --no-errors-on-unmatched"
@@ -14,7 +14,9 @@
   "dependencies": {
     "@abonten/api-client": "*",
     "@abonten/core": "*",
+    "@abonten/i18n": "*",
     "@abonten/types": "*",
+    "@abonten/ui-native": "*",
     "@abonten/ui-tokens": "*",
     "@expo/vector-icons": "^15.0.2",
     "@supabase/supabase-js": "^2.112.4",
