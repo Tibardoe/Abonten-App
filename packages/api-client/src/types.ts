@@ -194,6 +194,14 @@ export type AddMomoWalletBody = {
   label?: string;
 };
 
+// initCardVerificationCore result data. Open `authorizationUrl` in a
+// browser session; pass `reference` back to confirmCard() once it closes.
+export type CardVerificationInitData = {
+  reference: string;
+  accessCode: string;
+  authorizationUrl: string;
+};
+
 export type MomoNetwork = { code: string; name: string };
 
 // ---- payment attempt + verification ----------------------------------

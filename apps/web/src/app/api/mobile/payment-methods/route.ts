@@ -9,9 +9,9 @@ import type { AddPaymentMethodInput } from "@abonten/validation/paymentMethodSch
 
 // GET  /api/mobile/payment-methods         -> the caller's active methods
 // POST /api/mobile/payment-methods  { ...AddPaymentMethodInput }
-//   The app only builds `momo` wallets (network + phone). A `card` is
-//   accepted by the shared schema but requires a server-captured
-//   authorization code the app has no flow for, so it is rejected here.
+//   Only `momo` wallets (network + phone) are added through this endpoint.
+//   A `card` needs a server-captured authorization code, so it goes through
+//   the verification flow instead: /payment-methods/card/{init,confirm}.
 
 export async function GET(req: Request) {
   const auth = await getMobileAuth(req);
