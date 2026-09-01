@@ -693,32 +693,50 @@ highlight uploads can share it.
 **Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
 `expo export --platform android` clean, `biome check` clean.
 
-### Native rebuild status (2026-09-01)
+### Native rebuild status — RESOLVED (2026-09-01)
 
 `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` **set as an EAS env var** for
 development / preview / production (`eas env:create`, project
 `@abonten-hub/abonten`).
 
-A local `npx expo run:android` was attempted repeatedly and **fails during
-`:react-native-worklets:configureCMakeDebug` with `[CXX5304] … SDK XML
-file of version 4`**, unrelated to the JS changes (worklets was already a
-dep; the failure reproduces on a bare `gradlew :react-native-worklets:configureCMakeDebug`).
+`npx expo run:android` now **builds, installs and launches on
+`emulator-5554` (Pixel_10_Pro_XL)** — `BUILD SUCCESSFUL`, `com.abonten.app`
+installed, first full build ~5 min then incremental ~1–2 min. This
+unblocks device verification of `react-native-maps` (WP-2g-6),
+`expo-image-picker` → avatar upload (WP-2g-5), and review-photo / highlight
+image pickers.
 
-Root cause: this machine's Android SDK has **CMake `3.22.1` only and no
-`cmdline-tools`/`sdkmanager`**, while the installed platform/NDK metadata is
-at repository schema v4 which CMake 3.22.1's SDK integration can't parse.
-Clearing every `.cxx` cache did not help. It can't be fixed from here
-without mutating the SDK install. **Fix = one of:**
-1. Android Studio → SDK Manager → SDK Tools → install a newer **CMake**
-   (3.30+/3.31.x) and **Android SDK Command-line Tools**, then re-run
-   `npx expo run:android`; or
-2. produce an **EAS dev/preview build**
-   (`eas build --profile development --platform android`) — the EAS image
-   has a consistent toolchain and the `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
-   env var is already set for it.
+Three machine-level fixes got it there — all outside git
+(`local.properties` is gitignored; the JDK pin is in
+`~/.gradle/gradle.properties`):
 
-Until then these stay device-unverified because their native modules
-aren't in the installed (stale) dev client: `react-native-maps`
-(WP-2g-6), `expo-image-picker` → avatar upload (WP-2g-5) + review-photo /
-highlight uploads. All their JS is in place; `MapErrorBoundary` keeps the
-app usable meanwhile.
+1. **JDK 17.** AGP 8.12 (Expo SDK 57 / RN 0.86) runs the `prefab` tool as a
+   subprocess on the Gradle daemon's JDK. Android Studio's bundled JBR had
+   auto-updated to **25**, on which `prefab` prints a native-access warning
+   to stderr that AGP treats as fatal
+   (`:<module>:configureCMakeDebug … A restricted method in
+   java.lang.System has been called`). Installed Microsoft OpenJDK 17
+   (`winget install Microsoft.OpenJDK.17` →
+   `C:\Program Files\Microsoft\jdk-17.0.20.101-hotspot`) and pinned the
+   Gradle daemon to it via `org.gradle.java.home` in
+   `C:\Users\<user>\.gradle\gradle.properties`.
+2. **CMake 3.30.5** — the version RN 0.86.3 targets
+   (`ReactAndroid/build.gradle.kts`: `CMAKE_VERSION ?: "3.30.5"`). The SDK
+   only had `3.22.1` (too old — `[CXX5304] SDK XML file of version 4`) and
+   `4.1.2` (too new — `cmake_minimum_required` in
+   `node_modules/expo-updates/android/CMakeLists.txt` is `VERSION 3.4.1`,
+   below CMake 4's hard floor of 3.5). There's no `cmdline-tools`/
+   `sdkmanager` on the machine, so installed it by hand: downloaded
+   `https://dl.google.com/android/repository/cmake-3.30.5-windows.zip` and
+   extracted it to `<SDK>\cmake\3.30.5\` (ships its own `bin/`,
+   `source.properties`, `ninja.exe`).
+3. **`cmake.dir=C:/AndroidSdk/cmake/3.30.5`** in
+   `apps/mobile/android/local.properties` — forces every native module
+   (RN community libs don't pin a CMake version, so they'd otherwise fall
+   back to AGP's default 3.22.1 and re-trigger CXX5304).
+
+To reproduce on another machine: JDK 17 + `cmake;3.30.5` (via Android
+Studio SDK Manager or the direct zip) + the `cmake.dir` line.
+
+EAS route still valid as an alternative:
+`eas build --profile development --platform android`.
