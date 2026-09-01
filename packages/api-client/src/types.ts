@@ -108,6 +108,18 @@ export type FreeRsvpBody = {
 
 export type FreeRsvpResult = { status: number; message?: string };
 
+// ---- ticket cancellation --------------------------------------------------
+// cancelUserTicketCore. Pass transactionId (from the ticket row) for a paid
+// ticket so the refund can be gated; null/omitted for a free one. Flat
+// reply: 200 = cancelled (message says whether a refund was requested or
+// deferred); 404 = not the caller's ticket.
+export type CancelTicketBody = {
+  ticketId: string;
+  transactionId?: string | null;
+};
+
+export type CancelTicketResult = { status: number; message?: string };
+
 export type PreparedCheckoutSession = {
   checkoutSessionId: string;
   eventTitle: string;

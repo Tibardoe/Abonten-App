@@ -8,6 +8,8 @@ export type {
   AddPayoutAccountResult,
   ApiEnvelope,
   CancelEventResult,
+  CancelTicketBody,
+  CancelTicketResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,
