@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 per-event insights done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 per-event insights, 4c-2a per-event edit done, see below |
 
 ---
 
@@ -1092,3 +1092,68 @@ WP-4c-2 / WP-4c-3, attendee list + QR check-in is WP-4d.
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified — the six analytics RPCs from a Bearer client and the
 screen render need a signed-in organizer device pass.
+
+### WP-4c-2a — Per-event management: edit core fields (Details) (done 2026-09-01)
+
+The **Details** tab of the web `ManageEventView` reuses `useEventEditForm`
++ `EditEventFormFields` for the core, non-ticketing fields
+(title / description / location / schedule / category / website / capacity /
+flyer). This chunk ports that; the ticket-types editor on the same web tab
+is **WP-4c-2b**, the Promotion tab is **WP-4c-3**.
+
+- **`apps/web/src/utils/`** — three lifted query bodies (the same
+  `organizerReadQuery.ts` arrangement, no logic fork):
+  - `getEventHasConfirmedParticipationCore(supabase, userId, eventId)` — the
+    "is any editing still safe" check (any non-cancelled `ticket` row exists
+    for the event's ticket types). `updateEventCore` now calls this core
+    directly instead of the Server Action (no nested `createClient`).
+  - `getEventForEditCore(supabase, userId, eventId)` — the owner-scoped
+    prefill fetch (`EventForEditData`).
+  - `updateEventCore(supabase, userId, input)` — the whole `updateEvent`
+    body minus auth, minus the server-side flyer-`File` upload (caller
+    passes an already-uploaded `flyerPublicId` / `flyerVersion`, both
+    omitted = keep the current flyer), minus the `revalidatePath` calls
+    (kept in the thin action; the core returns `eventCode` for them). Keeps
+    the confirmed-participation lock (dates / location / capacity changes →
+    409) and the wholesale occurrence delete+reinsert. The old-flyer
+    Cloudinary `destroy` cleanup stays in the core — it runs on the web
+    server for both transports.
+  - `getEventForEdit` / `getEventHasConfirmedParticipation` / `updateEvent`
+    Server Actions are now thin `auth → delegate` wrappers (401 `as const`;
+    `updateEvent` keeps an explicit return type — the status-widening
+    gotcha, and still does the flyer-`File` upload + `revalidatePath`).
+- **Routes** — `GET /api/mobile/organizer/events/[eventId]/edit`
+  (`getEventForEditCore` + `getEventHasConfirmedParticipationCore` in
+  parallel → `{ event, hasConfirmedParticipation }`; 404 if not the
+  caller's) and `PATCH /api/mobile/organizer/events/[eventId]`
+  (`updateEventCore`). The api-client `request()` method union gained
+  `PATCH` / `PUT`.
+- **api-client** — `EventForEditData` / `EventEditContextResult` /
+  `UpdateEventBody` / `UpdateEventResult`;
+  `api.organizer.eventEditContext(id)` + `api.organizer.updateEvent(id, body)`.
+- **Mobile** — `src/lib/datetime.ts` gains `hhmm(date)` (inverse of
+  `combineDateAndTime`'s time part). `src/features/events/useUpdateEvent.ts`
+  (mutation — uploads a replacement flyer via
+  `uploadToCloudinary(uri, "event_flyer")` only if one was picked, then
+  PATCH; invalidates discovery / explore / organizer / the event-insights
+  and event-detail keys). `src/features/events/useEventEdit.ts` — the mobile
+  echo of `useEventEditForm`: prefills from `eventEditContext`, best-effort
+  `Location.geocodeAsync` on the stored address so an unchanged location
+  still submits with coords, reuses the create wizard's autocomplete /
+  current-location / map-pick resolver, `save()` skips the 5-hour-notice
+  check when `locked`. `app/(app)/organizer/events/[eventId]/edit.tsx` — one
+  scrolling form (basics + flyer preview/replace + schedule + location);
+  schedule / location / capacity render read-only with a lock notice when
+  `hasConfirmedParticipation`. The insights screen (`[eventId].tsx` → moved
+  to `[eventId]/index.tsx`) gained an "Edit event" button; route registered
+  `href: null`.
+- **No new deps** — `expo-image-picker` / `expo-location` already in the
+  build.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/events/[eventId]` + `.../edit` compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified — the prefill, the geocode fallback, the flyer replace and
+the `updateEventCore` write from a Bearer client need a signed-in organizer
+device pass.

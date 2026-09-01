@@ -461,6 +461,16 @@ export default function EventInsightsScreen() {
         ) : null}
       </View>
 
+      {eventId ? (
+        <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
+          <Pressable className="flex-row items-center justify-center gap-2 rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
+            <Text className="text-sm font-semibold text-primary">
+              Edit event
+            </Text>
+          </Pressable>
+        </Link>
+      ) : null}
+
       <View className="flex-row flex-wrap gap-2">
         {PERIODS.map((p) => {
           const active = p.key === period;
