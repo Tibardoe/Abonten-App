@@ -481,14 +481,24 @@ export default function EventInsightsScreen() {
       ) : null}
 
       {eventId ? (
-        <Link href={`/(app)/organizer/events/${eventId}/attendees`} asChild>
-          <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-            <Text className="text-base text-foreground">
-              Attendees &amp; check-in
-            </Text>
-            <Text className="text-muted-foreground">›</Text>
-          </Pressable>
-        </Link>
+        <View className="gap-2">
+          <Link href={`/(app)/organizer/events/${eventId}/attendees`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base text-foreground">
+                Attendees &amp; check-in
+              </Text>
+              <Text className="text-muted-foreground">›</Text>
+            </Pressable>
+          </Link>
+          <Link href={`/(app)/organizer/events/${eventId}/promo-codes`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base text-foreground">
+                Manage promo codes
+              </Text>
+              <Text className="text-muted-foreground">›</Text>
+            </Pressable>
+          </Link>
+        </View>
       ) : null}
 
       <View className="flex-row flex-wrap gap-2">
