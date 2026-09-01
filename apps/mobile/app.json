@@ -33,6 +33,7 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-image",
+      "expo-sharing",
       "expo-dev-client",
       [
         "expo-splash-screen",
