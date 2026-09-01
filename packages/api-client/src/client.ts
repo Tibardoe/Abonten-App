@@ -11,6 +11,8 @@ import type {
   DeviceRegisterBody,
   DeviceTokenResult,
   EventCancellationImpactResult,
+  FreeRsvpBody,
+  FreeRsvpResult,
   MomoNetwork,
   MutatePayoutAccountResult,
   NotificationType,
@@ -189,6 +191,15 @@ export function createApiClient(options: ApiClientOptions) {
             auth: true,
           },
         );
+      },
+      /** One-click RSVP for a free ("FREE" ticket type) event — no session,
+       *  no payment, quantity always 1. */
+      freeRsvp(body: FreeRsvpBody) {
+        return request<FreeRsvpResult>("/api/mobile/checkout/free-rsvp", {
+          method: "POST",
+          body,
+          auth: true,
+        });
       },
       /** Authoritative amount owed for the given pending sessions. */
       prepare(checkoutSessionIds: string[]) {

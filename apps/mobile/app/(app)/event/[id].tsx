@@ -1,4 +1,5 @@
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
+import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
 import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
@@ -274,11 +275,7 @@ export default function EventDetailScreen() {
         ) : event.ticket_type.length === 0 ? null : event.ticket_type.every(
             (t) => t.price === 0,
           ) ? (
-          <View className="items-center rounded-xl bg-muted px-4 py-3">
-            <Text className="text-sm font-semibold text-muted-foreground">
-              Free RSVP is coming to the app soon
-            </Text>
-          </View>
+          <FreeRsvpCard event={event} />
         ) : (
           <TicketPicker event={event} />
         )}

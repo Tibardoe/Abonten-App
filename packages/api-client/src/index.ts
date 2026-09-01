@@ -16,6 +16,8 @@ export type {
   DeviceTokenResult,
   EventCancellationImpact,
   EventCancellationImpactResult,
+  FreeRsvpBody,
+  FreeRsvpResult,
   MomoNetwork,
   MutatePayoutAccountResult,
   NotificationType,
