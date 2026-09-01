@@ -1,4 +1,6 @@
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import type { PlaceType } from "@abonten/types/placeType";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -21,23 +23,37 @@ export function PlaceCard({ place }: { place: PlaceType }) {
         })
       : null;
 
+  // Same status derivation as the web PlaceCard / PlaceOpenStatusBadge:
+  // temporary_status (temporarily/permanently closed) wins over the
+  // SQL-computed is_open boolean.
+  const openStatus = derivePlaceCardOpenStatus(
+    place.is_open,
+    place.temporary_status ?? null,
+  );
+
   return (
     <Pressable
       className="overflow-hidden rounded-xl border border-border bg-card active:opacity-90"
       onPress={() => router.push(`/(app)/place/${place.id}`)}
     >
-      {cover ? (
-        <Image
-          source={{ uri: cover }}
-          style={{ width: "100%", height: 160 }}
-          contentFit="cover"
-          transition={150}
-        />
-      ) : (
-        <View className="h-40 items-center justify-center bg-muted">
-          <Text className="text-muted-foreground">No photo</Text>
+      <View className="relative">
+        {cover ? (
+          <Image
+            source={{ uri: cover }}
+            style={{ width: "100%", height: 160 }}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <View className="h-40 items-center justify-center bg-muted">
+            <Text className="text-muted-foreground">No photo</Text>
+          </View>
+        )}
+
+        <View className="absolute right-2 top-2">
+          <FavoriteButton kind="place" id={place.id} onSurface size={18} />
         </View>
-      )}
+      </View>
 
       <View className="gap-1 p-3">
         <Text
@@ -56,15 +72,23 @@ export function PlaceCard({ place }: { place: PlaceType }) {
               ? `★ ${place.avg_rating.toFixed(1)} (${place.review_count})`
               : "No reviews"}
           </Text>
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-1.5">
+            <View
+              className={`h-2 w-2 rounded-full ${
+                openStatus.isOpen ? "bg-primary" : "bg-destructive"
+              }`}
+            />
             <Text
-              className={`text-[10px] font-semibold uppercase ${place.is_open ? "text-success" : "text-muted-foreground"}`}
+              className={`text-[11px] font-medium ${
+                openStatus.isOpen ? "text-primary" : "text-muted-foreground"
+              }`}
             >
-              {place.is_open ? "Open" : "Closed"}
+              {openStatus.label}
             </Text>
             {typeof place.distance_km === "number" ? (
               <Text className="text-xs text-muted-foreground">
-                {place.distance_km.toFixed(1)} km
+                {" "}
+                · {place.distance_km.toFixed(1)} km
               </Text>
             ) : null}
           </View>

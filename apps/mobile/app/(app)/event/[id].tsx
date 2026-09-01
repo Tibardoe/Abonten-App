@@ -1,3 +1,4 @@
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -31,10 +32,11 @@ export default function EventDetailScreen() {
   const { data, isLoading, isError, refetch } = useEventDetail(id);
 
   useEffect(() => {
-    if (data?.event.title) {
-      navigation.setOptions({ title: data.event.title });
-    }
-  }, [data?.event.title, navigation]);
+    navigation.setOptions({
+      ...(data?.event.title ? { title: data.event.title } : {}),
+      headerRight: () => <FavoriteButton kind="event" id={id} />,
+    });
+  }, [data?.event.title, navigation, id]);
 
   if (isLoading) {
     return (
