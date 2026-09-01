@@ -191,6 +191,10 @@ function Layout() {
           options={{ href: null, title: "Attendees" }}
         />
         <Tabs.Screen
+          name="organizer/events/[eventId]/promo-codes"
+          options={{ href: null, title: "Promo codes" }}
+        />
+        <Tabs.Screen
           name="organizer/finance"
           options={{ href: null, title: "Finances" }}
         />

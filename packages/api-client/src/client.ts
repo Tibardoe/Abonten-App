@@ -13,6 +13,7 @@ import type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  DeletePromoCodeResult,
   DeviceRegisterBody,
   DeviceTokenResult,
   EventCancellationImpactResult,
@@ -20,6 +21,7 @@ import type {
   EventCreateResult,
   EventEditContextResult,
   EventInsightsResult,
+  EventPromoCodesResult,
   EventPromotionContextResult,
   FreeRsvpBody,
   FreeRsvpResult,
@@ -51,6 +53,8 @@ import type {
   UpdateEventResult,
   UpdateEventTicketTypesBody,
   UpdateEventTicketTypesResult,
+  UpdatePromoCodeBody,
+  UpdatePromoCodeResult,
   UploadSignatureKind,
   UserPostType,
   ValidateCheckoutBody,
@@ -623,6 +627,41 @@ export function createApiClient(options: ApiClientOptions) {
             ticketId,
           )}/check-in`,
           { method: "POST", body: { checkedIn }, auth: true },
+        );
+      },
+      /**
+       * The caller's own event's promo codes, newest first, with usage
+       * counts. Codes are created only in the event wizard's Promos step;
+       * this surface edits or removes existing ones. 403 if not owned.
+       */
+      eventPromoCodes(eventId: string) {
+        return request<EventPromoCodesResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promo-codes`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Edit the terms of one existing promo code (discount, usage cap,
+       * expiry, active flag) — never its text or event. 403 unless the
+       * caller owns the code's event.
+       */
+      updatePromoCode(body: UpdatePromoCodeBody) {
+        return request<UpdatePromoCodeResult>(
+          "/api/mobile/organizer/promo-codes/update",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * Remove one promo code. A code that has already been redeemed is
+       * deactivated instead (`deactivatedOnly: true`) so its usage history
+       * survives. 403 unless the caller owns the code's event.
+       */
+      deletePromoCode(promoCodeId: string) {
+        return request<DeletePromoCodeResult>(
+          "/api/mobile/organizer/promo-codes/delete",
+          { method: "POST", body: { promoCodeId }, auth: true },
         );
       },
     },

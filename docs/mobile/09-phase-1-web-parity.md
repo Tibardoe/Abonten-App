@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management done, see below |
 
 ---
 
@@ -1321,3 +1321,56 @@ no new deps.
 `/api/mobile/organizer/tickets/[ticketId]/check-in` compiled),
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified (list render + check-in toggle unseen on a device).
+
+### WP-4e — Per-event management: promo-code management (done 2026-09-01)
+
+The `ManagePromoCodesButton` → `ManagePromoCodesModal` flow off the web
+Details tab. That modal is **list + edit-terms + delete only** — promo
+codes are created solely in the event wizard's Promos step, so there is no
+"add" here either. No money path, no new deps.
+
+- **`apps/web/src/utils/eventPromoCodeManageCore.ts`** — three lifted
+  bodies (all ownership-proved by joining the code's `event`, since
+  `promo_code` carries no `organizer_id`):
+  - `fetchEventPromoCodes(supabase, userId, eventId)` — the
+    `getEventPromoCodes` body (owner check → 403, `promo_code` list newest
+    first, mapped to the camelCase `EventPromoCode` shape).
+  - `updatePromoCodeCore(supabase, userId, input)` — the `updatePromoCode`
+    body; edits **only** the terms (`discount_percentage`, `max_uses`,
+    `expires_at`, `is_active`), never the code text or `event_id`.
+  - `deletePromoCodeCore(supabase, userId, promoCodeId)` — the
+    `deletePromoCode` body: a never-used code is hard-deleted; a code with
+    `times_used > 0` is deactivated instead (`deactivatedOnly: true`) so
+    the `promo_code_usage` history (ON DELETE CASCADE) survives.
+  The three Server Actions are now thin `auth → delegate` wrappers;
+  `getEventPromoCodes` still re-exports the `EventPromoCode` type from the
+  core for `ManagePromoCodesModal`.
+- **Routes** — `GET /api/mobile/organizer/events/[eventId]/promo-codes`,
+  `POST /api/mobile/organizer/promo-codes/update`
+  `{ promoCodeId, discountPercentage, maxUses, expiresAt (ISO), isActive }`,
+  `POST /api/mobile/organizer/promo-codes/delete` `{ promoCodeId }` (POST
+  for the mutations, matching the `payout-accounts/remove` precedent — no
+  new verb on the api-client `request()`).
+- **api-client** — `EventPromoCode` / `EventPromoCodesResult` /
+  `UpdatePromoCodeBody` / `UpdatePromoCodeResult` / `DeletePromoCodeResult`;
+  `api.organizer.eventPromoCodes(id)` / `updatePromoCode(body)` /
+  `deletePromoCode(id)`.
+- **Mobile** — `src/features/organizer/useEventPromoCodes.ts`
+  (`useEventPromoCodes` query keyed `["mobile","organizer","promo-codes",
+  eventId]` + `useUpdatePromoCode` / `useDeletePromoCode`, both
+  invalidating the list and `event-insights`).
+  `app/(app)/organizer/events/[eventId]/promo-codes.tsx` — a `ScrollView`
+  of cards mirroring the web modal: code + usage line + Active/Inactive
+  badge, an inline **Edit** form (Discount % / Max uses / Expiry date
+  `YYYY-MM-DD` + `HH:MM` time via `combineDateAndTime` — no date-picker
+  dep — / Active `Switch`), and **Delete** with an `Alert` confirm that
+  surfaces the "deactivated instead" outcome. The insights screen gains a
+  **"Manage promo codes ›"** link row (next to Attendees); route
+  registered `href: null`.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/events/[eventId]/promo-codes` +
+`/api/mobile/organizer/promo-codes/{update,delete}` compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified.

@@ -635,6 +635,47 @@ export type CheckInTicketResult =
   | { status: 200; message: string; eventId?: string | null }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
 
+// ---- per-event promo-code management ------------------------------------
+
+// One promo code as the manage list shows it. Promo codes are created only
+// at event-creation time (the wizard's Promos step) — this surface edits
+// the terms of an existing code or removes it, mirroring the web
+// ManagePromoCodesModal.
+export type EventPromoCode = {
+  id: string;
+  promoCode: string;
+  discountPercentage: number | null;
+  maxUses: number | null;
+  timesUsed: number;
+  expiresAt: string | null;
+  isActive: boolean;
+  createdAt: string;
+};
+
+export type EventPromoCodesResult =
+  | { status: 200; message: string; data: EventPromoCode[] }
+  | { status: 401 | 403 | 500; message: string; data: EventPromoCode[] };
+
+// Only the terms change — never the code text or the event it belongs to.
+export type UpdatePromoCodeBody = {
+  promoCodeId: string;
+  discountPercentage: number;
+  maxUses: number | null;
+  /** ISO string. */
+  expiresAt: string;
+  isActive: boolean;
+};
+
+export type UpdatePromoCodeResult =
+  | { status: 200; message: string }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// `deactivatedOnly: true` means the code had already been redeemed, so it
+// was deactivated (history preserved) rather than hard-deleted.
+export type DeletePromoCodeResult =
+  | { status: 200; message: string; deactivatedOnly?: boolean }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =
