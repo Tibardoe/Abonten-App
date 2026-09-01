@@ -1,3 +1,4 @@
+import { ProfileCompletionCard } from "@/components/profile/ProfileCompletionCard";
 import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
 import { useUpdateProfile } from "@/features/profile/useUpdateProfile";
@@ -114,6 +115,8 @@ export default function EditProfile() {
         contentContainerClassName="gap-5 p-4"
         keyboardShouldPersistTaps="handled"
       >
+        <ProfileCompletionCard />
+
         <View className="flex-row items-center gap-3">
           <Pressable
             onPress={() => avatar.mutate()}
