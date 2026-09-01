@@ -699,12 +699,26 @@ highlight uploads can share it.
 development / preview / production (`eas env:create`, project
 `@abonten-hub/abonten`).
 
-A local `npx expo run:android` was attempted and **fails during
+A local `npx expo run:android` was attempted repeatedly and **fails during
 `:react-native-worklets:configureCMakeDebug` with `[CXX5304] … SDK XML
-file of version 4`** — an Android SDK cmake/NDK toolchain version mismatch
-on this machine, unrelated to the JS changes (worklets was already a dep).
-Until the local SDK is repaired or an EAS dev/preview build is produced,
-the following stay device-unverified because their native modules aren't
-in the installed (stale) dev client: `react-native-maps` (WP-2g-6),
-`expo-image-picker` → avatar upload (WP-2g-5). All the JS for them is in
-place and the `MapErrorBoundary` keeps the app usable meanwhile.
+file of version 4`**, unrelated to the JS changes (worklets was already a
+dep; the failure reproduces on a bare `gradlew :react-native-worklets:configureCMakeDebug`).
+
+Root cause: this machine's Android SDK has **CMake `3.22.1` only and no
+`cmdline-tools`/`sdkmanager`**, while the installed platform/NDK metadata is
+at repository schema v4 which CMake 3.22.1's SDK integration can't parse.
+Clearing every `.cxx` cache did not help. It can't be fixed from here
+without mutating the SDK install. **Fix = one of:**
+1. Android Studio → SDK Manager → SDK Tools → install a newer **CMake**
+   (3.30+/3.31.x) and **Android SDK Command-line Tools**, then re-run
+   `npx expo run:android`; or
+2. produce an **EAS dev/preview build**
+   (`eas build --profile development --platform android`) — the EAS image
+   has a consistent toolchain and the `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
+   env var is already set for it.
+
+Until then these stay device-unverified because their native modules
+aren't in the installed (stale) dev client: `react-native-maps`
+(WP-2g-6), `expo-image-picker` → avatar upload (WP-2g-5) + review-photo /
+highlight uploads. All their JS is in place; `MapErrorBoundary` keeps the
+app usable meanwhile.
