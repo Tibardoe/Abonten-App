@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
+import { useIsOrganizer } from "@/features/roles/useRoles";
 import {
   AppText,
   Avatar,
@@ -63,6 +64,7 @@ export function AppMenuSheet() {
   const { open, setOpen } = useMenuSheet();
   const { session, signOut } = useSession();
   const { data: profile } = useProfile();
+  const isOrganizer = useIsOrganizer();
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
@@ -115,22 +117,27 @@ export function AppMenuSheet() {
             onPress={openWeb}
           />
 
-          <Label className="mb-1 mt-3">{t("manage")}</Label>
-          <Row
-            icon="grid-outline"
-            label={t("dashboard")}
-            onPress={() => go("/(app)/organizer")}
-          />
-          <Row
-            icon="calendar-outline"
-            label={t("manageEvents")}
-            onPress={() => go("/(app)/organizer/events")}
-          />
-          <Row
-            icon="wallet-outline"
-            label={t("finances")}
-            onPress={() => go("/(app)/organizer/finance")}
-          />
+          {/* Organizer-only, like the web SideBar's ManageMenu. */}
+          {isOrganizer ? (
+            <>
+              <Label className="mb-1 mt-3">{t("manage")}</Label>
+              <Row
+                icon="grid-outline"
+                label={t("dashboard")}
+                onPress={() => go("/(app)/organizer")}
+              />
+              <Row
+                icon="calendar-outline"
+                label={t("manageEvents")}
+                onPress={() => go("/(app)/organizer/events")}
+              />
+              <Row
+                icon="wallet-outline"
+                label={t("finances")}
+                onPress={() => go("/(app)/organizer/finance")}
+              />
+            </>
+          ) : null}
 
           <Label className="mb-1 mt-3">{t("account")}</Label>
           <Row
