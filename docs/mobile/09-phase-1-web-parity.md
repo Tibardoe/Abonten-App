@@ -64,7 +64,7 @@ Grouped the way the audit was requested:
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
-| **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
+| **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3h, see below; ticket PDF/receipt still deferred; money-path items not device/Paystack-verified |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
 ---
@@ -647,7 +647,128 @@ autocomplete.
 
 ---
 
-## WP-3 — Checkout & buyer completeness (in progress)
+## WP-3 — Checkout & buyer completeness (COMPLETE 2026-09-01)
+
+All eight items shipped as one-branch-per-item, `--no-ff` merged to `main`.
+Every payment-path core follows the established contract: a
+`*Core(supabase, userId, …)` extracted from the monolithic `"use server"`
+action (thinned to an auth + `revalidatePath` wrapper, no logic fork), a
+`/api/mobile/**` route with `getMobileAuth` + `apiJson`, an `@abonten/api-client`
+method + types, then the mobile UI. **Money-path items (cancel/refund,
+AddBankCard, and any real Paystack charge) are code-, type- and
+bundle-verified but NOT device- or Paystack-verified** — same caveat as
+phase 5.7; they need Paystack test keys + a device pass.
+
+| Item | Branch / merge | Core + route |
+|---|---|---|
+| Live expiry countdown | WP-3a (`63a68b7`) | client-only |
+| Profile-completion checklist | WP-3b (`4e2024b`) | client-only |
+| Pending-checkouts basket | WP-3c (`b25a8fb`) | `getUserPendingTicketCheckoutsCore` + `GET /api/mobile/checkout/pending` |
+| Fulfillment recovery | WP-3d (`55e4e66`) | `retryPaymentFulfillmentCore` + `POST /api/mobile/payments/retry` |
+| Free RSVP | WP-3e (`430a4ad`) | `registerForFreeEventCore` + `POST /api/mobile/checkout/free-rsvp` |
+| Cancel ticket + partial refund | WP-3f (`08a126c`) | `cancelUserTicketCore` (reuses `issueRefundCore`) + `POST /api/mobile/tickets/cancel` |
+| Promo codes | WP-3g (`f951a90`) | `getPromoCodeCore` + optional client on `claim/releasePromoUsage`; `/checkout/validate` now forwards `promoCode` |
+| AddBankCard | WP-3h (`8940a6d`) | `cardVerificationCore` (init + confirm) + `POST /api/mobile/payment-methods/card/{init,confirm}` |
+
+### WP-3c — Pending-checkouts basket (done 2026-09-01)
+
+`getUserPendingTicketCheckoutsCore(supabase, userId)` extracted; action
+thinned; `PendingCheckoutSession`/`…Line` types re-exported for the web
+import sites (`checkout` pages, `PendingCheckoutsBasket`,
+`TicketCheckoutSessionCard`). `GET /api/mobile/checkout/pending` wraps it;
+`api.checkout.pending()` added.
+
+Mobile: `usePendingCheckouts()` + `components/checkout/PendingCheckoutsSection.tsx`
+as the `ListHeaderComponent` of the **Active** tickets tab — one card per
+session with live `useCheckoutCountdown`, line summary, **Resume** (→
+`/checkout/{id}`) and **Release** (→ `api.checkout.cancel`). Line-level
+quantity editing from the basket (web has it) is deferred to the checkout
+screen you resume into.
+
+### WP-3d — Payment fulfillment recovery (done 2026-09-01)
+
+`retryPaymentFulfillmentCore(supabase, userId, paymentAttemptId)` — same
+`finalizePaystackPayment` pipeline as the webhook/verify, never re-charges.
+`POST /api/mobile/payments/retry`; `api.payments.retry()` reuses the
+`VerifyPaymentResult` shape.
+
+Mobile: a 207 from `verify()` in `PaymentSection` is no longer a dead-end
+"contact support" — it becomes a "Payment received — finishing up" state
+with **Retry issuing my ticket** (`useRetryFulfillment`). Native echo of
+the web `FulfillmentRecoveryBanner`.
+
+### WP-3e — Free-event RSVP (done 2026-09-01)
+
+`registerForFreeEventCore(supabase, userId, eventId, occurrenceId?)` — the
+core drives the chained helpers (`insertUserAttendance`,
+`ticketPurchaseNotification`) through the existing `AuthOverride {
+supabase, userId }` the Paystack webhook already uses, so no cookie
+context; `reserveTicketQuantity` + the Cloudinary QR upload are unchanged;
+the confirmation email is scheduled in the core (`after()`). Web wrapper
+keeps `revalidatePath`. `POST /api/mobile/checkout/free-rsvp`;
+`api.checkout.freeRsvp()`.
+
+Mobile: the "Free RSVP is coming to the app soon" placeholder on the event
+screen is replaced by `components/checkout/FreeRsvpCard.tsx` — occurrence
+picker + one-tap **RSVP — get free ticket** (`useFreeRsvp`), signed-out
+gate via `setPendingRedirect`, success + already-registered states.
+
+### WP-3f — Cancel ticket + partial refund (done 2026-09-01)
+
+`cancelUserTicketCore(supabase, userId, ticketId, transactionId)` — the
+whole body + its three private helpers (all-siblings-cancelled gate,
+checkout rollup, promo-usage release). The whole-order refund gate is
+preserved: a paid ticket only triggers `issueRefundCore` (partial Paystack
+refund of ticket revenue, fee retained) once **every** ticket sharing its
+transaction is cancelled; otherwise the message says the refund is
+deferred. Web wrapper keeps `revalidatePath` (core returns
+eventId/eventCode). `POST /api/mobile/tickets/cancel`; `api.tickets.cancel()`.
+
+Mobile: **Cancel ticket** / **Cancel ticket & request refund** on the
+ticket detail screen (active tickets only), with a refund-aware confirm
+`Alert`. Native echo of the web `CancelUserTicketBtn`.
+
+### WP-3g — Promo codes at checkout (done 2026-09-01)
+
+`validateCheckoutCore` already did promo end-to-end; the blocker was that
+`getPromoCode` / `claimPromoUsage` / `releasePromoUsage` each built their
+own cookie/anon client, so they 401'd or hit RLS from a Bearer route. Now:
+`getPromoCodeCore(supabase, userId, code, eventId)` extracted;
+`claim/releasePromoUsage` take an optional trailing `client`;
+`validateCheckoutCore` threads its own `supabase` into all three;
+`cancelTicketCheckoutSessionCore` + `cancelUserTicketCore` do too (was a
+latent no-op on the mobile cancel path once promo is live). RLS confirmed
+(`20260825105233`): `promo_code_authenticated_usage_update` (TO
+authenticated USING(true), column-guarded by trigger) +
+`promo_code_usage_owner_*` (auth.uid() = user_id) — the Bearer client is
+the same authenticated role + uid. `/checkout/validate` stops rejecting
+`promoCode`; `ValidateCheckoutBody.promoCode?` added.
+
+Mobile: promo-code field in `TicketPicker`; applied at "Get tickets"
+(validate); a bad code is surfaced inline instead of aborting checkout.
+Live promo preview (web's `CheckoutModal` has one) is deferred.
+
+### WP-3h — Add a card as a payment method (done 2026-09-01)
+
+Ports the web `AddBankCard` verification flow (Paystack can't tokenise a
+card without a charge). `cardVerificationCore.ts`:
+`initCardVerificationCore(userId, userEmail)` starts a GHS 1
+`card`-channel charge (now also returns `authorizationUrl` for the mobile
+browser session); `confirmCardVerificationCore(supabase, userId,
+userEmail, reference, label?)` independently verifies it, checks the
+customer email matches the caller, captures the reusable authorization,
+refunds the GHS 1 (best-effort), saves via `addPaymentMethodCore`. Both
+actions thinned (explicit return types — the status-widening gotcha).
+`POST /api/mobile/payment-methods/card/{init,confirm}`;
+`api.paymentMethods.initCard()` / `confirmCard()`.
+
+Mobile: **Add debit / credit card** on the wallet screen — `useAddCard`
+opens the Paystack page in a `WebBrowser` auth session, then calls
+`confirmCard` on return (the source of truth regardless of how the browser
+closed). The "cards can't be added from the app" note becomes the GHS 1
+verification-charge explanation.
+
+### Earlier WP-3 items
 
 ### WP-3a — Live checkout expiry countdown (done 2026-09-01)
 
@@ -667,11 +788,10 @@ server-driven "expired / seats released" state.
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
 
-**Still open in WP-3:** pending-checkouts basket (multi-session), promo
-codes (needs the shared `@abonten/api-client` `ValidateCheckoutBody` + the
-web `/api/mobile/checkout/validate` route to accept & apply a code — a
-cross-package change), free RSVP, fulfillment recovery, cancel-ticket /
-partial refund, ticket PDF / receipt, AddBankCard.
+**(All WP-3 items — pending basket, promo codes, free RSVP, fulfillment
+recovery, cancel/refund, AddBankCard — shipped 2026-09-01; see the table
+and per-item sections above. Ticket PDF/receipt is still deferred — see
+below.)**
 
 ### WP-3b — Profile-completion checklist (done 2026-09-01)
 
