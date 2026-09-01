@@ -1,5 +1,6 @@
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
+import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,6 +20,7 @@ export default function TicketDetailScreen() {
   const router = useRouter();
   const { data: ticket, isLoading, isError, refetch } = useTicketDetail(id);
   const cancel = useCancelTicket();
+  const receipt = useTicketReceipt();
 
   function onCancelTicket() {
     if (!ticket) return;
@@ -146,6 +148,23 @@ export default function TicketDetailScreen() {
           {formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
         </Text>
       ) : null}
+
+      <Pressable
+        disabled={receipt.isGenerating}
+        className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary py-3 active:opacity-90"
+        onPress={() => receipt.downloadReceipt(ticket)}
+      >
+        {receipt.isGenerating ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Ionicons name="download-outline" size={18} color="#fff" />
+        )}
+        <Text className="text-sm font-semibold text-primary-foreground">
+          {receipt.isGenerating
+            ? "Preparing receipt…"
+            : "Download receipt (PDF)"}
+        </Text>
+      </Pressable>
 
       <Pressable
         className="w-full items-center rounded-xl border border-border py-3 active:opacity-90"
