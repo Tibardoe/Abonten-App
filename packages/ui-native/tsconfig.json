@@ -1,0 +1,8 @@
+{
+  "extends": "@abonten/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "nativewind-env.d.ts"]
+}

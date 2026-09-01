@@ -8,9 +8,10 @@ import {
 
 const KEY = ["mobile", "notifications"] as const;
 
-export function useNotifications() {
+export function useNotifications(options?: { enabled?: boolean }) {
   return useInfiniteQuery({
     queryKey: KEY,
+    enabled: options?.enabled ?? true,
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
       api.notifications.list({ cursor: pageParam, pageSize: 20 }),

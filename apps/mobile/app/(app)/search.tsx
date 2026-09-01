@@ -4,14 +4,9 @@ import {
   useEventSearch,
 } from "@/features/search/useEventSearch";
 import type { UserPostType } from "@abonten/types/postsType";
+import { EmptyState, Input, Muted, Spinner } from "@abonten/ui-native";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { FlatList, View } from "react-native";
 
 export default function Search() {
   const [query, setQuery] = useState("");
@@ -27,12 +22,9 @@ export default function Search() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="px-4 pb-2 pt-16">
-        <Text className="mb-2 text-2xl font-bold text-foreground">Search</Text>
-        <TextInput
-          className="rounded-md border border-border bg-card px-3 py-3 text-base text-foreground"
+      <View className="px-4 pb-2 pt-4">
+        <Input
           placeholder="Search events…"
-          placeholderTextColor="#9CA3AF"
           autoCapitalize="none"
           autoCorrect={false}
           value={query}
@@ -41,13 +33,9 @@ export default function Search() {
       </View>
 
       {!active ? (
-        <Text className="mt-10 text-center text-sm text-muted-foreground">
-          Type at least 2 characters.
-        </Text>
+        <Muted className="mt-10 text-center">Type at least 2 characters.</Muted>
       ) : q.isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
+        <Spinner className="mt-10" />
       ) : (
         <FlatList
           data={events}
@@ -58,13 +46,15 @@ export default function Search() {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           ListEmptyComponent={
-            <Text className="mt-10 text-center text-sm text-muted-foreground">
-              {q.isError ? "Search failed." : "No matching events."}
-            </Text>
+            <EmptyState
+              icon="search-outline"
+              title={q.isError ? "Search failed" : "No matching events"}
+              description={
+                q.isError ? "Please try again." : "Try a different search term."
+              }
+            />
           }
-          ListFooterComponent={
-            q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null
-          }
+          ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
         />
       )}
     </View>

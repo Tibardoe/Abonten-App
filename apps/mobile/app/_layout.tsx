@@ -1,30 +1,46 @@
 import "../global.css";
 import { SessionProvider, useSession } from "@/auth/SessionProvider";
+import {
+  consumePendingRedirect,
+  isProtectedPath,
+  setPendingRedirect,
+} from "@/lib/authRedirect";
 import { queryClient } from "@/lib/queryClient";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
+import { I18nProvider } from "@abonten/ui-native/i18n";
+import { ThemeProvider } from "@abonten/ui-native/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { View } from "react-native";
 
-// Sends the user to the auth stack when signed out and into the app when
-// signed in. Runs only after the persisted session has been read back.
+// Mirrors the web app's public-route allowlist + `/auth/signin?next=` bounce:
+// discovery / detail / search render for signed-out visitors, and only the
+// protected screens (tickets, wallet, account, checkout, organizer,
+// notifications) send a signed-out user to the auth stack, remembering where
+// they were headed. Runs only after the persisted session has been read back.
 function useProtectedRoute() {
   const { session, initializing } = useSession();
   const segments = useSegments();
+  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
     if (initializing) return;
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (!session && !inAuthGroup) {
-      router.replace("/(auth)/sign-in");
-    } else if (session && inAuthGroup) {
-      router.replace("/(app)");
+    if (session && inAuthGroup) {
+      const next = consumePendingRedirect();
+      router.replace(next ?? "/(app)");
+      return;
     }
-  }, [session, initializing, segments, router]);
+
+    if (!session && !inAuthGroup && isProtectedPath(pathname)) {
+      setPendingRedirect(pathname);
+      router.replace("/(auth)/sign-in");
+    }
+  }, [session, initializing, segments, pathname, router]);
 
   return initializing;
 }
@@ -46,10 +62,14 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <StatusBar style="auto" />
-        <RootNavigator />
-      </SessionProvider>
+      <ThemeProvider>
+        <I18nProvider>
+          <SessionProvider>
+            <StatusBar style="auto" />
+            <RootNavigator />
+          </SessionProvider>
+        </I18nProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

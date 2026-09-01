@@ -2,14 +2,9 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import type { PlaceType } from "@abonten/types/placeType";
+import { Caption, EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
 import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 
 export default function Places() {
   const { location } = useDeviceLocation();
@@ -21,45 +16,42 @@ export default function Places() {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
+  if (q.isLoading) return <ScreenLoader />;
+
   return (
     <View className="flex-1 bg-background">
-      <View className="gap-1 px-4 pb-2 pt-16">
-        <Text className="text-2xl font-bold text-foreground">Places</Text>
-        {location?.isFallback ? (
-          <Text className="text-xs text-muted-foreground">
+      {location?.isFallback ? (
+        <View className="px-4 pb-1 pt-4">
+          <Caption>
             Showing Accra — enable location for places near you.
-          </Text>
-        ) : null}
-      </View>
-
-      {q.isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
+          </Caption>
         </View>
-      ) : (
-        <FlatList
-          data={places}
-          keyExtractor={(p) => p.id}
-          renderItem={({ item }) => <PlaceCard place={item} />}
-          contentContainerClassName="gap-4 px-4 pb-16"
-          onEndReached={onEndReached}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            <RefreshControl
-              refreshing={q.isRefetching && !q.isFetchingNextPage}
-              onRefresh={() => q.refetch()}
-            />
-          }
-          ListEmptyComponent={
-            <Text className="mt-10 text-center text-sm text-muted-foreground">
-              {q.isError ? "Couldn't load places." : "No places found nearby."}
-            </Text>
-          }
-          ListFooterComponent={
-            q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null
-          }
-        />
-      )}
+      ) : null}
+
+      <FlatList
+        data={places}
+        keyExtractor={(p) => p.id}
+        renderItem={({ item }) => <PlaceCard place={item} />}
+        contentContainerClassName="gap-4 px-4 pb-16 pt-4"
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={q.isRefetching && !q.isFetchingNextPage}
+            onRefresh={() => q.refetch()}
+          />
+        }
+        ListEmptyComponent={
+          <EmptyState
+            icon="location-outline"
+            title={q.isError ? "Couldn't load places" : "No places nearby"}
+            description={
+              q.isError ? "Pull down to try again." : "Check back soon."
+            }
+          />
+        }
+        ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
+      />
     </View>
   );
 }
