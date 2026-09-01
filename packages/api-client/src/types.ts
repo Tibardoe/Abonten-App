@@ -12,7 +12,10 @@ import type {
   PlaceOpeningHoursInput,
   PlaceServiceInput,
 } from "@abonten/types/placeType";
-import type { UserPostType } from "@abonten/types/postsType";
+import type {
+  EventPromotionTier,
+  UserPostType,
+} from "@abonten/types/postsType";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
@@ -23,6 +26,7 @@ export type ApiEnvelope<T> = {
 };
 
 export type {
+  EventPromotionTier,
   NotificationType,
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
@@ -547,6 +551,64 @@ export type UpdateEventTicketTypesBody = {
 export type UpdateEventTicketTypesResult =
   | { status: 200; message?: string }
   | { status: 400 | 401 | 404 | 409 | 500; message: string };
+
+// ---- per-event promotion (paid "Feature this event") ----------------
+
+export type EventPromotionContext = {
+  tiers: EventPromotionTier[];
+  currentPromotion: { ends_at: string; tierLabel: string | null } | null;
+  eligibility: {
+    eventStatus: string | null;
+    ended: boolean;
+    soldOut: boolean;
+  };
+};
+
+export type EventPromotionContextResult =
+  | { status: 200; data: EventPromotionContext }
+  | { status: 401 | 403 | 404 | 500; message: string };
+
+export type PromoteEventResult =
+  | {
+      status: 200;
+      data: {
+        checkoutId: string;
+        tierLabel: string;
+        amount: number;
+        currency: string;
+      };
+    }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// Same discriminated Paystack shape the ticket checkout attempt returns; the
+// screen opens `authorizationUrl` (popup) or approves on-device (direct),
+// then polls the shared /api/mobile/payments/verify.
+export type PromotionPaymentAttemptResult =
+  | {
+      status: 200;
+      data: {
+        attempt: {
+          id: string;
+          status: string;
+          amount: number;
+          currency: string;
+        };
+        paystack:
+          | {
+              mode: "popup";
+              reference: string;
+              accessCode: string;
+              authorizationUrl: string;
+            }
+          | {
+              mode: "direct";
+              reference: string;
+              chargeStatus: string;
+              displayMessage?: string;
+            };
+      };
+    }
+  | { status: 400 | 401 | 404 | 410 | 500; message: string };
 
 // ---- organizer write actions ----------------------------------------
 

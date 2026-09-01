@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 per-event insights, 4c-2a/2b per-event edit + ticket types done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion done, see below |
 
 ---
 
@@ -1203,3 +1203,68 @@ first confirmed ticket.
 device-verified — the prefill, the lock behaviour and the
 `updateEventTicketTypesCore` write from a Bearer client need a signed-in
 organizer device pass.
+
+### WP-4c-3 — Per-event management: Promotion tab (done 2026-09-01)
+
+The third tab of the web `ManageEventView` — `ManageEventPromotionSection`'s
+paid "Feature this event" flow (tier picker → `insertEventPromotionCheckout`
+→ the `/checkout/[id]?type=event-promotion` page → Paystack). Ported natively;
+**money path — code/bundle-verified only, not Paystack-verified**, same
+caveat as WP-3f/3h.
+
+- **`apps/web/src/utils/`** — three lifted bodies:
+  - `insertEventPromotionCheckoutCore(supabase, userId, eventId, tierId)` —
+    the reserve step (ownership + tier fetch + `event_promotion_checkout`
+    insert, price always from the seeded tier). `insertEventPromotionCheckout`
+    is now a thin `auth → delegate` wrapper that re-wraps the result into its
+    existing `{ status, data: { id } }` shape for `ManageEventPromotionSection`.
+  - `fetchEventPromotionContext(supabase, userId, eventId)` — everything the
+    tab needs in one owner-scoped read: the seeded tiers, whether the event
+    is currently featured (`event_promotion` where `ends_at > now`, never
+    stored), and the ineligibility reason (`getEventStatus` + `getEventSoldOutStatus`
+    — cancelled / ended / sold out), mirroring what `manage/events/[eventId]/page.tsx`
+    assembles.
+  - `createPromotionPaymentAttemptCore(supabase, userId, email, { kind:
+    "event" | "place", checkoutId, paymentMethodId }, buildCallbackUrl)` — a
+    focused standalone re-implementation of the ~40 lines
+    `createPaymentAttempt`'s promotion branches run (method fetch, the stale
+    sweep, the owner-scoped checkout read for the authoritative amount,
+    `upsertPaymentAttemptForSession`, `initiatePaystackChargeForAttempt`).
+    **The live web `createPaymentAttempt` action is deliberately left
+    untouched** — it is a money path; the promotion-checkout schema is
+    stable, so the small duplication is the safer call. The `kind: "place"`
+    arm is ready for WP-4f.
+- **Routes** — `GET /api/mobile/organizer/events/[eventId]/promotion`
+  (`fetchEventPromotionContext`), `POST .../[eventId]/promote` `{ tierId }`
+  (`insertEventPromotionCheckoutCore` → `{ checkoutId, tierLabel, amount,
+  currency }`), `POST /api/mobile/checkout/promotion-attempt`
+  `{ eventPromotionCheckoutId, paymentMethodId }` (`createPromotionPaymentAttemptCore`,
+  `kind: "event"`, callback `abonten://promotion/<id>`). Completion is the
+  **existing** `POST /api/mobile/payments/verify` → `finalizePaystackPayment`,
+  which already dispatches to `activateEventPromotion` when the attempt
+  carries an `event_promotion_checkout_id` — no promotion-specific verify.
+- **api-client** — re-exports `EventPromotionTier`; adds `EventPromotionContext`
+  / `EventPromotionContextResult` / `PromoteEventResult` /
+  `PromotionPaymentAttemptResult`; `api.organizer.eventPromotionContext(id)`
+  / `promoteEvent(id, tierId)` and `api.checkout.promotionAttempt(body)`.
+- **Mobile** — `src/features/organizer/useEventPromotion.ts`
+  (`useEventPromotionContext` / `usePromoteEvent` / `useCreatePromotionAttempt`
+  / `useInvalidateEventPromotion`). `src/components/organizer/PromotionPaymentSection.tsx`
+  — the slim sibling of the ticket `PaymentSection` (saved-method picker →
+  `promotionAttempt` → `WebBrowser` popup or on-device direct/OTP → polls
+  `payments.verify`; a 207 = charge cleared, activation failed →
+  `payments.retry`). `app/(app)/organizer/events/[eventId]/promote.tsx` —
+  "currently featured" banner / ineligible reason / tier picker →
+  "Continue to payment" reserves the checkout → order summary +
+  `PromotionPaymentSection`. The insights screen's action row now has
+  **Edit event · Promote**; route registered `href: null`.
+- **No new deps** — `expo-web-browser` was already in the build (WP-3h).
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/events/[eventId]/promot{e,ion}` +
+`/api/mobile/checkout/promotion-attempt` compiled),
+`expo export --platform android` clean, `biome check` clean. **Not
+Paystack- or device-verified** — the tier read, the reserve step, and the
+whole Paystack charge → verify → `activateEventPromotion` path need a
+device pass with Paystack test keys.

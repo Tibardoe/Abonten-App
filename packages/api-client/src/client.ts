@@ -18,6 +18,7 @@ import type {
   EventCreateResult,
   EventEditContextResult,
   EventInsightsResult,
+  EventPromotionContextResult,
   FreeRsvpBody,
   FreeRsvpResult,
   MomoNetwork,
@@ -37,6 +38,8 @@ import type {
   PlaceCreateResult,
   PreparedCheckoutPayment,
   ProfileData,
+  PromoteEventResult,
+  PromotionPaymentAttemptResult,
   RequestPayoutBody,
   RequestPayoutResult,
   RequestPhoneOtpBody,
@@ -255,6 +258,19 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+      /**
+       * Start the Paystack charge for a pending event-promotion checkout.
+       * Completion is the shared payments.verify path.
+       */
+      promotionAttempt(body: {
+        eventPromotionCheckoutId: string;
+        paymentMethodId: string;
+      }) {
+        return request<PromotionPaymentAttemptResult>(
+          "/api/mobile/checkout/promotion-attempt",
+          { method: "POST", body, auth: true },
+        );
       },
     },
 
@@ -549,6 +565,29 @@ export function createApiClient(options: ApiClientOptions) {
             eventId,
           )}/ticket-types`,
           { method: "PUT", body, auth: true },
+        );
+      },
+      /**
+       * The Promotion tab payload: seeded tiers, the current active promotion
+       * (if any), and whether a new promotion is ineligible. 403 if the event
+       * isn't the caller's.
+       */
+      eventPromotionContext(eventId: string) {
+        return request<EventPromotionContextResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promotion`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Reserve step: create a pending event-promotion checkout priced from
+       * the seeded tier, and get its id + amount for the payment screen.
+       */
+      promoteEvent(eventId: string, tierId: number) {
+        return request<PromoteEventResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/promote`,
+          { method: "POST", body: { tierId }, auth: true },
         );
       },
     },

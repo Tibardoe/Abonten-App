@@ -462,13 +462,22 @@ export default function EventInsightsScreen() {
       </View>
 
       {eventId ? (
-        <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
-          <Pressable className="flex-row items-center justify-center gap-2 rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
-            <Text className="text-sm font-semibold text-primary">
-              Edit event
-            </Text>
-          </Pressable>
-        </Link>
+        <View className="flex-row gap-2">
+          <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
+            <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
+              <Text className="text-sm font-semibold text-primary">
+                Edit event
+              </Text>
+            </Pressable>
+          </Link>
+          <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
+            <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
+              <Text className="text-sm font-semibold text-primary">
+                Promote
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
       ) : null}
 
       <View className="flex-row flex-wrap gap-2">
