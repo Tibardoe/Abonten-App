@@ -6,6 +6,7 @@ import {
   type ViewProps,
 } from "react-native";
 import { useThemeColors } from "../theme/ThemeProvider";
+import { family } from "../theme/tokens";
 import { AppText } from "./Typography";
 
 // Native echo of apps/web/src/components/ui/input.tsx + the shadcn Form
@@ -42,7 +43,7 @@ export function Input({ invalid, className, style, ...rest }: InputProps) {
       ]
         .filter(Boolean)
         .join(" ")}
-      style={style}
+      style={family.body ? [{ fontFamily: family.body }, style] : style}
       {...rest}
     />
   );

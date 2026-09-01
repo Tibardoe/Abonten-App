@@ -5,11 +5,13 @@ import {
   isProtectedPath,
   setPendingRedirect,
 } from "@/lib/authRedirect";
+import { euclidFonts } from "@/lib/fonts";
 import { queryClient } from "@/lib/queryClient";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { I18nProvider } from "@abonten/ui-native/i18n";
 import { ThemeProvider } from "@abonten/ui-native/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { useFonts } from "expo-font";
 import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -56,9 +58,18 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts(euclidFonts);
+
   useEffect(() => {
     startSupabaseAutoRefresh();
   }, []);
+
+  // Hold the (blank) root until the brand face is registered so the first
+  // paint isn't in the system font. If the files fail to load we still render
+  // — AppText falls back to the platform font.
+  if (!fontsLoaded && !fontError) {
+    return <View className="flex-1 bg-background" />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

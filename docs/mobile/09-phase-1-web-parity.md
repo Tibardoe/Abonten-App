@@ -468,3 +468,34 @@ filter controls (`4f423d4`), 2b card overlays + favourites (`b2c1a82`),
 - Settings: avatar upload, profile-completion checklist, promotion details,
   full OTP-based email/phone change.
 - Euclid Circular B font (still `.woff2`-only; needs `.ttf`/`.otf`).
+
+---
+
+## WP-2g — Deferral cleanup (2026-09-01)
+
+Env: `apps/mobile/.env` gained the three client-safe keys mirrored from
+`apps/web/.env.local` — `EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME`,
+`EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY`, `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
+(publishable keys only; server secrets stay behind `/api/mobile/**`).
+
+### WP-2g-1 — Euclid Circular B font (done 2026-09-01)
+
+- `apps/mobile/assets/fonts/Euclid-Circular-B-{Light,Regular,Medium,SemiBold,Bold}.ttf`
+  — converted from `apps/web/public/fonts/*.woff2` with `fonttools`
+  (same five weights the web app loads via `next/font/local`).
+- `src/lib/fonts.ts` — `euclidFonts` map (face name → `require`).
+- `app/_layout.tsx` — `useFonts(euclidFonts)`; the root holds a blank
+  themed view until the faces register (falls through on load error).
+- `app.json` — `expo-font` config plugin with the five files, so a native
+  build embeds them too.
+- `@abonten/ui-native` `theme/tokens.ts` — `family.body` is now
+  `"EuclidCircularB-Regular"` and `family.byWeight` maps a `fontWeight`
+  to the matching face.
+- `Typography.tsx` `AppText` (the single text chokepoint) resolves each
+  render's weight from an explicit `style.fontWeight`, else a `font-*`
+  utility in `className`, else the variant's baked weight, and applies the
+  matching face. `Input.tsx`'s `TextInput` gets `family.body`.
+
+**Verified:** `turbo run typecheck` (`@abonten/mobile` + `@abonten/ui-native`)
+green, `expo export --platform android` clean (fonts listed in the bundle),
+`biome check` clean. Not device-verified (rendered face needs a device).

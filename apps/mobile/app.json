@@ -52,6 +52,18 @@
           "icon": "./assets/notification-icon.png",
           "color": "#4FD9C4"
         }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Euclid-Circular-B-Light.ttf",
+            "./assets/fonts/Euclid-Circular-B-Regular.ttf",
+            "./assets/fonts/Euclid-Circular-B-Medium.ttf",
+            "./assets/fonts/Euclid-Circular-B-SemiBold.ttf",
+            "./assets/fonts/Euclid-Circular-B-Bold.ttf"
+          ]
+        }
       ]
     ],
     "experiments": {
