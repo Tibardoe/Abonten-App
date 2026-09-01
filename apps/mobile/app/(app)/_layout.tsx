@@ -195,6 +195,14 @@ function Layout() {
           options={{ href: null, title: "Promo codes" }}
         />
         <Tabs.Screen
+          name="organizer/places/index"
+          options={{ href: null, title: "My places" }}
+        />
+        <Tabs.Screen
+          name="organizer/places/[placeId]/index"
+          options={{ href: null, title: "Place insights" }}
+        />
+        <Tabs.Screen
           name="organizer/finance"
           options={{ href: null, title: "Finances" }}
         />

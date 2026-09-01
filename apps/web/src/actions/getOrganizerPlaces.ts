@@ -1,15 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { fetchOrganizerPlacesPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
-import {
-  DEFAULT_EVENTS_PAGE_SIZE,
-  decodeCursor,
-  encodeCursor,
-  keysetOlderThan,
-  splitPage,
-} from "@abonten/core/pagination";
-import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
+import type { PaginatedResult } from "@abonten/types/pagination";
 
 export default async function getOrganizerPlaces(options?: {
   // Public profile lookup (e.g. /user/[username]/places): when set, returns
@@ -17,15 +11,14 @@ export default async function getOrganizerPlaces(options?: {
   // as getUserPosts(username, ...). When omitted, falls back to the
   // original behavior -- the currently authenticated caller's own places
   // (used by /manage/places, which is inherently "my places" and already
-  // auth-gated by the page itself).
+  // auth-gated by the page itself, plus the mobile
+  // GET /api/mobile/organizer/places route).
   username?: string;
   cursor?: string | null;
   pageSize?: number;
   // biome-ignore lint/suspicious/noExplicitAny: the joined place_category shape doesn't match PlaceType's flat category_name/category_slug fields (that shape is specific to the get_nearby_places/get_filtered_places RPCs), and no generated Supabase types exist in this repo (see PROJECT.md)
 }): Promise<PaginatedResult<any>> {
   const supabase = await createClient();
-  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
-  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
 
   let ownerId: string;
 
@@ -67,43 +60,8 @@ export default async function getOrganizerPlaces(options?: {
     ownerId = user.id;
   }
 
-  let query = supabase
-    .from("place")
-    .select("*, place_category(name, slug)")
-    .eq("owner_id", ownerId)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(pageSize + 1);
-
-  if (cursor) {
-    query = query.or(keysetOlderThan("created_at", "id", cursor));
-  }
-
-  const { data: places, error: placesError } = await query;
-
-  if (placesError) {
-    logger.error(`Error fetching organizer's places: ${placesError.message}`);
-
-    return {
-      status: 500,
-      data: [],
-      nextCursor: null,
-      hasNextPage: false,
-      message: "Something went wrong!",
-    };
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: see the return-type biome-ignore above
-  const { page, hasNextPage } = splitPage<any>(places, pageSize);
-
-  const last = page[page.length - 1];
-  const nextCursor =
-    hasNextPage && last
-      ? encodeCursor<SimpleCursor>({
-          sortValue: String(last.created_at),
-          id: last.id,
-        })
-      : null;
-
-  return { status: 200, data: page, nextCursor, hasNextPage };
+  return fetchOrganizerPlacesPage(supabase, ownerId, {
+    cursor: options?.cursor,
+    pageSize: options?.pageSize,
+  });
 }

@@ -676,6 +676,39 @@ export type DeletePromoCodeResult =
   | { status: 200; message: string; deactivatedOnly?: boolean }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
 
+// ---- per-place management ---------------------------------------------
+
+// A place as the owner's "My places" list shows it — the place row plus
+// its joined category. Untyped like every other joined Supabase row in
+// this repo (no generated types); read the fields the list needs.
+export type OrganizerPlaceRow = {
+  id: string;
+  name: string;
+  cover_public_id: string | null;
+  cover_version: string | null;
+  status: string | null;
+  temporary_status: string | null;
+  place_category: { name: string | null; slug: string | null } | null;
+  // biome-ignore lint/suspicious/noExplicitAny: address + other columns vary; consumers read what they need
+  [key: string]: any;
+};
+
+// Owner-only stat counts for one place. Keys are optional — a place with
+// no analytics yet returns `{ favorites: 0, reviews: 0 }`.
+export type PlaceInsights = {
+  view?: number;
+  direction_click?: number;
+  phone_click?: number;
+  whatsapp_click?: number;
+  favorites?: number;
+  reviews?: number;
+  [key: string]: number | undefined;
+};
+
+export type PlaceInsightsResult =
+  | { status: 200; data: PlaceInsights }
+  | { status: 401 | 404 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =

@@ -1,7 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
-import { useIsOrganizer } from "@/features/roles/useRoles";
+import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
 import {
   AppText,
   Avatar,
@@ -65,6 +65,7 @@ export function AppMenuSheet() {
   const { session, signOut } = useSession();
   const { data: profile } = useProfile();
   const isOrganizer = useIsOrganizer();
+  const isPlaceOwner = useIsPlaceOwner();
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
@@ -117,10 +118,14 @@ export function AppMenuSheet() {
             onPress={() => go("/(app)/place/new")}
           />
 
-          {/* Organizer-only, like the web SideBar's ManageMenu. */}
+          {/* Organizer / place-owner, like the web SideBar's ManageMenu:
+              the event rows are organizer-gated, "My places" is
+              place-owner-gated, independently. */}
+          {isOrganizer || isPlaceOwner ? (
+            <Label className="mb-1 mt-3">{t("manage")}</Label>
+          ) : null}
           {isOrganizer ? (
             <>
-              <Label className="mb-1 mt-3">{t("manage")}</Label>
               <Row
                 icon="grid-outline"
                 label={t("dashboard")}
@@ -137,6 +142,13 @@ export function AppMenuSheet() {
                 onPress={() => go("/(app)/organizer/finance")}
               />
             </>
+          ) : null}
+          {isPlaceOwner ? (
+            <Row
+              icon="storefront-outline"
+              label="My places"
+              onPress={() => go("/(app)/organizer/places")}
+            />
           ) : null}
 
           <Label className="mb-1 mt-3">{t("account")}</Label>
