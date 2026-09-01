@@ -16,6 +16,7 @@ import type {
   EventCancellationImpactResult,
   EventCreateBody,
   EventCreateResult,
+  EventInsightsResult,
   FreeRsvpBody,
   FreeRsvpResult,
   MomoNetwork,
@@ -488,6 +489,19 @@ export function createApiClient(options: ApiClientOptions) {
         return request<CancelEventResult>(
           "/api/mobile/organizer/events/cancel",
           { method: "POST", body: { eventId }, auth: true },
+        );
+      },
+      /**
+       * Full Event Insights payload (overview, finance, ticket-type / promo /
+       * per-date breakdowns, returning-attendee stats) for the period, in one
+       * call. 403 if the event isn't the caller's.
+       */
+      eventInsights(eventId: string, period: OrganizerDashboardPeriod = "all") {
+        return request<EventInsightsResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/analytics?period=${period}`,
+          { method: "GET", auth: true },
         );
       },
     },

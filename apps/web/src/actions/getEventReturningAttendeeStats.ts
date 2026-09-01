@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
+import { fetchEventReturningAttendeeStats } from "@/utils/eventInsightsQuery";
 
 export default async function getEventReturningAttendeeStats(
   eventId: string,
@@ -16,39 +16,14 @@ export default async function getEventReturningAttendeeStats(
   } = await supabase.auth.getUser();
 
   if (!user || userError) {
-    return { status: 401, message: "User not logged in" };
+    return { status: 401 as const, message: "User not logged in" };
   }
 
-  const { data: event, error: eventError } = await supabase
-    .from("event")
-    .select("id")
-    .eq("id", eventId)
-    .eq("organizer_id", user.id)
-    .maybeSingle();
-
-  if (eventError || !event) {
-    return { status: 403, message: "Not authorized to view this event" };
-  }
-
-  const { data, error } = await supabase.rpc(
-    "get_event_returning_attendee_stats",
-    {
-      p_event_id: eventId,
-      p_start_date: startDate ?? undefined,
-      p_end_date: endDate ?? undefined,
-    },
+  return fetchEventReturningAttendeeStats(
+    supabase,
+    user.id,
+    eventId,
+    startDate,
+    endDate,
   );
-
-  if (error) {
-    logger.error("Supabase error:", error.message);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  const rows = (data ?? []) as any[];
-
-  return {
-    status: 200,
-    data: rows[0] ?? { returning_count: 0, first_time_count: 0 },
-  };
 }

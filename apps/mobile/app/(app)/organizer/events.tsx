@@ -44,7 +44,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
     <View className="gap-2 rounded-xl border border-border bg-card p-3">
       <Pressable
         className="flex-row gap-3 active:opacity-90"
-        onPress={() => router.push(`/(app)/event/${event.id}`)}
+        onPress={() => router.push(`/(app)/organizer/events/${event.id}`)}
       >
         {flyer ? (
           <Image

@@ -38,7 +38,7 @@ export default function EventDateBreakdown({
     return null;
   }
 
-  const rows = response?.data ?? [];
+  const rows = response?.status === 200 ? response.data : [];
 
   return (
     <section className="flex flex-col gap-3">
