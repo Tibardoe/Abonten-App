@@ -457,17 +457,19 @@ filter controls (`4f423d4`), 2b card overlays + favourites (`b2c1a82`),
 (`c54fc87`), 2e transactions analytics + ticket tabs + share (`e35d3fd`),
 2f role gating.
 
-**Deferred out of WP-2 (candidates for a WP-2g or folded into later WPs):**
-- Explore map view + `ChangeLocationSheet` autocomplete / map picker — need
-  `react-native-maps` + a Google Maps API key not yet provisioned for
-  mobile (go/no-go).
-- Profile highlights (Instagram-style); organizer link from `EventCard`.
-- Reviews **write** (attendance-gated `AddReviewSheet` + star input) and the
-  My-Tickets **To Review / Reviewed / Refunds** tabs.
-- Transaction detail screen (`/transactions/[kind]/[id]`).
-- Settings: avatar upload, profile-completion checklist, promotion details,
-  full OTP-based email/phone change.
-- Euclid Circular B font (still `.woff2`-only; needs `.ttf`/`.otf`).
+**Deferred out of WP-2 — all cleared in WP-2g (2026-09-01), except:**
+- ~~Explore map view + `ChangeLocationSheet` autocomplete / map picker~~ →
+  WP-2g-6 (needs a native rebuild to render; see that section).
+- ~~Profile highlights~~ → WP-2g-2. ~~organizer link~~ → WP-2g-2.
+- ~~Reviews **write** + To Review / Reviewed / Refunds tabs~~ → WP-2g-3.
+- ~~Transaction detail screen~~ → WP-2g-4.
+- ~~Settings avatar upload~~ → WP-2g-5.
+- ~~Euclid Circular B font~~ → WP-2g-1.
+- **Still deferred:** review photo attachments (Cloudinary signed upload
+  flow), profile-completion checklist, promotion details, full OTP-based
+  email/phone change, highlight upload/delete (creator tooling), video
+  playback in the highlight viewer (`expo-video`), `user_image_history`
+  write on avatar change (no client INSERT policy).
 
 ---
 
@@ -603,3 +605,42 @@ error looks like a latent post-RLS bug — flagged, not touched).
 **Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified (needs a device photo library + Cloudinary round-trip).
+
+### WP-2g-6 — Explore map view + map picker + Places autocomplete (done 2026-09-01)
+
+`react-native-maps@1.27.2` added. **This is a native module** — the map
+only renders after the app binary is rebuilt with it linked
+(`npx expo run:android`, or a fresh EAS dev/preview build). On a stale
+binary `MapErrorBoundary` (`src/components/map/NativeMap.tsx`) shows an
+"update the app" message instead of crashing; everything else on the
+screen keeps working.
+
+- `app.config.js` (new) — layers `android.config.googleMaps.apiKey` /
+  `ios.config.googleMapsApiKey` from `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` so
+  the key never lives in a tracked file. **EAS builds need
+  `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` set in the project's EAS env vars**
+  (dev / preview / production), like the Supabase vars.
+- `components/explore/ExploreMap.tsx` — the Explore list rendered as pins
+  (web `EventsMapView` / `PlacesMapView`). Locations parsed from the
+  `location` geography column with the shared `@abonten/core/parseWKBHex`;
+  tap a pin's callout → the detail screen. A **List / Map toggle** sits
+  next to the Events/Places tabs on `app/(app)/index.tsx`.
+- `components/explore/MapPickerSheet.tsx` — full-screen map with a fixed
+  centre pin (web `MapModal` / `MapPicker`); "Use this location" commits
+  the centre via the provider's new `setPickedLocation` (reverse-geocodes
+  a label).
+- `features/discovery/usePlacesAutocomplete.ts` — Google Places
+  autocomplete via the REST endpoints (no DOM SDK on native), session
+  tokens, `resolvePlace(placeId)` → `{lat,lng,address}`. Degrades to plain
+  manual entry if the key is missing or referrer-locked. **The key must
+  allow the Places API without an HTTP-referrer restriction for the
+  suggestions to work from the app.**
+- `ChangeLocationSheet.tsx` — the address field now shows autocomplete
+  suggestions, plus a "Choose on map" entry into `MapPickerSheet`.
+- `ExploreLocationProvider` — `setPickedLocation(lat, lng, label?)`.
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean (JS bundle only — native linking
+and the rendered map are NOT verified here), `biome check` clean. Needs a
+native rebuild + a device to verify the map, and a Places-enabled key for
+autocomplete.
