@@ -1,3 +1,4 @@
+import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
 import { useUpdateProfile } from "@/features/profile/useUpdateProfile";
 import {
@@ -10,13 +11,19 @@ import {
 } from "@abonten/ui-native";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { useEffect, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 // Native echo of the web EditProfileInputFields — the same
 // @abonten/validation editProfileSchema (username / full_name / website /
 // bio), validated on submit, written straight to `user_info` (RLS
-// self-update). Avatar upload + the profile-completion checklist are a
-// later pass.
+// self-update), plus the avatar upload (Cloudinary signed direct upload).
+// The profile-completion checklist is still a later pass.
 
 type FormState = {
   username: string;
@@ -28,6 +35,7 @@ type FormState = {
 export default function EditProfile() {
   const { data: profile, isLoading } = useProfile();
   const update = useUpdateProfile();
+  const avatar = useAvatarUpload();
 
   const [form, setForm] = useState<FormState>({
     username: "",
@@ -107,16 +115,34 @@ export default function EditProfile() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-row items-center gap-3">
-          <Avatar
-            publicId={profile.avatar_public_id ?? undefined}
-            version={profile.avatar_version ?? undefined}
-            size={64}
-          />
-          <View className="flex-1">
+          <Pressable
+            onPress={() => avatar.mutate()}
+            disabled={avatar.isPending}
+            accessibilityRole="button"
+            accessibilityLabel="Change profile photo"
+          >
+            <Avatar
+              publicId={profile.avatar_public_id ?? undefined}
+              version={profile.avatar_version ?? undefined}
+              size={64}
+            />
+          </Pressable>
+          <View className="flex-1 gap-1">
             <AppText variant="bodyStrong">{profile.username}</AppText>
-            <AppText variant="caption">
-              Change your photo on the web for now.
-            </AppText>
+            <Button
+              title={avatar.isPending ? "Uploading…" : "Change photo"}
+              variant="outline"
+              size="sm"
+              onPress={() => avatar.mutate()}
+              disabled={avatar.isPending}
+            />
+            {avatar.isError ? (
+              <AppText className="text-[12px] text-destructive">
+                {avatar.error instanceof Error
+                  ? avatar.error.message
+                  : "Upload failed."}
+              </AppText>
+            ) : null}
           </View>
         </View>
 
