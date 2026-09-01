@@ -14,6 +14,8 @@ import type {
   DeviceRegisterBody,
   DeviceTokenResult,
   EventCancellationImpactResult,
+  EventCreateBody,
+  EventCreateResult,
   FreeRsvpBody,
   FreeRsvpResult,
   MomoNetwork,
@@ -293,6 +295,20 @@ export function createApiClient(options: ApiClientOptions) {
        *  a retry so a replay returns the same place, not a duplicate. */
       create(body: PlaceCreateBody) {
         return request<PlaceCreateResult>("/api/mobile/places", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+    },
+
+    events: {
+      /** Publish an event. Upload the flyer first via
+       *  uploads.signature("event_flyer") + a direct Cloudinary POST, then
+       *  pass its public_id/version here. Reuse the same clientRequestId on
+       *  a retry so a replay returns the same event, not a duplicate. */
+      create(body: EventCreateBody) {
+        return request<EventCreateResult>("/api/mobile/events", {
           method: "POST",
           body,
           auth: true,

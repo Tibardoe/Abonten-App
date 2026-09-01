@@ -146,6 +146,10 @@ function Layout() {
           options={{ href: null, title: "Create place" }}
         />
         <Tabs.Screen
+          name="event/new"
+          options={{ href: null, title: "Create event" }}
+        />
+        <Tabs.Screen
           name="user/[username]"
           options={{ href: null, title: "Profile" }}
         />

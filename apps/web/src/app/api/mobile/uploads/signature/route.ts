@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       return apiJson({
         status: 400,
         message:
-          "kind must be one of: avatar, highlight, place_photo, event_review_photo, place_review_photo",
+          "kind must be one of: avatar, highlight, place_photo, event_flyer, event_review_photo, place_review_photo",
       });
     }
 

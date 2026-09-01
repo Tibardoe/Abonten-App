@@ -109,7 +109,7 @@ export function AppMenuSheet() {
           <Row
             icon="add-circle-outline"
             label="Create event"
-            onPress={openWeb}
+            onPress={() => go("/(app)/event/new")}
           />
           <Row
             icon="storefront-outline"

@@ -19,6 +19,8 @@ export type {
   DeviceTokenResult,
   EventCancellationImpact,
   EventCancellationImpactResult,
+  EventCreateBody,
+  EventCreateResult,
   FreeRsvpBody,
   FreeRsvpResult,
   MomoNetwork,

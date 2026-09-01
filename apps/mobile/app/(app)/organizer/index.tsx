@@ -122,13 +122,20 @@ export default function OrganizerDashboard() {
           </Pressable>
         </View>
       ) : !hasEvents ? (
-        <View className="items-center gap-2 py-12">
+        <View className="items-center gap-3 py-12">
           <Text className="text-base font-semibold text-foreground">
             No events yet
           </Text>
           <Text className="text-center text-sm text-muted-foreground">
-            Publish an event on the Abonten website to start seeing sales here.
+            Publish your first event to start seeing sales here.
           </Text>
+          <Link href="/(app)/event/new" asChild>
+            <Pressable className="rounded-lg bg-primary px-4 py-2 active:opacity-90">
+              <Text className="font-semibold text-primary-foreground">
+                + Create event
+              </Text>
+            </Pressable>
+          </Link>
         </View>
       ) : (
         <>
@@ -212,12 +219,19 @@ export default function OrganizerDashboard() {
       )}
 
       <View className="gap-2">
+        <Link href="/(app)/event/new" asChild>
+          <Pressable className="items-center rounded-xl bg-primary px-4 py-3 active:opacity-90">
+            <Text className="text-base font-semibold text-primary-foreground">
+              + Create event
+            </Text>
+          </Pressable>
+        </Link>
         <NavRow href="/(app)/organizer/events" label="My events" />
         <NavRow href="/(app)/organizer/finance" label="Finances" />
       </View>
 
       <Text className="text-center text-[11px] text-muted-foreground">
-        Read-only. Create and edit events on the Abonten website.
+        Editing an event is still done on the Abonten website.
       </Text>
     </ScrollView>
   );
