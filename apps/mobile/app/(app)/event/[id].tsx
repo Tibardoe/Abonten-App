@@ -3,7 +3,10 @@ import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { eventShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
+import {
+  formatFullDateTimeRange,
+  getRelativeTime,
+} from "@abonten/core/dateFormatter";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -71,7 +74,7 @@ export default function EventDetailScreen() {
     );
   }
 
-  const { event, attendanceCount } = data;
+  const { event, attendanceCount, organizerRating } = data;
   const flyer =
     event.flyer_public_id && event.flyer_version
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
@@ -142,24 +145,54 @@ export default function EventDetailScreen() {
         </View>
 
         {event.user_info ? (
-          <View className="flex-row items-center gap-3">
+          <Pressable
+            className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
+            onPress={() =>
+              router.push(`/(app)/user/${event.user_info?.username}`)
+            }
+          >
             {organizerAvatar ? (
               <Image
                 source={{ uri: organizerAvatar }}
-                style={{ width: 40, height: 40, borderRadius: 20 }}
+                style={{ width: 44, height: 44, borderRadius: 22 }}
               />
             ) : (
-              <View className="h-10 w-10 rounded-full bg-muted" />
+              <View className="h-11 w-11 rounded-full bg-muted" />
             )}
-            <View>
+            <View className="flex-1">
               <Text className="text-xs text-muted-foreground">
                 Organized by
               </Text>
               <Text className="text-sm font-semibold text-foreground">
                 {event.user_info.username}
               </Text>
+              <View className="mt-0.5 flex-row items-center gap-1">
+                <Text className="text-xs">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <Text
+                      key={i}
+                      className={
+                        i < Math.floor(organizerRating.average)
+                          ? "text-foreground"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      ★
+                    </Text>
+                  ))}
+                </Text>
+                <Text className="text-xs text-muted-foreground">
+                  ({organizerRating.average.toFixed(1)})
+                </Text>
+              </View>
             </View>
-          </View>
+            <View className="items-end gap-1">
+              <Text className="text-xs text-muted-foreground">
+                Posted {getRelativeTime(event.created_at)}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#888" />
+            </View>
+          </Pressable>
         ) : null}
 
         {event.description ? (
