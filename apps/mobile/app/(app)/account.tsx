@@ -11,6 +11,7 @@ import {
   Icon,
   type IoniconName,
   Label,
+  PressableCard,
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
@@ -83,27 +84,44 @@ export default function Account() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 px-4 py-6"
     >
-      <Card className="flex-row items-center gap-3">
-        <Avatar
-          publicId={profile?.avatar_public_id}
-          version={profile?.avatar_version}
-          size={52}
-        />
-        <View className="flex-1">
-          <AppText className="text-[16px] font-semibold text-foreground">
-            {profile?.full_name ?? profile?.username ?? "Your account"}
-          </AppText>
-          {profile?.username ? (
-            <AppText className="text-[13px] text-muted-foreground">
-              @{profile.username}
-            </AppText>
-          ) : session.user.phone ? (
-            <AppText className="text-[13px] text-muted-foreground">
-              {session.user.phone}
-            </AppText>
-          ) : null}
-        </View>
-      </Card>
+      {(() => {
+        const body = (
+          <>
+            <Avatar
+              publicId={profile?.avatar_public_id}
+              version={profile?.avatar_version}
+              size={52}
+            />
+            <View className="flex-1">
+              <AppText className="text-[16px] font-semibold text-foreground">
+                {profile?.full_name ?? profile?.username ?? "Your account"}
+              </AppText>
+              {profile?.username ? (
+                <AppText className="text-[13px] text-muted-foreground">
+                  @{profile.username}
+                </AppText>
+              ) : session.user.phone ? (
+                <AppText className="text-[13px] text-muted-foreground">
+                  {session.user.phone}
+                </AppText>
+              ) : null}
+            </View>
+            {profile?.username ? (
+              <Icon name="chevron-forward" size={16} tone="muted" />
+            ) : null}
+          </>
+        );
+        return profile?.username ? (
+          <PressableCard
+            className="flex-row items-center gap-3"
+            onPress={() => router.push(`/(app)/user/${profile.username}`)}
+          >
+            {body}
+          </PressableCard>
+        ) : (
+          <Card className="flex-row items-center gap-3">{body}</Card>
+        );
+      })()}
 
       <View className="gap-2">
         <NavRow
