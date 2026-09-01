@@ -63,7 +63,7 @@ Grouped the way the audit was requested:
 |---|---|---|
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
-| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | |
+| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore **done** (2026-09-01), see below; 2b–2f pending |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
@@ -180,3 +180,71 @@ font. Drop-in when available: add the files under `apps/mobile/assets/fonts`,
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform ios` clean,
 `expo-doctor` 21/21, `biome check` clean on all touched files. Not
 device-verified.
+
+---
+
+## WP-2a — Explore screen (done 2026-09-01)
+
+Native equivalent of the web `/explore/[location]` page (`page.tsx` +
+`LocationAndFilterSection` + `ExploreTabs` + `EventsTabContent` /
+`PlacesTabContent`). `app/(app)/index.tsx` was a bare nearby-events list;
+it is now the Explore screen.
+
+- **Shared category data moved into `@abonten/core`.** The
+  `eventCategoriesAndTypes` and `distances`/`rating` constant arrays now
+  live in `packages/core/src/{eventCategoriesAndTypes,distanceAndRating}.ts`
+  (framework-free; `@abonten/core` exports `./*`). `apps/web/src/data/*.ts`
+  are kept as one-line re-export shims so no web import site changes; mobile
+  imports `@abonten/core/...` directly. One source, so the category list and
+  the Distance / Rating ladders can't drift between platforms.
+- **`ExploreLocationProvider`** (`src/features/discovery/`) — the active
+  Explore location, the native stand-in for the web `[location]` URL slug.
+  Seeded from device GPS (reverse-geocoded to a city label), overridable,
+  persisted per device in `expo-secure-store` (`abonten.explore-location`),
+  falls back to Accra (same coords as `useDeviceLocation`). Mounted in
+  `app/(app)/_layout.tsx`.
+- **`ChangeLocationSheet`** (`src/components/explore/`) — the web
+  `ChangeLocationModal` ("Set your location"): type an address
+  (`Location.geocodeAsync`) or "Use my current location". *Gaps vs web: no
+  Google autocomplete suggestions, no full-screen map picker — later pass.*
+- **Events / Places tabs** — the web `ExploreTabs`, as a two-chip switch.
+- **`CategoryChipsRow`** (`src/components/explore/`) — the web
+  `EventCategoryChips` / `PlaceCategoryChips`: a horizontal pill row, "All"
+  + one chip per category (event categories from `@abonten/core`, place
+  categories from the new `usePlaceCategories` hook → `place_category`
+  table).
+- **`FilterSheet`** (`src/components/explore/`) — the web `FilterModalPopup`,
+  tab-aware: Events = Category / Type (of the picked category) / Price
+  min-max / Date range / Min rating / Distance; Places = Category / Open
+  now / Min rating / Distance. Edits a local draft; Apply lifts it, Clear
+  all resets. *Gap vs web: date range is two `YYYY-MM-DD` text fields, not
+  a calendar picker; price is two number fields, not a slider.*
+- **`ActiveFilterChips`** (`src/components/explore/`) — the applied filters
+  as removable chips (tap to drop one, "Clear all"). The web app shows only
+  a count badge on the Filters button; mobile keeps that badge **and** adds
+  this row.
+- **Filter-aware empty states** — distinct copy + a "Clear filters" action
+  when filters are active vs. "No events/places in {location}" when not,
+  mirroring the web `NoEventsFound` vs `NoEventsInLocation` split.
+- **Data hooks** — `useFilteredEvents` (`get_filtered_events`) and
+  `useFilteredPlaces` (`get_filtered_places`), direct anon RPC calls with
+  in-memory cursors, same pattern as `useNearbyEvents` / `useEventSearch`.
+- Tab header now reads **"Explore"** (matches the web `<h1>`); the bottom-tab
+  slot keeps its **"Home"** label (`tabBarLabel`).
+
+**Known WP-2a gaps (later passes):**
+- No curated sliders yet — the web Events tab has Featured carousel +
+  Around-You / Top-rated Organizers / Happening Today/Week/Month; the
+  Places tab has Featured / Around You / Open Now / Top Rated. Only the
+  filterable "All events" / "All places" list is ported.
+- No map view (`ViewToggle` list/map on web).
+- `ChangeLocationSheet`: no autocomplete suggestions, no map picker.
+- `FilterSheet`: date = text fields, price = number fields.
+- `get_filtered_places` is assumed anon-granted (same migration family as
+  `get_nearby_places`, which mobile already calls) — confirm on device.
+- The hidden `places.tsx` route still uses `useNearbyPlaces` (unfiltered);
+  Explore's Places tab is the parity surface.
+
+**Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
+clean, `biome check` clean on all touched files, web `next build`
+(`@abonten/core` move). Not device-verified.
