@@ -672,3 +672,39 @@ codes (needs the shared `@abonten/api-client` `ValidateCheckoutBody` + the
 web `/api/mobile/checkout/validate` route to accept & apply a code — a
 cross-package change), free RSVP, fulfillment recovery, cancel-ticket /
 partial refund, ticket PDF / receipt, AddBankCard.
+
+### WP-3b — Profile-completion checklist (done 2026-09-01)
+
+`src/features/profile/useProfileCompletion.ts` — native echo of the web
+`getProfileCompletion` + `useProfileCompletion`, using the shared
+`@abonten/core/profileCompletion` (`computeProfileCompletion`: name / real
+username / verified email / avatar; computed on read, never stored).
+Reads `user_info` directly for `username_is_generated` (not on the
+`user_profile_details` view).
+
+`components/profile/ProfileCompletionCard.tsx` — the 4-item checklist above
+the Edit Profile fields; each row routes to the mobile equivalent of the
+web `href`; the card renders nothing once complete.
+
+Also: `src/lib/cloudinaryUpload.ts` — the signed-direct-upload helper
+(previously inline in `useAvatarUpload`) extracted so review-photo and
+highlight uploads can share it.
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean.
+
+### Native rebuild status (2026-09-01)
+
+`EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` **set as an EAS env var** for
+development / preview / production (`eas env:create`, project
+`@abonten-hub/abonten`).
+
+A local `npx expo run:android` was attempted and **fails during
+`:react-native-worklets:configureCMakeDebug` with `[CXX5304] … SDK XML
+file of version 4`** — an Android SDK cmake/NDK toolchain version mismatch
+on this machine, unrelated to the JS changes (worklets was already a dep).
+Until the local SDK is repaired or an EAS dev/preview build is produced,
+the following stay device-unverified because their native modules aren't
+in the installed (stale) dev client: `react-native-maps` (WP-2g-6),
+`expo-image-picker` → avatar upload (WP-2g-5). All the JS for them is in
+place and the `MapErrorBoundary` keeps the app usable meanwhile.
