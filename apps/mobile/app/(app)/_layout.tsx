@@ -1,6 +1,7 @@
 import { AppMenuSheet } from "@/components/app/AppMenuSheet";
 import { NotificationBellButton } from "@/components/app/NotificationBellButton";
 import { MenuSheetProvider, useMenuSheet } from "@/components/app/menuSheet";
+import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -64,7 +65,11 @@ function Layout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: t("home"),
+            // Header reads "Explore" (matches the web /explore page's
+            // heading); the bottom-tab slot keeps the web MobileNavBar's
+            // "Home" label.
+            title: "Explore",
+            tabBarLabel: t("home"),
             headerLeft,
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="home-outline" color={color} size={size} />
@@ -176,8 +181,10 @@ function Layout() {
 
 export default function AppLayout() {
   return (
-    <MenuSheetProvider>
-      <Layout />
-    </MenuSheetProvider>
+    <ExploreLocationProvider>
+      <MenuSheetProvider>
+        <Layout />
+      </MenuSheetProvider>
+    </ExploreLocationProvider>
   );
 }
