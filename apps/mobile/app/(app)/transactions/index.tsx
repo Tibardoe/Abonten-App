@@ -15,8 +15,9 @@ import {
   ScreenLoader,
   Spinner,
 } from "@abonten/ui-native";
+import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { FlatList, ScrollView, View } from "react-native";
+import { FlatList, Pressable, ScrollView, View } from "react-native";
 
 // Native echo of the web /transactions page: a period filter, summary
 // tiles, and the merged ticket + subscription history timeline.
@@ -50,13 +51,22 @@ function Tile({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TransactionRow({ row }: { row: UserTransactionRow }) {
+function TransactionRow({
+  row,
+  onPress,
+}: {
+  row: UserTransactionRow;
+  onPress: () => void;
+}) {
   const refunded =
     !!row.refund_status && row.refund_status !== "none"
       ? ` · refund ${row.refund_status}`
       : "";
   return (
-    <View className="gap-1 rounded-xl border border-border bg-card p-3">
+    <Pressable
+      onPress={onPress}
+      className="gap-1 rounded-xl border border-border bg-card p-3 active:opacity-90"
+    >
       <View className="flex-row items-center justify-between">
         <AppText variant="bodyStrong" numberOfLines={1} className="flex-1">
           {row.title ??
@@ -80,11 +90,12 @@ function TransactionRow({ row }: { row: UserTransactionRow }) {
           {new Date(row.created_at).toLocaleDateString()}
         </AppText>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 export default function Transactions() {
+  const router = useRouter();
   const [period, setPeriod] = useState<TransactionPeriod>("thisMonth");
   const summaryQuery = useTransactionSummary(period);
   const historyQuery = useTransactionHistory(period);
@@ -145,7 +156,14 @@ export default function Transactions() {
       keyExtractor={(r) => r.id}
       ListHeaderComponent={header}
       contentContainerClassName="gap-3 px-4 pb-16"
-      renderItem={({ item }) => <TransactionRow row={item} />}
+      renderItem={({ item }) => (
+        <TransactionRow
+          row={item}
+          onPress={() =>
+            router.push(`/(app)/transactions/${item.kind}/${item.id}`)
+          }
+        />
+      )}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={

@@ -553,3 +553,28 @@ DB's `UNIQUE(event_id, reviewer_id)` is the backstop.
 **Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified (needs a signed-in user with a checked-in ticket).
+
+### WP-2g-4 — Transaction detail screen (done 2026-09-01)
+
+`app/(app)/transactions.tsx` became `transactions/index.tsx` under a new
+`transactions/_layout.tsx` Stack (like `settings/`), plus
+`transactions/[kind]/[id].tsx` — the native echo of the web
+`/transactions/[kind]/[id]` page.
+
+- `src/features/transactions/useTransactionDetail.ts` — native
+  `getUserTransactionDetail`: one `ticket_checkout` /
+  `subscription_checkout` row scoped by id **and** `user_id`
+  (owner-scoped RLS), with the same service-fee attribution math (this
+  checkout's proportional share of `transaction.amount`).
+- The detail screen: amount banner, status banner (icon + contextual
+  Completed/Expires/Date), and the labelled field block — Event / Ticket
+  type / Quantity / Unit price / Discount / Ticket price / Service fee /
+  Total paid / Date / Order reference / Cancelled / Refund (via
+  `getRefundStatusLabel`), or the subscription equivalents.
+- `transactions/index.tsx` rows are now `Pressable` → the detail route.
+- `(app)/_layout.tsx` — the `transactions` tab screen is now
+  `headerShown: false` (its Stack owns the header).
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified.
