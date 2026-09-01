@@ -114,7 +114,7 @@ export function AppMenuSheet() {
           <Row
             icon="storefront-outline"
             label="Create place"
-            onPress={openWeb}
+            onPress={() => go("/(app)/place/new")}
           />
 
           {/* Organizer-only, like the web SideBar's ManageMenu. */}

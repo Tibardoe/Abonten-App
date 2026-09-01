@@ -29,6 +29,8 @@ import type {
   PayoutsResult,
   PendingCheckoutSession,
   PhoneSession,
+  PlaceCreateBody,
+  PlaceCreateResult,
   PreparedCheckoutPayment,
   ProfileData,
   RequestPayoutBody,
@@ -277,6 +279,20 @@ export function createApiClient(options: ApiClientOptions) {
        *  ticket row) for a paid ticket so the refund can be gated. */
       cancel(body: CancelTicketBody) {
         return request<CancelTicketResult>("/api/mobile/tickets/cancel", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+    },
+
+    places: {
+      /** Publish a place. Upload the cover photo first via
+       *  uploads.signature("place_photo") + a direct Cloudinary POST, then
+       *  pass its public_id/version here. Reuse the same clientRequestId on
+       *  a retry so a replay returns the same place, not a duplicate. */
+      create(body: PlaceCreateBody) {
+        return request<PlaceCreateResult>("/api/mobile/places", {
           method: "POST",
           body,
           auth: true,
