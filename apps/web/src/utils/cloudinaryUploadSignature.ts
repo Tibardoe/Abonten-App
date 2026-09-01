@@ -20,6 +20,7 @@ export type UploadSignatureKind =
   | "avatar"
   | "highlight"
   | "place_photo"
+  | "event_flyer"
   | "event_review_photo"
   | "place_review_photo";
 
@@ -27,6 +28,11 @@ const FOLDER_PREFIX: Record<UploadSignatureKind, string> = {
   avatar: "user_profiles",
   highlight: "highlight_media",
   place_photo: "place_photos",
+  // The web saveEventFlyerToCloudinary uploads to a flat "event_flyers"
+  // folder; the signed mobile upload scopes it per user like every other
+  // kind here (buildCloudinaryUrl only needs public_id + version, so the
+  // folder difference is cosmetic).
+  event_flyer: "event_flyers",
   event_review_photo: "event_review_photos",
   place_review_photo: "place_review_photos",
 };

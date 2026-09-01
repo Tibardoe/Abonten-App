@@ -1,8 +1,8 @@
+import { StepDots } from "@/components/StepDots";
 import { PlaceWizardBasicInfo } from "@/components/places/PlaceWizardBasicInfo";
 import { PlaceWizardCover } from "@/components/places/PlaceWizardCover";
 import { PlaceWizardHours } from "@/components/places/PlaceWizardHours";
 import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
-import { StepDots } from "@/components/places/StepDots";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
 import { ScreenLoader } from "@abonten/ui-native";
 import { useNavigation, useRouter } from "expo-router";

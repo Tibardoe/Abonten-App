@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation done, see below |
 
 ---
 
@@ -971,3 +971,65 @@ compiled), `expo export --platform android` clean, `biome check` clean.
 Not device-verified — the wizard flow, the map picker, the Cloudinary
 cover upload and the `create_place` write from a Bearer client need a
 signed-in device pass.
+
+### WP-4b — Event creation (done 2026-09-01)
+
+Native echo of the web `EventUploadModal` / `useEventUploadForm` — a 7-step
+wizard (Basics · Flyer · Schedule · Location · Tickets · Promo codes ·
+Review) that publishes an event. Create-only; save-as-draft is WP-4g.
+
+- **`@abonten/core/eventDateValidation`** — the web
+  `apps/web/src/utils/eventDateValidation.ts` (`getBufferedNow` +
+  `validateSingleDateRange` + `validateSpecificDates` — the "5 hours'
+  notice" rule) moved into `@abonten/core`, framework-free (the
+  `react-day-picker` `DateRange` type inlined as `{ from, to }`); the web
+  file is now a re-export shim so `useEventUploadForm` / `useEventEditForm`
+  don't change. The native wizard imports the same functions.
+- **`apps/web/src/utils/postEventCore.ts`** — `postEventCore(supabase,
+  userId, input)` lifted from `postEvent`: location check, event code,
+  slug, the ticket / promo / specific-dates payload shaping, the
+  `create_event` RPC (incl. the `promo_code_..._key` → 409 branch), draft
+  cleanup. Same platform-difference resolution as 4a — the caller hands it
+  an already-uploaded `flyerPublicId` / `flyerVersion`. `postEvent` thinned
+  to auth + flyer resolution → core (explicit return type).
+- **`POST /api/mobile/events`** — `getMobileAuth` + body validation → core.
+  RLS: `create_event` (latest def
+  `20260902140000_fix_event_type_serialization.sql`) is `GRANT ALL … TO
+  authenticated` and SECURITY INVOKER, so the Bearer `authenticated` client
+  inserts `event` / `ticket_type` / `promo_code` / `event_occurrence`
+  identically to the web cookie session (same finding class as 4a / WP-3g).
+- **New upload kind `event_flyer`** — added to
+  `cloudinaryUploadSignature.ts` (`UploadSignatureKind` +
+  `FOLDER_PREFIX["event_flyer"] = "event_flyers"`, user-scoped like
+  `place_photo`) + the `@abonten/api-client` `UploadSignatureKind` union +
+  the `/uploads/signature` route's error text. The API secret still never
+  leaves the server.
+- **`@abonten/api-client`** — `EventCreateBody` / `EventCreateResult` +
+  `events.create(body)`.
+- **Mobile** — `src/features/events/useEventCreate.ts` (flyer signed
+  upload → `api.events.create`); `src/features/events/useEventWizard.ts` —
+  the state/validation/submit hook (mobile echo of `useEventUploadForm`);
+  `src/components/events/EventWizard{Basics,Flyer,Schedule,Location,
+  Tickets,Promos,Review}.tsx` — the seven step components;
+  `app/(app)/event/new.tsx` — the orchestrator. `src/lib/datetime.ts`
+  (`TIME_RE`, `combineDateAndTime`, `prettyDate` — no datetime-picker dep;
+  dates come from the WP-2a pure-JS `DateRangeField`, times are `HH:MM`
+  text). `StepDots` moved `components/places/` → `components/` (shared by
+  both wizards). `/event/new` added to `authRedirect` `PROTECTED_PREFIXES`.
+  Entry points: `AppMenuSheet` "Create event" row (was → website), a
+  "+ Create event" CTA on the organizer dashboard (+ its empty state), and
+  the dashboard footer text updated ("Editing an event is still done on
+  the website").
+- **Deferred:** the optional Abonten-Place venue picker (`placeId` stays
+  `null`, as it is for most web events); currency detection (mobile has no
+  `fetchCountryMetadata` — ticket prices are entered in `GHS`, the same
+  fallback the web currency query uses); save-as-draft (WP-4g).
+- **No new deps** — `expo-image-picker` / `expo-location` were already in
+  the build; no native rebuild needed.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client` + `@abonten/core`) green, `next build` exit 0
+(`/api/mobile/events` compiled), `expo export --platform android` clean,
+`biome check` clean. Not device-verified — the wizard flow, the flyer
+upload and the `create_event` write from a Bearer client need a signed-in
+device pass.

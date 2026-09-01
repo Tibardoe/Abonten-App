@@ -66,6 +66,7 @@ export type UploadSignatureKind =
   | "avatar"
   | "highlight"
   | "place_photo"
+  | "event_flyer"
   | "event_review_photo"
   | "place_review_photo";
 
@@ -159,6 +160,58 @@ export type PlaceCreateBody = {
 export type PlaceCreateResult =
   | { status: number; message?: string }
   | { status: 200; message?: string; placeId: string; slug: string };
+
+// ---- event creation --------------------------------------------------
+// postEventCore. The flyer is uploaded from the device first (signed direct
+// upload, kind "event_flyer"); its public_id/version are passed here.
+// Provide a single start/end range (startsAt + endsAt, ISO) OR a list of
+// specific date entries (specificDates), never both. Ticketing is free, a
+// single paid tier, or multiple named tiers. Flat reply: 200 = published
+// (carries eventId); 400 = validation; 409 = a promo code already exists on
+// this event; 500 = create failed (retry-friendly).
+export type EventCreateBody = {
+  title: string;
+  description: string;
+  category: string;
+  types: string[];
+  address: string;
+  latitude: number;
+  longitude: number;
+  requireRegistration: boolean;
+  currency: string;
+  flyerPublicId: string;
+  flyerVersion: string;
+  clientRequestId: string;
+  capacity?: number | null;
+  websiteUrl?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  specificDates?: { start: string; end: string }[] | null;
+  freeEvent?: boolean;
+  singleTicket?: { price: number; quantity: number | null } | null;
+  multipleTickets?:
+    | {
+        type: string;
+        price: number;
+        quantity: number | null;
+        availableFrom?: string | null;
+        availableUntil?: string | null;
+      }[]
+    | null;
+  promoCodes?:
+    | {
+        promoCode: string;
+        discount: number;
+        maximumUse: number;
+        expiryDate: string;
+      }[]
+    | null;
+  placeId?: string | null;
+};
+
+export type EventCreateResult =
+  | { status: number; message?: string }
+  | { status: 200; message?: string; eventId: string };
 
 export type PreparedCheckoutSession = {
   checkoutSessionId: string;
