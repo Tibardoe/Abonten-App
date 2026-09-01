@@ -41,7 +41,10 @@ import type {
   PhoneSession,
   PlaceCreateBody,
   PlaceCreateResult,
+  PlaceHoursStatusResult,
   PlaceInsightsResult,
+  PlaceManageContextResult,
+  PlaceOpeningHoursInput,
   PreparedCheckoutPayment,
   ProfileData,
   PromoteEventResult,
@@ -50,11 +53,14 @@ import type {
   RequestPayoutResult,
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
+  SetPlaceStatusBody,
   SubmitChargeOtpResult,
   UpdateEventBody,
   UpdateEventResult,
   UpdateEventTicketTypesBody,
   UpdateEventTicketTypesResult,
+  UpdatePlaceBody,
+  UpdatePlaceResult,
   UpdatePromoCodeBody,
   UpdatePromoCodeResult,
   UploadSignatureKind,
@@ -687,6 +693,49 @@ export function createApiClient(options: ApiClientOptions) {
             placeId,
           )}/insights`,
           { method: "GET", auth: true },
+        );
+      },
+      /**
+       * The caller's own place row (editable fields) + its weekly hours +
+       * its services — one read to prefill the per-place management forms.
+       * 404 if the place isn't the caller's.
+       */
+      placeManageContext(placeId: string) {
+        return request<PlaceManageContextResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/manage`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Edit a place's core fields (name / description / category / contact
+       * / location / cover). A replacement cover is uploaded from the device
+       * first; pass `coverPublicId` / `coverVersion`, or omit both to keep
+       * the current one. Hours / services are separate endpoints.
+       */
+      updatePlace(placeId: string, body: UpdatePlaceBody) {
+        return request<UpdatePlaceResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(placeId)}`,
+          { method: "PATCH", body, auth: true },
+        );
+      },
+      /** Replace a place's whole weekly opening-hours schedule. */
+      updatePlaceHours(
+        placeId: string,
+        openingHours: PlaceOpeningHoursInput[],
+      ) {
+        return request<PlaceHoursStatusResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/hours`,
+          { method: "PUT", body: { openingHours }, auth: true },
+        );
+      },
+      /**
+       * Set (or clear, with `status: null`) a place's temporary-closed
+       * status. A note without a status is dropped.
+       */
+      setPlaceStatus(placeId: string, body: SetPlaceStatusBody) {
+        return request<PlaceHoursStatusResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/status`,
+          { method: "POST", body, auth: true },
         );
       },
     },

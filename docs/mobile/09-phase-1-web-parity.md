@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status) done, see below |
 
 ---
 
@@ -1382,8 +1382,9 @@ Location · Photos · Hours & Status · Services · Bookings · Reviews ·
 Insights · Promotion), reached from a `/manage/places` "My places" list.
 Ported natively as sub-chunks, one branch each, mirroring WP-4c:
 
-- **4f-1** — My places list + per-place **Insights** (this chunk).
-- **4f-2** — Details & Location edit + Hours & Status + Services.
+- **4f-1** — My places list + per-place **Insights**.
+- **4f-2a** — Details & Location edit + Hours & Status.
+- **4f-2b** — Services CRUD.
 - **4f-3** — Photos (add / remove / reorder).
 - **4f-4** — Bookings (list + status) + Reviews (owner view).
 - **4f-5** — Promotion tab (reuses `createPromotionPaymentAttemptCore`'s
@@ -1426,3 +1427,63 @@ Ported natively as sub-chunks, one branch each, mirroring WP-4c:
 (`/api/mobile/organizer/places` + `.../places/[placeId]/insights`
 compiled), `expo export --platform android` clean, `biome check` clean.
 Not device-verified.
+
+#### WP-4f-2a — Place edit: Details & Location + Hours & Status (done 2026-09-01)
+
+The web `ManagePlaceView` Details & Location tab (`useManagePlaceDetailsForm`
+→ `updatePlace`) and Hours & Status tab (`ManagePlaceHoursSection` →
+`updatePlaceOpeningHours` + `setPlaceTemporaryStatus`). Services are 4f-2b.
+
+- **`apps/web/src/utils/`** — three lifted bodies:
+  - `placeManageContextQuery.ts` → `fetchPlaceManageContext(supabase,
+    userId, placeId)` — one owner-scoped read of the editable place row +
+    weekly hours + services (services now, so 4f-2b's prefill is free —
+    same trick as WP-4c-2b's `ticket_type`). 403 / 404.
+  - `updatePlaceCore.ts` → `updatePlaceCore(supabase, userId, input)` — the
+    `updatePlace` body minus auth and the server `File` upload; the caller
+    passes an already-uploaded `coverPublicId` / `coverVersion` (omit both
+    = keep current), mirroring `updateEventCore`. Keeps
+    `validateLocationInput`, the owner check, and the old-cover
+    `cloudinary.destroy`. `updatePlace` action thinned to
+    `auth (401 as const) → savePlacePhotoToCloudinary if picked → delegate`.
+  - `placeHoursStatusCore.ts` → `updatePlaceOpeningHoursCore` +
+    `setPlaceTemporaryStatusCore` (shared `assertOwnsPlace` helper). Both
+    actions thinned to `auth (401 as const) → delegate`.
+- **Routes** — `GET /api/mobile/organizer/places/[placeId]/manage`
+  (context), `PATCH /api/mobile/organizer/places/[placeId]` (details),
+  `PUT /api/mobile/organizer/places/[placeId]/hours`
+  (`{ openingHours: {dayOfWeek,openTime,closeTime,isClosed}[] }`, HH:MM
+  validated), `POST /api/mobile/organizer/places/[placeId]/status`
+  (`{ status: null | "temporarily_closed" | "permanently_closed", note? }`).
+- **api-client** — `PlaceManageContext` / `PlaceManageContextResult` /
+  `UpdatePlaceBody` / `UpdatePlaceResult` / `SetPlaceStatusBody` /
+  `PlaceHoursStatusResult` / `PlaceTemporaryStatus`;
+  `api.organizer.placeManageContext(id)` / `updatePlace(id, body)` /
+  `updatePlaceHours(id, hours)` / `setPlaceStatus(id, body)`.
+- **Mobile** — `src/features/organizer/useManagePlace.ts`
+  (`usePlaceManageContext` query keyed `["mobile","organizer",
+  "place-manage", placeId]` + `useUpdatePlace` [uploads a replacement
+  cover via `uploadToCloudinary(uri, "place_photo")` only if picked] +
+  `useUpdatePlaceHours` + `useSetPlaceStatus`, all invalidating the
+  context + `["mobile","organizer","places"]` + discovery).
+  `src/features/organizer/usePlaceEdit.ts` — the mobile echo of
+  `useManagePlaceDetailsForm`: prefill (guarded), best-effort
+  `Location.geocodeAsync(storedAddress)` so an unchanged location still
+  submits with coords, reuses the create wizard's
+  `usePlacesAutocomplete` + current-location + map-pick resolvers,
+  `toHoursRows` (7-day fill), plus `saveDetails()` / `saveHours()` /
+  `applyStatus()`.
+  `app/(app)/organizer/places/[placeId]/edit.tsx` — one scrolling form:
+  Details (name / description / category `Chip`s / website / phone /
+  whatsapp / cover) + Location (autocomplete + "Choose on map" via
+  `MapPickerSheet` + current location) → "Save details"; Status chips
+  (Normal / Temporarily / Permanently closed, `Alert` confirm on either
+  closed choice) + optional visitor note; Weekly hours (7-day `Switch` +
+  HH:MM `Input`s) → "Save hours". The place management screen gains an
+  **"Edit place ›"** link row; route registered `href: null`.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all place routes
+compiled: `/manage`, `/[placeId]`, `/hours`, `/status`, plus 4f-1's),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified.

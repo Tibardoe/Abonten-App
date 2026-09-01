@@ -84,14 +84,24 @@ export default function PlaceManageScreen() {
       )}
 
       {id ? (
-        <Link href={`/(app)/place/${id}`} asChild>
-          <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-            <Text className="text-base text-foreground">
-              View public place page
-            </Text>
-            <Text className="text-muted-foreground">›</Text>
-          </Pressable>
-        </Link>
+        <View className="gap-2">
+          <Link href={`/(app)/organizer/places/${id}/edit`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base font-semibold text-primary">
+                Edit place
+              </Text>
+              <Text className="text-primary">›</Text>
+            </Pressable>
+          </Link>
+          <Link href={`/(app)/place/${id}`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base text-foreground">
+                View public place page
+              </Text>
+              <Text className="text-muted-foreground">›</Text>
+            </Pressable>
+          </Link>
+        </View>
       ) : null}
     </ScrollView>
   );
