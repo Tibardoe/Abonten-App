@@ -480,6 +480,17 @@ export default function EventInsightsScreen() {
         </View>
       ) : null}
 
+      {eventId ? (
+        <Link href={`/(app)/organizer/events/${eventId}/attendees`} asChild>
+          <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+            <Text className="text-base text-foreground">
+              Attendees &amp; check-in
+            </Text>
+            <Text className="text-muted-foreground">›</Text>
+          </Pressable>
+        </Link>
+      ) : null}
+
       <View className="flex-row flex-wrap gap-2">
         {PERIODS.map((p) => {
           const active = p.key === period;

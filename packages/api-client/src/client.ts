@@ -3,10 +3,12 @@ import type {
   AddPayoutAccountBody,
   AddPayoutAccountResult,
   ApiEnvelope,
+  AttendanceRow,
   CancelEventResult,
   CancelTicketBody,
   CancelTicketResult,
   CardVerificationInitData,
+  CheckInTicketResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,
@@ -588,6 +590,39 @@ export function createApiClient(options: ApiClientOptions) {
         return request<PromoteEventResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/promote`,
           { method: "POST", body: { tierId }, auth: true },
+        );
+      },
+      /**
+       * Cursor-paginated attendee list for one of the caller's own events,
+       * each row carrying the attendee's real account email / phone.
+       * `row.ticket?.status === "used"` means checked in. 403 if not owned.
+       */
+      eventAttendees(
+        eventId: string,
+        params?: { cursor?: string | null; pageSize?: number },
+      ) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<PaginatedResult<AttendanceRow>>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/attendees${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Flip one ticket between checked-in (`true`) and not (`false`) — the
+       * same transition as the web attendee list's Check in / undo buttons.
+       * 403 unless the caller owns the ticket's event.
+       */
+      checkInTicket(ticketId: string, checkedIn: boolean) {
+        return request<CheckInTicketResult>(
+          `/api/mobile/organizer/tickets/${encodeURIComponent(
+            ticketId,
+          )}/check-in`,
+          { method: "POST", body: { checkedIn }, auth: true },
         );
       },
     },

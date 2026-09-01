@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in done, see below |
 
 ---
 
@@ -911,8 +911,11 @@ finance, events list, payouts, cancel-event) landed in phases 5.8/5.9 and
 already has `api/mobile/organizer/*` routes. WP-4 adds creation +
 management. Proposed chunking: **4a place creation** · 4b event creation ·
 4c per-event management (analytics / edit / delete / promote) · 4d attendee
-list + check-in (needs `expo-camera`) · 4e promo CRUD · 4f per-place
-management · 4g dashboard widgets + drafts. Same per-chunk git flow.
+list + check-in · 4e promo CRUD · 4f per-place management · 4g dashboard
+widgets + drafts. Same per-chunk git flow. (Earlier notes said WP-4d needs
+`expo-camera` for QR scanning — it doesn't: the web app has no scanner, its
+check-in is a per-row button on the attendee list, so parity needs no new
+native module.)
 
 ### WP-4a — Place creation (done 2026-09-01)
 
@@ -1039,7 +1042,7 @@ device pass.
 First slice of per-event management (`manage/events/[eventId]` on web — a
 3-tab `ManageEventView`: Details / Promotion / Insights). This chunk ports
 the **Insights** tab read-only; the Details (edit) and Promotion tabs are
-WP-4c-2 / WP-4c-3, attendee list + QR check-in is WP-4d.
+WP-4c-2 / WP-4c-3, the attendee list + check-in is WP-4d.
 
 - **`apps/web/src/utils/eventInsightsQuery.ts`** (new) — the post-auth
   query bodies for one event's Insights surface, shared by the six Server
@@ -1268,3 +1271,53 @@ caveat as WP-3f/3h.
 Paystack- or device-verified** — the tier read, the reserve step, and the
 whole Paystack charge → verify → `activateEventPromotion` path need a
 device pass with Paystack test keys.
+
+### WP-4d — Per-event management: attendee list + check-in (done 2026-09-01)
+
+The last piece of `ManageEventView`'s Insights tab — `AttendanceListView`
+(a cursor-paginated attendee list with a per-row **Check in** / **undo**
+button). **The web app has no QR scanner** — check-in is `checkInTicket`
+flipping `ticket.status` between `active` and `used`, the single source of
+"verified attendance" that gates reviews. So parity needed **no
+`expo-camera`** (earlier plan notes were an over-reach). No money path,
+no new deps.
+
+- **`apps/web/src/utils/organizerReadQuery.ts`** — added
+  `fetchEventAttendanceListPage(supabase, userId, eventId, options?)`: the
+  `getAttendanceList` body (owner-scoped `event` check → 403, keyset
+  `attendance` query with `user_info` / `ticket_type` / `ticket` embeds,
+  then the `get_event_attendee_contacts` RPC merged back onto each row so
+  `row.auth.email` / `.phone` are populated — `auth.users` can't be
+  PostgREST-embedded). `getAttendanceList` is now a thin `auth → delegate`
+  wrapper.
+- **`apps/web/src/utils/checkInTicketCore.ts`** —
+  `checkInTicketCore(supabase, userId, ticketId, checkedIn)`: the
+  `checkInTicket` body minus auth and `revalidatePath`, returning the
+  affected `eventId` so the caller can revalidate. Same guards (404 / 403 /
+  400 "already checked in" / "isn't checked in"). `checkInTicket` is now a
+  thin wrapper that delegates then `revalidatePath("/manage/events/<id>")`
+  on success.
+- **Routes** — `GET /api/mobile/organizer/events/[eventId]/attendees?cursor=&pageSize=`
+  (`fetchEventAttendanceListPage` → `PaginatedResult<AttendanceRow>`),
+  `POST /api/mobile/organizer/tickets/[ticketId]/check-in` `{ checkedIn }`
+  (`checkInTicketCore` → `fromActionResult`).
+- **api-client** — adds `AttendanceRow` / `CheckInTicketResult`;
+  `api.organizer.eventAttendees(id, { cursor, pageSize })` and
+  `api.organizer.checkInTicket(ticketId, checkedIn)`.
+- **Mobile** — `src/features/organizer/useAttendees.ts`
+  (`useAttendees` infinite query keyed `["mobile","organizer","attendees",
+  eventId]` + `flattenAttendees` + `useCheckInTicket(eventId)` mutation,
+  invalidating the list and `event-insights`).
+  `app/(app)/organizer/events/[eventId]/attendees.tsx` — a `FlatList`
+  mirroring the web row (name, ticket type + Active/Cancelled badge, email,
+  phone, Check in / "✓ Checked in — undo"), infinite scroll, 403 → "not
+  authorized" empty state, `Alert` on a failed toggle. The insights
+  screen's action area gets an **Attendees & check-in ›** link row; route
+  registered `href: null`.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/events/[eventId]/attendees` +
+`/api/mobile/organizer/tickets/[ticketId]/check-in` compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified (list render + check-in toggle unseen on a device).

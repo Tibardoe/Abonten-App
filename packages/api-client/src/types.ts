@@ -610,6 +610,31 @@ export type PromotionPaymentAttemptResult =
     }
   | { status: 400 | 401 | 404 | 410 | 500; message: string };
 
+// ---- per-event attendee list + check-in ----------------------------
+
+// One row of the attendee list. `auth` carries the real account contact
+// (email / phone), merged in server-side because auth.users can't be
+// PostgREST-embedded. `ticket.status === "used"` means checked in.
+export type AttendanceRow = {
+  id: string;
+  user_id: string;
+  status: string;
+  ticket_id: string | null;
+  created_at: string;
+  user_info: { username: string | null; full_name: string | null } | null;
+  ticket_type: {
+    type: string | null;
+    price: number | null;
+    currency: string | null;
+  } | null;
+  ticket: { status: string | null; used_at: string | null } | null;
+  auth: { email: string | null; phone: string | null } | null;
+};
+
+export type CheckInTicketResult =
+  | { status: 200; message: string; eventId?: string | null }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =
