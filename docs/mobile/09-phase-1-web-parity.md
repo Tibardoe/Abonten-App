@@ -941,28 +941,33 @@ Create-only; save-as-draft is deferred to WP-4g.
 - **Mobile** — `src/features/places/useCreatePlace.ts` (upload cover via
   `uploadToCloudinary(uri, "place_photo")` → `api.places.create`);
   `src/lib/uuid.ts` (`uuidv4` for the `clientRequestId` idempotency key —
-  no `crypto.randomUUID` dependency); `app/(app)/place/new.tsx` — the
-  wizard, using `@abonten/ui-native` `Field`/`Input`/`Button`, the shared
-  `@abonten/validation/placeSchema` for the text fields, `usePlaceCategories`
-  (WP-2a) for the category picker, `usePlacesAutocomplete` (WP-2g-6) +
-  `expo-location` reverse-geocode for the address, `expo-image-picker`
-  (`allowsEditing`, `aspect [16,9]`) for the cover. `/place/new` added to
-  `authRedirect` `PROTECTED_PREFIXES` (only matches `/place/new`, not the
-  public `/place/<id>` detail). Entry points: `AppMenuSheet` "Create place"
-  row (was → website) and an "Add place" button on `places.tsx`.
-- **No new deps** — `expo-image-picker` / `expo-location` were already in
-  the build; no native rebuild needed.
+  no `crypto.randomUUID` dependency); `src/features/places/usePlaceWizard.ts`
+  — the state/validation/submit hook (mobile echo of the web
+  `usePlaceUploadForm`); `src/components/places/PlaceWizard{BasicInfo,Cover,
+  Hours,Review}.tsx` + `StepDots.tsx` — the four presentational step
+  components (mirroring the web `PlaceCreateStep*` files);
+  `app/(app)/place/new.tsx` — a thin orchestrator (step switch + title +
+  publish navigation, ~95 lines). Uses `@abonten/ui-native`
+  `Field`/`Input`/`Button`, the shared `@abonten/validation/placeSchema`
+  for the text fields, `usePlaceCategories` (WP-2a) for the category
+  picker, and for the address: `usePlacesAutocomplete` (WP-2g-6)
+  suggestions, **"Choose on map"** (`MapPickerSheet`, see below), or
+  `expo-location` current-location; `expo-image-picker` (`allowsEditing`,
+  `aspect [16,9]`) for the cover. `/place/new` added to `authRedirect`
+  `PROTECTED_PREFIXES` (only matches `/place/new`, not the public
+  `/place/<id>` detail). Entry points: `AppMenuSheet` "Create place" row
+  (was → website) and an "Add place" button on `places.tsx`.
+- **`MapPickerSheet` generalised** — it took an optional `onPick(loc)`
+  callback; when set, the chosen point is reverse-geocoded (the
+  now-exported `labelForCoords` from `ExploreLocationProvider`) and handed
+  to the caller instead of committing to the Explore location. The place
+  wizard passes `onPick={w.setMapLocation}`.
+- **No new deps** — `expo-image-picker` / `expo-location` /
+  `react-native-maps` were already in the build; no native rebuild needed.
 
 **Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
 `@abonten/api-client`) green, `next build` exit 0 (`/api/mobile/places`
 compiled), `expo export --platform android` clean, `biome check` clean.
-Not device-verified — the wizard flow, the Cloudinary cover upload and the
-`create_place` write from a Bearer client need a signed-in device pass.
-
-### Map-pick for the address (deferred)
-
-`place/new.tsx` covers address entry via autocomplete + current-location.
-A map-pin picker (web's `MapModal`) is deferred: the existing
-`MapPickerSheet` is wired to `ExploreLocationProvider`, so a standalone
-"pick on map for this form" needs it generalised with an `onPick` callback
-— a small follow-up, tracked here.
+Not device-verified — the wizard flow, the map picker, the Cloudinary
+cover upload and the `create_place` write from a Bearer client need a
+signed-in device pass.
