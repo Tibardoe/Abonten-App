@@ -2,8 +2,14 @@ import { PaymentSection } from "@/features/checkout/PaymentSection";
 import {
   useCancelCheckout,
   useCheckoutPrepare,
+  useCheckoutSession,
 } from "@/features/checkout/useCheckout";
+import {
+  formatCountdown,
+  useCheckoutCountdown,
+} from "@/features/checkout/useCheckoutCountdown";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +18,47 @@ import {
   Text,
   View,
 } from "react-native";
+
+function CheckoutExpiryBanner({
+  expiresAt,
+  onExpired,
+}: {
+  expiresAt: string | null;
+  onExpired: () => void;
+}) {
+  const { secondsLeft, isExpired, isWarning } = useCheckoutCountdown(expiresAt);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    if (isExpired && !firedRef.current) {
+      firedRef.current = true;
+      onExpired();
+    }
+  }, [isExpired, onExpired]);
+
+  if (secondsLeft === null) return null;
+
+  const tone = isExpired || isWarning ? "destructive" : "muted";
+  return (
+    <View
+      className={`rounded-md border px-4 py-3 ${
+        tone === "destructive"
+          ? "border-destructive/40 bg-destructive/10"
+          : "border-border bg-muted"
+      }`}
+    >
+      <Text
+        className={`text-center text-sm font-medium ${
+          tone === "destructive" ? "text-destructive" : "text-muted-foreground"
+        }`}
+      >
+        {isExpired
+          ? "This checkout has expired."
+          : `Checkout expires in ${formatCountdown(secondsLeft)}`}
+      </Text>
+    </View>
+  );
+}
 
 function Line({
   label,
@@ -50,7 +97,13 @@ export default function CheckoutReviewScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useCheckoutPrepare(sessionId);
+  const sessionQuery = useCheckoutSession(sessionId);
   const cancel = useCancelCheckout();
+
+  // The first line item's expires_at speaks for the session (all rows share
+  // one deadline). getSession self-heals stale rows server-side.
+  const rows = (sessionQuery.data?.data ?? []) as { expires_at?: string }[];
+  const expiresAt = rows[0]?.expires_at ?? null;
 
   if (isLoading) {
     return (
@@ -113,6 +166,14 @@ export default function CheckoutReviewScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 p-4 pb-10"
     >
+      <CheckoutExpiryBanner
+        expiresAt={expiresAt}
+        onExpired={() => {
+          refetch();
+          sessionQuery.refetch();
+        }}
+      />
+
       <Text className="text-lg font-bold text-foreground">
         {session.eventTitle}
       </Text>
