@@ -33,6 +33,12 @@ type Ctx = {
   setTypedLocation: (text: string) => Promise<boolean>;
   /** Re-acquire the device GPS position and make it active. */
   useCurrentLocation: () => Promise<boolean>;
+  /** Commit an exact point (from the map picker / an autocomplete result). */
+  setPickedLocation: (
+    lat: number,
+    lng: number,
+    label?: string,
+  ) => Promise<void>;
 };
 
 const STORAGE_KEY = "abonten.explore-location";
@@ -160,6 +166,14 @@ export function ExploreLocationProvider({
     [persist],
   );
 
+  const setPickedLocation = useCallback(
+    async (lat: number, lng: number, label?: string) => {
+      const finalLabel = label?.trim() || (await labelForCoords(lat, lng));
+      persist({ label: finalLabel, lat, lng, isFallback: false });
+    },
+    [persist],
+  );
+
   const useCurrentLocation = useCallback(async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -184,8 +198,20 @@ export function ExploreLocationProvider({
   }, [persist]);
 
   const value = useMemo<Ctx>(
-    () => ({ location, resolving, setTypedLocation, useCurrentLocation }),
-    [location, resolving, setTypedLocation, useCurrentLocation],
+    () => ({
+      location,
+      resolving,
+      setTypedLocation,
+      useCurrentLocation,
+      setPickedLocation,
+    }),
+    [
+      location,
+      resolving,
+      setTypedLocation,
+      useCurrentLocation,
+      setPickedLocation,
+    ],
   );
 
   return (

@@ -3,6 +3,7 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
+import { ExploreMap } from "@/components/explore/ExploreMap";
 import {
   EventSliderRow,
   PlaceSliderRow,
@@ -55,6 +56,7 @@ export default function Explore() {
   const coords = location ? { lat: location.lat, lng: location.lng } : null;
 
   const [tab, setTab] = useState<Tab>("events");
+  const [view, setView] = useState<"list" | "map">("list");
   const [eventFilters, setEventFilters] =
     useState<EventFilters>(EMPTY_EVENT_FILTERS);
   const [placeFilters, setPlaceFilters] =
@@ -266,18 +268,36 @@ export default function Explore() {
         </Pressable>
       </View>
 
-      {/* Events / Places tabs — the web ExploreTabs. */}
-      <View className="flex-row gap-2 px-4 pb-1">
-        <Chip
-          label="Events"
-          selected={tab === "events"}
-          onPress={() => setTab("events")}
-        />
-        <Chip
-          label="Places"
-          selected={tab === "places"}
-          onPress={() => setTab("places")}
-        />
+      {/* Events / Places tabs — the web ExploreTabs — plus the List / Map
+          view toggle (the web EventsTabContent's list-vs-map switch). */}
+      <View className="flex-row items-center justify-between px-4 pb-1">
+        <View className="flex-row gap-2">
+          <Chip
+            label="Events"
+            selected={tab === "events"}
+            onPress={() => setTab("events")}
+          />
+          <Chip
+            label="Places"
+            selected={tab === "places"}
+            onPress={() => setTab("places")}
+          />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={view === "list" ? "Show map" : "Show list"}
+          onPress={() => setView((v) => (v === "list" ? "map" : "list"))}
+          className="flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
+        >
+          <Icon
+            name={view === "list" ? "map-outline" : "list-outline"}
+            size={18}
+            tone="foreground"
+          />
+          <AppText className="text-[13px] font-medium text-foreground">
+            {view === "list" ? "Map" : "List"}
+          </AppText>
+        </Pressable>
       </View>
 
       {location?.isFallback ? (
@@ -286,7 +306,14 @@ export default function Explore() {
         </Caption>
       ) : null}
 
-      {tab === "events" ? (
+      {view === "map" ? (
+        <ExploreMap
+          kind={tab}
+          events={events}
+          places={places}
+          center={coords}
+        />
+      ) : tab === "events" ? (
         <FlatList
           key="events"
           data={events}
