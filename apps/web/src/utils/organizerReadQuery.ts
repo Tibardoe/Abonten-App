@@ -288,3 +288,123 @@ export async function fetchOrganizerLedgerPage(
 
   return { status: 200, data: page, nextCursor, hasNextPage };
 }
+
+// biome-ignore lint/suspicious/noExplicitAny: joined place_category shape, no generated Supabase types (see PROJECT.md)
+type OrganizerPlaceRow = any;
+
+// Cursor-paginated list of the places owned by `ownerId` — the authed
+// branch of getOrganizerPlaces (the public /user/:username/places branch
+// stays in the action). RLS `place_owner_select` also keys on auth.uid();
+// the explicit owner_id filter keeps the shape identical either way.
+export async function fetchOrganizerPlacesPage(
+  supabase: SupabaseClient,
+  ownerId: string,
+  options?: { cursor?: string | null; pageSize?: number },
+): Promise<PaginatedResult<OrganizerPlaceRow>> {
+  const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
+  const cursor = decodeCursor<SimpleCursor>(options?.cursor);
+
+  let query = supabase
+    .from("place")
+    .select("*, place_category(name, slug)")
+    .eq("owner_id", ownerId)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
+
+  if (cursor) {
+    query = query.or(keysetOlderThan("created_at", "id", cursor));
+  }
+
+  const { data: places, error } = await query;
+
+  if (error) {
+    logger.error(`Error fetching organizer's places: ${error.message}`);
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "Something went wrong!",
+    };
+  }
+
+  const { page, hasNextPage } = splitPage<OrganizerPlaceRow>(
+    places ?? [],
+    pageSize,
+  );
+
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasNextPage && last
+      ? encodeCursor<SimpleCursor>({
+          sortValue: String(last.created_at),
+          id: last.id,
+        })
+      : null;
+
+  return { status: 200, data: page, nextCursor, hasNextPage };
+}
+
+export type PlaceInsightsCoreResult =
+  | { status: 401 | 404 | 500; message: string }
+  | { status: 200; data: Record<string, number> };
+
+// Owner-only analytics for one place — the getPlaceInsights body: view /
+// direction / phone / whatsapp event-type counts from
+// place_analytics_event, plus favorites and approved-review counts. A
+// select + JS reduce is fine (low-traffic owner dashboard, not a hot path).
+export async function fetchPlaceInsights(
+  supabase: SupabaseClient,
+  userId: string,
+  placeId: string,
+): Promise<PlaceInsightsCoreResult> {
+  const { data: place, error: fetchError } = await supabase
+    .from("place")
+    .select("id")
+    .eq("id", placeId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (fetchError || !place) {
+    return { status: 404, message: "Place not found or unauthorized" };
+  }
+
+  const [eventsResult, favoritesResult, reviewsResult] = await Promise.all([
+    supabase
+      .from("place_analytics_event")
+      .select("event_type")
+      .eq("place_id", placeId),
+    supabase
+      .from("favorite_place")
+      .select("id", { count: "exact", head: true })
+      .eq("place_id", placeId),
+    supabase
+      .from("place_review")
+      .select("id", { count: "exact", head: true })
+      .eq("place_id", placeId)
+      .eq("status", "approved"),
+  ]);
+
+  if (eventsResult.error || favoritesResult.error || reviewsResult.error) {
+    const message =
+      eventsResult.error?.message ??
+      favoritesResult.error?.message ??
+      reviewsResult.error?.message;
+    logger.error(`Error fetching place insights: ${message}`);
+    return { status: 500, message: "Something went wrong!" };
+  }
+
+  const counts = (eventsResult.data ?? []).reduce<Record<string, number>>(
+    (acc, row) => {
+      acc[row.event_type] = (acc[row.event_type] ?? 0) + 1;
+      return acc;
+    },
+    {},
+  );
+
+  counts.favorites = favoritesResult.count ?? 0;
+  counts.reviews = reviewsResult.count ?? 0;
+
+  return { status: 200, data: counts };
+}

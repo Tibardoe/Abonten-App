@@ -32,6 +32,7 @@ import type {
   OrganizerFinanceResult,
   OrganizerLedgerTransactionRow,
   OrganizerOverviewResult,
+  OrganizerPlaceRow,
   PaginatedResult,
   PaymentMethodRow,
   PayoutAccountsResult,
@@ -40,6 +41,7 @@ import type {
   PhoneSession,
   PlaceCreateBody,
   PlaceCreateResult,
+  PlaceInsightsResult,
   PreparedCheckoutPayment,
   ProfileData,
   PromoteEventResult,
@@ -662,6 +664,29 @@ export function createApiClient(options: ApiClientOptions) {
         return request<DeletePromoCodeResult>(
           "/api/mobile/organizer/promo-codes/delete",
           { method: "POST", body: { promoCodeId }, auth: true },
+        );
+      },
+      /** The caller's own places, newest first, every status. */
+      places(params?: { cursor?: string | null; pageSize?: number }) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<PaginatedResult<OrganizerPlaceRow>>(
+          `/api/mobile/organizer/places${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Owner-only stat counts for one place (views / directions / phone /
+       * whatsapp / favorites / reviews). 404 if the place isn't the caller's.
+       */
+      placeInsights(placeId: string) {
+        return request<PlaceInsightsResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/insights`,
+          { method: "GET", auth: true },
         );
       },
     },

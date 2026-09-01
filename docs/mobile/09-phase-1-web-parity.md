@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights done, see below |
 
 ---
 
@@ -1374,3 +1374,55 @@ codes are created solely in the event wizard's Promos step, so there is no
 `/api/mobile/organizer/promo-codes/{update,delete}` compiled),
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
+
+### WP-4f — Per-place management (in progress 2026-09-01)
+
+The web `/manage/places/[placeId]` is an 8-tab `ManagePlaceView` (Details &
+Location · Photos · Hours & Status · Services · Bookings · Reviews ·
+Insights · Promotion), reached from a `/manage/places` "My places" list.
+Ported natively as sub-chunks, one branch each, mirroring WP-4c:
+
+- **4f-1** — My places list + per-place **Insights** (this chunk).
+- **4f-2** — Details & Location edit + Hours & Status + Services.
+- **4f-3** — Photos (add / remove / reorder).
+- **4f-4** — Bookings (list + status) + Reviews (owner view).
+- **4f-5** — Promotion tab (reuses `createPromotionPaymentAttemptCore`'s
+  `kind: "place"` arm — money path, code/bundle-verified only).
+
+#### WP-4f-1 — My places list + place Insights (done 2026-09-01)
+
+- **`apps/web/src/utils/organizerReadQuery.ts`** — two lifted bodies:
+  - `fetchOrganizerPlacesPage(supabase, ownerId, options?)` — the authed
+    branch of `getOrganizerPlaces` (keyset `place` list + `place_category`
+    join, newest first, any status). `getOrganizerPlaces` keeps its public
+    `/user/:username/places` branch and delegates the rest here.
+  - `fetchPlaceInsights(supabase, userId, placeId)` — the `getPlaceInsights`
+    body (owner check → 404, `place_analytics_event` event-type counts +
+    `favorite_place` + approved `place_review` counts, JS reduce).
+    `getPlaceInsights` thinned to `auth (401 as const) → delegate`.
+- **Routes** — `GET /api/mobile/organizer/places?cursor=&pageSize=`
+  (`PaginatedResult<OrganizerPlaceRow>`), `GET
+  /api/mobile/organizer/places/[placeId]/insights` (`PlaceInsightsResult`).
+- **api-client** — `OrganizerPlaceRow` / `PlaceInsights` /
+  `PlaceInsightsResult`; `api.organizer.places({cursor,pageSize})` /
+  `api.organizer.placeInsights(placeId)`.
+- **Mobile** — `src/features/organizer/useOrganizerPlaces.ts`
+  (`useOrganizerPlaces` infinite query keyed `["mobile","organizer",
+  "places"]` + `flattenOrganizerPlaces` + `usePlaceInsights`).
+  `app/(app)/organizer/places/index.tsx` — a `FlatList` of place cards
+  (cover thumb, name, category + closed-status note) → tap opens
+  `.../places/[placeId]`; header "Add place" button.
+  `app/(app)/organizer/places/[placeId]/index.tsx` — the six
+  `ManagePlaceInsightsSection` stat tiles (Place Views / Directions /
+  Phone Calls / WhatsApp / Favorites / Reviews) + "View public place
+  page". `AppMenuSheet` gains a place-owner-gated **"My places"** row
+  (the manage label now shows for `isOrganizer || isPlaceOwner`, the
+  event rows stay organizer-gated — matching the web `ManageMenu`); both
+  routes registered `href: null`. `/organizer` is already an
+  `authRedirect` prefix.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/places` + `.../places/[placeId]/insights`
+compiled), `expo export --platform android` clean, `biome check` clean.
+Not device-verified.
