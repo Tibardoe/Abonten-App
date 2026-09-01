@@ -80,14 +80,26 @@ export const fontWeight = {
   bold: "700",
 } as const;
 
-// Euclid Circular B is the web brand face, loaded via next/font/local from
-// .woff2 files. React Native needs .ttf/.otf, which aren't in the repo yet —
-// until they are, `body` falls back to the platform system font. When the
-// files land: add them under apps/mobile/assets/fonts, load with
-// `useFonts({ "EuclidCircularB": require(...) })` in the app root, and set
-// `family.body` here to "EuclidCircularB". Everything downstream reads this.
+// Euclid Circular B is the web brand face (apps/web/src/app/fonts.ts loads the
+// same five weights via next/font/local). The mobile app bundles .ttf versions
+// under apps/mobile/assets/fonts and registers them by these exact names in
+// app/_layout.tsx (`useFonts(euclidFonts)`). `AppText` is the single chokepoint
+// that maps a text style's weight to the matching face; `body` is the regular
+// fallback for anything that doesn't specify a weight. If the app root ever
+// stops loading these, set the values back to `undefined` and text falls back
+// to the platform system font.
 export const family = {
-  body: undefined as string | undefined,
+  body: "EuclidCircularB-Regular" as string | undefined,
+  /** fontWeight (as a string) → registered face name. */
+  byWeight: {
+    "300": "EuclidCircularB-Light",
+    "400": "EuclidCircularB-Regular",
+    "500": "EuclidCircularB-Medium",
+    "600": "EuclidCircularB-SemiBold",
+    "700": "EuclidCircularB-Bold",
+    normal: "EuclidCircularB-Regular",
+    bold: "EuclidCircularB-Bold",
+  } as Record<string, string>,
 } as const;
 
 /** Card / sheet elevation. Web uses `shadow-sm`; this is its native echo. */

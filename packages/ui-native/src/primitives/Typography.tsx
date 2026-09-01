@@ -1,12 +1,16 @@
-import { Text as RNText, type TextProps as RNTextProps } from "react-native";
+import {
+  Text as RNText,
+  type TextProps as RNTextProps,
+  StyleSheet,
+} from "react-native";
 import { family } from "../theme/tokens";
 
 // Native echo of apps/web/src/components/ui/typography.tsx. Same role names
 // (PageTitle / SectionTitle / CardTitle / SupportingText …) so a screen ported
 // from web keeps the same visual hierarchy. `AppText` is the base every other
 // text component and screen should use instead of a bare <Text> — it applies
-// the brand font family (once the .ttf is bundled) and a sensible default
-// colour token.
+// the brand font family (Euclid Circular B, see theme/tokens.ts) and a sensible
+// default colour token.
 
 type Variant =
   | "pageTitle"
@@ -37,6 +41,46 @@ const VARIANT_CLASS: Record<Variant, string> = {
   caption: "text-[11px] leading-[16px] text-muted-foreground",
 };
 
+// The weight each variant bakes in via its className (font-bold / font-semibold).
+const VARIANT_WEIGHT: Record<Variant, string> = {
+  pageTitle: "700",
+  screenTitle: "700",
+  sectionTitle: "600",
+  cardTitle: "600",
+  body: "400",
+  bodyStrong: "600",
+  small: "400",
+  muted: "400",
+  label: "600",
+  caption: "400",
+};
+
+// NativeWind applies className-derived styles after this component runs, so the
+// `font-*` utility a caller passes isn't visible on `style` here — scan the
+// className string for it, then fall back to the variant's baked weight, and
+// let an explicit style.fontWeight win over both.
+function resolveFontFamily(
+  variant: Variant,
+  className: string | undefined,
+  style: RNTextProps["style"],
+): string | undefined {
+  if (!family.body) return undefined;
+  const flat = StyleSheet.flatten(style) as
+    | { fontWeight?: unknown }
+    | undefined;
+  let weight: string | undefined;
+  if (flat?.fontWeight != null) {
+    weight = String(flat.fontWeight);
+  } else if (className) {
+    if (/\bfont-bold\b/.test(className)) weight = "700";
+    else if (/\bfont-semibold\b/.test(className)) weight = "600";
+    else if (/\bfont-medium\b/.test(className)) weight = "500";
+    else if (/\bfont-light\b/.test(className)) weight = "300";
+  }
+  weight = weight ?? VARIANT_WEIGHT[variant];
+  return family.byWeight[weight] ?? family.body;
+}
+
 export type AppTextProps = RNTextProps & {
   variant?: Variant;
   className?: string;
@@ -48,10 +92,11 @@ export function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const fontFamily = resolveFontFamily(variant, className, style);
   return (
     <RNText
       className={`${VARIANT_CLASS[variant]}${className ? ` ${className}` : ""}`}
-      style={family.body ? [{ fontFamily: family.body }, style] : style}
+      style={fontFamily ? [{ fontFamily }, style] : style}
       {...rest}
     />
   );
