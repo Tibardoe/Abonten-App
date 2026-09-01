@@ -3,6 +3,10 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
+import {
+  EventSliderRow,
+  PlaceSliderRow,
+} from "@/components/explore/ExploreSliderRow";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
@@ -17,6 +21,8 @@ import {
   describeEventFilters,
   describePlaceFilters,
 } from "@/features/discovery/exploreFilters";
+import { useExploreEventSliders } from "@/features/discovery/useExploreEventSliders";
+import { useExplorePlaceSliders } from "@/features/discovery/useExplorePlaceSliders";
 import { useFilteredEvents } from "@/features/discovery/useFilteredEvents";
 import { useFilteredPlaces } from "@/features/discovery/useFilteredPlaces";
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
@@ -30,6 +36,7 @@ import {
   EmptyState,
   Icon,
   ScreenLoader,
+  SectionTitle,
   Spinner,
 } from "@abonten/ui-native";
 import { useCallback, useMemo, useState } from "react";
@@ -40,10 +47,9 @@ type Tab = "events" | "places";
 // The Explore screen — native equivalent of the web /explore/[location]
 // page: a location switcher, Events/Places tabs, a category chip row, a
 // filter sheet mirroring the web Filter modal, a removable active-filter
-// chip row, and the filterable "All events" / "All places" list with
-// filter-aware empty states. The web page's curated sliders (Featured,
-// Around You, Happening Today/Week/Month, Top Rated) are a follow-up pass
-// (docs/mobile/09).
+// chip row, the curated sliders (Featured / Around You / Happening
+// Today-Week-Month / Top Rated), and the filterable "All events" / "All
+// places" list with filter-aware empty states.
 export default function Explore() {
   const { location, resolving } = useExploreLocation();
   const coords = location ? { lat: location.lat, lng: location.lng } : null;
@@ -61,6 +67,9 @@ export default function Explore() {
 
   const eventsQuery = useFilteredEvents(coords, eventFilters);
   const placesQuery = useFilteredPlaces(coords, placeFilters);
+
+  const eventSliders = useExploreEventSliders(coords, location?.label ?? "");
+  const placeSliders = useExplorePlaceSliders(coords);
 
   const events: UserPostType[] =
     eventsQuery.data?.pages.flatMap((p) => p.rows) ?? [];
@@ -115,8 +124,51 @@ export default function Explore() {
 
   const activeQuery = tab === "events" ? eventsQuery : placesQuery;
 
+  const sliders =
+    tab === "events" ? (
+      <View>
+        <EventSliderRow
+          title="Featured"
+          events={eventSliders.data.featured}
+          featured
+        />
+        <EventSliderRow
+          title="Around you"
+          events={eventSliders.data.aroundYou}
+        />
+        <EventSliderRow
+          title="Top-rated organizers"
+          events={eventSliders.data.topRatedOrganizers}
+        />
+        <EventSliderRow
+          title="Happening today"
+          events={eventSliders.data.happeningToday}
+        />
+        <EventSliderRow
+          title="Happening this week"
+          events={eventSliders.data.happeningThisWeek}
+        />
+        <EventSliderRow
+          title="Happening this month"
+          events={eventSliders.data.happeningThisMonth}
+        />
+      </View>
+    ) : (
+      <View>
+        <PlaceSliderRow title="Featured" places={placeSliders.data.featured} />
+        <PlaceSliderRow
+          title="Around you"
+          places={placeSliders.data.aroundYou}
+        />
+        <PlaceSliderRow title="Open now" places={placeSliders.data.openNow} />
+        <PlaceSliderRow title="Top rated" places={placeSliders.data.topRated} />
+      </View>
+    );
+
   const listHeader = (
     <View>
+      {sliders}
+
       <CategoryChipsRow
         items={tab === "events" ? eventCategoryChips : placeCategoryChips}
         selectedKey={
@@ -146,6 +198,9 @@ export default function Explore() {
         onRemove={removeChip}
         onClearAll={clearAllChips}
       />
+      <SectionTitle className="px-4 pb-1 pt-2">
+        {tab === "events" ? "All events" : "All places"}
+      </SectionTitle>
     </View>
   );
 
@@ -246,7 +301,10 @@ export default function Explore() {
               refreshing={
                 eventsQuery.isRefetching && !eventsQuery.isFetchingNextPage
               }
-              onRefresh={() => eventsQuery.refetch()}
+              onRefresh={() => {
+                eventsQuery.refetch();
+                eventSliders.refetch();
+              }}
             />
           }
           ListEmptyComponent={eventsQuery.isLoading ? <Spinner /> : emptyState}
@@ -269,7 +327,10 @@ export default function Explore() {
               refreshing={
                 placesQuery.isRefetching && !placesQuery.isFetchingNextPage
               }
-              onRefresh={() => placesQuery.refetch()}
+              onRefresh={() => {
+                placesQuery.refetch();
+                placeSliders.refetch();
+              }}
             />
           }
           ListEmptyComponent={placesQuery.isLoading ? <Spinner /> : emptyState}
