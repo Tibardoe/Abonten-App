@@ -1,8 +1,13 @@
 import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplete";
 import { useUpdateEvent } from "@/features/events/useUpdateEvent";
+import { useUpdateEventTicketTypes } from "@/features/events/useUpdateEventTicketTypes";
 import { api } from "@/lib/api";
 import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
-import type { EventForEditData, UpdateEventResult } from "@abonten/api-client";
+import type {
+  EventForEditData,
+  UpdateEventResult,
+  UpdateEventTicketTypesResult,
+} from "@abonten/api-client";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
   validateSingleDateRange,
@@ -15,7 +20,12 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
-import type { OccurrenceDraft, ScheduleMode } from "./useEventWizard";
+import type {
+  OccurrenceDraft,
+  ScheduleMode,
+  TicketMode,
+  TicketTier,
+} from "./useEventWizard";
 
 // Mobile echo of the web useEventEditForm hook. Edits the core, non-ticketing
 // fields of an event the organizer already created; ticketing/promo state is
@@ -48,6 +58,7 @@ function splitIso(iso: string): { date: string; time: string } {
 export function useEventEdit(eventId: string) {
   const autocomplete = usePlacesAutocomplete();
   const update = useUpdateEvent();
+  const updateTickets = useUpdateEventTicketTypes();
   const eventSchema = useMemo(() => getEventSchema(EVENT_MESSAGES), []);
 
   const query = useQuery({
@@ -90,6 +101,14 @@ export function useEventEdit(eventId: string) {
     null,
   );
   const [resolvingLocation, setResolvingLocation] = useState(false);
+
+  // ticket types — a separate save, like the web ManageEventDetailsSection.
+  // Read-only once the event has confirmed tickets (`locked`).
+  const [ticketMode, setTicketMode] = useState<TicketMode>("single");
+  const [ticketPrice, setTicketPrice] = useState("");
+  const [ticketQuantity, setTicketQuantity] = useState("");
+  const [tiers, setTiers] = useState<TicketTier[]>([]);
+  const [ticketCurrency, setTicketCurrency] = useState("GHS");
 
   const seededAddress = useRef<string>("");
 
@@ -140,6 +159,27 @@ export function useEventEdit(eventId: string) {
       setRangeEnd(e.date);
       setRangeStartTime(s.time);
       setRangeEndTime(e.time);
+    }
+
+    // Ticket types — mirrors the web inferInitialTicketState.
+    const tt = event.ticket_type ?? [];
+    setTicketCurrency(tt[0]?.currency ?? "GHS");
+    if (tt.length === 1 && tt[0].type === "FREE") {
+      setTicketMode("free");
+    } else if (tt.length === 1 && tt[0].type === "SINGLE TICKET") {
+      setTicketMode("single");
+      setTicketPrice(String(tt[0].price));
+      setTicketQuantity(tt[0].quantity != null ? String(tt[0].quantity) : "");
+    } else if (tt.length > 0) {
+      setTicketMode("multiple");
+      setTiers(
+        tt.map((t) => ({
+          id: t.id,
+          name: t.type,
+          price: String(t.price),
+          quantity: t.quantity != null ? String(t.quantity) : "",
+        })),
+      );
     }
 
     setPrefilled(true);
@@ -374,6 +414,73 @@ export function useEventEdit(eventId: string) {
     });
   }
 
+  async function saveTicketTypes(): Promise<UpdateEventTicketTypesResult | null> {
+    if (locked) return null;
+
+    if (ticketMode === "free") {
+      return updateTickets.mutateAsync({
+        eventId,
+        currency: ticketCurrency,
+        freeEvent: true,
+      });
+    }
+
+    if (ticketMode === "single") {
+      const price = Number(ticketPrice);
+      const qty = ticketQuantity.trim() === "" ? null : Number(ticketQuantity);
+      if (!Number.isFinite(price) || price <= 0) {
+        Alert.alert(
+          "Check the price",
+          "Enter a ticket price greater than zero.",
+        );
+        return null;
+      }
+      if (qty != null && (!Number.isFinite(qty) || qty <= 0)) {
+        Alert.alert(
+          "Check the quantity",
+          "Quantity must be a whole number above zero.",
+        );
+        return null;
+      }
+      return updateTickets.mutateAsync({
+        eventId,
+        currency: ticketCurrency,
+        singleTicket: { price, quantity: qty },
+      });
+    }
+
+    const parsed = tiers.map((t) => ({
+      type: t.name.trim(),
+      price: Number(t.price),
+      quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+    }));
+    if (parsed.length === 0) {
+      Alert.alert("Add a ticket type", "Add at least one ticket type.");
+      return null;
+    }
+    if (
+      parsed.some(
+        (t) =>
+          !t.type ||
+          !Number.isFinite(t.price) ||
+          t.price < 0 ||
+          (t.quantity != null &&
+            (!Number.isFinite(t.quantity) || t.quantity <= 0)),
+      )
+    ) {
+      Alert.alert(
+        "Check the ticket types",
+        "Each ticket type needs a name, a price and a valid quantity.",
+      );
+      return null;
+    }
+    return updateTickets.mutateAsync({
+      eventId,
+      currency: ticketCurrency,
+      multipleTickets: parsed,
+    });
+  }
+
   return {
     isLoading: query.isLoading,
     loadError:
@@ -429,6 +536,18 @@ export function useEventEdit(eventId: string) {
     pickSuggestion,
     useCurrentLocation,
     setMapLocation,
+    // ticket types
+    ticketMode,
+    setTicketMode,
+    ticketPrice,
+    setTicketPrice,
+    ticketQuantity,
+    setTicketQuantity,
+    tiers,
+    setTiers,
+    ticketCurrency,
+    saveTicketTypes,
+    isSavingTicketTypes: updateTickets.isPending,
     // submit
     save,
     isSaving: update.isPending,

@@ -44,6 +44,8 @@ import type {
   SubmitChargeOtpResult,
   UpdateEventBody,
   UpdateEventResult,
+  UpdateEventTicketTypesBody,
+  UpdateEventTicketTypesResult,
   UploadSignatureKind,
   UserPostType,
   ValidateCheckoutBody,
@@ -532,6 +534,21 @@ export function createApiClient(options: ApiClientOptions) {
         return request<UpdateEventResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}`,
           { method: "PATCH", body, auth: true },
+        );
+      },
+      /**
+       * Replace the caller's event's ticket types. Editable only until the
+       * event's first confirmed ticket (409 after).
+       */
+      updateEventTicketTypes(
+        eventId: string,
+        body: UpdateEventTicketTypesBody,
+      ) {
+        return request<UpdateEventTicketTypesResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/ticket-types`,
+          { method: "PUT", body, auth: true },
         );
       },
     },

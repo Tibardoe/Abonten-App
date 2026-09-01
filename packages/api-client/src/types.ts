@@ -482,6 +482,17 @@ export type EventForEditData = {
   flyer_public_id: string;
   flyer_version: string;
   event_occurrence: { id: string; starts_at: string; ends_at: string }[] | null;
+  ticket_type:
+    | {
+        id: string;
+        type: string;
+        price: number;
+        quantity: number | null;
+        currency: string | null;
+        available_from: string | null;
+        available_until: string | null;
+      }[]
+    | null;
 };
 
 export type EventEditContextResult =
@@ -513,6 +524,28 @@ export type UpdateEventBody = {
 
 export type UpdateEventResult =
   | { status: 200; message?: string; eventCode?: string }
+  | { status: 400 | 401 | 404 | 409 | 500; message: string };
+
+// The event's ticket types, replaced wholesale. Editable only until the
+// event's first confirmed ticket (409 after — hasConfirmedParticipation).
+// Free, a single paid tier, or multiple named tiers — mirrors EventCreateBody.
+export type UpdateEventTicketTypesBody = {
+  currency?: string | null;
+  freeEvent?: boolean;
+  singleTicket?: { price: number; quantity: number | null } | null;
+  multipleTickets?:
+    | {
+        type: string;
+        price: number;
+        quantity: number | null;
+        availableFrom?: string | null;
+        availableUntil?: string | null;
+      }[]
+    | null;
+};
+
+export type UpdateEventTicketTypesResult =
+  | { status: 200; message?: string }
   | { status: 400 | 401 | 404 | 409 | 500; message: string };
 
 // ---- organizer write actions ----------------------------------------
