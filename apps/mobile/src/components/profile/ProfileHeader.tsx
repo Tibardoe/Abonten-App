@@ -58,7 +58,7 @@ export function ProfileHeader({
         <Button
           title="Edit profile"
           variant="outline"
-          onPress={() => router.push("/(app)/account")}
+          onPress={() => router.push("/(app)/settings/edit-profile")}
         />
       ) : null}
 

@@ -63,7 +63,7 @@ Grouped the way the audit was requested:
 |---|---|---|
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
-| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore, 2b card overlays/favourites, 2c Profile + tabs **done** (2026-09-01), see below; 2d–2f pending |
+| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore, 2b card overlays/favourites, 2c Profile + tabs, 2d Settings **done** (2026-09-01), see below; 2e–2f pending |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
@@ -352,3 +352,41 @@ Native equivalent of the web `user/[username]` route group
 
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
 clean, `biome check` clean on touched files. Not device-verified.
+
+---
+
+## WP-2d — Settings hub + sub-pages (done 2026-09-01)
+
+Native echo of the web `(settings)` route group + `SettingsDesktopSidebar`.
+New nested stack `app/(app)/settings/` (registered `href: null`,
+`headerShown: false` on the tab so the stack owns its header); `/settings`
+added to `authRedirect` `PROTECTED_PREFIXES`.
+
+- **Hub** (`settings/index.tsx`) — the five sidebar entries in web order,
+  `settings.nav.*` labels: Overview · Edit Profile · Security · Switch
+  Appearance · Language.
+- **Overview** — the "Quick links" card (Manage payment method → Wallet,
+  View transaction history → Tickets for now). *PromotionDetails deferred.*
+- **Edit Profile** — controlled form validated on submit with the shared
+  `@abonten/validation/editProfileSchema` (`username` / `full_name` /
+  `website` / `bio`); `useUpdateProfile` writes straight to `user_info`
+  (RLS `user_info_self_update`) and invalidates the profile caches. Added
+  `@abonten/validation` (+ transitive `zod`) as a mobile dep — closes the
+  audit's "Zod schemas re-implemented as ad-hoc regex" gap for this form.
+  *Avatar upload + profile-completion checklist deferred; `username_is_generated`
+  flag not flipped (web-side profile-completion nicety).*
+- **Security** — read-only summary (email / phone + verified state from
+  `session.user`, linked Google identity) + "manage on the web" note. The
+  web page's full Hubtel OTP change flows aren't ported (mobile phone-auth
+  is half-wired per CLAUDE.md).
+- **Language** — the six `@abonten/i18n` locales via
+  `useLocale()` / `I18N_LOCALES` / `LOCALE_LABELS` (the web `Language`
+  organism), persisted per device.
+- **Switch Appearance** — reuses the shared `AppearanceToggle` +
+  `settings.appearance.*` descriptions (the web `SwitchAppearance`).
+- **Wiring** — `account.tsx` gains a "Settings" row; the profile header's
+  "Edit profile" now points at `settings/edit-profile`.
+
+**Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
+clean, `biome check` clean on touched files. Not device-verified (the
+profile-write path needs a signed-in device check).

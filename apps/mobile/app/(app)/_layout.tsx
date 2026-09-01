@@ -140,6 +140,11 @@ function Layout() {
           name="user/[username]"
           options={{ href: null, title: "Profile" }}
         />
+        {/* Nested Stack owns its own header, so hide the tab-level one. */}
+        <Tabs.Screen
+          name="settings"
+          options={{ href: null, headerShown: false }}
+        />
         <Tabs.Screen
           name="ticket/[id]"
           options={{ href: null, title: "Ticket" }}
