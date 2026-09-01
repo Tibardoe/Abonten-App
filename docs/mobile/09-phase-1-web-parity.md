@@ -578,3 +578,28 @@ device-verified (needs a signed-in user with a checked-in ticket).
 **Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
+
+### WP-2g-5 — Settings avatar upload (done 2026-09-01)
+
+`src/features/profile/useAvatarUpload.ts` — the native echo of the web
+`getAvatarUploadSignature` + `saveAvatarToSupabase`:
+
+1. `expo-image-picker` — pick a square image (`allowsEditing`, `aspect [1,1]`).
+2. `api.uploads.signature("avatar")` → a short-lived Cloudinary signature
+   scoped to `user_profiles/<user id>` (secret never leaves the server).
+3. Multipart `POST` straight to `api.cloudinary.com/.../image/upload`.
+4. `user_info.update({ avatar_public_id, avatar_version })` (RLS
+   `user_info_self_update`); invalidates the profile queries.
+
+`settings/edit-profile.tsx` — the avatar and a "Change photo" button now
+run this (replacing the "change it on the web" caption). `app.json` gains
+the `expo-image-picker` plugin with an iOS photo-permission string.
+
+**Not ported:** the `user_image_history` insert the web action also does —
+that table has no client `INSERT` RLS policy, so it stays server-side
+(and the web action's treatment of a failed history insert as a hard
+error looks like a latent post-RLS bug — flagged, not touched).
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified (needs a device photo library + Cloudinary round-trip).
