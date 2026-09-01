@@ -1,4 +1,5 @@
 import { TicketCard } from "@/components/TicketCard";
+import { PendingCheckoutsSection } from "@/components/checkout/PendingCheckoutsSection";
 import { EventsToReviewList } from "@/components/reviews/EventsToReviewList";
 import { ReviewedEventsList } from "@/components/reviews/ReviewedEventsList";
 import {
@@ -64,6 +65,9 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
       renderItem={({ item }) => (
         <TicketCard ticket={item} showRefundInfo={tab === "refunds"} />
       )}
+      ListHeaderComponent={
+        tab === "active" ? <PendingCheckoutsSection /> : null
+      }
       contentContainerClassName="gap-3 px-4 pb-16"
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}

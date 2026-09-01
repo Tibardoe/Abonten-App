@@ -43,3 +43,15 @@ export function useCancelCheckout() {
     },
   });
 }
+
+// The "resume checkout" basket — every active, non-expired pending session
+// across all of the user's events. Mirrors the web PendingCheckoutsBasket.
+// Self-heals expiry server-side, so a `refetch()` after a countdown hits
+// zero drops the stale session.
+export function usePendingCheckouts() {
+  return useQuery({
+    queryKey: ["mobile", "checkout", "pending"],
+    queryFn: () => api.checkout.pending(),
+    staleTime: 30_000,
+  });
+}

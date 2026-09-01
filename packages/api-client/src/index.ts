@@ -33,6 +33,8 @@ export type {
   PayoutAccountType,
   PayoutsResult,
   PayoutStatus,
+  PendingCheckoutSession,
+  PendingCheckoutSessionLine,
   PaystackPaymentInfo,
   PhoneSession,
   PreparedCheckoutPayment,
