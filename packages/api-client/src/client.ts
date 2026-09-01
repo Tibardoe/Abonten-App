@@ -22,6 +22,7 @@ import type {
   PaymentMethodRow,
   PayoutAccountsResult,
   PayoutsResult,
+  PendingCheckoutSession,
   PhoneSession,
   PreparedCheckoutPayment,
   ProfileData,
@@ -210,6 +211,14 @@ export function createApiClient(options: ApiClientOptions) {
           body: { checkoutSessionId },
           auth: true,
         });
+      },
+      /** Every active, non-expired pending checkout session for the caller
+       *  (across all their events) — the "resume checkout" basket. */
+      pending() {
+        return request<ApiEnvelope<PendingCheckoutSession[]>>(
+          "/api/mobile/checkout/pending",
+          { method: "GET", auth: true },
+        );
       },
       /** Record a payment_attempt and start the Paystack charge. */
       attempt(body: CheckoutAttemptBody) {

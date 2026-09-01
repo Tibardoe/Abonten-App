@@ -118,6 +118,36 @@ export type PreparedCheckoutPayment = {
 // is `*, event(...), ticket_type(...)` — broad and DB-driven, kept loose.
 export type CheckoutSessionRow = Record<string, unknown>;
 
+// ---- pending-checkout basket -------------------------------------------
+// Mirrors getUserPendingTicketCheckoutsCore's PendingCheckoutSession /
+// PendingCheckoutSessionLine. `GET /api/mobile/checkout/pending` returns
+// `ApiEnvelope<PendingCheckoutSession[]>`.
+
+export type PendingCheckoutSessionLine = {
+  ticketCheckoutId: string;
+  ticketTypeId: string;
+  type: string;
+  unitPrice: number;
+  quantity: number;
+  discount: number;
+  discountedUnits: number;
+  amount: number;
+  currency: string;
+  availableStock: number | null;
+};
+
+export type PendingCheckoutSession = {
+  checkoutSessionId: string;
+  eventId: string;
+  eventTitle: string;
+  eventCode: string;
+  eventDateAndTime: { date: string; time: string };
+  expiresAt: string;
+  promoCode: string | null;
+  lines: PendingCheckoutSessionLine[];
+  sessionSubtotal: number;
+};
+
 // ---- payment methods ---------------------------------------------------
 
 export type PaymentMethodRow = {
