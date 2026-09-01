@@ -2,7 +2,14 @@ import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useValidateCheckout } from "./useCheckout";
 
 const MAX_PER_TYPE = 10;
@@ -27,6 +34,8 @@ export function TicketPicker({ event }: { event: EventDetail }) {
     occurrences[0]?.id ?? null,
   );
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [promoCode, setPromoCode] = useState("");
+  const [promoError, setPromoError] = useState<string | null>(null);
 
   const currency = event.ticket_type[0]?.currency ?? "GHS";
   const subtotal = useMemo(
@@ -54,10 +63,13 @@ export function TicketPicker({ event }: { event: EventDetail }) {
 
   async function onGetTickets() {
     if (totalCount === 0) return;
+    setPromoError(null);
+    const trimmedPromo = promoCode.trim();
     const res = await validate.mutateAsync({
       eventId: event.id,
       quantities,
       occurrenceId,
+      promoCode: trimmedPromo || null,
     });
 
     if (res.status === 200 && res.checkoutSessionId) {
@@ -70,6 +82,12 @@ export function TicketPicker({ event }: { event: EventDetail }) {
       res.checkoutId
     ) {
       router.push(`/(app)/checkout/${res.checkoutId}`);
+      return;
+    }
+    // A promo was entered and validate rejected — most likely the code.
+    // Keep the sheet open and surface it inline rather than aborting.
+    if (trimmedPromo) {
+      setPromoError(res.message ?? "That promo code couldn't be applied.");
       return;
     }
     Alert.alert(
@@ -169,6 +187,31 @@ export function TicketPicker({ event }: { event: EventDetail }) {
             </View>
           );
         })}
+      </View>
+
+      <View className="gap-1.5">
+        <Text className="text-sm font-semibold text-foreground">
+          Promo code
+        </Text>
+        <TextInput
+          value={promoCode}
+          onChangeText={(v) => {
+            setPromoCode(v);
+            if (promoError) setPromoError(null);
+          }}
+          placeholder="Enter code (optional)"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+          placeholderTextColor="#999"
+        />
+        {promoError ? (
+          <Text className="text-[11px] text-destructive">{promoError}</Text>
+        ) : (
+          <Text className="text-[11px] text-muted-foreground">
+            Applied when you continue to checkout.
+          </Text>
+        )}
       </View>
 
       <View className="flex-row items-center justify-between">

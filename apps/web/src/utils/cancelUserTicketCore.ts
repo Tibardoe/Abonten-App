@@ -283,5 +283,6 @@ async function releasePromoUsageIfEventFullyCancelled(
     eventId,
     // Even a fully-discounted purchase claimed at least one unit of usage.
     Math.max(1, totalDiscountedUnits),
+    supabase,
   );
 }

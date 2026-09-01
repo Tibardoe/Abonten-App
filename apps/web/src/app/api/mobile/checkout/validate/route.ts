@@ -4,13 +4,14 @@ import { validateCheckoutCore } from "@/utils/validateCheckoutCore";
 import { logger } from "@abonten/core/logger";
 
 // POST /api/mobile/checkout/validate
-//   { eventId: string, quantities: { [ticketTypeId]: number }, occurrenceId?: string }
+//   { eventId: string, quantities: { [ticketTypeId]: number },
+//     occurrenceId?: string, promoCode?: string }
 //
 // Reserves inventory and creates a pending checkout session — the same
-// validateCheckoutCore the web action runs. Promo codes are not accepted
-// from the app yet (getPromoCode / claimPromoUsage still assume the cookie
-// SSR context); a request with a promoCode is rejected rather than silently
-// ignored.
+// validateCheckoutCore the web action runs. Promo codes are honoured: the
+// core threads this route's Bearer client through getPromoCodeCore /
+// claimPromoUsage so the promo_code / promo_code_usage writes run as the
+// caller's own `authenticated` role + `auth.uid()`.
 export async function POST(req: Request) {
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
@@ -27,12 +28,10 @@ export async function POST(req: Request) {
       return apiJson({ status: 400, message: "eventId is required" });
     }
 
-    if (body.promoCode != null && body.promoCode !== "") {
-      return apiJson({
-        status: 400,
-        message: "Promo codes aren't supported in the app yet.",
-      });
-    }
+    const promoCode =
+      typeof body.promoCode === "string" && body.promoCode.trim().length > 0
+        ? body.promoCode.trim()
+        : null;
 
     const rawQuantities = body.quantities;
     if (
@@ -62,7 +61,7 @@ export async function POST(req: Request) {
     const result = await validateCheckoutCore(auth.supabase, auth.user.id, {
       eventId: body.eventId,
       quantities,
-      promoCode: null,
+      promoCode,
       occurrenceId,
     });
 

@@ -1,10 +1,18 @@
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
 // for why. These accept an arbitrary userId with no session binding of their
 // own, so they must only ever be reached through validateCheckout, which
 // already resolves userId from the caller's own session.
+//
+// `client` is optional: the web (cookie-session) callers omit it and get a
+// fresh cookie-bound client; the mobile API route path passes its already-
+// authenticated Bearer client through validateCheckoutCore so the
+// promo_code / promo_code_usage writes run as the same `authenticated`
+// role + `auth.uid()` the RLS policies expect
+// (promo_code_authenticated_usage_update, promo_code_usage_owner_*).
 
 /**
  * Atomically claims `unitsToClaim` redemptions of a promo code for one
@@ -20,8 +28,9 @@ export async function claimPromoUsage(
   userId: string,
   eventId: string,
   unitsToClaim: number,
+  client?: SupabaseClient,
 ) {
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
 
   const { data: promoCode, error: promoCodeError } = await supabase
     .from("promo_code")
@@ -163,10 +172,11 @@ export async function releasePromoUsage(
   userId: string,
   eventId: string,
   unitsToRelease: number,
+  client?: SupabaseClient,
 ) {
   if (unitsToRelease <= 0) return;
 
-  const supabase = await createClient();
+  const supabase = client ?? (await createClient());
 
   await supabase
     .from("promo_code_usage")

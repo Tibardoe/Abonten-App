@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import getPromoCode from "@/actions/getPromoCode";
+import { getPromoCodeCore } from "@/utils/getPromoCodeCore";
 import { claimPromoUsage, releasePromoUsage } from "@/utils/promoUsage";
 import {
   releaseTicketQuantity,
@@ -180,7 +180,12 @@ export async function validateCheckoutCore(
   let eligibleUnitsByTicketType: Record<string, number> = {};
 
   if (promoCode) {
-    const promoCodeResponse = await getPromoCode(promoCode, eventId);
+    const promoCodeResponse = await getPromoCodeCore(
+      supabase,
+      userId,
+      promoCode,
+      eventId,
+    );
 
     if (promoCodeResponse.status !== 200) {
       return {
@@ -285,6 +290,7 @@ export async function validateCheckoutCore(
       userId,
       eventId,
       totalDiscountedUnits,
+      supabase,
     );
 
     if (claim.status !== 200) {
@@ -329,6 +335,7 @@ export async function validateCheckoutCore(
         userId,
         eventId,
         totalDiscountedUnits,
+        supabase,
       );
     }
 
