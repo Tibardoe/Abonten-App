@@ -10,6 +10,10 @@ const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 module.exports = {
   ...base,
+  updates: {
+    ...base.updates,
+    url: "https://u.expo.dev/c0a45056-182f-47c5-b862-de14034a830a",
+  },
   android: {
     ...base.android,
     config: {
