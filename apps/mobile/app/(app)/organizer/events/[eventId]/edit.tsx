@@ -2,6 +2,7 @@ import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { useEventEdit } from "@/features/events/useEventEdit";
 import { TIME_RE, prettyDate } from "@/lib/datetime";
+import { uuidv4 as makeId } from "@/lib/uuid";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Button, Field, Icon, Input } from "@abonten/ui-native";
 import { Image } from "expo-image";
@@ -89,6 +90,17 @@ export default function EditEventScreen() {
     } else {
       Alert.alert("Couldn't save", res.message ?? "Please try again.");
     }
+  }
+
+  async function onSaveTicketTypes() {
+    const res = await w.saveTicketTypes();
+    if (!res) return;
+    Alert.alert(
+      res.status === 200 ? "Saved" : "Couldn't save",
+      res.status === 200
+        ? "Ticket types updated."
+        : (res.message ?? "Please try again."),
+    );
   }
 
   return (
@@ -389,6 +401,157 @@ export default function EditEventScreen() {
         disabled={w.isSaving}
         onPress={onSave}
       />
+
+      <View className="h-px bg-border" />
+
+      {/* Ticket types — a separate save, like the web Details tab */}
+      <View className="gap-3">
+        <AppText variant="label">Ticket types</AppText>
+        {w.locked ? (
+          <AppText className="text-[12px] text-muted-foreground">
+            This event already has confirmed tickets, so ticket types can no
+            longer be changed.
+          </AppText>
+        ) : (
+          <>
+            <View className="flex-row gap-2">
+              {(["free", "single", "multiple"] as const).map((m) => (
+                <Chip
+                  key={m}
+                  label={
+                    m === "free"
+                      ? "Free"
+                      : m === "single"
+                        ? "One price"
+                        : "Multiple types"
+                  }
+                  active={w.ticketMode === m}
+                  onPress={() => w.setTicketMode(m)}
+                />
+              ))}
+            </View>
+
+            {w.ticketMode === "free" ? (
+              <AppText className="text-[13px] text-muted-foreground">
+                Attendees reserve a free ticket. Capacity caps the total.
+              </AppText>
+            ) : null}
+
+            {w.ticketMode === "single" ? (
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <Field label={`Price (${w.ticketCurrency})`}>
+                    <Input
+                      value={w.ticketPrice}
+                      onChangeText={w.setTicketPrice}
+                      keyboardType="decimal-pad"
+                      placeholder="0.00"
+                    />
+                  </Field>
+                </View>
+                <View className="flex-1">
+                  <Field label="Quantity" hint="Optional">
+                    <Input
+                      value={w.ticketQuantity}
+                      onChangeText={w.setTicketQuantity}
+                      keyboardType="number-pad"
+                      placeholder="Unlimited"
+                    />
+                  </Field>
+                </View>
+              </View>
+            ) : null}
+
+            {w.ticketMode === "multiple" ? (
+              <View className="gap-3">
+                {w.tiers.map((t, i) => (
+                  <View
+                    key={t.id}
+                    className="gap-2 rounded-xl border border-border bg-card p-3"
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <AppText className="text-[13px] font-semibold text-foreground">
+                        Ticket type {i + 1}
+                      </AppText>
+                      <Pressable
+                        onPress={() =>
+                          w.setTiers((prev) =>
+                            prev.filter((_, idx) => idx !== i),
+                          )
+                        }
+                      >
+                        <AppText className="text-[12px] text-destructive">
+                          Remove
+                        </AppText>
+                      </Pressable>
+                    </View>
+                    <Input
+                      value={t.name}
+                      onChangeText={(v) =>
+                        w.setTiers((prev) =>
+                          prev.map((x, idx) =>
+                            idx === i ? { ...x, name: v } : x,
+                          ),
+                        )
+                      }
+                      placeholder="e.g. VIP"
+                    />
+                    <View className="flex-row gap-3">
+                      <View className="flex-1">
+                        <Input
+                          value={t.price}
+                          onChangeText={(v) =>
+                            w.setTiers((prev) =>
+                              prev.map((x, idx) =>
+                                idx === i ? { ...x, price: v } : x,
+                              ),
+                            )
+                          }
+                          keyboardType="decimal-pad"
+                          placeholder={`Price (${w.ticketCurrency})`}
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <Input
+                          value={t.quantity}
+                          onChangeText={(v) =>
+                            w.setTiers((prev) =>
+                              prev.map((x, idx) =>
+                                idx === i ? { ...x, quantity: v } : x,
+                              ),
+                            )
+                          }
+                          keyboardType="number-pad"
+                          placeholder="Qty (optional)"
+                        />
+                      </View>
+                    </View>
+                  </View>
+                ))}
+                <Button
+                  title="Add ticket type"
+                  variant="outline"
+                  size="sm"
+                  onPress={() =>
+                    w.setTiers((prev) => [
+                      ...prev,
+                      { id: makeId(), name: "", price: "", quantity: "" },
+                    ])
+                  }
+                />
+              </View>
+            ) : null}
+
+            <Button
+              title={w.isSavingTicketTypes ? "Saving…" : "Save ticket types"}
+              variant="secondary"
+              loading={w.isSavingTicketTypes}
+              disabled={w.isSavingTicketTypes}
+              onPress={onSaveTicketTypes}
+            />
+          </>
+        )}
+      </View>
 
       <MapPickerSheet
         open={mapOpen}

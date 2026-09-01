@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 per-event insights, 4c-2a per-event edit done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 per-event insights, 4c-2a/2b per-event edit + ticket types done, see below |
 
 ---
 
@@ -1157,3 +1157,49 @@ is **WP-4c-2b**, the Promotion tab is **WP-4c-3**.
 device-verified — the prefill, the geocode fallback, the flyer replace and
 the `updateEventCore` write from a Bearer client need a signed-in organizer
 device pass.
+
+### WP-4c-2b — Per-event management: ticket-types editor (done 2026-09-01)
+
+The other half of the web Details tab — `ManageEventDetailsSection`'s
+ticket-types editor (`updateEventTicketTypes` + `TicketType` / `TicketInputs`),
+saved separately from the core fields and locked once the event has its
+first confirmed ticket.
+
+- **`apps/web/src/utils/updateEventTicketTypesCore.ts`** (new) — the whole
+  `updateEventTicketTypes` body minus auth (calls
+  `getEventHasConfirmedParticipationCore` directly): the confirmed-ticket
+  lock → 409, the FREE / SINGLE TICKET / multiple payload shaping, the
+  `expire_stale_ticket_checkouts` self-heal + pending-checkout guard (a
+  pending checkout FK-references a `ticket_type` row —
+  `ticket_checkout_ticket_type_id_fkey` is `ON DELETE RESTRICT`) → 409, the
+  wholesale delete+reinsert. `updateEventTicketTypes` is now a thin
+  `auth → map ManageEventDetailsSection's string-mode form shape → delegate`
+  wrapper (explicit return type).
+- **`PUT /api/mobile/organizer/events/[eventId]/ticket-types`** — body
+  `{ currency?, freeEvent?, singleTicket?, multipleTickets? }` (mirrors
+  `EventCreateBody`'s ticketing) → `updateEventTicketTypesCore`.
+- **`getEventForEditCore`** now also selects `ticket_type(...)` so the
+  `/edit` GET returns the current config for prefill (`EventForEditData` /
+  the api-client `EventForEditData` gained the field; the web
+  `useEventEditForm` ignores it).
+- **api-client** — `UpdateEventTicketTypesBody` / `UpdateEventTicketTypesResult`
+  + `api.organizer.updateEventTicketTypes(id, body)`.
+- **Mobile** — `src/features/events/useUpdateEventTicketTypes.ts` (mutation).
+  `useEventEdit` gained ticket state (`ticketMode` / `ticketPrice` /
+  `ticketQuantity` / `tiers` / `ticketCurrency`), prefilled from
+  `event.ticket_type` the way the web `inferInitialTicketState` does
+  (single FREE → free; single "SINGLE TICKET" → one price; else multiple
+  named tiers), and `saveTicketTypes()` (validation mirrors
+  `useEventWizard.buildTickets`). The `edit.tsx` screen gained a "Ticket
+  types" section below "Save changes" with its **own** "Save ticket types"
+  button (matching the web's two-save layout); the whole section renders a
+  read-only lock notice when `hasConfirmedParticipation`.
+- **No new deps.**
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/events/[eventId]/ticket-types` compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified — the prefill, the lock behaviour and the
+`updateEventTicketTypesCore` write from a Bearer client need a signed-in
+organizer device pass.

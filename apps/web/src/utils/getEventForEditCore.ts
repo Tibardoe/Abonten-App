@@ -21,6 +21,17 @@ export type EventForEditData = {
   flyer_public_id: string;
   flyer_version: string;
   event_occurrence: { id: string; starts_at: string; ends_at: string }[] | null;
+  ticket_type:
+    | {
+        id: string;
+        type: string;
+        price: number;
+        quantity: number | null;
+        currency: string | null;
+        available_from: string | null;
+        available_until: string | null;
+      }[]
+    | null;
 };
 
 export type EventForEditResult =
@@ -50,7 +61,8 @@ export async function getEventForEditCore(
       ends_at,
       flyer_public_id,
       flyer_version,
-      event_occurrence(id, starts_at, ends_at)
+      event_occurrence(id, starts_at, ends_at),
+      ticket_type(id, type, price, quantity, currency, available_from, available_until)
     `,
     )
     .eq("id", eventId)

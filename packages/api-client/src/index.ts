@@ -67,6 +67,8 @@ export type {
   SubmitChargeOtpResult,
   UpdateEventBody,
   UpdateEventResult,
+  UpdateEventTicketTypesBody,
+  UpdateEventTicketTypesResult,
   UploadSignatureKind,
   UserPostType,
   ValidateCheckoutBody,
