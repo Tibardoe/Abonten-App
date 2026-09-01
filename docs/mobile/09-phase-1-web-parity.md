@@ -523,3 +523,33 @@ highlights stays deferred to creator tooling (WP-4).
 **Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
+
+### WP-2g-3 — Reviews write + To Review / Reviewed / Refunds tabs (done 2026-09-01)
+
+`event_review` (reviewer-scoped RLS) + `ticket` (owner-scoped RLS) + `event`
+(public) are all directly reachable, so the whole event-review flow is
+client-side — no `/api/mobile` endpoint. Every rule the web server actions
+enforce is re-checked in `src/features/reviews/useEventReviews.ts`, and the
+DB's `UNIQUE(event_id, reviewer_id)` is the backstop.
+
+- `useEventReviewEligibility(event)` — native `getEventReviewEligibility`:
+  signed-in? organizer? own review? cancelled? ended
+  (`resolveEventEndDate`)? checked-in (`ticket.status = 'used'`) ticket?
+- `useEventsAwaitingReview()` / `useUserEventReviews()` (cursor-paginated) /
+  `usePostEventReview()` (inserts `status:'approved'`,
+  `is_verified_attendee:true`, title-cased title) / `useDeleteEventReview()`.
+- `components/reviews/`: `StarRatingInput` (tappable 1–5),
+  `AddReviewSheet` (rating + optional title ≤150 + comment ≤500 — photos
+  deferred, need the Cloudinary signed upload), `EventsToReviewList`,
+  `ReviewedEventsList` (with "Verified Attendee" badge + delete).
+- `event/[id].tsx` — a "Write a review" button when eligible, or the user's
+  own review card when they've already reviewed.
+- `tickets.tsx` — the chip row goes from 3 to 6: Active / Past / Cancelled /
+  **Refunds** / **To Review** / **Reviewed**. `useMyTickets` gained a
+  `refunds` filter (`TICKET_REFUND_SELECT` + `transaction.amount > 0`, like
+  `getUserTicketRefunds`); `TicketCard` gained `showRefundInfo` for the
+  refund-status line.
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified (needs a signed-in user with a checked-in ticket).

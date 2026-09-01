@@ -2,7 +2,10 @@ import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { keysetOlderThan } from "@abonten/core/pagination";
-import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
+import {
+  TICKET_REFUND_SELECT,
+  TICKET_WITH_EVENT_SELECT,
+} from "@abonten/core/ticketSelect";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
@@ -11,8 +14,9 @@ const PAGE_SIZE = 20;
 // The My-Tickets tab set — native echo of the web /manage/my-events tabs.
 // `active` / `past` share the same status filter (`active` | `used`) and are
 // split client-side by whether the event has ended (matching the web
-// switcher); `cancelled` is its own status.
-export type TicketFilter = "active" | "past" | "cancelled";
+// switcher); `cancelled` is its own status; `refunds` is cancelled tickets
+// that had a paid transaction (`getUserTicketRefunds`).
+export type TicketFilter = "active" | "past" | "cancelled" | "refunds";
 
 type Cursor = { sortValue: string; id: string };
 type Row = UserTicketType & {
@@ -20,7 +24,9 @@ type Row = UserTicketType & {
 };
 
 function statusesFor(filter: TicketFilter): string[] {
-  return filter === "cancelled" ? ["cancelled"] : ["active", "used"];
+  return filter === "cancelled" || filter === "refunds"
+    ? ["cancelled"]
+    : ["active", "used"];
 }
 
 function eventEnded(event: UserTicketType["event"]): boolean {
@@ -41,12 +47,20 @@ async function fetchPage(
 ): Promise<{ tickets: UserTicketType[]; nextCursor: Cursor | null }> {
   let query = supabase
     .from("ticket")
-    .select(TICKET_WITH_EVENT_SELECT)
+    .select(
+      filter === "refunds" ? TICKET_REFUND_SELECT : TICKET_WITH_EVENT_SELECT,
+    )
     .eq("user_id", userId)
     .in("status", statusesFor(filter))
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(PAGE_SIZE + 1);
+
+  // Refunds = cancelled tickets that actually had money attached
+  // (getUserTicketRefunds): the !inner transaction embed + amount > 0.
+  if (filter === "refunds") {
+    query = query.gt("transaction.amount", 0);
+  }
 
   if (cursor) {
     query = query.or(keysetOlderThan("created_at", "id", cursor));

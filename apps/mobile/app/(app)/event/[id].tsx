@@ -1,6 +1,8 @@
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
+import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
 import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
+import { useEventReviewEligibility } from "@/features/reviews/useEventReviews";
 import { eventShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
@@ -8,10 +10,11 @@ import {
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { Button } from "@abonten/ui-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -34,6 +37,19 @@ export default function EventDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { data, isLoading, isError, refetch } = useEventDetail(id);
+  const [reviewOpen, setReviewOpen] = useState(false);
+
+  const reviewEvent = data
+    ? {
+        id: data.event.id,
+        organizer_id: data.event.organizer_id,
+        status: data.event.status,
+        starts_at: data.event.starts_at,
+        ends_at: data.event.ends_at,
+        event_occurrence: data.event.event_occurrence,
+      }
+    : undefined;
+  const { data: eligibility } = useEventReviewEligibility(reviewEvent);
 
   const eventCode = data?.event.event_code;
   useEffect(() => {
@@ -213,6 +229,42 @@ export default function EventDetailScreen() {
           ))}
         </View>
 
+        {eligibility?.canReview ? (
+          <Button title="Write a review" onPress={() => setReviewOpen(true)} />
+        ) : eligibility &&
+          !eligibility.canReview &&
+          eligibility.reason === "has_review" ? (
+          <View className="gap-2 rounded-xl border border-border bg-card p-4">
+            <Text className="text-sm font-semibold text-foreground">
+              Your review
+            </Text>
+            <Text className="text-sm text-warning">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <Text
+                  key={i}
+                  className={
+                    i < eligibility.ownReview.rating
+                      ? "text-warning"
+                      : "text-muted-foreground"
+                  }
+                >
+                  ★
+                </Text>
+              ))}
+            </Text>
+            {eligibility.ownReview.title ? (
+              <Text className="text-sm font-semibold text-foreground">
+                {eligibility.ownReview.title}
+              </Text>
+            ) : null}
+            {eligibility.ownReview.comment ? (
+              <Text className="text-sm text-muted-foreground">
+                {eligibility.ownReview.comment}
+              </Text>
+            ) : null}
+          </View>
+        ) : null}
+
         {canceled ? (
           <View className="items-center rounded-xl bg-muted px-4 py-3">
             <Text className="text-sm font-semibold text-muted-foreground">
@@ -235,6 +287,13 @@ export default function EventDetailScreen() {
           <Text className="text-sm text-primary">Back to browsing</Text>
         </Pressable>
       </View>
+
+      <AddReviewSheet
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+        eventId={event.id}
+        eventTitle={event.title}
+      />
     </ScrollView>
   );
 }
