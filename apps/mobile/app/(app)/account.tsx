@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { AppearanceToggle } from "@/components/app/AppearanceToggle";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
+import { useIsOrganizer } from "@/features/roles/useRoles";
 import {
   AppText,
   Avatar,
@@ -42,6 +43,7 @@ function NavRow({
 export default function Account() {
   const { session, signOut } = useSession();
   const { data: profile } = useProfile();
+  const isOrganizer = useIsOrganizer();
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
@@ -154,11 +156,13 @@ export default function Account() {
           label={t("places")}
           onPress={() => router.push("/(app)/places")}
         />
-        <NavRow
-          icon="grid-outline"
-          label="Organizer"
-          onPress={() => router.push("/(app)/organizer")}
-        />
+        {isOrganizer ? (
+          <NavRow
+            icon="grid-outline"
+            label="Organizer"
+            onPress={() => router.push("/(app)/organizer")}
+          />
+        ) : null}
       </View>
 
       <View className="gap-2">

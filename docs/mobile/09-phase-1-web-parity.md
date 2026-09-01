@@ -63,7 +63,7 @@ Grouped the way the audit was requested:
 |---|---|---|
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
-| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore, 2b card overlays/favourites, 2c Profile + tabs, 2d Settings, 2e transactions/tickets/share **done** (2026-09-01), see below; 2f pending |
+| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
@@ -427,3 +427,44 @@ profile-write path needs a signed-in device check).
 
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
 clean, `biome check` clean on touched files. Not device-verified.
+
+---
+
+## WP-2f — Role gating (done 2026-09-01)
+
+`src/features/roles/useRoles.ts` — `useIsOrganizer()` / `useIsPlaceOwner()`,
+native echoes of the web `hooks/useCurrentUser.ts` hooks: a cached
+`event` where `organizer_id = uid` / `place` where `owner_id = uid`
+existence check (`limit 1`). UI gating only — organizer screens re-check
+ownership themselves.
+
+- `AppMenuSheet` — the **Manage** section (Dashboard / My events /
+  Finances) now renders only for organizers, matching the web `SideBar`'s
+  `ManageMenu` gate. Create event / Create place stay visible to every
+  signed-in user (anyone can start).
+- `account.tsx` — the **Organizer** nav row is organizer-only.
+
+**Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
+clean, `biome check` clean on touched files. Not device-verified.
+
+---
+
+## WP-2 complete (2026-09-01)
+
+All six chunks merged to `main`: 2a Explore (`dd2bc70`) + curated sliders /
+filter controls (`4f423d4`), 2b card overlays + favourites (`b2c1a82`),
+2c public profile + tabs (`303c183`), 2d Settings hub + sub-pages
+(`c54fc87`), 2e transactions analytics + ticket tabs + share (`e35d3fd`),
+2f role gating.
+
+**Deferred out of WP-2 (candidates for a WP-2g or folded into later WPs):**
+- Explore map view + `ChangeLocationSheet` autocomplete / map picker — need
+  `react-native-maps` + a Google Maps API key not yet provisioned for
+  mobile (go/no-go).
+- Profile highlights (Instagram-style); organizer link from `EventCard`.
+- Reviews **write** (attendance-gated `AddReviewSheet` + star input) and the
+  My-Tickets **To Review / Reviewed / Refunds** tabs.
+- Transaction detail screen (`/transactions/[kind]/[id]`).
+- Settings: avatar upload, profile-completion checklist, promotion details,
+  full OTP-based email/phone change.
+- Euclid Circular B font (still `.woff2`-only; needs `.ttf`/`.otf`).
