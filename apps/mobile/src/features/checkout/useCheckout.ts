@@ -5,10 +5,11 @@ type ValidateInput = {
   eventId: string;
   quantities: Record<string, number>;
   occurrenceId?: string | null;
+  promoCode?: string | null;
 };
 
 // Reserve inventory + open a pending checkout session. Mirrors the web
-// validateCheckout action (promo codes not supported from the app yet).
+// validateCheckout action, including promo-code validation + claim.
 export function useValidateCheckout() {
   return useMutation({
     mutationFn: (input: ValidateInput) => api.checkout.validate(input),

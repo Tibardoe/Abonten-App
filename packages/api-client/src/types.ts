@@ -85,6 +85,10 @@ export type ValidateCheckoutBody = {
   eventId: string;
   quantities: Record<string, number>;
   occurrenceId?: string | null;
+  // Optional promo code — validated + claimed server-side inside
+  // validateCheckoutCore. A bad code fails the whole validate call with its
+  // own message (e.g. "Promo code is invalid!").
+  promoCode?: string | null;
 };
 
 // validateCheckoutCore replies flat (not wrapped in `data`): 200 carries
