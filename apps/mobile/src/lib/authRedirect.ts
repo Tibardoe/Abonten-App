@@ -27,6 +27,9 @@ const PROTECTED_PREFIXES = [
   "/checkout",
   "/organizer",
   "/settings",
+  // Creating a place needs a session; the public place detail route
+  // (`/place/<id>`) stays open — this prefix only matches `/place/new`.
+  "/place/new",
 ] as const;
 
 export function isProtectedPath(pathname: string): boolean {

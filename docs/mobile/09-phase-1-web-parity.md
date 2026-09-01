@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation done, see below |
 
 ---
 
@@ -901,3 +901,68 @@ Studio SDK Manager or the direct zip) + the `cmake.dir` line.
 
 EAS route still valid as an alternative:
 `eas build --profile development --platform android`.
+
+---
+
+## WP-4 — Organizer & creator (in progress, 2026-09-01)
+
+Makes the mobile organizer surface read-**write**. The read side (dashboard,
+finance, events list, payouts, cancel-event) landed in phases 5.8/5.9 and
+already has `api/mobile/organizer/*` routes. WP-4 adds creation +
+management. Proposed chunking: **4a place creation** · 4b event creation ·
+4c per-event management (analytics / edit / delete / promote) · 4d attendee
+list + check-in (needs `expo-camera`) · 4e promo CRUD · 4f per-place
+management · 4g dashboard widgets + drafts. Same per-chunk git flow.
+
+### WP-4a — Place creation (done 2026-09-01)
+
+Native echo of the web `PlaceUploadModal` (Places Milestone 3) — a 4-step
+wizard (Basic info · Cover photo · Hours · Review) that publishes a place.
+Create-only; save-as-draft is deferred to WP-4g.
+
+- **`apps/web/src/utils/postPlaceCore.ts`** — `postPlaceCore(supabase,
+  userId, input)` lifted from `postPlace`: location validation, slug, the
+  `create_place` RPC, draft cleanup. The one platform difference — where
+  the cover bytes reach Cloudinary (web: `savePlacePhotoToCloudinary` with
+  a `File`; mobile: a signed direct upload from the device) — is resolved
+  by the caller, which hands the core an already-uploaded
+  `coverPublicId` / `coverVersion`. `postPlace` thinned to auth + cover
+  resolution → core (explicit return type — the status-widening gotcha).
+- **`POST /api/mobile/places`** — `getMobileAuth` + body validation →
+  `postPlaceCore`. RLS confirmed (`20260825105513`): `place_owner_insert`
+  = `auth.uid() = owner_id`, `place_opening_hours` / `place_service`
+  owner_all keyed on the parent place's `owner_id`; `create_place` is
+  `GRANT ALL … TO authenticated` and runs SECURITY INVOKER, so the Bearer
+  `authenticated` client (same role + `auth.uid()` as the web cookie
+  session) inserts identically. Same finding class as WP-3g.
+- **`@abonten/api-client`** — `PlaceCreateBody` / `PlaceCreateResult` +
+  `places.create(body)`; re-exports `PlaceOpeningHoursInput` /
+  `PlaceServiceInput` from `@abonten/types/placeType`.
+- **Mobile** — `src/features/places/useCreatePlace.ts` (upload cover via
+  `uploadToCloudinary(uri, "place_photo")` → `api.places.create`);
+  `src/lib/uuid.ts` (`uuidv4` for the `clientRequestId` idempotency key —
+  no `crypto.randomUUID` dependency); `app/(app)/place/new.tsx` — the
+  wizard, using `@abonten/ui-native` `Field`/`Input`/`Button`, the shared
+  `@abonten/validation/placeSchema` for the text fields, `usePlaceCategories`
+  (WP-2a) for the category picker, `usePlacesAutocomplete` (WP-2g-6) +
+  `expo-location` reverse-geocode for the address, `expo-image-picker`
+  (`allowsEditing`, `aspect [16,9]`) for the cover. `/place/new` added to
+  `authRedirect` `PROTECTED_PREFIXES` (only matches `/place/new`, not the
+  public `/place/<id>` detail). Entry points: `AppMenuSheet` "Create place"
+  row (was → website) and an "Add place" button on `places.tsx`.
+- **No new deps** — `expo-image-picker` / `expo-location` were already in
+  the build; no native rebuild needed.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (`/api/mobile/places`
+compiled), `expo export --platform android` clean, `biome check` clean.
+Not device-verified — the wizard flow, the Cloudinary cover upload and the
+`create_place` write from a Bearer client need a signed-in device pass.
+
+### Map-pick for the address (deferred)
+
+`place/new.tsx` covers address entry via autocomplete + current-location.
+A map-pin picker (web's `MapModal`) is deferred: the existing
+`MapPickerSheet` is wired to `ExploreLocationProvider`, so a standalone
+"pick on map for this form" needs it generalised with an `onPick` callback
+— a small follow-up, tracked here.

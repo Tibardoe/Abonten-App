@@ -8,6 +8,10 @@ import type {
   PayoutStatus,
 } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
+import type {
+  PlaceOpeningHoursInput,
+  PlaceServiceInput,
+} from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
@@ -123,6 +127,38 @@ export type CancelTicketBody = {
 };
 
 export type CancelTicketResult = { status: number; message?: string };
+
+// ---- place creation ----------------------------------------------------
+// postPlaceCore. The cover photo is uploaded from the device first (signed
+// direct upload, kind "place_photo"); its public_id/version are passed
+// here. `clientRequestId` is generated once per submission and reused
+// across retries so a replay returns the same place instead of a
+// duplicate. Flat reply: 200 = published (carries placeId/slug); 400 =
+// validation; 500 = create failed (retry-friendly).
+export type { PlaceOpeningHoursInput, PlaceServiceInput };
+
+export type PlaceCreateBody = {
+  name: string;
+  categoryId: number;
+  description: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  coverPublicId: string;
+  coverVersion: string;
+  clientRequestId: string;
+  openingHours: PlaceOpeningHoursInput[];
+  websiteUrl?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  socialLinks?: Record<string, string> | null;
+  services?: PlaceServiceInput[] | null;
+  draftId?: string | null;
+};
+
+export type PlaceCreateResult =
+  | { status: number; message?: string }
+  | { status: 200; message?: string; placeId: string; slug: string };
 
 export type PreparedCheckoutSession = {
   checkoutSessionId: string;

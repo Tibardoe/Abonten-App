@@ -2,11 +2,19 @@ import { PlaceCard } from "@/components/PlaceCard";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import type { PlaceType } from "@abonten/types/placeType";
-import { Caption, EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
+import {
+  Button,
+  Caption,
+  EmptyState,
+  ScreenLoader,
+  Spinner,
+} from "@abonten/ui-native";
+import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 
 export default function Places() {
+  const router = useRouter();
   const { location } = useDeviceLocation();
   const q = useNearbyPlaces(location);
 
@@ -20,8 +28,16 @@ export default function Places() {
 
   return (
     <View className="flex-1 bg-background">
+      <View className="px-4 pt-4">
+        <Button
+          title="Add place"
+          size="sm"
+          onPress={() => router.push("/(app)/place/new")}
+        />
+      </View>
+
       {location?.isFallback ? (
-        <View className="px-4 pb-1 pt-4">
+        <View className="px-4 pb-1 pt-3">
           <Caption>
             Showing Accra — enable location for places near you.
           </Caption>
