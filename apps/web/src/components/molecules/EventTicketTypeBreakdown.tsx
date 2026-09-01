@@ -28,7 +28,7 @@ export default function EventTicketTypeBreakdown({
     staleTime: 20_000,
   });
 
-  const rows = response?.data ?? [];
+  const rows = response?.status === 200 ? response.data : [];
 
   return (
     <section className="flex flex-col gap-3">

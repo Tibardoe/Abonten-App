@@ -382,6 +382,88 @@ export type OrganizerFinanceResult =
   | { status: 200; data: OrganizerFinanceOverviewRow[] }
   | { status: 401 | 500; message: string };
 
+// ---- event insights (per-event analytics, read-only) ----------------
+//
+// The underlying get_event_*_analytics RPCs have no generated types; the
+// PostgREST layer can serialise their bigint/numeric columns as strings, so
+// the mobile screen coerces every numeric field with Number() on read (same
+// convention as OrganizerOverviewRow above).
+
+export type EventInsightsOverview = {
+  event_title: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  require_registration: boolean;
+  capacity: number | null;
+  currency: string | null;
+  tickets_sold: number;
+  tickets_cancelled: number;
+  gross_sales: number;
+  total_discount: number;
+  promo_purchase_count: number;
+  distinct_attendees: number;
+  capacity_remaining: number | null;
+};
+
+export type EventInsightsFinance = {
+  currency: string;
+  ticketSales: number;
+  platformFee: number;
+  refunds: number;
+  netSales: number;
+  pendingRefunds: number;
+  completedRefunds: number;
+  refundRequestCount: number;
+  organizerEarnings: number;
+  settled: boolean;
+};
+
+export type EventInsightsTicketTypeRow = {
+  ticket_type_id: string;
+  type: string;
+  sold: number;
+  quantity_capacity: number | null;
+  percent_sold: number | null;
+  price: number;
+  currency: string | null;
+  revenue: number;
+  cancelled: number;
+};
+
+export type EventInsightsPromoRow = {
+  promo_code: string;
+  orders: number;
+  units_discounted: number;
+  total_discount: number;
+};
+
+export type EventInsightsDateRow = {
+  occurrence_id: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  tickets_sold: number;
+  tickets_cancelled: number;
+};
+
+export type EventInsightsReturning = {
+  returning_count: number;
+  first_time_count: number;
+};
+
+export type EventInsightsResult =
+  | {
+      status: 200;
+      data: {
+        overview: EventInsightsOverview | null;
+        finance: EventInsightsFinance | null;
+        ticketTypes: EventInsightsTicketTypeRow[];
+        promos: EventInsightsPromoRow[];
+        dates: { rows: EventInsightsDateRow[]; hasOccurrences: boolean };
+        returning: EventInsightsReturning;
+      };
+    }
+  | { status: 401 | 403 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =

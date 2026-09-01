@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 per-event insights done, see below |
 
 ---
 
@@ -1033,3 +1033,62 @@ Review) that publishes an event. Create-only; save-as-draft is WP-4g.
 `biome check` clean. Not device-verified — the wizard flow, the flyer
 upload and the `create_event` write from a Bearer client need a signed-in
 device pass.
+
+### WP-4c-1 — Per-event management: Insights (done 2026-09-01)
+
+First slice of per-event management (`manage/events/[eventId]` on web — a
+3-tab `ManageEventView`: Details / Promotion / Insights). This chunk ports
+the **Insights** tab read-only; the Details (edit) and Promotion tabs are
+WP-4c-2 / WP-4c-3, attendee list + QR check-in is WP-4d.
+
+- **`apps/web/src/utils/eventInsightsQuery.ts`** (new) — the post-auth
+  query bodies for one event's Insights surface, shared by the six Server
+  Actions (cookie session) and the mobile route (Bearer session), the same
+  arrangement `organizerReadQuery.ts` uses for the dashboard/finance reads.
+  Exports `fetchEvent{Overview,Finance,TicketType,Promo,Date}Analytics` /
+  `fetchEventReturningAttendeeStats` (each `(supabase, userId, eventId,
+  start?, end?)`, ownership-checked) **plus** `fetchEventInsights(...)`
+  which runs all six in one call for the mobile screen (which shows every
+  section at once — the web page lazy-loads them per-section instead).
+  `getEvent{Overview,Finance,TicketType,Promo,Date}Analytics` /
+  `getEventReturningAttendeeStats` are now thin `auth → delegate` wrappers
+  (401 return annotated `as const` — the status-widening gotcha); the three
+  `Event{TicketType,Promo,Date}Breakdown` molecules narrow `rows` on
+  `status === 200` now that the delegated result is a real discriminated
+  union. `getEventFinanceSummary` re-exports its `EventFinanceSummary` type
+  from the util for its existing (internal-only) consumers.
+  - RLS: the five `get_event_*_analytics` / `_stats` RPCs are SECURITY
+    INVOKER and each re-check `event.organizer_id = auth.uid()` internally
+    (`20260903100000`); `get_event_refund_breakdown` / `is_event_settled`
+    are SECURITY DEFINER, scoped to the caller's own ledger rows / granted
+    to `authenticated` (`20260819110000`). A Bearer `authenticated` client
+    resolves `auth.uid()` the same way the cookie session does → identical
+    results on mobile (same finding class as WP-4a / 4b / 3g).
+- **`GET /api/mobile/organizer/events/[eventId]/analytics?period=`** —
+  `getMobileAuth` → `getDashboardPeriodRange(period)` → `fetchEventInsights`
+  → `fromActionResult` (403 when the event isn't the caller's).
+- **api-client** — `EventInsights{Overview,Finance,TicketTypeRow,PromoRow,
+  DateRow,Returning}` + `EventInsightsResult` types;
+  `api.organizer.eventInsights(eventId, period = "all")`.
+- **Mobile** — `src/features/organizer/useEventInsights.ts` (one query,
+  20 s `staleTime`); `app/(app)/organizer/events/[eventId].tsx` — the
+  Insights screen: period chips (Today / 7d / 30d / All, default All to
+  match web) + Overview tiles (the web `EventOverviewCards`
+  registration-vs-sales split) + Event Revenue (the `EventFinanceSummary`
+  rows incl. all-time refund/settlement note) + Ticket Types (progress
+  bars) + Promo Codes + Attendance by Date (only when the event has
+  occurrences) + Attendee Behavior (returning-vs-first-time split bar) +
+  a "View public event page" row. Every numeric field is `Number()`-coerced
+  on read (PostgREST bigint→string). `organizer/events.tsx` cards now open
+  this screen instead of the public event page (the "Cancel event" link
+  stays on the card — that flow already shipped in phase 5.9); route
+  registered `href: null` in `(app)/_layout.tsx`. `/organizer` is already
+  an `authRedirect` protected prefix, so `/organizer/events/<id>` is gated.
+- **No new deps.**
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0
+(`/api/mobile/organizer/events/[eventId]/analytics` compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified — the six analytics RPCs from a Bearer client and the
+screen render need a signed-in organizer device pass.

@@ -28,7 +28,7 @@ export default function EventPromoBreakdown({
     staleTime: 20_000,
   });
 
-  const rows = response?.data ?? [];
+  const rows = response?.status === 200 ? response.data : [];
 
   if (!isLoading && isError) {
     return (
