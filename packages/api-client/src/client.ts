@@ -16,6 +16,7 @@ import type {
   EventCancellationImpactResult,
   EventCreateBody,
   EventCreateResult,
+  EventEditContextResult,
   EventInsightsResult,
   FreeRsvpBody,
   FreeRsvpResult,
@@ -41,6 +42,8 @@ import type {
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
   SubmitChargeOtpResult,
+  UpdateEventBody,
+  UpdateEventResult,
   UploadSignatureKind,
   UserPostType,
   ValidateCheckoutBody,
@@ -84,7 +87,11 @@ export function createApiClient(options: ApiClientOptions) {
 
   async function request<TResponse extends { status: number }>(
     path: string,
-    init: { method: "GET" | "POST"; body?: unknown; auth: boolean },
+    init: {
+      method: "GET" | "POST" | "PATCH" | "PUT";
+      body?: unknown;
+      auth: boolean;
+    },
   ): Promise<TResponse> {
     const headers: Record<string, string> = {};
 
@@ -502,6 +509,29 @@ export function createApiClient(options: ApiClientOptions) {
             eventId,
           )}/analytics?period=${period}`,
           { method: "GET", auth: true },
+        );
+      },
+      /**
+       * The caller's own event row for prefilling the edit form, plus
+       * `hasConfirmedParticipation` (dates / location / capacity locked).
+       * 404 if the event isn't the caller's.
+       */
+      eventEditContext(eventId: string) {
+        return request<EventEditContextResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/edit`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Edit the core, non-ticketing fields of the caller's own event. A
+       * replacement flyer is uploaded from the device first; pass its
+       * `flyerPublicId` / `flyerVersion`, or omit both to keep the current
+       * one. Ticket types are a separate endpoint.
+       */
+      updateEvent(eventId: string, body: UpdateEventBody) {
+        return request<UpdateEventResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(eventId)}`,
+          { method: "PATCH", body, auth: true },
         );
       },
     },

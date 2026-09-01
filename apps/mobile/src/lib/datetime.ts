@@ -16,6 +16,13 @@ export function todayIso(): string {
   return isoDate(new Date());
 }
 
+/** "HH:MM" (24h, local) for `d` — the inverse of combineDateAndTime's time part. */
+export function hhmm(d: Date): string {
+  return `${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes(),
+  ).padStart(2, "0")}`;
+}
+
 /**
  * Combine a yyyy-mm-dd string and an "HH:MM" string into a local Date.
  * Returns null if either part is missing or malformed.

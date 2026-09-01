@@ -464,6 +464,57 @@ export type EventInsightsResult =
     }
   | { status: 401 | 403 | 500; message: string };
 
+// ---- per-event edit (core, non-ticketing fields) --------------------
+
+export type EventForEditData = {
+  id: string;
+  title: string;
+  description: string;
+  address: { full_address?: string } | null;
+  capacity: number | null;
+  website_url: string | null;
+  event_category: string | null;
+  event_type: string[] | string | null;
+  require_registration: boolean | null;
+  featured: boolean | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  flyer_public_id: string;
+  flyer_version: string;
+  event_occurrence: { id: string; starts_at: string; ends_at: string }[] | null;
+};
+
+export type EventEditContextResult =
+  | {
+      status: 200;
+      data: { event: EventForEditData; hasConfirmedParticipation: boolean };
+    }
+  | { status: 401 | 404 | 500; message: string };
+
+export type UpdateEventBody = {
+  title: string;
+  description: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  category: string;
+  types: string[];
+  /** require_registration */
+  checked: boolean;
+  capacity?: number | null;
+  websiteUrl?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  specificDates?: { start: string; end: string }[] | null;
+  /** Omit both to keep the current flyer. */
+  flyerPublicId?: string | null;
+  flyerVersion?: string | null;
+};
+
+export type UpdateEventResult =
+  | { status: 200; message?: string; eventCode?: string }
+  | { status: 400 | 401 | 404 | 409 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =
