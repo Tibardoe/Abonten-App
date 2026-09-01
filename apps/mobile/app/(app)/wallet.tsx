@@ -1,4 +1,5 @@
 import {
+  useAddCard,
   useAddMomoWallet,
   useMomoNetworks,
   usePaymentMethods,
@@ -32,8 +33,19 @@ export default function WalletScreen() {
   const { data, isLoading, isError, refetch } = usePaymentMethods();
   const networks = useMomoNetworks();
   const addMomo = useAddMomoWallet();
+  const addCard = useAddCard();
   const removeMethod = useRemovePaymentMethod();
   const setDefault = useSetDefaultPaymentMethod();
+
+  async function onAddCard() {
+    const res = await addCard.mutateAsync(undefined);
+    if (res.status === 200) return;
+    Alert.alert(
+      "Card not added",
+      res.message ??
+        "We couldn't verify that card. You won't have been charged.",
+    );
+  }
 
   const [showForm, setShowForm] = useState(false);
   const [networkCode, setNetworkCode] = useState<string | null>(null);
@@ -223,19 +235,39 @@ export default function WalletScreen() {
           </View>
         </View>
       ) : (
-        <Pressable
-          onPress={() => setShowForm(true)}
-          className="flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3"
-        >
-          <Ionicons name="add" size={18} color="#888" />
-          <Text className="text-sm font-semibold text-foreground">
-            Add mobile money
-          </Text>
-        </Pressable>
+        <View className="gap-3">
+          <Pressable
+            onPress={() => setShowForm(true)}
+            className="flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3"
+          >
+            <Ionicons name="add" size={18} color="#888" />
+            <Text className="text-sm font-semibold text-foreground">
+              Add mobile money
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={onAddCard}
+            disabled={addCard.isPending}
+            className="flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3"
+          >
+            {addCard.isPending ? (
+              <ActivityIndicator />
+            ) : (
+              <>
+                <Ionicons name="card-outline" size={18} color="#888" />
+                <Text className="text-sm font-semibold text-foreground">
+                  Add debit / credit card
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </View>
       )}
 
       <Text className="text-[11px] text-muted-foreground">
-        Cards can't be added from the app yet — add one on the website.
+        Adding a card runs a GHS 1 verification charge that is refunded
+        immediately. Your card number is never stored.
       </Text>
     </ScrollView>
   );

@@ -10,6 +10,7 @@ export type {
   CancelEventResult,
   CancelTicketBody,
   CancelTicketResult,
+  CardVerificationInitData,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,

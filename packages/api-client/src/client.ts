@@ -6,6 +6,7 @@ import type {
   CancelEventResult,
   CancelTicketBody,
   CancelTicketResult,
+  CardVerificationInitData,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
   CheckoutSessionRow,
@@ -290,12 +291,29 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "GET", auth: true },
         );
       },
-      /** Add a mobile money wallet (network + phone). Cards aren't addable
-       *  from the app — they need a server-captured authorization code. */
+      /** Add a mobile money wallet (network + phone). */
       addMomo(body: AddMomoWalletBody) {
         return request<ApiEnvelope<PaymentMethodRow>>(
           "/api/mobile/payment-methods",
           { method: "POST", body, auth: true },
+        );
+      },
+      /** Start the GHS 1 card-verification charge. Open `authorizationUrl`
+       *  in a browser session, then call confirmCard(reference) once it
+       *  closes. */
+      initCard() {
+        return request<ApiEnvelope<CardVerificationInitData>>(
+          "/api/mobile/payment-methods/card/init",
+          { method: "POST", auth: true },
+        );
+      },
+      /** Finish the card save after the verification popup closes — verifies
+       *  the charge, captures the reusable authorization, refunds the GHS 1,
+       *  saves the card. */
+      confirmCard(reference: string, label?: string) {
+        return request<ApiEnvelope<PaymentMethodRow>>(
+          "/api/mobile/payment-methods/card/confirm",
+          { method: "POST", body: { reference, label }, auth: true },
         );
       },
       remove(paymentMethodId: string) {
