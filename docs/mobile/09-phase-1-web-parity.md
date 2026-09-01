@@ -644,3 +644,31 @@ screen keeps working.
 and the rendered map are NOT verified here), `biome check` clean. Needs a
 native rebuild + a device to verify the map, and a Places-enabled key for
 autocomplete.
+
+---
+
+## WP-3 — Checkout & buyer completeness (in progress)
+
+### WP-3a — Live checkout expiry countdown (done 2026-09-01)
+
+`src/features/checkout/useCheckoutCountdown.ts` — native port of the web
+`hooks/useCheckoutCountdown.ts` (`useCheckoutCountdown` + `formatCountdown`,
+120s warning threshold). Display-only; the server's
+`expire_stale_ticket_checkouts` sweep is the real enforcement.
+
+`app/(app)/checkout/[sessionId].tsx` now also calls `useCheckoutSession`
+(the `/checkout/session/:id` route self-heals stale rows), reads the first
+line item's `ticket_checkout.expires_at`, and renders a `CheckoutExpiryBanner`
+(muted → destructive under 2 min → "expired"). On hitting zero it refetches
+`prepare` + `session` once, so the screen flips into the existing
+server-driven "expired / seats released" state.
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified.
+
+**Still open in WP-3:** pending-checkouts basket (multi-session), promo
+codes (needs the shared `@abonten/api-client` `ValidateCheckoutBody` + the
+web `/api/mobile/checkout/validate` route to accept & apply a code — a
+cross-package change), free RSVP, fulfillment recovery, cancel-ticket /
+partial refund, ticket PDF / receipt, AddBankCard.
