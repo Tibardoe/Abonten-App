@@ -1,3 +1,4 @@
+import { FavoriteButton } from "@/components/FavoriteButton";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -28,10 +29,11 @@ export default function PlaceDetailScreen() {
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
 
   useEffect(() => {
-    if (place?.name) {
-      navigation.setOptions({ title: place.name });
-    }
-  }, [place?.name, navigation]);
+    navigation.setOptions({
+      ...(place?.name ? { title: place.name } : {}),
+      headerRight: () => <FavoriteButton kind="place" id={id} />,
+    });
+  }, [place?.name, navigation, id]);
 
   if (isLoading) {
     return (

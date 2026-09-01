@@ -63,7 +63,7 @@ Grouped the way the audit was requested:
 |---|---|---|
 | **WP-0 Foundation** | `@abonten/ui-native` (primitives + theme + i18n); font plumbing; runtime theme provider; wire into `apps/mobile` | **done** (2026-09-01) — see below |
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
-| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore **done** (2026-09-01), see below; 2b–2f pending |
+| **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **in progress** — 2a Explore + 2b card overlays/favourites **done** (2026-09-01), see below; 2c–2f pending |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | |
 | **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | |
 
@@ -266,3 +266,39 @@ it is now the Explore screen.
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
 clean, `biome check` clean on all touched files, web `next build` exit 0
 (`@abonten/core` moves). Not device-verified.
+
+---
+
+## WP-2b — Card status overlays + favourites (done 2026-09-01)
+
+- **`EventCard` status overlay** — `CardStatusOverlay` (a non-interactive
+  centred wash over the flyer, card stays tappable) with the exact web
+  `EventCard` `centerOverlay` precedence: `status === "canceled"` →
+  "Event Canceled" (dark-red), else `getEventSoldOutStatus({capacity,
+  attendeeCount})` → "Sold Out", else `getEventStatusOverlay(...)` →
+  "Ongoing" / "Event Ended". Upcoming shows nothing. Helpers are the
+  shared `@abonten/core` ones the web card uses.
+- **`PlaceCard` open status** — now `derivePlaceCardOpenStatus(is_open,
+  temporary_status)` from `@abonten/core/computePlaceOpenStatus` (the same
+  call the web `PlaceCard` makes), so `temporarily_closed` /
+  `permanently_closed` win over the SQL `is_open` boolean and render as a
+  dot + label like the web `PlaceOpenStatusBadge` (was a bare
+  "Open"/"Closed").
+- **Favourites** — `src/features/favorites/useFavorites.ts`: `useIsFavorited`
+  + `useToggleFavorite` (kind `"event"` | `"place"`), direct RLS-scoped CRUD
+  on `favorite` / `favorite_place` (both have a single
+  `FOR ALL USING (auth.uid() = user_id)` policy — migrations `20260825105625`
+  / `20260825105513`), optimistic cache update + rollback, matches the web
+  `AddToFavoriteButton` / `AddPlaceToFavoriteButton` pattern.
+  `favoritesListKey(kind)` is invalidated on every toggle for the Profile
+  Favourites tabs (WP-2c).
+- **`FavoriteButton`** — an optimistic heart. On the cover of every
+  `EventCard` / `PlaceCard` (top-right, translucent chip) and in the
+  `headerRight` of the event / place detail screens (via
+  `navigation.setOptions`). Signed-out taps store the path
+  (`setPendingRedirect`) and route to sign-in, mirroring the web
+  `useRequireAuth()` gate.
+
+**Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
+clean, `biome check` clean on touched files. Not device-verified (the
+favourites write path in particular needs a signed-in device check).
