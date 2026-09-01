@@ -29,6 +29,7 @@ export type EventDetail = {
   status: string;
   event_code: string;
   created_at: string;
+  organizer_id: string;
   user_info: {
     avatar_public_id: string;
     avatar_version: string;
@@ -47,9 +48,13 @@ export type EventDetail = {
   place: { id: string; name: string; slug: string } | null;
 };
 
-async function fetchEventDetail(
-  id: string,
-): Promise<{ event: EventDetail; attendanceCount: number }> {
+export type OrganizerRating = { average: number; count: number };
+
+async function fetchEventDetail(id: string): Promise<{
+  event: EventDetail;
+  attendanceCount: number;
+  organizerRating: OrganizerRating;
+}> {
   const { data, error } = await supabase
     .from("event")
     .select(EVENT_DETAIL_SELECT)
@@ -68,7 +73,24 @@ async function fetchEventDetail(
     p_event_id: event.id,
   });
 
-  return { event, attendanceCount: Number(count ?? 0) };
+  // Same as the web page's getUserRating(organizer_id): the organizer rated
+  // as a person via the generic `review` table (anon-readable).
+  const { data: ratings } = await supabase
+    .from("review")
+    .select("rating")
+    .eq("reviewed_id", event.organizer_id);
+  const list = (ratings ?? []) as { rating: number }[];
+  const organizerRating: OrganizerRating = {
+    count: list.length,
+    average:
+      list.length > 0
+        ? Number(
+            (list.reduce((a, r) => a + r.rating, 0) / list.length).toFixed(1),
+          )
+        : 0,
+  };
+
+  return { event, attendanceCount: Number(count ?? 0), organizerRating };
 }
 
 export function useEventDetail(id: string | undefined) {

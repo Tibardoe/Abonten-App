@@ -499,3 +499,27 @@ Env: `apps/mobile/.env` gained the three client-safe keys mirrored from
 **Verified:** `turbo run typecheck` (`@abonten/mobile` + `@abonten/ui-native`)
 green, `expo export --platform android` clean (fonts listed in the bundle),
 `biome check` clean. Not device-verified (rendered face needs a device).
+
+### WP-2g-2 — Organizer link + profile highlights (done 2026-09-01)
+
+**Organizer card (event detail).** `useEventDetail` now also returns
+`organizerRating` (`review` avg where `reviewed_id = organizer_id`, same as
+the web page's `getUserRating`). `event/[id].tsx`'s "Organized by" block is
+now a card `Pressable` → `/(app)/user/{username}`, with the 5-star rating
+row and a `Posted {getRelativeTime(created_at)}` line — parity with the web
+detail page's Organizer Card.
+
+**Highlights.** `src/features/profile/useHighlights.ts` reads the
+`highlight` table directly (`highlight_public_select` RLS is `USING(true)`),
+grouped by `group_id` (newest group first, slides oldest-first).
+`src/components/profile/HighlightsRow.tsx` — the horizontal strip of
+mint-ringed covers on the profile header (replaces the placeholder line);
+`HighlightViewer.tsx` — a story player (progress bars, tap L/R to step,
+press-hold to pause, auto-advance, rolls to the next group). Image slides
+play fully; video/audio slides show their thumbnail for the same dwell
+(native video needs `expo-video` — deferred). Owner add/delete of
+highlights stays deferred to creator tooling (WP-4).
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified.

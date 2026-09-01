@@ -1,12 +1,12 @@
+import { HighlightsRow } from "@/components/profile/HighlightsRow";
 import type { PublicProfile } from "@/features/profile/usePublicProfile";
-import { AppText, Avatar, Button, SectionTitle } from "@abonten/ui-native";
+import { AppText, Avatar, Button } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 // Native echo of the web ProfileDetails header (mobile layout): avatar +
-// username, full name, the Posts / Favorites / Ratings counts, bio, and —
-// on your own profile — an Edit profile action. Highlights are a later
-// pass (docs/mobile/09).
+// username, full name, the Posts / Favorites / Ratings counts, bio, the
+// highlights strip, and — on your own profile — an Edit profile action.
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -62,8 +62,7 @@ export function ProfileHeader({
         />
       ) : null}
 
-      <SectionTitle>Highlights</SectionTitle>
-      <AppText variant="caption">Highlights aren't on mobile yet.</AppText>
+      <HighlightsRow userId={profile.user_id} username={profile.username} />
     </View>
   );
 }
