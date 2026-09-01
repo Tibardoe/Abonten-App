@@ -124,9 +124,10 @@ function Layout() {
           name="notifications"
           options={{ href: null, title: "Notifications" }}
         />
+        {/* Nested Stack owns its own header, so hide the tab-level one. */}
         <Tabs.Screen
           name="transactions"
-          options={{ href: null, title: "Transactions" }}
+          options={{ href: null, headerShown: false }}
         />
         <Tabs.Screen
           name="places"
