@@ -46,7 +46,10 @@ const FALLBACK_LABEL = "Accra";
 
 const ExploreLocationContext = createContext<Ctx | null>(null);
 
-async function labelForCoords(lat: number, lng: number): Promise<string> {
+export async function labelForCoords(
+  lat: number,
+  lng: number,
+): Promise<string> {
   try {
     const [place] = await Location.reverseGeocodeAsync({
       latitude: lat,

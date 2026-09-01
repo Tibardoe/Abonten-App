@@ -3,16 +3,21 @@ import {
   MapView,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
-import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  labelForCoords,
+  useExploreLocation,
+} from "@/features/discovery/ExploreLocationProvider";
 import { AppText, Button, Icon } from "@abonten/ui-native";
 import { useRef, useState } from "react";
 import { Modal, Platform, Pressable, View } from "react-native";
 
 // Native echo of the web MapModal / MapPicker: a full-screen map with a
 // fixed centre pin. Pan the map under the pin, then "Use this location"
-// commits the centre coordinate through ExploreLocationProvider (which
-// reverse-geocodes a label). Wrapped in MapErrorBoundary so a stale binary
-// shows a message instead of crashing.
+// commits the centre coordinate. Default target is the Explore location
+// (ExploreLocationProvider); pass `onPick` to reuse it for another form
+// (e.g. place creation), which gets the point + a reverse-geocoded label
+// and the provider is left untouched. Wrapped in MapErrorBoundary so a
+// stale binary shows a message instead of crashing.
 
 type Region = {
   latitude: number;
@@ -25,10 +30,18 @@ export function MapPickerSheet({
   open,
   onClose,
   initial,
+  onPick,
 }: {
   open: boolean;
   onClose: () => void;
   initial: { lat: number; lng: number } | null;
+  /** When set, the chosen point is handed here instead of the Explore
+   *  location. */
+  onPick?: (loc: {
+    lat: number;
+    lng: number;
+    label: string;
+  }) => void | Promise<void>;
 }) {
   const { setPickedLocation } = useExploreLocation();
   const [busy, setBusy] = useState(false);
@@ -46,7 +59,13 @@ export function MapPickerSheet({
 
   async function confirm() {
     setBusy(true);
-    await setPickedLocation(centerRef.current.lat, centerRef.current.lng);
+    const { lat, lng } = centerRef.current;
+    if (onPick) {
+      const label = await labelForCoords(lat, lng);
+      await onPick({ lat, lng, label });
+    } else {
+      await setPickedLocation(lat, lng);
+    }
     setBusy(false);
     onClose();
   }

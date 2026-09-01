@@ -1,0 +1,56 @@
+import type { PlaceWizard } from "@/features/places/usePlaceWizard";
+import { AppText, Button, Icon } from "@abonten/ui-native";
+import { Image } from "expo-image";
+import { View } from "react-native";
+
+// Step 2 of the place wizard — pick the cover photo. Mirrors the web
+// PlaceCreateStepPhotos (expo-image-picker's built-in editor gives the
+// 16:9 crop the web ImageCropper does).
+export function PlaceWizardCover({
+  w,
+  onBack,
+  onNext,
+}: {
+  w: PlaceWizard;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <View className="gap-4">
+      <AppText variant="label">Cover photo</AppText>
+      {w.coverUri ? (
+        <Image
+          source={{ uri: w.coverUri }}
+          style={{ width: "100%", aspectRatio: 16 / 9, borderRadius: 12 }}
+          contentFit="cover"
+        />
+      ) : (
+        <View className="aspect-[16/9] w-full items-center justify-center rounded-xl border border-border border-dashed bg-muted">
+          <Icon name="image-outline" size={28} tone="muted" />
+          <AppText className="mt-2 text-[12px] text-muted-foreground">
+            No photo yet
+          </AppText>
+        </View>
+      )}
+      <Button
+        title={w.coverUri ? "Replace photo" : "Choose photo"}
+        variant="outline"
+        onPress={w.pickCover}
+      />
+      <View className="flex-row gap-3">
+        <Button
+          title="Back"
+          variant="ghost"
+          className="flex-1"
+          onPress={onBack}
+        />
+        <Button
+          title="Next"
+          className="flex-1"
+          disabled={!w.coverUri}
+          onPress={onNext}
+        />
+      </View>
+    </View>
+  );
+}
