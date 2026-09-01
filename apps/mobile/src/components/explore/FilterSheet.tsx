@@ -3,23 +3,22 @@ import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
   type EventFilters,
-  PRICE_ANY_MAX,
   type PlaceFilters,
   RATING_OPTIONS,
 } from "@/features/discovery/exploreFilters";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
-import { AppText, Button, Chip, Input, Label, Sheet } from "@abonten/ui-native";
+import { Button, Chip, Label, Sheet } from "@abonten/ui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
+import { DateRangeField } from "./DateRangeField";
+import { PriceRangeField } from "./PriceRangeField";
 
 // Native echo of apps/web/src/components/organisms/FilterModalPopup.tsx.
 // Tab-aware, same as the web modal: Category / Types / Price / Date /
 // Rating / Distance for Events; Category / Open now / Rating / Distance for
 // Places. Edits a local draft; "Apply" lifts it, "Clear all" resets to the
 // EMPTY_* defaults.
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function Section({
   label,
@@ -90,11 +89,6 @@ export function FilterSheet({
     else setPDraft(EMPTY_PLACE_FILTERS);
   }
 
-  const priceMaxLabel =
-    eDraft.maxPrice != null && eDraft.maxPrice < PRICE_ANY_MAX
-      ? String(eDraft.maxPrice)
-      : "";
-
   return (
     <Sheet
       open={open}
@@ -159,70 +153,23 @@ export function FilterSheet({
           ) : null}
 
           <Section label="Price (GHS)">
-            <View className="flex-row items-center gap-3">
-              <View className="flex-1">
-                <Input
-                  placeholder="Min"
-                  keyboardType="number-pad"
-                  value={eDraft.minPrice != null ? String(eDraft.minPrice) : ""}
-                  onChangeText={(v) =>
-                    setEDraft((d) => ({
-                      ...d,
-                      minPrice: v.trim()
-                        ? Number(v.replace(/[^\d]/g, ""))
-                        : null,
-                    }))
-                  }
-                />
-              </View>
-              <AppText variant="muted">–</AppText>
-              <View className="flex-1">
-                <Input
-                  placeholder="Any"
-                  keyboardType="number-pad"
-                  value={priceMaxLabel}
-                  onChangeText={(v) =>
-                    setEDraft((d) => ({
-                      ...d,
-                      maxPrice: v.trim()
-                        ? Number(v.replace(/[^\d]/g, ""))
-                        : null,
-                    }))
-                  }
-                />
-              </View>
-            </View>
+            <PriceRangeField
+              min={eDraft.minPrice}
+              max={eDraft.maxPrice}
+              onChange={({ min, max }) =>
+                setEDraft((d) => ({ ...d, minPrice: min, maxPrice: max }))
+              }
+            />
           </Section>
 
           <Section label="Date range">
-            <View className="flex-row items-center gap-3">
-              <View className="flex-1">
-                <Input
-                  placeholder="From (YYYY-MM-DD)"
-                  autoCapitalize="none"
-                  value={eDraft.startDate ?? ""}
-                  onChangeText={(v) =>
-                    setEDraft((d) => ({ ...d, startDate: v || null }))
-                  }
-                />
-              </View>
-              <View className="flex-1">
-                <Input
-                  placeholder="To (YYYY-MM-DD)"
-                  autoCapitalize="none"
-                  value={eDraft.endDate ?? ""}
-                  onChangeText={(v) =>
-                    setEDraft((d) => ({ ...d, endDate: v || null }))
-                  }
-                />
-              </View>
-            </View>
-            {(eDraft.startDate && !ISO_DATE.test(eDraft.startDate)) ||
-            (eDraft.endDate && !ISO_DATE.test(eDraft.endDate)) ? (
-              <AppText className="text-[12px] text-destructive">
-                Use the format YYYY-MM-DD.
-              </AppText>
-            ) : null}
+            <DateRangeField
+              start={eDraft.startDate}
+              end={eDraft.endDate}
+              onChange={({ start, end }) =>
+                setEDraft((d) => ({ ...d, startDate: start, endDate: end }))
+              }
+            />
           </Section>
 
           <Section label="Minimum rating">

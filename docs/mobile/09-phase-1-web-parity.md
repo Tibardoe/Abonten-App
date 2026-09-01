@@ -205,8 +205,7 @@ it is now the Explore screen.
   `app/(app)/_layout.tsx`.
 - **`ChangeLocationSheet`** (`src/components/explore/`) — the web
   `ChangeLocationModal` ("Set your location"): type an address
-  (`Location.geocodeAsync`) or "Use my current location". *Gaps vs web: no
-  Google autocomplete suggestions, no full-screen map picker — later pass.*
+  (`Location.geocodeAsync`) or "Use my current location".
 - **Events / Places tabs** — the web `ExploreTabs`, as a two-chip switch.
 - **`CategoryChipsRow`** (`src/components/explore/`) — the web
   `EventCategoryChips` / `PlaceCategoryChips`: a horizontal pill row, "All"
@@ -214,11 +213,12 @@ it is now the Explore screen.
   categories from the new `usePlaceCategories` hook → `place_category`
   table).
 - **`FilterSheet`** (`src/components/explore/`) — the web `FilterModalPopup`,
-  tab-aware: Events = Category / Type (of the picked category) / Price
-  min-max / Date range / Min rating / Distance; Places = Category / Open
-  now / Min rating / Distance. Edits a local draft; Apply lifts it, Clear
-  all resets. *Gap vs web: date range is two `YYYY-MM-DD` text fields, not
-  a calendar picker; price is two number fields, not a slider.*
+  tab-aware: Events = Category / Type (of the picked category) / Price /
+  Date range / Min rating / Distance; Places = Category / Open now / Min
+  rating / Distance. Edits a local draft; Apply lifts it, Clear all resets.
+  Price is a dual-thumb `PriceRangeField` (PanResponder, no dep — the web
+  `PriceRangeSlider`); date range is `DateRangeField`, a pure-JS month
+  calendar with range select (no dep — the web `DateRangePickerSheet`).
 - **`ActiveFilterChips`** (`src/components/explore/`) — the applied filters
   as removable chips (tap to drop one, "Clear all"). The web app shows only
   a count badge on the Filters button; mobile keeps that badge **and** adds
@@ -229,22 +229,40 @@ it is now the Explore screen.
 - **Data hooks** — `useFilteredEvents` (`get_filtered_events`) and
   `useFilteredPlaces` (`get_filtered_places`), direct anon RPC calls with
   in-memory cursors, same pattern as `useNearbyEvents` / `useEventSearch`.
+  **`get_filtered_places` is confirmed `GRANT`ed to `anon`** — migration
+  `20260820090000_add_places_feature.sql:581` (not an assumption).
+- **Curated sliders** — `useExploreEventSliders` (one bounded
+  `get_nearby_events` 10km fetch + the `event_promotion` id set →
+  `getFeaturedEvents` / `filterEventsByWindow` from `@abonten/core`) drives
+  Featured / Around you / Top-rated organizers / Happening today-week-month;
+  `useExplorePlaceSliders` (`get_active_place_promotions` +
+  `get_nearby_places` 5km + two `get_filtered_places` calls) drives
+  Featured / Around you / Open now / Top rated. Rendered by
+  `EventSliderRow` / `PlaceSliderRow` (web `EventsSlider` / `PlacesSlider`)
+  above the "All …" list; only the "All …" list honours the filter sheet,
+  same split as web. The pure `filterEventsByWindow` was moved
+  `apps/web/src/actions/getFilteredEvents.ts` → `@abonten/core/eventDateWindow`
+  (web file kept as a re-export shim). *`filterEventsByWindow(…, "top-rated-organizers")`
+  is a pass-through on web too — it returns all nearby events; parity
+  preserved, not a new gap.*
 - Tab header now reads **"Explore"** (matches the web `<h1>`); the bottom-tab
   slot keeps its **"Home"** label (`tabBarLabel`).
 
-**Known WP-2a gaps (later passes):**
-- No curated sliders yet — the web Events tab has Featured carousel +
-  Around-You / Top-rated Organizers / Happening Today/Week/Month; the
-  Places tab has Featured / Around You / Open Now / Top Rated. Only the
-  filterable "All events" / "All places" list is ported.
-- No map view (`ViewToggle` list/map on web).
-- `ChangeLocationSheet`: no autocomplete suggestions, no map picker.
-- `FilterSheet`: date = text fields, price = number fields.
-- `get_filtered_places` is assumed anon-granted (same migration family as
-  `get_nearby_places`, which mobile already calls) — confirm on device.
+**Known WP-2a gaps (deferred, need a decision):**
+- **Map view** (`ViewToggle` list/map — web `EventsMapView` / `PlacesMapView`)
+  and **`ChangeLocationSheet` map picker / Google autocomplete suggestions**
+  all require `react-native-maps` (a native module → new `app.json` plugin
+  entry → fresh dev/EAS build) **plus** a Google Maps API key for Android
+  that is **not currently provisioned for mobile** (`apps/mobile/.env` has
+  only Supabase + API base URL). Flagged for a go/no-go: add the dep + the
+  user supplies `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`, or stay list-only for
+  Phase 1.
+- Slider headings aren't linked to "see all" window pages (web links to
+  `/explore/.../happening-today` etc.) — those routes don't exist on
+  mobile yet; a card tap still opens the detail screen.
 - The hidden `places.tsx` route still uses `useNearbyPlaces` (unfiltered);
   Explore's Places tab is the parity surface.
 
 **Verified:** `turbo run typecheck` 9/9, `expo export --platform android`
-clean, `biome check` clean on all touched files, web `next build`
-(`@abonten/core` move). Not device-verified.
+clean, `biome check` clean on all touched files, web `next build` exit 0
+(`@abonten/core` moves). Not device-verified.
