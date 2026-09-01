@@ -1,17 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
-import { validateLocationInput } from "@abonten/core/validateLocationInput";
-import { v2 as cloudinary } from "cloudinary";
+import {
+  type UpdatePlaceCoreResult,
+  updatePlaceCore,
+} from "@/utils/updatePlaceCore";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
-
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true,
-});
 
 export type UpdatePlaceInput = {
   placeId: string;
@@ -28,23 +22,22 @@ export type UpdatePlaceInput = {
   // Places Milestone 6 management page: optional cover photo replacement.
   // A place always requires exactly one cover photo (place.cover_public_id
   // is NOT NULL), so this deliberately mirrors updateEvent.ts's
-  // `selectedFile` — the one required-image field this action DOES touch,
-  // unlike the multi-photo gallery below which keeps its own dedicated
-  // actions (addPlacePhoto.ts/removePlacePhoto.ts/reorderPlacePhotos.ts).
+  // `selectedFile`.
   selectedFile?: File | null;
 };
 
 /**
  * Edits a place's core, non-structural fields (name/description/category/
- * contact info/location/cover photo). Deliberately doesn't touch opening
- * hours, services, or the photo gallery — those each have their own
- * dedicated actions (updatePlaceOpeningHours.ts, addPlaceService.ts/
- * updatePlaceService.ts, addPlacePhoto.ts/reorderPlacePhotos.ts) since
- * they're separate tables with their own replace/reorder semantics, same
- * reasoning as updateEvent.ts deliberately not touching ticket_type/
- * promo_code.
+ * contact info/location/cover photo). Thin wrapper: auth, upload a
+ * replacement cover here if one was picked, then delegate to
+ * updatePlaceCore — the body shared with the mobile
+ * PATCH /api/mobile/organizer/places/:id route. Deliberately doesn't touch
+ * opening hours, services, or the photo gallery — those each have their
+ * own dedicated actions.
  */
-export async function updatePlace(formData: UpdatePlaceInput) {
+export async function updatePlace(
+  formData: UpdatePlaceInput,
+): Promise<UpdatePlaceCoreResult | { status: 401 | 500; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -53,101 +46,41 @@ export async function updatePlace(formData: UpdatePlaceInput) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401 as const, message: "User not authenticated" };
   }
 
-  const {
-    placeId,
-    name,
-    description,
-    categoryId,
-    websiteUrl,
-    phone,
-    whatsapp,
-    socialLinks,
-    address,
-    latitude,
-    longitude,
-    selectedFile,
-  } = formData;
+  let coverPublicId: string | null | undefined;
+  let coverVersion: string | null | undefined;
 
-  const locationCheck = validateLocationInput({ address, latitude, longitude });
-  if (!locationCheck.valid) {
-    return { status: 400, message: locationCheck.message };
-  }
-
-  const { data: existingPlace, error: fetchError } = await supabase
-    .from("place")
-    .select("id, owner_id, cover_public_id")
-    .eq("id", placeId)
-    .maybeSingle();
-
-  if (fetchError || !existingPlace) {
-    return { status: 404, message: "Place not found" };
-  }
-
-  if (existingPlace.owner_id !== user.id) {
-    return { status: 403, message: "Not authorized to edit this place" };
-  }
-
-  let coverPublicId = existingPlace.cover_public_id;
-  let coverVersion: string | number | undefined;
-  let previousCoverPublicId: string | null = null;
-
-  if (selectedFile) {
-    const coverUpload = await savePlacePhotoToCloudinary(selectedFile);
+  if (formData.selectedFile) {
+    const coverUpload = await savePlacePhotoToCloudinary(formData.selectedFile);
 
     if (!coverUpload?.public_id || !coverUpload?.version) {
       return {
-        status: 500,
+        status: 500 as const,
         message:
           (coverUpload as { error?: string })?.error ??
           "Cover photo upload to Cloudinary failed.",
       };
     }
 
-    previousCoverPublicId = coverPublicId;
     coverPublicId = coverUpload.public_id;
     coverVersion = String(coverUpload.version);
   }
 
-  const { error: updateError } = await supabase
-    .from("place")
-    .update({
-      name,
-      description,
-      category_id: categoryId,
-      website_url: websiteUrl ?? null,
-      phone: phone ?? null,
-      whatsapp: whatsapp ?? null,
-      social_links: socialLinks ?? null,
-      address: { full_address: address },
-      location: `POINT(${longitude} ${latitude})`,
-      cover_public_id: coverPublicId,
-      ...(coverVersion !== undefined && { cover_version: coverVersion }),
-      updated_at: new Date(),
-    })
-    .eq("id", placeId)
-    .eq("owner_id", user.id);
-
-  if (updateError) {
-    return {
-      status: 500,
-      message: `Error updating place: ${updateError.message}`,
-    };
-  }
-
-  if (previousCoverPublicId) {
-    try {
-      await cloudinary.uploader.destroy(previousCoverPublicId);
-    } catch (cloudError) {
-      logger.error(
-        "Cloudinary deletion of old cover photo failed:",
-        cloudError,
-      );
-      // Not failing the whole update if cleanup of the old cover fails.
-    }
-  }
-
-  return { status: 200, message: "Place updated successfully!" };
+  return updatePlaceCore(supabase, user.id, {
+    placeId: formData.placeId,
+    name: formData.name,
+    description: formData.description,
+    categoryId: formData.categoryId,
+    websiteUrl: formData.websiteUrl,
+    phone: formData.phone,
+    whatsapp: formData.whatsapp,
+    socialLinks: formData.socialLinks,
+    address: formData.address,
+    latitude: formData.latitude,
+    longitude: formData.longitude,
+    coverPublicId,
+    coverVersion,
+  });
 }

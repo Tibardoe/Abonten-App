@@ -709,6 +709,83 @@ export type PlaceInsightsResult =
   | { status: 200; data: PlaceInsights }
   | { status: 401 | 404 | 500; message: string };
 
+export type PlaceTemporaryStatus =
+  | "temporarily_closed"
+  | "permanently_closed"
+  | null;
+
+// Everything to prefill the per-place management forms — the mobile echo of
+// what manage/places/[placeId]/page.tsx assembles: the editable place row,
+// weekly hours, and services.
+export type PlaceManageContext = {
+  place: {
+    id: string;
+    name: string;
+    description: string;
+    category_id: number;
+    website_url: string | null;
+    phone: string | null;
+    whatsapp: string | null;
+    social_links: Record<string, string> | null;
+    address: { full_address?: string } | null;
+    cover_public_id: string | null;
+    cover_version: string | null;
+    temporary_status: PlaceTemporaryStatus;
+    temporary_status_note: string | null;
+  };
+  openingHours: {
+    day_of_week: number;
+    open_time: string | null;
+    close_time: string | null;
+    is_closed: boolean;
+  }[];
+  services: {
+    id: string;
+    name: string;
+    description: string | null;
+    price: number | null;
+    price_unit: string | null;
+    show_price: boolean;
+    position: number;
+  }[];
+};
+
+export type PlaceManageContextResult =
+  | { status: 200; data: PlaceManageContext }
+  | { status: 401 | 403 | 404 | 500; message: string };
+
+// Core, non-structural fields only — hours / services / the photo gallery
+// have their own endpoints. Omit both cover fields to keep the current
+// cover photo.
+export type UpdatePlaceBody = {
+  name: string;
+  description: string;
+  categoryId: number;
+  address: string;
+  latitude: number;
+  longitude: number;
+  websiteUrl?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  socialLinks?: Record<string, string> | null;
+  coverPublicId?: string | null;
+  coverVersion?: string | null;
+};
+
+export type UpdatePlaceResult =
+  | { status: 200; message: string }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+export type SetPlaceStatusBody = {
+  status: PlaceTemporaryStatus;
+  note?: string | null;
+};
+
+// Shared by the hours PUT and the status POST — both just report success.
+export type PlaceHoursStatusResult =
+  | { status: 200; message: string }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =
