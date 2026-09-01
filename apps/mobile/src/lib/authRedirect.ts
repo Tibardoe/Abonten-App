@@ -26,6 +26,7 @@ const PROTECTED_PREFIXES = [
   "/notifications",
   "/checkout",
   "/organizer",
+  "/settings",
 ] as const;
 
 export function isProtectedPath(pathname: string): boolean {

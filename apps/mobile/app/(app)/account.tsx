@@ -125,6 +125,11 @@ export default function Account() {
 
       <View className="gap-2">
         <NavRow
+          icon="settings-outline"
+          label="Settings"
+          onPress={() => router.push("/(app)/settings")}
+        />
+        <NavRow
           icon="notifications-outline"
           label="Notifications"
           onPress={() => router.push("/(app)/notifications")}
