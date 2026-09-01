@@ -98,6 +98,16 @@ export type ValidateCheckoutResult = {
   checkoutId?: string;
 };
 
+// One-click RSVP for a free event (registerForFreeEventCore). Flat reply:
+// 200 = registered; 300 = already have a ticket; 404 = no free
+// registration; 409 = not accepting / ended; 400 = bad occurrence.
+export type FreeRsvpBody = {
+  eventId: string;
+  occurrenceId?: string | null;
+};
+
+export type FreeRsvpResult = { status: number; message?: string };
+
 export type PreparedCheckoutSession = {
   checkoutSessionId: string;
   eventTitle: string;
