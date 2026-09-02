@@ -42,8 +42,8 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
               <AppText
                 className={
                   active
-                    ? "text-[12px] font-semibold text-primary-foreground"
-                    : "text-[12px] font-medium text-muted-foreground"
+                    ? "text-[13px] font-semibold text-primary-foreground"
+                    : "text-[13px] font-medium text-muted-foreground"
                 }
               >
                 {label}
@@ -54,7 +54,7 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
       </View>
 
       {w.ticketMode === "free" ? (
-        <AppText className="text-[13px] text-muted-foreground">
+        <AppText variant="muted">
           Attendees reserve a free ticket. Capacity (Basics step) caps the
           total.
         </AppText>
@@ -93,7 +93,7 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
               className="gap-2 rounded-xl border border-border bg-card p-3"
             >
               <View className="flex-row items-center justify-between">
-                <AppText className="text-[13px] font-semibold text-foreground">
+                <AppText variant="small" className="font-semibold">
                   Ticket type {i + 1}
                 </AppText>
                 <Pressable
@@ -101,7 +101,7 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
                     w.setTiers((prev) => prev.filter((_, idx) => idx !== i))
                   }
                 >
-                  <AppText className="text-[12px] text-destructive">
+                  <AppText variant="small" tone="error">
                     Remove
                   </AppText>
                 </Pressable>

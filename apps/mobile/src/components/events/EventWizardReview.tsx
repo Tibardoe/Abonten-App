@@ -58,12 +58,10 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
         />
       </View>
 
-      <AppText className="text-[13px] text-muted-foreground">
-        {w.description}
-      </AppText>
+      <AppText variant="muted">{w.description}</AppText>
 
       {w.isSubmitError ? (
-        <AppText className="text-[13px] text-destructive">
+        <AppText variant="small" tone="error">
           We couldn't post your event. Please try again.
         </AppText>
       ) : null}
@@ -74,8 +72,8 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row justify-between gap-4">
-      <AppText className="text-[13px] text-muted-foreground">{label}</AppText>
-      <AppText className="flex-1 text-right text-[13px] text-foreground">
+      <AppText variant="muted">{label}</AppText>
+      <AppText variant="small" className="flex-1 text-right">
         {value || "—"}
       </AppText>
     </View>

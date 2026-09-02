@@ -304,7 +304,7 @@ export default function Explore() {
           </AppText>
           {activeCount > 0 ? (
             <View className="ml-0.5 min-w-[18px] items-center rounded-full bg-primary px-1">
-              <AppText className="text-[12px] font-semibold text-primary-foreground">
+              <AppText className="text-[13px] font-semibold text-primary-foreground">
                 {activeCount}
               </AppText>
             </View>

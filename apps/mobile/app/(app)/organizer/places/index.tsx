@@ -4,6 +4,7 @@ import {
 } from "@/features/organizer/useOrganizerPlaces";
 import type { OrganizerPlaceRow } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
+import { AppText } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -12,7 +13,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -48,22 +48,27 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
         />
       ) : (
         <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
-          <Text className="text-[10px] text-muted-foreground">No image</Text>
+          <AppText className="text-[10px] text-muted-foreground">
+            No image
+          </AppText>
         </View>
       )}
       <View className="flex-1 justify-center gap-1">
-        <Text
+        <AppText
           className="text-sm font-semibold text-foreground"
           numberOfLines={1}
         >
           {place.name}
-        </Text>
-        <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+        </AppText>
+        <AppText
+          className="text-[13px] text-muted-foreground"
+          numberOfLines={1}
+        >
           {place.place_category?.name ?? "Uncategorized"}
           {closed ? ` · ${closed}` : ""}
-        </Text>
+        </AppText>
       </View>
-      <Text className="self-center text-muted-foreground">›</Text>
+      <AppText className="self-center text-muted-foreground">›</AppText>
     </Pressable>
   );
 }
@@ -95,12 +100,12 @@ export default function OrganizerPlacesScreen() {
       contentContainerClassName="gap-3 p-4 pb-16"
       ListHeaderComponent={
         <View className="mb-1 flex-row items-center justify-between">
-          <Text className="text-xl font-bold text-foreground">My places</Text>
+          <AppText variant="screenTitle">My places</AppText>
           <Link href="/(app)/place/new" asChild>
             <Pressable className="rounded-lg bg-primary px-3 py-1.5 active:opacity-90">
-              <Text className="text-sm font-semibold text-primary-foreground">
+              <AppText className="text-sm font-semibold text-primary-foreground">
                 Add place
-              </Text>
+              </AppText>
             </Pressable>
           </Link>
         </View>
@@ -114,11 +119,11 @@ export default function OrganizerPlacesScreen() {
         />
       }
       ListEmptyComponent={
-        <Text className="mt-10 text-center text-sm text-muted-foreground">
+        <AppText className="mt-10 text-center text-sm text-muted-foreground">
           {failed
             ? "Couldn't load your places."
             : "You haven't added any places yet."}
-        </Text>
+        </AppText>
       }
       ListFooterComponent={
         q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null

@@ -254,7 +254,7 @@ export default function Search() {
             <Icon name="options-outline" size={18} tone="foreground" />
             {activeFilterCount > 0 ? (
               <View className="min-w-[18px] items-center rounded-full bg-primary px-1">
-                <AppText className="text-[12px] font-semibold text-primary-foreground">
+                <AppText className="text-[13px] font-semibold text-primary-foreground">
                   {activeFilterCount}
                 </AppText>
               </View>

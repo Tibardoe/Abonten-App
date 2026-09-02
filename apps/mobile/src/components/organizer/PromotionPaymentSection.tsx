@@ -7,16 +7,11 @@ import { useCreatePromotionAttempt } from "@/features/organizer/useEventPromotio
 import { useCreatePlacePromotionAttempt } from "@/features/organizer/usePlacePromotion";
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
+import { AppText } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 
 // Native promotion-payment flow — the slim sibling of the ticket
 // PaymentSection. Starts the charge via checkout.promotionAttempt (event) or
@@ -212,16 +207,16 @@ export function PromotionPaymentSection({
   if (phase.k === "succeeded") {
     return (
       <View className="items-center gap-3 rounded-xl border border-border bg-card p-5">
-        <Text className="text-base font-bold text-success">
+        <AppText className="text-base font-bold text-success">
           Your {kind} is now featured
-        </Text>
+        </AppText>
         <Pressable
           onPress={() => router.back()}
           className="rounded-lg bg-primary px-4 py-2.5"
         >
-          <Text className="text-sm font-semibold text-primary-foreground">
+          <AppText className="text-sm font-semibold text-primary-foreground">
             Done
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     );
@@ -230,10 +225,12 @@ export function PromotionPaymentSection({
   if (phase.k === "activationFailed") {
     return (
       <View className="gap-3 rounded-xl border border-border bg-card p-4">
-        <Text className="text-sm font-semibold text-warning">
+        <AppText className="text-sm font-semibold text-warning">
           Payment received — finishing up
-        </Text>
-        <Text className="text-sm text-muted-foreground">{phase.message}</Text>
+        </AppText>
+        <AppText className="text-sm text-muted-foreground">
+          {phase.message}
+        </AppText>
         <Pressable
           disabled={retry.isPending}
           onPress={() => onRetryActivation(phase.attemptId)}
@@ -244,9 +241,9 @@ export function PromotionPaymentSection({
           {retry.isPending ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-sm font-semibold text-primary-foreground">
+            <AppText className="text-sm font-semibold text-primary-foreground">
               Retry activation
-            </Text>
+            </AppText>
           )}
         </Pressable>
       </View>
@@ -256,14 +253,14 @@ export function PromotionPaymentSection({
   if (phase.k === "failed") {
     return (
       <View className="gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4">
-        <Text className="text-sm text-destructive">{phase.message}</Text>
+        <AppText className="text-sm text-destructive">{phase.message}</AppText>
         <Pressable
           onPress={() => setPhase({ k: "idle" })}
           className="items-center rounded-lg border border-border py-2.5"
         >
-          <Text className="text-sm font-semibold text-foreground">
+          <AppText className="text-sm font-semibold text-foreground">
             Try again
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     );
@@ -273,9 +270,9 @@ export function PromotionPaymentSection({
     return (
       <View className="items-center gap-3 rounded-xl border border-border bg-card p-5">
         <ActivityIndicator />
-        <Text className="text-center text-sm text-muted-foreground">
+        <AppText className="text-center text-sm text-muted-foreground">
           {phase.k === "awaiting" ? phase.hint : "Starting your payment…"}
-        </Text>
+        </AppText>
       </View>
     );
   }
@@ -283,9 +280,9 @@ export function PromotionPaymentSection({
   if (phase.k === "otp") {
     return (
       <View className="gap-3 rounded-xl border border-border bg-card p-4">
-        <Text className="text-sm font-semibold text-foreground">
+        <AppText className="text-sm font-semibold text-foreground">
           Enter the OTP sent to your phone
-        </Text>
+        </AppText>
         <TextInput
           value={otp}
           onChangeText={setOtp}
@@ -306,9 +303,9 @@ export function PromotionPaymentSection({
           {submitOtp.isPending ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-sm font-semibold text-primary-foreground">
+            <AppText className="text-sm font-semibold text-primary-foreground">
               Submit
-            </Text>
+            </AppText>
           )}
         </Pressable>
       </View>
@@ -319,16 +316,16 @@ export function PromotionPaymentSection({
   if (methods.length === 0) {
     return (
       <View className="gap-3 rounded-xl border border-border bg-card p-4">
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           Add a payment method to pay for a promotion.
-        </Text>
+        </AppText>
         <Pressable
           onPress={() => router.push("/(app)/wallet")}
           className="items-center rounded-lg bg-primary px-4 py-2.5"
         >
-          <Text className="text-sm font-semibold text-primary-foreground">
+          <AppText className="text-sm font-semibold text-primary-foreground">
             Add payment method
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     );
@@ -336,7 +333,9 @@ export function PromotionPaymentSection({
 
   return (
     <View className="gap-3">
-      <Text className="text-sm font-semibold text-foreground">Pay with</Text>
+      <AppText className="text-sm font-semibold text-foreground">
+        Pay with
+      </AppText>
       {methods.map((m) => {
         const selected = m.id === chosenId;
         return (
@@ -347,9 +346,13 @@ export function PromotionPaymentSection({
               selected ? "border-primary bg-accent" : "border-border bg-card"
             }`}
           >
-            <Text className="text-sm text-foreground">{methodLabel(m)}</Text>
+            <AppText className="text-sm text-foreground">
+              {methodLabel(m)}
+            </AppText>
             {selected ? (
-              <Text className="text-xs font-semibold text-primary">✓</Text>
+              <AppText variant="small" tone="brand" className="font-semibold">
+                ✓
+              </AppText>
             ) : null}
           </Pressable>
         );
@@ -362,13 +365,13 @@ export function PromotionPaymentSection({
           !chosenId || creatingAttempt ? "bg-muted" : "bg-primary"
         }`}
       >
-        <Text
+        <AppText
           className={`text-sm font-semibold ${
             !chosenId ? "text-muted-foreground" : "text-primary-foreground"
           }`}
         >
           Pay {currency} {amount.toFixed(2)}
-        </Text>
+        </AppText>
       </Pressable>
     </View>
   );

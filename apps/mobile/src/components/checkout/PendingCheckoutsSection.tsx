@@ -7,10 +7,10 @@ import {
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
 import type { PendingCheckoutSession } from "@abonten/api-client";
-import { Button, Card, Icon, SectionTitle } from "@abonten/ui-native";
+import { AppText, Button, Card, Icon, SectionTitle } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 
 // Native echo of the web PendingCheckoutsBasket — the "resume checkout"
 // list. Shown at the top of the Tickets tab. Line-level quantity editing
@@ -81,17 +81,17 @@ function SessionCard({
     <Card className="gap-3">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
-          <Text className="text-sm font-semibold text-foreground">
+          <AppText className="text-sm font-semibold text-foreground">
             {session.eventTitle}
-          </Text>
-          <Text className="text-xs text-muted-foreground">
+          </AppText>
+          <AppText variant="muted">
             {session.eventDateAndTime.date} {session.eventDateAndTime.time}
-          </Text>
+          </AppText>
         </View>
         <Pressable disabled={release.isPending} onPress={onRelease} hitSlop={8}>
-          <Text className="text-xs font-medium text-destructive">
+          <AppText className="text-[13px] font-medium text-destructive">
             {release.isPending ? "Releasing…" : "Release"}
-          </Text>
+          </AppText>
         </Pressable>
       </View>
 
@@ -102,7 +102,7 @@ function SessionCard({
             size={13}
             tone={isExpired || isWarning ? "destructive" : "muted"}
           />
-          <Text
+          <AppText
             className={`text-[11px] ${
               isExpired || isWarning
                 ? "font-medium text-destructive"
@@ -112,7 +112,7 @@ function SessionCard({
             {isExpired
               ? "This checkout has expired."
               : `Expires in ${formatCountdown(secondsLeft)}`}
-          </Text>
+          </AppText>
         </View>
       ) : null}
 
@@ -122,26 +122,26 @@ function SessionCard({
             key={line.ticketCheckoutId}
             className="flex-row items-center justify-between"
           >
-            <Text className="text-xs text-muted-foreground">
+            <AppText variant="muted">
               {line.type} × {line.quantity}
               {line.discount > 0
                 ? ` · −${line.currency} ${line.discount.toFixed(2)}`
                 : ""}
-            </Text>
-            <Text className="text-xs text-foreground">
+            </AppText>
+            <AppText variant="small">
               {line.currency} {line.amount.toFixed(2)}
-            </Text>
+            </AppText>
           </View>
         ))}
       </View>
 
       <View className="flex-row items-center justify-between border-t border-border pt-2">
-        <Text className="text-sm font-semibold text-foreground">
+        <AppText className="text-sm font-semibold text-foreground">
           Checkout total
-        </Text>
-        <Text className="text-sm font-semibold text-foreground">
+        </AppText>
+        <AppText className="text-sm font-semibold text-foreground">
           {currency} {session.sessionSubtotal.toFixed(2)}
-        </Text>
+        </AppText>
       </View>
 
       <Button

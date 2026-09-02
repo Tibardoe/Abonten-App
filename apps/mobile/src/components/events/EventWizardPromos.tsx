@@ -41,7 +41,7 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
 
   return (
     <View className="gap-4">
-      <AppText className="text-[13px] text-muted-foreground">
+      <AppText variant="muted">
         Promo codes are optional. Add one or more discounts buyers can apply at
         checkout, or skip this step.
       </AppText>
@@ -52,10 +52,10 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
           className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
         >
           <View>
-            <AppText className="text-[13px] font-semibold text-foreground">
+            <AppText variant="small" className="font-semibold">
               {p.promoCode}
             </AppText>
-            <AppText className="text-[12px] text-muted-foreground">
+            <AppText variant="meta">
               {p.discount}% off · {p.maximumUse} uses · until{" "}
               {prettyDate(p.expiryIso)}
             </AppText>
@@ -65,7 +65,9 @@ export function EventWizardPromos({ w }: { w: EventWizard }) {
               w.setPromos((prev) => prev.filter((_, idx) => idx !== i))
             }
           >
-            <AppText className="text-[12px] text-destructive">Remove</AppText>
+            <AppText variant="small" tone="error">
+              Remove
+            </AppText>
           </Pressable>
         </View>
       ))}

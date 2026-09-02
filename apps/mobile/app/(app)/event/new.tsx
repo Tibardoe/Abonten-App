@@ -148,7 +148,7 @@ export default function CreateEventScreen() {
               hitSlop={8}
               className="active:opacity-60 disabled:opacity-50"
             >
-              <AppText className="text-[13px] font-semibold text-primary">
+              <AppText variant="small" tone="brand" className="font-semibold">
                 {w.isSavingDraft ? "Saving…" : "Save as draft"}
               </AppText>
             </Pressable>
@@ -164,7 +164,7 @@ export default function CreateEventScreen() {
         </View>
 
         {w.draftLoadError ? (
-          <AppText className="text-[13px] text-destructive">
+          <AppText variant="small" tone="error">
             {w.draftLoadError}
           </AppText>
         ) : null}
@@ -172,7 +172,7 @@ export default function CreateEventScreen() {
         {!draftId && draftCount > 0 && w.step === 0 ? (
           <Link href="/(app)/organizer/event-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <AppText className="text-[14px] text-foreground">
+              <AppText variant="body">
                 You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
               </AppText>
               <AppText className="text-[14px] font-semibold text-primary">

@@ -46,8 +46,8 @@ function Chip({
       <AppText
         className={
           active
-            ? "text-[12px] font-semibold text-primary-foreground"
-            : "text-[12px] font-medium text-muted-foreground"
+            ? "text-[13px] font-semibold text-primary-foreground"
+            : "text-[13px] font-medium text-muted-foreground"
         }
       >
         {label}
@@ -119,7 +119,7 @@ export default function EditEventScreen() {
     >
       {w.locked ? (
         <View className="rounded-xl border border-border bg-muted p-3">
-          <AppText className="text-[12px] text-muted-foreground">
+          <AppText variant="meta">
             This event already has confirmed tickets, so its dates, location and
             capacity are locked. You can still edit the title, description,
             category, website, flyer and registration setting.
@@ -200,10 +200,8 @@ export default function EditEventScreen() {
 
       <View className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3">
         <View className="flex-1 pr-3">
-          <AppText className="text-[14px] font-semibold text-foreground">
-            Require registration
-          </AppText>
-          <AppText className="text-[12px] text-muted-foreground">
+          <AppText variant="bodyStrong">Require registration</AppText>
+          <AppText variant="meta">
             Attendees must register even for a free event.
           </AppText>
         </View>
@@ -237,7 +235,7 @@ export default function EditEventScreen() {
       <View className="gap-3">
         <AppText variant="label">Schedule</AppText>
         {w.locked ? (
-          <AppText className="text-[12px] text-muted-foreground">
+          <AppText variant="meta">
             Locked — this event has confirmed tickets.
           </AppText>
         ) : (
@@ -295,7 +293,7 @@ export default function EditEventScreen() {
                 )}
               </View>
             ) : w.rangeStart ? (
-              <AppText className="text-[13px] text-foreground">
+              <AppText variant="small">
                 {prettyDate(w.rangeStart)}
                 {w.rangeEnd && w.rangeEnd !== w.rangeStart
                   ? ` – ${prettyDate(w.rangeEnd)}`
@@ -306,7 +304,7 @@ export default function EditEventScreen() {
               <View className="flex-1">
                 <Field label="Start time">
                   {w.locked ? (
-                    <AppText className="text-[13px] text-foreground">
+                    <AppText variant="small">
                       {prettyTime(w.rangeStartTime)}
                     </AppText>
                   ) : (
@@ -322,7 +320,7 @@ export default function EditEventScreen() {
               <View className="flex-1">
                 <Field label="End time">
                   {w.locked ? (
-                    <AppText className="text-[13px] text-foreground">
+                    <AppText variant="small">
                       {prettyTime(w.rangeEndTime)}
                     </AppText>
                   ) : (
@@ -344,7 +342,7 @@ export default function EditEventScreen() {
                 key={o.id}
                 className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
               >
-                <AppText className="text-[13px] text-foreground">
+                <AppText variant="small">
                   {prettyDate(o.dateIso)} · {o.start}–{o.end}
                 </AppText>
                 {!w.locked ? (
@@ -355,7 +353,7 @@ export default function EditEventScreen() {
                       )
                     }
                   >
-                    <AppText className="text-[12px] text-destructive">
+                    <AppText variant="small" tone="error">
                       Remove
                     </AppText>
                   </Pressable>
@@ -376,7 +374,7 @@ export default function EditEventScreen() {
         }
       >
         {w.locked ? (
-          <AppText className="text-[13px] text-foreground">{w.address}</AppText>
+          <AppText variant="small">{w.address}</AppText>
         ) : (
           <View className="gap-2">
             <Input
@@ -388,9 +386,7 @@ export default function EditEventScreen() {
             {w.resolvingLocation ? (
               <View className="flex-row items-center gap-2 py-1">
                 <ActivityIndicator size="small" />
-                <AppText className="text-[12px] text-muted-foreground">
-                  Resolving location…
-                </AppText>
+                <AppText variant="meta">Resolving location…</AppText>
               </View>
             ) : null}
             {w.autocomplete.predictions.length > 0 ? (
@@ -401,13 +397,9 @@ export default function EditEventScreen() {
                     onPress={() => w.pickSuggestion(p.placeId)}
                     className="border-border border-b px-3 py-2 active:opacity-70"
                   >
-                    <AppText className="text-[13px] text-foreground">
-                      {p.primary}
-                    </AppText>
+                    <AppText variant="small">{p.primary}</AppText>
                     {p.secondary ? (
-                      <AppText className="text-[11px] text-muted-foreground">
-                        {p.secondary}
-                      </AppText>
+                      <AppText variant="caption">{p.secondary}</AppText>
                     ) : null}
                   </Pressable>
                 ))}
@@ -419,7 +411,7 @@ export default function EditEventScreen() {
                 className="flex-row items-center gap-2 py-1 active:opacity-70"
               >
                 <Icon name="map-outline" size={16} tone="primary" />
-                <AppText className="text-[13px] text-primary">
+                <AppText variant="small" tone="brand">
                   Choose on map
                 </AppText>
               </Pressable>
@@ -428,15 +420,13 @@ export default function EditEventScreen() {
                 className="flex-row items-center gap-2 py-1 active:opacity-70"
               >
                 <Icon name="locate-outline" size={16} tone="primary" />
-                <AppText className="text-[13px] text-primary">
+                <AppText variant="small" tone="brand">
                   Current location
                 </AppText>
               </Pressable>
             </View>
             {w.address && w.coords ? (
-              <AppText className="text-[12px] text-muted-foreground">
-                Selected: {w.address}
-              </AppText>
+              <AppText variant="meta">Selected: {w.address}</AppText>
             ) : null}
           </View>
         )}
@@ -455,7 +445,7 @@ export default function EditEventScreen() {
       <View className="gap-3">
         <AppText variant="label">Ticket types</AppText>
         {w.locked ? (
-          <AppText className="text-[12px] text-muted-foreground">
+          <AppText variant="meta">
             This event already has confirmed tickets, so ticket types can no
             longer be changed.
           </AppText>
@@ -479,7 +469,7 @@ export default function EditEventScreen() {
             </View>
 
             {w.ticketMode === "free" ? (
-              <AppText className="text-[13px] text-muted-foreground">
+              <AppText variant="muted">
                 Attendees reserve a free ticket. Capacity caps the total.
               </AppText>
             ) : null}
@@ -517,7 +507,7 @@ export default function EditEventScreen() {
                     className="gap-2 rounded-xl border border-border bg-card p-3"
                   >
                     <View className="flex-row items-center justify-between">
-                      <AppText className="text-[13px] font-semibold text-foreground">
+                      <AppText variant="small" className="font-semibold">
                         Ticket type {i + 1}
                       </AppText>
                       <Pressable
@@ -527,7 +517,7 @@ export default function EditEventScreen() {
                           )
                         }
                       >
-                        <AppText className="text-[12px] text-destructive">
+                        <AppText variant="small" tone="error">
                           Remove
                         </AppText>
                       </Pressable>

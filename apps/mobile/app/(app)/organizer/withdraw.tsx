@@ -3,6 +3,7 @@ import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
+import { AppText } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -11,7 +12,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from "react-native";
@@ -100,14 +100,14 @@ export default function WithdrawScreen() {
   if (accounts.length === 0) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-muted-foreground">
+        <AppText className="text-center text-muted-foreground">
           Add a payout account before you can withdraw.
-        </Text>
+        </AppText>
         <Link href="/(app)/organizer/payout-accounts" asChild>
           <Pressable className="rounded-lg bg-primary px-4 py-2 active:opacity-90">
-            <Text className="font-semibold text-primary-foreground">
+            <AppText className="font-semibold text-primary-foreground">
               Add payout account
-            </Text>
+            </AppText>
           </Pressable>
         </Link>
       </View>
@@ -121,9 +121,9 @@ export default function WithdrawScreen() {
     >
       {balances.length > 1 ? (
         <View className="gap-2">
-          <Text className="text-xs font-semibold uppercase text-muted-foreground">
+          <AppText className="text-[13px] font-semibold uppercase text-muted-foreground">
             Currency
-          </Text>
+          </AppText>
           <View className="flex-row flex-wrap gap-2">
             {balances.map((b) => {
               const active = b.currency === selectedCurrency;
@@ -137,15 +137,15 @@ export default function WithdrawScreen() {
                       : "rounded-full border border-border px-3 py-1.5"
                   }
                 >
-                  <Text
+                  <AppText
                     className={
                       active
-                        ? "text-xs font-semibold text-primary-foreground"
-                        : "text-xs text-muted-foreground"
+                        ? "text-[13px] font-semibold text-primary-foreground"
+                        : "text-[13px] text-muted-foreground"
                     }
                   >
                     {b.currency}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -154,18 +154,18 @@ export default function WithdrawScreen() {
       ) : null}
 
       <View className="rounded-xl border border-border bg-card p-4">
-        <Text className="text-xs uppercase text-muted-foreground">
+        <AppText className="text-[13px] uppercase text-muted-foreground">
           Available
-        </Text>
-        <Text className="text-2xl font-bold text-foreground">
+        </AppText>
+        <AppText variant="pageTitle">
           {selectedCurrency ?? "GHS"} {available.toFixed(2)}
-        </Text>
+        </AppText>
       </View>
 
       <View className="gap-2">
-        <Text className="text-xs font-semibold uppercase text-muted-foreground">
+        <AppText className="text-[13px] font-semibold uppercase text-muted-foreground">
           To account
-        </Text>
+        </AppText>
         {accounts.map((a) => {
           const active = a.id === defaultAccountId;
           return (
@@ -176,21 +176,19 @@ export default function WithdrawScreen() {
                 active ? "border-primary bg-primary/5" : "border-border bg-card"
               }`}
             >
-              <Text className="text-sm font-medium text-foreground">
+              <AppText className="text-sm font-medium text-foreground">
                 {a.provider ?? a.account_type} · {a.account_number}
-              </Text>
-              <Text className="text-xs text-muted-foreground">
-                {a.account_holder_name}
-              </Text>
+              </AppText>
+              <AppText variant="muted">{a.account_holder_name}</AppText>
             </Pressable>
           );
         })}
       </View>
 
       <View className="gap-2">
-        <Text className="text-xs font-semibold uppercase text-muted-foreground">
+        <AppText className="text-[13px] font-semibold uppercase text-muted-foreground">
           Amount
-        </Text>
+        </AppText>
         <TextInput
           value={amount}
           onChangeText={setAmount}
@@ -209,15 +207,15 @@ export default function WithdrawScreen() {
         {request.isPending ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text className="text-sm font-semibold text-primary-foreground">
+          <AppText className="text-sm font-semibold text-primary-foreground">
             Request withdrawal
-          </Text>
+          </AppText>
         )}
       </Pressable>
 
-      <Text className="text-center text-[11px] text-muted-foreground">
+      <AppText className="text-center text-[11px] text-muted-foreground">
         Withdrawals are reviewed before the funds are sent.
-      </Text>
+      </AppText>
     </ScrollView>
   );
 }

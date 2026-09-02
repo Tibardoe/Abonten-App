@@ -5,7 +5,7 @@ import {
 import type { EventDraftListItem } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
-import { Icon } from "@abonten/ui-native";
+import { AppText, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import {
@@ -14,7 +14,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -62,12 +61,12 @@ function DraftRow({ draft }: { draft: EventDraftListItem }) {
           <View className="h-[60px] w-12 rounded-lg bg-muted" />
         )}
         <View className="flex-1">
-          <Text className="font-medium text-foreground" numberOfLines={1}>
+          <AppText className="font-medium text-foreground" numberOfLines={1}>
             {draft.title?.trim() || "Untitled draft"}
-          </Text>
-          <Text className="text-xs text-muted-foreground">
+          </AppText>
+          <AppText variant="muted">
             Edited {getRelativeTime(draft.updatedAt)}
-          </Text>
+          </AppText>
         </View>
       </Pressable>
       <Pressable
@@ -97,9 +96,9 @@ export default function EventDraftsScreen() {
       renderItem={({ item }) => <DraftRow draft={item} />}
       contentContainerClassName="gap-3 p-4 pb-16"
       ListHeaderComponent={
-        <Text className="mb-1 text-xl font-bold text-foreground">
+        <AppText variant="screenTitle" className="mb-1">
           Event drafts
-        </Text>
+        </AppText>
       }
       refreshControl={
         <RefreshControl
@@ -111,11 +110,11 @@ export default function EventDraftsScreen() {
         q.isLoading ? (
           <ActivityIndicator className="mt-10" />
         ) : (
-          <Text className="mt-10 text-center text-sm text-muted-foreground">
+          <AppText className="mt-10 text-center text-sm text-muted-foreground">
             {failed
               ? "Couldn't load your drafts."
               : "No saved drafts. Start an event and tap “Save as draft”."}
-          </Text>
+          </AppText>
         )
       }
     />

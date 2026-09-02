@@ -9,6 +9,7 @@ import {
   formatCountdown,
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
+import { AppText } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import {
@@ -16,7 +17,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 
@@ -48,7 +48,7 @@ function CheckoutExpiryBanner({
           : "border-border bg-muted"
       }`}
     >
-      <Text
+      <AppText
         className={`text-center text-sm font-medium ${
           tone === "destructive" ? "text-destructive" : "text-muted-foreground"
         }`}
@@ -56,7 +56,7 @@ function CheckoutExpiryBanner({
         {isExpired
           ? "This checkout has expired."
           : `Checkout expires in ${formatCountdown(secondsLeft)}`}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -72,7 +72,7 @@ function Line({
 }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text
+      <AppText
         className={
           strong
             ? "text-sm font-semibold text-foreground"
@@ -80,8 +80,8 @@ function Line({
         }
       >
         {label}
-      </Text>
-      <Text
+      </AppText>
+      <AppText
         className={
           strong
             ? "text-sm font-semibold text-foreground"
@@ -89,7 +89,7 @@ function Line({
         }
       >
         {value}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -117,14 +117,16 @@ export default function CheckoutReviewScreen() {
   if (isError || !data || data.status !== 200 || !data.data) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-muted-foreground">
+        <AppText className="text-center text-muted-foreground">
           {data?.message ?? "This checkout could not be loaded."}
-        </Text>
+        </AppText>
         <Pressable
           className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
           onPress={() => refetch()}
         >
-          <Text className="font-semibold text-primary-foreground">Retry</Text>
+          <AppText className="font-semibold text-primary-foreground">
+            Retry
+          </AppText>
         </Pressable>
       </View>
     );
@@ -146,17 +148,17 @@ export default function CheckoutReviewScreen() {
   if (expired || !session) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-muted-foreground">
+        <AppText className="text-center text-muted-foreground">
           This checkout has expired. Your seats were released — start again from
           the event.
-        </Text>
+        </AppText>
         <Pressable
           className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
           onPress={() => router.back()}
         >
-          <Text className="font-semibold text-primary-foreground">
+          <AppText className="font-semibold text-primary-foreground">
             Back to event
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     );
@@ -177,9 +179,9 @@ export default function CheckoutReviewScreen() {
           }}
         />
 
-        <Text className="text-lg font-bold text-foreground">
+        <AppText className="text-lg font-bold text-foreground">
           {session.eventTitle}
-        </Text>
+        </AppText>
 
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Line label="Subtotal" value={`${currency} ${session.subtotal}`} />
@@ -195,9 +197,9 @@ export default function CheckoutReviewScreen() {
         </View>
 
         {grandTotal !== session.total ? (
-          <Text className="text-xs text-muted-foreground">
+          <AppText variant="muted">
             Group total: {currency} {grandTotal}
-          </Text>
+          </AppText>
         ) : null}
 
         <PaymentSection
@@ -214,15 +216,15 @@ export default function CheckoutReviewScreen() {
           {cancel.isPending ? (
             <ActivityIndicator />
           ) : (
-            <Text className="text-sm font-semibold text-destructive">
+            <AppText className="text-sm font-semibold text-destructive">
               Cancel checkout
-            </Text>
+            </AppText>
           )}
         </Pressable>
 
-        <Text className="text-center text-[11px] text-muted-foreground">
+        <AppText className="text-center text-[11px] text-muted-foreground">
           Your seats are held for a limited time.
-        </Text>
+        </AppText>
       </ScrollView>
     </View>
   );

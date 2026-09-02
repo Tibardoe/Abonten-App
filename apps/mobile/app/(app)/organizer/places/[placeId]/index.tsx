@@ -1,11 +1,11 @@
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
+import { AppText, Overline } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 
@@ -25,10 +25,8 @@ const TILES: { key: string; label: string }[] = [
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
-      <Text className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Text>
-      <Text className="text-lg font-bold text-foreground">{value}</Text>
+      <Overline>{label}</Overline>
+      <AppText className="text-lg font-bold text-foreground">{value}</AppText>
     </View>
   );
 }
@@ -52,7 +50,7 @@ export default function PlaceManageScreen() {
         />
       }
     >
-      <Text className="text-xl font-bold text-foreground">Place insights</Text>
+      <AppText variant="screenTitle">Place insights</AppText>
 
       {q.isLoading ? (
         <View className="items-center py-12">
@@ -60,15 +58,17 @@ export default function PlaceManageScreen() {
         </View>
       ) : q.isError || (result && result.status !== 200) ? (
         <View className="items-center gap-3 py-12">
-          <Text className="text-center text-muted-foreground">
+          <AppText className="text-center text-muted-foreground">
             {(result && result.status === 404 && result.message) ||
               "Couldn't load this place's insights."}
-          </Text>
+          </AppText>
           <Pressable
             className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
             onPress={() => q.refetch()}
           >
-            <Text className="font-semibold text-primary-foreground">Retry</Text>
+            <AppText className="font-semibold text-primary-foreground">
+              Retry
+            </AppText>
           </Pressable>
         </View>
       ) : (
@@ -87,44 +87,46 @@ export default function PlaceManageScreen() {
         <View className="gap-2">
           <Link href={`/(app)/organizer/places/${id}/edit`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base font-semibold text-primary">
+              <AppText className="text-base font-semibold text-primary">
                 Edit place
-              </Text>
-              <Text className="text-primary">›</Text>
+              </AppText>
+              <AppText className="text-primary">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/places/${id}/photos`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base text-foreground">Manage photos</Text>
-              <Text className="text-muted-foreground">›</Text>
+              <AppText className="text-base text-foreground">
+                Manage photos
+              </AppText>
+              <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/places/${id}/bookings`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base text-foreground">Bookings</Text>
-              <Text className="text-muted-foreground">›</Text>
+              <AppText className="text-base text-foreground">Bookings</AppText>
+              <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/places/${id}/reviews`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base text-foreground">Reviews</Text>
-              <Text className="text-muted-foreground">›</Text>
+              <AppText className="text-base text-foreground">Reviews</AppText>
+              <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base font-semibold text-primary">
+              <AppText className="text-base font-semibold text-primary">
                 Feature this place
-              </Text>
-              <Text className="text-primary">›</Text>
+              </AppText>
+              <AppText className="text-primary">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/place/${id}`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base text-foreground">
+              <AppText className="text-base text-foreground">
                 View public place page
-              </Text>
-              <Text className="text-muted-foreground">›</Text>
+              </AppText>
+              <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
         </View>

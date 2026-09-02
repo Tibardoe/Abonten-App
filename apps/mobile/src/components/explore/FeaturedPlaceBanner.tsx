@@ -125,7 +125,7 @@ export function FeaturedPlaceBanner({ place }: { place: PlaceType }) {
 
         <View className="mt-1 flex-row">
           <View className="flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5">
-            <AppText className="text-[12px] font-semibold text-primary-foreground">
+            <AppText className="text-[13px] font-semibold text-primary-foreground">
               View place
             </AppText>
             <Icon name="arrow-forward" size={13} tone="inverse" />

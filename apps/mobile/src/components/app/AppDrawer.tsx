@@ -249,15 +249,13 @@ export function AppDrawer() {
                       size={44}
                     />
                     <View className="flex-1">
-                      <AppText className="text-[15px] font-semibold text-foreground">
+                      <AppText variant="bodyStrong">
                         {profile?.full_name ??
                           profile?.username ??
                           "Your account"}
                       </AppText>
                       {profile?.username ? (
-                        <AppText className="text-[12px] text-muted-foreground">
-                          @{profile.username}
-                        </AppText>
+                        <AppText variant="meta">@{profile.username}</AppText>
                       ) : null}
                     </View>
                     <Icon name="chevron-forward" size={16} tone="muted" />
@@ -370,13 +368,11 @@ export function AppDrawer() {
                       onPress={openWeb}
                       className="active:opacity-60"
                     >
-                      <AppText className="text-[13px] text-muted-foreground">
-                        {label}
-                      </AppText>
+                      <AppText variant="muted">{label}</AppText>
                     </Pressable>
                   ),
                 )}
-                <AppText className="mt-1 text-[12px] text-muted-foreground">
+                <AppText variant="meta" className="mt-1">
                   © {new Date().getFullYear()} Abonten Hub
                 </AppText>
               </View>

@@ -106,7 +106,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
               key={o.id}
               className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
             >
-              <AppText className="text-[13px] text-foreground">
+              <AppText variant="small">
                 {prettyDate(o.dateIso)} · {o.start}–{o.end}
               </AppText>
               <Pressable
@@ -114,7 +114,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
                   w.setOccurrences((prev) => prev.filter((_, idx) => idx !== i))
                 }
               >
-                <AppText className="text-[12px] text-destructive">
+                <AppText variant="small" tone="error">
                   Remove
                 </AppText>
               </Pressable>

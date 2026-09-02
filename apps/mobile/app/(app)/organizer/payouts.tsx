@@ -1,11 +1,11 @@
 import { usePayouts } from "@/features/organizer/usePayouts";
 import type { OrganizerPayoutRow } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { AppText } from "@abonten/ui-native";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -20,24 +20,24 @@ function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
   return (
     <View className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-3">
       <View className="flex-1 gap-0.5">
-        <Text className="text-sm font-medium text-foreground">
+        <AppText className="text-sm font-medium text-foreground">
           {row.currency}{" "}
           {row.amount.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
-        </Text>
-        <Text className="text-[10px] text-muted-foreground">
+        </AppText>
+        <AppText className="text-[10px] text-muted-foreground">
           {formatDateWithSuffix(row.requested_at)} · {row.reference}
-        </Text>
+        </AppText>
       </View>
-      <Text
-        className={`text-xs font-semibold uppercase ${
+      <AppText
+        className={`text-[13px] font-semibold uppercase ${
           STATUS_TONE[row.status] ?? "text-muted-foreground"
         }`}
       >
         {row.status}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -69,9 +69,9 @@ export default function PayoutsScreen() {
         />
       }
       ListEmptyComponent={
-        <Text className="mt-10 text-center text-sm text-muted-foreground">
+        <AppText className="mt-10 text-center text-sm text-muted-foreground">
           {failed ? "Couldn't load payouts." : "No withdrawals yet."}
-        </Text>
+        </AppText>
       }
     />
   );
