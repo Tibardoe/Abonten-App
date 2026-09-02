@@ -33,7 +33,7 @@ export function CountryCodeField({
         className="h-[52px] flex-row items-center gap-1.5 rounded-xl border border-input bg-background px-3 active:opacity-70"
       >
         <AppText className="text-[16px]">{value.flag}</AppText>
-        <AppText className="text-[15px] font-medium text-foreground">
+        <AppText variant="body" className="font-medium">
           {value.callingCode}
         </AppText>
         <Icon name="chevron-down" size={14} tone="muted" />
@@ -50,7 +50,7 @@ export function CountryCodeField({
           />
           <View className="overflow-hidden rounded-lg border border-border">
             {results.length === 0 ? (
-              <AppText className="p-3 text-[13px] text-muted-foreground">
+              <AppText variant="muted" className="p-3">
                 No country matches “{query}”.
               </AppText>
             ) : (
@@ -69,12 +69,10 @@ export function CountryCodeField({
                     } ${selected ? "bg-accent" : ""}`}
                   >
                     <AppText className="text-[18px]">{c.flag}</AppText>
-                    <AppText className="flex-1 text-[14px] text-foreground">
+                    <AppText variant="body" className="flex-1">
                       {c.name}
                     </AppText>
-                    <AppText className="text-[13px] text-muted-foreground">
-                      {c.callingCode}
-                    </AppText>
+                    <AppText variant="muted">{c.callingCode}</AppText>
                     {selected ? (
                       <Icon name="checkmark" size={16} tone="primary" />
                     ) : null}

@@ -41,6 +41,7 @@ import {
   SectionTitle,
   Stars,
 } from "@abonten/ui-native";
+import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -68,10 +69,8 @@ function InfoRow({
     <View className="flex-row gap-3">
       <Icon name={icon} size={18} tone="muted" style={{ marginTop: 2 }} />
       <View className="flex-1">
-        <AppText className="text-[14px] text-foreground">{label}</AppText>
-        {sub ? (
-          <AppText className="text-[12px] text-muted-foreground">{sub}</AppText>
-        ) : null}
+        <AppText variant="body">{label}</AppText>
+        {sub ? <AppText variant="meta">{sub}</AppText> : null}
       </View>
     </View>
   );
@@ -88,7 +87,8 @@ function ReviewItem({ review }: { review: EventReviewListItem }) {
             size={28}
           />
           <AppText
-            className="flex-1 text-[13px] font-semibold text-foreground"
+            variant="small"
+            className="flex-1 font-semibold"
             numberOfLines={1}
           >
             {review.reviewer?.username ?? "Attendee"}
@@ -99,27 +99,23 @@ function ReviewItem({ review }: { review: EventReviewListItem }) {
       {review.is_verified_attendee ? (
         <View className="flex-row items-center gap-1">
           <Icon name="checkmark-circle" size={12} tone="success" />
-          <AppText className="text-[11px] text-success">
+          <AppText variant="caption" tone="success">
             Verified attendee
           </AppText>
         </View>
       ) : null}
       {review.title ? (
-        <AppText className="text-[13px] font-semibold text-foreground">
+        <AppText variant="small" className="font-semibold">
           {review.title}
         </AppText>
       ) : null}
       {review.comment ? (
-        <AppText className="text-[13px] text-muted-foreground">
-          {review.comment}
-        </AppText>
+        <AppText variant="muted">{review.comment}</AppText>
       ) : null}
       {review.event_review_photo?.length ? (
         <ReviewPhotoStrip photos={review.event_review_photo} />
       ) : null}
-      <AppText className="text-[11px] text-muted-foreground">
-        {getRelativeTime(review.created_at)}
-      </AppText>
+      <AppText variant="caption">{getRelativeTime(review.created_at)}</AppText>
     </View>
   );
 }
@@ -127,6 +123,7 @@ function ReviewItem({ review }: { review: EventReviewListItem }) {
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const similarCardWidth = useCarouselCardWidth();
   const { data, isLoading, isError, refetch } = useEventDetail(id);
   const [reviewOpen, setReviewOpen] = useState(false);
 
@@ -285,7 +282,11 @@ export default function EventDetailScreen() {
 
         {canceled || hasEnded ? (
           <View className="mx-4 mt-4 rounded-lg border border-destructive/40 bg-muted px-3 py-2">
-            <AppText className="text-center text-[13px] font-medium text-destructive">
+            <AppText
+              variant="small"
+              tone="error"
+              className="text-center font-medium"
+            >
               {canceled
                 ? "This event has been canceled."
                 : "This event has ended."}
@@ -309,24 +310,19 @@ export default function EventDetailScreen() {
                 size={44}
               />
               <View className="flex-1">
-                <AppText className="text-[11px] text-muted-foreground">
-                  Organized by
-                </AppText>
-                <AppText
-                  className="text-[14px] font-semibold text-foreground"
-                  numberOfLines={1}
-                >
+                <AppText variant="caption">Organized by</AppText>
+                <AppText variant="bodyStrong" numberOfLines={1}>
                   {event.user_info.username}
                 </AppText>
                 <View className="mt-0.5 flex-row items-center gap-1">
                   <Stars rating={organizerRating.average} size={12} />
-                  <AppText className="text-[11px] text-muted-foreground">
+                  <AppText variant="caption">
                     ({organizerRating.average.toFixed(1)})
                   </AppText>
                 </View>
               </View>
               <View className="items-end gap-1">
-                <AppText className="text-[11px] text-muted-foreground">
+                <AppText variant="caption">
                   {getRelativeTime(event.created_at)}
                 </AppText>
                 <Icon name="chevron-forward" size={16} tone="muted" />
@@ -431,7 +427,7 @@ export default function EventDetailScreen() {
           {event.description ? (
             <View className="gap-2">
               <SectionTitle>About the event</SectionTitle>
-              <AppText className="text-[14px] leading-relaxed text-muted-foreground">
+              <AppText variant="body" tone="muted">
                 {event.description}
               </AppText>
             </View>
@@ -442,15 +438,11 @@ export default function EventDetailScreen() {
             <SectionTitle>Category &amp; tags</SectionTitle>
             <View className="flex-row flex-wrap gap-2">
               <View className="rounded-full bg-muted px-3 py-1">
-                <AppText className="text-[12px] text-muted-foreground">
-                  {event.event_category}
-                </AppText>
+                <AppText variant="meta">{event.event_category}</AppText>
               </View>
               {tags.map((t) => (
                 <View key={t} className="rounded-full bg-muted px-3 py-1">
-                  <AppText className="text-[12px] text-muted-foreground">
-                    #{t}
-                  </AppText>
+                  <AppText variant="meta">#{t}</AppText>
                 </View>
               ))}
             </View>
@@ -461,24 +453,24 @@ export default function EventDetailScreen() {
             <SectionTitle>Tickets</SectionTitle>
             {canceled ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
-                <AppText className="text-[13px] font-semibold text-muted-foreground">
+                <AppText variant="muted" className="font-semibold">
                   Tickets unavailable — this event was canceled.
                 </AppText>
               </View>
             ) : hasEnded ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
-                <AppText className="text-[13px] font-semibold text-muted-foreground">
+                <AppText variant="muted" className="font-semibold">
                   This event has ended.
                 </AppText>
               </View>
             ) : soldOut ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
-                <AppText className="text-[13px] font-semibold text-muted-foreground">
+                <AppText variant="muted" className="font-semibold">
                   Sold out
                 </AppText>
               </View>
             ) : event.ticket_type.length === 0 ? (
-              <AppText className="text-[13px] text-muted-foreground">
+              <AppText variant="muted">
                 No tickets have been set up for this event yet.
               </AppText>
             ) : isFree ? (
@@ -495,7 +487,7 @@ export default function EventDetailScreen() {
               {rating.data && rating.data.count > 0 ? (
                 <View className="flex-row items-center gap-1.5">
                   <Stars rating={rating.data.average} size={14} />
-                  <AppText className="text-[12px] text-muted-foreground">
+                  <AppText variant="meta">
                     {rating.data.average.toFixed(1)} ({rating.data.count})
                   </AppText>
                 </View>
@@ -512,18 +504,18 @@ export default function EventDetailScreen() {
             ) : eligibility?.reason === "has_review" ? (
               <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
                 <View className="flex-row items-center justify-between">
-                  <AppText className="text-[13px] font-semibold text-foreground">
+                  <AppText variant="small" className="font-semibold">
                     Your review
                   </AppText>
                   <Stars rating={eligibility.ownReview.rating} size={13} />
                 </View>
                 {eligibility.ownReview.title ? (
-                  <AppText className="text-[13px] font-semibold text-foreground">
+                  <AppText variant="small" className="font-semibold">
                     {eligibility.ownReview.title}
                   </AppText>
                 ) : null}
                 {eligibility.ownReview.comment ? (
-                  <AppText className="text-[13px] text-muted-foreground">
+                  <AppText variant="muted">
                     {eligibility.ownReview.comment}
                   </AppText>
                 ) : null}
@@ -536,13 +528,9 @@ export default function EventDetailScreen() {
             ) : null}
 
             {reviewsList.isLoading ? (
-              <AppText className="text-[13px] text-muted-foreground">
-                Loading reviews…
-              </AppText>
+              <AppText variant="muted">Loading reviews…</AppText>
             ) : reviews.length === 0 ? (
-              <AppText className="text-[13px] text-muted-foreground">
-                No reviews yet.
-              </AppText>
+              <AppText variant="muted">No reviews yet.</AppText>
             ) : (
               <View className="gap-2">
                 {reviews.map((r) => (
@@ -555,7 +543,11 @@ export default function EventDetailScreen() {
                     onPress={() => reviewsList.fetchNextPage()}
                     disabled={reviewsList.isFetchingNextPage}
                   >
-                    <AppText className="text-[13px] font-semibold text-primary">
+                    <AppText
+                      variant="small"
+                      tone="brand"
+                      className="font-semibold"
+                    >
                       {reviewsList.isFetchingNextPage
                         ? "Loading…"
                         : "Show more reviews"}
@@ -577,7 +569,7 @@ export default function EventDetailScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerClassName="gap-3"
                 renderItem={({ item }) => (
-                  <View style={{ width: 260 }}>
+                  <View style={{ width: similarCardWidth }}>
                     <EventCard event={item} />
                   </View>
                 )}

@@ -128,10 +128,10 @@ export default function SignIn() {
 
           <View className="grow justify-center gap-7">
             <View className="gap-2">
-              <AppText className="text-center text-[26px] font-bold text-foreground">
+              <AppText variant="pageTitle" className="text-center">
                 Log in or sign up
               </AppText>
-              <AppText className="text-center text-[14px] leading-[20px] text-muted-foreground">
+              <AppText variant="muted" className="text-center">
                 Continue with your phone number or Google account.
               </AppText>
             </View>
@@ -148,18 +148,14 @@ export default function SignIn() {
               ) : (
                 <>
                   <GoogleIcon size={20} />
-                  <AppText className="text-[15px] font-semibold text-foreground">
-                    Continue with Google
-                  </AppText>
+                  <AppText variant="bodyStrong">Continue with Google</AppText>
                 </>
               )}
             </Pressable>
 
             <View className="flex-row items-center gap-3">
               <View className="h-px flex-1 bg-border" />
-              <AppText className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                or
-              </AppText>
+              <AppText variant="overline">or</AppText>
               <View className="h-px flex-1 bg-border" />
             </View>
 
@@ -196,7 +192,7 @@ export default function SignIn() {
               {error ? (
                 <View className="flex-row items-center gap-1.5">
                   <Icon name="alert-circle" size={15} tone="destructive" />
-                  <AppText className="text-[13px] text-destructive">
+                  <AppText variant="small" tone="error">
                     {error}
                   </AppText>
                 </View>
@@ -213,17 +209,21 @@ export default function SignIn() {
               />
             </View>
 
-            <AppText className="text-center text-[12px] leading-[18px] text-muted-foreground">
+            <AppText variant="caption" className="text-center">
               By continuing you agree to Abonten's{" "}
               <AppText
-                className="text-[12px] font-semibold text-primary"
+                variant="caption"
+                tone="brand"
+                className="font-semibold"
                 onPress={() => Linking.openURL(TERMS_URL)}
               >
                 Terms
               </AppText>{" "}
               and{" "}
               <AppText
-                className="text-[12px] font-semibold text-primary"
+                variant="caption"
+                tone="brand"
+                className="font-semibold"
                 onPress={() => Linking.openURL(PRIVACY_URL)}
               >
                 Privacy Policy

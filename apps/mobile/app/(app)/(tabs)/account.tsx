@@ -35,7 +35,9 @@ function NavRow({
       className="flex-row items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 active:opacity-80"
     >
       <Icon name={icon} size={20} tone="muted" />
-      <AppText className="flex-1 text-[15px] text-foreground">{label}</AppText>
+      <AppText variant="body" className="flex-1">
+        {label}
+      </AppText>
       <Icon name="chevron-forward" size={16} tone="muted" />
     </Pressable>
   );
@@ -64,10 +66,8 @@ export default function Account() {
         >
           <View className="items-center gap-2">
             <Icon name="person-circle-outline" size={48} tone="muted" />
-            <AppText className="text-[18px] font-bold text-foreground">
-              Sign in to Abonten
-            </AppText>
-            <AppText className="text-center text-[13px] text-muted-foreground">
+            <AppText variant="sectionTitle">Sign in to Abonten</AppText>
+            <AppText variant="muted" className="text-center">
               Sign in to buy tickets, save favourites, and manage your events.
             </AppText>
           </View>
@@ -101,17 +101,13 @@ export default function Account() {
                 size={52}
               />
               <View className="flex-1">
-                <AppText className="text-[16px] font-semibold text-foreground">
+                <AppText variant="cardTitle">
                   {profile?.full_name ?? profile?.username ?? "Your account"}
                 </AppText>
                 {profile?.username ? (
-                  <AppText className="text-[13px] text-muted-foreground">
-                    @{profile.username}
-                  </AppText>
+                  <AppText variant="meta">@{profile.username}</AppText>
                 ) : session.user.phone ? (
-                  <AppText className="text-[13px] text-muted-foreground">
-                    {session.user.phone}
-                  </AppText>
+                  <AppText variant="meta">{session.user.phone}</AppText>
                 ) : null}
               </View>
               {profile?.username ? (

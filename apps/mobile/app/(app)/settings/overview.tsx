@@ -21,7 +21,7 @@ export default function SettingsOverview() {
       onPress={onPress}
       className="flex-row items-center justify-between py-3 active:opacity-70"
     >
-      <AppText className="text-[15px] text-foreground">{label}</AppText>
+      <AppText variant="body">{label}</AppText>
       <Icon name="chevron-forward" size={18} tone="muted" />
     </Pressable>
   );

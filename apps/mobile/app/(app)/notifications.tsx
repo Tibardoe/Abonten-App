@@ -12,7 +12,7 @@ import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
-import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, View } from "react-native";
 
 function Row({
   item,
@@ -30,21 +30,18 @@ function Row({
         {item.read_at ? null : (
           <View className="h-2 w-2 rounded-full bg-primary" />
         )}
-        <Text
-          className="flex-1 text-sm font-semibold text-foreground"
-          numberOfLines={1}
-        >
+        <AppText variant="bodyStrong" className="flex-1" numberOfLines={1}>
           {item.title}
-        </Text>
+        </AppText>
       </View>
       {item.body ? (
-        <Text className="text-xs text-muted-foreground" numberOfLines={2}>
+        <AppText variant="meta" numberOfLines={2}>
           {item.body}
-        </Text>
+        </AppText>
       ) : null}
-      <Text className="text-[10px] text-muted-foreground">
+      <AppText variant="caption">
         {formatDateWithSuffix(item.created_at)}
-      </Text>
+      </AppText>
     </Pressable>
   );
 }
@@ -90,7 +87,7 @@ export default function Notifications() {
               disabled={markAll.isPending}
               className="px-2 active:opacity-60"
             >
-              <AppText className="text-[13px] font-medium text-primary">
+              <AppText variant="small" tone="brand" className="font-medium">
                 Mark all read
               </AppText>
             </Pressable>

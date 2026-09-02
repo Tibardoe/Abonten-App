@@ -190,7 +190,9 @@ export function DateRangeField({
           onPress={() => onChange({ start: null, end: null })}
           className="self-start pt-1"
         >
-          <AppText className="text-[12px] text-primary">Clear dates</AppText>
+          <AppText variant="small" tone="brand" className="font-medium">
+            Clear dates
+          </AppText>
         </Pressable>
       )}
     </View>

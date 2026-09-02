@@ -29,10 +29,12 @@ function VerifiedTag({ verified }: { verified: boolean }) {
   return verified ? (
     <View className="flex-row items-center gap-1">
       <Icon name="checkmark-circle" size={16} tone="success" />
-      <AppText className="text-[12px] text-primary">Verified</AppText>
+      <AppText variant="caption" tone="success" className="font-semibold">
+        Verified
+      </AppText>
     </View>
   ) : (
-    <AppText className="text-[12px] text-muted-foreground">Unverified</AppText>
+    <AppText variant="caption">Unverified</AppText>
   );
 }
 
@@ -191,7 +193,7 @@ export default function Security() {
                 />
               </Field>
               {emailErr ? (
-                <AppText className="text-[13px] text-destructive">
+                <AppText variant="small" tone="error">
                   {emailErr}
                 </AppText>
               ) : null}
@@ -224,7 +226,7 @@ export default function Security() {
           )}
 
           {emailMsg ? (
-            <AppText className="pt-2 text-[13px] text-primary">
+            <AppText variant="small" tone="brand" className="pt-2">
               {emailMsg}
             </AppText>
           ) : null}
@@ -259,7 +261,7 @@ export default function Security() {
                     />
                   </Field>
                   {phoneErr ? (
-                    <AppText className="text-[13px] text-destructive">
+                    <AppText variant="small" tone="error">
                       {phoneErr}
                     </AppText>
                   ) : null}
@@ -299,7 +301,7 @@ export default function Security() {
                     </View>
                   </View>
                   {phoneErr ? (
-                    <AppText className="text-[13px] text-destructive">
+                    <AppText variant="small" tone="error">
                       {phoneErr}
                     </AppText>
                   ) : null}
@@ -331,7 +333,7 @@ export default function Security() {
           )}
 
           {phoneMsg ? (
-            <AppText className="pt-2 text-[13px] text-primary">
+            <AppText variant="small" tone="brand" className="pt-2">
               {phoneMsg}
             </AppText>
           ) : null}

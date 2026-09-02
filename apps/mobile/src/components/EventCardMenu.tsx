@@ -41,9 +41,9 @@ function MenuRow({
         tone={destructive ? "destructive" : "foreground"}
       />
       <AppText
-        className={`flex-1 text-[15px] ${
-          destructive ? "text-destructive" : "text-foreground"
-        }`}
+        variant="body"
+        tone={destructive ? "error" : "primary"}
+        className="flex-1"
       >
         {label}
       </AppText>
@@ -112,7 +112,7 @@ export function EventCardMenu({
               onPress={() => go(`/(app)/organizer/events/${event.id}/edit`)}
             />
             {isCancelled ? (
-              <AppText className="px-1 py-2 text-[13px] text-muted-foreground">
+              <AppText variant="muted" className="px-1 py-2">
                 This event has been cancelled
               </AppText>
             ) : (
