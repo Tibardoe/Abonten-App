@@ -112,28 +112,40 @@ never imported by a client component.
   column-level privilege.
 - `wallet` / `payout` / `organizer_ledger_entry` are `SELECT`-only for the
   owner; balance moves only via trusted server code.
-- **M1 (this branch):** the six `record_*` `SECURITY DEFINER` financial
-  functions had a default `EXECUTE` grant to `authenticated` with no caller
-  guard. Every remaining `authenticated`-role call path was moved to the
-  service-role client (`finalizePaystackPayment` → `record_platform_fee`;
-  `generateTicket` → `record_organizer_earning`; `issueRefundCore` →
-  `record_refund_hold` / `record_fee_refund_adjustment`).
+- **M1 (this branch, applied 2026-09-02):** the six `record_*`
+  `SECURITY DEFINER` financial functions had a default `EXECUTE` grant to
+  `authenticated` with no caller guard. Every remaining `authenticated`-role
+  call path was moved to the service-role client
+  (`finalizePaystackPayment` → `record_platform_fee`; `generateTicket` →
+  `record_organizer_earning`; `issueRefundCore` → `record_refund_hold` /
+  `record_fee_refund_adjustment`), then
   `supabase/migrations/20260903200000_revoke_record_fns_from_authenticated.sql`
-  then revokes the grant. **Apply via Supabase MCP + re-run `get_advisors`.**
+  revoked the grant. **Applied via Supabase MCP and verified:**
+  `has_function_privilege('authenticated', …, 'EXECUTE') = false` on all six;
+  a direct call as `role authenticated` fails with "permission denied";
+  `service_role` still executes them; `get_advisors(security)` no longer
+  lists any `record_*` under `authenticated_security_definer_function_executable`
+  (no new findings).
 - **S2 (this branch):** `PendingCheckoutsBasket` called `generateTicket`
   directly from a client component. Replaced with
   `actions/issueFreeCheckoutTickets.ts`, which re-verifies every checkout row
-  is pending, caller-owned, and priced at 0 before delegating. `generateTicket`
-  is now imported only by server-side code.
+  is pending, caller-owned, and priced at 0 before delegating.
+  `generateTicket` moved to `apps/web/src/utils/generateTicket.ts`, dropped
+  its `"use server"` directive — it is a server-only module function now,
+  imported only by `issueFreeCheckoutTickets` and `paymentFulfillmentDeps`.
 
 ## Known residual items
 
-- `generateTicket` is still a `"use server"` export (invoked only
-  server-side now). Making it a plain module function is deferred — low risk.
 - `apps/web/src/app/api/user-profile/route.tsx` queries a non-existent
-  `user_profile_detail` (singular) — pre-existing bug (PROJECT.md §7.6 #1).
-- `@abonten/api-client` `ProfileData` / `CheckoutSessionRow` are still
-  `Record<string, unknown>` (broad DB-driven view/join rows).
+  `user_profile_detail` (singular) — pre-existing bug (PROJECT.md §7.6 #1),
+  out of scope for this phase.
 - Net-new mobile endpoints for event-review write etc. were **not** added —
   mobile already does event reviews as a class-A direct-Supabase flow
   (`apps/mobile/src/features/reviews/useEventReviews.ts`), so there is no gap.
+- M2 (add the `CHECK` / `UNIQUE` constraints app logic assumes on
+  `ticket_type` / `promo_code` / `ticket.ticket_code`) is not written —
+  it needs a data scan for existing violations first.
+
+_Resolved during this phase: `generateTicket` is now a plain server-only
+module function; `@abonten/api-client` `ProfileData` / `CheckoutSessionRow`
+are properly typed._
