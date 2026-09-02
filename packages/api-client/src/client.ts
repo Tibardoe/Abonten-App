@@ -6,6 +6,7 @@ import type {
   AddPlaceServiceBody,
   ApiEnvelope,
   AttendanceRow,
+  BookingStatus,
   CancelEventResult,
   CancelTicketBody,
   CancelTicketResult,
@@ -35,12 +36,15 @@ import type {
   OrganizerLedgerTransactionRow,
   OrganizerOverviewResult,
   OrganizerPlaceRow,
+  OwnerPlaceBooking,
+  OwnerPlaceReviewRow,
   PaginatedResult,
   PaymentMethodRow,
   PayoutAccountsResult,
   PayoutsResult,
   PendingCheckoutSession,
   PhoneSession,
+  PlaceBookingRespondResult,
   PlaceCreateBody,
   PlaceCreateResult,
   PlaceHoursStatusResult,
@@ -48,6 +52,7 @@ import type {
   PlaceManageContextResult,
   PlaceOpeningHoursInput,
   PlacePhotoResult,
+  PlaceReviewRespondResult,
   PlaceServiceResult,
   PreparedCheckoutPayment,
   ProfileData,
@@ -57,6 +62,8 @@ import type {
   RequestPayoutResult,
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
+  RespondToPlaceBookingBody,
+  RespondToPlaceReviewBody,
   SetPlaceStatusBody,
   SubmitChargeOtpResult,
   UpdateEventBody,
@@ -804,6 +811,75 @@ export function createApiClient(options: ApiClientOptions) {
             placeId,
           )}/photos/${encodeURIComponent(photoId)}/delete`,
           { method: "POST", auth: true },
+        );
+      },
+      /**
+       * Cursor-paginated booking requests for one of the caller's own
+       * places. Omit `status` for the "All" view. 403 if not owned.
+       */
+      placeBookings(
+        placeId: string,
+        params?: {
+          status?: BookingStatus;
+          cursor?: string | null;
+          pageSize?: number;
+        },
+      ) {
+        const query = new URLSearchParams();
+        if (params?.status) query.set("status", params.status);
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<PaginatedResult<OwnerPlaceBooking>>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/bookings${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Accept or decline a pending booking request. 409 if it was already
+       * responded to; 403 unless the caller owns the booking's place. The
+       * customer is notified either way.
+       */
+      respondToPlaceBooking(placeId: string, body: RespondToPlaceBookingBody) {
+        return request<PlaceBookingRespondResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/bookings/respond`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * Cursor-paginated approved reviews for one of the caller's own
+       * places (the same list the public detail page shows). 403 if not
+       * owned.
+       */
+      placeReviews(
+        placeId: string,
+        params?: { cursor?: string | null; pageSize?: number },
+      ) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<PaginatedResult<OwnerPlaceReviewRow>>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/reviews${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Post (or overwrite) the owner's public reply to one review. 403
+       * unless the caller owns the review's place.
+       */
+      respondToPlaceReview(placeId: string, body: RespondToPlaceReviewBody) {
+        return request<PlaceReviewRespondResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/reviews/respond`,
+          { method: "POST", body, auth: true },
         );
       },
     },

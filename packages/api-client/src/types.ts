@@ -9,6 +9,10 @@ import type {
 } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
+  BookingStatus,
+  OwnerPlaceBooking,
+} from "@abonten/types/placeBookingType";
+import type {
   PlaceOpeningHoursInput,
   PlaceServiceInput,
 } from "@abonten/types/placeType";
@@ -141,6 +145,7 @@ export type CancelTicketResult = { status: number; message?: string };
 // duplicate. Flat reply: 200 = published (carries placeId/slug); 400 =
 // validation; 500 = create failed (retry-friendly).
 export type { PlaceOpeningHoursInput, PlaceServiceInput };
+export type { BookingStatus, OwnerPlaceBooking };
 
 export type PlaceCreateBody = {
   name: string;
@@ -831,6 +836,54 @@ export type AddPlacePhotoBody = {
 export type PlacePhotoResult =
   | { status: 200; message: string; data?: PlacePhotoRow }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// ---- per-place bookings + reviews (owner management tabs) -----------
+
+// Accept is a direct action; Decline is confirmed first (web mirrors this
+// with a ConfirmDeleteModal). Only `pending` bookings are respondable.
+export type RespondToPlaceBookingBody = {
+  bookingId: string;
+  decision: "accept" | "decline";
+};
+
+export type PlaceBookingRespondResult = {
+  status: 200 | 400 | 401 | 403 | 404 | 409 | 500;
+  message: string;
+};
+
+// One `place_review` row as the owner Reviews tab reads it — the approved
+// review plus the reviewer's handle/avatar and its photos. Untyped like
+// every other joined Supabase row in this repo (no generated types); read
+// the fields the list needs.
+export type OwnerPlaceReviewRow = {
+  id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  created_at: string;
+  owner_response: string | null;
+  owner_response_at: string | null;
+  user_info: {
+    username: string | null;
+    avatar_public_id: string | null;
+    avatar_version: string | null;
+  } | null;
+  place_review_photo:
+    | { id: string; public_id: string; version: string; position: number }[]
+    | null;
+  // biome-ignore lint/suspicious/noExplicitAny: other place_review columns vary; consumers read what they need
+  [key: string]: any;
+};
+
+export type RespondToPlaceReviewBody = {
+  reviewId: string;
+  response: string;
+};
+
+export type PlaceReviewRespondResult = {
+  status: 200 | 400 | 401 | 403 | 404 | 500;
+  message: string;
+};
 
 // ---- organizer write actions ----------------------------------------
 
