@@ -1,4 +1,5 @@
 import { DashboardWidgets } from "@/components/organizer/DashboardWidgets";
+import { DashboardSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import {
   useOrganizerDashboardWidgets,
@@ -12,7 +13,6 @@ import type {
 import { Link } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -126,9 +126,7 @@ export default function OrganizerDashboard() {
       </View>
 
       {q.isLoading ? (
-        <View className="items-center py-12">
-          <ActivityIndicator />
-        </View>
+        <DashboardSkeleton />
       ) : q.isError || (result && result.status !== 200) ? (
         <View className="items-center gap-3 py-12">
           <Text className="text-center text-muted-foreground">

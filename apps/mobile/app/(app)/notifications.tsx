@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { NotificationsSkeleton } from "@/components/skeletons";
 import { notificationHref } from "@/features/notifications/notificationLink";
 import {
   flattenNotifications,
@@ -8,7 +9,7 @@ import {
 } from "@/features/notifications/useNotifications";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
-import { AppText, EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
+import { AppText, EmptyState, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
@@ -98,7 +99,7 @@ export default function Notifications() {
       />
 
       {q.isLoading ? (
-        <ScreenLoader />
+        <NotificationsSkeleton />
       ) : (
         <FlatList
           data={items}

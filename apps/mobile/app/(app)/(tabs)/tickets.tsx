@@ -3,17 +3,13 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { PendingCheckoutsSection } from "@/components/checkout/PendingCheckoutsSection";
 import { EventsToReviewList } from "@/components/reviews/EventsToReviewList";
 import { ReviewedEventsList } from "@/components/reviews/ReviewedEventsList";
+import { TicketListSkeleton } from "@/components/skeletons";
 import {
   type TicketFilter,
   useMyTickets,
 } from "@/features/tickets/useMyTickets";
 import type { UserTicketType } from "@abonten/types/ticketType";
-import {
-  EmptyState,
-  ScreenLoader,
-  SegmentedTabs,
-  Spinner,
-} from "@abonten/ui-native";
+import { EmptyState, SegmentedTabs, Spinner } from "@abonten/ui-native";
 import { useCallback, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 
@@ -56,7 +52,7 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  if (q.isLoading) return <ScreenLoader />;
+  if (q.isLoading) return <TicketListSkeleton />;
 
   return (
     <FlatList
