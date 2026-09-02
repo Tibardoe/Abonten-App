@@ -3,13 +3,13 @@ import { AppText, Button, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
-// Step 2 of the place wizard — pick the cover photo. Mirrors the web
+// Step 1 (first) of the place wizard — pick the cover photo. Mirrors the web
 // PlaceCreateStepPhotos (expo-image-picker's built-in editor gives the
-// 16:9 crop the web ImageCropper does).
+// 16:9 crop the web ImageCropper does). The section title/subtitle is drawn
+// by the wizard screen.
 export function PlaceWizardCover({ w }: { w: PlaceWizard }) {
   return (
     <View className="gap-4">
-      <AppText variant="label">Cover photo</AppText>
       {w.coverUri ? (
         <Image
           source={{ uri: w.coverUri }}

@@ -360,12 +360,12 @@ export function usePlaceWizard(resumeDraftId?: string) {
     });
   }
 
-  // Whether the current step's requirements are met, so the header's "Next"
-  // can be disabled. Step 0 runs validateBasics() on press instead. These
-  // gates used to live on each step component's own Next button.
+  // Step order (see app/(app)/place/new.tsx): 0 Cover · 1 Basic info · 2
+  // Hours · 3 Review. Basic info (step 1) runs validateBasics() on
+  // Next-press, so it isn't gated here.
   const canAdvance = useMemo(() => {
     switch (step) {
-      case 1:
+      case 0:
         return !!coverUri;
       case 2:
         return hoursComplete;
