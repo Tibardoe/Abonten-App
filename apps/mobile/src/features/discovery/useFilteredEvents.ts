@@ -9,6 +9,16 @@ const PAGE_SIZE = 20;
 // useEventSearch.
 const NO_DISTANCE = 1e18;
 
+// get_filtered_events' distance clause is
+// `ST_DWithin(location, point, p_max_distance_km * 1000)` — when coords are
+// given but p_max_distance_km is null, `null * 1000` is null and ST_DWithin
+// returns null, so the whole row is filtered out and "All events" comes back
+// empty even though the curated sliders (a separate 10km get_nearby_events
+// call) are full. Web never hits this because EventsTabContent always passes
+// `maxDistanceKm ?? EXPLORE_EVENTS_RADIUS_KM` (10). Match that here: the
+// Filter sheet's Distance field overrides it when set.
+const DEFAULT_RADIUS_KM = 10;
+
 type Cursor = { startsAt: string; distanceKm: number; id: string };
 
 async function fetchPage(
@@ -29,7 +39,7 @@ async function fetchPage(
     p_min_rating: f.minRating,
     p_user_lat: coords?.lat ?? null,
     p_user_lng: coords?.lng ?? null,
-    p_max_distance_km: f.maxDistanceKm,
+    p_max_distance_km: f.maxDistanceKm ?? DEFAULT_RADIUS_KM,
     p_start_date: f.startDate,
     p_end_date: f.endDate,
     p_search_text: "",

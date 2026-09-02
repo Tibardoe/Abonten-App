@@ -5,6 +5,13 @@ import type { PlaceFilters } from "./exploreFilters";
 
 const PAGE_SIZE = 20;
 
+// Same null-radius trap as useFilteredEvents: get_filtered_places gates rows
+// on `ST_DWithin(..., p_max_distance_km * 1000)`, so a null radius with real
+// coords filters everything out. Web's PlacesTabContent always passes
+// `maxDistanceKm ?? EXPLORE_PLACES_RADIUS_KM` (20) — mirror that; the Filter
+// sheet's Distance field overrides it.
+const DEFAULT_RADIUS_KM = 20;
+
 type Cursor = { distanceKm: number; id: string };
 type Row = PlaceType & { cursor_distance_km?: number };
 
@@ -20,7 +27,7 @@ async function fetchPage(
     p_open_now: f.openNow ? true : null,
     p_user_lat: coords?.lat ?? null,
     p_user_lng: coords?.lng ?? null,
-    p_max_distance_km: f.maxDistanceKm,
+    p_max_distance_km: f.maxDistanceKm ?? DEFAULT_RADIUS_KM,
     p_cursor_distance: cursor?.distanceKm ?? null,
     p_cursor_id: cursor?.id ?? null,
     p_page_size: PAGE_SIZE + 1,
