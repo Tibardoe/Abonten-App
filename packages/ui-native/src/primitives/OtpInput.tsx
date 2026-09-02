@@ -97,7 +97,7 @@ export function OtpInput({
         accessibilityRole="none"
         onPress={() => inputRef.current?.focus()}
         disabled={disabled}
-        className="flex-row justify-between"
+        className="flex-row justify-center gap-2.5"
         style={{ opacity: disabled ? 0.5 : 1 }}
       >
         {Array.from({ length }).map((_, i) => {
