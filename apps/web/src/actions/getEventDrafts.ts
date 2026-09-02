@@ -1,9 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchEventDraftsList } from "@/utils/eventDraftCore";
+import { fetchEventDraftsList } from "@abonten/services/events/eventDraftCore";
 
-export type { EventDraftListItem } from "@/utils/eventDraftCore";
+export type { EventDraftListItem } from "@abonten/services/events/eventDraftCore";
 
 // List-page query: only list-display columns, never the full jsonb payload,
 // bounded to this user's own non-expired event drafts. Body shared with the

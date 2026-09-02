@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UpdateEventTicketTypesCoreResult,
   updateEventTicketTypesCore,
-} from "@/utils/updateEventTicketTypesCore";
+} from "@abonten/services/events/updateEventTicketTypesCore";
 import type { Ticket } from "@abonten/types/ticketType";
 
 export type UpdateEventTicketTypesInput = {

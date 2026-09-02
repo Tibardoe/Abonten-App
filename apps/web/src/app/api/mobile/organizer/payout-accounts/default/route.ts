@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { setDefaultPayoutAccountCore } from "@/utils/payoutAccountCore";
 import { logger } from "@abonten/core/logger";
+import { setDefaultPayoutAccountCore } from "@abonten/services/organizer/payoutAccountCore";
 
 // POST /api/mobile/organizer/payout-accounts/default { payoutAccountId }
 // Marks one payout account as the default. Same body as setDefaultPayoutAccount.

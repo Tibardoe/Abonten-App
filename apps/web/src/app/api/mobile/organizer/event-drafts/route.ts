@@ -1,10 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   fetchEventDraftsList,
   saveEventDraftCore,
-} from "@/utils/eventDraftCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/events/eventDraftCore";
 import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
 
 // GET  /api/mobile/organizer/event-drafts   -> the caller's non-expired event drafts

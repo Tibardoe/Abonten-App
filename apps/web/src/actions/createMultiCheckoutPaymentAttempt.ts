@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type CreateMultiCheckoutPaymentAttemptCoreResult,
   createMultiCheckoutPaymentAttemptCore,
-} from "@/utils/createMultiCheckoutPaymentAttemptCore";
+} from "@abonten/services/payments/createMultiCheckoutPaymentAttemptCore";
 
 type CreateMultiCheckoutPaymentAttemptInput = {
   checkoutSessionIds: string[];

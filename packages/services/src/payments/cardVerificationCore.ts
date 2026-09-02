@@ -1,15 +1,15 @@
 import { randomUUID } from "node:crypto";
+import { logger } from "@abonten/core/logger";
+import { toPesewas } from "@abonten/core/paystackAmount";
 import {
   initializeTransaction,
   refundTransaction,
   verifyTransaction,
-} from "@/services/paystackService";
+} from "@abonten/services/payments/gateway/paystackService";
 import {
   type AddPaymentMethodResult,
   addPaymentMethodCore,
-} from "@/utils/paymentMethodCore";
-import { logger } from "@abonten/core/logger";
-import { toPesewas } from "@abonten/core/paystackAmount";
+} from "@abonten/services/payments/paymentMethodCore";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth bodies of initCardVerification / confirmCardVerification, lifted

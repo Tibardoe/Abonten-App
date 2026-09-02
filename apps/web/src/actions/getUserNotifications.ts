@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchNotificationsPage } from "@/utils/notificationsQuery";
+import { fetchNotificationsPage } from "@abonten/services/notifications/notificationsQuery";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult } from "@abonten/types/pagination";
 

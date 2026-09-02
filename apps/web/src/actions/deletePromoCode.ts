@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type DeletePromoCodeCoreResult,
   deletePromoCodeCore,
-} from "@/utils/eventPromoCodeManageCore";
+} from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
 // Thin wrapper: auth, then delegate to the shared body (also used by the
 // mobile POST /api/mobile/organizer/promo-codes/delete route). A code that

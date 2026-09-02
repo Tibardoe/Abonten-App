@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { listPayoutsCore } from "@/utils/payoutAccountCore";
 import { logger } from "@abonten/core/logger";
+import { listPayoutsCore } from "@abonten/services/organizer/payoutAccountCore";
 
 // GET /api/mobile/organizer/payouts?offset=<n>&limit=<n>
 // The organizer's withdrawal history, newest first. Same body as

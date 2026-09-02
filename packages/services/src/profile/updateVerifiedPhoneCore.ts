@@ -1,13 +1,13 @@
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { verifyHubtelOtp } from "@/services/hubtelOtpClient";
+import { logger } from "@abonten/core/logger";
+import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
+import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+import { verifyHubtelOtp } from "@abonten/services/profile/hubtelOtpClient";
 import {
   clearPendingOtp,
   getPendingOtp,
   registerVerifyAttempt,
-} from "@/services/phoneOtpStore";
-import { logger } from "@abonten/core/logger";
-import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
-import { OTP_MESSAGES } from "@abonten/core/otpMessages";
+} from "@abonten/services/profile/phoneOtpStore";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
 export type UpdateVerifiedPhoneResult =
   | { status: 200; message: string }

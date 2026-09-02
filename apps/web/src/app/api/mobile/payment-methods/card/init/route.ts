@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { initCardVerificationCore } from "@/utils/cardVerificationCore";
 import { logger } from "@abonten/core/logger";
+import { initCardVerificationCore } from "@abonten/services/payments/cardVerificationCore";
 
 // POST /api/mobile/payment-methods/card/init  (no body)
 //

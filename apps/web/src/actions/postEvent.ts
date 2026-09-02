@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { type PostEventCoreResult, postEventCore } from "@/utils/postEventCore";
+import {
+  type PostEventCoreResult,
+  postEventCore,
+} from "@abonten/services/events/postEventCore";
 import type { PostsType } from "@abonten/types/postsType";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 

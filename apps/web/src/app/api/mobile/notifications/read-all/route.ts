@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { markAllNotificationsReadFor } from "@/utils/notificationsQuery";
 import { logger } from "@abonten/core/logger";
+import { markAllNotificationsReadFor } from "@abonten/services/notifications/notificationsQuery";
 
 // POST /api/mobile/notifications/read-all
 // Marks every unread notification of the caller read.

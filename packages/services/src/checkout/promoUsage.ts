@@ -1,4 +1,3 @@
-import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -28,9 +27,9 @@ export async function claimPromoUsage(
   userId: string,
   eventId: string,
   unitsToClaim: number,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ) {
-  const supabase = client ?? (await createClient());
+  const supabase = client;
 
   const { data: promoCode, error: promoCodeError } = await supabase
     .from("promo_code")
@@ -102,12 +101,11 @@ const MAX_CAS_ATTEMPTS = 5;
  * retry pattern as both.
  */
 export async function adjustPromoUsageUnits(
+  supabase: SupabaseClient,
   promoCodeId: string,
   unitsDelta: number,
 ) {
   if (unitsDelta === 0) return { status: 200 };
-
-  const supabase = await createClient();
 
   for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
     const { data: promoCode, error: promoCodeError } = await supabase
@@ -172,11 +170,11 @@ export async function releasePromoUsage(
   userId: string,
   eventId: string,
   unitsToRelease: number,
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ) {
   if (unitsToRelease <= 0) return;
 
-  const supabase = client ?? (await createClient());
+  const supabase = client;
 
   await supabase
     .from("promo_code_usage")

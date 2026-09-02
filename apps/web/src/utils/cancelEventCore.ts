@@ -2,8 +2,8 @@ import eventCancellationNotification, {
   type CancelledAttendeeRefund,
 } from "@/actions/eventCancellationNotification";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { issueRefundCore } from "@/utils/issueRefundCore";
 import { logger } from "@abonten/core/logger";
+import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { after } from "next/server";
 

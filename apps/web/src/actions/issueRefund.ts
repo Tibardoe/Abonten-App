@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { issueRefundCore } from "@/utils/issueRefundCore";
+import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
 
 /**
  * Refunds a transaction via Paystack and moves it into the refund_pending

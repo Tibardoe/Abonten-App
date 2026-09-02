@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UpdateVerifiedPhoneResult,
   updateVerifiedPhoneCore,
-} from "@/utils/updateVerifiedPhoneCore";
+} from "@abonten/services/profile/updateVerifiedPhoneCore";
 
 export type { UpdateVerifiedPhoneResult };
 

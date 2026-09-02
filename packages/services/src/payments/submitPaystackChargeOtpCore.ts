@@ -1,5 +1,5 @@
-import { submitChargeOtp } from "@/services/paystackService";
 import { logger } from "@abonten/core/logger";
+import { submitChargeOtp } from "@abonten/services/payments/gateway/paystackService";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of submitPaystackChargeOtp — shared with

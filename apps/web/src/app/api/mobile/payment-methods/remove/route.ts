@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { removePaymentMethodCore } from "@/utils/paymentMethodCore";
 import { logger } from "@abonten/core/logger";
+import { removePaymentMethodCore } from "@abonten/services/payments/paymentMethodCore";
 
 // POST /api/mobile/payment-methods/remove  { paymentMethodId: string }
 export async function POST(req: Request) {

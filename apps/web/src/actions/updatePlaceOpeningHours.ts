@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type PlaceHoursStatusCoreResult,
   updatePlaceOpeningHoursCore,
-} from "@/utils/placeHoursStatusCore";
+} from "@abonten/services/places/placeHoursStatusCore";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 
 // Thin wrapper: auth, then delegate to the shared body (also used by the

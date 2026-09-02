@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UpdatePlaceCoreResult,
   updatePlaceCore,
-} from "@/utils/updatePlaceCore";
+} from "@abonten/services/places/updatePlaceCore";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
 export type UpdatePlaceInput = {

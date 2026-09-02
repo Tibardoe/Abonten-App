@@ -1,8 +1,8 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchOrganizerDashboardWidgets } from "@/utils/organizerDashboardQuery";
 import { logger } from "@abonten/core/logger";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import { fetchOrganizerDashboardWidgets } from "@abonten/services/organizer/organizerDashboardQuery";
 
 const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 

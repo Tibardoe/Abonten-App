@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type PlacePhotoCoreResult,
   removePlacePhotoCore,
-} from "@/utils/placePhotoCore";
+} from "@abonten/services/places/placePhotoCore";
 
 // Thin wrapper: auth, then delegate to the shared body (also used by the
 // mobile POST /api/mobile/organizer/places/:placeId/photos/:photoId/delete

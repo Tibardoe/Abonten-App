@@ -15,9 +15,9 @@
 import activateEventPromotion from "@/actions/activateEventPromotion";
 import activatePlacePromotion from "@/actions/activatePlacePromotion";
 import generateTicket from "@/actions/generateTicket";
-import { verifyTransaction } from "@/services/paystackService";
 import { logger } from "@abonten/core/logger";
 import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
+import { verifyTransaction } from "@abonten/services/payments/gateway/paystackService";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type PaymentAttemptFullRow = {

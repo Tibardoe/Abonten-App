@@ -1,5 +1,5 @@
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
 // Register / unregister a mobile device's Expo push token for one user.
 // Called only from the /api/mobile/devices/* routes, which authenticate the

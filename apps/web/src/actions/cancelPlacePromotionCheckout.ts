@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { cancelPromotionCheckout } from "@/utils/checkoutCancellation";
+import { cancelPromotionCheckout } from "@abonten/services/checkout/checkoutCancellation";
 
 export default async function cancelPlacePromotionCheckout(checkoutId: string) {
   const supabase = await createClient();

@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type ListPayoutAccountsResult,
   listPayoutAccountsCore,
-} from "@/utils/payoutAccountCore";
+} from "@abonten/services/organizer/payoutAccountCore";
 
 /**
  * Every active payout destination for the current organizer — separate

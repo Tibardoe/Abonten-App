@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { deleteEventDraftCore } from "@/utils/eventDraftCore";
+import { deleteEventDraftCore } from "@abonten/services/events/eventDraftCore";
 
 // Cloudinary-first, DB-second ordering (in the core) — a failed Cloudinary
 // destroy leaves the draft row in place so the asset can still be found and

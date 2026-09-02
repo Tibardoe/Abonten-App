@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchOrganizerFinanceOverview } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchOrganizerFinanceOverview } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/finance
 // The organizer's balance figures per currency (pending / available /

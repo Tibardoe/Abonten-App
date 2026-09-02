@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { unregisterDeviceTokenCore } from "@/utils/deviceTokenCore";
 import { logger } from "@abonten/core/logger";
+import { unregisterDeviceTokenCore } from "@abonten/services/notifications/deviceTokenCore";
 
 // POST /api/mobile/devices/unregister { token }
 // Drops the caller's Expo push token (called on sign-out).

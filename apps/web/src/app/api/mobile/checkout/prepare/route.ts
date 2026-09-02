@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { prepareCheckoutPayment } from "@/utils/checkoutPaymentPreparation";
 import { logger } from "@abonten/core/logger";
+import { prepareCheckoutPayment } from "@abonten/services/checkout/checkoutPaymentPreparation";
 
 // POST /api/mobile/checkout/prepare  { checkoutSessionIds: string[] }
 //

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerNeedsAttention } from "@/utils/organizerDashboardQuery";
+import { fetchOrganizerNeedsAttention } from "@abonten/services/organizer/organizerDashboardQuery";
 
 export default async function getOrganizerNeedsAttention(daysSoon = 7) {
   const supabase = await createClient();

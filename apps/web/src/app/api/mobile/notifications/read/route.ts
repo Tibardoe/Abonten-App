@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { markNotificationReadFor } from "@/utils/notificationsQuery";
 import { logger } from "@abonten/core/logger";
+import { markNotificationReadFor } from "@abonten/services/notifications/notificationsQuery";
 
 // POST /api/mobile/notifications/read  { "notificationId": "<uuid>" }
 // Marks one of the caller's own notifications read.

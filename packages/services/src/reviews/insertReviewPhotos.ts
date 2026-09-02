@@ -1,6 +1,6 @@
-import type { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ReviewPhotoInput = { publicId: string; version: string };
 
@@ -16,7 +16,7 @@ export type ReviewPhotoInput = { publicId: string; version: string };
 // MAX_REVIEW_PHOTOS is dropped too, as defense-in-depth against a tampered
 // request (the picker UI already enforces this client-side).
 export async function insertReviewPhotos(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   table: "place_review_photo" | "event_review_photo",
   reviewIdColumn: "place_review_id" | "event_review_id",
   reviewId: string,

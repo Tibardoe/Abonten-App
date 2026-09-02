@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerLedgerPage } from "@/utils/organizerReadQuery";
+import { fetchOrganizerLedgerPage } from "@abonten/services/organizer/organizerReadQuery";
 import type { OrganizerLedgerTransactionRow } from "@abonten/types/organizerFinance";
 import type { PaginatedResult } from "@abonten/types/pagination";
 

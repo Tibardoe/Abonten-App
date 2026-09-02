@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerEventPerformance } from "@/utils/organizerDashboardQuery";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import { fetchOrganizerEventPerformance } from "@abonten/services/organizer/organizerDashboardQuery";
 
 export default async function getOrganizerEventPerformance(
   period: DashboardPeriod,

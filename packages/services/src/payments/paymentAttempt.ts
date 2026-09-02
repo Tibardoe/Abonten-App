@@ -7,7 +7,6 @@
 // its own, so it must only ever be reached through actions that already
 // resolved userId from the caller's own session.
 
-import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -55,14 +54,9 @@ export async function upsertPaymentAttemptForSession(
   amount: number,
   currency: string,
   paymentMethodId: string,
-  paymentGroupId?: string,
-  client?: SupabaseClient,
+  paymentGroupId: string | undefined,
+  supabase: SupabaseClient,
 ): Promise<UpsertPaymentAttemptResult> {
-  // `client` lets an already-authenticated caller (the mobile checkout
-  // routes) reuse its own Supabase client; the "use server" actions omit it
-  // and get the cookie client exactly as before.
-  const supabase = client ?? (await createClient());
-
   const { data: existingAttempt, error: existingError } = await supabase
     .from("payment_attempt")
     .select(PAYMENT_ATTEMPT_ROW_SELECT)
@@ -142,7 +136,7 @@ type CheckoutMatchColumn =
  * must check this before flipping a checkout to 'cancelled'.
  */
 export async function hasOpenPaymentAttempt(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   matchColumn: CheckoutMatchColumn,
   matchValue: string,
 ): Promise<boolean> {
@@ -177,7 +171,7 @@ export type LatestPaymentAttemptStatus = {
  * instead of relying only on the live component's in-memory state).
  */
 export async function getLatestPaymentAttemptStatus(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   matchColumn: CheckoutMatchColumn,
   matchValue: string,
 ): Promise<LatestPaymentAttemptStatus | null> {

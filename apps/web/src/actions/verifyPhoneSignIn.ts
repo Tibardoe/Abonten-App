@@ -2,11 +2,11 @@
 
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   issueOneTimePassword,
   verifyPhoneOtpAndResolveUser,
-} from "@/services/phoneAuthCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/profile/phoneAuthCore";
 
 export type VerifyPhoneSignInResult =
   | { status: 200 }

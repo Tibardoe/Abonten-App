@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type EventFinanceSummary,
   fetchEventFinanceSummary,
-} from "@/utils/eventInsightsQuery";
+} from "@abonten/services/organizer/eventInsightsQuery";
 
 export type { EventFinanceSummary };
 

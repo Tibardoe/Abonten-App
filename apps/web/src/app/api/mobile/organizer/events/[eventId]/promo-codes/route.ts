@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchEventPromoCodes } from "@/utils/eventPromoCodeManageCore";
 import { logger } from "@abonten/core/logger";
+import { fetchEventPromoCodes } from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
 // GET /api/mobile/organizer/events/:eventId/promo-codes
 // The caller's own event's promo codes, newest first, with usage counts —

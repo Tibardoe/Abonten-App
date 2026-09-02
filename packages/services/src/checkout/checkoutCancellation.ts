@@ -10,9 +10,9 @@
 // ticket_checkout), so the only thing that varies is which table/FK column
 // to use.
 
-import type { createClient } from "@/config/supabase/server";
-import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
 import { logger } from "@abonten/core/logger";
+import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type PromotionCheckoutTable =
   | "event_promotion_checkout"
@@ -26,7 +26,7 @@ type CancelPromotionCheckoutResult =
   | { status: 404 | 409 | 500; message: string };
 
 export async function cancelPromotionCheckout(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: SupabaseClient,
   table: PromotionCheckoutTable,
   paymentAttemptColumn: PromotionPaymentAttemptColumn,
   checkoutId: string,

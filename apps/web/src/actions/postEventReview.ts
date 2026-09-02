@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import { logger } from "@abonten/core/logger";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
-} from "@/utils/insertReviewPhotos";
-import { resolveEventEndDate } from "@abonten/core/dateFormatter";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/reviews/insertReviewPhotos";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 
 // Postgres error code for a unique-constraint violation.

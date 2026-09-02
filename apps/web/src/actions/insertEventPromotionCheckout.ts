@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { insertEventPromotionCheckoutCore } from "@/utils/insertEventPromotionCheckoutCore";
+import { insertEventPromotionCheckoutCore } from "@abonten/services/promotions/insertEventPromotionCheckoutCore";
 
 /**
  * Reserve step for an Event Promotion purchase — mirrors

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { insertPlacePromotionCheckoutCore } from "@/utils/placePromotionCore";
 import { logger } from "@abonten/core/logger";
+import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/placePromotionCore";
 
 // POST /api/mobile/organizer/places/:placeId/promote  { tierId: number }
 // Reserve step: creates a pending place_promotion_checkout priced from the

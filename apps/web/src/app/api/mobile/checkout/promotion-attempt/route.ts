@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { createPromotionPaymentAttemptCore } from "@/utils/createPromotionPaymentAttemptCore";
 import { logger } from "@abonten/core/logger";
+import { createPromotionPaymentAttemptCore } from "@abonten/services/payments/createPromotionPaymentAttemptCore";
 
 // POST /api/mobile/checkout/promotion-attempt
 //   { eventPromotionCheckoutId: string, paymentMethodId: string }

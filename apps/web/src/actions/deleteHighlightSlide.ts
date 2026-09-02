@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { deleteHighlightSlideCore } from "@/utils/highlightDeleteCore";
+import { deleteHighlightSlideCore } from "@abonten/services/profile/highlightDeleteCore";
 
 // Thin wrapper: auth, then delegate to the shared core (also used by the
 // mobile /api/mobile/highlights/slide/delete route). Cloudinary-first

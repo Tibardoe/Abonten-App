@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchOrganizerEventsPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchOrganizerEventsPage } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/events?cursor=<opaque>&pageSize=<n>
 // Cursor-paginated list of the caller's own events, newest first, every

@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type CheckInTicketCoreResult,
   checkInTicketCore,
-} from "@/utils/checkInTicketCore";
+} from "@abonten/services/tickets/checkInTicketCore";
 import { revalidatePath } from "next/cache";
 
 // Thin wrapper: auth, delegate to the shared body (also used by the mobile

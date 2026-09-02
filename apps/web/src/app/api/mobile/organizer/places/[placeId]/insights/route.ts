@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchPlaceInsights } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchPlaceInsights } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/places/:placeId/insights
 // Owner-only stat counts for one place (views / directions / phone /

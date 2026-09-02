@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { addPlacePhotoCore } from "@/utils/placePhotoCore";
 import { logger } from "@abonten/core/logger";
+import { addPlacePhotoCore } from "@abonten/services/places/placePhotoCore";
 
 // POST /api/mobile/organizer/places/:placeId/photos  { publicId, version }
 // Records one gallery photo after it finished uploading straight to

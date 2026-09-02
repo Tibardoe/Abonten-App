@@ -4,12 +4,12 @@ import { createClient } from "@/config/supabase/server";
 import {
   type GetUserPendingTicketCheckoutsCoreResult,
   getUserPendingTicketCheckoutsCore,
-} from "@/utils/getUserPendingTicketCheckoutsCore";
+} from "@abonten/services/checkout/getUserPendingTicketCheckoutsCore";
 
 export type {
   PendingCheckoutSession,
   PendingCheckoutSessionLine,
-} from "@/utils/getUserPendingTicketCheckoutsCore";
+} from "@abonten/services/checkout/getUserPendingTicketCheckoutsCore";
 
 type GetUserPendingTicketCheckoutsResult =
   | GetUserPendingTicketCheckoutsCoreResult

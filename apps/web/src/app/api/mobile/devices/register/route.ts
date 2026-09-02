@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { registerDeviceTokenCore } from "@/utils/deviceTokenCore";
 import { logger } from "@abonten/core/logger";
+import { registerDeviceTokenCore } from "@abonten/services/notifications/deviceTokenCore";
 
 // POST /api/mobile/devices/register { token, platform: "ios" | "android" }
 // Saves the caller's Expo push token so createNotification can push to it.

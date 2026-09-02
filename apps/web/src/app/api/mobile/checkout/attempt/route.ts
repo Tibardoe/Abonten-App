@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { createMultiCheckoutPaymentAttemptCore } from "@/utils/createMultiCheckoutPaymentAttemptCore";
 import { logger } from "@abonten/core/logger";
+import { createMultiCheckoutPaymentAttemptCore } from "@abonten/services/payments/createMultiCheckoutPaymentAttemptCore";
 
 // POST /api/mobile/checkout/attempt
 //   { checkoutSessionIds: string[], paymentMethodId: string }

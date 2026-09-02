@@ -1,13 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { adjustPromoUsageUnits } from "@/utils/promoUsage";
+import { computeLineAmount } from "@abonten/core/checkoutPricing";
+import { logger } from "@abonten/core/logger";
+import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
 import {
   releaseTicketQuantity,
   reserveTicketQuantity,
-} from "@/utils/ticketInventory";
-import { computeLineAmount } from "@abonten/core/checkoutPricing";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/checkout/ticketInventory";
 
 type CheckoutRow = {
   id: string;
@@ -153,6 +153,7 @@ export default async function updateTicketCheckoutQuantity(
   // --- Adjust promo usage (does not touch the promo_code_usage row) ---
   if (promoCodeRowId && promoUnitsDelta !== 0) {
     const adjustment = await adjustPromoUsageUnits(
+      supabase,
       promoCodeRowId,
       promoUnitsDelta,
     );
@@ -165,7 +166,7 @@ export default async function updateTicketCheckoutQuantity(
 
   const rollbackPromo = async () => {
     if (promoCodeRowId && promoUnitsDelta !== 0) {
-      await adjustPromoUsageUnits(promoCodeRowId, -promoUnitsDelta);
+      await adjustPromoUsageUnits(supabase, promoCodeRowId, -promoUnitsDelta);
     }
   };
 

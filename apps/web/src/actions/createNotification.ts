@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { sendPushToUser } from "@/utils/sendPushNotification";
 import { logger } from "@abonten/core/logger";
+import { sendPushToUser } from "@abonten/services/notifications/sendPushNotification";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

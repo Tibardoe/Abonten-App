@@ -1,11 +1,11 @@
 import ensureProfileCompletionNotification from "@/actions/ensureProfileCompletionNotification";
 import { createAnonClient } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   issueOneTimePassword,
   verifyPhoneOtpAndResolveUser,
-} from "@/services/phoneAuthCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/profile/phoneAuthCore";
 
 // POST /api/mobile/auth/phone/verify  { "phoneE164": "+233...", "code": "123456" }
 //

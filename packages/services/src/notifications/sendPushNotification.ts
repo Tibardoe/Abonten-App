@@ -1,5 +1,5 @@
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
 // Fire a push to every device the target user has registered. Best-effort:
 // the caller (createNotification) never lets a push failure affect the

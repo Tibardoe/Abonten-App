@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type SubmitChargeOtpCoreResult,
   submitPaystackChargeOtpCore,
-} from "@/utils/submitPaystackChargeOtpCore";
+} from "@abonten/services/payments/submitPaystackChargeOtpCore";
 
 /**
  * Submits an OTP for a pending direct charge (mobile money/card charges

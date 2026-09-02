@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getEventForEditCore } from "@/utils/getEventForEditCore";
+import { getEventForEditCore } from "@abonten/services/events/getEventForEditCore";
 
 /**
  * Fetches a single event scoped to the current user, for prefilling the

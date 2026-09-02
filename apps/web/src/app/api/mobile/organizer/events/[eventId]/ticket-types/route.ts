@@ -1,10 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   type UpdateEventTicketTypesCoreInput,
   updateEventTicketTypesCore,
-} from "@/utils/updateEventTicketTypesCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/events/updateEventTicketTypesCore";
 
 // PUT /api/mobile/organizer/events/:eventId/ticket-types
 //   { currency?, freeEvent?, singleTicket?: { price, quantity } | null,

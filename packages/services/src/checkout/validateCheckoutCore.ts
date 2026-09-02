@@ -1,16 +1,19 @@
 import { randomUUID } from "node:crypto";
-import { getPromoCodeCore } from "@/utils/getPromoCodeCore";
-import { claimPromoUsage, releasePromoUsage } from "@/utils/promoUsage";
-import {
-  releaseTicketQuantity,
-  reserveTicketQuantity,
-} from "@/utils/ticketInventory";
 import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
 import {
   allocatePromoEligibility,
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
 import { logger } from "@abonten/core/logger";
+import {
+  claimPromoUsage,
+  releasePromoUsage,
+} from "@abonten/services/checkout/promoUsage";
+import {
+  releaseTicketQuantity,
+  reserveTicketQuantity,
+} from "@abonten/services/checkout/ticketInventory";
+import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of validateCheckout, lifted verbatim so the mobile API

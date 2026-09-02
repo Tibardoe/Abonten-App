@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type AddPayoutAccountResult,
   addPayoutAccountCore,
-} from "@/utils/payoutAccountCore";
+} from "@abonten/services/organizer/payoutAccountCore";
 import type { AddPayoutAccountInput } from "@abonten/validation/payoutAccountSchema";
 import { revalidatePath } from "next/cache";
 

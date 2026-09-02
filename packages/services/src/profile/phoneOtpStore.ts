@@ -12,7 +12,7 @@
 // client, so this state is shared and authoritative regardless of which
 // instance handles a given request.
 
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
 export type PhoneOtpPurpose = "sign-in" | "phone-update";
 

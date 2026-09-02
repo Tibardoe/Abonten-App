@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { validateCheckoutCore } from "@/utils/validateCheckoutCore";
 import { logger } from "@abonten/core/logger";
+import { validateCheckoutCore } from "@abonten/services/checkout/validateCheckoutCore";
 
 // POST /api/mobile/checkout/validate
 //   { eventId: string, quantities: { [ticketTypeId]: number },

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchPlaceDraftDetail } from "@/utils/placeDraftCore";
 import { logger } from "@abonten/core/logger";
+import { fetchPlaceDraftDetail } from "@abonten/services/places/placeDraftCore";
 
 // GET /api/mobile/organizer/place-drafts/:draftId
 // The full jsonb payload + cover ids for one of the caller's place drafts,

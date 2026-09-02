@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { getEventHasConfirmedParticipationCore } from "@/utils/getEventHasConfirmedParticipationCore";
+import { getEventHasConfirmedParticipationCore } from "@abonten/services/events/getEventHasConfirmedParticipationCore";
 
 /**
  * Whether an event already has at least one confirmed ticket — paid or free

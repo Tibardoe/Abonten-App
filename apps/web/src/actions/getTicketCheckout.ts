@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type GetTicketCheckoutCoreResult,
   getTicketCheckoutCore,
-} from "@/utils/getTicketCheckoutCore";
+} from "@abonten/services/checkout/getTicketCheckoutCore";
 
 export default async function getTicketCheckout(
   checkoutSessionId: string,

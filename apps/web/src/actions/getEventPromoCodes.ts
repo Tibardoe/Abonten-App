@@ -5,9 +5,9 @@ import {
   type EventPromoCode,
   type EventPromoCodesCoreResult,
   fetchEventPromoCodes,
-} from "@/utils/eventPromoCodeManageCore";
+} from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
-export type { EventPromoCode } from "@/utils/eventPromoCodeManageCore";
+export type { EventPromoCode } from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
 // Thin wrapper: auth, then delegate to the shared body used by the mobile
 // GET /api/mobile/organizer/events/:id/promo-codes route too — no fork.

@@ -1,7 +1,7 @@
 "use server";
 
-import { listMobileMoneyProviders } from "@/services/paystackService";
 import { logger } from "@abonten/core/logger";
+import { listMobileMoneyProviders } from "@abonten/services/payments/gateway/paystackService";
 
 export type MobileMoneyNetworkOption = {
   code: string;

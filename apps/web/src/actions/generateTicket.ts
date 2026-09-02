@@ -1,13 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import { logger } from "@abonten/core/logger";
+import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
-} from "@/utils/generateTicketCode";
-import { releaseTicketQuantity } from "@/utils/ticketInventory";
-import { resolveEventEndDate } from "@abonten/core/dateFormatter";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/tickets/generateTicketCode";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";

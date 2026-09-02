@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { cancelTicketCheckoutSessionCore } from "@/utils/cancelTicketCheckoutSessionCore";
+import { cancelTicketCheckoutSessionCore } from "@abonten/services/checkout/cancelTicketCheckoutSessionCore";
 
 /**
  * Removes an entire pending checkout session (the "Remove this checkout"

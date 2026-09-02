@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type PlaceServiceCoreResult,
   addPlaceServiceCore,
-} from "@/utils/placeServiceCore";
+} from "@abonten/services/places/placeServiceCore";
 
 type AddPlaceServiceInput = {
   placeId: string;

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { cancelUserTicketCore } from "@/utils/cancelUserTicketCore";
 import { logger } from "@abonten/core/logger";
+import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
 
 // POST /api/mobile/tickets/cancel  { ticketId: string, transactionId?: string | null }
 //

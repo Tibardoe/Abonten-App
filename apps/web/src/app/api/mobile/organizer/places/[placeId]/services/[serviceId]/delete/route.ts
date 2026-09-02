@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { removePlaceServiceCore } from "@/utils/placeServiceCore";
 import { logger } from "@abonten/core/logger";
+import { removePlaceServiceCore } from "@abonten/services/places/placeServiceCore";
 
 // POST /api/mobile/organizer/places/:placeId/services/:serviceId/delete
 // Removes one service — same body as removePlaceService. POST for the

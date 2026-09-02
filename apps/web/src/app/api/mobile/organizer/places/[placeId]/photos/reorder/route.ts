@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { reorderPlacePhotosCore } from "@/utils/placePhotoCore";
 import { logger } from "@abonten/core/logger";
+import { reorderPlacePhotosCore } from "@abonten/services/places/placePhotoCore";
 
 // POST /api/mobile/organizer/places/:placeId/photos/reorder  { photoIds: string[] }
 // Sets each photo's `position` to its index in `photoIds`. Same body as

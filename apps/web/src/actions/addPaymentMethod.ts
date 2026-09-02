@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type AddPaymentMethodResult,
   addPaymentMethodCore,
-} from "@/utils/paymentMethodCore";
+} from "@abonten/services/payments/paymentMethodCore";
 import type { AddPaymentMethodInput } from "@abonten/validation/paymentMethodSchema";
 
 /**

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { updatePlaceCore } from "@/utils/updatePlaceCore";
 import { logger } from "@abonten/core/logger";
+import { updatePlaceCore } from "@abonten/services/places/updatePlaceCore";
 
 // PATCH /api/mobile/organizer/places/:placeId
 //   { name, description, categoryId, address, latitude, longitude,

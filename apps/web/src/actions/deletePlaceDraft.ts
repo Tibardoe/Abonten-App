@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { deletePlaceDraftCore } from "@/utils/placeDraftCore";
+import { deletePlaceDraftCore } from "@abonten/services/places/placeDraftCore";
 
 // Cloudinary-first, DB-second ordering (in the core) — a failed Cloudinary
 // destroy leaves the draft row in place so the asset can still be found and

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { updatePlaceOpeningHoursCore } from "@/utils/placeHoursStatusCore";
 import { logger } from "@abonten/core/logger";
+import { updatePlaceOpeningHoursCore } from "@abonten/services/places/placeHoursStatusCore";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;

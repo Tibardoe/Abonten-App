@@ -9,14 +9,14 @@
 // authorization.
 
 import { randomUUID } from "node:crypto";
+import { logger } from "@abonten/core/logger";
+import { toPesewas } from "@abonten/core/paystackAmount";
 import {
   chargeAuthorization,
   initializeTransaction,
   initiateMobileMoneyCharge,
-} from "@/services/paystackService";
-import type { PaymentAttemptRow } from "@/utils/paymentAttempt";
-import { logger } from "@abonten/core/logger";
-import { toPesewas } from "@abonten/core/paystackAmount";
+} from "@abonten/services/payments/gateway/paystackService";
+import type { PaymentAttemptRow } from "@abonten/services/payments/paymentAttempt";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type EnsurePaystackTransactionResult =

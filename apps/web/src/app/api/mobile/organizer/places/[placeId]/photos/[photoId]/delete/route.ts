@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { removePlacePhotoCore } from "@/utils/placePhotoCore";
 import { logger } from "@abonten/core/logger";
+import { removePlacePhotoCore } from "@abonten/services/places/placePhotoCore";
 
 // POST /api/mobile/organizer/places/:placeId/photos/:photoId/delete
 // Deletes the place_photo row + best-effort Cloudinary asset. Same body as

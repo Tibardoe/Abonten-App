@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { markNotificationReadFor } from "@/utils/notificationsQuery";
+import { markNotificationReadFor } from "@abonten/services/notifications/notificationsQuery";
 
 /**
  * Marks one notification read — scoped to the caller's own row via the

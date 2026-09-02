@@ -10,7 +10,6 @@
 // rows (locked in at checkout creation / quantity-update time), re-read
 // fresh on every call after self-healing expiry.
 
-import { createClient } from "@/config/supabase/server";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
 import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -49,12 +48,12 @@ export type PreparedCheckoutPayment = {
 export async function prepareCheckoutPayment(
   userId: string,
   checkoutSessionIds: string[],
-  client?: SupabaseClient,
+  client: SupabaseClient,
 ): Promise<PreparedCheckoutPayment> {
   // `client` lets an already-authenticated caller (the mobile checkout
   // routes) reuse its own Supabase client; the "use server" actions omit it
   // and get the cookie client exactly as before.
-  const supabase = client ?? (await createClient());
+  const supabase = client;
   const uniqueIds = Array.from(new Set(checkoutSessionIds));
 
   await supabase.rpc("expire_stale_ticket_checkouts");

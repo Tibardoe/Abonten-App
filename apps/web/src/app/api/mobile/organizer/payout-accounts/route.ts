@@ -1,10 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   addPayoutAccountCore,
   listPayoutAccountsCore,
-} from "@/utils/payoutAccountCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/organizer/payoutAccountCore";
 
 // GET  /api/mobile/organizer/payout-accounts   -> active payout destinations
 // POST /api/mobile/organizer/payout-accounts   -> add one (momo or bank);
