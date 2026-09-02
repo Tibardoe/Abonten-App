@@ -28,6 +28,38 @@ export function favoritesListKey(kind: Kind) {
   return ["favorites", kind] as const;
 }
 
+// The "Favorites" stat on the profile header comes from the
+// `user_profile_details` view, whose `total_favorites` is
+// `count(distinct favorite.event_id)` — EVENT favourites only, not
+// `favorite_place` (same as web). It's surfaced by useProfile (own
+// profile, key ["mobile","profile"]) and usePublicProfile (key
+// ["profile","public",<username>]). Neither was refreshed on a toggle, so
+// the count only changed on a cold reload. Patch both optimistically and
+// invalidate them once an EVENT write settles.
+type ProfileWithCount = { user_id?: string; total_favorites?: number } | null;
+
+function bumpProfileFavorites(
+  qc: ReturnType<typeof useQueryClient>,
+  userId: string | undefined,
+  delta: number,
+) {
+  if (!userId) return;
+  const patch = (
+    p: ProfileWithCount | undefined,
+  ): ProfileWithCount | undefined => {
+    if (!p || p.user_id !== userId) return p;
+    return {
+      ...p,
+      total_favorites: Math.max(0, (p.total_favorites ?? 0) + delta),
+    };
+  };
+  qc.setQueryData<ProfileWithCount>(["mobile", "profile"], patch);
+  qc.setQueriesData<ProfileWithCount>(
+    { queryKey: ["profile", "public"] },
+    patch,
+  );
+}
+
 async function fetchIsFavorited(kind: Kind, id: string): Promise<boolean> {
   const { data, error } = await supabase
     .from(TABLE[kind])
@@ -80,17 +112,29 @@ export function useToggleFavorite(kind: Kind, id: string | undefined) {
       if (!id) return { previous: undefined };
       await qc.cancelQueries({ queryKey: itemKey(kind, id) });
       const previous = qc.getQueryData<boolean>(itemKey(kind, id));
+      // Only move the counter when the flag actually changes state.
+      const changed = previous !== next;
       qc.setQueryData(itemKey(kind, id), next);
-      return { previous };
+      if (changed && kind === "event") {
+        bumpProfileFavorites(qc, session?.user.id, next ? 1 : -1);
+      }
+      return { previous, changed };
     },
 
-    onError: (_err, _next, ctx) => {
+    onError: (_err, next, ctx) => {
       if (id) qc.setQueryData(itemKey(kind, id), ctx?.previous ?? false);
+      if (ctx?.changed && kind === "event") {
+        bumpProfileFavorites(qc, session?.user.id, next ? -1 : 1);
+      }
     },
 
     onSettled: () => {
       if (id) qc.invalidateQueries({ queryKey: itemKey(kind, id) });
       qc.invalidateQueries({ queryKey: favoritesListKey(kind) });
+      if (kind === "event") {
+        qc.invalidateQueries({ queryKey: ["mobile", "profile"] });
+        qc.invalidateQueries({ queryKey: ["profile", "public"] });
+      }
     },
   });
 }
