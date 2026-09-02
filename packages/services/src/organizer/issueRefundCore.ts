@@ -15,6 +15,7 @@ import { logger } from "@abonten/core/logger";
 import { toPesewas } from "@abonten/core/paystackAmount";
 import { refundTransaction } from "@abonten/services/payments/gateway/paystackService";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 export type IssueRefundResult = {
   status: 200 | 400 | 404 | 500;
@@ -149,7 +150,15 @@ export async function issueRefundCore(
   // record_refund_hold does the status transition AND the organizer ledger
   // deduction atomically in one Postgres function — the money is reserved
   // the instant Paystack accepts the request, not once it's confirmed.
-  const { error: holdError } = await supabase.rpc("record_refund_hold", {
+  //
+  // Run on the service-role client, never the caller's: this and
+  // record_fee_refund_adjustment below mutate ledger / transaction state
+  // that is not the caller's own row, and are EXECUTE-revoked from
+  // `authenticated` (migration 20260903200000). Authorisation is already
+  // proven upstream — issueRefund.ts checks admin/organizer, cancelEvent
+  // passes only its own event's refundable transactions.
+  const privileged = getSupabaseServiceClient();
+  const { error: holdError } = await privileged.rpc("record_refund_hold", {
     p_transaction_id: transaction.id,
   });
 
@@ -167,7 +176,7 @@ export async function issueRefundCore(
   // Audit-only row: records that the ticket revenue was returned and the
   // Abonten service fee was retained. Best-effort — the money movement and
   // the organizer-ledger hold already happened.
-  const { error: feeAdjustmentError } = await supabase.rpc(
+  const { error: feeAdjustmentError } = await privileged.rpc(
     "record_fee_refund_adjustment",
     { p_transaction_id: transaction.id },
   );

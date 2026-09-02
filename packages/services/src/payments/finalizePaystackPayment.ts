@@ -17,6 +17,7 @@
 import { logger } from "@abonten/core/logger";
 import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import { verifyTransaction } from "./gateway/paystackService";
 
@@ -473,7 +474,11 @@ export async function finalizePaystackPayment(
     const processingCost =
       verification.fees != null ? fromPesewas(verification.fees) : null;
 
-    const { error: platformFeeError } = await supabase.rpc(
+    // Service-role, not the caller's client: record_platform_fee writes the
+    // RLS-less platform_fee_entry table and is EXECUTE-revoked from
+    // `authenticated` (migration 20260903200000). Safe — the payment is
+    // already verified against Paystack above.
+    const { error: platformFeeError } = await getSupabaseServiceClient().rpc(
       "record_platform_fee",
       {
         p_transaction_id: transactionRow.id,

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
@@ -293,10 +294,14 @@ export default async function generateTicket(
   // server-side from the now-paid ticket_checkout/ticket_type/event chain —
   // see record_organizer_earning. Idempotent (organizer_ledger_entry_earning_once),
   // so this stays safe even if generateTicket is ever invoked twice for the
-  // same checkout session.
+  // same checkout session. Runs on the service-role client, never the
+  // buyer's: record_organizer_earning credits the *organizer's* ledger and
+  // is EXECUTE-revoked from `authenticated` (migration 20260903200000). The
+  // checkout it prices from is already paid + owned by this caller.
+  const ledgerClient = getSupabaseServiceClient();
   await Promise.all(
     rows.map((row) =>
-      supabase.rpc("record_organizer_earning", {
+      ledgerClient.rpc("record_organizer_earning", {
         p_ticket_checkout_id: row.id,
       }),
     ),
