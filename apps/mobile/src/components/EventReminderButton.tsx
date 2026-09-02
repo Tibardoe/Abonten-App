@@ -24,6 +24,7 @@ export function EventReminderButton({
     eventId,
     startsAtIso,
     status,
+    eventTitle,
   );
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<number[]>(offsets);
@@ -96,8 +97,8 @@ export function EventReminderButton({
       <Sheet open={open} onClose={() => setOpen(false)} title="Remind me">
         <View className="gap-2">
           <AppText variant="muted">
-            Pick when to be reminded. Reminders are scheduled on this device and
-            still fire if the app is closed.
+            Pick when to be reminded. Notifications fire even if the app is
+            closed, and your choice syncs to your other devices.
           </AppText>
 
           {REMINDER_OFFSETS.map((o) => {

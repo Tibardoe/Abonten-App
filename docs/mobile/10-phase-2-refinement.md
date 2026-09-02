@@ -20,16 +20,15 @@ type/bundle-verified only — it still needs a device pass.
 | **I** | 13, 14 | HighlightViewer: swipe-down-to-dismiss (PanResponder, claims only on a clear downward drag), failed image slide advances. Posting: pick → `PostHighlightSheet` preview → Post with a **real** progress bar (`uploadToCloudinary` now XHR with `upload.onprogress`; `useUploadHighlights({ onProgress })`). Can't dismiss mid-upload; Post inert while running. |
 | **J** | 15, 17, 18 | **Fix:** `useToggleFavorite` read the (already-flipped) query cache inside `mutationFn`, so every toggle ran the opposite DB write — favourites never persisted. Now takes the target state explicitly. `EventCardMenu` "…" sheet = web `EventCardMenuModal` parity (Favourite/Share for all; Edit/Promo codes/Cancel for the organiser). Tab navigator `animation: "shift"`. |
 | **K** | 19 | Event reminders = OS-scheduled local notifications (`expo-notifications` DATE trigger, HIGH-importance `event-reminders` Android channel). "Remind me" sheet on the event detail (10 min / 30 min / 1 h / 1 day before). Deep-links via the existing `usePushRegistration` response listener. Per-event choice persisted in `expo-secure-store`; `reconcileEventReminder` re-arms on a start-time change and cancels on `status = "canceled"`. |
+| **M** | 19 (follow-up) | Reminders made **cross-device** — new RLS-scoped `event_reminder` table (`(user_id, event_id)` PK, `offsets int[]`, `event(id)` FK `ON DELETE CASCADE`, owner-only `FOR ALL` policy; migration `20260904090000`, applied live via MCP). `useEventReminder` mirrors the choice to the row and, on reconcile, re-arms the local schedule to match the server (covers a reminder set on another device). New `useRemindersSync` (mounted in `(app)/_layout`, runs on sign-in + every foreground) clears any local reminder whose server row is gone — so a **hard-deleted** event's reminder is now proactively cancelled via the FK cascade, and a reminder turned off elsewhere disappears here. An offline push is retried on the next sync (`serverSynced` flag) rather than mistaken for a removal. |
 | **L** | 20, 21, 23 | Coherence pass on touched screens + this doc. |
 
 ## Known limitations / follow-ups
 
-- **Event reminders are device-local.** There is no `event_reminder` table, so a
-  reminder set on one device is not mirrored to the user's other devices.
-  A hard-*deleted* event's reminder is not proactively cancelled (a cancel or a
-  time change is). Cross-device sync would need a new table + `/api/mobile`
-  route.
 - Money paths (Paystack card verification, checkout), highlight uploads, and
   notification scheduling/delivery/boot-persistence are **not device-verified**.
+- Reminder cross-device sync is RLS direct-CRUD (class-A), verified by
+  typecheck/export only — the round trip (`event_reminder` upsert/pull, the
+  cascade on delete, `useRemindersSync` on foreground) needs a device pass.
 - `docs/mobile/09` non-parity items (web-server-only bits, e.g. the
   `user_image_history` insert) are unaffected and still open.

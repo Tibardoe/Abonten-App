@@ -2,6 +2,7 @@ import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
+import { useRemindersSync } from "@/features/reminders/useRemindersSync";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
 
@@ -15,6 +16,9 @@ export const unstable_settings = { anchor: "(tabs)" };
 function StackHost() {
   // Register this device for push while the user is inside the app.
   usePushRegistration();
+  // Reconcile local event reminders with the cross-device `event_reminder`
+  // rows (clears ones whose event was deleted / turned off elsewhere).
+  useRemindersSync();
   const c = useThemeColors();
 
   return (
