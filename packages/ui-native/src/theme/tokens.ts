@@ -102,6 +102,9 @@ export const family = {
   } as Record<string, string>,
 } as const;
 
+/** Minimum comfortable tap target (px) — Material/HIG floor. */
+export const touchTarget = 44;
+
 /** Card / sheet elevation. Web uses `shadow-sm`; this is its native echo. */
 export const shadow = {
   card: {

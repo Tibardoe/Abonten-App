@@ -13,6 +13,7 @@ import { family } from "../theme/tokens";
 // default colour token.
 
 type Variant =
+  | "hero"
   | "pageTitle"
   | "screenTitle"
   | "sectionTitle"
@@ -22,27 +23,35 @@ type Variant =
   | "small"
   | "muted"
   | "label"
+  | "overline"
   | "caption";
 
 const VARIANT_CLASS: Record<Variant, string> = {
+  // Big screen / flow header — one step above pageTitle, tight tracking.
+  hero: "text-[28px] leading-[34px] font-bold tracking-[-0.4px] text-foreground",
   // Web PageTitle: text-2xl/3xl font-bold. Screen headers.
-  pageTitle: "text-[24px] leading-[30px] font-bold text-foreground",
-  screenTitle: "text-[20px] leading-[28px] font-bold text-foreground",
+  pageTitle:
+    "text-[24px] leading-[31px] font-bold tracking-[-0.2px] text-foreground",
+  screenTitle:
+    "text-[20px] leading-[27px] font-bold tracking-[-0.2px] text-foreground",
   // Web SectionTitle: text-lg/xl font-semibold.
-  sectionTitle: "text-[17px] leading-[24px] font-semibold text-foreground",
-  cardTitle: "text-[15px] leading-[22px] font-semibold text-foreground",
+  sectionTitle: "text-[18px] leading-[25px] font-semibold text-foreground",
+  cardTitle: "text-[15px] leading-[21px] font-semibold text-foreground",
   body: "text-[15px] leading-[22px] text-foreground",
   bodyStrong: "text-[15px] leading-[22px] font-semibold text-foreground",
-  small: "text-[13px] leading-[18px] text-foreground",
+  small: "text-[13px] leading-[19px] text-foreground",
   // Web SupportingText: text-sm text-muted-foreground.
-  muted: "text-[13px] leading-[18px] text-muted-foreground",
-  label:
-    "text-[11px] leading-[16px] font-semibold uppercase tracking-wide text-muted-foreground",
-  caption: "text-[11px] leading-[16px] text-muted-foreground",
+  muted: "text-[13px] leading-[19px] text-muted-foreground",
+  label: "text-[12px] leading-[16px] font-semibold text-muted-foreground",
+  // ALL-CAPS section kicker (replaces hand-rolled uppercase+tracking spans).
+  overline:
+    "text-[11px] leading-[14px] font-semibold uppercase tracking-[1px] text-muted-foreground",
+  caption: "text-[12px] leading-[16px] text-muted-foreground",
 };
 
 // The weight each variant bakes in via its className (font-bold / font-semibold).
 const VARIANT_WEIGHT: Record<Variant, string> = {
+  hero: "700",
   pageTitle: "700",
   screenTitle: "700",
   sectionTitle: "600",
@@ -52,6 +61,7 @@ const VARIANT_WEIGHT: Record<Variant, string> = {
   small: "400",
   muted: "400",
   label: "600",
+  overline: "600",
   caption: "400",
 };
 
@@ -197,8 +207,10 @@ const make = (variant: Variant) => {
   return Component;
 };
 
+export const Hero = make("hero");
 export const PageTitle = make("pageTitle");
 export const ScreenTitle = make("screenTitle");
+export const Overline = make("overline");
 export const SectionTitle = make("sectionTitle");
 export const CardTitle = make("cardTitle");
 export const Body = make("body");

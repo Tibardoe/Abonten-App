@@ -4,6 +4,7 @@ import {
   View,
   type ViewProps,
 } from "react-native";
+import { shadow } from "../theme/tokens";
 import { Icon, type IoniconName } from "./Icon";
 import { AppText } from "./Typography";
 
@@ -14,23 +15,28 @@ import { AppText } from "./Typography";
 export type CardProps = ViewProps & {
   className?: string;
   padded?: boolean;
+  /** Adds a soft drop shadow (light mode) — the border still carries it in dark. */
+  elevated?: boolean;
 };
 
 export function Card({
   className,
   padded = true,
+  elevated = false,
   children,
+  style,
   ...rest
 }: CardProps) {
   return (
     <View
       className={[
-        "rounded-xl border border-border bg-card",
+        "rounded-2xl border border-border bg-card",
         padded ? "p-4" : "",
         className ?? "",
       ]
         .filter(Boolean)
         .join(" ")}
+      style={elevated ? [shadow.card, style] : style}
       {...rest}
     >
       {children}
@@ -50,7 +56,7 @@ export function PressableCard({
   return (
     <Pressable
       className={[
-        "overflow-hidden rounded-xl border border-border bg-card active:opacity-90",
+        "overflow-hidden rounded-2xl border border-border bg-card active:opacity-90",
         className ?? "",
       ]
         .filter(Boolean)
