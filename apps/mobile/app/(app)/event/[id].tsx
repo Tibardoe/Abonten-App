@@ -1,5 +1,6 @@
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
+import { EventReminderButton } from "@/components/EventReminderButton";
 import { AppHeader } from "@/components/app/AppHeader";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import {
@@ -401,6 +402,15 @@ export default function EventDetailScreen() {
               ) : null}
             </View>
           </View>
+
+          {!canceled && !hasEnded && event.starts_at ? (
+            <EventReminderButton
+              eventId={event.id}
+              eventTitle={event.title}
+              startsAtIso={event.starts_at}
+              status={event.status}
+            />
+          ) : null}
 
           {event.website_url ? (
             <Button
