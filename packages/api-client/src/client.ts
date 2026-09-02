@@ -252,6 +252,14 @@ export function createApiClient(options: ApiClientOptions) {
           auth: true,
         });
       },
+      /** Permanently delete the caller's own account. On 200 the client must
+       *  sign out locally — the session is already invalid server-side. */
+      deleteAccount() {
+        return request<{ status: 200 | 401 | 500; message: string }>(
+          "/api/mobile/account/delete",
+          { method: "POST", auth: true },
+        );
+      },
     },
 
     uploads: {

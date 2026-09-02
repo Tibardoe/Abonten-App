@@ -12,6 +12,7 @@ import {
   type BadgeTone,
   Button,
   EmptyState,
+  ListFooter,
   ScreenError,
   Spinner,
 } from "@abonten/ui-native";
@@ -170,15 +171,13 @@ export default function MyBookingsScreen() {
           />
         }
         ListFooterComponent={
-          q.isFetchingNextPage ? (
-            <View className="py-4">
-              <Spinner />
-            </View>
-          ) : rows.length > 0 && !q.hasNextPage ? (
-            <AppText variant="caption" className="py-3 text-center">
-              That's everything.
-            </AppText>
-          ) : null
+          <ListFooter
+            count={rows.length}
+            isFetchingNextPage={q.isFetchingNextPage}
+            hasNextPage={q.hasNextPage}
+            isError={q.isError}
+            onRetry={() => q.fetchNextPage()}
+          />
         }
         renderItem={({ item }) => (
           <BookingRow

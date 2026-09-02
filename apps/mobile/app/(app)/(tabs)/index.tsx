@@ -38,10 +38,10 @@ import {
   Caption,
   EmptyState,
   Icon,
+  ListFooter,
   ScreenLoader,
   SectionTitle,
   SegmentedTabs,
-  Spinner,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
@@ -392,7 +392,13 @@ export default function Explore() {
             )
           }
           ListFooterComponent={
-            eventsQuery.isFetchingNextPage ? <Spinner /> : null
+            <ListFooter
+              count={events.length}
+              isFetchingNextPage={eventsQuery.isFetchingNextPage}
+              hasNextPage={eventsQuery.hasNextPage}
+              isError={eventsQuery.isError}
+              onRetry={() => eventsQuery.fetchNextPage()}
+            />
           }
         />
       ) : (
@@ -428,7 +434,13 @@ export default function Explore() {
             )
           }
           ListFooterComponent={
-            placesQuery.isFetchingNextPage ? <Spinner /> : null
+            <ListFooter
+              count={places.length}
+              isFetchingNextPage={placesQuery.isFetchingNextPage}
+              hasNextPage={placesQuery.hasNextPage}
+              isError={placesQuery.isError}
+              onRetry={() => placesQuery.fetchNextPage()}
+            />
           }
         />
       )}

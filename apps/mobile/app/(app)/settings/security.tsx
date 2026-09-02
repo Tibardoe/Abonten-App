@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
@@ -14,7 +15,7 @@ import {
   OtpInput,
 } from "@abonten/ui-native";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 
 // Native echo of the web settings/security page (SecurityInputFields):
 // change email (Supabase's own confirmation-link flow) and change/add phone
@@ -39,9 +40,57 @@ function VerifiedTag({ verified }: { verified: boolean }) {
 }
 
 export default function Security() {
-  const { session } = useSession();
+  const { session, signOut } = useSession();
   const user = session?.user;
   const google = (user?.identities ?? []).some((i) => i.provider === "google");
+
+  // ---- delete account ---------------------------------------------------
+  const [deleteBusy, setDeleteBusy] = useState(false);
+
+  function confirmDelete() {
+    Alert.alert(
+      "Delete your account?",
+      "This permanently removes your account and can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert(
+              "Are you sure?",
+              "Your tickets, places, reviews and bookings will be gone for good.",
+              [
+                { text: "Keep my account", style: "cancel" },
+                {
+                  text: "Delete forever",
+                  style: "destructive",
+                  onPress: runDelete,
+                },
+              ],
+            );
+          },
+        },
+      ],
+    );
+  }
+
+  async function runDelete() {
+    setDeleteBusy(true);
+    try {
+      const res = await api.account.deleteAccount();
+      if (res.status !== 200) {
+        Alert.alert("Couldn't delete", res.message ?? "Please try again.");
+        return;
+      }
+      await unregisterPushToken();
+      await signOut();
+    } catch {
+      Alert.alert("Network error", "Please try again.");
+    } finally {
+      setDeleteBusy(false);
+    }
+  }
 
   // ---- email --------------------------------------------------------------
   const [emailOpen, setEmailOpen] = useState(false);
@@ -356,6 +405,26 @@ export default function Security() {
           Changing your email sends a confirmation link — open it to finish. A
           new phone number is verified by a one-time code.
         </AppText>
+
+        {/* Danger zone */}
+        <Card padded className="mt-4 border-destructive/40">
+          <View className="gap-1 py-1">
+            <AppText variant="bodyStrong" tone="error">
+              Delete account
+            </AppText>
+            <AppText variant="caption">
+              Permanently delete your account and all of its data. This can't be
+              undone.
+            </AppText>
+          </View>
+          <Button
+            title={deleteBusy ? "Deleting…" : "Delete account"}
+            variant="outline"
+            className="border-destructive"
+            disabled={deleteBusy}
+            onPress={confirmDelete}
+          />
+        </Card>
       </ScrollView>
     </View>
   );

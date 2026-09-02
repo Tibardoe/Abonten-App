@@ -39,6 +39,58 @@ export function ScreenLoader() {
   );
 }
 
+export type ListFooterProps = {
+  /** The current number of rows already rendered. */
+  count: number;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
+  /** Shown once the whole list is exhausted (count > 0, no next page). */
+  endLabel?: string;
+};
+
+/**
+ * The standard footer for an infinite `FlatList` (`ListFooterComponent`):
+ * a spinner while the next page loads, a "couldn't load more — Retry" row on
+ * a page error, or a quiet end-of-list note once everything is in. Renders
+ * nothing while idle mid-list or when the list is empty (the list's
+ * `ListEmptyComponent` owns that case).
+ */
+export function ListFooter({
+  count,
+  isFetchingNextPage,
+  hasNextPage,
+  isError,
+  onRetry,
+  endLabel = "You're all caught up",
+}: ListFooterProps) {
+  if (isFetchingNextPage) return <Spinner className="py-5" />;
+
+  if (isError && count > 0) {
+    return (
+      <View className="items-center gap-2 py-5">
+        <AppText variant="small" tone="muted">
+          Couldn't load more.
+        </AppText>
+        {onRetry ? (
+          <Button title="Retry" size="sm" variant="outline" onPress={onRetry} />
+        ) : null}
+      </View>
+    );
+  }
+
+  if (count > 0 && !hasNextPage) {
+    return (
+      <AppText variant="caption" className="py-5 text-center">
+        {endLabel}
+      </AppText>
+    );
+  }
+
+  return null;
+}
+
 export type ErrorStateProps = {
   message?: string;
   onRetry?: () => void;
