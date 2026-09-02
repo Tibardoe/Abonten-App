@@ -1,9 +1,11 @@
 import { api } from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import type {
+  AddPlaceServiceBody,
   PlaceOpeningHoursInput,
   SetPlaceStatusBody,
   UpdatePlaceBody,
+  UpdatePlaceServiceBody,
 } from "@abonten/api-client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -85,6 +87,33 @@ export function useSetPlaceStatus(placeId: string) {
   return useMutation({
     mutationFn: (body: SetPlaceStatusBody) =>
       api.organizer.setPlaceStatus(placeId, body),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+export function useAddPlaceService(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AddPlaceServiceBody) =>
+      api.organizer.addPlaceService(placeId, body),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+export function useUpdatePlaceService(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { serviceId: string; body: UpdatePlaceServiceBody }) =>
+      api.organizer.updatePlaceService(placeId, v.serviceId, v.body),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+export function useRemovePlaceService(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (serviceId: string) =>
+      api.organizer.removePlaceService(placeId, serviceId),
     onSuccess: () => invalidate(qc, placeId),
   });
 }

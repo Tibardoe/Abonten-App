@@ -2,6 +2,7 @@ import type {
   AddMomoWalletBody,
   AddPayoutAccountBody,
   AddPayoutAccountResult,
+  AddPlaceServiceBody,
   ApiEnvelope,
   AttendanceRow,
   CancelEventResult,
@@ -45,6 +46,7 @@ import type {
   PlaceInsightsResult,
   PlaceManageContextResult,
   PlaceOpeningHoursInput,
+  PlaceServiceResult,
   PreparedCheckoutPayment,
   ProfileData,
   PromoteEventResult,
@@ -61,6 +63,7 @@ import type {
   UpdateEventTicketTypesResult,
   UpdatePlaceBody,
   UpdatePlaceResult,
+  UpdatePlaceServiceBody,
   UpdatePromoCodeBody,
   UpdatePromoCodeResult,
   UploadSignatureKind,
@@ -736,6 +739,40 @@ export function createApiClient(options: ApiClientOptions) {
         return request<PlaceHoursStatusResult>(
           `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/status`,
           { method: "POST", body, auth: true },
+        );
+      },
+      /** Add a service to one of the caller's places. */
+      addPlaceService(placeId: string, body: AddPlaceServiceBody) {
+        return request<PlaceServiceResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/services`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * Edit one service (`null` clears a field, an omitted key leaves it).
+       * 403 unless the caller owns the service's place.
+       */
+      updatePlaceService(
+        placeId: string,
+        serviceId: string,
+        body: UpdatePlaceServiceBody,
+      ) {
+        return request<PlaceServiceResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/services/${encodeURIComponent(serviceId)}`,
+          { method: "PATCH", body, auth: true },
+        );
+      },
+      /** Remove one service. 403 unless the caller owns its place. */
+      removePlaceService(placeId: string, serviceId: string) {
+        return request<PlaceServiceResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/services/${encodeURIComponent(serviceId)}/delete`,
+          { method: "POST", auth: true },
         );
       },
     },

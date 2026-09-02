@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status) done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD done, see below |
 
 ---
 
@@ -1487,3 +1487,42 @@ The web `ManagePlaceView` Details & Location tab (`useManagePlaceDetailsForm`
 compiled: `/manage`, `/[placeId]`, `/hours`, `/status`, plus 4f-1's),
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
+
+#### WP-4f-2b — Place edit: Services CRUD (done 2026-09-02)
+
+The web `ManagePlaceServicesSection` (add / edit / remove `place_service`
+rows). Prefill already comes free from the 4f-2a `/manage` context.
+
+- **`apps/web/src/utils/placeServiceCore.ts`** — `addPlaceServiceCore` /
+  `updatePlaceServiceCore` / `removePlaceServiceCore`. A `place_service`
+  row has no `owner_id`, so update / remove prove ownership by joining
+  through to the owning `place` (shared `serviceOwnerId` helper); add is
+  owner-scoped on `placeId` and sets `position` from the current count.
+  The three actions (`addPlaceService` / `updatePlaceService` /
+  `removePlaceService`) thinned to `auth (401 as const) → delegate`.
+- **Routes** — all nested under `[placeId]` (ownership for update/remove is
+  still by `serviceId`, `placeId` is just for a tidy path):
+  `POST /api/mobile/organizer/places/[placeId]/services` (add),
+  `PATCH .../places/[placeId]/services/[serviceId]` (edit — `null` clears a
+  field, an omitted key leaves it),
+  `POST .../places/[placeId]/services/[serviceId]/delete` (remove — POST,
+  matching the promo-codes/delete precedent).
+- **api-client** — `PlaceServiceRow` (= a `PlaceManageContext` services
+  element), `AddPlaceServiceBody`, `UpdatePlaceServiceBody`,
+  `PlaceServiceResult`; `api.organizer.addPlaceService(placeId, body)` /
+  `updatePlaceService(placeId, serviceId, body)` /
+  `removePlaceService(placeId, serviceId)`.
+- **Mobile** — `useManagePlace.ts` gains `useAddPlaceService` /
+  `useUpdatePlaceService` / `useRemovePlaceService` (all invalidate the
+  `place-manage` context + places list + discovery). `usePlaceEdit`
+  exposes `services` from the context. `edit.tsx` gains a **Services**
+  section below Weekly hours: a card per service (name / description /
+  price / unit) with inline pencil-edit and a trash + `Alert` confirm
+  remove, plus an "Add a service" inline form (`ServiceFields` shared by
+  add and edit — name / description / price / unit / "Show price publicly"
+  `Switch`).
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all 3 service routes
+compiled), `expo export --platform android` clean, `biome check` clean.
+Not device-verified.

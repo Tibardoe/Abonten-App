@@ -1,10 +1,18 @@
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import {
+  useAddPlaceService,
+  useRemovePlaceService,
+  useUpdatePlaceService,
+} from "@/features/organizer/useManagePlace";
+import {
   DAY_LABELS,
   TIME_RE,
   usePlaceEdit,
 } from "@/features/organizer/usePlaceEdit";
-import type { PlaceTemporaryStatus } from "@abonten/api-client";
+import type {
+  PlaceServiceRow,
+  PlaceTemporaryStatus,
+} from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Button, Field, Icon, Input } from "@abonten/ui-native";
 import { Image } from "expo-image";
@@ -55,6 +63,298 @@ const STATUS_OPTIONS: { value: PlaceTemporaryStatus; label: string }[] = [
   { value: "temporarily_closed", label: "Temporarily closed" },
   { value: "permanently_closed", label: "Permanently closed" },
 ];
+
+type ServiceForm = {
+  name: string;
+  description: string;
+  price: string;
+  priceUnit: string;
+  showPrice: boolean;
+};
+
+const EMPTY_SERVICE: ServiceForm = {
+  name: "",
+  description: "",
+  price: "",
+  priceUnit: "",
+  showPrice: true,
+};
+
+function toForm(s: PlaceServiceRow): ServiceForm {
+  return {
+    name: s.name,
+    description: s.description ?? "",
+    price: s.price != null ? String(s.price) : "",
+    priceUnit: s.price_unit ?? "",
+    showPrice: s.show_price,
+  };
+}
+
+function ServiceFields({
+  value,
+  onChange,
+  onSubmit,
+  onCancel,
+  submitting,
+  submitLabel,
+}: {
+  value: ServiceForm;
+  onChange: (patch: Partial<ServiceForm>) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  submitting: boolean;
+  submitLabel: string;
+}) {
+  return (
+    <View className="gap-2">
+      <Input
+        value={value.name}
+        onChangeText={(v) => onChange({ name: v })}
+        placeholder="Service name"
+      />
+      <Input
+        value={value.description}
+        onChangeText={(v) => onChange({ description: v })}
+        placeholder="Description (optional)"
+      />
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Input
+            value={value.price}
+            onChangeText={(v) => onChange({ price: v })}
+            placeholder="Price (optional)"
+            keyboardType="decimal-pad"
+          />
+        </View>
+        <View className="flex-1">
+          <Input
+            value={value.priceUnit}
+            onChangeText={(v) => onChange({ priceUnit: v })}
+            placeholder="Unit (e.g. per hour)"
+          />
+        </View>
+      </View>
+      <View className="flex-row items-center justify-between">
+        <AppText className="text-sm text-foreground">
+          Show price publicly
+        </AppText>
+        <Switch
+          value={value.showPrice}
+          onValueChange={(v) => onChange({ showPrice: v })}
+        />
+      </View>
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Button
+            title={submitting ? "Saving…" : submitLabel}
+            loading={submitting}
+            disabled={submitting || !value.name.trim()}
+            onPress={onSubmit}
+          />
+        </View>
+        <View className="flex-1">
+          <Button
+            title="Cancel"
+            variant="outline"
+            onPress={onCancel}
+            disabled={submitting}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ServicesSection({
+  placeId,
+  services,
+}: {
+  placeId: string;
+  services: PlaceServiceRow[];
+}) {
+  const add = useAddPlaceService(placeId);
+  const update = useUpdatePlaceService(placeId);
+  const remove = useRemovePlaceService(placeId);
+
+  const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState<ServiceForm>(EMPTY_SERVICE);
+
+  const patch = (p: Partial<ServiceForm>) =>
+    setForm((prev) => ({ ...prev, ...p }));
+
+  const priceValue = (): number | null => {
+    const t = form.price.trim();
+    if (t === "") return null;
+    const n = Number(t);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const beginAdd = () => {
+    setForm(EMPTY_SERVICE);
+    setEditingId(null);
+    setAdding(true);
+  };
+
+  const beginEdit = (s: PlaceServiceRow) => {
+    setForm(toForm(s));
+    setAdding(false);
+    setEditingId(s.id);
+  };
+
+  const submitAdd = () => {
+    if (form.price.trim() !== "" && priceValue() === null) {
+      Alert.alert("Check the price", "Enter a number or leave it blank.");
+      return;
+    }
+    add.mutate(
+      {
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        price: priceValue(),
+        priceUnit: form.priceUnit.trim() || null,
+        showPrice: form.showPrice,
+      },
+      {
+        onSuccess: (res) => {
+          if (res.status === 200) setAdding(false);
+          else Alert.alert("Couldn't add", res.message);
+        },
+        onError: () => Alert.alert("Couldn't add", "Please try again."),
+      },
+    );
+  };
+
+  const submitEdit = (serviceId: string) => {
+    if (form.price.trim() !== "" && priceValue() === null) {
+      Alert.alert("Check the price", "Enter a number or leave it blank.");
+      return;
+    }
+    update.mutate(
+      {
+        serviceId,
+        body: {
+          name: form.name.trim(),
+          description: form.description.trim() || null,
+          price: priceValue(),
+          priceUnit: form.priceUnit.trim() || null,
+          showPrice: form.showPrice,
+        },
+      },
+      {
+        onSuccess: (res) => {
+          if (res.status === 200) setEditingId(null);
+          else Alert.alert("Couldn't save", res.message);
+        },
+        onError: () => Alert.alert("Couldn't save", "Please try again."),
+      },
+    );
+  };
+
+  const confirmRemove = (s: PlaceServiceRow) => {
+    Alert.alert("Remove this service?", `"${s.name}" — this can't be undone.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () =>
+          remove.mutate(s.id, {
+            onSuccess: (res) => {
+              if (res.status !== 200)
+                Alert.alert("Couldn't remove", res.message);
+            },
+            onError: () => Alert.alert("Couldn't remove", "Please try again."),
+          }),
+      },
+    ]);
+  };
+
+  return (
+    <View className="gap-3">
+      <AppText variant="label">Services</AppText>
+
+      {services.length === 0 && !adding ? (
+        <AppText className="text-[13px] text-muted-foreground">
+          No services listed yet.
+        </AppText>
+      ) : null}
+
+      {services.map((s) =>
+        editingId === s.id ? (
+          <View
+            key={s.id}
+            className="gap-2 rounded-xl border border-border bg-card p-3"
+          >
+            <ServiceFields
+              value={form}
+              onChange={patch}
+              onSubmit={() => submitEdit(s.id)}
+              onCancel={() => setEditingId(null)}
+              submitting={update.isPending}
+              submitLabel="Save"
+            />
+          </View>
+        ) : (
+          <View
+            key={s.id}
+            className="flex-row items-start justify-between gap-3 rounded-xl border border-border bg-card p-3"
+          >
+            <View className="flex-1">
+              <AppText className="font-semibold text-foreground">
+                {s.name}
+              </AppText>
+              {s.description ? (
+                <AppText className="mt-0.5 text-[13px] text-muted-foreground">
+                  {s.description}
+                </AppText>
+              ) : null}
+              {s.show_price && s.price != null ? (
+                <AppText className="mt-0.5 text-[13px] font-medium text-foreground">
+                  {s.price}
+                  {s.price_unit ? ` / ${s.price_unit}` : ""}
+                </AppText>
+              ) : null}
+            </View>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => beginEdit(s)}
+                className="p-1 active:opacity-60"
+              >
+                <Icon name="pencil-outline" size={18} tone="muted" />
+              </Pressable>
+              <Pressable
+                onPress={() => confirmRemove(s)}
+                className="p-1 active:opacity-60"
+              >
+                <Icon name="trash-outline" size={18} tone="destructive" />
+              </Pressable>
+            </View>
+          </View>
+        ),
+      )}
+
+      {adding ? (
+        <View className="gap-2 rounded-xl border border-border bg-card p-3">
+          <ServiceFields
+            value={form}
+            onChange={patch}
+            onSubmit={submitAdd}
+            onCancel={() => setAdding(false)}
+            submitting={add.isPending}
+            submitLabel="Add service"
+          />
+        </View>
+      ) : (
+        <Button
+          title="Add a service"
+          variant="outline"
+          size="sm"
+          onPress={beginAdd}
+        />
+      )}
+    </View>
+  );
+}
 
 export default function EditPlaceScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -394,6 +694,10 @@ export default function EditPlaceScreen() {
           onPress={onSaveHours}
         />
       </View>
+
+      <View className="h-px bg-border" />
+
+      <ServicesSection placeId={placeId ?? ""} services={w.services} />
 
       <MapPickerSheet
         open={mapOpen}
