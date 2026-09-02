@@ -1,4 +1,5 @@
 import {
+  MapConfigured,
   MapErrorBoundary,
   MapView,
   PROVIDER_GOOGLE,
@@ -70,16 +71,46 @@ export function MapPickerSheet({
     onClose();
   }
 
+  // A Google-provider MapView hard-crashes at native view-attach when the
+  // Maps API key isn't baked into the installed binary — an error a JS
+  // boundary can't catch. So when maps aren't configured, never mount one:
+  // show a message instead (the calling screen still has address search +
+  // "use current location").
+  const header = (
+    <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
+      <Pressable onPress={onClose} hitSlop={10}>
+        <Icon name="close" size={24} tone="foreground" />
+      </Pressable>
+      <AppText variant="bodyStrong">Choose on map</AppText>
+    </View>
+  );
+
+  if (!MapConfigured) {
+    return (
+      <Modal visible={open} animationType="slide" onRequestClose={onClose}>
+        <View className="flex-1 bg-background">
+          {header}
+          <View className="flex-1 items-center justify-center gap-2 p-8">
+            <Icon name="map-outline" size={32} tone="muted" />
+            <AppText variant="bodyStrong">Map picker unavailable</AppText>
+            <AppText variant="muted" className="text-center">
+              This build doesn't have maps enabled. Search for the address or
+              use your current location instead.
+            </AppText>
+            <View className="pt-2">
+              <Button title="Close" variant="outline" onPress={onClose} />
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  }
+
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
       <MapErrorBoundary>
         <View className="flex-1 bg-background">
-          <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
-            <Pressable onPress={onClose} hitSlop={10}>
-              <Icon name="close" size={24} tone="foreground" />
-            </Pressable>
-            <AppText variant="bodyStrong">Choose on map</AppText>
-          </View>
+          {header}
 
           <View className="flex-1">
             <MapView
