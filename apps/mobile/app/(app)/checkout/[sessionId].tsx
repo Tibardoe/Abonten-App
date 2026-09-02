@@ -179,9 +179,7 @@ export default function CheckoutReviewScreen() {
           }}
         />
 
-        <AppText className="text-lg font-bold text-foreground">
-          {session.eventTitle}
-        </AppText>
+        <AppText variant="sectionHeading">{session.eventTitle}</AppText>
 
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Line label="Subtotal" value={`${currency} ${session.subtotal}`} />

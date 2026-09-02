@@ -1,6 +1,6 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { uuidv4 } from "@/lib/uuid";
-import { AppText, Button, Field, Input } from "@abonten/ui-native";
+import { AppText, Button, Chip, Field, Input } from "@abonten/ui-native";
 import { Pressable, View } from "react-native";
 
 // Step 5 of the event wizard — free, a single paid tier, or multiple named
@@ -21,36 +21,20 @@ export function EventWizardTickets({ w }: { w: EventWizard }) {
   return (
     <View className="gap-4">
       <View className="flex-row gap-2">
-        {(["free", "single", "multiple"] as const).map((m) => {
-          const label =
-            m === "free"
-              ? "Free"
-              : m === "single"
-                ? "One price"
-                : "Multiple types";
-          const active = w.ticketMode === m;
-          return (
-            <Pressable
-              key={m}
-              onPress={() => w.setTicketMode(m)}
-              className={
-                active
-                  ? "rounded-full bg-primary px-4 py-1.5"
-                  : "rounded-full border border-border px-4 py-1.5"
-              }
-            >
-              <AppText
-                className={
-                  active
-                    ? "text-[13px] font-semibold text-primary-foreground"
-                    : "text-[13px] font-medium text-muted-foreground"
-                }
-              >
-                {label}
-              </AppText>
-            </Pressable>
-          );
-        })}
+        {(["free", "single", "multiple"] as const).map((m) => (
+          <Chip
+            key={m}
+            label={
+              m === "free"
+                ? "Free"
+                : m === "single"
+                  ? "One price"
+                  : "Multiple types"
+            }
+            selected={w.ticketMode === m}
+            onPress={() => w.setTicketMode(m)}
+          />
+        ))}
       </View>
 
       {w.ticketMode === "free" ? (

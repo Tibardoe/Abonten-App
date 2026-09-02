@@ -9,7 +9,7 @@ import type {
   OrganizerDashboardPeriod,
 } from "@abonten/api-client";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
-import { AppText, Overline } from "@abonten/ui-native";
+import { AppText, Chip, Overline } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -36,11 +36,7 @@ function money(currency: string | null | undefined, amount: number): string {
 }
 
 function SectionTitle({ children }: { children: string }) {
-  return (
-    <AppText className="text-base font-bold text-foreground">
-      {children}
-    </AppText>
-  );
+  return <AppText variant="sectionHeading">{children}</AppText>;
 }
 
 function Stat({
@@ -55,7 +51,7 @@ function Stat({
   return (
     <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
       <Overline>{label}</Overline>
-      <AppText className="text-lg font-bold text-foreground">{value}</AppText>
+      <AppText variant="sectionHeading">{value}</AppText>
       {sublabel ? <AppText variant="caption">{sublabel}</AppText> : null}
     </View>
   );
@@ -494,30 +490,14 @@ export default function EventInsightsScreen() {
       ) : null}
 
       <View className="flex-row flex-wrap gap-2">
-        {PERIODS.map((p) => {
-          const active = p.key === period;
-          return (
-            <Pressable
-              key={p.key}
-              onPress={() => setPeriod(p.key)}
-              className={
-                active
-                  ? "rounded-full bg-primary px-3 py-1.5"
-                  : "rounded-full border border-border px-3 py-1.5"
-              }
-            >
-              <AppText
-                className={
-                  active
-                    ? "text-[13px] font-semibold text-primary-foreground"
-                    : "text-[13px] font-medium text-muted-foreground"
-                }
-              >
-                {p.label}
-              </AppText>
-            </Pressable>
-          );
-        })}
+        {PERIODS.map((p) => (
+          <Chip
+            key={p.key}
+            label={p.label}
+            selected={p.key === period}
+            onPress={() => setPeriod(p.key)}
+          />
+        ))}
       </View>
 
       {q.isLoading ? (

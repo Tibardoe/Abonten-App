@@ -8,6 +8,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   AppText,
   Button,
+  Chip,
   Field,
   Icon,
   Input,
@@ -24,37 +25,6 @@ import {
   Switch,
   View,
 } from "react-native";
-
-function Chip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={
-        active
-          ? "rounded-full bg-primary px-3 py-1.5"
-          : "rounded-full border border-border px-3 py-1.5"
-      }
-    >
-      <AppText
-        className={
-          active
-            ? "text-[13px] font-semibold text-primary-foreground"
-            : "text-[13px] font-medium text-muted-foreground"
-        }
-      >
-        {label}
-      </AppText>
-    </Pressable>
-  );
-}
 
 export default function EditEventScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
@@ -148,7 +118,7 @@ export default function EditEventScreen() {
             <Chip
               key={c}
               label={c}
-              active={c === w.category}
+              selected={c === w.category}
               onPress={() => w.selectCategory(c)}
             />
           ))}
@@ -162,7 +132,7 @@ export default function EditEventScreen() {
               <Chip
                 key={t}
                 label={t}
-                active={w.types.includes(t)}
+                selected={w.types.includes(t)}
                 onPress={() => w.toggleType(t)}
               />
             ))}
@@ -242,12 +212,12 @@ export default function EditEventScreen() {
           <View className="flex-row gap-2">
             <Chip
               label="Single event"
-              active={w.scheduleMode === "single"}
+              selected={w.scheduleMode === "single"}
               onPress={() => w.setScheduleMode("single")}
             />
             <Chip
               label="Multiple dates"
-              active={w.scheduleMode === "specific"}
+              selected={w.scheduleMode === "specific"}
               onPress={() => w.setScheduleMode("specific")}
             />
           </View>
@@ -462,7 +432,7 @@ export default function EditEventScreen() {
                         ? "One price"
                         : "Multiple types"
                   }
-                  active={w.ticketMode === m}
+                  selected={w.ticketMode === m}
                   onPress={() => w.setTicketMode(m)}
                 />
               ))}

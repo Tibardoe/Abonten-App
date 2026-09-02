@@ -10,7 +10,7 @@ import type {
   OrganizerDashboardPeriod,
   OrganizerOverviewRow,
 } from "@abonten/api-client";
-import { AppText, Overline } from "@abonten/ui-native";
+import { AppText, Chip, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
@@ -35,7 +35,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
       <Overline>{label}</Overline>
-      <AppText className="text-lg font-bold text-foreground">{value}</AppText>
+      <AppText variant="sectionHeading">{value}</AppText>
     </View>
   );
 }
@@ -92,30 +92,14 @@ export default function OrganizerDashboard() {
       }
     >
       <View className="flex-row flex-wrap gap-2">
-        {PERIODS.map((p) => {
-          const active = p.key === period;
-          return (
-            <Pressable
-              key={p.key}
-              onPress={() => setPeriod(p.key)}
-              className={
-                active
-                  ? "rounded-full bg-primary px-3 py-1.5"
-                  : "rounded-full border border-border px-3 py-1.5"
-              }
-            >
-              <AppText
-                className={
-                  active
-                    ? "text-[13px] font-semibold text-primary-foreground"
-                    : "text-[13px] font-medium text-muted-foreground"
-                }
-              >
-                {p.label}
-              </AppText>
-            </Pressable>
-          );
-        })}
+        {PERIODS.map((p) => (
+          <Chip
+            key={p.key}
+            label={p.label}
+            selected={p.key === period}
+            onPress={() => setPeriod(p.key)}
+          />
+        ))}
       </View>
 
       {q.isLoading ? (
@@ -137,9 +121,7 @@ export default function OrganizerDashboard() {
         </View>
       ) : !hasEvents ? (
         <View className="items-center gap-3 py-12">
-          <AppText className="text-base font-semibold text-foreground">
-            No events yet
-          </AppText>
+          <AppText variant="sectionHeading">No events yet</AppText>
           <AppText className="text-center text-sm text-muted-foreground">
             Publish your first event to start seeing sales here.
           </AppText>

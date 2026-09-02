@@ -3,7 +3,7 @@ import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
-import { AppText, Overline } from "@abonten/ui-native";
+import { AppText, Chip, Overline } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -123,30 +123,14 @@ export default function WithdrawScreen() {
         <View className="gap-2">
           <Overline>Currency</Overline>
           <View className="flex-row flex-wrap gap-2">
-            {balances.map((b) => {
-              const active = b.currency === selectedCurrency;
-              return (
-                <Pressable
-                  key={b.currency}
-                  onPress={() => setCurrency(b.currency)}
-                  className={
-                    active
-                      ? "rounded-full bg-primary px-3 py-1.5"
-                      : "rounded-full border border-border px-3 py-1.5"
-                  }
-                >
-                  <AppText
-                    className={
-                      active
-                        ? "text-[13px] font-semibold text-primary-foreground"
-                        : "text-[13px] text-muted-foreground"
-                    }
-                  >
-                    {b.currency}
-                  </AppText>
-                </Pressable>
-              );
-            })}
+            {balances.map((b) => (
+              <Chip
+                key={b.currency}
+                label={b.currency}
+                selected={b.currency === selectedCurrency}
+                onPress={() => setCurrency(b.currency)}
+              />
+            ))}
           </View>
         </View>
       ) : null}

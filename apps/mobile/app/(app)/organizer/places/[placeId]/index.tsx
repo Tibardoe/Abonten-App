@@ -26,7 +26,7 @@ function StatTile({ label, value }: { label: string; value: string }) {
   return (
     <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
       <Overline>{label}</Overline>
-      <AppText className="text-lg font-bold text-foreground">{value}</AppText>
+      <AppText variant="sectionHeading">{value}</AppText>
     </View>
   );
 }
