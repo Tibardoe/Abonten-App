@@ -7,7 +7,12 @@ import { useQuery } from "@tanstack/react-query";
 // Top Rated. Only "All places" (a separate infinite query) honours the
 // filter sheet.
 
-const AROUND_YOU_RADIUS_KM = 5;
+// `get_nearby_places.search_radius` is a PostGIS `geography` distance —
+// METRES (matches the web getNearByPlaces(lat,lng,5000) call). Passing 5
+// here searched a 5-metre radius. `WIDE_RADIUS_KM` below feeds
+// `p_max_distance_km`, which the RPC multiplies by 1000, so that one stays
+// in kilometres.
+const AROUND_YOU_RADIUS_METERS = 5_000;
 const WIDE_RADIUS_KM = 20;
 const TOP_RATED_FETCH = 20;
 const TOP_RATED_DISPLAY = 10;
@@ -16,7 +21,7 @@ async function nearby(lat: number, lng: number): Promise<PlaceType[]> {
   const { data, error } = await supabase.rpc("get_nearby_places", {
     user_lat: lat,
     user_lng: lng,
-    search_radius: AROUND_YOU_RADIUS_KM,
+    search_radius: AROUND_YOU_RADIUS_METERS,
     p_cursor_distance: null,
     p_cursor_id: null,
     p_page_size: 20,
