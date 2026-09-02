@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, 4g-2 event wizard save-as-draft + drafts list, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | **done (2026-09-02)** — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, 4g-2 event wizard save-as-draft + drafts list, 4g-3 place wizard save-as-draft — **WP-4g + WP-4 COMPLETE**, see below |
 
 ---
 
@@ -1774,3 +1774,49 @@ create wizard's "Save as draft" / draft-resume flow (`useEventUploadForm`'s
 `@abonten/api-client`) green, `next build` exit 0 (all 3 new routes
 compiled), `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
+
+#### WP-4g-3 — Place wizard save-as-draft (done 2026-09-02)
+
+The place mirror of WP-4g-2 — `savePlaceDraft` / `getPlaceDrafts` /
+`getPlaceDraft` / `deletePlaceDraft` + the `DraftsView` place tab + the
+place create wizard's save / resume flow. `placeDraftPayloadSchema` has no
+date fields (opening hours are HH:MM strings), so the mapping is 1:1 and
+the api-client mirror is fully concrete.
+
+- **`apps/web/src/utils/placeDraftCore.ts`** — `savePlaceDraftCore` (minus
+  the `File` upload — caller passes `coverPublicId` / `coverVersion`),
+  `fetchPlaceDraftsList`, `fetchPlaceDraftDetail`, `deletePlaceDraftCore` —
+  structural copies of `eventDraftCore.ts` against `place_drafts` /
+  `cover_*`. The four actions thinned; `savePlaceDraft` keeps its browser
+  `File` upload. `PlaceDraftListItem` / `PlaceDraftDetail` re-exported.
+- **Routes** — `GET/POST /api/mobile/organizer/place-drafts`,
+  `GET .../place-drafts/[draftId]`, `POST .../place-drafts/[draftId]/delete`.
+- **api-client** — concrete `PlaceDraftPayload` mirror (openingHours rows
+  reuse `PlaceOpeningHoursInput`) + list/detail/save/delete result types;
+  `api.organizer.placeDrafts()` / `placeDraft(id)` / `savePlaceDraft(body)`
+  / `deletePlaceDraft(id)`.
+- **Mobile** — `src/features/places/usePlaceDrafts.ts` (mirror of
+  `useEventDrafts.ts`, cover uploaded via `uploadToCloudinary(uri,
+  "place_photo")`). `usePlaceWizard(resumeDraftId?)` gained
+  `buildDraftPayload()` (trivial 1:1 map — persists `latitude`/`longitude`
+  the web draft drops), a one-shot hydration `useEffect`, and `saveDraft()`.
+  `place/new.tsx` reads `?draftId=` (hydration `ScreenLoader` + "Save as
+  draft" button + "N saved drafts →" banner). New
+  `app/(app)/organizer/place-drafts.tsx` list screen; "Place drafts (N)"
+  dashboard nav row; route registered `href: null`.
+- **Resume-then-publish flyer/cover fix (both wizards)** — a resumed
+  draft's flyer/cover is a Cloudinary URL, not a local file, so
+  `useCreatePlace` / `useEventCreate` now also accept a pre-uploaded
+  `coverPublicId` / `coverVersion` (resp. `flyerPublicId` / `flyerVersion`)
+  and skip the upload; the wizards stash the resumed asset's ids on
+  hydration and pass them through on Publish when the URI is remote. This
+  closes a latent gap in WP-4g-2 (a resumed event draft would otherwise
+  have tried to re-upload its flyer URL on Publish).
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all 3 new routes
+compiled), `expo export --platform android` clean, `biome check` clean. Not
+device-verified.
+
+**WP-4g COMPLETE** (4g-1 dashboard widgets · 4g-2 event drafts · 4g-3 place
+drafts). **WP-4 (Organizer & creator) COMPLETE** — 4a … 4g.

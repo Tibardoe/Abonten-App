@@ -4,6 +4,7 @@ import {
   useOrganizerDashboardWidgets,
   useOrganizerOverview,
 } from "@/features/organizer/useOrganizer";
+import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import type {
   OrganizerDashboardPeriod,
   OrganizerOverviewRow,
@@ -64,6 +65,11 @@ export default function OrganizerDashboard() {
   const draftsQuery = useEventDrafts();
   const draftCount =
     draftsQuery.data?.status === 200 ? draftsQuery.data.data.length : 0;
+  const placeDraftsQuery = usePlaceDrafts();
+  const placeDraftCount =
+    placeDraftsQuery.data?.status === 200
+      ? placeDraftsQuery.data.data.length
+      : 0;
 
   const result = q.data;
   const rows: OrganizerOverviewRow[] =
@@ -253,6 +259,12 @@ export default function OrganizerDashboard() {
           />
         ) : null}
         <NavRow href="/(app)/organizer/places" label="My places" />
+        {placeDraftCount > 0 ? (
+          <NavRow
+            href="/(app)/organizer/place-drafts"
+            label={`Place drafts (${placeDraftCount})`}
+          />
+        ) : null}
         <NavRow href="/(app)/organizer/finance" label="Finances" />
       </View>
     </ScrollView>

@@ -17,6 +17,7 @@ import type {
   CheckoutSessionRow,
   CloudinarySignatureData,
   DeleteEventDraftResult,
+  DeletePlaceDraftResult,
   DeletePromoCodeResult,
   DeviceRegisterBody,
   DeviceTokenResult,
@@ -51,6 +52,8 @@ import type {
   PlaceBookingRespondResult,
   PlaceCreateBody,
   PlaceCreateResult,
+  PlaceDraftDetailResult,
+  PlaceDraftsListResult,
   PlaceHoursStatusResult,
   PlaceInsightsResult,
   PlaceManageContextResult,
@@ -72,6 +75,8 @@ import type {
   RespondToPlaceReviewBody,
   SaveEventDraftBody,
   SaveEventDraftResult,
+  SavePlaceDraftBody,
+  SavePlaceDraftResult,
   SetPlaceStatusBody,
   SubmitChargeOtpResult,
   UpdateEventBody,
@@ -522,6 +527,42 @@ export function createApiClient(options: ApiClientOptions) {
       deleteEventDraft(draftId: string) {
         return request<DeleteEventDraftResult>(
           `/api/mobile/organizer/event-drafts/${encodeURIComponent(
+            draftId,
+          )}/delete`,
+          { method: "POST", auth: true },
+        );
+      },
+      /** The caller's non-expired place drafts, newest first (list columns
+       *  only — no jsonb payload). */
+      placeDrafts() {
+        return request<PlaceDraftsListResult>(
+          "/api/mobile/organizer/place-drafts",
+          { method: "GET", auth: true },
+        );
+      },
+      /** The full payload + cover ids for one place draft, to resume it in
+       *  the create wizard. 404 if not owned, 410 if expired. */
+      placeDraft(draftId: string) {
+        return request<PlaceDraftDetailResult>(
+          `/api/mobile/organizer/place-drafts/${encodeURIComponent(draftId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Create (`draftId` omitted) or update a place draft. Upload a
+       *  replacement cover from the device first (kind "place_photo") and
+       *  pass its `coverPublicId` / `coverVersion`, or omit both to keep the
+       *  current one. `expectedUpdatedAt` guards against a concurrent edit
+       *  (409). */
+      savePlaceDraft(body: SavePlaceDraftBody) {
+        return request<SavePlaceDraftResult>(
+          "/api/mobile/organizer/place-drafts",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Delete one place draft (row + best-effort Cloudinary cover). */
+      deletePlaceDraft(draftId: string) {
+        return request<DeletePlaceDraftResult>(
+          `/api/mobile/organizer/place-drafts/${encodeURIComponent(
             draftId,
           )}/delete`,
           { method: "POST", auth: true },

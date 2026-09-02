@@ -14,23 +14,38 @@ export type CreateEventInput = Omit<
   EventCreateBody,
   "flyerPublicId" | "flyerVersion"
 > & {
-  /** Local file URI of the picked (and cropped) flyer. */
-  flyerUri: string;
+  /** Local file URI of a freshly picked (and cropped) flyer — uploaded here.
+   *  Omit and pass `flyerPublicId` / `flyerVersion` instead when publishing
+   *  a resumed draft whose flyer is already on Cloudinary. */
+  flyerUri?: string | null;
+  flyerPublicId?: string;
+  flyerVersion?: string;
 };
 
 export function useEventCreate() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ flyerUri, ...rest }: CreateEventInput) => {
-      const { publicId, version } = await uploadToCloudinary(
-        flyerUri,
-        "event_flyer",
-      );
+    mutationFn: async ({
+      flyerUri,
+      flyerPublicId,
+      flyerVersion,
+      ...rest
+    }: CreateEventInput) => {
+      let publicId = flyerPublicId;
+      let version = flyerVersion;
+      if (flyerUri) {
+        const up = await uploadToCloudinary(flyerUri, "event_flyer");
+        publicId = up.publicId;
+        version = String(up.version);
+      }
+      if (!publicId || !version) {
+        throw new Error("A flyer is required");
+      }
       return api.events.create({
         ...rest,
         flyerPublicId: publicId,
-        flyerVersion: String(version),
+        flyerVersion: version,
       });
     },
     onSuccess: (res) => {

@@ -3,18 +3,23 @@ import { PlaceWizardBasicInfo } from "@/components/places/PlaceWizardBasicInfo";
 import { PlaceWizardCover } from "@/components/places/PlaceWizardCover";
 import { PlaceWizardHours } from "@/components/places/PlaceWizardHours";
 import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
+import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
 import { ScreenLoader } from "@abonten/ui-native";
-import { useNavigation, useRouter } from "expo-router";
+import {
+  Link,
+  useLocalSearchParams,
+  useNavigation,
+  useRouter,
+} from "expo-router";
 import { useEffect } from "react";
-import { Alert, ScrollView } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
-// Native echo of the web PlaceUploadModal (Places Milestone 3): a 4-step
-// wizard — Basic info, Cover photo, Hours, Review — that publishes a place
-// via useCreatePlace (signed Cloudinary upload + POST /api/mobile/places →
-// the same postPlaceCore the web postPlace action runs). All state and
-// logic live in usePlaceWizard (the mobile echo of usePlaceUploadForm);
-// this file is just the step switch + navigation. Save-as-draft is WP-4g.
+// Native echo of the web PlaceUploadModal: a 4-step wizard — Basic info,
+// Cover photo, Hours, Review — that publishes a place via useCreatePlace.
+// With `?draftId=`, it resumes a saved draft; the "Save as draft" button
+// (WP-4g-3) writes the same drafts/place_drafts rows the web savePlaceDraft
+// action does.
 
 const STEP_TITLES = [
   "Create place · Basic info",
@@ -26,7 +31,11 @@ const STEP_TITLES = [
 export default function CreatePlaceScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const w = usePlaceWizard();
+  const { draftId } = useLocalSearchParams<{ draftId?: string }>();
+  const w = usePlaceWizard(draftId);
+  const draftsList = usePlaceDrafts();
+  const draftCount =
+    draftsList.data?.status === 200 ? draftsList.data.data.length : 0;
 
   useEffect(() => {
     navigation.setOptions({ title: STEP_TITLES[w.step] });
@@ -52,7 +61,16 @@ export default function CreatePlaceScreen() {
     );
   }
 
-  if (w.categoriesLoading) return <ScreenLoader />;
+  async function onSaveDraft() {
+    const res = await w.saveDraft();
+    if (res.status === 200) {
+      Alert.alert("Draft saved", "Pick it back up any time from Place drafts.");
+    } else {
+      Alert.alert("Couldn't save draft", res.message ?? "Please try again.");
+    }
+  }
+
+  if (w.categoriesLoading || w.isHydratingDraft) return <ScreenLoader />;
 
   return (
     <ScrollView
@@ -60,7 +78,33 @@ export default function CreatePlaceScreen() {
       contentContainerClassName="gap-5 p-4 pb-16"
       keyboardShouldPersistTaps="handled"
     >
-      <StepDots step={w.step} total={4} />
+      <View className="flex-row items-center justify-between">
+        <StepDots step={w.step} total={4} />
+        <Pressable
+          onPress={onSaveDraft}
+          disabled={w.isSavingDraft}
+          className="active:opacity-60 disabled:opacity-50"
+        >
+          <Text className="text-sm font-semibold text-primary">
+            {w.isSavingDraft ? "Saving…" : "Save as draft"}
+          </Text>
+        </Pressable>
+      </View>
+
+      {w.draftLoadError ? (
+        <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
+      ) : null}
+
+      {!draftId && draftCount > 0 ? (
+        <Link href="/(app)/organizer/place-drafts" asChild>
+          <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+            <Text className="text-sm text-foreground">
+              You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+            </Text>
+            <Text className="text-primary">Resume ›</Text>
+          </Pressable>
+        </Link>
+      ) : null}
 
       {w.step === 0 ? (
         <PlaceWizardBasicInfo

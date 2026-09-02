@@ -1,19 +1,13 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { fetchPlaceDraftsList } from "@/utils/placeDraftCore";
 
-export type PlaceDraftListItem = {
-  id: string;
-  title: string | null;
-  updatedAt: string;
-  expiresAt: string;
-  coverPublicId: string | null;
-  coverVersion: string | null;
-};
+export type { PlaceDraftListItem } from "@/utils/placeDraftCore";
 
-// List-page query: only list-display columns, never the full jsonb
-// payload, bounded to this user's own non-expired place drafts. Mirrors
-// getEventDrafts.ts.
+// List-page query: only list-display columns, never the full jsonb payload,
+// bounded to this user's own non-expired place drafts. Body shared with the
+// mobile GET /api/mobile/organizer/place-drafts route. Mirrors getEventDrafts.ts.
 export async function getPlaceDrafts() {
   const supabase = await createClient();
 
@@ -23,66 +17,21 @@ export async function getPlaceDrafts() {
   } = await supabase.auth.getUser();
 
   if (userError) {
-    return {
-      status: 500,
-      message: userError.message,
-      data: [] as PlaceDraftListItem[],
-    };
+    return { status: 500 as const, message: userError.message, data: [] };
   }
   if (!user) {
     return {
-      status: 401,
+      status: 401 as const,
       message: "User not authenticated",
-      data: [] as PlaceDraftListItem[],
+      data: [],
     };
   }
 
-  const { data: drafts, error: draftsError } = await supabase
-    .from("drafts")
-    .select("id, title, updated_at, expires_at")
-    .eq("user_id", user.id)
-    .eq("draft_type", "place")
-    .gt("expires_at", new Date().toISOString())
-    .order("updated_at", { ascending: false });
+  const result = await fetchPlaceDraftsList(supabase, user.id);
 
-  if (draftsError) {
-    return {
-      status: 500,
-      message: draftsError.message,
-      data: [] as PlaceDraftListItem[],
-    };
-  }
-  if (!drafts || drafts.length === 0) {
-    return { status: 200, message: "OK", data: [] as PlaceDraftListItem[] };
+  if (result.status !== 200) {
+    return { status: 500 as const, message: result.message, data: result.data };
   }
 
-  const draftIds = drafts.map((d) => d.id);
-
-  const { data: placeDrafts, error: placeDraftsError } = await supabase
-    .from("place_drafts")
-    .select("draft_id, cover_public_id, cover_version")
-    .in("draft_id", draftIds);
-
-  if (placeDraftsError) {
-    return {
-      status: 500,
-      message: placeDraftsError.message,
-      data: [] as PlaceDraftListItem[],
-    };
-  }
-
-  const coverByDraftId = new Map(
-    (placeDrafts ?? []).map((pd) => [pd.draft_id, pd]),
-  );
-
-  const data: PlaceDraftListItem[] = drafts.map((d) => ({
-    id: d.id,
-    title: d.title,
-    updatedAt: d.updated_at,
-    expiresAt: d.expires_at,
-    coverPublicId: coverByDraftId.get(d.id)?.cover_public_id ?? null,
-    coverVersion: coverByDraftId.get(d.id)?.cover_version ?? null,
-  }));
-
-  return { status: 200, message: "OK", data };
+  return { status: 200 as const, message: "OK", data: result.data };
 }
