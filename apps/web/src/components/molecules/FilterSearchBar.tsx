@@ -58,15 +58,32 @@ function matchCategoryNames(
 // FilterSearchBarContent and this default export just supplies the
 // boundary. The fallback matches the settled layout closely enough that
 // there's no visible jump on the static pages that render it.
-export default function FilterSearchBar() {
+// `filterOnly` renders just the Filters button + modal, no search input or
+// suggestions dropdown. The discovery pages (Explore / Events / location
+// pages, via LocationAndFilterSection) use this so the search *experience*
+// lives only on the dedicated /search route, while those pages keep their
+// filtering. The /search and /search/[searchTitle] pages render the full
+// bar (default).
+export default function FilterSearchBar({
+  filterOnly = false,
+}: {
+  filterOnly?: boolean;
+} = {}) {
   return (
-    <Suspense fallback={<FilterSearchBarFallback />}>
-      <FilterSearchBarContent />
+    <Suspense fallback={<FilterSearchBarFallback filterOnly={filterOnly} />}>
+      <FilterSearchBarContent filterOnly={filterOnly} />
     </Suspense>
   );
 }
 
-function FilterSearchBarFallback() {
+function FilterSearchBarFallback({ filterOnly }: { filterOnly?: boolean }) {
+  if (filterOnly) {
+    return (
+      <span className="shrink-0 text-muted-foreground">
+        <VscSettings className="text-3xl md:text-4xl" />
+      </span>
+    );
+  }
   return (
     <div className="w-full md:w-fit bg-muted rounded-lg flex justify-between p-3">
       <div className="flex items-center gap-2">
@@ -80,7 +97,7 @@ function FilterSearchBarFallback() {
   );
 }
 
-function FilterSearchBarContent() {
+function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
   const [showPopup, setShowPopup] = useState(false);
 
   const [searchText, setSearchText] = useState("");
@@ -445,7 +462,52 @@ function FilterSearchBarContent() {
   const showDropdown =
     isOpen &&
     !showPopup &&
+    !filterOnly &&
     (sections.length > 0 || isLoadingSuggestions || noMatches);
+
+  const filterButton = (
+    <button
+      type="button"
+      onClick={() => handleShowPopup(true)}
+      className="relative shrink-0"
+      aria-label={hasActiveFilters ? "Filters (active)" : "Filters"}
+    >
+      <VscSettings className="text-3xl md:text-4xl text-muted-foreground" />
+      {hasActiveFilters && (
+        <span
+          aria-hidden
+          className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold leading-[18px] text-center"
+        >
+          {activeFilterCount}
+        </span>
+      )}
+    </button>
+  );
+
+  const filterModal = showPopup && (
+    <FilterModalPopup
+      handlePopup={handleShowPopup}
+      contentType={activeTab}
+      exploreEventsBasePath={exploreEventsBasePath}
+      initialCategory={initialEventCategory}
+      initialTypes={initialEventTypes}
+      initialMinPrice={initialEventMinPrice}
+      initialMaxPrice={initialEventMaxPrice}
+      initialFromDate={initialEventFromDate}
+      initialToDate={initialEventToDate}
+      initialMinRating={initialEventMinRating}
+      initialMaxDistanceKm={initialEventMaxDistanceKm}
+    />
+  );
+
+  if (filterOnly) {
+    return (
+      <div ref={containerRef} className="relative shrink-0">
+        {filterButton}
+        {filterModal}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -482,22 +544,7 @@ function FilterSearchBarContent() {
         />
       </div>
 
-      <button
-        type="button"
-        onClick={() => handleShowPopup(true)}
-        className="relative"
-        aria-label={hasActiveFilters ? "Filters (active)" : "Filters"}
-      >
-        <VscSettings className="text-3xl md:text-4xl text-muted-foreground" />
-        {hasActiveFilters && (
-          <span
-            aria-hidden
-            className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[11px] font-semibold leading-[18px] text-center"
-          >
-            {activeFilterCount}
-          </span>
-        )}
-      </button>
+      {filterButton}
 
       {showDropdown && (
         <div id="search-suggestions-listbox">
@@ -519,21 +566,7 @@ function FilterSearchBarContent() {
         </div>
       )}
 
-      {showPopup && (
-        <FilterModalPopup
-          handlePopup={handleShowPopup}
-          contentType={activeTab}
-          exploreEventsBasePath={exploreEventsBasePath}
-          initialCategory={initialEventCategory}
-          initialTypes={initialEventTypes}
-          initialMinPrice={initialEventMinPrice}
-          initialMaxPrice={initialEventMaxPrice}
-          initialFromDate={initialEventFromDate}
-          initialToDate={initialEventToDate}
-          initialMinRating={initialEventMinRating}
-          initialMaxDistanceKm={initialEventMaxDistanceKm}
-        />
-      )}
+      {filterModal}
     </div>
   );
 }

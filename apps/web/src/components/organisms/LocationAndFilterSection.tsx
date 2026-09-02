@@ -31,7 +31,10 @@ export default function LocationAndFilterSection() {
         />
       )}
 
-      <div className="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
+      {/* Search moved to the dedicated /search route (Phase 2); the
+          discovery pages keep only the location switcher + a Filters
+          button (FilterSearchBar in filter-only mode). */}
+      <div className="flex flex-row items-center justify-between gap-3">
         <button
           type="button"
           className="flex gap-1 items-center text-lg md:text-xl"
@@ -41,7 +44,7 @@ export default function LocationAndFilterSection() {
 
           <p>{location}</p>
         </button>
-        <FilterSearchBar />
+        <FilterSearchBar filterOnly />
       </div>
     </>
   );
