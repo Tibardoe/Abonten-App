@@ -56,7 +56,7 @@ export function ProfileTabBar({
               tone={active ? "foreground" : "muted"}
             />
             <AppText
-              className={`text-[12px] ${
+              className={`text-[13px] ${
                 active
                   ? "font-bold text-foreground"
                   : "font-medium text-muted-foreground"
