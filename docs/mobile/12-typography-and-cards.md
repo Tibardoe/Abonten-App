@@ -11,6 +11,7 @@ noisy text. Merged to `main` in four branches:
 | `feat/mobile-discovery-cards` | `EventCard` / `PlaceCard` redesign + responsive carousel width |
 | `feat/mobile-header-nav` | header logo size, bottom-tab label font, `ProfileTabBar` |
 | `feat/mobile-typography-sweep` | every raw `<Text>` / hard-coded `text-[Npx]` → semantic variant, whole app |
+| `feat/mobile-chip-consolidation` | ~11 hand-rolled selectable pills (wizards, organizer dashboards, edit screens) → shared `Chip`; deletes 2 local `Chip` re-impls + a `ModeChip` helper (−222 lines) |
 
 ---
 
@@ -111,14 +112,22 @@ placeholder values). `recyclingKey` + `onError` as EventCard.
 
 `turbo typecheck` (10/10) · `next build` (apps/web, clean) ·
 `expo export --platform android` (bundle OK) · `biome check` on every touched
-file. **Not device-verified** — the emulator visual QA pass across small /
-normal / large widths is still owed; money-path and native-module screens are
-type/bundle-verified only, as with prior mobile work.
+file.
+
+**Device visual QA** was run on `emulator-5554` (Pixel 10 Pro XL, dark mode):
+Home, Explore (Events + Places), Place Detail and Tickets all render the new
+hierarchy correctly — card title bold, date `metaStrong`, venue/price/
+attendance `meta`; the event flyer carries only the favourite toggle + `⋯`
+menu + "You're going" badge (no price pill); the place cover carries only the
+favourite toggle; the place card shows a red "● Closed" and omits the rating
+row when `avg_rating` is 0. Still unverified: small / large screen widths,
+iOS, and the money-path (Paystack) + native-module screens (type/bundle only,
+as with prior mobile work).
 
 ## 7. Follow-ups
 
-- A handful of 13px conditional chip/badge classNames in the wizards and
-  organizer edit screens were left inline (they already meet the 13px floor);
-  fold them into a shared selectable-chip primitive later.
-- Emulator/device visual QA (clipping, wrap, header-logo alignment, carousel
-  peek) at 320 / 390 / 430 dp.
+- The remaining inline `text-[13px]` classNames are colour-varying **status**
+  pills (e.g. booking status warning/primary/destructive) and the
+  Open/Closed toggle in the place-hours editor — legitimately not the
+  selectable-chip pattern; they already meet the 13px floor.
+- Visual QA at 320 dp and large (430 dp+) widths, and on iOS.
