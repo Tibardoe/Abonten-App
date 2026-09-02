@@ -11,6 +11,7 @@ import type {
   CancelTicketBody,
   CancelTicketResult,
   CardVerificationInitData,
+  ChangePhoneResult,
   CheckInTicketResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
@@ -226,6 +227,25 @@ export function createApiClient(options: ApiClientOptions) {
       get() {
         return request<ApiEnvelope<ProfileData>>("/api/mobile/profile", {
           method: "GET",
+          auth: true,
+        });
+      },
+    },
+
+    account: {
+      /** Send a Hubtel OTP to change/add the signed-in user's phone number
+       *  (purpose "phone-update"). */
+      requestPhoneChange(body: RequestPhoneOtpBody) {
+        return request<ApiEnvelope<RequestPhoneOtpData>>(
+          "/api/mobile/account/phone/request",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Confirm the OTP; on 200 the number is attached + marked verified. */
+      verifyPhoneChange(body: VerifyPhoneOtpBody) {
+        return request<ChangePhoneResult>("/api/mobile/account/phone/verify", {
+          method: "POST",
+          body,
           auth: true,
         });
       },

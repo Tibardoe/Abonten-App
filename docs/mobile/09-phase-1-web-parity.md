@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | **done (2026-09-02)** — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, 4g-2 event wizard save-as-draft + drafts list, 4g-3 place wizard save-as-draft — **WP-4g + WP-4 COMPLETE**, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | **done (2026-09-02)** — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, 4g-2 event wizard save-as-draft + drafts list, 4g-3 place wizard save-as-draft — **WP-4g + WP-4 COMPLETE**; 4h deferral cleanup (4h-1 event review photo attachments, 4h-2 highlight upload/delete + `expo-video` playback, 4h-3 change email/phone) — **WP-4h COMPLETE, no Phase-1 parity deferrals remain**, see below |
 
 ---
 
@@ -1908,3 +1908,58 @@ Cloudinary asset is destroyed with the server secret.
 `@abonten/api-client`) green, `next build` exit 0 (both routes compiled),
 `expo export --platform android` clean, `biome check` clean. Not
 device-verified; video playback needs the native rebuild.
+
+### WP-4h-3 — Change email / phone number (done 2026-09-02)
+
+The mobile `settings/security` screen was a read-only summary with a "manage
+on the web" note; it now runs both change flows, mirroring the web
+`SecurityInputFields`.
+
+- **Email** — client-only: `supabase.auth.updateUser({ email }, {
+  emailRedirectTo: \`${EXPO_PUBLIC_API_BASE_URL}/auth/callback\` })`, the same
+  primitive the web form uses. Supabase sends the confirmation link; the
+  address only changes once it's opened (on the web callback — the app has
+  no deep link for it), and the app reflects it on its next session
+  refresh. No schema / auth-config change, no new server code.
+- **Phone** — needs the server (Hubtel `phoneOtpStore` + service-role
+  `auth.admin.updateUserById`), so two thin routes wrap the existing,
+  audited actions:
+  - `apps/web/src/utils/updateVerifiedPhoneCore.ts` (new) — the post-auth
+    body of `updateVerifiedPhone.ts` lifted verbatim, taking `userId`
+    instead of doing its own cookie `getUser()` (a Bearer route has no
+    cookies). `updateVerifiedPhone.ts` thinned to `getUser()` + delegate,
+    re-exporting `UpdateVerifiedPhoneResult`.
+  - `POST /api/mobile/account/phone/request` — `getMobileAuth` +
+    `requestPhoneVerification(dialCode, rawPhone, "phone-update")` (called
+    directly, same as the existing `/auth/phone/request` route; the
+    `"phone-update"` purpose keeps it separate from the pre-login flow).
+  - `POST /api/mobile/account/phone/verify` — `getMobileAuth` +
+    `updateVerifiedPhoneCore(auth.user.id, phoneE164, code)`.
+  - api-client — `ChangePhoneResult` + `api.account.requestPhoneChange` /
+    `verifyPhoneChange` (reusing `RequestPhoneOtpBody` / `…Data` /
+    `VerifyPhoneOtpBody`).
+  - `security.tsx` — dial-code (`+233` default, like the sign-in screen) +
+    number → "Send code" → OTP → "Verify"; on 200 it calls
+    `supabase.auth.refreshSession()` to pull the new phone claim in.
+- **No DB / RLS / auth-config change.** The phone routes expose the same
+  `auth.admin.updateUserById` path any signed-in web user already reaches
+  through the Server Action, behind the same `getMobileAuth` gate every
+  other `/api/mobile/**` route uses; the `phoneOtpStore` cooldown + attempt
+  cap + Hubtel confirmation still gate it.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (both routes compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified — the Hubtel OTP round-trip + the Supabase email-change
+email need a real device + inbox.
+
+---
+
+## WP-4h complete (2026-09-02)
+
+All four carried Phase-1 deferrals cleared: 4h-1 event review photo
+attachments, 4h-2 highlight upload/delete + `expo-video` playback, 4h-3
+change email / phone number. **No Phase-1 parity deferrals remain.** The
+outstanding items are all things the web itself does server-side and that a
+client can't replicate (`user_image_history` insert on avatar/highlight
+change — no client INSERT policy) or explicit Phase-2 (redesign) scope.
