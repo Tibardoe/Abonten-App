@@ -4,6 +4,7 @@ import {
   useVerifyPayment,
 } from "@/features/checkout/usePayment";
 import { useCreatePromotionAttempt } from "@/features/organizer/useEventPromotion";
+import { useCreatePlacePromotionAttempt } from "@/features/organizer/usePlacePromotion";
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import { useRouter } from "expo-router";
@@ -18,10 +19,11 @@ import {
 } from "react-native";
 
 // Native promotion-payment flow — the slim sibling of the ticket
-// PaymentSection. Starts the charge via checkout.promotionAttempt, then
-// polls the shared payments.verify (which runs finalizePaystackPayment ->
-// activateEventPromotion). A 207 means the charge cleared but activation
-// failed — retryable without re-charging, same as the ticket flow.
+// PaymentSection. Starts the charge via checkout.promotionAttempt (event) or
+// checkout.placePromotionAttempt (place), then polls the shared
+// payments.verify (which runs finalizePaystackPayment ->
+// activateEvent/PlacePromotion). A 207 means the charge cleared but
+// activation failed — retryable without re-charging, same as the ticket flow.
 
 type Phase =
   | { k: "idle" }
@@ -47,11 +49,14 @@ export function PromotionPaymentSection({
   currency,
   amount,
   onFeatured,
+  kind = "event",
 }: {
   checkoutId: string;
   currency: string;
   amount: number;
   onFeatured: () => void;
+  /** Which promotion checkout this pays for — picks the attempt endpoint. */
+  kind?: "event" | "place";
 }) {
   const router = useRouter();
   const { data: methodsRes } = usePaymentMethods();
@@ -62,7 +67,10 @@ export function PromotionPaymentSection({
   const [otp, setOtp] = useState("");
   const pollsRef = useRef(0);
 
-  const createAttempt = useCreatePromotionAttempt();
+  const createEventAttempt = useCreatePromotionAttempt();
+  const createPlaceAttempt = useCreatePlacePromotionAttempt();
+  const creatingAttempt =
+    createEventAttempt.isPending || createPlaceAttempt.isPending;
   const verify = useVerifyPayment();
   const submitOtp = useSubmitChargeOtp();
   const retry = useRetryFulfillment();
@@ -116,10 +124,16 @@ export function PromotionPaymentSection({
     setPhase({ k: "starting" });
     pollsRef.current = 0;
 
-    const res = await createAttempt.mutateAsync({
-      eventPromotionCheckoutId: checkoutId,
-      paymentMethodId: chosenId,
-    });
+    const res =
+      kind === "place"
+        ? await createPlaceAttempt.mutateAsync({
+            placePromotionCheckoutId: checkoutId,
+            paymentMethodId: chosenId,
+          })
+        : await createEventAttempt.mutateAsync({
+            eventPromotionCheckoutId: checkoutId,
+            paymentMethodId: chosenId,
+          });
 
     if (res.status !== 200) {
       setPhase({
@@ -199,7 +213,7 @@ export function PromotionPaymentSection({
     return (
       <View className="items-center gap-3 rounded-xl border border-border bg-card p-5">
         <Text className="text-base font-bold text-success">
-          Your event is now featured
+          Your {kind} is now featured
         </Text>
         <Pressable
           onPress={() => router.back()}
@@ -342,10 +356,10 @@ export function PromotionPaymentSection({
       })}
 
       <Pressable
-        disabled={!chosenId || createAttempt.isPending}
+        disabled={!chosenId || creatingAttempt}
         onPress={onPay}
         className={`items-center rounded-xl px-4 py-3 ${
-          !chosenId || createAttempt.isPending ? "bg-muted" : "bg-primary"
+          !chosenId || creatingAttempt ? "bg-muted" : "bg-primary"
         }`}
       >
         <Text

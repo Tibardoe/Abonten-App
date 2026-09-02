@@ -111,6 +111,14 @@ export default function PlaceManageScreen() {
               <Text className="text-muted-foreground">›</Text>
             </Pressable>
           </Link>
+          <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base font-semibold text-primary">
+                Feature this place
+              </Text>
+              <Text className="text-primary">›</Text>
+            </Pressable>
+          </Link>
           <Link href={`/(app)/place/${id}`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <Text className="text-base text-foreground">

@@ -52,11 +52,13 @@ import type {
   PlaceManageContextResult,
   PlaceOpeningHoursInput,
   PlacePhotoResult,
+  PlacePromotionContextResult,
   PlaceReviewRespondResult,
   PlaceServiceResult,
   PreparedCheckoutPayment,
   ProfileData,
   PromoteEventResult,
+  PromotePlaceResult,
   PromotionPaymentAttemptResult,
   RequestPayoutBody,
   RequestPayoutResult,
@@ -295,6 +297,20 @@ export function createApiClient(options: ApiClientOptions) {
       }) {
         return request<PromotionPaymentAttemptResult>(
           "/api/mobile/checkout/promotion-attempt",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * The place sibling of promotionAttempt — start the Paystack charge
+       * for a pending place-promotion checkout. Completion is the same
+       * shared payments.verify path.
+       */
+      placePromotionAttempt(body: {
+        placePromotionCheckoutId: string;
+        paymentMethodId: string;
+      }) {
+        return request<PromotionPaymentAttemptResult>(
+          "/api/mobile/checkout/place-promotion-attempt",
           { method: "POST", body, auth: true },
         );
       },
@@ -880,6 +896,29 @@ export function createApiClient(options: ApiClientOptions) {
             placeId,
           )}/reviews/respond`,
           { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * The Promotion tab payload for one of the caller's own places: the
+       * seeded tiers + the current active promotion (if any). 403 if not
+       * owned.
+       */
+      placePromotionContext(placeId: string) {
+        return request<PlacePromotionContextResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/promotion`,
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Reserve step: create a pending place-promotion checkout priced from
+       * the seeded tier, and get its id + amount for the payment screen.
+       */
+      promotePlace(placeId: string, tierId: number) {
+        return request<PromotePlaceResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/promote`,
+          { method: "POST", body: { tierId }, auth: true },
         );
       },
     },

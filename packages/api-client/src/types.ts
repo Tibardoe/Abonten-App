@@ -14,6 +14,7 @@ import type {
 } from "@abonten/types/placeBookingType";
 import type {
   PlaceOpeningHoursInput,
+  PlacePromotionTier,
   PlaceServiceInput,
 } from "@abonten/types/placeType";
 import type {
@@ -144,7 +145,7 @@ export type CancelTicketResult = { status: number; message?: string };
 // across retries so a replay returns the same place instead of a
 // duplicate. Flat reply: 200 = published (carries placeId/slug); 400 =
 // validation; 500 = create failed (retry-friendly).
-export type { PlaceOpeningHoursInput, PlaceServiceInput };
+export type { PlaceOpeningHoursInput, PlacePromotionTier, PlaceServiceInput };
 export type { BookingStatus, OwnerPlaceBooking };
 
 export type PlaceCreateBody = {
@@ -884,6 +885,35 @@ export type PlaceReviewRespondResult = {
   status: 200 | 400 | 401 | 403 | 404 | 500;
   message: string;
 };
+
+// ---- per-place promotion (paid "Feature this Place") ---------------
+
+// A place has no "ended" / "sold out" concept, so unlike the event
+// Promotion tab there is no eligibility gate.
+export type PlacePromotionContext = {
+  tiers: PlacePromotionTier[];
+  currentPromotion: { ends_at: string; tierLabel: string | null } | null;
+};
+
+export type PlacePromotionContextResult =
+  | { status: 200; data: PlacePromotionContext }
+  | { status: 401 | 403 | 404 | 500; message: string };
+
+export type PromotePlaceResult =
+  | {
+      status: 200;
+      data: {
+        checkoutId: string;
+        tierLabel: string;
+        amount: number;
+        currency: string;
+      };
+    }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// The Paystack charge for a place promotion completes on the same shared
+// /api/mobile/payments/verify path as an event promotion, so the result
+// shape is the shared PromotionPaymentAttemptResult.
 
 // ---- organizer write actions ----------------------------------------
 
