@@ -138,12 +138,47 @@ for places). **No new dependencies.**
   Security gains a double-confirmed "Delete account" card that signs out
   locally on success.
 
-## Not done / remaining gaps
+## Follow-up round (`feat/mobile-parity-round2-fixes`, merged `845a47b`)
 
-- **Organizer reply to an event review** — web `respondToEventReview` has no
-  mobile route (place-review reply does). Needs a shared core + route +
-  organizer-event-screen UI.
-- **Report place / report review** — the web actions exist but neither
-  platform surfaces them in the UI; not a real parity gap today.
-- Device verification of the money path, native map, drawer edge-swipe feel,
-  and push.
+User feedback after the first pass:
+
+- **OTP cells** — `justify-between` spread them to the row edges; now
+  `justify-center gap-2.5`.
+- **Checkout** — the 3-step wizard was unwanted. `buy/[eventId]` is now one
+  scroll (occurrence + quantity steppers + promo field + running subtotal +
+  Proceed), matching the web checkout modal. Promo still validated at
+  `api.checkout.validate`.
+- **Social map** — markers/preview weren't working:
+  * photo markers switched from `expo-image` to react-native `Image` — an
+    expo-image often snapshots empty inside a `<Marker>` on Android, so
+    markers fell back to the default red pin (this was "event flyers not
+    showing");
+  * marker tap did nothing because it bubbled a `MapView.onPress` that
+    cleared the selection before the card could mount — guarded with a
+    350 ms marker-tap timestamp;
+  * removed the nested `GestureHandlerRootView` (root already has one) — it
+    was blocking the preview card's pan;
+  * `tracksViewChanges` is now per-marker (until image `onLoad`, or while
+    selected) instead of one shared 1.5 s window;
+  * no-image fallback is a solid coloured circle + glyph, not a faint icon.
+- **Drawer edge-swipe** — now only armed on the tab-root screens
+  (`useSegments().includes("(tabs)")`). On a pushed screen the left edge is
+  the native stack back-swipe, so it no longer opens the drawer when you
+  meant to go back.
+
+Remaining-gap items from the first pass, now closed:
+
+- **Report place / report review** — `useReportPlace` (class-A insert into
+  `place_report`, `place_report_reporter_insert`) + `ReportSheet` (reason
+  chips + free-text detail joined into the `reason` column). "Report this
+  place" link + a per-review "Report" on `place/[id]`.
+- **Organizer reply to EVENT reviews** — `event_review` has
+  `event_review_organizer_select` / `_organizer_update` (scoped through the
+  owning event), so it's class-A for the organizer. `useEventReviewsManage`
+  / `useRespondToEventReview` + new `organizer/events/[eventId]/reviews.tsx`
+  (inline Respond form) + a link from the event manage screen.
+
+## Still open
+
+- Device verification of the money path, native map (markers / clustering /
+  preview gestures), drawer edge-swipe feel, and push.
