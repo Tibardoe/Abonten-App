@@ -3,17 +3,41 @@ import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
-import { Ionicons } from "@expo/vector-icons";
+import { getEventStatus } from "@abonten/core/eventStatus";
+import {
+  AppText,
+  Button,
+  Icon,
+  type IoniconName,
+  ScreenError,
+  ScreenLoader,
+  TicketStatusBadge,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
+
+function Row({
+  icon,
+  label,
+  sub,
+}: {
+  icon: IoniconName;
+  label: string;
+  sub?: string;
+}) {
+  return (
+    <View className="flex-row gap-3">
+      <Icon name={icon} size={18} tone="muted" style={{ marginTop: 2 }} />
+      <View className="flex-1">
+        <AppText className="text-[14px] text-foreground">{label}</AppText>
+        {sub ? (
+          <AppText className="text-[12px] text-muted-foreground">{sub}</AppText>
+        ) : null}
+      </View>
+    </View>
+  );
+}
 
 export default function TicketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +45,39 @@ export default function TicketDetailScreen() {
   const { data: ticket, isLoading, isError, refetch } = useTicketDetail(id);
   const cancel = useCancelTicket();
   const receipt = useTicketReceipt();
+
+  if (isLoading) return <ScreenLoader />;
+  if (isError || !ticket) {
+    return (
+      <ScreenError
+        message="This ticket could not be loaded."
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
+  const qr =
+    ticket.qr_public_id && ticket.qr_version
+      ? buildCloudinaryUrl(ticket.qr_public_id, ticket.qr_version, {
+          width: 320,
+          height: 320,
+          lossless: true,
+        })
+      : null;
+  const when = formatFullDateTimeRange(
+    ticket.event.starts_at,
+    ticket.event.ends_at,
+  );
+  const cancelledByOrganizer = ticket.event.status === "canceled";
+  const eventEnded =
+    getEventStatus(
+      ticket.event.starts_at,
+      ticket.event.ends_at,
+      ticket.event.occurrences,
+    ) === "ended";
+  const used = ticket.status === "used" || ticket.used_at != null;
+  const canCancel =
+    ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
 
   function onCancelTicket() {
     if (!ticket) return;
@@ -56,44 +113,6 @@ export default function TicketDetailScreen() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  if (isError || !ticket) {
-    return (
-      <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-muted-foreground">
-          This ticket could not be loaded.
-        </Text>
-        <Pressable
-          className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
-          onPress={() => refetch()}
-        >
-          <Text className="font-semibold text-primary-foreground">Retry</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  const qr =
-    ticket.qr_public_id && ticket.qr_version
-      ? buildCloudinaryUrl(ticket.qr_public_id, ticket.qr_version, {
-          width: 320,
-          height: 320,
-          lossless: true,
-        })
-      : null;
-  const used = ticket.status === "used" || ticket.used_at != null;
-  const when = formatFullDateTimeRange(
-    ticket.event.starts_at,
-    ticket.event.ends_at,
-  );
-
   return (
     <ScrollView
       className="flex-1 bg-background"
@@ -108,26 +127,26 @@ export default function TicketDetailScreen() {
           />
         ) : (
           <View className="h-60 w-60 items-center justify-center rounded-lg bg-muted">
-            <Text className="text-muted-foreground">No QR code</Text>
+            <Icon name="qr-code-outline" size={40} tone="muted" />
+            <AppText className="mt-2 text-[12px] text-muted-foreground">
+              No QR code
+            </AppText>
           </View>
         )}
 
-        <View
-          className={`rounded-full px-3 py-1 ${used ? "bg-muted" : "bg-accent"}`}
-        >
-          <Text
-            className={`text-xs font-semibold uppercase ${used ? "text-muted-foreground" : "text-accent-foreground"}`}
-          >
-            {used ? "Used" : "Valid"}
-          </Text>
-        </View>
+        <TicketStatusBadge
+          status={ticket.status}
+          cancelledByOrganizer={cancelledByOrganizer}
+          eventCancelled={cancelledByOrganizer}
+          eventEnded={eventEnded}
+        />
 
-        <Text className="text-center text-lg font-bold text-foreground">
+        <AppText className="text-center text-[18px] font-bold text-foreground">
           {ticket.event.title}
-        </Text>
-        <Text className="text-xs tracking-widest text-muted-foreground">
+        </AppText>
+        <AppText className="text-[12px] tracking-[3px] text-muted-foreground">
           {ticket.ticket_code}
-        </Text>
+        </AppText>
       </View>
 
       <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">
@@ -140,78 +159,56 @@ export default function TicketDetailScreen() {
         {ticket.seat_number ? (
           <Row icon="grid-outline" label={`Seat ${ticket.seat_number}`} />
         ) : null}
-      </View>
-
-      {used && ticket.used_at ? (
-        <Text className="text-xs text-muted-foreground">
-          Checked in{" "}
-          {formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
-        </Text>
-      ) : null}
-
-      <Pressable
-        disabled={receipt.isGenerating}
-        className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary py-3 active:opacity-90"
-        onPress={() => receipt.downloadReceipt(ticket)}
-      >
-        {receipt.isGenerating ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Ionicons name="download-outline" size={18} color="#fff" />
-        )}
-        <Text className="text-sm font-semibold text-primary-foreground">
-          {receipt.isGenerating
-            ? "Preparing receipt…"
-            : "Download receipt (PDF)"}
-        </Text>
-      </Pressable>
-
-      <Pressable
-        className="w-full items-center rounded-xl border border-border py-3 active:opacity-90"
-        onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
-      >
-        <Text className="text-sm font-semibold text-foreground">
-          View event
-        </Text>
-      </Pressable>
-
-      {ticket.status === "active" ? (
-        <Pressable
-          disabled={cancel.isPending}
-          className="w-full items-center rounded-xl border border-border py-3 active:opacity-90"
-          onPress={onCancelTicket}
-        >
-          <Text className="text-sm font-semibold text-destructive">
-            {cancel.isPending
-              ? "Cancelling…"
-              : ticket.transaction_id
-                ? "Cancel ticket & request refund"
-                : "Cancel ticket"}
-          </Text>
-        </Pressable>
-      ) : null}
-    </ScrollView>
-  );
-}
-
-function Row({
-  icon,
-  label,
-  sub,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  sub?: string;
-}) {
-  return (
-    <View className="flex-row gap-3">
-      <Ionicons name={icon} size={18} color="#888" style={{ marginTop: 2 }} />
-      <View className="flex-1">
-        <Text className="text-sm text-foreground">{label}</Text>
-        {sub ? (
-          <Text className="text-xs text-muted-foreground">{sub}</Text>
+        {used && ticket.used_at ? (
+          <Row
+            icon="checkmark-done-circle-outline"
+            label="Checked in"
+            sub={formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
+          />
         ) : null}
       </View>
-    </View>
+
+      <View className="w-full gap-3">
+        <Button
+          title={
+            receipt.isGenerating
+              ? "Preparing receipt…"
+              : "Download receipt (PDF)"
+          }
+          fullWidth
+          leftIcon="download-outline"
+          onPress={() => receipt.downloadReceipt(ticket)}
+          disabled={receipt.isGenerating}
+          loading={receipt.isGenerating}
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
+          onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
+        >
+          <AppText className="text-[14px] font-semibold text-foreground">
+            View event
+          </AppText>
+        </Pressable>
+
+        {canCancel ? (
+          <Pressable
+            accessibilityRole="button"
+            disabled={cancel.isPending}
+            className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
+            onPress={onCancelTicket}
+          >
+            <AppText className="text-[14px] font-semibold text-destructive">
+              {cancel.isPending
+                ? "Cancelling…"
+                : ticket.transaction_id
+                  ? "Cancel ticket & request refund"
+                  : "Cancel ticket"}
+            </AppText>
+          </Pressable>
+        ) : null}
+      </View>
+    </ScrollView>
   );
 }

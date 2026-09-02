@@ -7,24 +7,23 @@ import {
   useMyTickets,
 } from "@/features/tickets/useMyTickets";
 import type { UserTicketType } from "@abonten/types/ticketType";
-import { Chip, EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
+import {
+  EmptyState,
+  ScreenLoader,
+  SegmentedTabs,
+  Spinner,
+} from "@abonten/ui-native";
 import { useCallback, useState } from "react";
-import { FlatList, RefreshControl, ScrollView, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 
-// Native echo of the full web /manage/my-events tab set. The web strip
-// compresses to four slots with popover switchers to avoid horizontal
-// scroll; on native a horizontally-scrolling chip row is the idiomatic
-// equivalent, so all six live inline.
-type TicketsTab = TicketFilter | "toReview" | "reviewed";
+// Native echo of the web /manage/my-events tab set. The web strip is a
+// 4-column segmented control where "Active/Past" and "To review/Reviewed"
+// each share one slot behind a popover switcher; on mobile the switcher is
+// an inline sub-toggle under the strip, which reads better on a phone.
 
-const TABS: { key: TicketsTab; label: string }[] = [
-  { key: "active", label: "Active" },
-  { key: "past", label: "Past" },
-  { key: "cancelled", label: "Cancelled" },
-  { key: "refunds", label: "Refunds" },
-  { key: "toReview", label: "To Review" },
-  { key: "reviewed", label: "Reviewed" },
-];
+type Section = "tickets" | "cancelled" | "refunds" | "review";
+type TicketsSub = "active" | "past";
+type ReviewSub = "toReview" | "reviewed";
 
 const EMPTY_COPY: Record<TicketFilter, { title: string; description: string }> =
   {
@@ -68,7 +67,7 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
       ListHeaderComponent={
         tab === "active" ? <PendingCheckoutsSection /> : null
       }
-      contentContainerClassName="gap-3 px-4 pb-16"
+      contentContainerClassName="gap-3 px-4 pb-16 pt-3"
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
@@ -92,31 +91,67 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
 }
 
 export default function Tickets() {
-  const [tab, setTab] = useState<TicketsTab>("active");
+  const [section, setSection] = useState<Section>("tickets");
+  const [ticketsSub, setTicketsSub] = useState<TicketsSub>("active");
+  const [reviewSub, setReviewSub] = useState<ReviewSub>("toReview");
 
   return (
     <View className="flex-1 bg-background">
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerClassName="gap-2 px-4 py-3"
-      >
-        {TABS.map((t) => (
-          <Chip
-            key={t.key}
-            label={t.label}
-            selected={tab === t.key}
-            onPress={() => setTab(t.key)}
-          />
-        ))}
-      </ScrollView>
+      <View className="px-4 pb-1 pt-3">
+        <SegmentedTabs
+          options={[
+            {
+              key: "tickets",
+              label: ticketsSub === "past" ? "Past" : "Active",
+            },
+            { key: "cancelled", label: "Cancelled" },
+            { key: "refunds", label: "Refunds" },
+            {
+              key: "review",
+              label: reviewSub === "reviewed" ? "Reviewed" : "To review",
+            },
+          ]}
+          value={section}
+          onChange={setSection}
+        />
+      </View>
 
-      {tab === "toReview" ? (
-        <EventsToReviewList />
-      ) : tab === "reviewed" ? (
-        <ReviewedEventsList />
+      {section === "tickets" ? (
+        <View className="px-4 pb-1">
+          <SegmentedTabs
+            options={[
+              { key: "active", label: "Active" },
+              { key: "past", label: "Past" },
+            ]}
+            value={ticketsSub}
+            onChange={setTicketsSub}
+            className="h-9"
+          />
+        </View>
+      ) : null}
+
+      {section === "review" ? (
+        <View className="px-4 pb-1">
+          <SegmentedTabs
+            options={[
+              { key: "toReview", label: "To review" },
+              { key: "reviewed", label: "Reviewed" },
+            ]}
+            value={reviewSub}
+            onChange={setReviewSub}
+            className="h-9"
+          />
+        </View>
+      ) : null}
+
+      {section === "review" ? (
+        reviewSub === "toReview" ? (
+          <EventsToReviewList />
+        ) : (
+          <ReviewedEventsList />
+        )
       ) : (
-        <TicketFilterList tab={tab} />
+        <TicketFilterList tab={section === "tickets" ? ticketsSub : section} />
       )}
     </View>
   );
