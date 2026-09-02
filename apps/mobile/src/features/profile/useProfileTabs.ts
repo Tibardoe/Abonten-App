@@ -210,6 +210,8 @@ export type ProfileReview = {
   comment: string | null;
   created_at: string;
   reviewer: { username: string | null } | null;
+  // Only set for owned-place reviews (the "Place Reviews" sub-tab).
+  place?: { name: string | null } | null;
 };
 
 export function useProfileReviews(userId: string | undefined) {
@@ -224,6 +226,50 @@ export function useProfileReviews(userId: string | undefined) {
           "id, rating, title, comment, created_at, reviewer:reviewer_id(username)",
         )
         .eq("reviewed_id", userId as string)
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .limit(PAGE + 1);
+      if (pageParam) {
+        q = q.or(
+          `created_at.lt.${pageParam.createdAt},and(created_at.eq.${pageParam.createdAt},id.lt.${pageParam.id})`,
+        );
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      const all = (data ?? []) as unknown as ProfileReview[];
+      const hasNext = all.length > PAGE;
+      const rows = hasNext ? all.slice(0, PAGE) : all;
+      const last = rows[rows.length - 1];
+      return {
+        rows,
+        nextCursor:
+          hasNext && last
+            ? { createdAt: String(last.created_at), id: last.id }
+            : null,
+      };
+    },
+    getNextPageParam: (p) => p.nextCursor,
+  });
+}
+
+// ---- Reviews of places this user owns (the "Place Reviews" sub-tab) -----
+// Native echo of the web getOwnedPlaceReviews action: place_review has no
+// "reviewed person" column, so filter by joining to `place` and matching
+// its owner_id. `place_review` is anon-readable where status='approved'
+// (place_review_public_select), same as `review`.
+export function useProfilePlaceReviews(userId: string | undefined) {
+  return useInfiniteQuery({
+    queryKey: ["profile", "place-reviews", userId],
+    enabled: !!userId,
+    initialPageParam: null as Cursor,
+    queryFn: async ({ pageParam }) => {
+      let q = supabase
+        .from("place_review")
+        .select(
+          "id, rating, title, comment, created_at, reviewer:reviewer_id(username), place:place_id!inner(name, owner_id)",
+        )
+        .eq("place.owner_id", userId as string)
+        .eq("status", "approved")
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
         .limit(PAGE + 1);
