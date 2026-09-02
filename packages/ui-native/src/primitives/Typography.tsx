@@ -12,42 +12,112 @@ import { family } from "../theme/tokens";
 // text component and screen should use instead of a bare <Text> — it applies
 // the brand font family (Euclid Circular B, see theme/tokens.ts) and a sensible
 // default colour token.
+//
+// The ramp is deliberately small and each rung has ONE job. Hierarchy is
+// carried by size + weight + two colour tokens (`foreground` /
+// `muted-foreground`, matching web — no third grey tier) so a glance separates
+// title → primary metadata → secondary metadata → caption:
+//
+//   metaStrong  14 / 600 foreground        date · time · price · status
+//   meta        13 / 400 muted-foreground  venue · distance · attendance
+//   caption     12 / 400 muted-foreground  genuinely-tiny only
+//
+// A `tone` prop overrides just the colour (e.g. a warning "2 spots left"),
+// without having to remember the exact `text-…` class.
 
 type Variant =
   | "hero"
   | "pageTitle"
   | "screenTitle"
   | "sectionTitle"
+  | "sectionHeading"
   | "cardTitle"
   | "body"
   | "bodyStrong"
+  | "bodyLg"
   | "small"
   | "muted"
   | "label"
+  | "metaStrong"
+  | "meta"
   | "overline"
   | "caption";
 
+type Tone =
+  | "primary"
+  | "secondary"
+  | "muted"
+  | "disabled"
+  | "brand"
+  | "success"
+  | "warning"
+  | "error"
+  | "inverse";
+
+// Size + leading + weight (+ case/tracking) only — NO colour. Colour is
+// resolved separately from `tone` so callers can recolour a rung without
+// fighting a baked-in `text-foreground`.
 const VARIANT_CLASS: Record<Variant, string> = {
-  // Big screen / flow header — one step above pageTitle, tight tracking.
-  hero: "text-[28px] leading-[34px] font-bold tracking-[-0.4px] text-foreground",
+  // Big flow / marketing header — one step above pageTitle, tight tracking.
+  hero: "text-[30px] leading-[36px] font-bold tracking-[-0.5px]",
   // Web PageTitle: text-2xl/3xl font-bold. Screen headers.
-  pageTitle:
-    "text-[24px] leading-[31px] font-bold tracking-[-0.2px] text-foreground",
-  screenTitle:
-    "text-[20px] leading-[27px] font-bold tracking-[-0.2px] text-foreground",
-  // Web SectionTitle: text-lg/xl font-semibold.
-  sectionTitle: "text-[18px] leading-[25px] font-semibold text-foreground",
-  cardTitle: "text-[15px] leading-[21px] font-semibold text-foreground",
-  body: "text-[15px] leading-[22px] text-foreground",
-  bodyStrong: "text-[15px] leading-[22px] font-semibold text-foreground",
-  small: "text-[13px] leading-[19px] text-foreground",
-  // Web SupportingText: text-sm text-muted-foreground.
-  muted: "text-[13px] leading-[19px] text-muted-foreground",
-  label: "text-[12px] leading-[16px] font-semibold text-muted-foreground",
+  pageTitle: "text-[26px] leading-[32px] font-bold tracking-[-0.3px]",
+  screenTitle: "text-[22px] leading-[28px] font-bold tracking-[-0.2px]",
+  // Web SectionTitle: text-lg/xl font-semibold — the dominant list heading.
+  sectionTitle: "text-[19px] leading-[25px] font-bold",
+  // Quieter group heading inside a screen (a carousel strip title used big).
+  sectionHeading: "text-[16px] leading-[22px] font-bold",
+  cardTitle: "text-[16px] leading-[22px] font-bold",
+  body: "text-[15px] leading-[22px]",
+  bodyStrong: "text-[15px] leading-[22px] font-semibold",
+  // Comfortable reading size for detail-screen prose.
+  bodyLg: "text-[16px] leading-[24px]",
+  small: "text-[13px] leading-[19px]",
+  muted: "text-[13px] leading-[19px]",
+  // Form field label — primary, not muted (you need to read it to fill the form).
+  label: "text-[13px] leading-[18px] font-semibold",
+  // PRIMARY metadata: date, time, price, open/closed, status.
+  metaStrong: "text-[14px] leading-[20px] font-semibold",
+  // SECONDARY metadata: venue, distance, attendance, category.
+  meta: "text-[13px] leading-[18px]",
   // ALL-CAPS section kicker (replaces hand-rolled uppercase+tracking spans).
   overline:
-    "text-[11px] leading-[14px] font-semibold uppercase tracking-[1px] text-muted-foreground",
-  caption: "text-[12px] leading-[16px] text-muted-foreground",
+    "text-[12px] leading-[16px] font-semibold uppercase tracking-[0.8px]",
+  caption: "text-[12px] leading-[16px]",
+};
+
+// Default colour per variant. `tone` (when passed) wins over this.
+const VARIANT_TONE: Record<Variant, Tone> = {
+  hero: "primary",
+  pageTitle: "primary",
+  screenTitle: "primary",
+  sectionTitle: "primary",
+  sectionHeading: "primary",
+  cardTitle: "primary",
+  body: "primary",
+  bodyStrong: "primary",
+  bodyLg: "primary",
+  small: "primary",
+  muted: "muted",
+  label: "primary",
+  metaStrong: "primary",
+  meta: "muted",
+  overline: "muted",
+  caption: "muted",
+};
+
+const TONE_CLASS: Record<Tone, string> = {
+  primary: "text-foreground",
+  // Distinct from `primary` only by the caller pairing it with a lighter
+  // weight — web has no middle grey and neither do we.
+  secondary: "text-foreground",
+  muted: "text-muted-foreground",
+  disabled: "text-muted-foreground opacity-60",
+  brand: "text-primary",
+  success: "text-success",
+  warning: "text-warning",
+  error: "text-destructive",
+  inverse: "text-white",
 };
 
 // The weight each variant bakes in via its className (font-bold / font-semibold).
@@ -55,13 +125,17 @@ const VARIANT_WEIGHT: Record<Variant, string> = {
   hero: "700",
   pageTitle: "700",
   screenTitle: "700",
-  sectionTitle: "600",
-  cardTitle: "600",
+  sectionTitle: "700",
+  sectionHeading: "700",
+  cardTitle: "700",
   body: "400",
   bodyStrong: "600",
+  bodyLg: "400",
   small: "400",
   muted: "400",
   label: "600",
+  metaStrong: "600",
+  meta: "400",
   overline: "600",
   caption: "400",
 };
@@ -194,17 +268,23 @@ function resolveTextMetrics(
 
 export type AppTextProps = RNTextProps & {
   variant?: Variant;
+  /** Override just the colour of the chosen variant. */
+  tone?: Tone;
   className?: string;
 };
 
 export function AppText({
   variant = "body",
+  tone,
   className,
   style,
   maxFontSizeMultiplier = MAX_FONT_SIZE_MULTIPLIER,
   ...rest
 }: AppTextProps) {
-  const combined = `${VARIANT_CLASS[variant]}${className ? ` ${className}` : ""}`;
+  const toneClass = TONE_CLASS[tone ?? VARIANT_TONE[variant]];
+  const combined = `${VARIANT_CLASS[variant]} ${toneClass}${
+    className ? ` ${className}` : ""
+  }`;
   const fontFamily = resolveFontFamily(variant, className, style);
   const metrics = resolveTextMetrics(combined, style);
   return (
@@ -230,10 +310,14 @@ export const PageTitle = make("pageTitle");
 export const ScreenTitle = make("screenTitle");
 export const Overline = make("overline");
 export const SectionTitle = make("sectionTitle");
+export const SectionHeading = make("sectionHeading");
 export const CardTitle = make("cardTitle");
 export const Body = make("body");
 export const BodyStrong = make("bodyStrong");
+export const BodyLg = make("bodyLg");
 export const SmallText = make("small");
 export const Muted = make("muted");
 export const Label = make("label");
+export const MetaStrong = make("metaStrong");
+export const Meta = make("meta");
 export const Caption = make("caption");

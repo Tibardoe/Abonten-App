@@ -55,7 +55,7 @@ export function SegmentedTabs<T extends string>({
           >
             <AppText
               numberOfLines={1}
-              className={`text-[13px] font-medium ${
+              className={`text-[14px] font-semibold ${
                 active ? "text-accent-foreground" : "text-muted-foreground"
               }`}
             >
