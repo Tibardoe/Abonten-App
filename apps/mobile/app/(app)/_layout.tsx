@@ -42,6 +42,7 @@ function StackHost() {
         name="highlight/new"
         options={{ animation: "slide_from_bottom" }}
       />
+      <Stack.Screen name="buy/[eventId]" />
       <Stack.Screen
         name="checkout/[sessionId]"
         options={{ animation: "slide_from_bottom" }}

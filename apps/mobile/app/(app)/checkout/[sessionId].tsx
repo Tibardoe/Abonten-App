@@ -179,7 +179,10 @@ export default function CheckoutReviewScreen() {
           }}
         />
 
-        <AppText variant="sectionHeading">{session.eventTitle}</AppText>
+        <View>
+          <AppText variant="caption">Order summary</AppText>
+          <AppText variant="sectionHeading">{session.eventTitle}</AppText>
+        </View>
 
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Line label="Subtotal" value={`${currency} ${session.subtotal}`} />
@@ -200,6 +203,9 @@ export default function CheckoutReviewScreen() {
           </AppText>
         ) : null}
 
+        <AppText variant="caption" className="-mb-2">
+          Payment
+        </AppText>
         <PaymentSection
           sessionId={sessionId ?? ""}
           currency={currency}

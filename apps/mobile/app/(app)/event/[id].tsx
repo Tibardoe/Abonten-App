@@ -13,7 +13,6 @@ import {
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { EventDetailSkeleton } from "@/components/skeletons";
-import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
@@ -476,7 +475,22 @@ export default function EventDetailScreen() {
             ) : isFree ? (
               <FreeRsvpCard event={event} />
             ) : (
-              <TicketPicker event={event} />
+              <View className="gap-3 rounded-xl border border-border bg-card p-4">
+                <View className="flex-row items-center justify-between">
+                  <View>
+                    <AppText variant="caption">Tickets</AppText>
+                    <AppText variant="cardTitle">
+                      {priceRange(event.ticket_type)}
+                    </AppText>
+                  </View>
+                  <Icon name="ticket-outline" size={22} tone="muted" />
+                </View>
+                <Button
+                  title="Buy tickets"
+                  fullWidth
+                  onPress={() => router.push(`/(app)/buy/${event.id}`)}
+                />
+              </View>
             )}
           </View>
 
