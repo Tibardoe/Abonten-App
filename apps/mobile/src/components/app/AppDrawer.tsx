@@ -43,8 +43,9 @@ import { useMenuSheet } from "./menuSheet";
 
 // Full-screen navigation drawer — the native stand-in for the web header's
 // hamburger -> <SideBar> sheet. Slides in from the left toward the right,
-// covers the whole screen, has a clear back control, and can be swiped left
-// to dismiss. Same Create / Manage / account links, appearance control,
+// covers the whole screen, has a centred brand with a close control on the
+// right, and can be swiped left to dismiss. Same Create / Manage / account
+// links, appearance control,
 // sign-out, and legal footer as the web SideBar. Mounted once from
 // app/(app)/_layout.tsx; opened via the header menu button through
 // useMenuSheet().
@@ -202,23 +203,29 @@ export function AppDrawer() {
               panelStyle,
             ]}
           >
-            {/* Header: back control + brand, mirroring the web Sheet's
-                close affordance. */}
+            {/* Header: brand centred, close control on the right — a
+                balanced, intentional bar (the X mirrors the web Sheet's
+                close affordance). The close button is absolutely pinned so
+                the logo sits at the true horizontal centre. */}
             <View
               style={{ paddingTop: insets.top }}
               className="border-b border-border"
             >
-              <View className="h-12 flex-row items-center px-1">
+              <View className="h-12 flex-row items-center justify-center px-1">
+                <AbontenLogo size={24} />
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Back to home"
+                  accessibilityLabel="Close menu"
                   onPress={close}
                   hitSlop={10}
+                  style={{
+                    position: "absolute",
+                    right: Math.max(insets.right, 4),
+                  }}
                   className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
                 >
-                  <Icon name="arrow-back" size={24} tone="foreground" />
+                  <Icon name="close" size={26} tone="foreground" />
                 </Pressable>
-                <AbontenLogo size={24} />
               </View>
             </View>
 
