@@ -9,10 +9,12 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
+import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
+import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
 import {
   type PlaceReviewItem,
@@ -143,6 +145,7 @@ export default function PlaceDetailScreen() {
   const carouselCardWidth = useCarouselCardWidth();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
 
   const placeSlug = place?.slug;
   const header = (
@@ -179,6 +182,7 @@ export default function PlaceDetailScreen() {
     place?.owner_id,
   );
   const deleteReview = useDeletePlaceReview(place?.id);
+  const { data: claim } = usePlaceClaimState(place?.id, place?.owner_id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
   // 10 km in metres — matches web's SIMILAR_PLACES_RADIUS_METERS.
   const nearby = useNearbyPlaces(coords, 10_000);
@@ -351,6 +355,35 @@ export default function PlaceDetailScreen() {
               />
             ) : null}
           </View>
+
+          {/* Claim this place */}
+          {claim?.status === "pending" ? (
+            <View className="flex-row items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2.5">
+              <Icon name="hourglass-outline" size={16} tone="muted" />
+              <AppText variant="small" tone="muted" className="flex-1">
+                Your claim for this place is awaiting review.
+              </AppText>
+            </View>
+          ) : claim?.canClaim ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setClaimOpen(true)}
+              className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
+            >
+              <Icon
+                name="shield-checkmark-outline"
+                size={20}
+                tone="foreground"
+              />
+              <View className="flex-1">
+                <AppText variant="bodyStrong">Own this place?</AppText>
+                <AppText variant="meta">
+                  Claim it to manage its details, hours and photos.
+                </AppText>
+              </View>
+              <Icon name="chevron-forward" size={16} tone="muted" />
+            </Pressable>
+          ) : null}
 
           {/* Location */}
           <View className="gap-3 rounded-xl border border-border bg-card p-4">
@@ -681,6 +714,13 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
         </View>
+
+        <ClaimPlaceSheet
+          open={claimOpen}
+          onClose={() => setClaimOpen(false)}
+          placeId={place.id}
+          placeName={place.name}
+        />
 
         <PlaceReviewSheet
           open={reviewOpen}
