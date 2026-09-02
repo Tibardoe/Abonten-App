@@ -1,4 +1,5 @@
 import { CardStatusOverlay } from "@/components/CardStatusOverlay";
+import { EventCardMenu } from "@/components/EventCardMenu";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -10,6 +11,7 @@ import type { UserPostType } from "@abonten/types/postsType";
 import { AppText, Icon, Skeleton } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, View } from "react-native";
 
 // Native EventCard — same information and hierarchy as the web
@@ -56,6 +58,7 @@ function MetaPill({ label }: { label: string }) {
 export function EventCard({ event }: { event: UserPostType }) {
   const router = useRouter();
   const attendingIds = useAttendingEventIds();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const flyer =
     event.flyer_public_id && event.flyer_version
@@ -115,8 +118,17 @@ export function EventCard({ event }: { event: UserPostType }) {
           </View>
         ) : null}
 
-        <View className="absolute right-2 top-2">
+        <View className="absolute right-2 top-2 flex-row items-center gap-1.5">
           <FavoriteButton kind="event" id={event.id} onSurface size={18} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="More options"
+            hitSlop={8}
+            onPress={() => setMenuOpen(true)}
+            className="h-9 w-9 items-center justify-center rounded-full border border-border bg-card active:opacity-70"
+          >
+            <Icon name="ellipsis-horizontal" size={18} tone="foreground" />
+          </Pressable>
         </View>
 
         {overlay ? (
@@ -179,6 +191,12 @@ export function EventCard({ event }: { event: UserPostType }) {
           </View>
         </View>
       </View>
+
+      <EventCardMenu
+        event={event}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+      />
     </Pressable>
   );
 }

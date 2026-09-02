@@ -43,6 +43,7 @@ export function useIsFavorited(kind: Kind, id: string | undefined) {
   return useQuery({
     queryKey: itemKey(kind, id ?? ""),
     enabled: !!session && !!id,
+    staleTime: 30_000,
     queryFn: () => fetchIsFavorited(kind, id as string),
   });
 }
@@ -51,36 +52,39 @@ export function useToggleFavorite(kind: Kind, id: string | undefined) {
   const qc = useQueryClient();
   const { session } = useSession();
 
+  // The caller passes the target state (true = favourite, false = remove).
+  // The DB op must key off the state *before* the optimistic flip, not off
+  // the cache — onMutate has already flipped the cache by the time
+  // mutationFn runs, so reading it here would invert the write.
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (next: boolean) => {
       if (!session || !id) throw new Error("not-authenticated");
-      const current = qc.getQueryData<boolean>(itemKey(kind, id)) ?? false;
 
-      if (current) {
-        const { error } = await supabase
-          .from(TABLE[kind])
-          .delete()
-          .eq(FK[kind], id);
-        if (error) throw error;
-      } else {
+      if (next) {
         const { error } = await supabase.from(TABLE[kind]).insert({
           user_id: session.user.id,
           [FK[kind]]: id,
           created_at: new Date().toISOString(),
         });
         if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from(TABLE[kind])
+          .delete()
+          .eq(FK[kind], id);
+        if (error) throw error;
       }
     },
 
-    onMutate: async () => {
+    onMutate: async (next: boolean) => {
       if (!id) return { previous: undefined };
       await qc.cancelQueries({ queryKey: itemKey(kind, id) });
       const previous = qc.getQueryData<boolean>(itemKey(kind, id));
-      qc.setQueryData(itemKey(kind, id), !(previous ?? false));
+      qc.setQueryData(itemKey(kind, id), next);
       return { previous };
     },
 
-    onError: (_err, _vars, ctx) => {
+    onError: (_err, _next, ctx) => {
       if (id) qc.setQueryData(itemKey(kind, id), ctx?.previous ?? false);
     },
 

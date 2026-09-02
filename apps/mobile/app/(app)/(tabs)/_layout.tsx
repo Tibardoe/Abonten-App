@@ -15,6 +15,9 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        // Subtle content shift on tab change — fast, interruptible, and the
+        // OS reduce-motion setting disables it automatically.
+        animation: "shift",
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c["muted-foreground"],
         tabBarStyle: {
