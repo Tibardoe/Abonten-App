@@ -4,7 +4,7 @@ import type {
 } from "@/features/profile/useProfileTabs";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText, Icon } from "@abonten/ui-native";
+import { AppText, Icon, Stars } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -51,22 +51,6 @@ export function ProfilePlaceRow({ place }: { place: ProfilePlace }) {
       </View>
       <Icon name="chevron-forward" size={18} tone="muted" />
     </Pressable>
-  );
-}
-
-function Stars({ rating }: { rating: number }) {
-  return (
-    <View className="flex-row">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Icon
-          key={n}
-          name={n <= rating ? "star" : "star-outline"}
-          size={14}
-          color={n <= rating ? "#f5a623" : undefined}
-          tone={n <= rating ? undefined : "muted"}
-        />
-      ))}
-    </View>
   );
 }
 

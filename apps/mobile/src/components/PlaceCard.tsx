@@ -19,7 +19,14 @@ function addressText(address: PlaceType["address"]): string {
   return "";
 }
 
-export function PlaceCard({ place }: { place: PlaceType }) {
+export function PlaceCard({
+  place,
+  sponsored = false,
+}: {
+  place: PlaceType;
+  /** Featured (paid-placement) slot — shows a neutral "Sponsored" pill. */
+  sponsored?: boolean;
+}) {
   const router = useRouter();
   const cover =
     place.cover_public_id && place.cover_version
@@ -57,6 +64,16 @@ export function PlaceCard({ place }: { place: PlaceType }) {
             <Icon name="image-outline" size={22} tone="muted" />
           </View>
         )}
+        {sponsored ? (
+          <View
+            className="absolute left-2 top-2 rounded-full px-2.5 py-1"
+            style={{ backgroundColor: "rgba(17,24,32,0.82)" }}
+          >
+            <AppText className="text-[10px] font-medium text-white">
+              Sponsored
+            </AppText>
+          </View>
+        ) : null}
         <View className="absolute right-2 top-2">
           <FavoriteButton kind="place" id={place.id} onSurface size={18} />
         </View>

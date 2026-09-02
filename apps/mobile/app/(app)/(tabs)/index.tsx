@@ -9,6 +9,7 @@ import {
   EventSliderRow,
   PlaceSliderRow,
 } from "@/components/explore/ExploreSliderRow";
+import { FeaturedEventsCarousel } from "@/components/explore/FeaturedEventsCarousel";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
@@ -130,11 +131,12 @@ export default function Explore() {
   const sliders =
     tab === "events" ? (
       <View>
-        <EventSliderRow
-          title="Featured"
-          events={eventSliders.data.featured}
-          featured
-        />
+        {eventSliders.data.featured.length > 0 ? (
+          <View className="gap-2 pt-4">
+            <SectionTitle className="px-4">Featured</SectionTitle>
+            <FeaturedEventsCarousel events={eventSliders.data.featured} />
+          </View>
+        ) : null}
         <EventSliderRow
           title="Around you"
           events={eventSliders.data.aroundYou}
@@ -158,7 +160,11 @@ export default function Explore() {
       </View>
     ) : (
       <View>
-        <PlaceSliderRow title="Featured" places={placeSliders.data.featured} />
+        <PlaceSliderRow
+          title="Featured"
+          places={placeSliders.data.featured}
+          sponsored
+        />
         <PlaceSliderRow
           title="Around you"
           places={placeSliders.data.aroundYou}

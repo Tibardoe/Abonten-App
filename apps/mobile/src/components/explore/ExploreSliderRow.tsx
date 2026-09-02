@@ -10,17 +10,17 @@ import { FlatList, View } from "react-native";
 // carry a "see all" link to a dedicated window page
 // (/explore/.../happening-today etc.); those routes don't exist on mobile
 // yet, so the heading is not yet linked (tracked in docs/mobile/09).
+// Featured events get the FeaturedEventsCarousel banner treatment instead
+// of this row.
 
 const CARD_WIDTH = 260;
 
 export function EventSliderRow({
   title,
   events,
-  featured = false,
 }: {
   title: string;
   events: UserPostType[];
-  featured?: boolean;
 }) {
   if (events.length === 0) return null;
   return (
@@ -33,7 +33,7 @@ export function EventSliderRow({
         keyExtractor={(e) => e.id}
         contentContainerClassName="gap-3 px-4"
         renderItem={({ item }) => (
-          <View style={{ width: featured ? CARD_WIDTH + 40 : CARD_WIDTH }}>
+          <View style={{ width: CARD_WIDTH }}>
             <EventCard event={item} />
           </View>
         )}
@@ -45,9 +45,12 @@ export function EventSliderRow({
 export function PlaceSliderRow({
   title,
   places,
+  sponsored = false,
 }: {
   title: string;
   places: PlaceType[];
+  /** Featured (paid-placement) row — cards show a "Sponsored" pill. */
+  sponsored?: boolean;
 }) {
   if (places.length === 0) return null;
   return (
@@ -61,7 +64,7 @@ export function PlaceSliderRow({
         contentContainerClassName="gap-3 px-4"
         renderItem={({ item }) => (
           <View style={{ width: CARD_WIDTH }}>
-            <PlaceCard place={item} />
+            <PlaceCard place={item} sponsored={sponsored} />
           </View>
         )}
       />
