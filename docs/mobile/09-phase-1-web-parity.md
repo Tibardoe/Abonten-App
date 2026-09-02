@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner) done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE, see below |
 
 ---
 
@@ -1617,3 +1617,58 @@ owner's public reply).
 `@abonten/api-client`) green, `next build` exit 0 (all 4 new routes
 compiled), `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
+
+#### WP-4f-5 — Per-place Promotion tab (done 2026-09-02) — MONEY PATH, code/bundle-verified only
+
+The web `ManagePlacePromotionSection` — the paid "Feature this Place"
+purchase (a randomly-rotated Featured Places slot on Explore). Reuses the
+`kind: "place"` arm of `createPromotionPaymentAttemptCore` that WP-4c-3
+staged, and `finalizePaystackPayment`'s existing dispatch on the
+`place_promotion_checkout_id` column → `activatePlacePromotion` — so the
+completion path needs **zero new backend code**.
+
+- **`apps/web/src/utils/placePromotionCore.ts`** — `fetchPlacePromotionContext`
+  (owner → 403/404, then `Promise.all` of the seeded `place_promotion_tier`
+  list + the current active `place_promotion` computed from `ends_at > now`;
+  no eligibility gate — a place has no "ended" / "sold out" concept, matching
+  the web section), `insertPlacePromotionCheckoutCore` (owner check + tier
+  read + a pending `place_promotion_checkout` priced from the seeded tier,
+  never the client — mirror of `insertEventPromotionCheckoutCore`).
+  `insertPlacePromotionCheckout` thinned to `auth (401/500 as const) →
+  delegate → re-wrap to `{ status, data: { id } }`` for its web caller;
+  `getPlacePromotionTiers` left as-is (public `publicSupabase` read).
+- **Routes** — `GET /api/mobile/organizer/places/[placeId]/promotion`
+  (context), `POST .../places/[placeId]/promote` (`{ tierId }`, reserve),
+  `POST /api/mobile/checkout/place-promotion-attempt`
+  (`{ placePromotionCheckoutId, paymentMethodId }` → `createPromotionPaymentAttemptCore`
+  `kind: "place"`; completion is the shared `/api/mobile/payments/verify`
+  path). The place sibling of WP-4c-3's `/checkout/promotion-attempt`.
+- **api-client** — re-exports `PlacePromotionTier`; adds `PlacePromotionContext`
+  / `PlacePromotionContextResult`, `PromotePlaceResult`; reuses
+  `PromotionPaymentAttemptResult` for the attempt.
+  `api.organizer.placePromotionContext(placeId)` / `promotePlace(placeId, tierId)`,
+  `api.checkout.placePromotionAttempt(body)`.
+- **Mobile** — `src/features/organizer/usePlacePromotion.ts`
+  (`usePlacePromotionContext` key `["mobile","organizer","place-promotion", placeId]`,
+  `usePromotePlace`, `useCreatePlacePromotionAttempt`,
+  `useInvalidatePlacePromotion` → promotion + the place-insights key +
+  discovery / explore / `["mobile","place", placeId]`).
+  `PromotionPaymentSection` gained a `kind?: "event" | "place"` prop — it
+  now picks the attempt endpoint (`promotionAttempt` vs
+  `placePromotionAttempt`) and the success copy; the verify / OTP / retry
+  logic stays shared. `app/(app)/organizer/places/[placeId]/promote.tsx`
+  (tier picker → reserve → `<PromotionPaymentSection kind="place" />`;
+  current-promotion banner when already featured) — mirrors the per-event
+  `promote.tsx` minus the eligibility branch. The place management screen
+  gains a **"Feature this place ›"** link row (bordered primary); route
+  registered `href: null`.
+
+**Not Paystack- or device-verified** — the charge, activation, and 207
+recovery are code- and bundle-verified only, same posture as WP-4c-3.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all 3 new routes
+compiled), `expo export --platform android` clean, `biome check` clean.
+
+**WP-4f COMPLETE** (4f-1 … 4f-5). Next: **WP-4g** — dashboard widgets +
+save-as-draft for the place and event creation wizards.
