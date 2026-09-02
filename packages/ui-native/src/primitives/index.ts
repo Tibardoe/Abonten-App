@@ -56,4 +56,5 @@ export {
   type ErrorStateProps,
 } from "./Feedback";
 export { Avatar, type AvatarProps } from "./Avatar";
+export { Stars } from "./Stars";
 export { Sheet, type SheetProps } from "./Sheet";
