@@ -13,7 +13,9 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 // by FeaturedEventsCarousel at the top of the Explore → Events tab, matching
 // the web FeaturedEventsCarousel placement.
 
-const BANNER_HEIGHT = 208;
+// Web molecules/Banner is h-[250px] at mobile widths — the native banner
+// matches that so it reads as the page's hero, not just another card.
+const BANNER_HEIGHT = 250;
 const WHITE_85 = "rgba(255,255,255,0.85)";
 const INK = "#0b1220";
 
@@ -90,8 +92,18 @@ export function FeaturedEventBanner({ event }: { event: UserPostType }) {
       </View>
 
       <View className="absolute inset-x-0 bottom-0 gap-2 p-4">
+        {/* Web Banner's "Most Anticipated" tag above the title. */}
+        <View
+          className="self-start rounded-full px-2.5 py-1"
+          style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+        >
+          <AppText className="text-[11px] font-medium text-white">
+            Most Anticipated
+          </AppText>
+        </View>
+
         <AppText
-          className="text-[20px] font-bold leading-[26px] text-white"
+          className="text-[17px] font-bold leading-[22px] text-white"
           numberOfLines={2}
         >
           {event.title}
