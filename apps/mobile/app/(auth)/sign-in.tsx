@@ -2,6 +2,7 @@ import { CountryCodeField } from "@/auth/CountryCodeField";
 import { GoogleIcon } from "@/auth/GoogleIcon";
 import { signInWithGoogle } from "@/auth/googleSignIn";
 import { api } from "@/lib/api";
+import { hapticError } from "@/lib/haptics";
 import { type Country, DEFAULT_COUNTRY } from "@abonten/core/countries";
 import {
   AbontenLogo,
@@ -16,6 +17,7 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -23,6 +25,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+const TERMS_URL = "https://abonten.com/terms";
+const PRIVACY_URL = "https://abonten.com/privacy";
 
 export default function SignIn() {
   const router = useRouter();
@@ -32,11 +37,13 @@ export default function SignIn() {
   const [rawPhone, setRawPhone] = useState("");
   const [busy, setBusy] = useState<"phone" | "google" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [phoneFocused, setPhoneFocused] = useState(false);
 
   const phoneValid = rawPhone.replace(/\D/g, "").length >= 6;
 
   async function sendCode() {
     if (!phoneValid) {
+      hapticError();
       setError("Enter your phone number.");
       return;
     }
@@ -49,15 +56,23 @@ export default function SignIn() {
       });
 
       if (res.status !== 200 || !res.data) {
+        hapticError();
         setError(res.message ?? "Couldn't send the code. Try again.");
         return;
       }
 
       router.push({
         pathname: "/(auth)/verify",
-        params: { phoneE164: res.data.phoneE164 },
+        params: {
+          phoneE164: res.data.phoneE164,
+          // Carried so the verify screen's "Resend code" can re-request
+          // without bouncing the user back here.
+          dialCode: country.callingCode,
+          rawPhone: rawPhone.trim(),
+        },
       });
     } catch {
+      hapticError();
       setError("Network error. Check your connection and try again.");
     } finally {
       setBusy(null);
@@ -69,7 +84,10 @@ export default function SignIn() {
     setBusy("google");
     try {
       const res = await signInWithGoogle();
-      if (!res.ok) setError(res.message);
+      if (!res.ok) {
+        hapticError();
+        setError(res.message);
+      }
       // On success SessionProvider's onAuthStateChange routes into the app.
     } finally {
       setBusy(null);
@@ -108,12 +126,12 @@ export default function SignIn() {
             <AbontenWordmark size={22} />
           </View>
 
-          <View className="grow justify-center gap-6">
-            <View className="gap-1.5">
-              <AppText className="text-center text-[24px] font-bold text-foreground">
+          <View className="grow justify-center gap-7">
+            <View className="gap-2">
+              <AppText className="text-center text-[26px] font-bold text-foreground">
                 Log in or sign up
               </AppText>
-              <AppText className="text-center text-[14px] text-muted-foreground">
+              <AppText className="text-center text-[14px] leading-[20px] text-muted-foreground">
                 Continue with your phone number or Google account.
               </AppText>
             </View>
@@ -123,7 +141,7 @@ export default function SignIn() {
               accessibilityLabel="Continue with Google"
               disabled={busy !== null}
               onPress={google}
-              className="h-[52px] flex-row items-center justify-center gap-3 rounded-lg border border-border bg-card active:opacity-80 disabled:opacity-50"
+              className="h-14 flex-row items-center justify-center gap-3 rounded-xl border border-border bg-card active:opacity-80 disabled:opacity-50"
             >
               {busy === "google" ? (
                 <ActivityIndicator />
@@ -145,17 +163,26 @@ export default function SignIn() {
               <View className="h-px flex-1 bg-border" />
             </View>
 
-            <View className="gap-2">
+            <View className="gap-3 rounded-2xl border border-border bg-card p-4">
               <AppText variant="label">Phone number</AppText>
               <View className="flex-row gap-2">
                 <CountryCodeField value={country} onChange={setCountry} />
                 <TextInput
-                  className="h-[48px] flex-1 rounded-lg border border-input bg-background px-3 text-[15px] text-foreground"
+                  className={[
+                    "h-[52px] flex-1 rounded-xl border bg-background px-3 text-[16px] text-foreground",
+                    error
+                      ? "border-destructive"
+                      : phoneFocused
+                        ? "border-ring"
+                        : "border-input",
+                  ].join(" ")}
                   placeholder="24 123 4567"
                   placeholderTextColor={c["muted-foreground"]}
                   keyboardType="phone-pad"
                   autoComplete="tel"
                   value={rawPhone}
+                  onFocus={() => setPhoneFocused(true)}
+                  onBlur={() => setPhoneFocused(false)}
                   onChangeText={(v) => {
                     setRawPhone(v);
                     if (error) setError(null);
@@ -167,13 +194,17 @@ export default function SignIn() {
               </View>
 
               {error ? (
-                <AppText className="text-[13px] text-destructive">
-                  {error}
-                </AppText>
+                <View className="flex-row items-center gap-1.5">
+                  <Icon name="alert-circle" size={15} tone="destructive" />
+                  <AppText className="text-[13px] text-destructive">
+                    {error}
+                  </AppText>
+                </View>
               ) : null}
 
               <Button
                 title={busy === "phone" ? "Sending code…" : "Send code"}
+                size="lg"
                 fullWidth
                 loading={busy === "phone"}
                 disabled={busy !== null || !phoneValid}
@@ -182,8 +213,22 @@ export default function SignIn() {
               />
             </View>
 
-            <AppText className="text-center text-[12px] text-muted-foreground">
-              By continuing you agree to Abonten's Terms and Privacy Policy.
+            <AppText className="text-center text-[12px] leading-[18px] text-muted-foreground">
+              By continuing you agree to Abonten's{" "}
+              <AppText
+                className="text-[12px] font-semibold text-primary"
+                onPress={() => Linking.openURL(TERMS_URL)}
+              >
+                Terms
+              </AppText>{" "}
+              and{" "}
+              <AppText
+                className="text-[12px] font-semibold text-primary"
+                onPress={() => Linking.openURL(PRIVACY_URL)}
+              >
+                Privacy Policy
+              </AppText>
+              .
             </AppText>
           </View>
         </ScrollView>

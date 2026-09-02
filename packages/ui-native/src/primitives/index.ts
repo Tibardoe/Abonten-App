@@ -43,6 +43,7 @@ export {
   type TicketStatusBadgeProps,
 } from "./TicketStatusBadge";
 export { Input, type InputProps, Field, type FieldProps } from "./Input";
+export { OtpInput, type OtpInputProps } from "./OtpInput";
 export { Chip, type ChipProps, Tag } from "./Chip";
 export {
   SegmentedTabs,
