@@ -1,15 +1,17 @@
+import { TimeField } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { TIME_RE, prettyDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
-import { AppText, Button, Field, Input } from "@abonten/ui-native";
+import { AppText, Button, Field, SegmentedTabs } from "@abonten/ui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
-// Step 3 of the event wizard — a single start/end range, or a list of
-// specific dates (occurrences). Mirrors the web DateTimePicker's
-// single/specific split. Dates come from the pure-JS DateRangeField; times
-// are "HH:MM" text.
+// Step 3 of the event wizard. First choice: one continuous event (a single
+// day, or an explicit start-day → end-day span) vs a list of specific
+// dates. Mirrors the web DateTimePicker's single/specific split, but the
+// single-day case no longer forces a range. Dates come from the pure-JS
+// calendar; times use the wheel TimeField and cross as "HH:MM".
 export function EventWizardSchedule({ w }: { w: EventWizard }) {
   const [draftDate, setDraftDate] = useState<string | null>(null);
   const [draftStart, setDraftStart] = useState("18:00");
@@ -27,10 +29,10 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
   }
 
   return (
-    <View className="gap-4">
+    <View className="gap-5">
       <View className="flex-row gap-2">
         <ModeChip
-          label="Single event"
+          label="One event"
           active={w.scheduleMode === "single"}
           onPress={() => w.setScheduleMode("single")}
         />
@@ -42,33 +44,55 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
       </View>
 
       {w.scheduleMode === "single" ? (
-        <View className="gap-3">
-          <Field label="Dates" hint="Tap a start day, then an end day">
-            <DateRangeField
-              start={w.rangeStart}
-              end={w.rangeEnd}
-              onChange={w.setRange}
-            />
-          </Field>
+        <View className="gap-4">
+          <SegmentedTabs
+            options={[
+              { key: "single", label: "Single date" },
+              { key: "range", label: "Date range" },
+            ]}
+            value={w.dateMode}
+            onChange={w.setDateMode}
+          />
+
+          {w.dateMode === "single" ? (
+            <Field label="Event date" hint="Tap the day your event happens">
+              <DateRangeField
+                mode="single"
+                start={w.rangeStart}
+                end={null}
+                onChange={(r) => w.setRange({ start: r.start, end: null })}
+              />
+            </Field>
+          ) : (
+            <Field
+              label="Start & end date"
+              hint="Tap the first day, then the last day"
+            >
+              <DateRangeField
+                start={w.rangeStart}
+                end={w.rangeEnd}
+                onChange={w.setRange}
+              />
+            </Field>
+          )}
+
           <View className="flex-row gap-3">
             <View className="flex-1">
-              <Field label="Start time">
-                <Input
+              <Field label={w.dateMode === "single" ? "Start time" : "Starts"}>
+                <TimeField
+                  label="Start time"
                   value={w.rangeStartTime}
-                  onChangeText={w.setRangeStartTime}
-                  placeholder="18:00"
-                  keyboardType="numbers-and-punctuation"
+                  onChange={w.setRangeStartTime}
                   invalid={!TIME_RE.test(w.rangeStartTime)}
                 />
               </Field>
             </View>
             <View className="flex-1">
-              <Field label="End time">
-                <Input
+              <Field label={w.dateMode === "single" ? "End time" : "Ends"}>
+                <TimeField
+                  label="End time"
                   value={w.rangeEndTime}
-                  onChangeText={w.setRangeEndTime}
-                  placeholder="22:00"
-                  keyboardType="numbers-and-punctuation"
+                  onChange={w.setRangeEndTime}
                   invalid={!TIME_RE.test(w.rangeEndTime)}
                 />
               </Field>
@@ -97,29 +121,28 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
             </View>
           ))}
 
-          <View className="gap-3 rounded-xl border border-border border-dashed p-3">
+          <View className="gap-3 rounded-xl border border-dashed border-border p-3">
             <AppText variant="label">Add a date</AppText>
             <DateRangeField
+              mode="single"
               start={draftDate}
               end={null}
               onChange={(r) => setDraftDate(r.start)}
             />
             <View className="flex-row gap-3">
               <View className="flex-1">
-                <Input
+                <TimeField
+                  label="Start time"
                   value={draftStart}
-                  onChangeText={setDraftStart}
-                  placeholder="18:00"
-                  keyboardType="numbers-and-punctuation"
+                  onChange={setDraftStart}
                   invalid={!TIME_RE.test(draftStart)}
                 />
               </View>
               <View className="flex-1">
-                <Input
+                <TimeField
+                  label="End time"
                   value={draftEnd}
-                  onChangeText={setDraftEnd}
-                  placeholder="22:00"
-                  keyboardType="numbers-and-punctuation"
+                  onChange={setDraftEnd}
                   invalid={!TIME_RE.test(draftEnd)}
                 />
               </View>
@@ -156,15 +179,15 @@ function ModeChip({
       onPress={onPress}
       className={
         active
-          ? "rounded-full bg-primary px-4 py-1.5"
-          : "rounded-full border border-border px-4 py-1.5"
+          ? "rounded-full bg-primary px-4 py-2"
+          : "rounded-full border border-border px-4 py-2"
       }
     >
       <AppText
         className={
           active
-            ? "text-[12px] font-semibold text-primary-foreground"
-            : "text-[12px] font-medium text-muted-foreground"
+            ? "text-[13px] font-semibold text-primary-foreground"
+            : "text-[13px] font-medium text-muted-foreground"
         }
       >
         {label}

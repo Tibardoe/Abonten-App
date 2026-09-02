@@ -1,3 +1,4 @@
+import { prettyTime } from "@/components/datetime/TimeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { AppText } from "@abonten/ui-native";
@@ -11,9 +12,13 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
   const when =
     w.scheduleMode === "single"
       ? w.rangeStart
-        ? `${prettyDate(w.rangeStart)} ${w.rangeStartTime} – ${
-            w.rangeEnd ? prettyDate(w.rangeEnd) : ""
-          } ${w.rangeEndTime}`.trim()
+        ? w.rangeEnd && w.rangeEnd !== w.rangeStart
+          ? `${prettyDate(w.rangeStart)}, ${prettyTime(w.rangeStartTime)} → ${prettyDate(
+              w.rangeEnd,
+            )}, ${prettyTime(w.rangeEndTime)}`
+          : `${prettyDate(w.rangeStart)} · ${prettyTime(
+              w.rangeStartTime,
+            )} – ${prettyTime(w.rangeEndTime)}`
         : "—"
       : `${w.occurrences.length} date${w.occurrences.length === 1 ? "" : "s"}`;
 
