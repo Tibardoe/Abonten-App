@@ -2,6 +2,7 @@ import type {
   AddMomoWalletBody,
   AddPayoutAccountBody,
   AddPayoutAccountResult,
+  AddPlacePhotoBody,
   AddPlaceServiceBody,
   ApiEnvelope,
   AttendanceRow,
@@ -46,6 +47,7 @@ import type {
   PlaceInsightsResult,
   PlaceManageContextResult,
   PlaceOpeningHoursInput,
+  PlacePhotoResult,
   PlaceServiceResult,
   PreparedCheckoutPayment,
   ProfileData,
@@ -772,6 +774,35 @@ export function createApiClient(options: ApiClientOptions) {
           `/api/mobile/organizer/places/${encodeURIComponent(
             placeId,
           )}/services/${encodeURIComponent(serviceId)}/delete`,
+          { method: "POST", auth: true },
+        );
+      },
+      /**
+       * Record one gallery photo after uploading its bytes straight to
+       * Cloudinary via uploads.signature("place_photo"). 403 if the
+       * publicId isn't in this caller's place_photos folder.
+       */
+      addPlacePhoto(placeId: string, body: AddPlacePhotoBody) {
+        return request<PlacePhotoResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/photos`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Set each gallery photo's position to its index in `photoIds`. */
+      reorderPlacePhotos(placeId: string, photoIds: string[]) {
+        return request<PlacePhotoResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/photos/reorder`,
+          { method: "POST", body: { photoIds }, auth: true },
+        );
+      },
+      /** Remove one gallery photo (row + best-effort Cloudinary asset). */
+      removePlacePhoto(placeId: string, photoId: string) {
+        return request<PlacePhotoResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/photos/${encodeURIComponent(photoId)}/delete`,
           { method: "POST", auth: true },
         );
       },

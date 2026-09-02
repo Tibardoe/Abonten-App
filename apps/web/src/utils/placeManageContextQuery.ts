@@ -4,8 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Everything the native per-place management screens need to prefill their
 // forms, in one owner-scoped read — the mobile echo of what
 // manage/places/[placeId]/page.tsx assembles server-side and passes down as
-// props (place row + weekly hours + services). Deliberately NOT a
-// "use server" file.
+// props (place row + weekly hours + services + gallery photos). Deliberately
+// NOT a "use server" file.
 
 export type PlaceManageContext = {
   place: {
@@ -38,6 +38,12 @@ export type PlaceManageContext = {
     show_price: boolean;
     position: number;
   }[];
+  photos: {
+    id: string;
+    public_id: string;
+    version: string;
+    position: number;
+  }[];
 };
 
 export type PlaceManageContextResult =
@@ -68,6 +74,7 @@ export async function fetchPlaceManageContext(
   const [
     { data: openingHours, error: hoursError },
     { data: services, error: servicesError },
+    { data: photos, error: photosError },
   ] = await Promise.all([
     supabase
       .from("place_opening_hours")
@@ -79,12 +86,17 @@ export async function fetchPlaceManageContext(
       .select("id, name, description, price, price_unit, show_price, position")
       .eq("place_id", placeId)
       .order("position", { ascending: true }),
+    supabase
+      .from("place_photo")
+      .select("id, public_id, version, position")
+      .eq("place_id", placeId)
+      .order("position", { ascending: true }),
   ]);
 
-  if (hoursError || servicesError) {
+  if (hoursError || servicesError || photosError) {
     logger.error(
       `Error fetching place manage context: ${
-        hoursError?.message ?? servicesError?.message
+        hoursError?.message ?? servicesError?.message ?? photosError?.message
       }`,
     );
     return { status: 500, message: "Something went wrong!" };
@@ -110,6 +122,7 @@ export async function fetchPlaceManageContext(
       },
       openingHours: openingHours ?? [],
       services: services ?? [],
+      photos: photos ?? [],
     },
   };
 }

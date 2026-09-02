@@ -117,3 +117,37 @@ export function useRemovePlaceService(placeId: string) {
     onSuccess: () => invalidate(qc, placeId),
   });
 }
+
+// Uploads one picked photo straight to Cloudinary (kind "place_photo"),
+// then records it. The screen calls this per picked asset.
+export function useAddPlacePhoto(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (uri: string) => {
+      const up = await uploadToCloudinary(uri, "place_photo");
+      return api.organizer.addPlacePhoto(placeId, {
+        publicId: up.publicId,
+        version: String(up.version),
+      });
+    },
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+export function useReorderPlacePhotos(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (photoIds: string[]) =>
+      api.organizer.reorderPlacePhotos(placeId, photoIds),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
+
+export function useRemovePlacePhoto(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (photoId: string) =>
+      api.organizer.removePlacePhoto(placeId, photoId),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}

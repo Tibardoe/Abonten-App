@@ -748,6 +748,12 @@ export type PlaceManageContext = {
     show_price: boolean;
     position: number;
   }[];
+  photos: {
+    id: string;
+    public_id: string;
+    version: string;
+    position: number;
+  }[];
 };
 
 export type PlaceManageContextResult =
@@ -809,6 +815,21 @@ export type UpdatePlaceServiceBody = {
 // add / update / remove all report success the same way.
 export type PlaceServiceResult =
   | { status: 200; message: string; data?: PlaceServiceRow }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
+// One `place_photo` gallery row as the manage context returns it.
+export type PlacePhotoRow = PlaceManageContext["photos"][number];
+
+// The bytes are uploaded straight to Cloudinary first (kind "place_photo");
+// this just records the resulting public id + version.
+export type AddPlacePhotoBody = {
+  publicId: string;
+  version: string;
+};
+
+// add / reorder / remove all report success the same way.
+export type PlacePhotoResult =
+  | { status: 200; message: string; data?: PlacePhotoRow }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
 
 // ---- organizer write actions ----------------------------------------
