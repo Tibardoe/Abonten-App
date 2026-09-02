@@ -2,6 +2,7 @@ import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
+import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
 import { useRemindersSync } from "@/features/reminders/useRemindersSync";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
@@ -38,6 +39,10 @@ function StackHost() {
         options={{ animation: "slide_from_bottom" }}
       />
       <Stack.Screen
+        name="highlight/new"
+        options={{ animation: "slide_from_bottom" }}
+      />
+      <Stack.Screen
         name="checkout/[sessionId]"
         options={{ animation: "slide_from_bottom" }}
       />
@@ -48,10 +53,12 @@ function StackHost() {
 export default function AppLayout() {
   return (
     <ExploreLocationProvider>
-      <MenuSheetProvider>
-        <StackHost />
-        <AppDrawer />
-      </MenuSheetProvider>
+      <HighlightUploadProvider>
+        <MenuSheetProvider>
+          <StackHost />
+          <AppDrawer />
+        </MenuSheetProvider>
+      </HighlightUploadProvider>
     </ExploreLocationProvider>
   );
 }
