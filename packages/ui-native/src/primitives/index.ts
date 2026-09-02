@@ -7,6 +7,7 @@ export {
 export {
   AppText,
   type AppTextProps,
+  Hero,
   PageTitle,
   ScreenTitle,
   SectionTitle,
@@ -16,6 +17,7 @@ export {
   SmallText,
   Muted,
   Label,
+  Overline,
   Caption,
 } from "./Typography";
 export {

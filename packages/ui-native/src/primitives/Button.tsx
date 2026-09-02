@@ -35,10 +35,12 @@ const LABEL: Record<ButtonVariant, string> = {
   destructive: "text-destructive-foreground",
 };
 
+// min-h keeps every button at (or above) a comfortable tap target even
+// when the label's line box is short.
 const SIZE: Record<ButtonSize, string> = {
-  sm: "px-3 py-2 rounded-md",
-  md: "px-4 py-3 rounded-lg",
-  lg: "px-5 py-4 rounded-xl",
+  sm: "min-h-[40px] px-3.5 py-2 rounded-lg",
+  md: "min-h-[48px] px-4 py-3 rounded-xl",
+  lg: "min-h-[52px] px-5 py-3.5 rounded-2xl",
 };
 
 const LABEL_SIZE: Record<ButtonSize, string> = {
