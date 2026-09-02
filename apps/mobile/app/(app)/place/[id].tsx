@@ -1,19 +1,41 @@
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
+import { EventCard } from "@/components/EventCard";
+import { PlaceCard } from "@/components/PlaceCard";
+import {
+  MapAvailable,
+  MapErrorBoundary,
+  MapView,
+  Marker,
+  PROVIDER_GOOGLE,
+} from "@/components/map/NativeMap";
+import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
+import {
+  type PlaceReviewItem,
+  usePlaceReviewsList,
+  usePlaceUpcomingEvents,
+} from "@/features/places/usePlaceExtras";
 import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
-import { Ionicons } from "@expo/vector-icons";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
+import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import type { PlaceType } from "@abonten/types/placeType";
+import {
+  AppText,
+  Avatar,
+  Button,
+  Icon,
+  type IoniconName,
+  ScreenError,
+  ScreenLoader,
+  SectionTitle,
+  Stars,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useEffect } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { useEffect, useMemo } from "react";
+import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -23,13 +45,92 @@ function timeLabel(t: string | null): string {
   return `${h}:${m ?? "00"}`;
 }
 
+function ContactRow({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: IoniconName;
+  label: string;
+  onPress?: () => void;
+}) {
+  const body = (
+    <View className="min-h-[40px] flex-row items-center gap-3">
+      <Icon name={icon} size={18} tone="muted" />
+      <AppText
+        className={`flex-1 text-[14px] ${onPress ? "text-primary" : "text-foreground"}`}
+        numberOfLines={1}
+      >
+        {label}
+      </AppText>
+    </View>
+  );
+  return onPress ? (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      className="active:opacity-60"
+    >
+      {body}
+    </Pressable>
+  ) : (
+    body
+  );
+}
+
+function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
+  return (
+    <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
+      <View className="flex-row items-center justify-between gap-2">
+        <View className="flex-1 flex-row items-center gap-2">
+          <Avatar
+            publicId={review.reviewer?.avatar_public_id ?? undefined}
+            version={review.reviewer?.avatar_version ?? undefined}
+            size={28}
+          />
+          <AppText
+            className="flex-1 text-[13px] font-semibold text-foreground"
+            numberOfLines={1}
+          >
+            {review.reviewer?.username ?? "Guest"}
+          </AppText>
+        </View>
+        <Stars rating={review.rating} size={13} />
+      </View>
+      {review.title ? (
+        <AppText className="text-[13px] font-semibold text-foreground">
+          {review.title}
+        </AppText>
+      ) : null}
+      {review.comment ? (
+        <AppText className="text-[13px] text-muted-foreground">
+          {review.comment}
+        </AppText>
+      ) : null}
+      {review.owner_response ? (
+        <View className="mt-1 gap-0.5 rounded-lg bg-muted p-2">
+          <AppText className="text-[11px] font-semibold text-foreground">
+            Response from the owner
+          </AppText>
+          <AppText className="text-[12px] text-muted-foreground">
+            {review.owner_response}
+          </AppText>
+        </View>
+      ) : null}
+      <AppText className="text-[11px] text-muted-foreground">
+        {getRelativeTime(review.created_at)}
+      </AppText>
+    </View>
+  );
+}
+
 export default function PlaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const navigation = useNavigation();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
 
-  const placeSlug = (place as { slug?: string } | undefined)?.slug;
+  const placeSlug = place?.slug;
   useEffect(() => {
     navigation.setOptions({
       ...(place?.name ? { title: place.name } : {}),
@@ -44,184 +145,429 @@ export default function PlaceDetailScreen() {
     });
   }, [place?.name, navigation, id, placeSlug]);
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  const coords = useMemo(() => {
+    if (!place?.location) return null;
+    try {
+      const { eventLat, eventLng } = parseWKBHex(place.location);
+      return Number.isFinite(eventLat) && Number.isFinite(eventLng)
+        ? { lat: eventLat, lng: eventLng }
+        : null;
+    } catch {
+      return null;
+    }
+  }, [place?.location]);
 
+  const reviewsList = usePlaceReviewsList(place?.id);
+  const upcoming = usePlaceUpcomingEvents(place?.id);
+  const nearby = useNearbyPlaces(coords, 10);
+
+  const similarPlaces = useMemo<PlaceType[]>(() => {
+    const rows = nearby.data?.pages.flatMap((p) => p.rows) ?? [];
+    return rows
+      .filter((p) => p.id !== place?.id && p.category_id === place?.category_id)
+      .slice(0, 6);
+  }, [nearby.data, place?.id, place?.category_id]);
+
+  if (isLoading) return <ScreenLoader />;
   if (isError || !place) {
     return (
-      <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-muted-foreground">
-          This place could not be loaded.
-        </Text>
-        <Pressable
-          className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
-          onPress={() => refetch()}
-        >
-          <Text className="font-semibold text-primary-foreground">Retry</Text>
-        </Pressable>
-      </View>
+      <ScreenError
+        message="This place could not be loaded."
+        onRetry={() => refetch()}
+      />
     );
   }
 
   const cover =
     place.cover_public_id && place.cover_version
       ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
-          width: 720,
-          height: 360,
+          width: 900,
+          height: 500,
         })
       : null;
   const openStatus = computePlaceOpenStatus(
     place.openingHours,
     place.temporary_status,
   );
+  const address = place.address?.full_address;
+  const reviews = reviewsList.data?.pages.flatMap((p) => p.reviews) ?? [];
+  const upcomingEvents = upcoming.data ?? [];
+
+  const openDirections = () => {
+    const q = encodeURIComponent(address ?? place.name);
+    Linking.openURL(
+      `https://www.google.com/maps/search/?api=1&query=${q}`,
+    ).catch(() => {});
+  };
+  const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
 
   return (
     <ScrollView
       className="flex-1 bg-background"
-      contentContainerClassName="pb-10"
+      contentContainerClassName="pb-12"
     >
-      {cover ? (
-        <Image
-          source={{ uri: cover }}
-          style={{ width: "100%", height: 200 }}
-          contentFit="cover"
-          transition={150}
-        />
-      ) : (
-        <View className="h-48 items-center justify-center bg-muted">
-          <Text className="text-muted-foreground">No photo</Text>
-        </View>
-      )}
-
-      <View className="gap-5 p-4">
-        <View className="gap-1">
-          <Text className="text-xl font-bold text-foreground">
-            {place.name}
-          </Text>
-          <Text className="text-xs text-muted-foreground">
-            {place.place_category?.name}
-            {place.verified ? " · Verified" : ""}
-          </Text>
-          <View className="mt-1 flex-row items-center gap-3">
-            <Text
-              className={`text-xs font-semibold ${openStatus.isOpen ? "text-success" : "text-muted-foreground"}`}
-            >
-              {openStatus.label}
-            </Text>
-            {place.reviewCount > 0 ? (
-              <Text className="text-xs text-muted-foreground">
-                ★ {place.avgRating.toFixed(1)} ({place.reviewCount})
-              </Text>
-            ) : (
-              <Text className="text-xs text-muted-foreground">No reviews</Text>
-            )}
-          </View>
-        </View>
-
-        <View className="gap-3 rounded-xl border border-border bg-card p-4">
-          <Row
-            icon="location-outline"
-            label={place.address?.full_address ?? "Address unavailable"}
+      {/* Hero */}
+      <View className="relative h-72 bg-muted">
+        {cover ? (
+          <Image
+            source={{ uri: cover }}
+            style={{ width: "100%", height: "100%" }}
+            contentFit="cover"
+            transition={150}
           />
-          {place.phone ? <Row icon="call-outline" label={place.phone} /> : null}
-          {place.website_url ? (
-            <Row icon="globe-outline" label={place.website_url} />
+        ) : (
+          <View className="flex-1 items-center justify-center">
+            <Icon name="image-outline" size={28} tone="muted" />
+          </View>
+        )}
+        <View
+          className="absolute inset-x-0 bottom-0 h-2/3"
+          style={{ backgroundColor: "rgba(0,0,0,0.32)" }}
+        />
+        <View
+          className="absolute inset-x-0 bottom-0 h-1/3"
+          style={{ backgroundColor: "rgba(0,0,0,0.34)" }}
+        />
+        <View className="absolute inset-x-0 bottom-0 gap-2 p-4">
+          <AppText
+            className="text-[24px] font-bold text-white"
+            style={{ textShadowColor: "rgba(0,0,0,0.5)", textShadowRadius: 8 }}
+            numberOfLines={2}
+          >
+            {place.name}
+          </AppText>
+          <View className="flex-row flex-wrap items-center gap-2">
+            <View className="rounded-full bg-black/40 px-3 py-1">
+              <AppText className="text-[12px] font-semibold text-white">
+                {place.place_category?.name ?? "Place"}
+              </AppText>
+            </View>
+            {place.verified ? (
+              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+                <Icon name="checkmark-circle" size={13} color="#fff" />
+                <AppText className="text-[12px] font-semibold text-white">
+                  Verified
+                </AppText>
+              </View>
+            ) : null}
+            <View className="rounded-full bg-black/40 px-3 py-1">
+              <AppText className="text-[12px] font-semibold text-white">
+                {openStatus.label}
+              </AppText>
+            </View>
+            <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+              <Icon name="star" size={12} tone="warning" />
+              <AppText className="text-[12px] font-semibold text-white">
+                {place.avgRating.toFixed(1)} ({place.reviewCount})
+              </AppText>
+            </View>
+          </View>
+          {address ? (
+            <View className="flex-row items-start gap-1">
+              <Icon name="location-outline" size={13} color="#fff" />
+              <AppText
+                className="flex-1 text-[12px] text-white/90"
+                numberOfLines={1}
+              >
+                {address}
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+      </View>
+
+      <View className="gap-6 p-4">
+        {/* Primary actions */}
+        <View className="flex-row flex-wrap gap-2">
+          <Button
+            title="Directions"
+            variant="outline"
+            size="sm"
+            leftIcon="navigate-outline"
+            className="flex-1"
+            onPress={openDirections}
+          />
+          {place.phone ? (
+            <Button
+              title="Call"
+              variant="outline"
+              size="sm"
+              leftIcon="call-outline"
+              className="flex-1"
+              onPress={() =>
+                Linking.openURL(`tel:${place.phone}`).catch(() => {})
+              }
+            />
+          ) : null}
+          {whatsappDigits ? (
+            <Button
+              title="WhatsApp"
+              variant="outline"
+              size="sm"
+              leftIcon="logo-whatsapp"
+              className="flex-1"
+              onPress={() =>
+                Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
+                  () => {},
+                )
+              }
+            />
           ) : null}
         </View>
 
-        {place.description ? (
-          <View className="gap-2">
-            <Text className="text-base font-semibold text-foreground">
-              About
-            </Text>
-            <Text className="text-sm leading-relaxed text-muted-foreground">
-              {place.description}
-            </Text>
+        {/* Location */}
+        <View className="gap-3 rounded-xl border border-border bg-card p-4">
+          <View className="flex-row items-center gap-2">
+            <Icon name="location-outline" size={18} tone="foreground" />
+            <AppText className="text-[15px] font-semibold text-foreground">
+              Location
+            </AppText>
+          </View>
+          <AppText className="text-[13px] text-muted-foreground">
+            {address ?? "Address not specified"}
+          </AppText>
+          {MapAvailable && MapView && coords ? (
+            <MapErrorBoundary fallback={null}>
+              <View className="h-40 overflow-hidden rounded-lg">
+                <MapView
+                  style={{ flex: 1 }}
+                  provider={PROVIDER_GOOGLE}
+                  pointerEvents="none"
+                  initialRegion={{
+                    latitude: coords.lat,
+                    longitude: coords.lng,
+                    latitudeDelta: 0.02,
+                    longitudeDelta: 0.02,
+                  }}
+                >
+                  {Marker ? (
+                    <Marker
+                      coordinate={{
+                        latitude: coords.lat,
+                        longitude: coords.lng,
+                      }}
+                    />
+                  ) : null}
+                </MapView>
+              </View>
+            </MapErrorBoundary>
+          ) : null}
+        </View>
+
+        {/* Contact */}
+        {place.phone || place.whatsapp || place.website_url ? (
+          <View className="gap-1 rounded-xl border border-border bg-card p-4">
+            <AppText className="mb-1 text-[15px] font-semibold text-foreground">
+              Contact
+            </AppText>
+            {place.phone ? (
+              <ContactRow
+                icon="call-outline"
+                label={place.phone}
+                onPress={() =>
+                  Linking.openURL(`tel:${place.phone}`).catch(() => {})
+                }
+              />
+            ) : null}
+            {place.whatsapp ? (
+              <ContactRow
+                icon="logo-whatsapp"
+                label={place.whatsapp}
+                onPress={() =>
+                  Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
+                    () => {},
+                  )
+                }
+              />
+            ) : null}
+            {place.website_url ? (
+              <ContactRow
+                icon="globe-outline"
+                label={place.website_url}
+                onPress={() =>
+                  Linking.openURL(
+                    place.website_url?.startsWith("http")
+                      ? place.website_url
+                      : `https://${place.website_url}`,
+                  ).catch(() => {})
+                }
+              />
+            ) : null}
           </View>
         ) : null}
 
+        {/* About */}
+        {place.description ? (
+          <View className="gap-2">
+            <SectionTitle>About</SectionTitle>
+            <AppText className="text-[14px] leading-relaxed text-muted-foreground">
+              {place.description}
+            </AppText>
+          </View>
+        ) : null}
+
+        {/* Opening hours */}
         {place.openingHours.length > 0 ? (
           <View className="gap-2">
-            <Text className="text-base font-semibold text-foreground">
-              Opening hours
-            </Text>
+            <SectionTitle>Opening hours</SectionTitle>
             <View className="rounded-xl border border-border bg-card">
               {[...place.openingHours]
                 .sort((a, b) => a.day_of_week - b.day_of_week)
-                .map((h) => (
+                .map((h, i, arr) => (
                   <View
                     key={h.day_of_week}
-                    className="flex-row justify-between border-b border-border px-4 py-2 last:border-b-0"
+                    className={`flex-row justify-between px-4 py-2.5 ${
+                      i < arr.length - 1 ? "border-b border-border" : ""
+                    }`}
                   >
-                    <Text className="text-sm text-foreground">
+                    <AppText className="text-[13px] text-foreground">
                       {DAY_LABELS[h.day_of_week]}
-                    </Text>
-                    <Text className="text-sm text-muted-foreground">
+                    </AppText>
+                    <AppText className="text-[13px] text-muted-foreground">
                       {h.is_closed || !h.open_time || !h.close_time
                         ? "Closed"
                         : `${timeLabel(h.open_time)} – ${timeLabel(h.close_time)}`}
-                    </Text>
+                    </AppText>
                   </View>
                 ))}
             </View>
           </View>
         ) : null}
 
+        {/* Services */}
         {place.services.length > 0 ? (
           <View className="gap-2">
-            <Text className="text-base font-semibold text-foreground">
-              Services
-            </Text>
+            <SectionTitle>Services</SectionTitle>
             {place.services.map((s) => (
               <View
                 key={s.id}
                 className="rounded-xl border border-border bg-card p-3"
               >
-                <View className="flex-row justify-between">
-                  <Text className="text-sm font-medium text-foreground">
+                <View className="flex-row justify-between gap-3">
+                  <AppText className="flex-1 text-[14px] font-medium text-foreground">
                     {s.name}
-                  </Text>
+                  </AppText>
                   {s.show_price && s.price != null ? (
-                    <Text className="text-sm text-muted-foreground">
+                    <AppText className="text-[13px] text-muted-foreground">
                       GHS {s.price}
                       {s.price_unit ? ` / ${s.price_unit}` : ""}
-                    </Text>
+                    </AppText>
                   ) : null}
                 </View>
                 {s.description ? (
-                  <Text className="mt-1 text-xs text-muted-foreground">
+                  <AppText className="mt-1 text-[12px] text-muted-foreground">
                     {s.description}
-                  </Text>
+                  </AppText>
                 ) : null}
               </View>
             ))}
           </View>
         ) : null}
 
-        <Pressable className="items-center py-2" onPress={() => router.back()}>
-          <Text className="text-sm text-primary">Back to browsing</Text>
-        </Pressable>
+        {/* Photos */}
+        {place.photos.length > 0 ? (
+          <View className="gap-2">
+            <SectionTitle>Photos</SectionTitle>
+            <View className="flex-row flex-wrap gap-2">
+              {place.photos.map((photo) => (
+                <Image
+                  key={photo.id}
+                  source={{
+                    uri: buildCloudinaryUrl(photo.public_id, photo.version, {
+                      width: 300,
+                      height: 300,
+                    }),
+                  }}
+                  style={{ width: "31%", aspectRatio: 1, borderRadius: 8 }}
+                  contentFit="cover"
+                />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {/* Reviews */}
+        <View className="gap-3">
+          <View className="flex-row items-center justify-between">
+            <SectionTitle>Reviews</SectionTitle>
+            {place.reviewCount > 0 ? (
+              <View className="flex-row items-center gap-1.5">
+                <Stars rating={place.avgRating} size={14} />
+                <AppText className="text-[12px] text-muted-foreground">
+                  {place.avgRating.toFixed(1)} ({place.reviewCount})
+                </AppText>
+              </View>
+            ) : null}
+          </View>
+          {reviewsList.isLoading ? (
+            <AppText className="text-[13px] text-muted-foreground">
+              Loading reviews…
+            </AppText>
+          ) : reviews.length === 0 ? (
+            <AppText className="text-[13px] text-muted-foreground">
+              No reviews yet.
+            </AppText>
+          ) : (
+            <View className="gap-2">
+              {reviews.map((r) => (
+                <PlaceReviewCard key={r.id} review={r} />
+              ))}
+              {reviewsList.hasNextPage ? (
+                <Pressable
+                  accessibilityRole="button"
+                  className="items-center py-2 active:opacity-60"
+                  disabled={reviewsList.isFetchingNextPage}
+                  onPress={() => reviewsList.fetchNextPage()}
+                >
+                  <AppText className="text-[13px] font-semibold text-primary">
+                    {reviewsList.isFetchingNextPage
+                      ? "Loading…"
+                      : "Show more reviews"}
+                  </AppText>
+                </Pressable>
+              ) : null}
+            </View>
+          )}
+        </View>
+
+        {/* Upcoming events (item 13) */}
+        {upcomingEvents.length > 0 ? (
+          <View className="gap-3">
+            <SectionTitle>Upcoming events here</SectionTitle>
+            <FlatList
+              horizontal
+              data={upcomingEvents}
+              keyExtractor={(e) => e.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-3"
+              renderItem={({ item }) => (
+                <View style={{ width: 260 }}>
+                  <EventCard event={item} />
+                </View>
+              )}
+            />
+          </View>
+        ) : null}
+
+        {/* Similar places (item 13) */}
+        {similarPlaces.length > 0 ? (
+          <View className="gap-3">
+            <SectionTitle>Similar places</SectionTitle>
+            <FlatList
+              horizontal
+              data={similarPlaces}
+              keyExtractor={(p) => p.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-3"
+              renderItem={({ item }) => (
+                <View style={{ width: 240 }}>
+                  <PlaceCard place={item} />
+                </View>
+              )}
+            />
+          </View>
+        ) : null}
       </View>
     </ScrollView>
-  );
-}
-
-function Row({
-  icon,
-  label,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}) {
-  return (
-    <View className="flex-row gap-3">
-      <Ionicons name={icon} size={18} color="#888" style={{ marginTop: 2 }} />
-      <Text className="flex-1 text-sm text-foreground">{label}</Text>
-    </View>
   );
 }

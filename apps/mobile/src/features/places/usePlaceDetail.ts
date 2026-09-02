@@ -12,6 +12,10 @@ export type PlaceDetail = {
   slug: string;
   description: string;
   address: { full_address?: string } | null;
+  /** PostGIS WKB hex — parse with parseWKBHex for the map / similar-places. */
+  location: string | null;
+  category_id: number | null;
+  owner_id: string | null;
   website_url: string | null;
   phone: string | null;
   whatsapp: string | null;
