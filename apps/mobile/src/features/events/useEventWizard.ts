@@ -1,8 +1,18 @@
 import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplete";
 import { useEventCreate } from "@/features/events/useEventCreate";
-import { combineDateAndTime } from "@/lib/datetime";
+import {
+  useEventDraft,
+  useSaveEventDraft,
+} from "@/features/events/useEventDrafts";
+import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
-import type { EventCreateBody, EventCreateResult } from "@abonten/api-client";
+import type {
+  EventCreateBody,
+  EventCreateResult,
+  EventDraftPayload,
+  SaveEventDraftResult,
+} from "@abonten/api-client";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import {
   validateSingleDateRange,
@@ -11,13 +21,23 @@ import {
 import { getEventSchema } from "@abonten/validation/eventSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 // All state, validation and submit logic for the native event-creation
-// wizard — the mobile echo of the web useEventUploadForm hook. Create-only;
-// save-as-draft is WP-4g, and the optional Abonten-Place venue picker is
-// deferred (placeId stays null, as it is for most web events).
+// wizard — the mobile echo of the web useEventUploadForm hook. Publishes an
+// event, and (WP-4g-2) saves / resumes a draft against the same
+// drafts/event_drafts rows the web saveEventDraft action writes. The
+// optional Abonten-Place venue picker is deferred (placeId stays null, as
+// it is for most web events).
+
+const isRemote = (uri: string | null): boolean =>
+  !!uri && /^https?:/i.test(uri);
+
+const splitIso = (iso: string): { date: string; time: string } => {
+  const d = new Date(iso);
+  return { date: isoDate(d), time: hhmm(d) };
+};
 
 const EVENT_MESSAGES = {
   titleRequired: "Give your event a title.",
@@ -64,12 +84,25 @@ export type EventWizardTextErrors = Partial<
   Record<"title" | "description" | "website_url" | "capacity", string>
 >;
 
-export function useEventWizard() {
+export function useEventWizard(resumeDraftId?: string) {
   const autocomplete = usePlacesAutocomplete();
   const create = useEventCreate();
+  const saveDraftMutation = useSaveEventDraft();
+  const draftQuery = useEventDraft(resumeDraftId);
 
   const clientRequestId = useRef(uuidv4()).current;
   const eventSchema = useMemo(() => getEventSchema(EVENT_MESSAGES), []);
+
+  // Draft tracking: `currentDraftId` becomes set after the first save (or is
+  // seeded when resuming); `draftUpdatedAt` feeds the optimistic-concurrency
+  // check; `savedFlyerUri` is the flyer URI already persisted, so an
+  // unchanged flyer isn't re-uploaded on every save.
+  const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
+    resumeDraftId,
+  );
+  const draftUpdatedAt = useRef<string | undefined>(undefined);
+  const savedFlyerUri = useRef<string | null>(null);
+  const hydratedRef = useRef(false);
 
   const [step, setStep] = useState(0);
 
@@ -240,6 +273,196 @@ export function useEventWizard() {
     });
     if (picked.canceled || !picked.assets?.[0]) return;
     setFlyerUri(picked.assets[0].uri);
+  }
+
+  // --- draft: hydrate on resume ------------------------------------
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot hydration guarded by hydratedRef; the setters are stable
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!resumeDraftId || draftQuery.data?.status !== 200) return;
+    hydratedRef.current = true;
+
+    const detail = draftQuery.data.data;
+    const p = detail.payload;
+    draftUpdatedAt.current = detail.updatedAt;
+
+    if (p.title) setTitle(p.title);
+    if (p.description) setDescription(p.description);
+    if (p.websiteUrl) setWebsite(p.websiteUrl);
+    if (p.capacity != null) setCapacity(String(p.capacity));
+    if (p.category) setCategory(p.category);
+    if (p.types?.length) setTypes(p.types);
+    if (p.requireRegistration != null)
+      setRequireRegistration(p.requireRegistration);
+
+    if (detail.flyerPublicId && detail.flyerVersion) {
+      const url = buildCloudinaryUrl(
+        detail.flyerPublicId,
+        detail.flyerVersion,
+        { width: 800 },
+      );
+      setFlyerUri(url);
+      savedFlyerUri.current = url;
+    }
+
+    if (p.dateType === "specific") {
+      setScheduleMode("specific");
+      if (p.multipleDates?.length) {
+        setOccurrences(
+          p.multipleDates.map((d) => {
+            const s = splitIso(d.start);
+            return {
+              id: uuidv4(),
+              dateIso: s.date,
+              start: s.time,
+              end: splitIso(d.end).time,
+            };
+          }),
+        );
+      }
+    } else if (p.singleDateRange?.from) {
+      setScheduleMode("single");
+      const from = splitIso(p.singleDateRange.from);
+      setRangeStart(from.date);
+      setRangeStartTime(from.time);
+      if (p.singleDateRange.to) {
+        const to = splitIso(p.singleDateRange.to);
+        setRangeEnd(to.date);
+        setRangeEndTime(to.time);
+      }
+    }
+
+    if (p.address) {
+      setAddress(p.address);
+      autocomplete.setQuery(p.address);
+    }
+    if (p.latitude != null && p.longitude != null)
+      setCoords({ lat: p.latitude, lng: p.longitude });
+
+    if (p.ticket === "free" || p.ticket === "single" || p.ticket === "multiple")
+      setTicketMode(p.ticket);
+    if (p.singleTicket != null) setTicketPrice(String(p.singleTicket));
+    if (p.singleTicketQuantity != null)
+      setTicketQuantity(String(p.singleTicketQuantity));
+    if (p.multipleTickets?.length) {
+      setTiers(
+        p.multipleTickets.map((t) => ({
+          id: uuidv4(),
+          name: t.category ?? "",
+          price: String(t.price),
+          quantity: t.quantity != null ? String(t.quantity) : "",
+        })),
+      );
+    }
+    if (p.promoCodes?.length) {
+      setPromos(
+        p.promoCodes.map((c) => ({
+          id: uuidv4(),
+          promoCode: c.promoCode,
+          discount: String(c.discount),
+          maximumUse: String(c.maximumUse),
+          expiryIso: c.expiryDate,
+        })),
+      );
+    }
+  }, [resumeDraftId, draftQuery.data]);
+
+  // --- draft: build payload from current state --------------------
+  function buildDraftPayload(): EventDraftPayload {
+    const capNum = capacity.trim() === "" ? undefined : Number(capacity.trim());
+    const single =
+      scheduleMode === "single" && rangeStart
+        ? {
+            from: combineDateAndTime(rangeStart, rangeStartTime)?.toISOString(),
+            to: combineDateAndTime(
+              rangeEnd ?? rangeStart,
+              rangeEndTime,
+            )?.toISOString(),
+          }
+        : undefined;
+    const multi =
+      scheduleMode === "specific" && occurrences.length > 0
+        ? occurrences
+            .map((o) => ({
+              start: combineDateAndTime(o.dateIso, o.start)?.toISOString(),
+              end: combineDateAndTime(o.dateIso, o.end)?.toISOString(),
+            }))
+            .filter(
+              (e): e is { start: string; end: string } => !!e.start && !!e.end,
+            )
+        : undefined;
+
+    return {
+      title: title.trim() || undefined,
+      description: description.trim() || undefined,
+      websiteUrl: website.trim() || undefined,
+      capacity:
+        capNum != null && Number.isInteger(capNum) && capNum > 0
+          ? capNum
+          : undefined,
+      category: category ?? undefined,
+      types: types.length > 0 ? types : undefined,
+      address: address.trim() || undefined,
+      latitude: coords?.lat,
+      longitude: coords?.lng,
+      dateType: scheduleMode,
+      singleDateRange:
+        single?.from && single?.to
+          ? { from: single.from, to: single.to }
+          : undefined,
+      multipleDates: multi && multi.length > 0 ? multi : undefined,
+      ticket: ticketMode,
+      singleTicket:
+        ticketMode === "single" && ticketPrice.trim() !== ""
+          ? Number(ticketPrice)
+          : undefined,
+      singleTicketQuantity:
+        ticketMode === "single" && ticketQuantity.trim() !== ""
+          ? Number(ticketQuantity)
+          : undefined,
+      multipleTickets:
+        ticketMode === "multiple" && tiers.length > 0
+          ? tiers.map((t) => ({
+              category: t.name.trim() || undefined,
+              price: Number(t.price) || 0,
+              quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
+            }))
+          : undefined,
+      promoCodes:
+        promos.length > 0
+          ? promos
+              .filter((c) => c.promoCode.trim() !== "" && c.expiryIso)
+              .map((c) => ({
+                promoCode: c.promoCode.trim().toUpperCase(),
+                discount: Number(c.discount) || 0,
+                maximumUse: Number(c.maximumUse) || 0,
+                expiryDate: c.expiryIso,
+              }))
+          : undefined,
+      requireRegistration,
+      currency: CURRENCY,
+    };
+  }
+
+  async function saveDraft(): Promise<SaveEventDraftResult> {
+    const localFlyer =
+      flyerUri && !isRemote(flyerUri) && flyerUri !== savedFlyerUri.current
+        ? flyerUri
+        : null;
+
+    const res = await saveDraftMutation.mutateAsync({
+      draftId: currentDraftId,
+      payload: buildDraftPayload(),
+      expectedUpdatedAt: draftUpdatedAt.current,
+      flyerUri: localFlyer,
+    });
+
+    if (res.status === 200) {
+      setCurrentDraftId(res.data.draftId);
+      draftUpdatedAt.current = res.data.updatedAt;
+      if (flyerUri) savedFlyerUri.current = flyerUri;
+    }
+    return res;
   }
 
   // Resolve the schedule step into the shape the API expects, or return an
@@ -470,6 +693,17 @@ export function useEventWizard() {
     submit,
     isSubmitting: create.isPending,
     isSubmitError: create.isError,
+    // draft
+    saveDraft,
+    isSavingDraft: saveDraftMutation.isPending,
+    currentDraftId,
+    isHydratingDraft: !!resumeDraftId && draftQuery.isLoading,
+    draftLoadError:
+      !!resumeDraftId &&
+      draftQuery.data != null &&
+      draftQuery.data.status !== 200
+        ? draftQuery.data.message
+        : null,
   };
 }
 

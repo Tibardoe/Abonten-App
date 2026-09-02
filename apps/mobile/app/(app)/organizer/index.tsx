@@ -1,4 +1,5 @@
 import { DashboardWidgets } from "@/components/organizer/DashboardWidgets";
+import { useEventDrafts } from "@/features/events/useEventDrafts";
 import {
   useOrganizerDashboardWidgets,
   useOrganizerOverview,
@@ -60,6 +61,9 @@ export default function OrganizerDashboard() {
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("30d");
   const q = useOrganizerOverview(period);
   const widgetsQuery = useOrganizerDashboardWidgets(period);
+  const draftsQuery = useEventDrafts();
+  const draftCount =
+    draftsQuery.data?.status === 200 ? draftsQuery.data.data.length : 0;
 
   const result = q.data;
   const rows: OrganizerOverviewRow[] =
@@ -242,6 +246,12 @@ export default function OrganizerDashboard() {
           </Pressable>
         </Link>
         <NavRow href="/(app)/organizer/events" label="My events" />
+        {draftCount > 0 ? (
+          <NavRow
+            href="/(app)/organizer/event-drafts"
+            label={`Event drafts (${draftCount})`}
+          />
+        ) : null}
         <NavRow href="/(app)/organizer/places" label="My places" />
         <NavRow href="/(app)/organizer/finance" label="Finances" />
       </View>

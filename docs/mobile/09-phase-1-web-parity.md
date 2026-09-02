@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, 4g-2 event wizard save-as-draft + drafts list, see below |
 
 ---
 
@@ -1717,5 +1717,60 @@ creation wizards save into. Ported as sub-chunks:
 
 **Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
 `@abonten/api-client`) green, `next build` exit 0 (`/api/mobile/organizer/dashboard`
+compiled), `expo export --platform android` clean, `biome check` clean. Not
+device-verified.
+
+#### WP-4g-2 — Event wizard save-as-draft + drafts list (done 2026-09-02)
+
+The web `saveEventDraft` / `getEventDrafts` / `getEventDraft` /
+`deleteEventDraft` actions + the event tab of `DraftsView`, plus the
+create wizard's "Save as draft" / draft-resume flow (`useEventUploadForm`'s
+`buildDraftPayload` / `saveDraft` / `initialValues` hydration).
+
+- **`apps/web/src/utils/eventDraftCore.ts`** — `saveEventDraftCore`
+  (lifted from `saveEventDraft` minus the `File` upload — the caller passes
+  an already-uploaded `flyerPublicId` / `flyerVersion`; keeps the
+  `eventDraftPayloadSchema` re-validation, the `expectedUpdatedAt` 409
+  concurrency guard, the manual base-row rollback, and the replaced-flyer
+  Cloudinary cleanup), `fetchEventDraftsList`, `fetchEventDraftDetail` (404
+  / 410 expiry re-checks + `eventDraftPayloadSchema.safeParse`),
+  `deleteEventDraftCore` (Cloudinary-first). The four actions thinned to
+  `auth (401 as const) → delegate`; `saveEventDraft` keeps its browser
+  `File` upload then delegates. `EventDraftListItem` / `EventDraftDetail`
+  re-exported from the actions for their existing web importers.
+- **Routes** — `GET /api/mobile/organizer/event-drafts` (list),
+  `POST .../event-drafts` (`{ draftId?, payload, expectedUpdatedAt?,
+  flyerPublicId?, flyerVersion? }`), `GET .../event-drafts/[draftId]`
+  (full payload), `POST .../event-drafts/[draftId]/delete`.
+- **api-client** — a dependency-free **structural mirror** of
+  `eventDraftPayloadSchema` (`EventDraftPayload` + its sub-types, all date
+  fields typed as ISO `string` — the route re-validates with the real Zod
+  schema, whose `z.coerce.date()` accepts the strings); `EventDraftListItem`
+  / `EventDraftDetail`, `EventDraftsListResult` / `EventDraftDetailResult`,
+  `SaveEventDraftBody` / `SaveEventDraftResult`, `DeleteEventDraftResult`;
+  `api.organizer.eventDrafts()` / `eventDraft(id)` / `saveEventDraft(body)`
+  / `deleteEventDraft(id)`.
+- **Mobile** — `src/features/events/useEventDrafts.ts` (`useEventDrafts`
+  list, `useEventDraft(id)`, `useSaveEventDraft` — uploads a new local
+  flyer URI via `uploadToCloudinary(uri, "event_flyer")` then saves —
+  `useDeleteEventDraft`). `useEventWizard(resumeDraftId?)` gained
+  `buildDraftPayload()` (maps the flat wizard state → the web payload
+  shape: `combineDateAndTime` to fold the split date+time fields into ISO
+  `singleDateRange` / `multipleDates`, `tiers` → `multipleTickets`, `promos`
+  → `promoCodes`; persists `latitude`/`longitude`, which the web draft
+  drops), a one-shot hydration `useEffect` (splits the ISO dates back with
+  `isoDate` / `hhmm`, rebuilds list-row `id`s, loads the flyer as a
+  Cloudinary URL and marks it already-saved so it isn't re-uploaded), and
+  `saveDraft()` (tracks `currentDraftId` + `draftUpdatedAt`, only uploads
+  the flyer when it's a new local URI). `app/(app)/event/new.tsx` reads
+  `?draftId=`, shows a hydration spinner, a "Save as draft" header-row
+  button, and a "You have N saved drafts →" banner when starting fresh.
+  New screen `app/(app)/organizer/event-drafts.tsx` (flyer thumb + title +
+  "Edited …" rows; tap → `/event/new?draftId=`; trash + `Alert` confirm →
+  delete). "Event drafts (N)" nav row on the organizer dashboard when a
+  draft exists; route registered `href: null`.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all 3 new routes
 compiled), `expo export --platform android` clean, `biome check` clean. Not
 device-verified.
