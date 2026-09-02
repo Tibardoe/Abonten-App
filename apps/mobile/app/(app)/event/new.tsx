@@ -9,6 +9,7 @@ import { EventWizardSchedule } from "@/components/events/EventWizardSchedule";
 import { EventWizardTickets } from "@/components/events/EventWizardTickets";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
+import { AppText, ScreenTitle } from "@abonten/ui-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -20,16 +21,37 @@ import {
 } from "react-native";
 
 // Native echo of the web EventUploadModal / useEventUploadForm — a 7-step
-// wizard (Basics, Flyer, Schedule, Location, Tickets, Promo codes, Review)
-// that publishes an event via useEventCreate. With `?draftId=`, it resumes
-// a saved draft; the "Save as draft" button (WP-4g-2) writes the same
+// wizard that publishes an event via useEventCreate. With `?draftId=`, it
+// resumes a saved draft; the "Save as draft" button writes the same
 // drafts/event_drafts rows the web saveEventDraft action does.
 //
-// Navigation lives entirely in the header: Back steps back (or leaves the
-// flow from step 0), Next / Publish advances. The per-step gates come from
-// `w.canAdvance`.
+// Flyer comes first (a strong image is what sells an event), then the
+// details in the order an organiser thinks about them: what it is → when →
+// where → tickets → promos → review. Navigation lives in the header: Back
+// steps back (or leaves the flow from step 0), Next / Publish advances; the
+// per-step gates come from `w.canAdvance`, except Basics which validates on
+// Next-press.
 
-const LAST_STEP = 6;
+const STEPS: { title: string; subtitle: string }[] = [
+  {
+    title: "Event flyer",
+    subtitle: "A striking image is what sells the event — add it first.",
+  },
+  {
+    title: "Basic info",
+    subtitle: "Name, description, category and capacity.",
+  },
+  { title: "Date & time", subtitle: "When the event happens." },
+  { title: "Location", subtitle: "Where guests should go." },
+  {
+    title: "Tickets & pricing",
+    subtitle: "Free entry, one price, or multiple tiers.",
+  },
+  { title: "Promo codes", subtitle: "Optional discount codes." },
+  { title: "Review & publish", subtitle: "Check everything, then go live." },
+];
+const LAST_STEP = STEPS.length - 1;
+const BASICS_STEP = 1;
 
 export default function CreateEventScreen() {
   const router = useRouter();
@@ -69,14 +91,11 @@ export default function CreateEventScreen() {
   }
 
   function goNext() {
-    if (w.step === 0) {
-      if (w.validateBasics()) w.setStep(1);
-      return;
-    }
     if (w.step === LAST_STEP) {
       onPublish();
       return;
     }
+    if (w.step === BASICS_STEP && !w.validateBasics()) return;
     w.setStep(w.step + 1);
   }
 
@@ -96,7 +115,7 @@ export default function CreateEventScreen() {
       onBack={goBack}
       onNext={goNext}
       nextLabel={w.step === LAST_STEP ? "Publish" : "Next"}
-      nextDisabled={w.isSubmitting || (w.step !== 0 && !w.canAdvance)}
+      nextDisabled={w.isSubmitting || (w.step !== BASICS_STEP && !w.canAdvance)}
     />
   );
 
@@ -111,6 +130,8 @@ export default function CreateEventScreen() {
     );
   }
 
+  const stepInfo = STEPS[w.step];
+
   return (
     <View className="flex-1 bg-background">
       {header}
@@ -119,24 +140,34 @@ export default function CreateEventScreen() {
         contentContainerClassName="gap-5 p-4 pb-16"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-row items-center justify-between">
-          <StepDots step={w.step} total={7} />
-          <Pressable
-            onPress={onSaveDraft}
-            disabled={w.isSavingDraft}
-            className="active:opacity-60 disabled:opacity-50"
-          >
-            <Text className="text-sm font-semibold text-primary">
-              {w.isSavingDraft ? "Saving…" : "Save as draft"}
-            </Text>
-          </Pressable>
+        <View className="gap-3">
+          <View className="flex-row items-center justify-between">
+            <StepDots step={w.step} total={STEPS.length} />
+            <Pressable
+              onPress={onSaveDraft}
+              disabled={w.isSavingDraft}
+              className="active:opacity-60 disabled:opacity-50"
+            >
+              <Text className="text-sm font-semibold text-primary">
+                {w.isSavingDraft ? "Saving…" : "Save as draft"}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View className="gap-0.5">
+            <AppText variant="caption">
+              Step {w.step + 1} of {STEPS.length}
+            </AppText>
+            <ScreenTitle>{stepInfo.title}</ScreenTitle>
+            <AppText variant="muted">{stepInfo.subtitle}</AppText>
+          </View>
         </View>
 
         {w.draftLoadError ? (
           <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
         ) : null}
 
-        {!draftId && draftCount > 0 ? (
+        {!draftId && draftCount > 0 && w.step === 0 ? (
           <Link href="/(app)/organizer/event-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <Text className="text-sm text-foreground">
@@ -147,8 +178,8 @@ export default function CreateEventScreen() {
           </Link>
         ) : null}
 
-        {w.step === 0 ? <EventWizardBasics w={w} /> : null}
-        {w.step === 1 ? <EventWizardFlyer w={w} /> : null}
+        {w.step === 0 ? <EventWizardFlyer w={w} /> : null}
+        {w.step === 1 ? <EventWizardBasics w={w} /> : null}
         {w.step === 2 ? <EventWizardSchedule w={w} /> : null}
         {w.step === 3 ? <EventWizardLocation w={w} /> : null}
         {w.step === 4 ? <EventWizardTickets w={w} /> : null}

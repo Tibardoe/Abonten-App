@@ -2,7 +2,7 @@ import type { EventWizard } from "@/features/events/useEventWizard";
 import { AppText, Field, Input } from "@abonten/ui-native";
 import { Pressable, Switch, View } from "react-native";
 
-// Step 1 of the event wizard — title, description, category + types,
+// Step 2 of the event wizard — title, description, category + types,
 // capacity, website, and the require-registration toggle. Mirrors the web
 // EventUploadFormFields "Event basics" + "Event details" sections.
 // Step navigation is owned by the screen header (app/(app)/event/new.tsx).
