@@ -1,15 +1,10 @@
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { AppText, Button, Chip, Icon } from "@abonten/ui-native";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, Pressable, TextInput, View } from "react-native";
 import { useValidateCheckout } from "./useCheckout";
 
 const MAX_PER_TYPE = 10;
@@ -24,9 +19,43 @@ function isOnSale(t: EventDetail["ticket_type"][number], now: number): boolean {
   return true;
 }
 
+function StepButton({
+  icon,
+  disabled,
+  onPress,
+  label,
+}: {
+  icon: "remove" | "add";
+  disabled: boolean;
+  onPress: () => void;
+  label: string;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled}
+      onPress={onPress}
+      hitSlop={6}
+      className={`h-9 w-9 items-center justify-center rounded-full border ${
+        disabled ? "border-border opacity-40" : "border-primary"
+      }`}
+    >
+      <Icon name={icon} size={18} tone={disabled ? "muted" : "primary"} />
+    </Pressable>
+  );
+}
+
+// The mobile checkout entry: pick an occurrence, choose ticket quantities
+// (capped per type by MAX_PER_TYPE and remaining stock), optionally add a
+// promo code, then start a checkout session. The actual charge happens on
+// the checkout screen — this screen never moves money, which keeps it
+// resistant to accidental purchases. Business rules unchanged from the
+// previous version.
 export function TicketPicker({ event }: { event: EventDetail }) {
   const router = useRouter();
   const validate = useValidateCheckout();
+  const c = useThemeColors();
   const now = Date.now();
 
   const occurrences = event.event_occurrence ?? [];
@@ -84,8 +113,6 @@ export function TicketPicker({ event }: { event: EventDetail }) {
       router.push(`/(app)/checkout/${res.checkoutId}`);
       return;
     }
-    // A promo was entered and validate rejected — most likely the code.
-    // Keep the sheet open and surface it inline rather than aborting.
     if (trimmedPromo) {
       setPromoError(res.message ?? "That promo code couldn't be applied.");
       return;
@@ -97,33 +124,21 @@ export function TicketPicker({ event }: { event: EventDetail }) {
   }
 
   return (
-    <View className="gap-4">
+    <View className="gap-4 rounded-xl border border-border bg-card p-4">
       {occurrences.length > 1 ? (
         <View className="gap-2">
-          <Text className="text-sm font-semibold text-foreground">Date</Text>
+          <AppText className="text-[13px] font-semibold text-foreground">
+            Date
+          </AppText>
           <View className="flex-row flex-wrap gap-2">
-            {occurrences.map((o) => {
-              const selected = o.id === occurrenceId;
-              return (
-                <Pressable
-                  key={o.id}
-                  onPress={() => setOccurrenceId(o.id)}
-                  className={`rounded-full border px-3 py-1.5 ${
-                    selected
-                      ? "border-primary bg-primary"
-                      : "border-border bg-card"
-                  }`}
-                >
-                  <Text
-                    className={`text-xs ${
-                      selected ? "text-primary-foreground" : "text-foreground"
-                    }`}
-                  >
-                    {formatDateWithSuffix(o.starts_at)}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {occurrences.map((o) => (
+              <Chip
+                key={o.id}
+                label={formatDateWithSuffix(o.starts_at)}
+                selected={o.id === occurrenceId}
+                onPress={() => setOccurrenceId(o.id)}
+              />
+            ))}
           </View>
         </View>
       ) : null}
@@ -139,13 +154,13 @@ export function TicketPicker({ event }: { event: EventDetail }) {
           return (
             <View
               key={t.id}
-              className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
+              className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
             >
               <View className="flex-1">
-                <Text className="text-sm font-medium text-foreground">
+                <AppText className="text-[14px] font-medium text-foreground">
                   {t.type}
-                </Text>
-                <Text className="text-xs text-muted-foreground">
+                </AppText>
+                <AppText className="text-[12px] text-muted-foreground">
                   {t.price === 0 ? "Free" : `${t.currency} ${t.price}`}
                   {soldOut
                     ? " · Sold out"
@@ -154,35 +169,25 @@ export function TicketPicker({ event }: { event: EventDetail }) {
                       : t.quantity != null
                         ? ` · ${t.quantity} left`
                         : ""}
-                </Text>
+                </AppText>
               </View>
 
               <View className="flex-row items-center gap-3">
-                <Pressable
+                <StepButton
+                  icon="remove"
+                  label={`Remove one ${t.type} ticket`}
                   disabled={disabled || qty === 0}
                   onPress={() => step(t.id, -1, cap)}
-                  className={`h-8 w-8 items-center justify-center rounded-full border ${
-                    disabled || qty === 0
-                      ? "border-border opacity-40"
-                      : "border-primary"
-                  }`}
-                >
-                  <Text className="text-base text-foreground">−</Text>
-                </Pressable>
-                <Text className="w-5 text-center text-sm text-foreground">
+                />
+                <AppText className="w-5 text-center text-[14px] text-foreground">
                   {qty}
-                </Text>
-                <Pressable
+                </AppText>
+                <StepButton
+                  icon="add"
+                  label={`Add one ${t.type} ticket`}
                   disabled={disabled || qty >= cap}
                   onPress={() => step(t.id, 1, cap)}
-                  className={`h-8 w-8 items-center justify-center rounded-full border ${
-                    disabled || qty >= cap
-                      ? "border-border opacity-40"
-                      : "border-primary"
-                  }`}
-                >
-                  <Text className="text-base text-foreground">+</Text>
-                </Pressable>
+                />
               </View>
             </View>
           );
@@ -190,9 +195,9 @@ export function TicketPicker({ event }: { event: EventDetail }) {
       </View>
 
       <View className="gap-1.5">
-        <Text className="text-sm font-semibold text-foreground">
+        <AppText className="text-[13px] font-semibold text-foreground">
           Promo code
-        </Text>
+        </AppText>
         <TextInput
           value={promoCode}
           onChangeText={(v) => {
@@ -202,51 +207,41 @@ export function TicketPicker({ event }: { event: EventDetail }) {
           placeholder="Enter code (optional)"
           autoCapitalize="characters"
           autoCorrect={false}
-          className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
-          placeholderTextColor="#999"
+          className="rounded-lg border border-input bg-background px-3 py-2.5 text-[14px] text-foreground"
+          placeholderTextColor={c["muted-foreground"]}
         />
         {promoError ? (
-          <Text className="text-[11px] text-destructive">{promoError}</Text>
+          <AppText className="text-[11px] text-destructive">
+            {promoError}
+          </AppText>
         ) : (
-          <Text className="text-[11px] text-muted-foreground">
+          <AppText className="text-[11px] text-muted-foreground">
             Applied when you continue to checkout.
-          </Text>
+          </AppText>
         )}
       </View>
 
-      <View className="flex-row items-center justify-between">
-        <Text className="text-sm text-muted-foreground">
-          {totalCount} ticket{totalCount === 1 ? "" : "s"}
-        </Text>
-        <Text className="text-sm font-semibold text-foreground">
-          {currency} {subtotal}
-        </Text>
+      <View className="gap-1 border-t border-border pt-3">
+        <View className="flex-row items-center justify-between">
+          <AppText className="text-[13px] text-muted-foreground">
+            {totalCount} ticket{totalCount === 1 ? "" : "s"}
+          </AppText>
+          <AppText className="text-[15px] font-bold text-foreground">
+            {currency} {subtotal}
+          </AppText>
+        </View>
+        <AppText className="text-[11px] text-muted-foreground">
+          An Abonten service fee is added at checkout.
+        </AppText>
       </View>
-      <Text className="text-[11px] text-muted-foreground">
-        A service fee is added at checkout.
-      </Text>
 
-      <Pressable
+      <Button
+        title="Get tickets"
+        fullWidth
+        loading={validate.isPending}
         disabled={totalCount === 0 || validate.isPending}
         onPress={onGetTickets}
-        className={`items-center rounded-xl px-4 py-3 ${
-          totalCount === 0 || validate.isPending ? "bg-muted" : "bg-primary"
-        }`}
-      >
-        {validate.isPending ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text
-            className={`text-sm font-semibold ${
-              totalCount === 0
-                ? "text-muted-foreground"
-                : "text-primary-foreground"
-            }`}
-          >
-            Get tickets
-          </Text>
-        )}
-      </Pressable>
+      />
     </View>
   );
 }
