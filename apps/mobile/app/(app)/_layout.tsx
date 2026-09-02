@@ -175,6 +175,10 @@ function Layout() {
           options={{ href: null, title: "My events" }}
         />
         <Tabs.Screen
+          name="organizer/event-drafts"
+          options={{ href: null, title: "Event drafts" }}
+        />
+        <Tabs.Screen
           name="organizer/events/[eventId]/index"
           options={{ href: null, title: "Event insights" }}
         />

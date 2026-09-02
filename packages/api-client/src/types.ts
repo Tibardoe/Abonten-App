@@ -458,6 +458,109 @@ export type OrganizerDashboardWidgetsResult =
   | { status: 200; data: OrganizerDashboardWidgets }
   | { status: 401 | 500; message: string };
 
+// ---- event drafts (save-as-draft for the create wizard) ------------
+//
+// Structural mirror of @abonten/validation eventDraftPayloadSchema — the
+// routes re-validate with the real Zod schema (its date fields use
+// z.coerce.date()), so this stays dependency-free. Every date field is an
+// ISO string: JSON transport never carries a Date.
+
+export type EventDraftDateRange = { from?: string; to?: string };
+export type EventDraftDateEntry = { start: string; end: string };
+export type EventDraftTicket = {
+  category?: string;
+  price: number;
+  quantity?: number | null;
+  availableFrom?: string;
+  availableUntil?: string;
+};
+export type EventDraftPromoCode = {
+  promoCode: string;
+  discount: number;
+  maximumUse: number;
+  expiryDate: string;
+};
+export type EventDraftReceivingAccount = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  bankName?: string;
+  branch?: string;
+  bankAccountNumber?: string;
+};
+export type EventDraftPayload = {
+  title?: string;
+  description?: string;
+  websiteUrl?: string;
+  capacity?: number;
+  category?: string;
+  types?: string[];
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  dateType?: "single" | "specific";
+  singleDateRange?: EventDraftDateRange;
+  multipleDates?: EventDraftDateEntry[];
+  ticket?: string | null;
+  singleTicket?: number | null;
+  singleTicketQuantity?: number | null;
+  multipleTickets?: EventDraftTicket[];
+  promoCodes?: EventDraftPromoCode[];
+  requireRegistration?: boolean;
+  featured?: boolean;
+  paymentOption?: string | null;
+  selectedNetwork?: string | null;
+  receivingAccountDetails?: EventDraftReceivingAccount;
+  currency?: string | null;
+};
+
+export type EventDraftListItem = {
+  id: string;
+  title: string | null;
+  updatedAt: string;
+  expiresAt: string;
+  flyerPublicId: string | null;
+  flyerVersion: string | null;
+};
+
+export type EventDraftDetail = {
+  id: string;
+  updatedAt: string;
+  expiresAt: string;
+  payload: EventDraftPayload;
+  flyerPublicId: string | null;
+  flyerVersion: string | null;
+};
+
+export type EventDraftsListResult =
+  | { status: 200; data: EventDraftListItem[] }
+  | { status: 401 | 500; message: string; data?: EventDraftListItem[] };
+
+export type EventDraftDetailResult =
+  | { status: 200; data: EventDraftDetail }
+  | { status: 401 | 404 | 410 | 500; message: string };
+
+export type SaveEventDraftBody = {
+  draftId?: string;
+  payload: EventDraftPayload;
+  expectedUpdatedAt?: string;
+  flyerPublicId?: string;
+  flyerVersion?: string;
+};
+
+export type SaveEventDraftResult =
+  | {
+      status: 200;
+      message: string;
+      data: { draftId: string; updatedAt?: string };
+    }
+  | { status: 400 | 401 | 404 | 409 | 500; message: string };
+
+export type DeleteEventDraftResult = {
+  status: 200 | 401 | 404 | 500;
+  message: string;
+};
+
 // ---- event insights (per-event analytics, read-only) ----------------
 //
 // The underlying get_event_*_analytics RPCs have no generated types; the

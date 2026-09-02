@@ -16,12 +16,15 @@ import type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  DeleteEventDraftResult,
   DeletePromoCodeResult,
   DeviceRegisterBody,
   DeviceTokenResult,
   EventCancellationImpactResult,
   EventCreateBody,
   EventCreateResult,
+  EventDraftDetailResult,
+  EventDraftsListResult,
   EventEditContextResult,
   EventInsightsResult,
   EventPromoCodesResult,
@@ -67,6 +70,8 @@ import type {
   RequestPhoneOtpData,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
+  SaveEventDraftBody,
+  SaveEventDraftResult,
   SetPlaceStatusBody,
   SubmitChargeOtpResult,
   UpdateEventBody,
@@ -484,6 +489,42 @@ export function createApiClient(options: ApiClientOptions) {
         return request<OrganizerDashboardWidgetsResult>(
           `/api/mobile/organizer/dashboard?period=${period}`,
           { method: "GET", auth: true },
+        );
+      },
+      /** The caller's non-expired event drafts, newest first (list columns
+       *  only — no jsonb payload). */
+      eventDrafts() {
+        return request<EventDraftsListResult>(
+          "/api/mobile/organizer/event-drafts",
+          { method: "GET", auth: true },
+        );
+      },
+      /** The full payload + flyer ids for one event draft, to resume it in
+       *  the create wizard. 404 if not owned, 410 if expired. */
+      eventDraft(draftId: string) {
+        return request<EventDraftDetailResult>(
+          `/api/mobile/organizer/event-drafts/${encodeURIComponent(draftId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Create (`draftId` omitted) or update an event draft. Upload a
+       *  replacement flyer from the device first (kind "event_flyer") and
+       *  pass its `flyerPublicId` / `flyerVersion`, or omit both to keep the
+       *  current one. `expectedUpdatedAt` guards against a concurrent edit
+       *  (409). */
+      saveEventDraft(body: SaveEventDraftBody) {
+        return request<SaveEventDraftResult>(
+          "/api/mobile/organizer/event-drafts",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Delete one event draft (row + best-effort Cloudinary flyer). */
+      deleteEventDraft(draftId: string) {
+        return request<DeleteEventDraftResult>(
+          `/api/mobile/organizer/event-drafts/${encodeURIComponent(
+            draftId,
+          )}/delete`,
+          { method: "POST", auth: true },
         );
       },
       /** The caller's own events, newest first, every status. */
