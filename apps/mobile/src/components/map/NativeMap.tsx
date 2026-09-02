@@ -1,12 +1,21 @@
 import { AppText } from "@abonten/ui-native";
+import Constants from "expo-constants";
 import { Component, type ReactNode } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 
 // react-native-maps ships native code that only exists once the app has been
 // rebuilt (dev client / EAS build) with the module linked. On a stale binary
 // the <MapView> render throws ("AIRMap was not found"). This boundary catches
 // that so the screen degrades to a message + the list view instead of a red
 // screen. Once the app is rebuilt the map renders normally.
+//
+// The Google Maps provider ALSO needs the API key baked into the native
+// AndroidManifest / Info.plist at build time (app.config.js reads it from
+// EXPO_PUBLIC_GOOGLE_MAPS_API_KEY). If the installed binary was built
+// without it, `<MapView provider={PROVIDER_GOOGLE}>` throws a *native*
+// IllegalStateException ("API key not found") during view attach — which a
+// JS error boundary CANNOT catch (it crashes the UI thread first). So the
+// screens must not mount a MapView at all unless `MapConfigured` is true.
 
 export class MapErrorBoundary extends Component<
   { children: ReactNode; fallback?: ReactNode },
@@ -49,3 +58,18 @@ export const MapView = maps?.default ?? null;
 export const Marker = maps?.Marker ?? null;
 export const PROVIDER_GOOGLE = maps?.PROVIDER_GOOGLE ?? undefined;
 export const MapAvailable = maps != null;
+
+// Is a Google Maps API key actually present in the config that produced
+// this binary? `expoConfig` reflects the resolved app.config.js at build
+// time, so a missing key here means the native manifest has no key and
+// mounting a Google-provider MapView would hard-crash.
+function readMapsApiKey(): string | undefined {
+  // biome-ignore lint/suspicious/noExplicitAny: expo-config typings don't surface the nested googleMaps block
+  const cfg = Constants.expoConfig as any;
+  if (Platform.OS === "android") {
+    return cfg?.android?.config?.googleMaps?.apiKey;
+  }
+  return cfg?.ios?.config?.googleMapsApiKey;
+}
+
+export const MapConfigured = MapAvailable && !!readMapsApiKey();

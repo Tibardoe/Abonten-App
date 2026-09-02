@@ -2,7 +2,7 @@ import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import {
-  MapAvailable,
+  MapConfigured,
   MapErrorBoundary,
   MapView,
   Marker,
@@ -326,7 +326,7 @@ export default function PlaceDetailScreen() {
           <AppText className="text-[13px] text-muted-foreground">
             {address ?? "Address not specified"}
           </AppText>
-          {MapAvailable && MapView && coords ? (
+          {MapConfigured && MapView && coords ? (
             <MapErrorBoundary fallback={null}>
               <View className="h-40 overflow-hidden rounded-lg">
                 <MapView
