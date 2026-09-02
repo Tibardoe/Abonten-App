@@ -6,7 +6,7 @@ import {
 } from "@/features/organizer/usePlaceBookingsReviews";
 import type { BookingStatus, OwnerPlaceBooking } from "@abonten/api-client";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
-import { AppText } from "@abonten/ui-native";
+import { AppText, Chip } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -171,30 +171,14 @@ export default function PlaceBookingsScreen() {
         <View className="mb-2 gap-3">
           <AppText variant="screenTitle">Bookings</AppText>
           <View className="flex-row flex-wrap gap-2">
-            {FILTERS.map((f) => {
-              const active = filter === f.id;
-              return (
-                <Pressable
-                  key={f.id}
-                  onPress={() => setFilter(f.id)}
-                  className={`rounded-full border px-3 py-1.5 ${
-                    active
-                      ? "border-primary bg-primary"
-                      : "border-border bg-transparent"
-                  }`}
-                >
-                  <AppText
-                    className={
-                      active
-                        ? "text-[13px] font-semibold text-primary-foreground"
-                        : "text-[13px] text-muted-foreground"
-                    }
-                  >
-                    {f.label}
-                  </AppText>
-                </Pressable>
-              );
-            })}
+            {FILTERS.map((f) => (
+              <Chip
+                key={f.id}
+                label={f.label}
+                selected={filter === f.id}
+                onPress={() => setFilter(f.id)}
+              />
+            ))}
           </View>
         </View>
       }

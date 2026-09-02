@@ -1,6 +1,6 @@
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import type { PlaceWizard } from "@/features/places/usePlaceWizard";
-import { AppText, Field, Icon, Input } from "@abonten/ui-native";
+import { AppText, Chip, Field, Icon, Input } from "@abonten/ui-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -23,30 +23,14 @@ export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
 
       <Field label="Category">
         <View className="flex-row flex-wrap gap-2">
-          {w.categories.map((cat) => {
-            const active = cat.id === w.categoryId;
-            return (
-              <Pressable
-                key={cat.id}
-                onPress={() => w.setCategoryId(cat.id)}
-                className={
-                  active
-                    ? "rounded-full bg-primary px-3 py-1.5"
-                    : "rounded-full border border-border px-3 py-1.5"
-                }
-              >
-                <AppText
-                  className={
-                    active
-                      ? "text-[13px] font-semibold text-primary-foreground"
-                      : "text-[13px] font-medium text-muted-foreground"
-                  }
-                >
-                  {cat.name}
-                </AppText>
-              </Pressable>
-            );
-          })}
+          {w.categories.map((cat) => (
+            <Chip
+              key={cat.id}
+              label={cat.name}
+              selected={cat.id === w.categoryId}
+              onPress={() => w.setCategoryId(cat.id)}
+            />
+          ))}
         </View>
       </Field>
 

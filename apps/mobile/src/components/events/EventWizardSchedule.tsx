@@ -3,7 +3,13 @@ import { DateRangeField } from "@/components/explore/DateRangeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { TIME_RE, prettyDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
-import { AppText, Button, Field, SegmentedTabs } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Chip,
+  Field,
+  SegmentedTabs,
+} from "@abonten/ui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -31,14 +37,14 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
   return (
     <View className="gap-5">
       <View className="flex-row gap-2">
-        <ModeChip
+        <Chip
           label="One event"
-          active={w.scheduleMode === "single"}
+          selected={w.scheduleMode === "single"}
           onPress={() => w.setScheduleMode("single")}
         />
-        <ModeChip
+        <Chip
           label="Multiple dates"
-          active={w.scheduleMode === "specific"}
+          selected={w.scheduleMode === "specific"}
           onPress={() => w.setScheduleMode("specific")}
         />
       </View>
@@ -162,36 +168,5 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
         </View>
       )}
     </View>
-  );
-}
-
-function ModeChip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={
-        active
-          ? "rounded-full bg-primary px-4 py-2"
-          : "rounded-full border border-border px-4 py-2"
-      }
-    >
-      <AppText
-        className={
-          active
-            ? "text-[13px] font-semibold text-primary-foreground"
-            : "text-[13px] font-medium text-muted-foreground"
-        }
-      >
-        {label}
-      </AppText>
-    </Pressable>
   );
 }

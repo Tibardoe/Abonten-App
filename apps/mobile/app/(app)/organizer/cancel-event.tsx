@@ -63,7 +63,7 @@ export default function CancelEventScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 p-4 pb-10"
     >
-      <AppText className="text-lg font-bold text-foreground">
+      <AppText variant="sectionHeading">
         {title ?? "Cancel this event?"}
       </AppText>
 

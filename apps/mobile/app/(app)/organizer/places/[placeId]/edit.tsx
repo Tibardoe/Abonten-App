@@ -15,7 +15,7 @@ import type {
   PlaceTemporaryStatus,
 } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { AppText, Button, Field, Icon, Input } from "@abonten/ui-native";
+import { AppText, Button, Chip, Field, Icon, Input } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -27,37 +27,6 @@ import {
   Switch,
   View,
 } from "react-native";
-
-function Chip({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className={
-        active
-          ? "rounded-full bg-primary px-3 py-1.5"
-          : "rounded-full border border-border px-3 py-1.5"
-      }
-    >
-      <AppText
-        className={
-          active
-            ? "text-[13px] font-semibold text-primary-foreground"
-            : "text-[13px] font-medium text-muted-foreground"
-        }
-      >
-        {label}
-      </AppText>
-    </Pressable>
-  );
-}
 
 const STATUS_OPTIONS: { value: PlaceTemporaryStatus; label: string }[] = [
   { value: null, label: "Normal hours" },
@@ -464,7 +433,7 @@ export default function EditPlaceScreen() {
             <Chip
               key={c.id}
               label={c.name}
-              active={c.id === w.categoryId}
+              selected={c.id === w.categoryId}
               onPress={() => w.setCategoryId(c.id)}
             />
           ))}
@@ -601,7 +570,7 @@ export default function EditPlaceScreen() {
             <Chip
               key={o.label}
               label={o.label}
-              active={o.value === w.status}
+              selected={o.value === w.status}
               onPress={() => onPickStatus(o.value)}
             />
           ))}

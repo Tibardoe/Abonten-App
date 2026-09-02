@@ -1,6 +1,6 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
-import { AppText, Field, Input } from "@abonten/ui-native";
-import { Pressable, Switch, View } from "react-native";
+import { AppText, Chip, Field, Input } from "@abonten/ui-native";
+import { Switch, View } from "react-native";
 
 // Step 2 of the event wizard — title, description, category + types,
 // capacity, website, and the require-registration toggle. Mirrors the web
@@ -30,60 +30,28 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
 
       <Field label="Category">
         <View className="flex-row flex-wrap gap-2">
-          {w.categories.map((c) => {
-            const active = c === w.category;
-            return (
-              <Pressable
-                key={c}
-                onPress={() => w.selectCategory(c)}
-                className={
-                  active
-                    ? "rounded-full bg-primary px-3 py-1.5"
-                    : "rounded-full border border-border px-3 py-1.5"
-                }
-              >
-                <AppText
-                  className={
-                    active
-                      ? "text-[13px] font-semibold text-primary-foreground"
-                      : "text-[13px] font-medium text-muted-foreground"
-                  }
-                >
-                  {c}
-                </AppText>
-              </Pressable>
-            );
-          })}
+          {w.categories.map((c) => (
+            <Chip
+              key={c}
+              label={c}
+              selected={c === w.category}
+              onPress={() => w.selectCategory(c)}
+            />
+          ))}
         </View>
       </Field>
 
       {w.category ? (
         <Field label="Types" hint="Pick one or more">
           <View className="flex-row flex-wrap gap-2">
-            {w.categoryTypes.map((t) => {
-              const active = w.types.includes(t);
-              return (
-                <Pressable
-                  key={t}
-                  onPress={() => w.toggleType(t)}
-                  className={
-                    active
-                      ? "rounded-full bg-primary px-3 py-1.5"
-                      : "rounded-full border border-border px-3 py-1.5"
-                  }
-                >
-                  <AppText
-                    className={
-                      active
-                        ? "text-[13px] font-semibold text-primary-foreground"
-                        : "text-[13px] font-medium text-muted-foreground"
-                    }
-                  >
-                    {t}
-                  </AppText>
-                </Pressable>
-              );
-            })}
+            {w.categoryTypes.map((t) => (
+              <Chip
+                key={t}
+                label={t}
+                selected={w.types.includes(t)}
+                onPress={() => w.toggleType(t)}
+              />
+            ))}
           </View>
         </Field>
       ) : null}
