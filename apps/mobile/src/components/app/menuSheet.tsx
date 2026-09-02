@@ -7,8 +7,9 @@ import {
 } from "react";
 
 // Lets the header's menu button (rendered deep inside React Navigation's
-// header) open the app menu sheet that's mounted once in (app)/_layout.tsx —
-// the native stand-in for the web header's hamburger → <SideBar> Sheet.
+// header) open the full-screen <AppDrawer> that's mounted once in
+// (app)/_layout.tsx — the native stand-in for the web header's hamburger →
+// <SideBar> Sheet.
 
 type MenuSheetValue = {
   open: boolean;
