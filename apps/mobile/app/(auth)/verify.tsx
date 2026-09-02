@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { hapticError, hapticSuccess } from "@/lib/haptics";
 import { supabase } from "@/lib/supabase";
+import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import {
   AbontenLogo,
   AbontenWordmark,
@@ -20,7 +21,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const CODE_LENGTH = 6;
+// Hubtel's OTP product issues 4-digit codes — single source of truth shared
+// with the web OTP UI and the verify actions.
+const CODE_LENGTH = HUBTEL_OTP_CODE_LENGTH;
 const RESEND_SECONDS = 30;
 
 // Mask all but the last two digits of the destination so the screen confirms

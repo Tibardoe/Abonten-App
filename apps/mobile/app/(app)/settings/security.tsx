@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import {
   AppText,
   Button,
@@ -10,6 +11,7 @@ import {
   Field,
   Icon,
   Input,
+  OtpInput,
 } from "@abonten/ui-native";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -122,14 +124,19 @@ export default function Security() {
     }
   }
 
-  async function verifyCode() {
+  // `code` is passed by OtpInput's onComplete (the state update from the
+  // final digit hasn't flushed yet when it fires); the Verify button falls
+  // back to the `otp` state.
+  async function verifyCode(code?: string) {
     if (!phoneE164) return;
+    const value = (code ?? otp).trim();
+    if (value.length < HUBTEL_OTP_CODE_LENGTH) return;
     setPhoneErr(null);
     setPhoneBusy(true);
     try {
       const res = await api.account.verifyPhoneChange({
         phoneE164,
-        code: otp.trim(),
+        code: value,
       });
       if (res.status !== 200) {
         setPhoneErr(res.message ?? "That code didn't work. Try again.");
@@ -242,13 +249,13 @@ export default function Security() {
               {phoneE164 ? (
                 <>
                   <Field label={`Code sent to ${phoneE164}`}>
-                    <Input
+                    <OtpInput
                       value={otp}
-                      onChangeText={setOtp}
-                      placeholder="0000"
-                      keyboardType="number-pad"
-                      autoComplete="sms-otp"
-                      maxLength={6}
+                      onChange={setOtp}
+                      onComplete={verifyCode}
+                      length={HUBTEL_OTP_CODE_LENGTH}
+                      disabled={phoneBusy}
+                      invalid={!!phoneErr}
                     />
                   </Field>
                   {phoneErr ? (
@@ -259,8 +266,10 @@ export default function Security() {
                   <View className="flex-row gap-2">
                     <Button
                       title={phoneBusy ? "Verifying…" : "Verify"}
-                      onPress={verifyCode}
-                      disabled={phoneBusy || otp.trim().length < 4}
+                      onPress={() => verifyCode()}
+                      disabled={
+                        phoneBusy || otp.trim().length < HUBTEL_OTP_CODE_LENGTH
+                      }
                     />
                     <Button
                       title="Resend"
