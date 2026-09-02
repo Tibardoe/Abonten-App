@@ -20,6 +20,8 @@ export type SheetProps = {
   open: boolean;
   onClose: () => void;
   title?: string;
+  /** When set, a back chevron shows left of the title (multi-step sheets). */
+  onBack?: () => void;
   footer?: ReactNode;
   children: ReactNode;
   /** Cap the sheet height as a fraction of the screen (default 0.85). */
@@ -30,6 +32,7 @@ export function Sheet({
   open,
   onClose,
   title,
+  onBack,
   footer,
   children,
   maxHeightRatio = 0.85,
@@ -68,8 +71,18 @@ export function Sheet({
           </View>
 
           {title ? (
-            <View className="flex-row items-center justify-between border-b border-border px-4 pb-3 pt-1">
-              <SectionTitle>{title}</SectionTitle>
+            <View className="flex-row items-center gap-2 border-b border-border px-4 pb-3 pt-1">
+              {onBack ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Back"
+                  onPress={onBack}
+                  hitSlop={8}
+                >
+                  <Icon name="chevron-back" size={22} tone="foreground" />
+                </Pressable>
+              ) : null}
+              <SectionTitle className="flex-1">{title}</SectionTitle>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close"
