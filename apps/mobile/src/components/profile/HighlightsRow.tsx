@@ -25,10 +25,14 @@ export function HighlightsRow({
   userId,
   username,
   isOwn = false,
+  avatarPublicId,
+  avatarVersion,
 }: {
   userId: string;
   username: string;
   isOwn?: boolean;
+  avatarPublicId?: string | null;
+  avatarVersion?: number | string | null;
 }) {
   const { data: groups } = useHighlights(userId);
   const deleteGroup = useDeleteHighlightGroup(userId);
@@ -167,6 +171,8 @@ export function HighlightsRow({
           username={username}
           canManage={isOwn}
           userId={userId}
+          avatarPublicId={avatarPublicId}
+          avatarVersion={avatarVersion}
           onClose={() => setOpenIndex(null)}
         />
       ) : null}
