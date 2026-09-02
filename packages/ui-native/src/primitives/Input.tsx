@@ -72,7 +72,9 @@ export function Field({
       {label ? <AppText variant="label">{label}</AppText> : null}
       {children}
       {error ? (
-        <AppText className="text-[12px] text-destructive">{error}</AppText>
+        <AppText variant="small" tone="error">
+          {error}
+        </AppText>
       ) : hint ? (
         <AppText variant="caption">{hint}</AppText>
       ) : null}

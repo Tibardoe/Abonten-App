@@ -31,7 +31,7 @@ export function EmptyState({
         .filter(Boolean)
         .join(" ")}
     >
-      <Icon name={icon} size={28} tone="muted" />
+      <Icon name={icon} size={32} tone="muted" />
       <AppText variant="sectionTitle" className="mt-1 text-center">
         {title}
       </AppText>

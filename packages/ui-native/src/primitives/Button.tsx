@@ -44,7 +44,7 @@ const SIZE: Record<ButtonSize, string> = {
 };
 
 const LABEL_SIZE: Record<ButtonSize, string> = {
-  sm: "text-[13px]",
+  sm: "text-[14px]",
   md: "text-[15px]",
   lg: "text-[16px]",
 };

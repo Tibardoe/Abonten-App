@@ -14,7 +14,9 @@ import { Dimensions, PixelRatio } from "react-native";
 const GUIDELINE_WIDTH = 390;
 // Apply half of the width delta (0 = fixed sizes, 1 = full linear scaling).
 const FACTOR = 0.5;
-const MIN_MULT = 0.94;
+// Floor chosen so the 13px metadata rung never drops below ~12.3px on the
+// smallest phones (~320-360dp) — still comfortably readable.
+const MIN_MULT = 0.95;
 const MAX_MULT = 1.12;
 
 let cache = { width: 0, mult: 1 };

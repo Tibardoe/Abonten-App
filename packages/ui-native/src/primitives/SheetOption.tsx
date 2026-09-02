@@ -36,14 +36,8 @@ export function SheetOption({
         <Icon name={icon} size={22} tone="primary" />
       </View>
       <View className="flex-1">
-        <AppText className="text-[15px] font-semibold text-foreground">
-          {title}
-        </AppText>
-        {subtitle ? (
-          <AppText className="text-[12px] text-muted-foreground">
-            {subtitle}
-          </AppText>
-        ) : null}
+        <AppText variant="bodyStrong">{title}</AppText>
+        {subtitle ? <AppText variant="meta">{subtitle}</AppText> : null}
       </View>
       <Icon name="chevron-forward" size={16} tone="muted" />
     </Pressable>

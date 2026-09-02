@@ -45,12 +45,12 @@ export function Badge({
   const t = TONE[tone];
   return (
     <View
-      className={["self-start rounded-full px-2 py-0.5", t.box, className ?? ""]
+      className={["self-start rounded-full px-2 py-1", t.box, className ?? ""]
         .filter(Boolean)
         .join(" ")}
     >
       <AppText
-        className={`text-[10px] font-semibold ${uppercase ? "uppercase" : ""} ${t.text}`}
+        className={`text-[11px] font-semibold ${uppercase ? "uppercase" : ""} ${t.text}`}
       >
         {label}
       </AppText>

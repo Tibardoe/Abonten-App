@@ -20,7 +20,7 @@ export function Chip({
 }: ChipProps) {
   const body = (
     <AppText
-      className={`text-[12px] ${
+      className={`text-[13px] ${
         selected
           ? "font-semibold text-primary-foreground"
           : "font-medium text-muted-foreground"
@@ -31,7 +31,7 @@ export function Chip({
   );
 
   const box = [
-    "rounded-full px-3 py-1.5",
+    "rounded-full px-3.5 py-2",
     selected ? "bg-primary" : "border border-border bg-background",
     className ?? "",
   ]
@@ -64,7 +64,7 @@ export function Tag({
         .filter(Boolean)
         .join(" ")}
     >
-      <AppText variant="caption">{label}</AppText>
+      <AppText variant="meta">{label}</AppText>
     </View>
   );
 }
