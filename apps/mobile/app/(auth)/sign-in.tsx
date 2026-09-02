@@ -3,7 +3,13 @@ import { GoogleIcon } from "@/auth/GoogleIcon";
 import { signInWithGoogle } from "@/auth/googleSignIn";
 import { api } from "@/lib/api";
 import { type Country, DEFAULT_COUNTRY } from "@abonten/core/countries";
-import { AbontenLogo, AppText, Button, Icon } from "@abonten/ui-native";
+import {
+  AbontenLogo,
+  AbontenWordmark,
+  AppText,
+  Button,
+  Icon,
+} from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -76,20 +82,22 @@ export default function SignIn() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View className="flex-1 bg-background">
-        {router.canGoBack() ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-            onPress={() => router.back()}
-            hitSlop={10}
-            style={{ marginTop: insets.top + 4, marginLeft: 8 }}
-            className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
-          >
-            <Icon name="arrow-back" size={24} tone="foreground" />
-          </Pressable>
-        ) : (
-          <View style={{ height: insets.top + 12 }} />
-        )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={router.canGoBack() ? "Back" : "Close"}
+          onPress={() =>
+            router.canGoBack() ? router.back() : router.replace("/(app)/(tabs)")
+          }
+          hitSlop={10}
+          style={{ marginTop: insets.top + 4, marginLeft: 8 }}
+          className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
+        >
+          <Icon
+            name={router.canGoBack() ? "arrow-back" : "close"}
+            size={24}
+            tone="foreground"
+          />
+        </Pressable>
 
         <ScrollView
           contentContainerClassName="grow justify-center gap-7 px-6 pb-10 pt-6"
@@ -97,14 +105,12 @@ export default function SignIn() {
         >
           <View className="items-center gap-3">
             <AbontenLogo size={52} />
-            <AppText className="text-[20px] font-bold text-foreground">
-              Abonten Hub
-            </AppText>
+            <AbontenWordmark size={22} />
           </View>
 
           <View className="gap-1.5">
             <AppText className="text-center text-[24px] font-bold text-foreground">
-              Sign in or create an account
+              Log in or sign up
             </AppText>
             <AppText className="text-center text-[14px] text-muted-foreground">
               Continue with your phone number or Google account.

@@ -1,6 +1,12 @@
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
-import { AbontenLogo, AppText, Button, Icon } from "@abonten/ui-native";
+import {
+  AbontenLogo,
+  AbontenWordmark,
+  AppText,
+  Button,
+  Icon,
+} from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -82,9 +88,7 @@ export default function Verify() {
         >
           <View className="items-center gap-3">
             <AbontenLogo size={52} />
-            <AppText className="text-[20px] font-bold text-foreground">
-              Abonten Hub
-            </AppText>
+            <AbontenWordmark size={22} />
           </View>
 
           <View className="gap-1.5">
