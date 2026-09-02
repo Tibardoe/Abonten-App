@@ -81,6 +81,91 @@ function resolveFontFamily(
   return family.byWeight[weight] ?? family.body;
 }
 
+// Tailwind text-size tokens -> px, mirroring theme/tokens.ts `fontSize`.
+const SIZE_TOKEN_PX: Record<string, number> = {
+  "text-xs": 11,
+  "text-sm": 13,
+  "text-base": 15,
+  "text-lg": 17,
+  "text-xl": 20,
+  "text-2xl": 24,
+  "text-3xl": 30,
+};
+const NAMED_LEADING_RATIO: Record<string, number> = {
+  "leading-none": 1,
+  "leading-tight": 1.25,
+  "leading-snug": 1.375,
+  "leading-normal": 1.5,
+  "leading-relaxed": 1.625,
+  "leading-loose": 2,
+};
+
+function lastMatch(re: RegExp, s: string): RegExpMatchArray | null {
+  let m: RegExpExecArray | null;
+  let last: RegExpExecArray | null = null;
+  const g = new RegExp(re.source, "g");
+  // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic regex scan
+  while ((m = g.exec(s)) !== null) last = m;
+  return last;
+}
+
+// Android renders custom .ttf faces (Euclid Circular B) with extra font
+// padding and, when a caller overrides `text-[Npx]` without a matching
+// `leading-*`, the variant's own (now-too-small) line height stays and
+// clips ascenders/descenders. This derives a safe line height from the
+// *effective* font size whenever the resolved leading would be too tight,
+// and drops Android's font padding so button/label text sits centred.
+// An explicit `style.lineHeight` always wins.
+function resolveTextMetrics(
+  combinedClassName: string,
+  style: RNTextProps["style"],
+): {
+  lineHeight?: number;
+  includeFontPadding: boolean;
+  textAlignVertical: "center";
+} {
+  const flat = StyleSheet.flatten(style) as
+    | { lineHeight?: unknown; fontSize?: unknown }
+    | undefined;
+  const base = {
+    includeFontPadding: false,
+    textAlignVertical: "center" as const,
+  };
+  if (typeof flat?.lineHeight === "number") return base;
+
+  let size: number | undefined;
+  if (typeof flat?.fontSize === "number") size = flat.fontSize;
+  const arbSize = lastMatch(/text-\[(\d+(?:\.\d+)?)px\]/, combinedClassName);
+  const tokenSize = lastMatch(
+    /\btext-(xs|sm|base|lg|xl|2xl|3xl)\b/,
+    combinedClassName,
+  );
+  if (arbSize) size = Number.parseFloat(arbSize[1]);
+  else if (!size && tokenSize) size = SIZE_TOKEN_PX[`text-${tokenSize[1]}`];
+  if (!size) return base;
+
+  let leading: number | undefined;
+  const arbLeading = lastMatch(
+    /leading-\[(\d+(?:\.\d+)?)px\]/,
+    combinedClassName,
+  );
+  const namedLeading = lastMatch(
+    /\bleading-(none|tight|snug|normal|relaxed|loose)\b/,
+    combinedClassName,
+  );
+  if (arbLeading) leading = Number.parseFloat(arbLeading[1]);
+  else if (namedLeading)
+    leading = size * NAMED_LEADING_RATIO[`leading-${namedLeading[1]}`];
+
+  const ratio = size >= 20 ? 1.3 : 1.4;
+  const safe = Math.round(size * ratio);
+  // Only step in when the resolved leading is missing or tight enough to clip.
+  if (leading == null || leading < size * 1.15) {
+    return { ...base, lineHeight: safe };
+  }
+  return base;
+}
+
 export type AppTextProps = RNTextProps & {
   variant?: Variant;
   className?: string;
@@ -92,11 +177,13 @@ export function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const combined = `${VARIANT_CLASS[variant]}${className ? ` ${className}` : ""}`;
   const fontFamily = resolveFontFamily(variant, className, style);
+  const metrics = resolveTextMetrics(combined, style);
   return (
     <RNText
-      className={`${VARIANT_CLASS[variant]}${className ? ` ${className}` : ""}`}
-      style={fontFamily ? [{ fontFamily }, style] : style}
+      className={combined}
+      style={[metrics, fontFamily ? { fontFamily } : null, style]}
       {...rest}
     />
   );
