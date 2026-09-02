@@ -69,6 +69,14 @@ export type PhoneSession = {
   isNewUser: boolean;
 };
 
+// Signed-in "change my phone number" flow (Settings -> Security). Distinct
+// from the pre-login sign-in OTP: verify attaches the number to the current
+// user via the Admin API instead of minting a session.
+export type ChangePhoneResult = {
+  status: 200 | 400 | 401 | 409 | 429 | 500;
+  message: string;
+};
+
 // ---- uploads ------------------------------------------------------------
 
 export type UploadSignatureKind =

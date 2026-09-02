@@ -13,6 +13,7 @@ export type {
   CancelTicketBody,
   CancelTicketResult,
   CardVerificationInitData,
+  ChangePhoneResult,
   CheckInTicketResult,
   CheckoutAttemptBody,
   CheckoutAttemptResult,
