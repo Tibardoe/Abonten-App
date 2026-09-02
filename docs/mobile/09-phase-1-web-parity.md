@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner), 4f-5 place Promotion tab (money path) — WP-4f COMPLETE; 4g-1 dashboard widget sections, see below |
 
 ---
 
@@ -1672,3 +1672,50 @@ compiled), `expo export --platform android` clean, `biome check` clean.
 
 **WP-4f COMPLETE** (4f-1 … 4f-5). Next: **WP-4g** — dashboard widgets +
 save-as-draft for the place and event creation wizards.
+
+### WP-4g — Organizer dashboard widgets + drafts (in progress 2026-09-02)
+
+The web organizer dashboard (`OrganizerDashboard`) has, below the KPI cards
+the mobile dashboard already mirrors, six more sections — Finance summary,
+Sales Over Time, Event Performance, Upcoming Events, Needs Attention, Recent
+Activity — plus a **Drafts** system (`/manage/drafts`) the event and place
+creation wizards save into. Ported as sub-chunks:
+
+- **4g-1** — dashboard widget sections.
+- **4g-2** — event wizard save-as-draft + a drafts list.
+- **4g-3** — place wizard save-as-draft (shares the drafts list).
+
+#### WP-4g-1 — Dashboard widget sections (done 2026-09-02)
+
+- **`apps/web/src/utils/organizerDashboardQuery.ts`** — five lifted RPC
+  bodies (`fetchOrganizerSalesTimeline` / `fetchOrganizerEventPerformance`
+  / `fetchOrganizerUpcomingEvents` / `fetchOrganizerNeedsAttention` /
+  `fetchOrganizerRecentActivity`) + `fetchOrganizerDashboardWidgets`, the
+  aggregate that runs all five via `Promise.all` and returns one payload
+  (`performance` fixed to the `revenue` sort / top 10 — the mobile screen
+  has no sort toggle). The five Server Actions
+  (`getOrganizerSalesTimeline` etc.) thinned to `auth (401 as const) →
+  delegate`. Same arrangement as `fetchEventInsights` (WP-4c-1).
+- **Route** — `GET /api/mobile/organizer/dashboard?period=` → the aggregate.
+- **api-client** — `DashboardBucket`, `OrganizerTimelineRow` /
+  `OrganizerPerformanceRow` / `OrganizerUpcomingRow` / `OrganizerAttentionRow`
+  / `OrganizerActivityRow` (loose, PostgREST-serialises-bigints-as-strings —
+  `Number()` on read), `OrganizerDashboardWidgets` /
+  `OrganizerDashboardWidgetsResult`; `api.organizer.dashboardWidgets(period)`.
+- **Mobile** — `useOrganizerDashboardWidgets(period)` in `useOrganizer.ts`;
+  `src/components/organizer/DashboardWidgets.tsx` renders all six sections:
+  **Finance summary** (a `useOrganizerFinance` row → `/organizer/finance`),
+  **Sales over time** (a proportional bar list — last 14 buckets, no
+  charting lib), **Event performance** + **Upcoming events** (tappable rows
+  → the per-event Insights screen), **Needs attention** (`warning-outline`
+  rows, "all caught up" when empty), **Recent activity** (icon + verb +
+  relative time). Mounted on `organizer/index.tsx` below the Events KPI
+  block (gated on `hasEvents`); pull-to-refresh refetches it too. Also:
+  dropped the stale *"Editing an event is still done on the Abonten
+  website"* footer (event editing shipped in WP-4c) and added a **"My
+  places"** nav row.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (`/api/mobile/organizer/dashboard`
+compiled), `expo export --platform android` clean, `biome check` clean. Not
+device-verified.

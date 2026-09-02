@@ -1,11 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
-import {
-  type DashboardPeriod,
-  getDashboardPeriodRange,
-} from "@abonten/core/organizerDashboardDateRange";
+import { fetchOrganizerEventPerformance } from "@/utils/organizerDashboardQuery";
+import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 
 export default async function getOrganizerEventPerformance(
   period: DashboardPeriod,
@@ -23,23 +20,5 @@ export default async function getOrganizerEventPerformance(
     return { status: 401 as const, message: "User not logged in" };
   }
 
-  const { start, end } = getDashboardPeriodRange(period);
-
-  const { data, error } = await supabase.rpc(
-    "get_organizer_event_performance",
-    {
-      p_start: start ? start.toISOString() : null,
-      p_end: end ? end.toISOString() : null,
-      p_sort: sort,
-      p_limit: limit,
-    },
-  );
-
-  if (error) {
-    logger.error("Supabase error:", error.message);
-    return { status: 500 as const, message: "Something went wrong!" };
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  return { status: 200 as const, data: (data ?? []) as any[] };
+  return fetchOrganizerEventPerformance(supabase, period, sort, limit);
 }
