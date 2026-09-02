@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { AppHeader } from "@/components/app/AppHeader";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import {
@@ -146,194 +147,205 @@ export default function Security() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="gap-3 p-4"
-    >
-      {/* Email */}
-      <Card padded>
-        <View className="flex-row items-center justify-between py-1">
-          <View className="flex-1">
-            <AppText variant="caption">Email</AppText>
-            <AppText variant="body">{user?.email || "No email added"}</AppText>
-          </View>
-          {user?.email ? (
-            <VerifiedTag verified={!!user.email_confirmed_at} />
-          ) : null}
-        </View>
-
-        {emailOpen ? (
-          <View className="gap-3 pt-2">
-            <Field label="New email">
-              <Input
-                value={email}
-                onChangeText={setEmail}
-                placeholder="you@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </Field>
-            {emailErr ? (
-              <AppText className="text-[13px] text-destructive">
-                {emailErr}
+    <View className="flex-1 bg-background">
+      <AppHeader
+        variant="title"
+        title="Security"
+        backFallback="/(app)/settings"
+      />
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="gap-3 p-4"
+      >
+        {/* Email */}
+        <Card padded>
+          <View className="flex-row items-center justify-between py-1">
+            <View className="flex-1">
+              <AppText variant="caption">Email</AppText>
+              <AppText variant="body">
+                {user?.email || "No email added"}
               </AppText>
+            </View>
+            {user?.email ? (
+              <VerifiedTag verified={!!user.email_confirmed_at} />
             ) : null}
-            <View className="flex-row gap-2">
-              <Button
-                title={emailBusy ? "Sending…" : "Send confirmation"}
-                onPress={submitEmail}
-                disabled={emailBusy}
-              />
-              <Button
-                title="Cancel"
-                variant="outline"
-                onPress={() => {
-                  setEmailOpen(false);
-                  setEmailErr(null);
-                }}
-                disabled={emailBusy}
-              />
+          </View>
+
+          {emailOpen ? (
+            <View className="gap-3 pt-2">
+              <Field label="New email">
+                <Input
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                />
+              </Field>
+              {emailErr ? (
+                <AppText className="text-[13px] text-destructive">
+                  {emailErr}
+                </AppText>
+              ) : null}
+              <View className="flex-row gap-2">
+                <Button
+                  title={emailBusy ? "Sending…" : "Send confirmation"}
+                  onPress={submitEmail}
+                  disabled={emailBusy}
+                />
+                <Button
+                  title="Cancel"
+                  variant="outline"
+                  onPress={() => {
+                    setEmailOpen(false);
+                    setEmailErr(null);
+                  }}
+                  disabled={emailBusy}
+                />
+              </View>
+            </View>
+          ) : (
+            <Button
+              title={user?.email ? "Change email" : "Add email"}
+              variant="outline"
+              onPress={() => {
+                setEmailOpen(true);
+                setEmailMsg(null);
+              }}
+            />
+          )}
+
+          {emailMsg ? (
+            <AppText className="pt-2 text-[13px] text-primary">
+              {emailMsg}
+            </AppText>
+          ) : null}
+        </Card>
+
+        {/* Phone */}
+        <Card padded>
+          <View className="flex-row items-center justify-between py-1">
+            <View className="flex-1">
+              <AppText variant="caption">Phone</AppText>
+              <AppText variant="body">
+                {user?.phone || "No phone number added"}
+              </AppText>
+            </View>
+            {user?.phone ? (
+              <VerifiedTag verified={!!user.phone_confirmed_at} />
+            ) : null}
+          </View>
+
+          {phoneOpen ? (
+            <View className="gap-3 pt-2">
+              {phoneE164 ? (
+                <>
+                  <Field label={`Code sent to ${phoneE164}`}>
+                    <Input
+                      value={otp}
+                      onChangeText={setOtp}
+                      placeholder="0000"
+                      keyboardType="number-pad"
+                      autoComplete="sms-otp"
+                      maxLength={6}
+                    />
+                  </Field>
+                  {phoneErr ? (
+                    <AppText className="text-[13px] text-destructive">
+                      {phoneErr}
+                    </AppText>
+                  ) : null}
+                  <View className="flex-row gap-2">
+                    <Button
+                      title={phoneBusy ? "Verifying…" : "Verify"}
+                      onPress={verifyCode}
+                      disabled={phoneBusy || otp.trim().length < 4}
+                    />
+                    <Button
+                      title="Resend"
+                      variant="outline"
+                      onPress={sendCode}
+                      disabled={phoneBusy}
+                    />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <View className="flex-row gap-2">
+                    <View className="w-20">
+                      <Field label="Code">
+                        <Input value={dialCode} onChangeText={setDialCode} />
+                      </Field>
+                    </View>
+                    <View className="flex-1">
+                      <Field label="Phone number">
+                        <Input
+                          value={rawPhone}
+                          onChangeText={setRawPhone}
+                          placeholder="24 123 4567"
+                          keyboardType="phone-pad"
+                        />
+                      </Field>
+                    </View>
+                  </View>
+                  {phoneErr ? (
+                    <AppText className="text-[13px] text-destructive">
+                      {phoneErr}
+                    </AppText>
+                  ) : null}
+                  <View className="flex-row gap-2">
+                    <Button
+                      title={phoneBusy ? "Sending…" : "Send code"}
+                      onPress={sendCode}
+                      disabled={phoneBusy}
+                    />
+                    <Button
+                      title="Cancel"
+                      variant="outline"
+                      onPress={resetPhone}
+                      disabled={phoneBusy}
+                    />
+                  </View>
+                </>
+              )}
+            </View>
+          ) : (
+            <Button
+              title={user?.phone ? "Change phone number" : "Add phone number"}
+              variant="outline"
+              onPress={() => {
+                setPhoneOpen(true);
+                setPhoneMsg(null);
+              }}
+            />
+          )}
+
+          {phoneMsg ? (
+            <AppText className="pt-2 text-[13px] text-primary">
+              {phoneMsg}
+            </AppText>
+          ) : null}
+        </Card>
+
+        {/* Google */}
+        <Card padded>
+          <View className="flex-row items-center justify-between py-1">
+            <View className="flex-1">
+              <AppText variant="caption">Google</AppText>
+              <AppText variant="body">
+                {google ? "Linked" : "Not linked"}
+              </AppText>
             </View>
           </View>
-        ) : (
-          <Button
-            title={user?.email ? "Change email" : "Add email"}
-            variant="outline"
-            onPress={() => {
-              setEmailOpen(true);
-              setEmailMsg(null);
-            }}
-          />
-        )}
+        </Card>
 
-        {emailMsg ? (
-          <AppText className="pt-2 text-[13px] text-primary">
-            {emailMsg}
-          </AppText>
-        ) : null}
-      </Card>
-
-      {/* Phone */}
-      <Card padded>
-        <View className="flex-row items-center justify-between py-1">
-          <View className="flex-1">
-            <AppText variant="caption">Phone</AppText>
-            <AppText variant="body">
-              {user?.phone || "No phone number added"}
-            </AppText>
-          </View>
-          {user?.phone ? (
-            <VerifiedTag verified={!!user.phone_confirmed_at} />
-          ) : null}
-        </View>
-
-        {phoneOpen ? (
-          <View className="gap-3 pt-2">
-            {phoneE164 ? (
-              <>
-                <Field label={`Code sent to ${phoneE164}`}>
-                  <Input
-                    value={otp}
-                    onChangeText={setOtp}
-                    placeholder="0000"
-                    keyboardType="number-pad"
-                    autoComplete="sms-otp"
-                    maxLength={6}
-                  />
-                </Field>
-                {phoneErr ? (
-                  <AppText className="text-[13px] text-destructive">
-                    {phoneErr}
-                  </AppText>
-                ) : null}
-                <View className="flex-row gap-2">
-                  <Button
-                    title={phoneBusy ? "Verifying…" : "Verify"}
-                    onPress={verifyCode}
-                    disabled={phoneBusy || otp.trim().length < 4}
-                  />
-                  <Button
-                    title="Resend"
-                    variant="outline"
-                    onPress={sendCode}
-                    disabled={phoneBusy}
-                  />
-                </View>
-              </>
-            ) : (
-              <>
-                <View className="flex-row gap-2">
-                  <View className="w-20">
-                    <Field label="Code">
-                      <Input value={dialCode} onChangeText={setDialCode} />
-                    </Field>
-                  </View>
-                  <View className="flex-1">
-                    <Field label="Phone number">
-                      <Input
-                        value={rawPhone}
-                        onChangeText={setRawPhone}
-                        placeholder="24 123 4567"
-                        keyboardType="phone-pad"
-                      />
-                    </Field>
-                  </View>
-                </View>
-                {phoneErr ? (
-                  <AppText className="text-[13px] text-destructive">
-                    {phoneErr}
-                  </AppText>
-                ) : null}
-                <View className="flex-row gap-2">
-                  <Button
-                    title={phoneBusy ? "Sending…" : "Send code"}
-                    onPress={sendCode}
-                    disabled={phoneBusy}
-                  />
-                  <Button
-                    title="Cancel"
-                    variant="outline"
-                    onPress={resetPhone}
-                    disabled={phoneBusy}
-                  />
-                </View>
-              </>
-            )}
-          </View>
-        ) : (
-          <Button
-            title={user?.phone ? "Change phone number" : "Add phone number"}
-            variant="outline"
-            onPress={() => {
-              setPhoneOpen(true);
-              setPhoneMsg(null);
-            }}
-          />
-        )}
-
-        {phoneMsg ? (
-          <AppText className="pt-2 text-[13px] text-primary">
-            {phoneMsg}
-          </AppText>
-        ) : null}
-      </Card>
-
-      {/* Google */}
-      <Card padded>
-        <View className="flex-row items-center justify-between py-1">
-          <View className="flex-1">
-            <AppText variant="caption">Google</AppText>
-            <AppText variant="body">{google ? "Linked" : "Not linked"}</AppText>
-          </View>
-        </View>
-      </Card>
-
-      <Divider />
-      <AppText variant="caption">
-        Changing your email sends a confirmation link — open it to finish. A new
-        phone number is verified by a one-time code.
-      </AppText>
-    </ScrollView>
+        <Divider />
+        <AppText variant="caption">
+          Changing your email sends a confirmation link — open it to finish. A
+          new phone number is verified by a one-time code.
+        </AppText>
+      </ScrollView>
+    </View>
   );
 }

@@ -5,15 +5,7 @@ import { Pressable, View } from "react-native";
 
 // Step 5 of the event wizard — free, a single paid tier, or multiple named
 // tiers. Mirrors the web TicketType + TicketInputs.
-export function EventWizardTickets({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: EventWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function EventWizardTickets({ w }: { w: EventWizard }) {
   function addTier() {
     w.setTiers((prev) => [
       ...prev,
@@ -147,16 +139,6 @@ export function EventWizardTickets({
           />
         </View>
       ) : null}
-
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button title="Next" className="flex-1" onPress={onNext} />
-      </View>
     </View>
   );
 }

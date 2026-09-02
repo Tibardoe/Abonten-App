@@ -6,15 +6,7 @@ import { View } from "react-native";
 // Step 2 of the place wizard — pick the cover photo. Mirrors the web
 // PlaceCreateStepPhotos (expo-image-picker's built-in editor gives the
 // 16:9 crop the web ImageCropper does).
-export function PlaceWizardCover({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: PlaceWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function PlaceWizardCover({ w }: { w: PlaceWizard }) {
   return (
     <View className="gap-4">
       <AppText variant="label">Cover photo</AppText>
@@ -37,20 +29,6 @@ export function PlaceWizardCover({
         variant="outline"
         onPress={w.pickCover}
       />
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title="Next"
-          className="flex-1"
-          disabled={!w.coverUri}
-          onPress={onNext}
-        />
-      </View>
     </View>
   );
 }

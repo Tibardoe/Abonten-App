@@ -1,3 +1,4 @@
+import { AppHeader } from "@/components/app/AppHeader";
 import { PaymentSection } from "@/features/checkout/PaymentSection";
 import {
   useCancelCheckout,
@@ -162,61 +163,67 @@ export default function CheckoutReviewScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="gap-5 p-4 pb-10"
-    >
-      <CheckoutExpiryBanner
-        expiresAt={expiresAt}
-        onExpired={() => {
-          refetch();
-          sessionQuery.refetch();
-        }}
-      />
-
-      <Text className="text-lg font-bold text-foreground">
-        {session.eventTitle}
-      </Text>
-
-      <View className="gap-3 rounded-xl border border-border bg-card p-4">
-        <Line label="Subtotal" value={`${currency} ${session.subtotal}`} />
-        {session.discount > 0 ? (
-          <Line label="Discount" value={`− ${currency} ${session.discount}`} />
-        ) : null}
-        <Line label="Service fee" value={`${currency} ${session.fee}`} />
-        <View className="my-1 h-px bg-border" />
-        <Line label="Total" value={`${currency} ${session.total}`} strong />
-      </View>
-
-      {grandTotal !== session.total ? (
-        <Text className="text-xs text-muted-foreground">
-          Group total: {currency} {grandTotal}
-        </Text>
-      ) : null}
-
-      <PaymentSection
-        sessionId={sessionId ?? ""}
-        currency={currency}
-        total={session.total}
-      />
-
-      <Pressable
-        disabled={cancel.isPending}
-        onPress={onCancel}
-        className="items-center rounded-xl border border-border py-3 active:opacity-90"
+    <View className="flex-1 bg-background">
+      <AppHeader variant="title" title="Checkout" backFallback="/(app)" />
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="gap-5 p-4 pb-10"
       >
-        {cancel.isPending ? (
-          <ActivityIndicator />
-        ) : (
-          <Text className="text-sm font-semibold text-destructive">
-            Cancel checkout
-          </Text>
-        )}
-      </Pressable>
+        <CheckoutExpiryBanner
+          expiresAt={expiresAt}
+          onExpired={() => {
+            refetch();
+            sessionQuery.refetch();
+          }}
+        />
 
-      <Text className="text-center text-[11px] text-muted-foreground">
-        Your seats are held for a limited time.
-      </Text>
-    </ScrollView>
+        <Text className="text-lg font-bold text-foreground">
+          {session.eventTitle}
+        </Text>
+
+        <View className="gap-3 rounded-xl border border-border bg-card p-4">
+          <Line label="Subtotal" value={`${currency} ${session.subtotal}`} />
+          {session.discount > 0 ? (
+            <Line
+              label="Discount"
+              value={`− ${currency} ${session.discount}`}
+            />
+          ) : null}
+          <Line label="Service fee" value={`${currency} ${session.fee}`} />
+          <View className="my-1 h-px bg-border" />
+          <Line label="Total" value={`${currency} ${session.total}`} strong />
+        </View>
+
+        {grandTotal !== session.total ? (
+          <Text className="text-xs text-muted-foreground">
+            Group total: {currency} {grandTotal}
+          </Text>
+        ) : null}
+
+        <PaymentSection
+          sessionId={sessionId ?? ""}
+          currency={currency}
+          total={session.total}
+        />
+
+        <Pressable
+          disabled={cancel.isPending}
+          onPress={onCancel}
+          className="items-center rounded-xl border border-border py-3 active:opacity-90"
+        >
+          {cancel.isPending ? (
+            <ActivityIndicator />
+          ) : (
+            <Text className="text-sm font-semibold text-destructive">
+              Cancel checkout
+            </Text>
+          )}
+        </Pressable>
+
+        <Text className="text-center text-[11px] text-muted-foreground">
+          Your seats are held for a limited time.
+        </Text>
+      </ScrollView>
+    </View>
   );
 }

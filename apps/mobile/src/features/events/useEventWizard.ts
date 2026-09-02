@@ -4,7 +4,7 @@ import {
   useEventDraft,
   useSaveEventDraft,
 } from "@/features/events/useEventDrafts";
-import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
+import { TIME_RE, combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
 import type {
   EventCreateBody,
@@ -646,9 +646,35 @@ export function useEventWizard(resumeDraftId?: string) {
     });
   }
 
+  // Whether the current step's requirements are met, so the header's "Next"
+  // can be disabled. Step 0 (basics) always returns true here — it runs
+  // validateBasics() on press instead, which surfaces field errors. These
+  // gates used to live on each step component's own Next button.
+  const scheduleValid =
+    scheduleMode === "single"
+      ? !!rangeStart &&
+        !!rangeEnd &&
+        TIME_RE.test(rangeStartTime) &&
+        TIME_RE.test(rangeEndTime)
+      : occurrences.length > 0;
+
+  const canAdvance = useMemo(() => {
+    switch (step) {
+      case 1:
+        return !!flyerUri;
+      case 2:
+        return scheduleValid;
+      case 3:
+        return !!address && !!coords;
+      default:
+        return true;
+    }
+  }, [step, flyerUri, scheduleValid, address, coords]);
+
   return {
     step,
     setStep,
+    canAdvance,
     // basics
     title,
     setTitle,

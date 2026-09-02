@@ -1,5 +1,6 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
+import { AppHeader } from "@/components/app/AppHeader";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
@@ -230,6 +231,7 @@ export default function Explore() {
 
   return (
     <View className="flex-1 bg-background">
+      <AppHeader variant="branded" />
       {/* Location switcher — the web LocationAndFilterSection's location
           button. */}
       <View className="flex-row items-center justify-between gap-2 px-4 pb-2 pt-3">

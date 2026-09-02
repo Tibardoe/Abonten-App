@@ -1,4 +1,5 @@
 import { PlaceCard } from "@/components/PlaceCard";
+import { AppHeader } from "@/components/app/AppHeader";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import type { PlaceType } from "@abonten/types/placeType";
@@ -28,6 +29,7 @@ export default function Places() {
 
   return (
     <View className="flex-1 bg-background">
+      <AppHeader variant="title" title="Places" backFallback="/(app)/account" />
       <View className="px-4 pt-4">
         <Button
           title="Add place"
