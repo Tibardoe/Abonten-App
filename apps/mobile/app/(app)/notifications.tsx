@@ -24,7 +24,7 @@ function Row({
   return (
     <Pressable
       onPress={onPress}
-      className="gap-1 rounded-lg border border-border bg-card p-3 active:opacity-80"
+      className="gap-1 rounded-xl border border-border bg-card p-3 active:opacity-80"
     >
       <View className="flex-row items-center gap-2">
         {item.read_at ? null : (
