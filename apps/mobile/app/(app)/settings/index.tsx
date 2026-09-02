@@ -67,7 +67,7 @@ export default function SettingsHub() {
             className="flex-row items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 active:opacity-80"
           >
             <Icon name={item.icon} size={20} tone="muted" />
-            <AppText className="flex-1 text-[15px] text-foreground">
+            <AppText variant="body" className="flex-1">
               {t(item.labelKey)}
             </AppText>
             <Icon name="chevron-forward" size={16} tone="muted" />

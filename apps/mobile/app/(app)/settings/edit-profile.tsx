@@ -150,7 +150,7 @@ export default function EditProfile() {
                 disabled={avatar.isPending}
               />
               {avatar.isError ? (
-                <AppText className="text-[12px] text-destructive">
+                <AppText variant="small" tone="error">
                   {avatar.error instanceof Error
                     ? avatar.error.message
                     : "Upload failed."}
@@ -197,12 +197,12 @@ export default function EditProfile() {
           </Field>
 
           {update.isError ? (
-            <AppText className="text-[13px] text-destructive">
+            <AppText variant="small" tone="error">
               We couldn't update your profile. Please try again.
             </AppText>
           ) : null}
           {saved ? (
-            <AppText className="text-[13px] text-primary">
+            <AppText variant="small" tone="brand">
               Profile updated.
             </AppText>
           ) : null}

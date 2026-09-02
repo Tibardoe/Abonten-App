@@ -23,7 +23,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 
@@ -148,9 +147,9 @@ export default function WalletScreen() {
       <View className="flex-1 bg-background">
         <AppHeader variant="branded" />
         <View className="flex-1 items-center justify-center gap-3 px-6">
-          <Text className="text-center text-muted-foreground">
+          <AppText variant="muted" className="text-center">
             Couldn't load your payment methods.
-          </Text>
+          </AppText>
           <Button title="Retry" onPress={() => refetch()} />
         </View>
       </View>
@@ -167,10 +166,10 @@ export default function WalletScreen() {
         {methods.length === 0 ? (
           <View className="items-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-10">
             <Icon name="wallet-outline" size={28} tone="muted" />
-            <Text className="text-center text-sm text-muted-foreground">
+            <AppText variant="muted" className="text-center">
               No wallets yet. Add a mobile money wallet or a card to check out
               faster.
-            </Text>
+            </AppText>
           </View>
         ) : (
           methods.map((m) => (
@@ -179,14 +178,18 @@ export default function WalletScreen() {
               className="gap-2 rounded-xl border border-border bg-card p-4"
             >
               <View className="flex-row items-center justify-between">
-                <Text className="flex-1 text-sm font-medium text-foreground">
+                <AppText
+                  variant="small"
+                  className="flex-1 font-medium"
+                  numberOfLines={1}
+                >
                   {methodTitle(m)}
-                </Text>
+                </AppText>
                 {m.is_default ? (
-                  <View className="rounded-full bg-accent px-2 py-0.5">
-                    <Text className="text-[10px] font-semibold uppercase text-accent-foreground">
+                  <View className="rounded-full bg-accent px-2 py-1">
+                    <AppText className="text-[12px] font-semibold uppercase text-accent-foreground">
                       Default
-                    </Text>
+                    </AppText>
                   </View>
                 ) : null}
               </View>
@@ -196,18 +199,26 @@ export default function WalletScreen() {
                     onPress={() => setDefault.mutate(m.id)}
                     disabled={setDefault.isPending}
                   >
-                    <Text className="text-xs font-semibold text-primary">
+                    <AppText
+                      variant="small"
+                      tone="brand"
+                      className="font-semibold"
+                    >
                       Make default
-                    </Text>
+                    </AppText>
                   </Pressable>
                 ) : null}
                 <Pressable
                   onPress={() => confirmRemove(m.id)}
                   disabled={removeMethod.isPending}
                 >
-                  <Text className="text-xs font-semibold text-destructive">
+                  <AppText
+                    variant="small"
+                    tone="error"
+                    className="font-semibold"
+                  >
                     Remove
-                  </Text>
+                  </AppText>
                 </Pressable>
               </View>
             </View>
@@ -239,7 +250,7 @@ export default function WalletScreen() {
             <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
               <Icon name="checkmark" size={30} tone="primary" />
             </View>
-            <AppText className="text-center text-[15px] text-foreground">
+            <AppText variant="body" className="text-center">
               {success}
             </AppText>
             <Button title="Done" fullWidth onPress={closeSheet} />
@@ -275,13 +286,14 @@ export default function WalletScreen() {
                         : "border-border bg-background"
                     }`}
                   >
-                    <Text
-                      className={`text-xs ${
+                    <AppText
+                      variant="small"
+                      className={
                         selected ? "text-primary-foreground" : "text-foreground"
-                      }`}
+                      }
                     >
                       {n.name}
-                    </Text>
+                    </AppText>
                   </Pressable>
                 );
               })}
@@ -298,7 +310,7 @@ export default function WalletScreen() {
             />
 
             {formError ? (
-              <AppText className="text-[12px] text-destructive">
+              <AppText variant="small" tone="error">
                 {formError}
               </AppText>
             ) : null}
@@ -312,14 +324,14 @@ export default function WalletScreen() {
           </View>
         ) : (
           <View className="gap-3">
-            <AppText className="text-[13px] text-muted-foreground">
+            <AppText variant="muted">
               Adding a card runs a GHS 1 verification charge that is refunded
               immediately. Your card number is never stored — only a reusable
               token from Paystack.
             </AppText>
 
             {formError ? (
-              <AppText className="text-[12px] text-destructive">
+              <AppText variant="small" tone="error">
                 {formError}
               </AppText>
             ) : null}

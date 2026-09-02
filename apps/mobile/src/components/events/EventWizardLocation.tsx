@@ -26,9 +26,7 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
         {w.resolvingLocation ? (
           <View className="flex-row items-center gap-2 py-1">
             <ActivityIndicator size="small" />
-            <AppText className="text-[12px] text-muted-foreground">
-              Resolving location…
-            </AppText>
+            <AppText variant="meta">Resolving location…</AppText>
           </View>
         ) : null}
         {w.autocomplete.predictions.length > 0 ? (
@@ -39,13 +37,9 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
                 onPress={() => w.pickSuggestion(p.placeId)}
                 className="border-border border-b px-3 py-2 active:opacity-70"
               >
-                <AppText className="text-[13px] text-foreground">
-                  {p.primary}
-                </AppText>
+                <AppText variant="small">{p.primary}</AppText>
                 {p.secondary ? (
-                  <AppText className="text-[11px] text-muted-foreground">
-                    {p.secondary}
-                  </AppText>
+                  <AppText variant="caption">{p.secondary}</AppText>
                 ) : null}
               </Pressable>
             ))}
@@ -57,7 +51,7 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
             className="flex-row items-center gap-2 py-1 active:opacity-70"
           >
             <Icon name="map-outline" size={16} tone="primary" />
-            <AppText className="text-[13px] text-primary">
+            <AppText variant="small" tone="brand">
               Choose on map
             </AppText>
           </Pressable>
@@ -66,15 +60,13 @@ export function EventWizardLocation({ w }: { w: EventWizard }) {
             className="flex-row items-center gap-2 py-1 active:opacity-70"
           >
             <Icon name="locate-outline" size={16} tone="primary" />
-            <AppText className="text-[13px] text-primary">
+            <AppText variant="small" tone="brand">
               Current location
             </AppText>
           </Pressable>
         </View>
         {w.address && w.coords ? (
-          <AppText className="text-[12px] text-muted-foreground">
-            Selected: {w.address}
-          </AppText>
+          <AppText variant="meta">Selected: {w.address}</AppText>
         ) : null}
       </Field>
 

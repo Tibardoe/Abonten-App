@@ -81,7 +81,8 @@ function TransactionRow({
       </AppText>
       <View className="flex-row items-center justify-between">
         <AppText
-          className={`text-[12px] font-medium ${STATUS_TONE[row.status] ?? "text-muted-foreground"}`}
+          variant="small"
+          className={`font-medium ${STATUS_TONE[row.status] ?? "text-muted-foreground"}`}
         >
           {row.status}
           {refunded}

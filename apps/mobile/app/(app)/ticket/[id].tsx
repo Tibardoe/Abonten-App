@@ -31,10 +31,8 @@ function Row({
     <View className="flex-row gap-3">
       <Icon name={icon} size={18} tone="muted" style={{ marginTop: 2 }} />
       <View className="flex-1">
-        <AppText className="text-[14px] text-foreground">{label}</AppText>
-        {sub ? (
-          <AppText className="text-[12px] text-muted-foreground">{sub}</AppText>
-        ) : null}
+        <AppText variant="body">{label}</AppText>
+        {sub ? <AppText variant="meta">{sub}</AppText> : null}
       </View>
     </View>
   );
@@ -131,7 +129,7 @@ export default function TicketDetailScreen() {
           ) : (
             <View className="h-60 w-60 items-center justify-center rounded-lg bg-muted">
               <Icon name="qr-code-outline" size={40} tone="muted" />
-              <AppText className="mt-2 text-[12px] text-muted-foreground">
+              <AppText variant="meta" className="mt-2">
                 No QR code
               </AppText>
             </View>
@@ -144,10 +142,10 @@ export default function TicketDetailScreen() {
             eventEnded={eventEnded}
           />
 
-          <AppText className="text-center text-[18px] font-bold text-foreground">
+          <AppText variant="sectionTitle" className="text-center">
             {ticket.event.title}
           </AppText>
-          <AppText className="text-[12px] tracking-[3px] text-muted-foreground">
+          <AppText variant="meta" className="tracking-[3px]">
             {ticket.ticket_code}
           </AppText>
         </View>
@@ -190,9 +188,7 @@ export default function TicketDetailScreen() {
             className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
             onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
           >
-            <AppText className="text-[14px] font-semibold text-foreground">
-              View event
-            </AppText>
+            <AppText variant="bodyStrong">View event</AppText>
           </Pressable>
 
           {canCancel ? (
@@ -202,7 +198,7 @@ export default function TicketDetailScreen() {
               className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
               onPress={onCancelTicket}
             >
-              <AppText className="text-[14px] font-semibold text-destructive">
+              <AppText variant="small" tone="error" className="font-semibold">
                 {cancel.isPending
                   ? "Cancelling…"
                   : ticket.transaction_id

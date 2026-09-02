@@ -98,10 +98,7 @@ export function TicketCard({
 
       <View className="gap-3 p-4">
         <View className="flex-row items-start justify-between gap-2">
-          <AppText
-            className="flex-1 text-[16px] font-semibold text-foreground"
-            numberOfLines={2}
-          >
+          <AppText variant="cardTitle" className="flex-1" numberOfLines={2}>
             {event.title}
           </AppText>
           <TicketStatusBadge
@@ -113,14 +110,12 @@ export function TicketCard({
         </View>
 
         <View className="flex-row flex-wrap items-center gap-x-2 gap-y-1">
-          <AppText className="text-[12px] text-muted-foreground">
-            {ticket.ticket_type.type}
-          </AppText>
-          <AppText className="text-[12px] tracking-widest text-muted-foreground">
+          <AppText variant="meta">{ticket.ticket_type.type}</AppText>
+          <AppText variant="meta" className="tracking-widest">
             · {ticket.ticket_code}
           </AppText>
           {event.starts_at ? (
-            <AppText className="text-[12px] text-muted-foreground">
+            <AppText variant="meta">
               · {formatDateWithSuffix(event.starts_at)}
             </AppText>
           ) : null}
@@ -129,25 +124,23 @@ export function TicketCard({
         {refundBadge ? (
           <View className="gap-1 rounded-lg bg-muted p-2.5">
             <View className="flex-row items-center justify-between gap-2">
-              <AppText className="text-[12px] font-semibold text-foreground">
+              <AppText variant="small" className="font-semibold">
                 {refundBadge.label}
               </AppText>
               {refundAmount !== undefined ? (
-                <AppText className="text-[13px] font-semibold text-foreground">
+                <AppText variant="small" className="font-semibold">
                   {txn?.currency} {refundAmount.toFixed(2)}
                 </AppText>
               ) : null}
             </View>
             {refundBadge.description ? (
-              <AppText className="text-[11px] text-muted-foreground">
-                {refundBadge.description}
-              </AppText>
+              <AppText variant="caption">{refundBadge.description}</AppText>
             ) : null}
           </View>
         ) : null}
 
         {showRefundInfo && ticket.status === "cancelled" && !txn ? (
-          <AppText className="text-[12px] text-muted-foreground">
+          <AppText variant="meta">
             No payment on this ticket — nothing to refund.
           </AppText>
         ) : null}
@@ -155,7 +148,7 @@ export function TicketCard({
         <View className="flex-row items-center justify-between gap-2 pt-1">
           <View className="flex-row items-center gap-1">
             <Icon name="qr-code-outline" size={16} tone="primary" />
-            <AppText className="text-[13px] font-semibold text-primary">
+            <AppText variant="small" tone="brand" className="font-semibold">
               View ticket
             </AppText>
           </View>
@@ -168,7 +161,7 @@ export function TicketCard({
               onPress={onCancel}
               className="min-h-[36px] justify-center rounded-lg border border-border px-3 active:opacity-70"
             >
-              <AppText className="text-[13px] font-semibold text-destructive">
+              <AppText variant="small" tone="error" className="font-semibold">
                 {cancel.isPending ? "Cancelling…" : "Cancel"}
               </AppText>
             </Pressable>

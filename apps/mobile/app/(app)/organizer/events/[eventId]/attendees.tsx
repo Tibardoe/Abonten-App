@@ -4,6 +4,7 @@ import {
   useCheckInTicket,
 } from "@/features/organizer/useAttendees";
 import type { AttendanceRow } from "@abonten/api-client";
+import { AppText } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import {
@@ -12,7 +13,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -54,14 +54,14 @@ function AttendeeRow({
   return (
     <View className="gap-2 rounded-xl border border-border bg-card p-4">
       <View className="flex-row items-center justify-between gap-2">
-        <Text className="flex-1 font-bold text-foreground" numberOfLines={1}>
+        <AppText className="flex-1 font-bold text-foreground" numberOfLines={1}>
           {name}
-        </Text>
+        </AppText>
         <View className="shrink-0 flex-row items-center gap-2">
           {attendee.ticket_type?.type ? (
-            <Text className="text-sm text-muted-foreground">
+            <AppText className="text-sm text-muted-foreground">
               {attendee.ticket_type.type}
-            </Text>
+            </AppText>
           ) : null}
           <View
             className={
@@ -70,28 +70,28 @@ function AttendeeRow({
                 : "rounded-full bg-primary/10 px-2 py-1"
             }
           >
-            <Text
+            <AppText
               className={
                 isCancelled
-                  ? "text-xs font-semibold text-destructive"
-                  : "text-xs font-semibold text-primary"
+                  ? "text-[13px] font-semibold text-destructive"
+                  : "text-[13px] font-semibold text-primary"
               }
             >
               {isCancelled ? "Cancelled" : "Active"}
-            </Text>
+            </AppText>
           </View>
         </View>
       </View>
 
       {attendee.auth?.email ? (
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           {attendee.auth.email}
-        </Text>
+        </AppText>
       ) : null}
       {attendee.auth?.phone ? (
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           {attendee.auth.phone}
-        </Text>
+        </AppText>
       ) : null}
 
       {!isCancelled && attendee.ticket_id ? (
@@ -102,9 +102,9 @@ function AttendeeRow({
               onPress={() => toggle(false)}
               className="self-start active:opacity-70 disabled:opacity-50"
             >
-              <Text className="text-xs font-semibold text-primary">
+              <AppText variant="small" tone="brand" className="font-semibold">
                 ✓ Checked in — undo
-              </Text>
+              </AppText>
             </Pressable>
           ) : (
             <Pressable
@@ -112,9 +112,9 @@ function AttendeeRow({
               onPress={() => toggle(true)}
               className="self-start rounded-md bg-primary px-3 py-1.5 active:opacity-90 disabled:opacity-60"
             >
-              <Text className="text-xs font-semibold text-primary-foreground">
+              <AppText className="text-[13px] font-semibold text-primary-foreground">
                 {checkIn.isPending ? "Checking in…" : "Check in"}
-              </Text>
+              </AppText>
             </Pressable>
           )}
         </View>
@@ -151,9 +151,9 @@ export default function EventAttendeesScreen() {
       renderItem={({ item }) => <AttendeeRow attendee={item} eventId={id} />}
       contentContainerClassName="gap-2 p-4 pb-16"
       ListHeaderComponent={
-        <Text className="mb-1 text-xl font-bold text-foreground">
+        <AppText variant="screenTitle" className="mb-1">
           Attendees
-        </Text>
+        </AppText>
       }
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
@@ -164,13 +164,13 @@ export default function EventAttendeesScreen() {
         />
       }
       ListEmptyComponent={
-        <Text className="mt-10 text-center text-sm text-muted-foreground">
+        <AppText className="mt-10 text-center text-sm text-muted-foreground">
           {failed
             ? firstPage && firstPage.status === 403
               ? "You're not authorized to view this event."
               : "Couldn't load the attendee list."
             : "No attendees yet."}
-        </Text>
+        </AppText>
       }
       ListFooterComponent={
         q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null

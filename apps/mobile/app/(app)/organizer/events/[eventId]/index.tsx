@@ -9,6 +9,7 @@ import type {
   OrganizerDashboardPeriod,
 } from "@abonten/api-client";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
+import { AppText, Overline } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -16,7 +17,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 
@@ -37,7 +37,9 @@ function money(currency: string | null | undefined, amount: number): string {
 
 function SectionTitle({ children }: { children: string }) {
   return (
-    <Text className="text-base font-bold text-foreground">{children}</Text>
+    <AppText className="text-base font-bold text-foreground">
+      {children}
+    </AppText>
   );
 }
 
@@ -52,13 +54,9 @@ function Stat({
 }) {
   return (
     <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
-      <Text className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Text>
-      <Text className="text-lg font-bold text-foreground">{value}</Text>
-      {sublabel ? (
-        <Text className="text-[11px] text-muted-foreground">{sublabel}</Text>
-      ) : null}
+      <Overline>{label}</Overline>
+      <AppText className="text-lg font-bold text-foreground">{value}</AppText>
+      {sublabel ? <AppText variant="caption">{sublabel}</AppText> : null}
     </View>
   );
 }
@@ -66,8 +64,8 @@ function Stat({
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row justify-between">
-      <Text className="text-sm text-muted-foreground">{label}</Text>
-      <Text className="text-sm font-medium text-foreground">{value}</Text>
+      <AppText className="text-sm text-muted-foreground">{label}</AppText>
+      <AppText className="text-sm font-medium text-foreground">{value}</AppText>
     </View>
   );
 }
@@ -77,9 +75,9 @@ function OverviewCards({
 }: { overview: EventInsightsOverview | null }) {
   if (!overview) {
     return (
-      <Text className="text-sm text-muted-foreground">
+      <AppText className="text-sm text-muted-foreground">
         No sales or registration data yet.
-      </Text>
+      </AppText>
     );
   }
 
@@ -166,9 +164,9 @@ function FinanceSection({
     <View className="gap-3">
       <SectionTitle>Event Revenue</SectionTitle>
       {!finance ? (
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           No revenue data available yet.
-        </Text>
+        </AppText>
       ) : (
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Row
@@ -194,14 +192,14 @@ function FinanceSection({
               />
               {n(finance.pendingRefunds) > 0 ||
               n(finance.completedRefunds) > 0 ? (
-                <Text className="text-xs text-muted-foreground">
+                <AppText variant="muted">
                   {n(finance.refundRequestCount)} request
                   {n(finance.refundRequestCount) === 1 ? "" : "s"} ·{" "}
                   {finance.currency}{" "}
                   {n(finance.pendingRefunds).toLocaleString()} pending ·{" "}
                   {finance.currency}{" "}
                   {n(finance.completedRefunds).toLocaleString()} completed
-                </Text>
+                </AppText>
               ) : null}
             </View>
           ) : null}
@@ -218,20 +216,20 @@ function FinanceSection({
           />
           <View className="h-px bg-border" />
           {period !== "all" ? (
-            <Text className="text-xs text-muted-foreground">
+            <AppText variant="muted">
               Refund breakdown and settlement status are all-time, not limited
               to the selected period.
-            </Text>
+            </AppText>
           ) : null}
-          <Text className="text-sm font-medium text-foreground">
+          <AppText className="text-sm font-medium text-foreground">
             Settlement status:{" "}
             {finance.settled ? "Settled" : "Pending settlement"}
-          </Text>
+          </AppText>
           {finance.settled ? (
-            <Text className="text-xs text-muted-foreground">
+            <AppText variant="muted">
               {finance.currency} {n(finance.organizerEarnings).toLocaleString()}{" "}
               is now available in your Finances balance.
-            </Text>
+            </AppText>
           ) : null}
         </View>
       )}
@@ -248,9 +246,9 @@ function TicketTypesSection({
     <View className="gap-3">
       <SectionTitle>Ticket Types</SectionTitle>
       {rows.length === 0 ? (
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           No ticket types set up yet.
-        </Text>
+        </AppText>
       ) : (
         <View className="gap-2">
           {rows.map((row) => {
@@ -265,13 +263,13 @@ function TicketTypesSection({
                 className="gap-2 rounded-xl border border-border bg-card p-4"
               >
                 <View className="flex-row items-center justify-between gap-2">
-                  <Text className="font-semibold text-foreground">
+                  <AppText className="font-semibold text-foreground">
                     {row.type}
-                  </Text>
-                  <Text className="shrink-0 text-sm text-muted-foreground">
+                  </AppText>
+                  <AppText className="shrink-0 text-sm text-muted-foreground">
                     {n(row.sold)} sold
                     {capped ? ` / ${row.quantity_capacity}` : " / Unlimited"}
-                  </Text>
+                  </AppText>
                 </View>
                 {capped ? (
                   <View className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -282,20 +280,18 @@ function TicketTypesSection({
                   </View>
                 ) : null}
                 <View className="flex-row justify-between">
-                  <Text className="text-xs text-muted-foreground">
+                  <AppText variant="muted">
                     {price > 0
                       ? `${row.currency ?? ""} ${price.toLocaleString()}`.trim()
                       : "Free"}
-                  </Text>
+                  </AppText>
                   {revenue > 0 ? (
-                    <Text className="text-xs text-muted-foreground">
+                    <AppText variant="muted">
                       {row.currency ?? ""} {revenue.toLocaleString()} revenue
-                    </Text>
+                    </AppText>
                   ) : null}
                   {cancelled > 0 ? (
-                    <Text className="text-xs text-muted-foreground">
-                      {cancelled} cancelled
-                    </Text>
+                    <AppText variant="muted">{cancelled} cancelled</AppText>
                   ) : null}
                 </View>
               </View>
@@ -312,9 +308,9 @@ function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
     <View className="gap-3">
       <SectionTitle>Promo Codes</SectionTitle>
       {rows.length === 0 ? (
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           No promo codes used yet.
-        </Text>
+        </AppText>
       ) : (
         <View className="gap-2">
           {rows.map((row) => (
@@ -323,17 +319,17 @@ function PromoSection({ rows }: { rows: EventInsightsPromoRow[] }) {
               className="flex-row items-center justify-between gap-2 rounded-xl border border-border bg-card p-4"
             >
               <View className="flex-1">
-                <Text className="font-semibold text-foreground">
+                <AppText className="font-semibold text-foreground">
                   {row.promo_code}
-                </Text>
-                <Text className="text-xs text-muted-foreground">
+                </AppText>
+                <AppText variant="muted">
                   {n(row.orders)} orders · {n(row.units_discounted)} tickets
                   discounted
-                </Text>
+                </AppText>
               </View>
-              <Text className="shrink-0 text-sm font-medium text-foreground">
+              <AppText className="shrink-0 text-sm font-medium text-foreground">
                 {n(row.total_discount).toLocaleString()} discount
-              </Text>
+              </AppText>
             </View>
           ))}
         </View>
@@ -357,23 +353,19 @@ function DateSection({ rows }: { rows: EventInsightsDateRow[] }) {
               className="flex-row items-center justify-between gap-2 rounded-xl border border-border bg-card p-4"
             >
               <View className="flex-1">
-                <Text className="font-semibold text-foreground">
+                <AppText className="font-semibold text-foreground">
                   {label ? label.date : "Before date-tracking"}
-                </Text>
-                {label ? (
-                  <Text className="text-xs text-muted-foreground">
-                    {label.time}
-                  </Text>
-                ) : null}
+                </AppText>
+                {label ? <AppText variant="muted">{label.time}</AppText> : null}
               </View>
               <View className="shrink-0 items-end">
-                <Text className="text-sm font-medium text-foreground">
+                <AppText className="text-sm font-medium text-foreground">
                   {n(row.tickets_sold)} attendees
-                </Text>
+                </AppText>
                 {n(row.tickets_cancelled) > 0 ? (
-                  <Text className="text-xs text-muted-foreground">
+                  <AppText variant="muted">
                     {n(row.tickets_cancelled)} cancelled
-                  </Text>
+                  </AppText>
                 ) : null}
               </View>
             </View>
@@ -397,9 +389,9 @@ function ReturningSection({
     <View className="gap-3">
       <SectionTitle>Attendee Behavior</SectionTitle>
       {total === 0 ? (
-        <Text className="text-sm text-muted-foreground">
+        <AppText className="text-sm text-muted-foreground">
           Not enough attendees yet to calculate returning vs. first-time.
-        </Text>
+        </AppText>
       ) : (
         <View className="gap-2">
           <View className="h-2 w-full flex-row overflow-hidden rounded-full bg-muted">
@@ -409,14 +401,14 @@ function ReturningSection({
             />
           </View>
           <View className="flex-row justify-between">
-            <Text className="text-sm text-foreground">
+            <AppText className="text-sm text-foreground">
               Returning: {Math.round((ret / total) * 100)}%{" "}
-              <Text className="text-muted-foreground">({ret})</Text>
-            </Text>
-            <Text className="text-sm text-foreground">
+              <AppText className="text-muted-foreground">({ret})</AppText>
+            </AppText>
+            <AppText className="text-sm text-foreground">
               First-time: {Math.round((first / total) * 100)}%{" "}
-              <Text className="text-muted-foreground">({first})</Text>
-            </Text>
+              <AppText className="text-muted-foreground">({first})</AppText>
+            </AppText>
           </View>
         </View>
       )}
@@ -451,13 +443,13 @@ export default function EventInsightsScreen() {
       }
     >
       <View>
-        <Text className="text-xl font-bold text-foreground">
+        <AppText variant="screenTitle">
           {insights?.overview?.event_title ?? "Event insights"}
-        </Text>
+        </AppText>
         {dateRange ? (
-          <Text className="mt-1 text-sm text-muted-foreground">
+          <AppText className="mt-1 text-sm text-muted-foreground">
             {dateRange.date} · {dateRange.time}
-          </Text>
+          </AppText>
         ) : null}
       </View>
 
@@ -465,16 +457,16 @@ export default function EventInsightsScreen() {
         <View className="flex-row gap-2">
           <Link href={`/(app)/organizer/events/${eventId}/edit`} asChild>
             <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
-              <Text className="text-sm font-semibold text-primary">
+              <AppText className="text-sm font-semibold text-primary">
                 Edit event
-              </Text>
+              </AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/events/${eventId}/promote`} asChild>
             <Pressable className="flex-1 items-center rounded-xl border border-primary px-4 py-2.5 active:opacity-80">
-              <Text className="text-sm font-semibold text-primary">
+              <AppText className="text-sm font-semibold text-primary">
                 Promote
-              </Text>
+              </AppText>
             </Pressable>
           </Link>
         </View>
@@ -484,18 +476,18 @@ export default function EventInsightsScreen() {
         <View className="gap-2">
           <Link href={`/(app)/organizer/events/${eventId}/attendees`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base text-foreground">
+              <AppText className="text-base text-foreground">
                 Attendees &amp; check-in
-              </Text>
-              <Text className="text-muted-foreground">›</Text>
+              </AppText>
+              <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
           <Link href={`/(app)/organizer/events/${eventId}/promo-codes`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-base text-foreground">
+              <AppText className="text-base text-foreground">
                 Manage promo codes
-              </Text>
-              <Text className="text-muted-foreground">›</Text>
+              </AppText>
+              <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
         </View>
@@ -514,15 +506,15 @@ export default function EventInsightsScreen() {
                   : "rounded-full border border-border px-3 py-1.5"
               }
             >
-              <Text
+              <AppText
                 className={
                   active
-                    ? "text-xs font-semibold text-primary-foreground"
-                    : "text-xs font-medium text-muted-foreground"
+                    ? "text-[13px] font-semibold text-primary-foreground"
+                    : "text-[13px] font-medium text-muted-foreground"
                 }
               >
                 {p.label}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -534,16 +526,18 @@ export default function EventInsightsScreen() {
         </View>
       ) : q.isError || (result && result.status !== 200) ? (
         <View className="items-center gap-3 py-12">
-          <Text className="text-center text-muted-foreground">
+          <AppText className="text-center text-muted-foreground">
             {(result && result.status === 403 && result.message) ||
               (result && result.status !== 200 && result.message) ||
               "Couldn't load this event's insights."}
-          </Text>
+          </AppText>
           <Pressable
             className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
             onPress={() => q.refetch()}
           >
-            <Text className="font-semibold text-primary-foreground">Retry</Text>
+            <AppText className="font-semibold text-primary-foreground">
+              Retry
+            </AppText>
           </Pressable>
         </View>
       ) : insights ? (
@@ -566,10 +560,10 @@ export default function EventInsightsScreen() {
       {eventId ? (
         <Link href={`/(app)/event/${eventId}`} asChild>
           <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-            <Text className="text-base text-foreground">
+            <AppText className="text-base text-foreground">
               View public event page
-            </Text>
-            <Text className="text-muted-foreground">›</Text>
+            </AppText>
+            <AppText className="text-muted-foreground">›</AppText>
           </Pressable>
         </Link>
       ) : null}

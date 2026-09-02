@@ -47,7 +47,7 @@ export function PlaceWizardCover({ w }: { w: PlaceWizard }) {
       ) : (
         <View className="aspect-[16/9] w-full items-center justify-center rounded-xl border border-border border-dashed bg-muted">
           <Icon name="image-outline" size={28} tone="muted" />
-          <AppText className="mt-2 text-[12px] text-muted-foreground">
+          <AppText variant="meta" className="mt-2">
             No photo yet
           </AppText>
         </View>

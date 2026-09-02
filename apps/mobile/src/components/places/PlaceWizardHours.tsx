@@ -35,7 +35,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
             hitSlop={8}
             className="active:opacity-60"
           >
-            <AppText className="text-[12px] font-semibold text-primary">
+            <AppText variant="small" tone="brand" className="font-semibold">
               Copy to every day
             </AppText>
           </Pressable>
@@ -48,9 +48,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
           className="gap-2 rounded-xl border border-border bg-card p-3"
         >
           <View className="flex-row items-center justify-between">
-            <AppText className="text-[14px] font-semibold text-foreground">
-              {DAY_LABELS[h.dayOfWeek]}
-            </AppText>
+            <AppText variant="bodyStrong">{DAY_LABELS[h.dayOfWeek]}</AppText>
             <Pressable
               accessibilityRole="switch"
               accessibilityState={{ checked: !h.isClosed }}
@@ -64,8 +62,8 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
               <AppText
                 className={
                   h.isClosed
-                    ? "text-[12px] font-medium text-muted-foreground"
-                    : "text-[12px] font-semibold text-primary-foreground"
+                    ? "text-[13px] font-medium text-muted-foreground"
+                    : "text-[13px] font-semibold text-primary-foreground"
                 }
               >
                 {h.isClosed ? "Closed" : "Open"}
@@ -82,9 +80,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
                   invalid={!!h.openTime && !TIME_RE.test(h.openTime)}
                 />
               </View>
-              <AppText className="text-[13px] text-muted-foreground">
-                to
-              </AppText>
+              <AppText variant="muted">to</AppText>
               <View className="flex-1">
                 <TimeField
                   label={`${DAY_LABELS[h.dayOfWeek]} — closes`}

@@ -5,6 +5,7 @@ import {
   usePromotePlace,
 } from "@/features/organizer/usePlacePromotion";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { AppText } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,7 +13,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 
@@ -51,15 +51,17 @@ export default function PromotePlaceScreen() {
   if (!ctx) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
-        <Text className="text-center text-muted-foreground">
+        <AppText className="text-center text-muted-foreground">
           {(q.data && q.data.status !== 200 && q.data.message) ||
             "Couldn't load promotion options."}
-        </Text>
+        </AppText>
         <Pressable
           onPress={() => q.refetch()}
           className="rounded-lg bg-primary px-4 py-2"
         >
-          <Text className="font-semibold text-primary-foreground">Retry</Text>
+          <AppText className="font-semibold text-primary-foreground">
+            Retry
+          </AppText>
         </Pressable>
       </View>
     );
@@ -84,42 +86,40 @@ export default function PromotePlaceScreen() {
       contentContainerClassName="gap-5 p-4 pb-16"
     >
       <View>
-        <Text className="text-xl font-bold text-foreground">
-          Feature this place
-        </Text>
-        <Text className="mt-1 text-sm text-muted-foreground">
+        <AppText variant="screenTitle">Feature this place</AppText>
+        <AppText className="mt-1 text-sm text-muted-foreground">
           Get a paid, randomly-rotated slot in the Featured Places section on
           the Explore page, clearly labeled "Sponsored".
-        </Text>
+        </AppText>
       </View>
 
       {ctx.currentPromotion ? (
         <View className="gap-2 rounded-2xl border border-primary/40 bg-primary/10 p-5">
-          <Text className="font-semibold text-primary">
+          <AppText className="font-semibold text-primary">
             This place is currently featured
-          </Text>
-          <Text className="text-sm text-muted-foreground">
+          </AppText>
+          <AppText className="text-sm text-muted-foreground">
             {ctx.currentPromotion.tierLabel
               ? `${ctx.currentPromotion.tierLabel} placement, active`
               : "Active"}{" "}
             until{" "}
-            <Text className="font-medium text-foreground">
+            <AppText className="font-medium text-foreground">
               {formatDateWithSuffix(ctx.currentPromotion.ends_at)}
-            </Text>
+            </AppText>
             .
-          </Text>
+          </AppText>
         </View>
       ) : reserved ? (
         <View className="gap-4">
           <View className="gap-1 rounded-xl border border-border bg-card p-4">
-            <Text className="text-sm text-muted-foreground">Order</Text>
+            <AppText className="text-sm text-muted-foreground">Order</AppText>
             <View className="flex-row justify-between">
-              <Text className="text-sm text-foreground">
+              <AppText className="text-sm text-foreground">
                 {reserved.tierLabel} placement
-              </Text>
-              <Text className="text-sm font-semibold text-foreground">
+              </AppText>
+              <AppText className="text-sm font-semibold text-foreground">
                 {reserved.currency} {reserved.amount.toFixed(2)}
-              </Text>
+              </AppText>
             </View>
           </View>
           <PromotionPaymentSection
@@ -133,9 +133,9 @@ export default function PromotePlaceScreen() {
       ) : (
         <View className="gap-3">
           {ctx.tiers.length === 0 ? (
-            <Text className="text-sm text-muted-foreground">
+            <AppText className="text-sm text-muted-foreground">
               No promotion tiers are available right now.
-            </Text>
+            </AppText>
           ) : (
             ctx.tiers.map((tier) => {
               const active = selectedTierId === tier.id;
@@ -147,12 +147,12 @@ export default function PromotePlaceScreen() {
                     active ? "border-primary bg-primary/10" : "border-border"
                   }`}
                 >
-                  <Text className="font-medium text-foreground">
+                  <AppText className="font-medium text-foreground">
                     {tier.duration_label}
-                  </Text>
-                  <Text className="text-sm text-muted-foreground">
+                  </AppText>
+                  <AppText className="text-sm text-muted-foreground">
                     {tier.currency} {tier.price.toFixed(2)}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })
@@ -171,7 +171,7 @@ export default function PromotePlaceScreen() {
                 : "bg-primary"
             }`}
           >
-            <Text
+            <AppText
               className={`text-sm font-semibold ${
                 selectedTierId == null
                   ? "text-muted-foreground"
@@ -179,7 +179,7 @@ export default function PromotePlaceScreen() {
               }`}
             >
               {promote.isPending ? "Starting…" : "Continue to payment"}
-            </Text>
+            </AppText>
           </Pressable>
         </View>
       )}

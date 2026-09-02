@@ -240,7 +240,9 @@ export function AddReviewSheet({
         </View>
 
         {error ? (
-          <AppText className="text-[13px] text-destructive">{error}</AppText>
+          <AppText variant="small" tone="error">
+            {error}
+          </AppText>
         ) : null}
       </View>
     </Sheet>

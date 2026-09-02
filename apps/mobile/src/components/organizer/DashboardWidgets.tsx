@@ -12,9 +12,9 @@ import {
   formatDateWithSuffix,
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
-import { Icon, type IoniconName } from "@abonten/ui-native";
+import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 // The Dashboard widget sections below the KPI cards — the native mirror of
 // the web OrganizerDashboard's OrganizerFinanceSummary /
@@ -28,14 +28,6 @@ function money(currency: string | null | undefined, amount: number): string {
   return `${currency ?? "GHS"} ${amount.toLocaleString(undefined, {
     maximumFractionDigits: 0,
   })}`;
-}
-
-function SectionTitle({ children }: { children: string }) {
-  return (
-    <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-      {children}
-    </Text>
-  );
 }
 
 function bucketLabel(bucketStart: string, bucket: DashboardBucket): string {
@@ -59,23 +51,21 @@ function FinanceSummary() {
       <Pressable className="flex-row items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 active:opacity-80">
         <View className="flex-row gap-6">
           <View>
-            <Text className="text-xs text-muted-foreground">
-              Available to withdraw
-            </Text>
-            <Text className="font-bold text-foreground">
+            <AppText variant="caption">Available to withdraw</AppText>
+            <AppText variant="cardTitle">
               {money(overview.currency, n(overview.available_balance))}
-            </Text>
+            </AppText>
           </View>
           <View>
-            <Text className="text-xs text-muted-foreground">Pending</Text>
-            <Text className="font-bold text-foreground">
+            <AppText variant="caption">Pending</AppText>
+            <AppText variant="cardTitle">
               {money(overview.currency, n(overview.pending_balance))}
-            </Text>
+            </AppText>
           </View>
         </View>
-        <Text className="shrink-0 text-sm font-medium text-primary">
+        <AppText variant="small" tone="brand" className="shrink-0 font-medium">
           Finances ›
-        </Text>
+        </AppText>
       </Pressable>
     </Link>
   );
@@ -95,12 +85,10 @@ function SalesTimeline({
 
   return (
     <View className="gap-2">
-      <SectionTitle>Sales over time</SectionTitle>
+      <Overline>Sales over time</Overline>
       {recent.length === 0 ? (
         <View className="rounded-xl border border-border bg-card p-3">
-          <Text className="text-sm text-muted-foreground">
-            No sales in this period yet.
-          </Text>
+          <AppText variant="muted">No sales in this period yet.</AppText>
         </View>
       ) : (
         <View className="gap-2 rounded-xl border border-border bg-card p-4">
@@ -109,13 +97,13 @@ function SalesTimeline({
             return (
               <View key={r.bucket_start} className="gap-1">
                 <View className="flex-row justify-between">
-                  <Text className="text-xs text-muted-foreground">
+                  <AppText variant="caption">
                     {bucketLabel(r.bucket_start, bucket)}
-                  </Text>
-                  <Text className="text-xs text-foreground">
+                  </AppText>
+                  <AppText variant="caption" tone="primary">
                     {money(currency, gross)} · {n(r.orders)} order
                     {n(r.orders) === 1 ? "" : "s"}
-                  </Text>
+                  </AppText>
                 </View>
                 <View className="h-2 overflow-hidden rounded-full bg-muted">
                   <View
@@ -149,14 +137,14 @@ function EventRow({
     <Link href={`/(app)/organizer/events/${eventId}`} asChild>
       <Pressable className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 active:opacity-80">
         <View className="flex-1">
-          <Text className="font-medium text-foreground" numberOfLines={1}>
+          <AppText variant="body" className="font-medium" numberOfLines={1}>
             {title}
-          </Text>
-          <Text className="text-xs text-muted-foreground">{subtitle}</Text>
+          </AppText>
+          <AppText variant="meta">{subtitle}</AppText>
         </View>
         <View className="shrink-0 items-end">
-          <Text className="font-bold text-foreground">{primary}</Text>
-          <Text className="text-xs text-muted-foreground">{secondary}</Text>
+          <AppText variant="bodyStrong">{primary}</AppText>
+          <AppText variant="meta">{secondary}</AppText>
         </View>
       </Pressable>
     </Link>
@@ -172,11 +160,9 @@ const STATUS_LABEL: Record<string, string> = {
 function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
   return (
     <View className="gap-2">
-      <SectionTitle>Event performance</SectionTitle>
+      <Overline>Event performance</Overline>
       {events.length === 0 ? (
-        <Text className="text-sm text-muted-foreground">
-          No event sales in this period yet.
-        </Text>
+        <AppText variant="muted">No event sales in this period yet.</AppText>
       ) : (
         events.map((e) => (
           <EventRow
@@ -194,7 +180,13 @@ function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
         ))
       )}
       <Link href="/(app)/organizer/events" asChild>
-        <Text className="self-start text-sm text-primary">View all events</Text>
+        <AppText
+          variant="small"
+          tone="brand"
+          className="self-start font-medium"
+        >
+          View all events
+        </AppText>
       </Link>
     </View>
   );
@@ -203,11 +195,9 @@ function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
 function UpcomingEvents({ events }: { events: OrganizerUpcomingRow[] }) {
   return (
     <View className="gap-2">
-      <SectionTitle>Upcoming events</SectionTitle>
+      <Overline>Upcoming events</Overline>
       {events.length === 0 ? (
-        <Text className="text-sm text-muted-foreground">
-          No upcoming events in the next while.
-        </Text>
+        <AppText variant="muted">No upcoming events in the next while.</AppText>
       ) : (
         events.map((e) => (
           <EventRow
@@ -233,13 +223,13 @@ function UpcomingEvents({ events }: { events: OrganizerUpcomingRow[] }) {
 function NeedsAttention({ items }: { items: OrganizerAttentionRow[] }) {
   return (
     <View className="gap-2">
-      <SectionTitle>Needs attention</SectionTitle>
+      <Overline>Needs attention</Overline>
       {items.length === 0 ? (
         <View className="flex-row items-center gap-2">
           <Icon name="checkmark-circle-outline" tone="primary" size={18} />
-          <Text className="text-sm text-muted-foreground">
+          <AppText variant="muted">
             You're all caught up — nothing needs attention right now.
-          </Text>
+          </AppText>
         </View>
       ) : (
         items.map((item, i) => (
@@ -256,12 +246,14 @@ function NeedsAttention({ items }: { items: OrganizerAttentionRow[] }) {
                 style={{ marginTop: 2 }}
               />
               <View className="flex-1">
-                <Text className="font-medium text-foreground" numberOfLines={1}>
+                <AppText
+                  variant="body"
+                  className="font-medium"
+                  numberOfLines={1}
+                >
                   {item.event_title ?? "Event"}
-                </Text>
-                <Text className="text-sm text-muted-foreground">
-                  {item.message}
-                </Text>
+                </AppText>
+                <AppText variant="muted">{item.message}</AppText>
               </View>
             </Pressable>
           </Link>
@@ -286,11 +278,9 @@ function activityVerb(type: string): string {
 function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {
   return (
     <View className="gap-2">
-      <SectionTitle>Recent activity</SectionTitle>
+      <Overline>Recent activity</Overline>
       {items.length === 0 ? (
-        <Text className="text-sm text-muted-foreground">
-          No recent activity yet.
-        </Text>
+        <AppText variant="muted">No recent activity yet.</AppText>
       ) : (
         <View className="overflow-hidden rounded-xl border border-border bg-card">
           {items.map((item, i) => (
@@ -305,16 +295,13 @@ function RecentActivity({ items }: { items: OrganizerActivityRow[] }) {
                 tone="muted"
                 size={18}
               />
-              <Text
-                className="flex-1 text-sm text-foreground"
-                numberOfLines={1}
-              >
+              <AppText variant="small" className="flex-1" numberOfLines={1}>
                 {activityVerb(item.activity_type)}{" "}
                 {item.event_title ?? "an event"}
-              </Text>
-              <Text className="shrink-0 text-xs text-muted-foreground">
+              </AppText>
+              <AppText variant="caption" className="shrink-0">
                 {getRelativeTime(item.occurred_at)}
-              </Text>
+              </AppText>
             </View>
           ))}
         </View>

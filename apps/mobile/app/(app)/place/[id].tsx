@@ -33,6 +33,7 @@ import {
   SectionTitle,
   Stars,
 } from "@abonten/ui-native";
+import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo } from "react";
@@ -59,7 +60,9 @@ function ContactRow({
     <View className="min-h-[40px] flex-row items-center gap-3">
       <Icon name={icon} size={18} tone="muted" />
       <AppText
-        className={`flex-1 text-[14px] ${onPress ? "text-primary" : "text-foreground"}`}
+        variant="body"
+        tone={onPress ? "brand" : "primary"}
+        className="flex-1"
         numberOfLines={1}
       >
         {label}
@@ -90,7 +93,8 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
             size={28}
           />
           <AppText
-            className="flex-1 text-[13px] font-semibold text-foreground"
+            variant="small"
+            className="flex-1 font-semibold"
             numberOfLines={1}
           >
             {review.reviewer?.username ?? "Guest"}
@@ -99,28 +103,20 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
         <Stars rating={review.rating} size={13} />
       </View>
       {review.title ? (
-        <AppText className="text-[13px] font-semibold text-foreground">
+        <AppText variant="small" className="font-semibold">
           {review.title}
         </AppText>
       ) : null}
       {review.comment ? (
-        <AppText className="text-[13px] text-muted-foreground">
-          {review.comment}
-        </AppText>
+        <AppText variant="muted">{review.comment}</AppText>
       ) : null}
       {review.owner_response ? (
         <View className="mt-1 gap-0.5 rounded-lg bg-muted p-2">
-          <AppText className="text-[11px] font-semibold text-foreground">
-            Response from the owner
-          </AppText>
-          <AppText className="text-[12px] text-muted-foreground">
-            {review.owner_response}
-          </AppText>
+          <AppText variant="label">Response from the owner</AppText>
+          <AppText variant="meta">{review.owner_response}</AppText>
         </View>
       ) : null}
-      <AppText className="text-[11px] text-muted-foreground">
-        {getRelativeTime(review.created_at)}
-      </AppText>
+      <AppText variant="caption">{getRelativeTime(review.created_at)}</AppText>
     </View>
   );
 }
@@ -128,6 +124,7 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
 export default function PlaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const carouselCardWidth = useCarouselCardWidth();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
 
   const placeSlug = place?.slug;
@@ -337,11 +334,9 @@ export default function PlaceDetailScreen() {
           <View className="gap-3 rounded-xl border border-border bg-card p-4">
             <View className="flex-row items-center gap-2">
               <Icon name="location-outline" size={18} tone="foreground" />
-              <AppText className="text-[15px] font-semibold text-foreground">
-                Location
-              </AppText>
+              <AppText variant="bodyStrong">Location</AppText>
             </View>
-            <AppText className="text-[13px] text-muted-foreground">
+            <AppText variant="muted">
               {address ?? "Address not specified"}
             </AppText>
             {MapConfigured && MapView && coords ? (
@@ -375,7 +370,7 @@ export default function PlaceDetailScreen() {
           {/* Contact */}
           {place.phone || place.whatsapp || place.website_url ? (
             <View className="gap-1 rounded-xl border border-border bg-card p-4">
-              <AppText className="mb-1 text-[15px] font-semibold text-foreground">
+              <AppText variant="bodyStrong" className="mb-1">
                 Contact
               </AppText>
               {place.phone ? (
@@ -418,7 +413,7 @@ export default function PlaceDetailScreen() {
           {place.description ? (
             <View className="gap-2">
               <SectionTitle>About</SectionTitle>
-              <AppText className="text-[14px] leading-relaxed text-muted-foreground">
+              <AppText variant="body" tone="muted">
                 {place.description}
               </AppText>
             </View>
@@ -438,10 +433,10 @@ export default function PlaceDetailScreen() {
                         i < arr.length - 1 ? "border-b border-border" : ""
                       }`}
                     >
-                      <AppText className="text-[13px] text-foreground">
+                      <AppText variant="small">
                         {DAY_LABELS[h.day_of_week]}
                       </AppText>
-                      <AppText className="text-[13px] text-muted-foreground">
+                      <AppText variant="muted">
                         {h.is_closed || !h.open_time || !h.close_time
                           ? "Closed"
                           : `${timeLabel(h.open_time)} – ${timeLabel(h.close_time)}`}
@@ -462,18 +457,18 @@ export default function PlaceDetailScreen() {
                   className="rounded-xl border border-border bg-card p-3"
                 >
                   <View className="flex-row justify-between gap-3">
-                    <AppText className="flex-1 text-[14px] font-medium text-foreground">
+                    <AppText variant="body" className="flex-1 font-medium">
                       {s.name}
                     </AppText>
                     {s.show_price && s.price != null ? (
-                      <AppText className="text-[13px] text-muted-foreground">
+                      <AppText variant="muted">
                         GHS {s.price}
                         {s.price_unit ? ` / ${s.price_unit}` : ""}
                       </AppText>
                     ) : null}
                   </View>
                   {s.description ? (
-                    <AppText className="mt-1 text-[12px] text-muted-foreground">
+                    <AppText variant="meta" className="mt-1">
                       {s.description}
                     </AppText>
                   ) : null}
@@ -511,20 +506,16 @@ export default function PlaceDetailScreen() {
               {place.reviewCount > 0 ? (
                 <View className="flex-row items-center gap-1.5">
                   <Stars rating={place.avgRating} size={14} />
-                  <AppText className="text-[12px] text-muted-foreground">
+                  <AppText variant="meta">
                     {place.avgRating.toFixed(1)} ({place.reviewCount})
                   </AppText>
                 </View>
               ) : null}
             </View>
             {reviewsList.isLoading ? (
-              <AppText className="text-[13px] text-muted-foreground">
-                Loading reviews…
-              </AppText>
+              <AppText variant="muted">Loading reviews…</AppText>
             ) : reviews.length === 0 ? (
-              <AppText className="text-[13px] text-muted-foreground">
-                No reviews yet.
-              </AppText>
+              <AppText variant="muted">No reviews yet.</AppText>
             ) : (
               <View className="gap-2">
                 {reviews.map((r) => (
@@ -537,7 +528,11 @@ export default function PlaceDetailScreen() {
                     disabled={reviewsList.isFetchingNextPage}
                     onPress={() => reviewsList.fetchNextPage()}
                   >
-                    <AppText className="text-[13px] font-semibold text-primary">
+                    <AppText
+                      variant="small"
+                      tone="brand"
+                      className="font-semibold"
+                    >
                       {reviewsList.isFetchingNextPage
                         ? "Loading…"
                         : "Show more reviews"}
@@ -559,7 +554,7 @@ export default function PlaceDetailScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerClassName="gap-3"
                 renderItem={({ item }) => (
-                  <View style={{ width: 260 }}>
+                  <View style={{ width: carouselCardWidth }}>
                     <EventCard event={item} />
                   </View>
                 )}
@@ -578,7 +573,7 @@ export default function PlaceDetailScreen() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerClassName="gap-3"
                 renderItem={({ item }) => (
-                  <View style={{ width: 240 }}>
+                  <View style={{ width: carouselCardWidth }}>
                     <PlaceCard place={item} />
                   </View>
                 )}

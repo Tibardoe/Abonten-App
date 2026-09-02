@@ -3,10 +3,10 @@ import { useFreeRsvp } from "@/features/checkout/useFreeRsvp";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { Button } from "@abonten/ui-native";
+import { AppText, Button } from "@abonten/ui-native";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 
 // Native echo of the web AttendingButton's RSVP path. One free ticket per
 // event, quantity fixed at 1 server-side.
@@ -49,14 +49,16 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
   if (done) {
     return (
       <View className="items-center gap-2 rounded-xl border border-border bg-card p-5">
-        <Text className="text-base font-bold text-success">You're going</Text>
+        <AppText className="text-base font-bold text-success">
+          You're going
+        </AppText>
         <Pressable
           onPress={() => router.push("/(app)/tickets")}
           className="rounded-lg bg-primary px-4 py-2.5"
         >
-          <Text className="text-sm font-semibold text-primary-foreground">
+          <AppText className="text-sm font-semibold text-primary-foreground">
             View my ticket
-          </Text>
+          </AppText>
         </Pressable>
       </View>
     );
@@ -66,7 +68,9 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
     <View className="gap-3">
       {occurrences.length > 1 ? (
         <View className="gap-2">
-          <Text className="text-sm font-semibold text-foreground">Date</Text>
+          <AppText className="text-sm font-semibold text-foreground">
+            Date
+          </AppText>
           <View className="flex-row flex-wrap gap-2">
             {occurrences.map((o) => {
               const selected = o.id === occurrenceId;
@@ -80,13 +84,13 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
                       : "border-border bg-card"
                   }`}
                 >
-                  <Text
-                    className={`text-xs ${
+                  <AppText
+                    className={`text-[13px] ${
                       selected ? "text-primary-foreground" : "text-foreground"
                     }`}
                   >
                     {formatDateWithSuffix(o.starts_at)}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -94,9 +98,9 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
         </View>
       ) : null}
 
-      <Text className="text-[11px] text-muted-foreground">
+      <AppText variant="caption">
         This event is free — one ticket per person.
-      </Text>
+      </AppText>
 
       <Button
         title={rsvp.isPending ? "Reserving…" : "RSVP — get free ticket"}

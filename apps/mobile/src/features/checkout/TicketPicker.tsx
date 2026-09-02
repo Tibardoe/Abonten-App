@@ -127,7 +127,7 @@ export function TicketPicker({ event }: { event: EventDetail }) {
     <View className="gap-4 rounded-xl border border-border bg-card p-4">
       {occurrences.length > 1 ? (
         <View className="gap-2">
-          <AppText className="text-[13px] font-semibold text-foreground">
+          <AppText variant="small" className="font-semibold">
             Date
           </AppText>
           <View className="flex-row flex-wrap gap-2">
@@ -157,10 +157,10 @@ export function TicketPicker({ event }: { event: EventDetail }) {
               className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-background p-3"
             >
               <View className="flex-1">
-                <AppText className="text-[14px] font-medium text-foreground">
+                <AppText variant="body" className="font-medium">
                   {t.type}
                 </AppText>
-                <AppText className="text-[12px] text-muted-foreground">
+                <AppText variant="meta">
                   {t.price === 0 ? "Free" : `${t.currency} ${t.price}`}
                   {soldOut
                     ? " · Sold out"
@@ -179,7 +179,10 @@ export function TicketPicker({ event }: { event: EventDetail }) {
                   disabled={disabled || qty === 0}
                   onPress={() => step(t.id, -1, cap)}
                 />
-                <AppText className="w-5 text-center text-[14px] text-foreground">
+                <AppText
+                  variant="body"
+                  className="w-5 text-center font-semibold"
+                >
                   {qty}
                 </AppText>
                 <StepButton
@@ -195,7 +198,7 @@ export function TicketPicker({ event }: { event: EventDetail }) {
       </View>
 
       <View className="gap-1.5">
-        <AppText className="text-[13px] font-semibold text-foreground">
+        <AppText variant="small" className="font-semibold">
           Promo code
         </AppText>
         <TextInput
@@ -211,11 +214,11 @@ export function TicketPicker({ event }: { event: EventDetail }) {
           placeholderTextColor={c["muted-foreground"]}
         />
         {promoError ? (
-          <AppText className="text-[11px] text-destructive">
+          <AppText variant="caption" tone="error">
             {promoError}
           </AppText>
         ) : (
-          <AppText className="text-[11px] text-muted-foreground">
+          <AppText variant="caption">
             Applied when you continue to checkout.
           </AppText>
         )}
@@ -223,14 +226,14 @@ export function TicketPicker({ event }: { event: EventDetail }) {
 
       <View className="gap-1 border-t border-border pt-3">
         <View className="flex-row items-center justify-between">
-          <AppText className="text-[13px] text-muted-foreground">
+          <AppText variant="muted">
             {totalCount} ticket{totalCount === 1 ? "" : "s"}
           </AppText>
-          <AppText className="text-[15px] font-bold text-foreground">
+          <AppText variant="cardTitle">
             {currency} {subtotal}
           </AppText>
         </View>
-        <AppText className="text-[11px] text-muted-foreground">
+        <AppText variant="caption">
           An Abonten service fee is added at checkout.
         </AppText>
       </View>

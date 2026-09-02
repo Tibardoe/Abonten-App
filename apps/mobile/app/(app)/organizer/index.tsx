@@ -10,15 +10,10 @@ import type {
   OrganizerDashboardPeriod,
   OrganizerOverviewRow,
 } from "@abonten/api-client";
+import { AppText, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useState } from "react";
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 
 const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
   { key: "today", label: "Today" },
@@ -39,10 +34,8 @@ function money(currency: string | null, amount: number | string): string {
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
-      <Text className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </Text>
-      <Text className="text-lg font-bold text-foreground">{value}</Text>
+      <Overline>{label}</Overline>
+      <AppText className="text-lg font-bold text-foreground">{value}</AppText>
     </View>
   );
 }
@@ -51,8 +44,8 @@ function NavRow({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href} asChild>
       <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-        <Text className="text-base text-foreground">{label}</Text>
-        <Text className="text-muted-foreground">›</Text>
+        <AppText className="text-base text-foreground">{label}</AppText>
+        <AppText className="text-muted-foreground">›</AppText>
       </Pressable>
     </Link>
   );
@@ -111,15 +104,15 @@ export default function OrganizerDashboard() {
                   : "rounded-full border border-border px-3 py-1.5"
               }
             >
-              <Text
+              <AppText
                 className={
                   active
-                    ? "text-xs font-semibold text-primary-foreground"
-                    : "text-xs font-medium text-muted-foreground"
+                    ? "text-[13px] font-semibold text-primary-foreground"
+                    : "text-[13px] font-medium text-muted-foreground"
                 }
               >
                 {p.label}
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -129,44 +122,44 @@ export default function OrganizerDashboard() {
         <DashboardSkeleton />
       ) : q.isError || (result && result.status !== 200) ? (
         <View className="items-center gap-3 py-12">
-          <Text className="text-center text-muted-foreground">
+          <AppText className="text-center text-muted-foreground">
             {(result && result.status !== 200 && result.message) ||
               "Couldn't load your dashboard."}
-          </Text>
+          </AppText>
           <Pressable
             className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
             onPress={() => q.refetch()}
           >
-            <Text className="font-semibold text-primary-foreground">Retry</Text>
+            <AppText className="font-semibold text-primary-foreground">
+              Retry
+            </AppText>
           </Pressable>
         </View>
       ) : !hasEvents ? (
         <View className="items-center gap-3 py-12">
-          <Text className="text-base font-semibold text-foreground">
+          <AppText className="text-base font-semibold text-foreground">
             No events yet
-          </Text>
-          <Text className="text-center text-sm text-muted-foreground">
+          </AppText>
+          <AppText className="text-center text-sm text-muted-foreground">
             Publish your first event to start seeing sales here.
-          </Text>
+          </AppText>
           <Link href="/(app)/event/new" asChild>
             <Pressable className="rounded-lg bg-primary px-4 py-2 active:opacity-90">
-              <Text className="font-semibold text-primary-foreground">
+              <AppText className="font-semibold text-primary-foreground">
                 + Create event
-              </Text>
+              </AppText>
             </Pressable>
           </Link>
         </View>
       ) : (
         <>
           <View className="gap-2">
-            <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Sales
-            </Text>
+            <Overline>Sales</Overline>
             {moneyRows.length === 0 ? (
               <View className="rounded-xl border border-border bg-card p-3">
-                <Text className="text-sm text-muted-foreground">
+                <AppText className="text-sm text-muted-foreground">
                   No paid orders in this period.
-                </Text>
+                </AppText>
               </View>
             ) : (
               moneyRows.map((r) => (
@@ -175,12 +168,10 @@ export default function OrganizerDashboard() {
                   className="gap-3 rounded-xl border border-border bg-card p-4"
                 >
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-xs uppercase text-muted-foreground">
-                      Gross sales
-                    </Text>
-                    <Text className="text-xl font-bold text-foreground">
+                    <Overline>Gross sales</Overline>
+                    <AppText variant="screenTitle">
                       {money(r.currency, r.gross_sales)}
-                    </Text>
+                    </AppText>
                   </View>
                   <View className="flex-row flex-wrap gap-2">
                     <Stat
@@ -202,9 +193,7 @@ export default function OrganizerDashboard() {
           </View>
 
           <View className="gap-2">
-            <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Tickets
-            </Text>
+            <Overline>Tickets</Overline>
             <View className="flex-row flex-wrap gap-2">
               <Stat label="Sold" value={String(n(head?.tickets_sold))} />
               <Stat
@@ -219,9 +208,7 @@ export default function OrganizerDashboard() {
           </View>
 
           <View className="gap-2">
-            <Text className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Events
-            </Text>
+            <Overline>Events</Overline>
             <View className="flex-row flex-wrap gap-2">
               <Stat
                 label="Active"
@@ -244,9 +231,9 @@ export default function OrganizerDashboard() {
       <View className="gap-2">
         <Link href="/(app)/event/new" asChild>
           <Pressable className="items-center rounded-xl bg-primary px-4 py-3 active:opacity-90">
-            <Text className="text-base font-semibold text-primary-foreground">
+            <AppText className="text-base font-semibold text-primary-foreground">
               + Create event
-            </Text>
+            </AppText>
           </Pressable>
         </Link>
         <NavRow href="/(app)/organizer/events" label="My events" />

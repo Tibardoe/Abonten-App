@@ -284,9 +284,7 @@ export default function EventPromoCodesScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-3 p-4 pb-16"
     >
-      <AppText className="text-xl font-bold text-foreground">
-        Promo codes
-      </AppText>
+      <AppText variant="screenTitle">Promo codes</AppText>
 
       {q.isLoading ? (
         <View className="items-center py-12">

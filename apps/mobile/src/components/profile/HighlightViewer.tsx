@@ -529,7 +529,7 @@ export function HighlightViewer({
                   className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
                 >
                   <Icon name="trash-outline" size={18} tone="destructive" />
-                  <AppText className="text-[14px] font-medium text-destructive">
+                  <AppText variant="small" tone="error" className="font-medium">
                     Delete {isVideo ? "video" : "photo"}
                   </AppText>
                 </Pressable>

@@ -84,12 +84,10 @@ export function EventReminderButton({
           tone={active ? "primary" : "muted"}
         />
         <View className="flex-1">
-          <AppText className="text-[14px] font-semibold text-foreground">
+          <AppText variant="bodyStrong">
             {active ? "Reminder on" : "Remind me"}
           </AppText>
-          <AppText className="text-[12px] text-muted-foreground">
-            {summary}
-          </AppText>
+          <AppText variant="meta">{summary}</AppText>
         </View>
         <Icon name="chevron-forward" size={16} tone="muted" />
       </Pressable>
@@ -116,7 +114,7 @@ export function EventReminderButton({
                   size={22}
                   tone={checked ? "primary" : "muted"}
                 />
-                <AppText className="flex-1 text-[15px] text-foreground">
+                <AppText variant="body" className="flex-1">
                   {o.label}
                 </AppText>
               </Pressable>

@@ -22,6 +22,7 @@ import {
   Chip,
   EmptyState,
   Icon,
+  Overline,
   Skeleton,
   Spinner,
 } from "@abonten/ui-native";
@@ -85,14 +86,11 @@ function SuggestionRow({
         </View>
       )}
       <View className="flex-1">
-        <AppText className="text-[15px] text-foreground" numberOfLines={1}>
+        <AppText variant="body" numberOfLines={1}>
           {title}
         </AppText>
         {subtitle ? (
-          <AppText
-            className="text-[12px] text-muted-foreground"
-            numberOfLines={1}
-          >
+          <AppText variant="meta" numberOfLines={1}>
             {subtitle}
           </AppText>
         ) : null}
@@ -121,12 +119,10 @@ function SectionHeader({
 }) {
   return (
     <View className="mt-3 mb-1 flex-row items-center justify-between px-1">
-      <AppText className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </AppText>
+      <Overline>{label}</Overline>
       {action ? (
         <Pressable onPress={action.onPress} hitSlop={8}>
-          <AppText className="text-[12px] font-medium text-primary">
+          <AppText variant="small" tone="brand" className="font-medium">
             {action.label}
           </AppText>
         </Pressable>
@@ -258,7 +254,7 @@ export default function Search() {
             <Icon name="options-outline" size={18} tone="foreground" />
             {activeFilterCount > 0 ? (
               <View className="min-w-[18px] items-center rounded-full bg-primary px-1">
-                <AppText className="text-[11px] font-semibold text-primary-foreground">
+                <AppText className="text-[13px] font-semibold text-primary-foreground">
                   {activeFilterCount}
                 </AppText>
               </View>
@@ -383,7 +379,7 @@ export default function Search() {
           suggest.query === trimmed &&
           suggest.events.length === 0 &&
           categoryMatches.length === 0 ? (
-            <AppText className="px-1 pt-3 text-[13px] text-muted-foreground">
+            <AppText variant="muted" className="px-1 pt-3">
               {suggest.isError
                 ? "Couldn't load suggestions."
                 : "No matching events or categories."}

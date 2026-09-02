@@ -8,6 +8,7 @@ import type {
   OrganizerLedgerTransactionRow,
 } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { AppText, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useCallback } from "react";
 import {
@@ -15,7 +16,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -23,8 +23,8 @@ function NavRow({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href} asChild>
       <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-        <Text className="text-sm text-foreground">{label}</Text>
-        <Text className="text-muted-foreground">›</Text>
+        <AppText className="text-sm text-foreground">{label}</AppText>
+        <AppText className="text-muted-foreground">›</AppText>
       </Pressable>
     </Link>
   );
@@ -51,24 +51,22 @@ function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
   return (
     <View className="gap-3 rounded-xl border border-border bg-card p-4">
       <View className="flex-row items-center justify-between">
-        <Text className="text-xs uppercase text-muted-foreground">
-          Available ({row.currency})
-        </Text>
-        <Text className="text-xl font-bold text-foreground">
+        <Overline>Available ({row.currency})</Overline>
+        <AppText variant="screenTitle">
           {amount(row.currency, row.available_balance)}
-        </Text>
+        </AppText>
       </View>
       <View className="flex-row justify-between">
-        <Text className="text-xs text-muted-foreground">Pending</Text>
-        <Text className="text-xs text-foreground">
+        <AppText variant="muted">Pending</AppText>
+        <AppText variant="small">
           {amount(row.currency, row.pending_balance)}
-        </Text>
+        </AppText>
       </View>
       <View className="flex-row justify-between">
-        <Text className="text-xs text-muted-foreground">Total earned</Text>
-        <Text className="text-xs text-foreground">
+        <AppText variant="muted">Total earned</AppText>
+        <AppText variant="small">
           {amount(row.currency, row.total_earnings)}
-        </Text>
+        </AppText>
       </View>
     </View>
   );
@@ -78,17 +76,23 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
   return (
     <View className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-3">
       <View className="flex-1 gap-0.5">
-        <Text className="text-sm font-medium text-foreground" numberOfLines={1}>
+        <AppText
+          className="text-sm font-medium text-foreground"
+          numberOfLines={1}
+        >
           {LINE_LABEL[row.line] ?? row.line}
-        </Text>
-        <Text className="text-xs text-muted-foreground" numberOfLines={1}>
+        </AppText>
+        <AppText
+          className="text-[13px] text-muted-foreground"
+          numberOfLines={1}
+        >
           {row.event_title ?? row.reference ?? "—"}
-        </Text>
-        <Text className="text-[10px] text-muted-foreground">
+        </AppText>
+        <AppText variant="caption">
           {formatDateWithSuffix(row.created_at)} · {row.status}
-        </Text>
+        </AppText>
       </View>
-      <Text
+      <AppText
         className={
           row.amount < 0
             ? "text-sm font-semibold text-destructive"
@@ -96,7 +100,7 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
         }
       >
         {amount(row.currency, row.amount)}
-      </Text>
+      </AppText>
     </View>
   );
 }
@@ -125,11 +129,11 @@ export default function OrganizerFinanceScreen() {
         </View>
       ) : balances.length === 0 ? (
         <View className="rounded-xl border border-border bg-card p-4">
-          <Text className="text-sm text-muted-foreground">
+          <AppText className="text-sm text-muted-foreground">
             {finance.isError
               ? "Couldn't load your balance."
               : "No earnings yet."}
-          </Text>
+          </AppText>
         </View>
       ) : (
         balances.map((b) => <BalanceCard key={b.currency} row={b} />)
@@ -144,9 +148,7 @@ export default function OrganizerFinanceScreen() {
         />
       </View>
 
-      <Text className="pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Transactions
-      </Text>
+      <Overline className="pt-2">Transactions</Overline>
     </View>
   );
 
@@ -176,9 +178,9 @@ export default function OrganizerFinanceScreen() {
         ledger.isLoading ? (
           <ActivityIndicator className="my-4" />
         ) : (
-          <Text className="mt-6 text-center text-sm text-muted-foreground">
+          <AppText className="mt-6 text-center text-sm text-muted-foreground">
             {ledgerFailed ? "Couldn't load transactions." : "No transactions."}
-          </Text>
+          </AppText>
         )
       }
       ListFooterComponent={

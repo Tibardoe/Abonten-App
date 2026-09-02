@@ -45,8 +45,8 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
                 <AppText
                   className={
                     active
-                      ? "text-[12px] font-semibold text-primary-foreground"
-                      : "text-[12px] font-medium text-muted-foreground"
+                      ? "text-[13px] font-semibold text-primary-foreground"
+                      : "text-[13px] font-medium text-muted-foreground"
                   }
                 >
                   {c}
@@ -75,8 +75,8 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
                   <AppText
                     className={
                       active
-                        ? "text-[12px] font-semibold text-primary-foreground"
-                        : "text-[12px] font-medium text-muted-foreground"
+                        ? "text-[13px] font-semibold text-primary-foreground"
+                        : "text-[13px] font-medium text-muted-foreground"
                     }
                   >
                     {t}
@@ -114,10 +114,8 @@ export function EventWizardBasics({ w }: { w: EventWizard }) {
 
       <View className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3">
         <View className="flex-1 pr-3">
-          <AppText className="text-[14px] font-semibold text-foreground">
-            Require registration
-          </AppText>
-          <AppText className="text-[12px] text-muted-foreground">
+          <AppText variant="bodyStrong">Require registration</AppText>
+          <AppText variant="meta">
             Attendees must register even for a free event.
           </AppText>
         </View>

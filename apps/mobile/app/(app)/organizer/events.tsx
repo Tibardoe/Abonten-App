@@ -5,6 +5,7 @@ import {
 import type { UserPostType } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { AppText } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { useCallback } from "react";
@@ -13,7 +14,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -55,31 +55,29 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           />
         ) : (
           <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
-            <Text className="text-[10px] text-muted-foreground">No image</Text>
+            <AppText variant="caption">No image</AppText>
           </View>
         )}
         <View className="flex-1 gap-1">
-          <Text
+          <AppText
             className="text-sm font-semibold text-foreground"
             numberOfLines={1}
           >
             {event.title}
-          </Text>
+          </AppText>
           {event.starts_at ? (
-            <Text className="text-xs text-muted-foreground">
+            <AppText variant="muted">
               {formatDateWithSuffix(event.starts_at)}
-            </Text>
+            </AppText>
           ) : null}
           <View className="mt-0.5 flex-row items-center gap-2">
             <View className="self-start rounded-full bg-muted px-2 py-0.5">
-              <Text className="text-[10px] font-medium uppercase text-muted-foreground">
+              <AppText variant="overline">
                 {STATUS_LABEL[status] ?? status ?? "—"}
-              </Text>
+              </AppText>
             </View>
             {event.event_code ? (
-              <Text className="text-[10px] text-muted-foreground">
-                {event.event_code}
-              </Text>
+              <AppText variant="caption">{event.event_code}</AppText>
             ) : null}
           </View>
         </View>
@@ -93,9 +91,9 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           asChild
         >
           <Pressable className="self-start px-1 py-1 active:opacity-70">
-            <Text className="text-xs font-semibold text-destructive">
+            <AppText variant="small" tone="error" className="font-semibold">
               Cancel event
-            </Text>
+            </AppText>
           </Pressable>
         </Link>
       ) : null}
@@ -137,9 +135,9 @@ export default function OrganizerEventsScreen() {
         />
       }
       ListEmptyComponent={
-        <Text className="mt-10 text-center text-sm text-muted-foreground">
+        <AppText className="mt-10 text-center text-sm text-muted-foreground">
           {failed ? "Couldn't load your events." : "You have no events yet."}
-        </Text>
+        </AppText>
       }
       ListFooterComponent={
         q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null

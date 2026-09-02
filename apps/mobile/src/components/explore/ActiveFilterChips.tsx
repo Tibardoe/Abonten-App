@@ -30,9 +30,9 @@ export function ActiveFilterChips({
           accessibilityRole="button"
           accessibilityLabel={`Remove filter ${chip.label}`}
           onPress={() => onRemove(chip.key)}
-          className="flex-row items-center gap-1 rounded-full bg-primary px-3 py-1.5 active:opacity-80"
+          className="flex-row items-center gap-1 rounded-full bg-primary px-3.5 py-2 active:opacity-80"
         >
-          <AppText className="text-[12px] font-semibold text-primary-foreground">
+          <AppText className="text-[13px] font-semibold text-primary-foreground">
             {chip.label}
           </AppText>
           <Icon name="close" size={13} color="#fff" />
@@ -42,9 +42,9 @@ export function ActiveFilterChips({
       <Pressable
         accessibilityRole="button"
         onPress={onClearAll}
-        className="flex-row items-center rounded-full border border-border px-3 py-1.5 active:opacity-70"
+        className="flex-row items-center rounded-full border border-border px-3.5 py-2 active:opacity-70"
       >
-        <AppText className="text-[12px] font-medium text-muted-foreground">
+        <AppText variant="meta" className="font-medium">
           Clear all
         </AppText>
       </Pressable>

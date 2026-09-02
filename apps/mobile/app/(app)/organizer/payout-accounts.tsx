@@ -23,7 +23,6 @@ import {
   Alert,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from "react-native";
 
@@ -165,9 +164,9 @@ export default function PayoutAccountsScreen() {
   if (isError) {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
-        <Text className="text-center text-muted-foreground">
+        <AppText className="text-center text-muted-foreground">
           Couldn't load your payout accounts.
-        </Text>
+        </AppText>
         <Button title="Retry" onPress={() => refetch()} />
       </View>
     );
@@ -182,9 +181,9 @@ export default function PayoutAccountsScreen() {
         {accounts.length === 0 ? (
           <View className="items-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-10">
             <Icon name="cash-outline" size={28} tone="muted" />
-            <Text className="text-center text-sm text-muted-foreground">
+            <AppText className="text-center text-sm text-muted-foreground">
               No payout accounts yet. Add one to withdraw your earnings.
-            </Text>
+            </AppText>
           </View>
         ) : (
           accounts.map((a) => (
@@ -193,38 +192,44 @@ export default function PayoutAccountsScreen() {
               className="gap-2 rounded-xl border border-border bg-card p-4"
             >
               <View className="flex-row items-center justify-between">
-                <Text className="flex-1 text-sm font-medium text-foreground">
+                <AppText className="flex-1 text-sm font-medium text-foreground">
                   {accountTitle(a)}
-                </Text>
+                </AppText>
                 {a.is_default ? (
                   <View className="rounded-full bg-accent px-2 py-0.5">
-                    <Text className="text-[10px] font-semibold uppercase text-accent-foreground">
+                    <AppText className="text-[12px] font-semibold uppercase text-accent-foreground">
                       Default
-                    </Text>
+                    </AppText>
                   </View>
                 ) : null}
               </View>
-              <Text className="text-xs text-muted-foreground">
-                {a.account_holder_name}
-              </Text>
+              <AppText variant="muted">{a.account_holder_name}</AppText>
               <View className="flex-row gap-4">
                 {!a.is_default ? (
                   <Pressable
                     onPress={() => setDefault.mutate(a.id)}
                     disabled={setDefault.isPending}
                   >
-                    <Text className="text-xs font-semibold text-primary">
+                    <AppText
+                      variant="small"
+                      tone="brand"
+                      className="font-semibold"
+                    >
                       Make default
-                    </Text>
+                    </AppText>
                   </Pressable>
                 ) : null}
                 <Pressable
                   onPress={() => confirmRemove(a.id)}
                   disabled={remove.isPending}
                 >
-                  <Text className="text-xs font-semibold text-destructive">
+                  <AppText
+                    variant="small"
+                    tone="error"
+                    className="font-semibold"
+                  >
                     Remove
-                  </Text>
+                  </AppText>
                 </Pressable>
               </View>
             </View>
@@ -256,7 +261,7 @@ export default function PayoutAccountsScreen() {
             <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
               <Icon name="checkmark" size={30} tone="primary" />
             </View>
-            <AppText className="text-center text-[15px] text-foreground">
+            <AppText variant="body" className="text-center">
               {success}
             </AppText>
             <Button title="Done" fullWidth onPress={closeSheet} />
@@ -302,15 +307,15 @@ export default function PayoutAccountsScreen() {
                             : "border-border bg-background"
                         }`}
                       >
-                        <Text
-                          className={`text-xs ${
+                        <AppText
+                          className={`text-[13px] ${
                             selected
                               ? "text-primary-foreground"
                               : "text-foreground"
                           }`}
                         >
                           {nw.name}
-                        </Text>
+                        </AppText>
                       </Pressable>
                     );
                   })}
@@ -344,7 +349,7 @@ export default function PayoutAccountsScreen() {
             )}
 
             {formError ? (
-              <AppText className="text-[12px] text-destructive">
+              <AppText variant="small" tone="error">
                 {formError}
               </AppText>
             ) : null}

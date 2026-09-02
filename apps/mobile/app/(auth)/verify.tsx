@@ -172,10 +172,10 @@ export default function Verify() {
 
           <View className="grow justify-center gap-8">
             <View className="gap-2">
-              <AppText className="text-center text-[26px] font-bold text-foreground">
+              <AppText variant="pageTitle" className="text-center">
                 Enter your code
               </AppText>
-              <AppText className="text-center text-[14px] leading-[20px] text-muted-foreground">
+              <AppText variant="muted" className="text-center">
                 We sent a {CODE_LENGTH}-digit code to {maskPhone(phoneE164)}.
               </AppText>
             </View>
@@ -196,16 +196,14 @@ export default function Verify() {
               {error ? (
                 <View className="flex-row items-center justify-center gap-1.5">
                   <Icon name="alert-circle" size={15} tone="destructive" />
-                  <AppText className="text-[13px] text-destructive">
+                  <AppText variant="small" tone="error">
                     {error}
                   </AppText>
                 </View>
               ) : notice ? (
                 <View className="flex-row items-center justify-center gap-1.5">
                   <Icon name="checkmark-circle" size={15} tone="primary" />
-                  <AppText className="text-[13px] text-muted-foreground">
-                    {notice}
-                  </AppText>
+                  <AppText variant="muted">{notice}</AppText>
                 </View>
               ) : null}
             </View>
@@ -225,7 +223,7 @@ export default function Verify() {
                 hitSlop={8}
                 className="active:opacity-60"
               >
-                <AppText className="text-center text-[13px] text-muted-foreground">
+                <AppText variant="muted" className="text-center">
                   {resending
                     ? "Sending…"
                     : secondsLeft > 0
@@ -235,7 +233,11 @@ export default function Verify() {
               </Pressable>
 
               <Pressable onPress={() => router.back()} disabled={busy}>
-                <AppText className="text-center text-[13px] font-semibold text-primary">
+                <AppText
+                  variant="small"
+                  tone="brand"
+                  className="text-center font-semibold"
+                >
                   Use a different number
                 </AppText>
               </Pressable>

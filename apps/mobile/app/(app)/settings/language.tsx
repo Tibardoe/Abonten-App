@@ -38,9 +38,7 @@ export default function LanguageSettings() {
                 active ? "border-primary bg-card" : "border-border bg-card"
               }`}
             >
-              <AppText className="text-[15px] text-foreground">
-                {LOCALE_LABELS[code] ?? code}
-              </AppText>
+              <AppText variant="body">{LOCALE_LABELS[code] ?? code}</AppText>
               {active ? (
                 <Icon name="checkmark" size={18} tone="primary" />
               ) : null}

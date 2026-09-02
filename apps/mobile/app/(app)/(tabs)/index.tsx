@@ -299,12 +299,12 @@ export default function Explore() {
           className="flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
         >
           <Icon name="options-outline" size={18} tone="foreground" />
-          <AppText className="text-[13px] font-medium text-foreground">
+          <AppText variant="small" className="font-medium">
             Filters
           </AppText>
           {activeCount > 0 ? (
             <View className="ml-0.5 min-w-[18px] items-center rounded-full bg-primary px-1">
-              <AppText className="text-[11px] font-semibold text-primary-foreground">
+              <AppText className="text-[13px] font-semibold text-primary-foreground">
                 {activeCount}
               </AppText>
             </View>
@@ -340,7 +340,7 @@ export default function Explore() {
             size={18}
             tone="foreground"
           />
-          <AppText className="text-[13px] font-medium text-foreground">
+          <AppText variant="small" className="font-medium">
             {view === "list" ? "Map" : "List"}
           </AppText>
         </Pressable>

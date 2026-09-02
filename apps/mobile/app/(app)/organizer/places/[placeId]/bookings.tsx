@@ -6,6 +6,7 @@ import {
 } from "@/features/organizer/usePlaceBookingsReviews";
 import type { BookingStatus, OwnerPlaceBooking } from "@abonten/api-client";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { AppText } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -14,7 +15,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  Text,
   View,
 } from "react-native";
 
@@ -90,35 +90,35 @@ function BookingRow({
     <View className="gap-2 rounded-xl border border-border bg-card p-4">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1">
-          <Text className="font-bold text-foreground">{customer}</Text>
-          <Text className="text-sm text-muted-foreground">
+          <AppText className="font-bold text-foreground">{customer}</AppText>
+          <AppText className="text-sm text-muted-foreground">
             {date} at {time}
-          </Text>
+          </AppText>
           {booking.place_service?.name ? (
-            <Text className="text-sm text-muted-foreground">
+            <AppText className="text-sm text-muted-foreground">
               Service: {booking.place_service.name}
-            </Text>
+            </AppText>
           ) : null}
           {booking.party_size != null ? (
-            <Text className="text-sm text-muted-foreground">
+            <AppText className="text-sm text-muted-foreground">
               Party size: {booking.party_size}
-            </Text>
+            </AppText>
           ) : null}
           {booking.note ? (
-            <Text className="mt-1 text-sm text-foreground">
+            <AppText className="mt-1 text-sm text-foreground">
               &ldquo;{booking.note}&rdquo;
-            </Text>
+            </AppText>
           ) : null}
         </View>
 
         <View
           className={`shrink-0 rounded-full px-2.5 py-1 ${BADGE_CLASS[booking.status]}`}
         >
-          <Text
-            className={`text-xs font-semibold capitalize ${BADGE_TEXT_CLASS[booking.status]}`}
+          <AppText
+            className={`text-[13px] font-semibold capitalize ${BADGE_TEXT_CLASS[booking.status]}`}
           >
             {booking.status}
-          </Text>
+          </AppText>
         </View>
       </View>
 
@@ -129,16 +129,16 @@ function BookingRow({
             onPress={() => send("accept")}
             className="rounded-md bg-primary px-3 py-1.5 active:opacity-90 disabled:opacity-60"
           >
-            <Text className="text-sm font-semibold text-primary-foreground">
+            <AppText className="text-sm font-semibold text-primary-foreground">
               {respond.isPending ? "Working…" : "Accept"}
-            </Text>
+            </AppText>
           </Pressable>
           <Pressable
             disabled={respond.isPending}
             onPress={confirmDecline}
             className="rounded-md border border-border px-3 py-1.5 active:opacity-70 disabled:opacity-60"
           >
-            <Text className="text-sm text-foreground">Decline</Text>
+            <AppText className="text-sm text-foreground">Decline</AppText>
           </Pressable>
         </View>
       ) : null}
@@ -169,7 +169,7 @@ export default function PlaceBookingsScreen() {
       contentContainerClassName="gap-2 p-4 pb-16"
       ListHeaderComponent={
         <View className="mb-2 gap-3">
-          <Text className="text-xl font-bold text-foreground">Bookings</Text>
+          <AppText variant="screenTitle">Bookings</AppText>
           <View className="flex-row flex-wrap gap-2">
             {FILTERS.map((f) => {
               const active = filter === f.id;
@@ -183,15 +183,15 @@ export default function PlaceBookingsScreen() {
                       : "border-border bg-transparent"
                   }`}
                 >
-                  <Text
+                  <AppText
                     className={
                       active
-                        ? "text-xs font-semibold text-primary-foreground"
-                        : "text-xs text-muted-foreground"
+                        ? "text-[13px] font-semibold text-primary-foreground"
+                        : "text-[13px] text-muted-foreground"
                     }
                   >
                     {f.label}
-                  </Text>
+                  </AppText>
                 </Pressable>
               );
             })}
@@ -210,13 +210,13 @@ export default function PlaceBookingsScreen() {
         q.isLoading ? (
           <ActivityIndicator className="mt-10" />
         ) : (
-          <Text className="mt-10 text-center text-sm text-muted-foreground">
+          <AppText className="mt-10 text-center text-sm text-muted-foreground">
             {failed
               ? firstPage && firstPage.status === 403
                 ? "You're not authorized to manage this place."
                 : "Couldn't load bookings."
               : `No ${filter === "all" ? "" : `${filter} `}bookings.`}
-          </Text>
+          </AppText>
         )
       }
       ListFooterComponent={

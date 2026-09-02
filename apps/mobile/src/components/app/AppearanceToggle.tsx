@@ -30,7 +30,8 @@ export function AppearanceToggle() {
             }`}
           >
             <AppText
-              className={`text-[13px] font-semibold ${
+              variant="small"
+              className={`font-semibold ${
                 active ? "text-primary-foreground" : "text-foreground"
               }`}
             >
