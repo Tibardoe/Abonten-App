@@ -76,7 +76,10 @@ function videoThumbnailUrl(publicId: string, version: number): string {
   return `https://res.cloudinary.com/${cloud}/video/upload/w_300,h_300,c_thumb/v${version}/${publicId}.jpg`;
 }
 
-export function useUploadHighlights(userId: string | undefined) {
+export function useUploadHighlights(
+  userId: string | undefined,
+  opts?: { onProgress?: (fraction: number) => void },
+) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (media: HighlightMediaPick[]) => {
@@ -85,11 +88,17 @@ export function useUploadHighlights(userId: string | undefined) {
 
       // One batch = one "story". Sequential upload, same as the web hook
       // (mobile-first, bandwidth-constrained; a batch is usually 1–2 clips).
+      // Overall progress = completed files + the current file's fraction,
+      // over the file count.
       const groupId = uuidv4();
-      for (const item of media) {
+      const total = media.length;
+      opts?.onProgress?.(0);
+      for (let i = 0; i < media.length; i++) {
+        const item = media[i];
         const isVideo = item.type === "video";
         const up = await uploadToCloudinary(item.uri, "highlight", {
           video: isVideo,
+          onProgress: (f) => opts?.onProgress?.((i + f) / total),
         });
         const durationSeconds = isVideo
           ? (up.duration ?? item.durationSeconds ?? null)
@@ -106,6 +115,7 @@ export function useUploadHighlights(userId: string | undefined) {
           public_id: up.publicId,
         });
         if (error) throw error;
+        opts?.onProgress?.((i + 1) / total);
       }
       return { groupId, count: media.length };
     },

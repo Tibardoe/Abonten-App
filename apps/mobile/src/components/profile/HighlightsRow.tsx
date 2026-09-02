@@ -1,3 +1,4 @@
+import { PostHighlightSheet } from "@/components/profile/PostHighlightSheet";
 import {
   type HighlightMediaPick,
   MAX_HIGHLIGHT_IMAGE_BYTES,
@@ -5,26 +6,19 @@ import {
   MAX_HIGHLIGHT_VIDEO_SECONDS,
   useDeleteHighlightGroup,
   useHighlights,
-  useUploadHighlights,
 } from "@/features/profile/useHighlights";
 import { Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { HighlightViewer } from "./HighlightViewer";
 
 // Native echo of the web `UserHighlights` row: a horizontal strip of circular
 // highlight covers (mint ring). Tapping one opens the story-style
 // `HighlightViewer`. On your own profile the strip also has an "add" circle
-// (pick images/videos → Cloudinary → `highlight` rows) and a long-press on a
-// cover deletes that whole group — creator tooling mirroring the web
+// (pick images/videos → PostHighlightSheet review + upload) and a long-press
+// on a cover deletes that whole group — creator tooling mirroring the web
 // `HighlightModal` + `HighlightMenu`.
 
 export function HighlightsRow({
@@ -37,14 +31,16 @@ export function HighlightsRow({
   isOwn?: boolean;
 }) {
   const { data: groups } = useHighlights(userId);
-  const upload = useUploadHighlights(userId);
   const deleteGroup = useDeleteHighlightGroup(userId);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [pendingMedia, setPendingMedia] = useState<HighlightMediaPick[] | null>(
+    null,
+  );
 
   const hasGroups = !!groups && groups.length > 0;
   if (!hasGroups && !isOwn) return null;
 
-  async function pickAndUpload() {
+  async function pickMedia() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
@@ -96,13 +92,7 @@ export function HighlightsRow({
       });
     }
 
-    upload.mutate(media, {
-      onError: (e) =>
-        Alert.alert(
-          "Upload failed",
-          e instanceof Error ? e.message : "Please try again.",
-        ),
-    });
+    setPendingMedia(media);
   }
 
   function confirmDeleteGroup(groupId: string) {
@@ -132,18 +122,13 @@ export function HighlightsRow({
       >
         {isOwn ? (
           <Pressable
-            onPress={pickAndUpload}
-            disabled={upload.isPending}
+            onPress={pickMedia}
             className="items-center justify-center active:opacity-80"
             accessibilityRole="button"
             accessibilityLabel="Add highlight"
           >
             <View className="h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-dashed border-border">
-              {upload.isPending ? (
-                <ActivityIndicator />
-              ) : (
-                <Icon name="add" size={26} tone="muted" />
-              )}
+              <Icon name="add" size={26} tone="muted" />
             </View>
           </Pressable>
         ) : null}
@@ -183,6 +168,16 @@ export function HighlightsRow({
           canManage={isOwn}
           userId={userId}
           onClose={() => setOpenIndex(null)}
+        />
+      ) : null}
+
+      {pendingMedia ? (
+        <PostHighlightSheet
+          open
+          media={pendingMedia}
+          userId={userId}
+          onClose={() => setPendingMedia(null)}
+          onPosted={() => setPendingMedia(null)}
         />
       ) : null}
     </View>

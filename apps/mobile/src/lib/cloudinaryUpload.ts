@@ -16,10 +16,57 @@ export type CloudinaryUpload = {
   duration?: number;
 };
 
+type CloudinaryResponse = {
+  public_id: string;
+  version: number;
+  secure_url: string;
+  resource_type: "image" | "video";
+  duration?: number;
+};
+
+// XHR (not fetch) so the caller can show a real upload progress bar —
+// `xhr.upload.onprogress` has no fetch equivalent in React Native. Resolves
+// with the same shape whether or not `onProgress` is passed.
+function postForm(
+  url: string,
+  form: FormData,
+  onProgress?: (fraction: number) => void,
+): Promise<CloudinaryResponse> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.responseType = "json";
+
+    if (onProgress) {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(e.loaded / e.total);
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const json =
+          typeof xhr.response === "string"
+            ? JSON.parse(xhr.response)
+            : xhr.response;
+        onProgress?.(1);
+        resolve(json as CloudinaryResponse);
+      } else {
+        reject(new Error("The upload failed. Please try again."));
+      }
+    };
+    xhr.onerror = () =>
+      reject(new Error("The upload failed. Check your connection."));
+    xhr.ontimeout = () => reject(new Error("The upload timed out."));
+
+    xhr.send(form);
+  });
+}
+
 export async function uploadToCloudinary(
   uri: string,
   kind: UploadSignatureKind,
-  opts?: { video?: boolean },
+  opts?: { video?: boolean; onProgress?: (fraction: number) => void },
 ): Promise<CloudinaryUpload> {
   const sig = await api.uploads.signature(kind);
   if (sig.status !== 200 || !sig.data) {
@@ -42,18 +89,12 @@ export async function uploadToCloudinary(
   form.append("signature", signature);
   form.append("folder", folder);
 
-  const res = await fetch(
+  const json = await postForm(
     `https://api.cloudinary.com/v1_1/${cloud}/${isVideo ? "video" : "image"}/upload`,
-    { method: "POST", body: form },
+    form,
+    opts?.onProgress,
   );
-  if (!res.ok) throw new Error("The upload failed. Please try again.");
-  const json = (await res.json()) as {
-    public_id: string;
-    version: number;
-    secure_url: string;
-    resource_type: "image" | "video";
-    duration?: number;
-  };
+
   return {
     publicId: json.public_id,
     version: json.version,

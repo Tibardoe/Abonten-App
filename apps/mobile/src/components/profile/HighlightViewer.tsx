@@ -8,6 +8,7 @@ import {
   Alert,
   Animated,
   Modal,
+  PanResponder,
   Pressable,
   Text,
   View,
@@ -55,6 +56,37 @@ export function HighlightViewer({
   const progress = useRef(new Animated.Value(0)).current;
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heldRef = useRef(false);
+
+  // Swipe-down-to-close — the familiar Stories dismiss gesture. Claims the
+  // responder only on a clear downward drag, so quick taps and press-hold
+  // still reach the tap/hold surface below.
+  const dragY = useRef(new Animated.Value(0)).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_e, g) =>
+          g.dy > 12 && g.dy > Math.abs(g.dx) * 1.5,
+        onPanResponderMove: (_e, g) => {
+          if (g.dy > 0) dragY.setValue(g.dy);
+        },
+        onPanResponderRelease: (_e, g) => {
+          if (g.dy > 120 || g.vy > 1.2) {
+            Animated.timing(dragY, {
+              toValue: height,
+              duration: 160,
+              useNativeDriver: true,
+            }).start(() => onClose());
+          } else {
+            Animated.spring(dragY, {
+              toValue: 0,
+              useNativeDriver: true,
+              bounciness: 4,
+            }).start();
+          }
+        },
+      }),
+    [dragY, height, onClose],
+  );
 
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
@@ -208,86 +240,92 @@ export function HighlightViewer({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: "#000" }}>
-        {isVideo ? (
-          <VideoView
-            player={player}
-            style={{ position: "absolute", width, height }}
-            contentFit="contain"
-            nativeControls={false}
-          />
-        ) : null}
-        {bg ? (
-          <Image
-            source={{ uri: bg }}
-            style={{ position: "absolute", width, height }}
-            contentFit="contain"
-            transition={120}
-          />
-        ) : null}
-
-        {/* progress bars */}
-        <View
-          className="absolute left-0 right-0 flex-row gap-1 px-3"
-          style={{ top: 12 }}
+        <Animated.View
+          style={{ flex: 1, transform: [{ translateY: dragY }] }}
+          {...panResponder.panHandlers}
         >
-          {group.map((s, i) => (
-            <View
-              key={s.id}
-              className="h-1 flex-1 overflow-hidden rounded-full"
-              style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
-            >
-              <Animated.View
-                style={{
-                  height: "100%",
-                  backgroundColor: "#fff",
-                  width:
-                    i < slideIndex
-                      ? "100%"
-                      : i === slideIndex
-                        ? progress.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: ["0%", "100%"],
-                          })
-                        : "0%",
-                }}
-              />
-            </View>
-          ))}
-        </View>
-
-        {/* header */}
-        <View
-          className="absolute left-0 right-0 flex-row items-center gap-2 px-3"
-          style={{ top: 26 }}
-        >
-          <Text
-            className="flex-1 text-sm font-bold text-white"
-            numberOfLines={1}
-          >
-            {username}
-          </Text>
-          {canManage ? (
-            <Pressable
-              onPress={onDelete}
-              hitSlop={12}
-              disabled={deleteSlide.isPending}
-              accessibilityRole="button"
-              accessibilityLabel="Delete slide"
-            >
-              <Icon name="trash-outline" size={22} color="#fff" />
-            </Pressable>
+          {isVideo ? (
+            <VideoView
+              player={player}
+              style={{ position: "absolute", width, height }}
+              contentFit="contain"
+              nativeControls={false}
+            />
           ) : null}
-          <Pressable onPress={onClose} hitSlop={12}>
-            <Icon name="close" size={24} color="#fff" />
-          </Pressable>
-        </View>
+          {bg ? (
+            <Image
+              source={{ uri: bg }}
+              style={{ position: "absolute", width, height }}
+              contentFit="contain"
+              transition={120}
+              onError={() => nextSlide()}
+            />
+          ) : null}
 
-        {/* tap / hold surface */}
-        <Pressable
-          style={{ flex: 1 }}
-          onPressIn={onPressIn}
-          onPressOut={(e) => onPressOut(e.nativeEvent.locationX)}
-        />
+          {/* progress bars */}
+          <View
+            className="absolute left-0 right-0 flex-row gap-1 px-3"
+            style={{ top: 12 }}
+          >
+            {group.map((s, i) => (
+              <View
+                key={s.id}
+                className="h-1 flex-1 overflow-hidden rounded-full"
+                style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+              >
+                <Animated.View
+                  style={{
+                    height: "100%",
+                    backgroundColor: "#fff",
+                    width:
+                      i < slideIndex
+                        ? "100%"
+                        : i === slideIndex
+                          ? progress.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: ["0%", "100%"],
+                            })
+                          : "0%",
+                  }}
+                />
+              </View>
+            ))}
+          </View>
+
+          {/* header */}
+          <View
+            className="absolute left-0 right-0 flex-row items-center gap-2 px-3"
+            style={{ top: 26 }}
+          >
+            <Text
+              className="flex-1 text-sm font-bold text-white"
+              numberOfLines={1}
+            >
+              {username}
+            </Text>
+            {canManage ? (
+              <Pressable
+                onPress={onDelete}
+                hitSlop={12}
+                disabled={deleteSlide.isPending}
+                accessibilityRole="button"
+                accessibilityLabel="Delete slide"
+              >
+                <Icon name="trash-outline" size={22} color="#fff" />
+              </Pressable>
+            ) : null}
+            <Pressable onPress={onClose} hitSlop={12}>
+              <Icon name="close" size={24} color="#fff" />
+            </Pressable>
+          </View>
+
+          {/* tap / hold surface */}
+          <Pressable
+            style={{ flex: 1 }}
+            onPressIn={onPressIn}
+            onPressOut={(e) => onPressOut(e.nativeEvent.locationX)}
+          />
+        </Animated.View>
       </View>
     </Modal>
   );
