@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@abonten/core": "*",
     "@abonten/i18n": "*",
     "@abonten/ui-tokens": "*"
   },
