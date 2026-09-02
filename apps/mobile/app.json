@@ -71,7 +71,8 @@
         {
           "photosPermission": "Abonten needs access to your photos so you can set a profile picture."
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": false
