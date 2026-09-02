@@ -11,6 +11,7 @@ import {
   Icon,
   ScreenLoader,
   Spinner,
+  Stars,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -22,21 +23,6 @@ import { ReviewPhotoStrip } from "./ReviewPhotoStrip";
 // history, cursor-paginated. Tap the title to open the event; the trash icon
 // deletes the review (event_review_reviewer_delete RLS), which puts the
 // event back in "To Review".
-
-function Stars({ rating }: { rating: number }) {
-  return (
-    <View className="flex-row">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <Icon
-          key={s}
-          name={rating >= s ? "star" : "star-outline"}
-          size={13}
-          tone={rating >= s ? "primary" : "muted"}
-        />
-      ))}
-    </View>
-  );
-}
 
 export function ReviewedEventsList() {
   const q = useUserEventReviews();
