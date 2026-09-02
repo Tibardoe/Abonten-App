@@ -10,6 +10,7 @@ import {
   PlaceSliderRow,
 } from "@/components/explore/ExploreSliderRow";
 import { FeaturedEventsCarousel } from "@/components/explore/FeaturedEventsCarousel";
+import { FeaturedPlacesCarousel } from "@/components/explore/FeaturedPlacesCarousel";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
@@ -160,11 +161,12 @@ export default function Explore() {
       </View>
     ) : (
       <View>
-        <PlaceSliderRow
-          title="Featured"
-          places={placeSliders.data.featured}
-          sponsored
-        />
+        {placeSliders.data.featured.length > 0 ? (
+          <View className="gap-2 pt-4">
+            <SectionTitle className="px-4">Featured</SectionTitle>
+            <FeaturedPlacesCarousel places={placeSliders.data.featured} />
+          </View>
+        ) : null}
         <PlaceSliderRow
           title="Around you"
           places={placeSliders.data.aroundYou}
