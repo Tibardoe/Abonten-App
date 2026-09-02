@@ -1,4 +1,7 @@
 import "../global.css";
+// Must be imported before any other module that touches the native gesture
+// system (react-native-gesture-handler's own setup requirement).
+import "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/auth/SessionProvider";
 import {
   consumePendingRedirect,
@@ -16,6 +19,8 @@ import { Slot, usePathname, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Mirrors the web app's public-route allowlist + `/auth/signin?next=` bounce:
 // discovery / detail / search render for signed-out visitors, and only the
@@ -72,15 +77,19 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <I18nProvider>
-          <SessionProvider>
-            <StatusBar style="auto" />
-            <RootNavigator />
-          </SessionProvider>
-        </I18nProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <I18nProvider>
+              <SessionProvider>
+                <StatusBar style="auto" />
+                <RootNavigator />
+              </SessionProvider>
+            </I18nProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

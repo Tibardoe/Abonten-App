@@ -1,4 +1,5 @@
 export { Icon, type IconProps, type IconTone, type IoniconName } from "./Icon";
+export { AbontenLogo, type AbontenLogoProps } from "./AbontenLogo";
 export {
   AppText,
   type AppTextProps,

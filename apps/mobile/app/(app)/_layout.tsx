@@ -1,9 +1,9 @@
-import { AppMenuSheet } from "@/components/app/AppMenuSheet";
+import { AppDrawer } from "@/components/app/AppDrawer";
 import { NotificationBellButton } from "@/components/app/NotificationBellButton";
 import { MenuSheetProvider, useMenuSheet } from "@/components/app/menuSheet";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
-import { Icon } from "@abonten/ui-native";
+import { AbontenLogo, Icon } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -65,10 +65,15 @@ function Layout() {
         <Tabs.Screen
           name="index"
           options={{
-            // Header reads "Explore" (matches the web /explore page's
-            // heading); the bottom-tab slot keeps the web MobileNavBar's
+            // Home header: menu button (left) · Abonten mark (centre) ·
+            // notification bell (right, from screenOptions.headerRight).
+            // The web app puts the brand mark in the centre of its nav; the
+            // wordmark is dropped here because it's illegible at header
+            // height. The bottom-tab slot keeps the web MobileNavBar's
             // "Home" label.
             title: "Explore",
+            headerTitle: () => <AbontenLogo size={26} />,
+            headerTitleAlign: "center",
             tabBarLabel: t("home"),
             headerLeft,
             tabBarIcon: ({ color, size }) => (
@@ -252,7 +257,7 @@ function Layout() {
         />
       </Tabs>
 
-      <AppMenuSheet />
+      <AppDrawer />
     </>
   );
 }

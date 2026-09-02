@@ -22,7 +22,8 @@
     "expo-secure-store": "*",
     "nativewind": ">=4",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-svg": "*"
   },
   "devDependencies": {
     "@abonten/config": "*",
