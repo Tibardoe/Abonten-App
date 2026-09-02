@@ -1,3 +1,4 @@
+import { TimeField, prettyTime } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { useEventEdit } from "@/features/events/useEventEdit";
@@ -268,24 +269,34 @@ export default function EditEventScreen() {
             <View className="flex-row gap-3">
               <View className="flex-1">
                 <Field label="Start time">
-                  <Input
-                    value={w.rangeStartTime}
-                    onChangeText={w.setRangeStartTime}
-                    keyboardType="numbers-and-punctuation"
-                    editable={!w.locked}
-                    invalid={!TIME_RE.test(w.rangeStartTime)}
-                  />
+                  {w.locked ? (
+                    <AppText className="text-[13px] text-foreground">
+                      {prettyTime(w.rangeStartTime)}
+                    </AppText>
+                  ) : (
+                    <TimeField
+                      label="Start time"
+                      value={w.rangeStartTime}
+                      onChange={w.setRangeStartTime}
+                      invalid={!TIME_RE.test(w.rangeStartTime)}
+                    />
+                  )}
                 </Field>
               </View>
               <View className="flex-1">
                 <Field label="End time">
-                  <Input
-                    value={w.rangeEndTime}
-                    onChangeText={w.setRangeEndTime}
-                    keyboardType="numbers-and-punctuation"
-                    editable={!w.locked}
-                    invalid={!TIME_RE.test(w.rangeEndTime)}
-                  />
+                  {w.locked ? (
+                    <AppText className="text-[13px] text-foreground">
+                      {prettyTime(w.rangeEndTime)}
+                    </AppText>
+                  ) : (
+                    <TimeField
+                      label="End time"
+                      value={w.rangeEndTime}
+                      onChange={w.setRangeEndTime}
+                      invalid={!TIME_RE.test(w.rangeEndTime)}
+                    />
+                  )}
                 </Field>
               </View>
             </View>

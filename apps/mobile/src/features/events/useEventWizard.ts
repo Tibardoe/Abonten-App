@@ -126,6 +126,10 @@ export function useEventWizard(resumeDraftId?: string) {
 
   // schedule
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("single");
+  // Within a single-event schedule: one calendar day, or an explicit
+  // start-day → end-day span. "single" leaves rangeEnd null and the
+  // schedule builder falls back to rangeStart for the end date.
+  const [dateMode, setDateMode] = useState<"single" | "range">("single");
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [rangeStartTime, setRangeStartTime] = useState("18:00");
@@ -336,8 +340,13 @@ export function useEventWizard(resumeDraftId?: string) {
       setRangeStartTime(from.time);
       if (p.singleDateRange.to) {
         const to = splitIso(p.singleDateRange.to);
-        setRangeEnd(to.date);
         setRangeEndTime(to.time);
+        // Only a genuine multi-day span makes this a "range"; a same-day
+        // draft round-trips back to the simpler single-date picker.
+        if (to.date !== from.date) {
+          setDateMode("range");
+          setRangeEnd(to.date);
+        }
       }
     }
 
@@ -653,7 +662,7 @@ export function useEventWizard(resumeDraftId?: string) {
   const scheduleValid =
     scheduleMode === "single"
       ? !!rangeStart &&
-        !!rangeEnd &&
+        (dateMode === "single" || !!rangeEnd) &&
         TIME_RE.test(rangeStartTime) &&
         TIME_RE.test(rangeEndTime)
       : occurrences.length > 0;
@@ -703,6 +712,14 @@ export function useEventWizard(resumeDraftId?: string) {
     // schedule
     scheduleMode,
     setScheduleMode,
+    dateMode,
+    setDateMode: (m: "single" | "range") => {
+      setDateMode(m);
+      // Leaving range mode: drop the now-hidden end day so validity and the
+      // review summary reflect a single date. Entering range mode keeps the
+      // chosen start as the range's first day.
+      if (m === "single") setRangeEnd(null);
+    },
     rangeStart,
     rangeEnd,
     setRange: (r: { start: string | null; end: string | null }) => {

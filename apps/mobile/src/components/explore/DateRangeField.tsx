@@ -40,10 +40,13 @@ export function DateRangeField({
   start,
   end,
   onChange,
+  mode = "range",
 }: {
   start: string | null;
   end: string | null;
   onChange: (next: { start: string | null; end: string | null }) => void;
+  /** "single" picks exactly one day (end stays null); "range" is start→end. */
+  mode?: "single" | "range";
 }) {
   const c = useThemeColors();
   const today = useMemo(() => {
@@ -66,6 +69,11 @@ export function DateRangeField({
 
   function pick(d: Date) {
     const s = iso(d);
+    // Single-day mode: every tap just sets the one date.
+    if (mode === "single") {
+      onChange({ start: s, end: null });
+      return;
+    }
     // No range yet, or a full range already set -> start a new range.
     if (!start || (start && end)) {
       onChange({ start: s, end: null });
