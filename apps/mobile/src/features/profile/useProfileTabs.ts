@@ -1,9 +1,46 @@
 import { useSession } from "@/auth/SessionProvider";
 import { favoritesListKey } from "@/features/favorites/useFavorites";
 import { supabase } from "@/lib/supabase";
+import {
+  type PlaceOpeningHourRow,
+  computePlaceOpenStatus,
+} from "@abonten/core/computePlaceOpenStatus";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
+
+// The Places / favourite-places tabs render the full PlaceCard, but the list
+// comes from a plain `place` table read (no is_open / rating from a list
+// RPC). This derives the two card fields client-side from the joined
+// opening-hours + approved review rows so the card isn't stuck showing
+// "Closed" / "No reviews" for every place.
+function enrichPlaceRow(
+  row: PlaceType & {
+    place_category?: { name: string; slug: string } | null;
+    place_opening_hours?: PlaceOpeningHourRow[] | null;
+    place_review?: { rating: number; status?: string | null }[] | null;
+  },
+): ProfilePlace {
+  const approved = (row.place_review ?? []).filter(
+    (r) => r.status == null || r.status === "approved",
+  );
+  const reviewCount = approved.length;
+  const avgRating =
+    reviewCount > 0
+      ? approved.reduce((s, r) => s + (r.rating ?? 0), 0) / reviewCount
+      : 0;
+  const open = computePlaceOpenStatus(
+    row.place_opening_hours ?? [],
+    row.temporary_status ?? null,
+  );
+  return {
+    ...row,
+    category_name: row.place_category?.name ?? row.category_name ?? null,
+    avg_rating: avgRating,
+    review_count: reviewCount,
+    is_open: open.isOpen,
+  } as ProfilePlace;
+}
 
 // Data for the public-profile tabs — native echoes of the web
 // user/[username]/{posts,places,favorites,reviews} pages. Direct table
@@ -82,7 +119,9 @@ export function useProfilePlaces(userId: string | undefined) {
     queryFn: async ({ pageParam }) => {
       let q = supabase
         .from("place")
-        .select("*, place_category(name, slug)")
+        .select(
+          "*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_review(rating, status)",
+        )
         .eq("owner_id", userId as string)
         .order("created_at", { ascending: false })
         .order("id", { ascending: false })
@@ -94,7 +133,8 @@ export function useProfilePlaces(userId: string | undefined) {
       }
       const { data, error } = await q;
       if (error) throw error;
-      const all = (data ?? []) as ProfilePlace[];
+      // biome-ignore lint/suspicious/noExplicitAny: PostgREST embeds aren't in the generated PlaceType
+      const all = ((data ?? []) as any[]).map(enrichPlaceRow);
       const hasNext = all.length > PAGE;
       const rows = hasNext ? all.slice(0, PAGE) : all;
       const last = rows[rows.length - 1];
@@ -173,7 +213,9 @@ export function useProfileFavoritePlaces(active: boolean) {
     queryFn: async ({ pageParam }) => {
       let q = supabase
         .from("favorite_place")
-        .select("created_at, place_id, place(*, place_category(name, slug))")
+        .select(
+          "created_at, place_id, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_review(rating, status))",
+        )
         .order("created_at", { ascending: false })
         .limit(PAGE + 1);
       if (pageParam) q = q.lt("created_at", pageParam.createdAt);
@@ -182,13 +224,14 @@ export function useProfileFavoritePlaces(active: boolean) {
       const all = (data ?? []) as unknown as {
         created_at: string;
         place_id: string;
-        place: ProfilePlace | null;
+        // biome-ignore lint/suspicious/noExplicitAny: PostgREST embeds aren't in the generated PlaceType
+        place: any | null;
       }[];
       const hasNext = all.length > PAGE;
       const slice = hasNext ? all.slice(0, PAGE) : all;
       const rows = slice
         .filter((r) => r.place)
-        .map((r) => r.place as ProfilePlace);
+        .map((r) => enrichPlaceRow(r.place));
       const last = slice[slice.length - 1];
       return {
         rows,

@@ -1,12 +1,10 @@
 import { useSession } from "@/auth/SessionProvider";
 import { EventCard } from "@/components/EventCard";
+import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { CreateActionSheet } from "@/components/profile/CreateActionSheet";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import {
-  ProfilePlaceRow,
-  ProfileReviewRow,
-} from "@/components/profile/ProfileRows";
+import { ProfileReviewRow } from "@/components/profile/ProfileRows";
 import {
   ProfileTabBar,
   type ProfileTabKey,
@@ -223,7 +221,7 @@ export default function UserProfileScreen() {
             return (
               <View className="px-4">
                 {/* biome-ignore lint/suspicious/noExplicitAny: row type switches per tab */}
-                <ProfilePlaceRow place={item as any} />
+                <PlaceCard place={item as any} />
               </View>
             );
           return (
