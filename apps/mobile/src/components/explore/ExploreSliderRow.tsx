@@ -2,18 +2,21 @@ import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
-import { AppText, Icon, SectionTitle } from "@abonten/ui-native";
+import { AppText, Icon, Overline } from "@abonten/ui-native";
 import { FlatList, Pressable, View } from "react-native";
 
 // Native echo of the web EventsSlider / PlacesSlider — a titled horizontal
-// strip of cards above the filterable "All" list, now with a "See all"
-// action that opens the full window (app/(app)/explore/[type]). Featured
-// events get the FeaturedEventsCarousel banner treatment instead of this
-// row.
+// strip of cards above the filterable "All" list, with a "View all" action
+// that opens the full window (app/(app)/explore/[type]). Featured events get
+// the FeaturedEventsCarousel banner treatment instead of this row.
+//
+// Header styling matches the web EventsSlider exactly: the title is
+// deliberately quieter than the "All events" heading below it — an uppercase,
+// tracked, muted-foreground kicker (the `Overline` variant) — and "View all"
+// is a brand-primary link with a chevron. Web shows "View all" whenever the
+// row has any items (no minimum-count gate).
 
 const CARD_WIDTH = 260;
-// Below this the strip already shows everything, so "See all" is noise.
-const VIEW_ALL_MIN = 4;
 
 function Header({
   title,
@@ -26,17 +29,17 @@ function Header({
 }) {
   return (
     <View className="flex-row items-center justify-between px-4">
-      <SectionTitle>{title}</SectionTitle>
-      {onViewAll && count >= VIEW_ALL_MIN ? (
+      <Overline>{title}</Overline>
+      {onViewAll && count > 0 ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`See all ${title}`}
+          accessibilityLabel={`View all ${title}`}
           onPress={onViewAll}
           hitSlop={8}
           className="flex-row items-center gap-0.5 active:opacity-60"
         >
-          <AppText className="text-[13px] font-semibold text-primary">
-            See all
+          <AppText className="text-[13px] font-medium text-primary">
+            View all
           </AppText>
           <Icon name="chevron-forward" size={15} tone="primary" />
         </Pressable>
