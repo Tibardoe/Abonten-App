@@ -1,6 +1,7 @@
-import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
 import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { finalizePaystackPayment } from "./finalizePaystackPayment";
+import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 
 // Post-auth body of retryPaymentFulfillment — shared with
 // `/api/mobile/payments/retry`. Caller supplies an already-authenticated
@@ -30,6 +31,7 @@ export async function retryPaymentFulfillmentCore(
   supabase: SupabaseClient,
   userId: string,
   paymentAttemptId: string,
+  deps: PaymentFulfillmentDeps,
 ): Promise<RetryPaymentFulfillmentCoreResult> {
   const { data: attempt, error: attemptError } = await supabase
     .from("payment_attempt")
@@ -50,7 +52,11 @@ export async function retryPaymentFulfillmentCore(
     return { status: 403, message: "Not authorized" };
   }
 
-  const result = await finalizePaystackPayment(supabase, paymentAttemptId);
+  const result = await finalizePaystackPayment(
+    supabase,
+    paymentAttemptId,
+    deps,
+  );
 
   if (result.status === "succeeded") {
     return { status: 200, data: { finalized: "succeeded" } };

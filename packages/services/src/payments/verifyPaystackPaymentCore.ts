@@ -1,6 +1,7 @@
-import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
 import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { finalizePaystackPayment } from "./finalizePaystackPayment";
+import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 
 // Post-auth body of verifyPaystackPayment — shared with
 // `/api/mobile/payments/verify`. Caller supplies an already-authenticated
@@ -27,6 +28,7 @@ export async function verifyPaystackPaymentCore(
   supabase: SupabaseClient,
   userId: string,
   paymentAttemptId: string,
+  deps: PaymentFulfillmentDeps,
 ): Promise<VerifyPaystackPaymentCoreResult> {
   const { data: attempt, error: attemptError } = await supabase
     .from("payment_attempt")
@@ -49,7 +51,11 @@ export async function verifyPaystackPaymentCore(
     return { status: 403, message: "Not authorized" };
   }
 
-  const result = await finalizePaystackPayment(supabase, paymentAttemptId);
+  const result = await finalizePaystackPayment(
+    supabase,
+    paymentAttemptId,
+    deps,
+  );
 
   if (result.status === "succeeded") {
     return { status: 200, data: { finalized: "succeeded" } };

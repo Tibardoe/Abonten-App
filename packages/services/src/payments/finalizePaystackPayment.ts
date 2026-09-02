@@ -9,16 +9,16 @@
 //
 // Deliberately NOT a "use server" Server Action: it takes an
 // already-constructed Supabase client (cookie-bound for the frontend path,
-// service-role for the webhook) and a payment_attempt id already resolved
-// by the caller — same category as ticketInventory.ts/paymentAttempt.ts.
+// service-role for the webhook), a payment_attempt id already resolved by
+// the caller, and the three purchase-fulfilment steps as injected deps
+// (they stay in apps/web — Next primitives + React email). Same category as
+// ticketInventory.ts/paymentAttempt.ts.
 
-import activateEventPromotion from "@/actions/activateEventPromotion";
-import activatePlacePromotion from "@/actions/activatePlacePromotion";
-import generateTicket from "@/actions/generateTicket";
 import { logger } from "@abonten/core/logger";
 import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
-import { verifyTransaction } from "@abonten/services/payments/gateway/paystackService";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
+import { verifyTransaction } from "./gateway/paystackService";
 
 type PaymentAttemptFullRow = {
   id: string;
@@ -54,7 +54,9 @@ const PAYMENT_ATTEMPT_FULL_SELECT =
 export async function finalizePaystackPayment(
   supabase: SupabaseClient,
   primaryAttemptId: string,
+  deps: PaymentFulfillmentDeps,
 ): Promise<FinalizeResult> {
+  const { issueTickets, activatePlacePromotion, activateEventPromotion } = deps;
   const { data: primary, error: primaryError } = await supabase
     .from("payment_attempt")
     .select(PAYMENT_ATTEMPT_FULL_SELECT)
@@ -349,7 +351,7 @@ export async function finalizePaystackPayment(
     };
 
     if (member.checkout_session_id) {
-      const result = await generateTicket(
+      const result = await issueTickets(
         member.checkout_session_id,
         transactionRow.id,
         JSON.stringify({

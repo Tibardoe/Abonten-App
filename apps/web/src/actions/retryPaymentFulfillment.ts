@@ -1,10 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import {
   type RetryPaymentFulfillmentCoreResult,
   retryPaymentFulfillmentCore,
-} from "@/utils/retryPaymentFulfillmentCore";
+} from "@abonten/services/payments/retryPaymentFulfillmentCore";
 
 type RetryPaymentFulfillmentResult =
   | RetryPaymentFulfillmentCoreResult
@@ -30,5 +31,10 @@ export default async function retryPaymentFulfillment(
     return { status: 401, message: "User not logged in" };
   }
 
-  return retryPaymentFulfillmentCore(supabase, user.id, paymentAttemptId);
+  return retryPaymentFulfillmentCore(
+    supabase,
+    user.id,
+    paymentAttemptId,
+    paymentFulfillmentDeps,
+  );
 }
