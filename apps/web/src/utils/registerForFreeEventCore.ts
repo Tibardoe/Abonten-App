@@ -1,5 +1,4 @@
 import insertUserAttendance from "@/actions/insertUserAttendance";
-import { saveEventQrCodeToCloudinary } from "@/actions/saveEventQrCodeToCloudinary";
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
@@ -11,6 +10,7 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@abonten/services/tickets/generateTicketCode";
+import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { after } from "next/server";

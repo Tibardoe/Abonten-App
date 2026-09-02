@@ -8,11 +8,11 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@abonten/services/tickets/generateTicketCode";
+import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import insertUserAttendance from "./insertUserAttendance";
-import { saveEventQrCodeToCloudinary } from "./saveEventQrCodeToCloudinary";
 import ticketPurchaseNotification from "./ticketPurchaseNotification";
 
 type TicketWithEvent = {
