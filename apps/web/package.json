@@ -13,6 +13,7 @@
   "dependencies": {
     "@abonten/core": "*",
     "@abonten/i18n": "*",
+    "@abonten/services": "*",
     "@abonten/types": "*",
     "@abonten/validation": "*",
     "@hookform/resolvers": "^5.2.2",

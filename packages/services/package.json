@@ -1,0 +1,27 @@
+{
+  "name": "@abonten/services",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-free, server-only business logic shared by apps/web's Server Actions and its /api/mobile HTTP routes. Takes an injected SupabaseClient; may use node:* and the Cloudinary/Paystack SDKs. No next/*, no react, no DOM.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@abonten/core": "*",
+    "@abonten/types": "*",
+    "@abonten/validation": "*",
+    "@supabase/supabase-js": "^2.49.1",
+    "cloudinary": "^2.6.0",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@abonten/config": "*",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5"
+  }
+}
