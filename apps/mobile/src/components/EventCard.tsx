@@ -33,10 +33,10 @@ function GlassButton({
       accessibilityLabel={label}
       hitSlop={8}
       onPress={onPress}
-      className="h-8 w-8 items-center justify-center rounded-full active:opacity-70"
+      className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
       style={{ backgroundColor: "rgba(17,24,32,0.55)" }}
     >
-      <Icon name={icon} size={17} color="#fff" />
+      <Icon name={icon} size={18} color="#fff" />
     </Pressable>
   );
 }
