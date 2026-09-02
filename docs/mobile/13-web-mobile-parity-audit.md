@@ -355,6 +355,38 @@ round.
 
 ---
 
+## 8b. Outcome — what shipped (branch `feat/mobile-web-parity-round2`)
+
+All phases A–H landed. Per-phase detail + SHAs in
+[`14-web-parity-round2.md`](14-web-parity-round2.md). Summary:
+
+| Phase | Shipped |
+| --- | --- |
+| A | `requestPlaceBookingCore` / `cancelPlaceBookingCore` in `@abonten/services`; web actions delegate; `POST /api/mobile/places/[id]/bookings` + `…/bookings/cancel`; api-client `places.requestBooking` / `cancelBooking`. Owner notification now writes via the service-role client — **also fixes a latent web bug** (the old cookie-client `createNotification` was silently denied by `notification`'s missing INSERT policy). |
+| B | Place reviews: `usePlaceReviews.ts` (eligibility / post / update / delete, all class-A), `PlaceReviewSheet`, "Your review · Edit / Delete" card on `place/[id]`, review-list cards now show photos. |
+| C | Place claim: `usePlaceClaim.ts` (status + submit, class-A), `ClaimPlaceSheet`, "Own this place?" / "claim pending" card on `place/[id]`. |
+| D | Place booking: `usePlaceBooking.ts` (request via the Phase-A route, cancel, `useMyBookings` infinite), `BookPlaceSheet` (service chips, single future date via `DateRangeField mode="single"` + wheel `TimeField`, party stepper, note), `app/(app)/bookings.tsx` "My bookings" + drawer link. Book CTA on `place/[id]` gated to **has ≥1 service** (intentional divergence from web). |
+| E | Stepped checkout: new `buy/[eventId]` (Tickets → Promo → Review → Proceed) replaces the inline `TicketPicker` on `event/[id]` (now a compact CTA); `checkout/[sessionId]` re-labelled "Order summary" / "Payment"; `TicketPicker.tsx` deleted. |
+| F | `SocialMap.tsx` — photo markers (flyer/cover circle), grid clustering with zoom-to-split, Reanimated pull-up preview card with swipe-to-dismiss; `ExploreMap` reduced to an adapter. No new deps. |
+| G | `AppDrawer` reworked from a mount-on-open `Modal` into an always-mounted absolute overlay; left-edge Pan opens it with finger-tracking + velocity/distance settle; Android back via `BackHandler`. |
+| H | `<ListFooter>` primitive (loading-next / retry / end) wired into home feeds, search, notifications, bookings; delete account (`deleteAccountCore` + `POST /api/mobile/account/delete` + Settings › Security danger card). |
+
+**RLS / schema changes: none.** Claims, place reviews and booking requests
+were already class-A. Two `@abonten/services` cores use the service-role
+client for the *owner-notification* insert only (system-generated
+notifications, matching every other server notification path).
+
+Verification each phase: `turbo typecheck` (all packages) · `next build`
+(web) · `expo export --platform android` (mobile) · `npm run check:api-parity`
+· `biome check` on touched files. **Not device-verified:** the Paystack
+charge path, the native map (markers/clustering/preview gestures), the
+drawer edge-swipe feel, and push — same standing caveat as every prior
+mobile round.
+
+Still open: organizer reply to an **event** review (web `respondToEventReview`
+has no mobile route yet — place-review reply exists); report place/review
+(web actions exist but no UI on either platform).
+
 ## 9. Open questions for the user
 
 1. **Booking owner-notification**: shared-service + `/api/mobile` route (rule-consistent, more code) **or** a DB `AFTER INSERT` trigger (zero transport code)? Audit recommends the route.
