@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,6 +13,7 @@ import {
 
 export default function Verify() {
   const router = useRouter();
+  const c = useThemeColors();
   const { phoneE164 } = useLocalSearchParams<{ phoneE164: string }>();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,7 +66,7 @@ export default function Verify() {
       <TextInput
         className="rounded-md border border-border bg-card px-3 py-3 text-center text-2xl tracking-[8px] text-foreground"
         placeholder="000000"
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={c["muted-foreground"]}
         keyboardType="number-pad"
         autoComplete="sms-otp"
         maxLength={6}
