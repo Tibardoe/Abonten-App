@@ -1,0 +1,35 @@
+# Normalize line endings. Text files are stored with LF in the repo and
+# checked out with LF on every platform — this stops Git (with
+# core.autocrlf=true on Windows) from rewriting working-tree files to CRLF
+# and printing "LF will be replaced by CRLF" on every add.
+#
+# Existing files renormalize the next time they're touched; run
+# `git add --renormalize .` once if you want to convert the whole tree in a
+# single commit.
+
+* text=auto eol=lf
+
+# Windows-only scripts keep CRLF.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Binary — never normalize.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.pdf   binary
+*.zip   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+*.mp4   binary
+*.mov   binary
+*.hbc   binary
+*.keystore binary
+*.jks   binary
