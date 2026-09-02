@@ -1,25 +1,127 @@
-import { useHighlights } from "@/features/profile/useHighlights";
+import {
+  type HighlightMediaPick,
+  MAX_HIGHLIGHT_IMAGE_BYTES,
+  MAX_HIGHLIGHT_VIDEO_BYTES,
+  MAX_HIGHLIGHT_VIDEO_SECONDS,
+  useDeleteHighlightGroup,
+  useHighlights,
+  useUploadHighlights,
+} from "@/features/profile/useHighlights";
+import { Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 import { HighlightViewer } from "./HighlightViewer";
 
 // Native echo of the web `UserHighlights` row: a horizontal strip of circular
-// highlight covers (mint ring, like the web `border-mint`). Tapping one opens
-// the story-style `HighlightViewer` at that group. Owner add/delete is
-// creator tooling handled elsewhere — this is the visitor-facing view.
+// highlight covers (mint ring). Tapping one opens the story-style
+// `HighlightViewer`. On your own profile the strip also has an "add" circle
+// (pick images/videos → Cloudinary → `highlight` rows) and a long-press on a
+// cover deletes that whole group — creator tooling mirroring the web
+// `HighlightModal` + `HighlightMenu`.
 
 export function HighlightsRow({
   userId,
   username,
+  isOwn = false,
 }: {
   userId: string;
   username: string;
+  isOwn?: boolean;
 }) {
   const { data: groups } = useHighlights(userId);
+  const upload = useUploadHighlights(userId);
+  const deleteGroup = useDeleteHighlightGroup(userId);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  if (!groups || groups.length === 0) return null;
+  const hasGroups = !!groups && groups.length > 0;
+  if (!hasGroups && !isOwn) return null;
+
+  async function pickAndUpload() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(
+        "Photo access needed",
+        "Allow photo access to add highlights.",
+      );
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+    if (picked.canceled || !picked.assets?.length) return;
+
+    const media: HighlightMediaPick[] = [];
+    for (const asset of picked.assets) {
+      const isVideo = asset.type === "video";
+      const maxBytes = isVideo
+        ? MAX_HIGHLIGHT_VIDEO_BYTES
+        : MAX_HIGHLIGHT_IMAGE_BYTES;
+      if (typeof asset.fileSize === "number" && asset.fileSize > maxBytes) {
+        Alert.alert(
+          "File too large",
+          `${isVideo ? "Videos" : "Images"} must be ${Math.round(
+            maxBytes / (1024 * 1024),
+          )}MB or smaller.`,
+        );
+        return;
+      }
+      const durationSeconds =
+        isVideo && typeof asset.duration === "number"
+          ? asset.duration / 1000
+          : null;
+      if (
+        durationSeconds &&
+        durationSeconds > MAX_HIGHLIGHT_VIDEO_SECONDS + 1
+      ) {
+        Alert.alert(
+          "Video too long",
+          `Highlight videos must be ${MAX_HIGHLIGHT_VIDEO_SECONDS} seconds or shorter. Trim it on the Abonten website first.`,
+        );
+        return;
+      }
+      media.push({
+        uri: asset.uri,
+        type: isVideo ? "video" : "image",
+        durationSeconds,
+      });
+    }
+
+    upload.mutate(media, {
+      onError: (e) =>
+        Alert.alert(
+          "Upload failed",
+          e instanceof Error ? e.message : "Please try again.",
+        ),
+    });
+  }
+
+  function confirmDeleteGroup(groupId: string) {
+    Alert.alert("Delete highlight?", "This removes every slide in it.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () =>
+          deleteGroup.mutate(groupId, {
+            onError: (e) =>
+              Alert.alert(
+                "Couldn't delete",
+                e instanceof Error ? e.message : "Please try again.",
+              ),
+          }),
+      },
+    ]);
+  }
 
   return (
     <View>
@@ -28,7 +130,25 @@ export function HighlightsRow({
         showsHorizontalScrollIndicator={false}
         contentContainerClassName="gap-3 py-1"
       >
-        {groups.map((group, index) => {
+        {isOwn ? (
+          <Pressable
+            onPress={pickAndUpload}
+            disabled={upload.isPending}
+            className="items-center justify-center active:opacity-80"
+            accessibilityRole="button"
+            accessibilityLabel="Add highlight"
+          >
+            <View className="h-[68px] w-[68px] items-center justify-center rounded-full border-2 border-dashed border-border">
+              {upload.isPending ? (
+                <ActivityIndicator />
+              ) : (
+                <Icon name="add" size={26} tone="muted" />
+              )}
+            </View>
+          </Pressable>
+        ) : null}
+
+        {(groups ?? []).map((group, index) => {
           const cover = group[group.length - 1];
           const thumb =
             cover.media_type === "video"
@@ -38,6 +158,9 @@ export function HighlightsRow({
             <Pressable
               key={cover.group_id}
               onPress={() => setOpenIndex(index)}
+              onLongPress={
+                isOwn ? () => confirmDeleteGroup(cover.group_id) : undefined
+              }
               className="items-center active:opacity-80"
             >
               <View className="rounded-full border-2 border-mint p-0.5">
@@ -52,11 +175,13 @@ export function HighlightsRow({
         })}
       </ScrollView>
 
-      {openIndex !== null ? (
+      {openIndex !== null && groups ? (
         <HighlightViewer
           groups={groups}
           initialGroupIndex={openIndex}
           username={username}
+          canManage={isOwn}
+          userId={userId}
           onClose={() => setOpenIndex(null)}
         />
       ) : null}

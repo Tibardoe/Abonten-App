@@ -1864,3 +1864,47 @@ the api-client + `/api/mobile/uploads/signature`).
 `expo export --platform android` clean, `biome check` clean on touched
 files. Not device-verified (needs a signed-in user with a checked-in
 ticket + a photo library).
+
+### WP-4h-2 — Highlight upload / delete + video playback (done 2026-09-02)
+
+Creator tooling for profile highlights, plus native video playback in the
+viewer. Upload is client-side (`highlight_owner_insert` RLS =
+`auth.uid() = user_id`, and the `"highlight"` Cloudinary upload kind is
+already wired); delete goes through `/api/mobile/highlights` so the
+Cloudinary asset is destroyed with the server secret.
+
+- **`apps/web/src/utils/highlightDeleteCore.ts`** (new) —
+  `deleteHighlightGroupCore` / `deleteHighlightSlideCore`, the post-auth
+  bodies of `deleteHighlight.ts` / `deleteHighlightSlide.ts` lifted verbatim
+  (Cloudinary-first cleanup, ownership scoped in the query). Both web
+  actions thinned to `createClient` + auth (`401 as const`) + delegate.
+- **Routes** — `POST /api/mobile/highlights/group/delete { groupId }`,
+  `POST /api/mobile/highlights/slide/delete { slideId }`.
+- **api-client** — `DeleteHighlightResult` + `api.highlights.deleteGroup(id)`
+  / `deleteSlide(id)`. No create method — upload is client-side.
+- **`src/features/profile/useHighlights.ts`** — `useUploadHighlights`
+  (one `group_id = uuidv4()` per batch, sequential
+  `uploadToCloudinary(uri, "highlight", { video })`, then a `highlight` row
+  per slide; video `thumbnail_url` built locally as a Cloudinary
+  `c_thumb`/`.jpg` URL, `media_duration` from the upload). `MAX_HIGHLIGHT_*`
+  byte + 60s duration caps mirror the web `useMediaSelection`.
+  `useDeleteHighlightGroup` / `useDeleteHighlightSlide`.
+- **`HighlightsRow.tsx`** — gains `isOwn`; own profile shows a dashed "add"
+  circle (`expo-image-picker` images+videos multi-select → size/duration
+  guard → `useUploadHighlights`) and long-press on a cover confirms a
+  group delete. Renders even with zero groups when `isOwn`.
+- **`HighlightViewer.tsx`** — `expo-video` `VideoView` + `useVideoPlayer`
+  for `media_type === "video"` slides: `replaceAsync` on slide change,
+  `playToEnd` advances, `timeUpdate` drives the progress bar, the shared
+  `paused` state pauses the player. Image slides keep the timed dwell.
+  A header trash button (when `canManage`) deletes the current slide and
+  steps past it. `ProfileHeader` passes `isOwn` through.
+- **New dep** — `expo-video ~57.0.3` + `"expo-video"` in `app.json`
+  plugins. **Native module** — the JS bundle builds, but `VideoView` only
+  renders after a native rebuild (`npx expo run:android` or a fresh EAS
+  build); a stale binary falls back to the slide's poster image.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (both routes compiled),
+`expo export --platform android` clean, `biome check` clean. Not
+device-verified; video playback needs the native rebuild.

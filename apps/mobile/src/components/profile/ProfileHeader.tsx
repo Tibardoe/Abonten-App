@@ -62,7 +62,11 @@ export function ProfileHeader({
         />
       ) : null}
 
-      <HighlightsRow userId={profile.user_id} username={profile.username} />
+      <HighlightsRow
+        userId={profile.user_id}
+        username={profile.username}
+        isOwn={isOwn}
+      />
     </View>
   );
 }

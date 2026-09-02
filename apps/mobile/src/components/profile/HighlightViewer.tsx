@@ -1,8 +1,11 @@
+import { useDeleteHighlightSlide } from "@/features/profile/useHighlights";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   Modal,
   Pressable,
@@ -14,9 +17,10 @@ import {
 // Native echo of the web `HighlightViewer` organism: a WhatsApp-Status /
 // Instagram-highlights player. Progress bars across the top, tap the left /
 // right half to step, press-and-hold to pause, auto-advances between slides
-// and rolls on to the next group at the end. Image slides only for now —
-// video/audio slides show their thumbnail for the same dwell (native video
-// playback needs expo-video, deferred).
+// and rolls on to the next group at the end. Image slides play for a fixed
+// dwell; video slides play through with `expo-video` and advance on end.
+// When `canManage` (own profile) the header shows a delete button that
+// removes the current slide.
 
 const IMAGE_DURATION_MS = 5000;
 
@@ -25,6 +29,8 @@ type Props = {
   initialGroupIndex: number;
   username: string;
   onClose: () => void;
+  canManage?: boolean;
+  userId?: string;
 };
 
 export function HighlightViewer({
@@ -32,6 +38,8 @@ export function HighlightViewer({
   initialGroupIndex,
   username,
   onClose,
+  canManage = false,
+  userId,
 }: Props) {
   const { width, height } = useWindowDimensions();
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
@@ -40,10 +48,18 @@ export function HighlightViewer({
 
   const group = groups[groupIndex] ?? [];
   const slide = group[slideIndex];
+  const isVideo = slide?.media_type === "video";
+
+  const deleteSlide = useDeleteHighlightSlide(userId);
 
   const progress = useRef(new Animated.Value(0)).current;
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const heldRef = useRef(false);
+
+  const player = useVideoPlayer(null, (p) => {
+    p.loop = false;
+    p.timeUpdateEventInterval = 0.2;
+  });
 
   const goToGroup = useCallback(
     (next: number) => {
@@ -74,10 +90,52 @@ export function HighlightViewer({
     }
   }, [slideIndex, goToGroup, groupIndex]);
 
-  // Drive the active bar; on completion advance. Restarts whenever the slide
-  // changes or playback resumes.
+  // Load / play the current video slide.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the slide identity; player is stable.
   useEffect(() => {
-    if (!slide || paused) return;
+    if (!slide || !isVideo) return;
+    let cancelled = false;
+    progress.setValue(0);
+    (async () => {
+      try {
+        await player.replaceAsync({ uri: slide.media_url });
+        if (cancelled) return;
+        if (!paused) player.play();
+      } catch {
+        // A failed video load shouldn't strand the viewer — move on.
+        if (!cancelled) nextSlide();
+      }
+    })();
+    return () => {
+      cancelled = true;
+      player.pause();
+    };
+  }, [slide?.id, isVideo]);
+
+  // Advance a video slide on end + drive its progress bar.
+  useEffect(() => {
+    if (!isVideo) return;
+    const endSub = player.addListener("playToEnd", () => nextSlide());
+    const timeSub = player.addListener("timeUpdate", (e) => {
+      const dur = player.duration || slide?.media_duration || 0;
+      if (dur > 0) progress.setValue(Math.min(1, e.currentTime / dur));
+    });
+    return () => {
+      endSub.remove();
+      timeSub.remove();
+    };
+  }, [isVideo, player, nextSlide, progress, slide?.media_duration]);
+
+  // Pause / resume the video with the shared paused state.
+  useEffect(() => {
+    if (!isVideo) return;
+    if (paused) player.pause();
+    else player.play();
+  }, [paused, isVideo, player]);
+
+  // Drive the active bar for image slides; on completion advance.
+  useEffect(() => {
+    if (!slide || isVideo || paused) return;
     progress.setValue(0);
     const anim = Animated.timing(progress, {
       toValue: 1,
@@ -88,7 +146,7 @@ export function HighlightViewer({
       if (finished) nextSlide();
     });
     return () => anim.stop();
-  }, [slide, paused, progress, nextSlide]);
+  }, [slide, isVideo, paused, progress, nextSlide]);
 
   const onPressIn = () => {
     heldRef.current = false;
@@ -113,12 +171,36 @@ export function HighlightViewer({
     else nextSlide();
   };
 
+  const onDelete = () => {
+    if (!slide) return;
+    Alert.alert("Delete this slide?", "This can't be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () =>
+          deleteSlide.mutate(slide.id, {
+            onSuccess: () => {
+              // If it was the last slide in the group, the group is gone.
+              if (group.length <= 1) goToGroup(groupIndex + 1);
+              else
+                setSlideIndex((i) =>
+                  Math.max(0, Math.min(i, group.length - 2)),
+                );
+            },
+            onError: (e) =>
+              Alert.alert(
+                "Couldn't delete",
+                e instanceof Error ? e.message : "Please try again.",
+              ),
+          }),
+      },
+    ]);
+  };
+
   const bg = useMemo(
-    () =>
-      slide?.media_type === "video"
-        ? (slide.thumbnail_url ?? slide.media_url)
-        : slide?.media_url,
-    [slide],
+    () => (isVideo ? (slide?.thumbnail_url ?? undefined) : slide?.media_url),
+    [isVideo, slide],
   );
 
   if (!slide) return null;
@@ -126,6 +208,14 @@ export function HighlightViewer({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: "#000" }}>
+        {isVideo ? (
+          <VideoView
+            player={player}
+            style={{ position: "absolute", width, height }}
+            contentFit="contain"
+            nativeControls={false}
+          />
+        ) : null}
         {bg ? (
           <Image
             source={{ uri: bg }}
@@ -176,6 +266,17 @@ export function HighlightViewer({
           >
             {username}
           </Text>
+          {canManage ? (
+            <Pressable
+              onPress={onDelete}
+              hitSlop={12}
+              disabled={deleteSlide.isPending}
+              accessibilityRole="button"
+              accessibilityLabel="Delete slide"
+            >
+              <Icon name="trash-outline" size={22} color="#fff" />
+            </Pressable>
+          ) : null}
           <Pressable onPress={onClose} hitSlop={12}>
             <Icon name="close" size={24} color="#fff" />
           </Pressable>

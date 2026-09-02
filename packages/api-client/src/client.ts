@@ -17,6 +17,7 @@ import type {
   CheckoutSessionRow,
   CloudinarySignatureData,
   DeleteEventDraftResult,
+  DeleteHighlightResult,
   DeletePlaceDraftResult,
   DeletePromoCodeResult,
   DeviceRegisterBody,
@@ -364,6 +365,26 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+    },
+
+    highlights: {
+      /** Delete every slide in one of the caller's highlight groups
+       *  (Cloudinary asset first). Upload is client-side — the
+       *  highlight_owner_insert RLS + a signed uploads.signature("highlight")
+       *  Cloudinary POST — so there is no create method here. */
+      deleteGroup(groupId: string) {
+        return request<DeleteHighlightResult>(
+          "/api/mobile/highlights/group/delete",
+          { method: "POST", body: { groupId }, auth: true },
+        );
+      },
+      /** Delete one slide from one of the caller's highlights. */
+      deleteSlide(slideId: string) {
+        return request<DeleteHighlightResult>(
+          "/api/mobile/highlights/slide/delete",
+          { method: "POST", body: { slideId }, auth: true },
+        );
       },
     },
 

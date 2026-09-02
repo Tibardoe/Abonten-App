@@ -138,6 +138,13 @@ export type CancelTicketBody = {
 
 export type CancelTicketResult = { status: number; message?: string };
 
+// ---- highlights -------------------------------------------------------
+
+export type DeleteHighlightResult = {
+  status: 200 | 400 | 401 | 404 | 500;
+  message: string;
+};
+
 // ---- place creation ----------------------------------------------------
 // postPlaceCore. The cover photo is uploaded from the device first (signed
 // direct upload, kind "place_photo"); its public_id/version are passed

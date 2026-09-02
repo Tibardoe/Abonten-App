@@ -18,6 +18,7 @@ export type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  DeleteHighlightResult,
   DeletePromoCodeResult,
   DeleteEventDraftResult,
   DeletePlaceDraftResult,
