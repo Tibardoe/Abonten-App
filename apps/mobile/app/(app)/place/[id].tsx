@@ -1,3 +1,4 @@
+import { useSession } from "@/auth/SessionProvider";
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
@@ -9,6 +10,7 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
+import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
@@ -146,6 +148,8 @@ export default function PlaceDetailScreen() {
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
+  const { session } = useSession();
 
   const placeSlug = place?.slug;
   const header = (
@@ -236,6 +240,12 @@ export default function PlaceDetailScreen() {
     ).catch(() => {});
   };
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
+  // Confirmed platform choice: mobile only offers "Book" when the place has
+  // at least one service (web shows it on any place).
+  const canBook =
+    !!session &&
+    place.owner_id !== session.user.id &&
+    place.services.length > 0;
 
   return (
     <View className="flex-1 bg-background">
@@ -318,6 +328,15 @@ export default function PlaceDetailScreen() {
         </View>
 
         <View className="gap-6 p-4">
+          {canBook ? (
+            <Button
+              title="Book"
+              leftIcon="calendar-outline"
+              fullWidth
+              onPress={() => setBookOpen(true)}
+            />
+          ) : null}
+
           {/* Primary actions */}
           <View className="flex-row flex-wrap gap-2">
             <Button
@@ -720,6 +739,14 @@ export default function PlaceDetailScreen() {
           onClose={() => setClaimOpen(false)}
           placeId={place.id}
           placeName={place.name}
+        />
+
+        <BookPlaceSheet
+          open={bookOpen}
+          onClose={() => setBookOpen(false)}
+          placeId={place.id}
+          placeName={place.name}
+          services={place.services.map((s) => ({ id: s.id, name: s.name }))}
         />
 
         <PlaceReviewSheet

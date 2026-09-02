@@ -320,6 +320,11 @@ export function AppDrawer() {
                     onPress={() => go("/(app)/places")}
                   />
                   <Row
+                    icon="calendar-outline"
+                    label="My bookings"
+                    onPress={() => go("/(app)/bookings")}
+                  />
+                  <Row
                     icon="notifications-outline"
                     label="Notifications"
                     onPress={() => go("/(app)/notifications")}
