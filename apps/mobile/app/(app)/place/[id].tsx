@@ -9,6 +9,8 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
+import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
+import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
@@ -17,6 +19,10 @@ import {
   usePlaceReviewsList,
   usePlaceUpcomingEvents,
 } from "@/features/places/usePlaceExtras";
+import {
+  useDeletePlaceReview,
+  usePlaceReviewEligibility,
+} from "@/features/reviews/usePlaceReviews";
 import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -36,8 +42,15 @@ import {
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
-import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Linking,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -110,6 +123,9 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
       {review.comment ? (
         <AppText variant="muted">{review.comment}</AppText>
       ) : null}
+      {review.place_review_photo?.length ? (
+        <ReviewPhotoStrip photos={review.place_review_photo} />
+      ) : null}
       {review.owner_response ? (
         <View className="mt-1 gap-0.5 rounded-lg bg-muted p-2">
           <AppText variant="label">Response from the owner</AppText>
@@ -126,6 +142,7 @@ export default function PlaceDetailScreen() {
   const router = useRouter();
   const carouselCardWidth = useCarouselCardWidth();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const placeSlug = place?.slug;
   const header = (
@@ -157,6 +174,11 @@ export default function PlaceDetailScreen() {
   }, [place?.location]);
 
   const reviewsList = usePlaceReviewsList(place?.id);
+  const { data: eligibility } = usePlaceReviewEligibility(
+    place?.id,
+    place?.owner_id,
+  );
+  const deleteReview = useDeletePlaceReview(place?.id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
   // 10 km in metres — matches web's SIMILAR_PLACES_RADIUS_METERS.
   const nearby = useNearbyPlaces(coords, 10_000);
@@ -512,6 +534,84 @@ export default function PlaceDetailScreen() {
                 </View>
               ) : null}
             </View>
+
+            {eligibility?.canReview ? (
+              <Button
+                title="Write a review"
+                variant="outline"
+                leftIcon="create-outline"
+                onPress={() => setReviewOpen(true)}
+              />
+            ) : eligibility?.reason === "has_review" ? (
+              <View className="gap-2 rounded-xl border border-border bg-card p-3">
+                <View className="flex-row items-center justify-between">
+                  <AppText variant="small" className="font-semibold">
+                    Your review
+                  </AppText>
+                  <Stars rating={eligibility.ownReview.rating} size={13} />
+                </View>
+                {eligibility.ownReview.title ? (
+                  <AppText variant="small" className="font-semibold">
+                    {eligibility.ownReview.title}
+                  </AppText>
+                ) : null}
+                {eligibility.ownReview.comment ? (
+                  <AppText variant="muted">
+                    {eligibility.ownReview.comment}
+                  </AppText>
+                ) : null}
+                {eligibility.ownReview.place_review_photo?.length ? (
+                  <ReviewPhotoStrip
+                    photos={eligibility.ownReview.place_review_photo}
+                  />
+                ) : null}
+                <View className="mt-1 flex-row gap-4">
+                  <Pressable
+                    accessibilityRole="button"
+                    className="active:opacity-60"
+                    onPress={() => setReviewOpen(true)}
+                  >
+                    <AppText
+                      variant="small"
+                      tone="brand"
+                      className="font-semibold"
+                    >
+                      Edit
+                    </AppText>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    className="active:opacity-60"
+                    disabled={deleteReview.isPending}
+                    onPress={() => {
+                      const reviewId = eligibility.ownReview.id;
+                      if (!reviewId) return;
+                      Alert.alert(
+                        "Delete your review?",
+                        "This can't be undone.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Delete",
+                            style: "destructive",
+                            onPress: () => deleteReview.mutate(reviewId),
+                          },
+                        ],
+                      );
+                    }}
+                  >
+                    <AppText
+                      variant="small"
+                      tone="error"
+                      className="font-semibold"
+                    >
+                      {deleteReview.isPending ? "Deleting…" : "Delete"}
+                    </AppText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
+
             {reviewsList.isLoading ? (
               <AppText variant="muted">Loading reviews…</AppText>
             ) : reviews.length === 0 ? (
@@ -581,6 +681,20 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
         </View>
+
+        <PlaceReviewSheet
+          open={reviewOpen}
+          onClose={() => setReviewOpen(false)}
+          placeId={place.id}
+          placeName={place.name}
+          existingReview={
+            eligibility && !eligibility.canReview
+              ? eligibility.reason === "has_review"
+                ? eligibility.ownReview
+                : null
+              : null
+          }
+        />
       </ScrollView>
     </View>
   );

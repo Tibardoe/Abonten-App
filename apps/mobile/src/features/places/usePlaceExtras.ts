@@ -35,6 +35,9 @@ export type PlaceReviewItem = {
     avatar_public_id: string | null;
     avatar_version: string | null;
   } | null;
+  place_review_photo?:
+    | { id: string; public_id: string; version: string; position: number }[]
+    | null;
 };
 
 type Cursor = { sortValue: string; id: string } | null;
@@ -49,7 +52,7 @@ export function usePlaceReviewsList(placeId: string | undefined) {
       let q = supabase
         .from("place_review")
         .select(
-          "id, rating, title, comment, created_at, owner_response, reviewer:reviewer_id(username, avatar_public_id, avatar_version)",
+          "id, rating, title, comment, created_at, owner_response, reviewer:reviewer_id(username, avatar_public_id, avatar_version), place_review_photo(id, public_id, version, position)",
         )
         .eq("place_id", placeId as string)
         .eq("status", "approved")
