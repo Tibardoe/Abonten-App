@@ -9,7 +9,7 @@ import {
 } from "@/features/notifications/useNotifications";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
-import { AppText, EmptyState, Spinner } from "@abonten/ui-native";
+import { AppText, EmptyState, ListFooter } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, Pressable, RefreshControl, View } from "react-native";
@@ -128,7 +128,15 @@ export default function Notifications() {
               }
             />
           }
-          ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
+          ListFooterComponent={
+            <ListFooter
+              count={items.length}
+              isFetchingNextPage={q.isFetchingNextPage}
+              hasNextPage={q.hasNextPage}
+              isError={q.isError}
+              onRetry={() => q.fetchNextPage()}
+            />
+          }
         />
       )}
     </View>

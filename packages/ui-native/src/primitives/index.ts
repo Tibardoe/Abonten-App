@@ -64,6 +64,8 @@ export {
   Spinner,
   ScreenLoader,
   ScreenError,
+  ListFooter,
+  type ListFooterProps,
   type ErrorStateProps,
 } from "./Feedback";
 export { Avatar, type AvatarProps } from "./Avatar";

@@ -1,3 +1,4 @@
+import { useSession } from "@/auth/SessionProvider";
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
@@ -9,14 +10,23 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
+import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
+import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
+import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
+import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
+import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
 import {
   type PlaceReviewItem,
   usePlaceReviewsList,
   usePlaceUpcomingEvents,
 } from "@/features/places/usePlaceExtras";
+import {
+  useDeletePlaceReview,
+  usePlaceReviewEligibility,
+} from "@/features/reviews/usePlaceReviews";
 import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -36,8 +46,15 @@ import {
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo } from "react";
-import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
+import { useMemo, useState } from "react";
+import {
+  Alert,
+  FlatList,
+  Linking,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -110,6 +127,9 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
       {review.comment ? (
         <AppText variant="muted">{review.comment}</AppText>
       ) : null}
+      {review.place_review_photo?.length ? (
+        <ReviewPhotoStrip photos={review.place_review_photo} />
+      ) : null}
       {review.owner_response ? (
         <View className="mt-1 gap-0.5 rounded-lg bg-muted p-2">
           <AppText variant="label">Response from the owner</AppText>
@@ -126,6 +146,10 @@ export default function PlaceDetailScreen() {
   const router = useRouter();
   const carouselCardWidth = useCarouselCardWidth();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [bookOpen, setBookOpen] = useState(false);
+  const { session } = useSession();
 
   const placeSlug = place?.slug;
   const header = (
@@ -157,6 +181,12 @@ export default function PlaceDetailScreen() {
   }, [place?.location]);
 
   const reviewsList = usePlaceReviewsList(place?.id);
+  const { data: eligibility } = usePlaceReviewEligibility(
+    place?.id,
+    place?.owner_id,
+  );
+  const deleteReview = useDeletePlaceReview(place?.id);
+  const { data: claim } = usePlaceClaimState(place?.id, place?.owner_id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
   // 10 km in metres — matches web's SIMILAR_PLACES_RADIUS_METERS.
   const nearby = useNearbyPlaces(coords, 10_000);
@@ -210,6 +240,12 @@ export default function PlaceDetailScreen() {
     ).catch(() => {});
   };
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
+  // Confirmed platform choice: mobile only offers "Book" when the place has
+  // at least one service (web shows it on any place).
+  const canBook =
+    !!session &&
+    place.owner_id !== session.user.id &&
+    place.services.length > 0;
 
   return (
     <View className="flex-1 bg-background">
@@ -292,6 +328,15 @@ export default function PlaceDetailScreen() {
         </View>
 
         <View className="gap-6 p-4">
+          {canBook ? (
+            <Button
+              title="Book"
+              leftIcon="calendar-outline"
+              fullWidth
+              onPress={() => setBookOpen(true)}
+            />
+          ) : null}
+
           {/* Primary actions */}
           <View className="flex-row flex-wrap gap-2">
             <Button
@@ -329,6 +374,35 @@ export default function PlaceDetailScreen() {
               />
             ) : null}
           </View>
+
+          {/* Claim this place */}
+          {claim?.status === "pending" ? (
+            <View className="flex-row items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2.5">
+              <Icon name="hourglass-outline" size={16} tone="muted" />
+              <AppText variant="small" tone="muted" className="flex-1">
+                Your claim for this place is awaiting review.
+              </AppText>
+            </View>
+          ) : claim?.canClaim ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setClaimOpen(true)}
+              className="flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
+            >
+              <Icon
+                name="shield-checkmark-outline"
+                size={20}
+                tone="foreground"
+              />
+              <View className="flex-1">
+                <AppText variant="bodyStrong">Own this place?</AppText>
+                <AppText variant="meta">
+                  Claim it to manage its details, hours and photos.
+                </AppText>
+              </View>
+              <Icon name="chevron-forward" size={16} tone="muted" />
+            </Pressable>
+          ) : null}
 
           {/* Location */}
           <View className="gap-3 rounded-xl border border-border bg-card p-4">
@@ -512,6 +586,84 @@ export default function PlaceDetailScreen() {
                 </View>
               ) : null}
             </View>
+
+            {eligibility?.canReview ? (
+              <Button
+                title="Write a review"
+                variant="outline"
+                leftIcon="create-outline"
+                onPress={() => setReviewOpen(true)}
+              />
+            ) : eligibility?.reason === "has_review" ? (
+              <View className="gap-2 rounded-xl border border-border bg-card p-3">
+                <View className="flex-row items-center justify-between">
+                  <AppText variant="small" className="font-semibold">
+                    Your review
+                  </AppText>
+                  <Stars rating={eligibility.ownReview.rating} size={13} />
+                </View>
+                {eligibility.ownReview.title ? (
+                  <AppText variant="small" className="font-semibold">
+                    {eligibility.ownReview.title}
+                  </AppText>
+                ) : null}
+                {eligibility.ownReview.comment ? (
+                  <AppText variant="muted">
+                    {eligibility.ownReview.comment}
+                  </AppText>
+                ) : null}
+                {eligibility.ownReview.place_review_photo?.length ? (
+                  <ReviewPhotoStrip
+                    photos={eligibility.ownReview.place_review_photo}
+                  />
+                ) : null}
+                <View className="mt-1 flex-row gap-4">
+                  <Pressable
+                    accessibilityRole="button"
+                    className="active:opacity-60"
+                    onPress={() => setReviewOpen(true)}
+                  >
+                    <AppText
+                      variant="small"
+                      tone="brand"
+                      className="font-semibold"
+                    >
+                      Edit
+                    </AppText>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    className="active:opacity-60"
+                    disabled={deleteReview.isPending}
+                    onPress={() => {
+                      const reviewId = eligibility.ownReview.id;
+                      if (!reviewId) return;
+                      Alert.alert(
+                        "Delete your review?",
+                        "This can't be undone.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Delete",
+                            style: "destructive",
+                            onPress: () => deleteReview.mutate(reviewId),
+                          },
+                        ],
+                      );
+                    }}
+                  >
+                    <AppText
+                      variant="small"
+                      tone="error"
+                      className="font-semibold"
+                    >
+                      {deleteReview.isPending ? "Deleting…" : "Delete"}
+                    </AppText>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
+
             {reviewsList.isLoading ? (
               <AppText variant="muted">Loading reviews…</AppText>
             ) : reviews.length === 0 ? (
@@ -581,6 +733,35 @@ export default function PlaceDetailScreen() {
             </View>
           ) : null}
         </View>
+
+        <ClaimPlaceSheet
+          open={claimOpen}
+          onClose={() => setClaimOpen(false)}
+          placeId={place.id}
+          placeName={place.name}
+        />
+
+        <BookPlaceSheet
+          open={bookOpen}
+          onClose={() => setBookOpen(false)}
+          placeId={place.id}
+          placeName={place.name}
+          services={place.services.map((s) => ({ id: s.id, name: s.name }))}
+        />
+
+        <PlaceReviewSheet
+          open={reviewOpen}
+          onClose={() => setReviewOpen(false)}
+          placeId={place.id}
+          placeName={place.name}
+          existingReview={
+            eligibility && !eligibility.canReview
+              ? eligibility.reason === "has_review"
+                ? eligibility.ownReview
+                : null
+              : null
+          }
+        />
       </ScrollView>
     </View>
   );

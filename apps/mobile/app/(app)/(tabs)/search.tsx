@@ -22,9 +22,9 @@ import {
   Chip,
   EmptyState,
   Icon,
+  ListFooter,
   Overline,
   Skeleton,
-  Spinner,
 } from "@abonten/ui-native";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
@@ -311,7 +311,15 @@ export default function Search() {
               />
             )
           }
-          ListFooterComponent={results.isFetchingNextPage ? <Spinner /> : null}
+          ListFooterComponent={
+            <ListFooter
+              count={resultRows.length}
+              isFetchingNextPage={results.isFetchingNextPage}
+              hasNextPage={results.hasNextPage}
+              isError={results.isError}
+              onRetry={() => results.fetchNextPage()}
+            />
+          }
         />
       ) : mode === "suggestions" ? (
         <ScrollView
