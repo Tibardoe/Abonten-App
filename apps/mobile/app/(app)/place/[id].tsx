@@ -161,7 +161,8 @@ export default function PlaceDetailScreen() {
 
   const reviewsList = usePlaceReviewsList(place?.id);
   const upcoming = usePlaceUpcomingEvents(place?.id);
-  const nearby = useNearbyPlaces(coords, 10);
+  // 10 km in metres — matches web's SIMILAR_PLACES_RADIUS_METERS.
+  const nearby = useNearbyPlaces(coords, 10_000);
 
   const similarPlaces = useMemo<PlaceType[]>(() => {
     const rows = nearby.data?.pages.flatMap((p) => p.rows) ?? [];

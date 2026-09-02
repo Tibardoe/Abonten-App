@@ -12,14 +12,18 @@ import { useQuery } from "@tanstack/react-query";
 // separate infinite query) honours the filter sheet — these keep their
 // fixed curated semantics, same split as web.
 
-const NEARBY_RADIUS_KM = 10;
+// `get_nearby_events.search_radius` is a PostGIS `geography` distance, i.e.
+// METRES (ST_DWithin, no *1000 in the RPC body). Web passes 10000 here;
+// this used to pass 10, which is a 10-metre radius that returns almost
+// nothing — the cause of web-created events never showing on mobile.
+const NEARBY_RADIUS_METERS = 10_000;
 const NEARBY_LIMIT = 60;
 
 async function fetchNearby(lat: number, lng: number): Promise<UserPostType[]> {
   const { data, error } = await supabase.rpc("get_nearby_events", {
     user_lat: lat,
     user_lng: lng,
-    search_radius: NEARBY_RADIUS_KM,
+    search_radius: NEARBY_RADIUS_METERS,
     p_cursor_sort_key: null,
     p_cursor_id: null,
     p_page_size: NEARBY_LIMIT,

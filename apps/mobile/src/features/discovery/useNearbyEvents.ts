@@ -3,7 +3,9 @@ import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 const PAGE_SIZE = 20;
-const DEFAULT_RADIUS_KM = 50;
+// `get_nearby_events.search_radius` is metres (PostGIS `geography`), same as
+// the web getNearByEvents(lat,lng,10000) call.
+const DEFAULT_RADIUS_METERS = 50_000;
 
 type Cursor = { sortKey: string; id: string };
 type Row = UserPostType & { cursor_sort_key?: string };
@@ -11,13 +13,13 @@ type Row = UserPostType & { cursor_sort_key?: string };
 async function fetchPage(
   lat: number,
   lng: number,
-  radiusKm: number,
+  radiusMeters: number,
   cursor: Cursor | null,
 ): Promise<{ rows: Row[]; nextCursor: Cursor | null }> {
   const { data, error } = await supabase.rpc("get_nearby_events", {
     user_lat: lat,
     user_lng: lng,
-    search_radius: radiusKm,
+    search_radius: radiusMeters,
     p_cursor_sort_key: cursor?.sortKey ?? null,
     p_cursor_id: cursor?.id ?? null,
     p_page_size: PAGE_SIZE + 1,
@@ -44,16 +46,16 @@ async function fetchPage(
 // straight through — no encode/decode, so no Node Buffer dependency.
 export function useNearbyEvents(
   coords: { lat: number; lng: number } | null,
-  radiusKm = DEFAULT_RADIUS_KM,
+  radiusMeters = DEFAULT_RADIUS_METERS,
 ) {
   const lat = coords?.lat ?? 0;
   const lng = coords?.lng ?? 0;
 
   return useInfiniteQuery({
-    queryKey: ["discovery", "nearby", lat, lng, radiusKm],
+    queryKey: ["discovery", "nearby", lat, lng, radiusMeters],
     enabled: coords != null,
     initialPageParam: null as Cursor | null,
-    queryFn: ({ pageParam }) => fetchPage(lat, lng, radiusKm, pageParam),
+    queryFn: ({ pageParam }) => fetchPage(lat, lng, radiusMeters, pageParam),
     getNextPageParam: (last) => last.nextCursor,
   });
 }
