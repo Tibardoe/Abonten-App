@@ -1,6 +1,7 @@
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
+import { AppHeader } from "@/components/app/AppHeader";
 import {
   MapConfigured,
   MapErrorBoundary,
@@ -33,8 +34,8 @@ import {
   Stars,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useEffect, useMemo } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMemo } from "react";
 import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -127,23 +128,24 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
 export default function PlaceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const navigation = useNavigation();
   const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
 
   const placeSlug = place?.slug;
-  useEffect(() => {
-    navigation.setOptions({
-      ...(place?.name ? { title: place.name } : {}),
-      headerRight: () => (
+  const header = (
+    <AppHeader
+      variant="detail"
+      title={place?.name ?? "Place"}
+      backFallback="/(app)"
+      rightAccessory={
         <DetailHeaderActions
           kind="place"
           id={id}
           shareTitle={place?.name ?? "Place"}
           shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
         />
-      ),
-    });
-  }, [place?.name, navigation, id, placeSlug]);
+      }
+    />
+  );
 
   const coords = useMemo(() => {
     if (!place?.location) return null;
@@ -168,13 +170,23 @@ export default function PlaceDetailScreen() {
       .slice(0, 6);
   }, [nearby.data, place?.id, place?.category_id]);
 
-  if (isLoading) return <ScreenLoader />;
+  if (isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        {header}
+        <ScreenLoader />
+      </View>
+    );
+  }
   if (isError || !place) {
     return (
-      <ScreenError
-        message="This place could not be loaded."
-        onRetry={() => refetch()}
-      />
+      <View className="flex-1 bg-background">
+        {header}
+        <ScreenError
+          message="This place could not be loaded."
+          onRetry={() => refetch()}
+        />
+      </View>
     );
   }
 
@@ -202,177 +214,115 @@ export default function PlaceDetailScreen() {
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="pb-12"
-    >
-      {/* Hero */}
-      <View className="relative h-72 bg-muted">
-        {cover ? (
-          <Image
-            source={{ uri: cover }}
-            style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            transition={150}
-          />
-        ) : (
-          <View className="flex-1 items-center justify-center">
-            <Icon name="image-outline" size={28} tone="muted" />
-          </View>
-        )}
-        <View
-          className="absolute inset-x-0 bottom-0 h-2/3"
-          style={{ backgroundColor: "rgba(0,0,0,0.32)" }}
-        />
-        <View
-          className="absolute inset-x-0 bottom-0 h-1/3"
-          style={{ backgroundColor: "rgba(0,0,0,0.34)" }}
-        />
-        <View className="absolute inset-x-0 bottom-0 gap-2 p-4">
-          <AppText
-            className="text-[24px] font-bold text-white"
-            style={{ textShadowColor: "rgba(0,0,0,0.5)", textShadowRadius: 8 }}
-            numberOfLines={2}
-          >
-            {place.name}
-          </AppText>
-          <View className="flex-row flex-wrap items-center gap-2">
-            <View className="rounded-full bg-black/40 px-3 py-1">
-              <AppText className="text-[12px] font-semibold text-white">
-                {place.place_category?.name ?? "Place"}
-              </AppText>
+    <View className="flex-1 bg-background">
+      {header}
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="pb-12"
+      >
+        {/* Hero */}
+        <View className="relative h-72 bg-muted">
+          {cover ? (
+            <Image
+              source={{ uri: cover }}
+              style={{ width: "100%", height: "100%" }}
+              contentFit="cover"
+              transition={150}
+            />
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <Icon name="image-outline" size={28} tone="muted" />
             </View>
-            {place.verified ? (
-              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
-                <Icon name="checkmark-circle" size={13} color="#fff" />
+          )}
+          <View
+            className="absolute inset-x-0 bottom-0 h-2/3"
+            style={{ backgroundColor: "rgba(0,0,0,0.32)" }}
+          />
+          <View
+            className="absolute inset-x-0 bottom-0 h-1/3"
+            style={{ backgroundColor: "rgba(0,0,0,0.34)" }}
+          />
+          <View className="absolute inset-x-0 bottom-0 gap-2 p-4">
+            <AppText
+              className="text-[24px] font-bold text-white"
+              style={{
+                textShadowColor: "rgba(0,0,0,0.5)",
+                textShadowRadius: 8,
+              }}
+              numberOfLines={2}
+            >
+              {place.name}
+            </AppText>
+            <View className="flex-row flex-wrap items-center gap-2">
+              <View className="rounded-full bg-black/40 px-3 py-1">
                 <AppText className="text-[12px] font-semibold text-white">
-                  Verified
+                  {place.place_category?.name ?? "Place"}
+                </AppText>
+              </View>
+              {place.verified ? (
+                <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+                  <Icon name="checkmark-circle" size={13} color="#fff" />
+                  <AppText className="text-[12px] font-semibold text-white">
+                    Verified
+                  </AppText>
+                </View>
+              ) : null}
+              <View className="rounded-full bg-black/40 px-3 py-1">
+                <AppText className="text-[12px] font-semibold text-white">
+                  {openStatus.label}
+                </AppText>
+              </View>
+              <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
+                <Icon name="star" size={12} tone="warning" />
+                <AppText className="text-[12px] font-semibold text-white">
+                  {place.avgRating.toFixed(1)} ({place.reviewCount})
+                </AppText>
+              </View>
+            </View>
+            {address ? (
+              <View className="flex-row items-start gap-1">
+                <Icon name="location-outline" size={13} color="#fff" />
+                <AppText
+                  className="flex-1 text-[12px] text-white/90"
+                  numberOfLines={1}
+                >
+                  {address}
                 </AppText>
               </View>
             ) : null}
-            <View className="rounded-full bg-black/40 px-3 py-1">
-              <AppText className="text-[12px] font-semibold text-white">
-                {openStatus.label}
-              </AppText>
-            </View>
-            <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
-              <Icon name="star" size={12} tone="warning" />
-              <AppText className="text-[12px] font-semibold text-white">
-                {place.avgRating.toFixed(1)} ({place.reviewCount})
-              </AppText>
-            </View>
           </View>
-          {address ? (
-            <View className="flex-row items-start gap-1">
-              <Icon name="location-outline" size={13} color="#fff" />
-              <AppText
-                className="flex-1 text-[12px] text-white/90"
-                numberOfLines={1}
-              >
-                {address}
-              </AppText>
-            </View>
-          ) : null}
         </View>
-      </View>
 
-      <View className="gap-6 p-4">
-        {/* Primary actions */}
-        <View className="flex-row flex-wrap gap-2">
-          <Button
-            title="Directions"
-            variant="outline"
-            size="sm"
-            leftIcon="navigate-outline"
-            className="flex-1"
-            onPress={openDirections}
-          />
-          {place.phone ? (
+        <View className="gap-6 p-4">
+          {/* Primary actions */}
+          <View className="flex-row flex-wrap gap-2">
             <Button
-              title="Call"
+              title="Directions"
               variant="outline"
               size="sm"
-              leftIcon="call-outline"
+              leftIcon="navigate-outline"
               className="flex-1"
-              onPress={() =>
-                Linking.openURL(`tel:${place.phone}`).catch(() => {})
-              }
+              onPress={openDirections}
             />
-          ) : null}
-          {whatsappDigits ? (
-            <Button
-              title="WhatsApp"
-              variant="outline"
-              size="sm"
-              leftIcon="logo-whatsapp"
-              className="flex-1"
-              onPress={() =>
-                Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
-                  () => {},
-                )
-              }
-            />
-          ) : null}
-        </View>
-
-        {/* Location */}
-        <View className="gap-3 rounded-xl border border-border bg-card p-4">
-          <View className="flex-row items-center gap-2">
-            <Icon name="location-outline" size={18} tone="foreground" />
-            <AppText className="text-[15px] font-semibold text-foreground">
-              Location
-            </AppText>
-          </View>
-          <AppText className="text-[13px] text-muted-foreground">
-            {address ?? "Address not specified"}
-          </AppText>
-          {MapConfigured && MapView && coords ? (
-            <MapErrorBoundary fallback={null}>
-              <View className="h-40 overflow-hidden rounded-lg">
-                <MapView
-                  style={{ flex: 1 }}
-                  provider={PROVIDER_GOOGLE}
-                  pointerEvents="none"
-                  initialRegion={{
-                    latitude: coords.lat,
-                    longitude: coords.lng,
-                    latitudeDelta: 0.02,
-                    longitudeDelta: 0.02,
-                  }}
-                >
-                  {Marker ? (
-                    <Marker
-                      coordinate={{
-                        latitude: coords.lat,
-                        longitude: coords.lng,
-                      }}
-                    />
-                  ) : null}
-                </MapView>
-              </View>
-            </MapErrorBoundary>
-          ) : null}
-        </View>
-
-        {/* Contact */}
-        {place.phone || place.whatsapp || place.website_url ? (
-          <View className="gap-1 rounded-xl border border-border bg-card p-4">
-            <AppText className="mb-1 text-[15px] font-semibold text-foreground">
-              Contact
-            </AppText>
             {place.phone ? (
-              <ContactRow
-                icon="call-outline"
-                label={place.phone}
+              <Button
+                title="Call"
+                variant="outline"
+                size="sm"
+                leftIcon="call-outline"
+                className="flex-1"
                 onPress={() =>
                   Linking.openURL(`tel:${place.phone}`).catch(() => {})
                 }
               />
             ) : null}
-            {place.whatsapp ? (
-              <ContactRow
-                icon="logo-whatsapp"
-                label={place.whatsapp}
+            {whatsappDigits ? (
+              <Button
+                title="WhatsApp"
+                variant="outline"
+                size="sm"
+                leftIcon="logo-whatsapp"
+                className="flex-1"
                 onPress={() =>
                   Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
                     () => {},
@@ -380,194 +330,262 @@ export default function PlaceDetailScreen() {
                 }
               />
             ) : null}
-            {place.website_url ? (
-              <ContactRow
-                icon="globe-outline"
-                label={place.website_url}
-                onPress={() =>
-                  Linking.openURL(
-                    place.website_url?.startsWith("http")
-                      ? place.website_url
-                      : `https://${place.website_url}`,
-                  ).catch(() => {})
-                }
-              />
+          </View>
+
+          {/* Location */}
+          <View className="gap-3 rounded-xl border border-border bg-card p-4">
+            <View className="flex-row items-center gap-2">
+              <Icon name="location-outline" size={18} tone="foreground" />
+              <AppText className="text-[15px] font-semibold text-foreground">
+                Location
+              </AppText>
+            </View>
+            <AppText className="text-[13px] text-muted-foreground">
+              {address ?? "Address not specified"}
+            </AppText>
+            {MapConfigured && MapView && coords ? (
+              <MapErrorBoundary fallback={null}>
+                <View className="h-40 overflow-hidden rounded-lg">
+                  <MapView
+                    style={{ flex: 1 }}
+                    provider={PROVIDER_GOOGLE}
+                    pointerEvents="none"
+                    initialRegion={{
+                      latitude: coords.lat,
+                      longitude: coords.lng,
+                      latitudeDelta: 0.02,
+                      longitudeDelta: 0.02,
+                    }}
+                  >
+                    {Marker ? (
+                      <Marker
+                        coordinate={{
+                          latitude: coords.lat,
+                          longitude: coords.lng,
+                        }}
+                      />
+                    ) : null}
+                  </MapView>
+                </View>
+              </MapErrorBoundary>
             ) : null}
           </View>
-        ) : null}
 
-        {/* About */}
-        {place.description ? (
-          <View className="gap-2">
-            <SectionTitle>About</SectionTitle>
-            <AppText className="text-[14px] leading-relaxed text-muted-foreground">
-              {place.description}
-            </AppText>
-          </View>
-        ) : null}
-
-        {/* Opening hours */}
-        {place.openingHours.length > 0 ? (
-          <View className="gap-2">
-            <SectionTitle>Opening hours</SectionTitle>
-            <View className="rounded-xl border border-border bg-card">
-              {[...place.openingHours]
-                .sort((a, b) => a.day_of_week - b.day_of_week)
-                .map((h, i, arr) => (
-                  <View
-                    key={h.day_of_week}
-                    className={`flex-row justify-between px-4 py-2.5 ${
-                      i < arr.length - 1 ? "border-b border-border" : ""
-                    }`}
-                  >
-                    <AppText className="text-[13px] text-foreground">
-                      {DAY_LABELS[h.day_of_week]}
-                    </AppText>
-                    <AppText className="text-[13px] text-muted-foreground">
-                      {h.is_closed || !h.open_time || !h.close_time
-                        ? "Closed"
-                        : `${timeLabel(h.open_time)} – ${timeLabel(h.close_time)}`}
-                    </AppText>
-                  </View>
-                ))}
+          {/* Contact */}
+          {place.phone || place.whatsapp || place.website_url ? (
+            <View className="gap-1 rounded-xl border border-border bg-card p-4">
+              <AppText className="mb-1 text-[15px] font-semibold text-foreground">
+                Contact
+              </AppText>
+              {place.phone ? (
+                <ContactRow
+                  icon="call-outline"
+                  label={place.phone}
+                  onPress={() =>
+                    Linking.openURL(`tel:${place.phone}`).catch(() => {})
+                  }
+                />
+              ) : null}
+              {place.whatsapp ? (
+                <ContactRow
+                  icon="logo-whatsapp"
+                  label={place.whatsapp}
+                  onPress={() =>
+                    Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
+                      () => {},
+                    )
+                  }
+                />
+              ) : null}
+              {place.website_url ? (
+                <ContactRow
+                  icon="globe-outline"
+                  label={place.website_url}
+                  onPress={() =>
+                    Linking.openURL(
+                      place.website_url?.startsWith("http")
+                        ? place.website_url
+                        : `https://${place.website_url}`,
+                    ).catch(() => {})
+                  }
+                />
+              ) : null}
             </View>
-          </View>
-        ) : null}
+          ) : null}
 
-        {/* Services */}
-        {place.services.length > 0 ? (
-          <View className="gap-2">
-            <SectionTitle>Services</SectionTitle>
-            {place.services.map((s) => (
-              <View
-                key={s.id}
-                className="rounded-xl border border-border bg-card p-3"
-              >
-                <View className="flex-row justify-between gap-3">
-                  <AppText className="flex-1 text-[14px] font-medium text-foreground">
-                    {s.name}
-                  </AppText>
-                  {s.show_price && s.price != null ? (
-                    <AppText className="text-[13px] text-muted-foreground">
-                      GHS {s.price}
-                      {s.price_unit ? ` / ${s.price_unit}` : ""}
+          {/* About */}
+          {place.description ? (
+            <View className="gap-2">
+              <SectionTitle>About</SectionTitle>
+              <AppText className="text-[14px] leading-relaxed text-muted-foreground">
+                {place.description}
+              </AppText>
+            </View>
+          ) : null}
+
+          {/* Opening hours */}
+          {place.openingHours.length > 0 ? (
+            <View className="gap-2">
+              <SectionTitle>Opening hours</SectionTitle>
+              <View className="rounded-xl border border-border bg-card">
+                {[...place.openingHours]
+                  .sort((a, b) => a.day_of_week - b.day_of_week)
+                  .map((h, i, arr) => (
+                    <View
+                      key={h.day_of_week}
+                      className={`flex-row justify-between px-4 py-2.5 ${
+                        i < arr.length - 1 ? "border-b border-border" : ""
+                      }`}
+                    >
+                      <AppText className="text-[13px] text-foreground">
+                        {DAY_LABELS[h.day_of_week]}
+                      </AppText>
+                      <AppText className="text-[13px] text-muted-foreground">
+                        {h.is_closed || !h.open_time || !h.close_time
+                          ? "Closed"
+                          : `${timeLabel(h.open_time)} – ${timeLabel(h.close_time)}`}
+                      </AppText>
+                    </View>
+                  ))}
+              </View>
+            </View>
+          ) : null}
+
+          {/* Services */}
+          {place.services.length > 0 ? (
+            <View className="gap-2">
+              <SectionTitle>Services</SectionTitle>
+              {place.services.map((s) => (
+                <View
+                  key={s.id}
+                  className="rounded-xl border border-border bg-card p-3"
+                >
+                  <View className="flex-row justify-between gap-3">
+                    <AppText className="flex-1 text-[14px] font-medium text-foreground">
+                      {s.name}
+                    </AppText>
+                    {s.show_price && s.price != null ? (
+                      <AppText className="text-[13px] text-muted-foreground">
+                        GHS {s.price}
+                        {s.price_unit ? ` / ${s.price_unit}` : ""}
+                      </AppText>
+                    ) : null}
+                  </View>
+                  {s.description ? (
+                    <AppText className="mt-1 text-[12px] text-muted-foreground">
+                      {s.description}
                     </AppText>
                   ) : null}
                 </View>
-                {s.description ? (
-                  <AppText className="mt-1 text-[12px] text-muted-foreground">
-                    {s.description}
-                  </AppText>
-                ) : null}
-              </View>
-            ))}
-          </View>
-        ) : null}
-
-        {/* Photos */}
-        {place.photos.length > 0 ? (
-          <View className="gap-2">
-            <SectionTitle>Photos</SectionTitle>
-            <View className="flex-row flex-wrap gap-2">
-              {place.photos.map((photo) => (
-                <Image
-                  key={photo.id}
-                  source={{
-                    uri: buildCloudinaryUrl(photo.public_id, photo.version, {
-                      width: 300,
-                      height: 300,
-                    }),
-                  }}
-                  style={{ width: "31%", aspectRatio: 1, borderRadius: 8 }}
-                  contentFit="cover"
-                />
               ))}
             </View>
-          </View>
-        ) : null}
+          ) : null}
 
-        {/* Reviews */}
-        <View className="gap-3">
-          <View className="flex-row items-center justify-between">
-            <SectionTitle>Reviews</SectionTitle>
-            {place.reviewCount > 0 ? (
-              <View className="flex-row items-center gap-1.5">
-                <Stars rating={place.avgRating} size={14} />
-                <AppText className="text-[12px] text-muted-foreground">
-                  {place.avgRating.toFixed(1)} ({place.reviewCount})
-                </AppText>
-              </View>
-            ) : null}
-          </View>
-          {reviewsList.isLoading ? (
-            <AppText className="text-[13px] text-muted-foreground">
-              Loading reviews…
-            </AppText>
-          ) : reviews.length === 0 ? (
-            <AppText className="text-[13px] text-muted-foreground">
-              No reviews yet.
-            </AppText>
-          ) : (
+          {/* Photos */}
+          {place.photos.length > 0 ? (
             <View className="gap-2">
-              {reviews.map((r) => (
-                <PlaceReviewCard key={r.id} review={r} />
-              ))}
-              {reviewsList.hasNextPage ? (
-                <Pressable
-                  accessibilityRole="button"
-                  className="items-center py-2 active:opacity-60"
-                  disabled={reviewsList.isFetchingNextPage}
-                  onPress={() => reviewsList.fetchNextPage()}
-                >
-                  <AppText className="text-[13px] font-semibold text-primary">
-                    {reviewsList.isFetchingNextPage
-                      ? "Loading…"
-                      : "Show more reviews"}
+              <SectionTitle>Photos</SectionTitle>
+              <View className="flex-row flex-wrap gap-2">
+                {place.photos.map((photo) => (
+                  <Image
+                    key={photo.id}
+                    source={{
+                      uri: buildCloudinaryUrl(photo.public_id, photo.version, {
+                        width: 300,
+                        height: 300,
+                      }),
+                    }}
+                    style={{ width: "31%", aspectRatio: 1, borderRadius: 8 }}
+                    contentFit="cover"
+                  />
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          {/* Reviews */}
+          <View className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <SectionTitle>Reviews</SectionTitle>
+              {place.reviewCount > 0 ? (
+                <View className="flex-row items-center gap-1.5">
+                  <Stars rating={place.avgRating} size={14} />
+                  <AppText className="text-[12px] text-muted-foreground">
+                    {place.avgRating.toFixed(1)} ({place.reviewCount})
                   </AppText>
-                </Pressable>
+                </View>
               ) : null}
             </View>
-          )}
+            {reviewsList.isLoading ? (
+              <AppText className="text-[13px] text-muted-foreground">
+                Loading reviews…
+              </AppText>
+            ) : reviews.length === 0 ? (
+              <AppText className="text-[13px] text-muted-foreground">
+                No reviews yet.
+              </AppText>
+            ) : (
+              <View className="gap-2">
+                {reviews.map((r) => (
+                  <PlaceReviewCard key={r.id} review={r} />
+                ))}
+                {reviewsList.hasNextPage ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    className="items-center py-2 active:opacity-60"
+                    disabled={reviewsList.isFetchingNextPage}
+                    onPress={() => reviewsList.fetchNextPage()}
+                  >
+                    <AppText className="text-[13px] font-semibold text-primary">
+                      {reviewsList.isFetchingNextPage
+                        ? "Loading…"
+                        : "Show more reviews"}
+                    </AppText>
+                  </Pressable>
+                ) : null}
+              </View>
+            )}
+          </View>
+
+          {/* Upcoming events (item 13) */}
+          {upcomingEvents.length > 0 ? (
+            <View className="gap-3">
+              <SectionTitle>Upcoming events here</SectionTitle>
+              <FlatList
+                horizontal
+                data={upcomingEvents}
+                keyExtractor={(e) => e.id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="gap-3"
+                renderItem={({ item }) => (
+                  <View style={{ width: 260 }}>
+                    <EventCard event={item} />
+                  </View>
+                )}
+              />
+            </View>
+          ) : null}
+
+          {/* Similar places (item 13) */}
+          {similarPlaces.length > 0 ? (
+            <View className="gap-3">
+              <SectionTitle>Similar places</SectionTitle>
+              <FlatList
+                horizontal
+                data={similarPlaces}
+                keyExtractor={(p) => p.id}
+                showsHorizontalScrollIndicator={false}
+                contentContainerClassName="gap-3"
+                renderItem={({ item }) => (
+                  <View style={{ width: 240 }}>
+                    <PlaceCard place={item} />
+                  </View>
+                )}
+              />
+            </View>
+          ) : null}
         </View>
-
-        {/* Upcoming events (item 13) */}
-        {upcomingEvents.length > 0 ? (
-          <View className="gap-3">
-            <SectionTitle>Upcoming events here</SectionTitle>
-            <FlatList
-              horizontal
-              data={upcomingEvents}
-              keyExtractor={(e) => e.id}
-              showsHorizontalScrollIndicator={false}
-              contentContainerClassName="gap-3"
-              renderItem={({ item }) => (
-                <View style={{ width: 260 }}>
-                  <EventCard event={item} />
-                </View>
-              )}
-            />
-          </View>
-        ) : null}
-
-        {/* Similar places (item 13) */}
-        {similarPlaces.length > 0 ? (
-          <View className="gap-3">
-            <SectionTitle>Similar places</SectionTitle>
-            <FlatList
-              horizontal
-              data={similarPlaces}
-              keyExtractor={(p) => p.id}
-              showsHorizontalScrollIndicator={false}
-              contentContainerClassName="gap-3"
-              renderItem={({ item }) => (
-                <View style={{ width: 240 }}>
-                  <PlaceCard place={item} />
-                </View>
-              )}
-            />
-          </View>
-        ) : null}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }

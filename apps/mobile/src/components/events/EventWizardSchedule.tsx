@@ -10,15 +10,7 @@ import { Pressable, View } from "react-native";
 // specific dates (occurrences). Mirrors the web DateTimePicker's
 // single/specific split. Dates come from the pure-JS DateRangeField; times
 // are "HH:MM" text.
-export function EventWizardSchedule({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: EventWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function EventWizardSchedule({ w }: { w: EventWizard }) {
   const [draftDate, setDraftDate] = useState<string | null>(null);
   const [draftStart, setDraftStart] = useState("18:00");
   const [draftEnd, setDraftEnd] = useState("22:00");
@@ -33,14 +25,6 @@ export function EventWizardSchedule({
     ]);
     setDraftDate(null);
   }
-
-  const canProceed =
-    w.scheduleMode === "single"
-      ? !!w.rangeStart &&
-        !!w.rangeEnd &&
-        TIME_RE.test(w.rangeStartTime) &&
-        TIME_RE.test(w.rangeEndTime)
-      : w.occurrences.length > 0;
 
   return (
     <View className="gap-4">
@@ -154,21 +138,6 @@ export function EventWizardSchedule({
           </View>
         </View>
       )}
-
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title="Next"
-          className="flex-1"
-          disabled={!canProceed}
-          onPress={onNext}
-        />
-      </View>
     </View>
   );
 }

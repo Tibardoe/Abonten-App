@@ -1,6 +1,6 @@
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import type { EventWizard } from "@/features/events/useEventWizard";
-import { AppText, Button, Field, Icon, Input } from "@abonten/ui-native";
+import { AppText, Field, Icon, Input } from "@abonten/ui-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -8,15 +8,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // place wizard's Basic-info step (autocomplete suggestions, "choose on
 // map", or current location). The optional Abonten-Place venue picker the
 // web form also offers is deferred.
-export function EventWizardLocation({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: EventWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function EventWizardLocation({ w }: { w: EventWizard }) {
   const [mapOpen, setMapOpen] = useState(false);
 
   return (
@@ -85,21 +77,6 @@ export function EventWizardLocation({
           </AppText>
         ) : null}
       </Field>
-
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title="Next"
-          className="flex-1"
-          disabled={!w.address || !w.coords}
-          onPress={onNext}
-        />
-      </View>
 
       <MapPickerSheet
         open={mapOpen}

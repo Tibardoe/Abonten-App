@@ -1,4 +1,5 @@
 import { StepDots } from "@/components/StepDots";
+import { AppHeader } from "@/components/app/AppHeader";
 import { PlaceWizardBasicInfo } from "@/components/places/PlaceWizardBasicInfo";
 import { PlaceWizardCover } from "@/components/places/PlaceWizardCover";
 import { PlaceWizardHours } from "@/components/places/PlaceWizardHours";
@@ -6,13 +7,7 @@ import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
 import { ScreenLoader } from "@abonten/ui-native";
-import {
-  Link,
-  useLocalSearchParams,
-  useNavigation,
-  useRouter,
-} from "expo-router";
-import { useEffect } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 // Native echo of the web PlaceUploadModal: a 4-step wizard — Basic info,
@@ -20,26 +15,19 @@ import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 // With `?draftId=`, it resumes a saved draft; the "Save as draft" button
 // (WP-4g-3) writes the same drafts/place_drafts rows the web savePlaceDraft
 // action does.
+//
+// Navigation lives entirely in the header: Back steps back (or leaves the
+// flow from step 0), Next / Publish advances. Per-step gates: `w.canAdvance`.
 
-const STEP_TITLES = [
-  "Create place · Basic info",
-  "Create place · Cover photo",
-  "Create place · Hours",
-  "Create place · Review",
-];
+const LAST_STEP = 3;
 
 export default function CreatePlaceScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const w = usePlaceWizard(draftId);
   const draftsList = usePlaceDrafts();
   const draftCount =
     draftsList.data?.status === 200 ? draftsList.data.data.length : 0;
-
-  useEffect(() => {
-    navigation.setOptions({ title: STEP_TITLES[w.step] });
-  }, [navigation, w.step]);
 
   async function onPublish() {
     const res = await w.submit();
@@ -61,6 +49,27 @@ export default function CreatePlaceScreen() {
     );
   }
 
+  function goBack() {
+    if (w.step === 0) {
+      if (router.canGoBack()) router.back();
+      else router.replace("/(app)/organizer");
+      return;
+    }
+    w.setStep(w.step - 1);
+  }
+
+  function goNext() {
+    if (w.step === 0) {
+      if (w.validateBasics()) w.setStep(1);
+      return;
+    }
+    if (w.step === LAST_STEP) {
+      onPublish();
+      return;
+    }
+    w.setStep(w.step + 1);
+  }
+
   async function onSaveDraft() {
     const res = await w.saveDraft();
     if (res.status === 200) {
@@ -70,74 +79,67 @@ export default function CreatePlaceScreen() {
     }
   }
 
-  if (w.categoriesLoading || w.isHydratingDraft) return <ScreenLoader />;
+  const header = (
+    <AppHeader
+      variant="form"
+      title="Create Place"
+      onBack={goBack}
+      onNext={goNext}
+      nextLabel={w.step === LAST_STEP ? "Publish" : "Next"}
+      nextDisabled={w.isSubmitting || (w.step !== 0 && !w.canAdvance)}
+    />
+  );
+
+  if (w.categoriesLoading || w.isHydratingDraft) {
+    return (
+      <View className="flex-1 bg-background">
+        {header}
+        <ScreenLoader />
+      </View>
+    );
+  }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="gap-5 p-4 pb-16"
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="flex-row items-center justify-between">
-        <StepDots step={w.step} total={4} />
-        <Pressable
-          onPress={onSaveDraft}
-          disabled={w.isSavingDraft}
-          className="active:opacity-60 disabled:opacity-50"
-        >
-          <Text className="text-sm font-semibold text-primary">
-            {w.isSavingDraft ? "Saving…" : "Save as draft"}
-          </Text>
-        </Pressable>
-      </View>
-
-      {w.draftLoadError ? (
-        <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
-      ) : null}
-
-      {!draftId && draftCount > 0 ? (
-        <Link href="/(app)/organizer/place-drafts" asChild>
-          <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-            <Text className="text-sm text-foreground">
-              You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+    <View className="flex-1 bg-background">
+      {header}
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="gap-5 p-4 pb-16"
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-row items-center justify-between">
+          <StepDots step={w.step} total={4} />
+          <Pressable
+            onPress={onSaveDraft}
+            disabled={w.isSavingDraft}
+            className="active:opacity-60 disabled:opacity-50"
+          >
+            <Text className="text-sm font-semibold text-primary">
+              {w.isSavingDraft ? "Saving…" : "Save as draft"}
             </Text>
-            <Text className="text-primary">Resume ›</Text>
           </Pressable>
-        </Link>
-      ) : null}
+        </View>
 
-      {w.step === 0 ? (
-        <PlaceWizardBasicInfo
-          w={w}
-          onNext={() => {
-            if (w.validateBasics()) w.setStep(1);
-          }}
-        />
-      ) : null}
+        {w.draftLoadError ? (
+          <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
+        ) : null}
 
-      {w.step === 1 ? (
-        <PlaceWizardCover
-          w={w}
-          onBack={() => w.setStep(0)}
-          onNext={() => w.setStep(2)}
-        />
-      ) : null}
+        {!draftId && draftCount > 0 ? (
+          <Link href="/(app)/organizer/place-drafts" asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-sm text-foreground">
+                You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+              </Text>
+              <Text className="text-primary">Resume ›</Text>
+            </Pressable>
+          </Link>
+        ) : null}
 
-      {w.step === 2 ? (
-        <PlaceWizardHours
-          w={w}
-          onBack={() => w.setStep(1)}
-          onNext={() => w.setStep(3)}
-        />
-      ) : null}
-
-      {w.step === 3 ? (
-        <PlaceWizardReview
-          w={w}
-          onBack={() => w.setStep(2)}
-          onPublish={onPublish}
-        />
-      ) : null}
-    </ScrollView>
+        {w.step === 0 ? <PlaceWizardBasicInfo w={w} /> : null}
+        {w.step === 1 ? <PlaceWizardCover w={w} /> : null}
+        {w.step === 2 ? <PlaceWizardHours w={w} /> : null}
+        {w.step === 3 ? <PlaceWizardReview w={w} /> : null}
+      </ScrollView>
+    </View>
   );
 }

@@ -1,4 +1,5 @@
 import { TicketCard } from "@/components/TicketCard";
+import { AppHeader } from "@/components/app/AppHeader";
 import { PendingCheckoutsSection } from "@/components/checkout/PendingCheckoutsSection";
 import { EventsToReviewList } from "@/components/reviews/EventsToReviewList";
 import { ReviewedEventsList } from "@/components/reviews/ReviewedEventsList";
@@ -97,6 +98,7 @@ export default function Tickets() {
 
   return (
     <View className="flex-1 bg-background">
+      <AppHeader variant="branded" />
       <View className="px-4 pb-1 pt-3">
         <SegmentedTabs
           options={[

@@ -3,21 +3,13 @@ import {
   type PlaceWizard,
   TIME_RE,
 } from "@/features/places/usePlaceWizard";
-import { AppText, Button, Input } from "@abonten/ui-native";
+import { AppText, Input } from "@abonten/ui-native";
 import { Pressable, View } from "react-native";
 
 // Step 3 of the place wizard — the 7-day open/close editor. Mirrors the web
 // PlaceCreateStepHours; times are plain "HH:MM" inputs validated against
 // TIME_RE (the same shape create_place's NULLIF(...)::time cast expects).
-export function PlaceWizardHours({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: PlaceWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
   return (
     <View className="gap-3">
       <AppText variant="label">Opening hours</AppText>
@@ -75,20 +67,6 @@ export function PlaceWizardHours({
           ) : null}
         </View>
       ))}
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title="Next"
-          className="flex-1"
-          disabled={!w.hoursComplete}
-          onPress={onNext}
-        />
-      </View>
     </View>
   );
 }

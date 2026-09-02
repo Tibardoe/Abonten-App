@@ -1,6 +1,6 @@
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import type { PlaceWizard } from "@/features/places/usePlaceWizard";
-import { AppText, Button, Field, Icon, Input } from "@abonten/ui-native";
+import { AppText, Field, Icon, Input } from "@abonten/ui-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -8,13 +8,7 @@ import { ActivityIndicator, Pressable, View } from "react-native";
 // category picker and the address resolver (autocomplete suggestions,
 // "choose on map", or current location). Mirrors the web
 // PlaceCreateStepBasicInfo.
-export function PlaceWizardBasicInfo({
-  w,
-  onNext,
-}: {
-  w: PlaceWizard;
-  onNext: () => void;
-}) {
+export function PlaceWizardBasicInfo({ w }: { w: PlaceWizard }) {
   const [mapOpen, setMapOpen] = useState(false);
 
   return (
@@ -160,8 +154,6 @@ export function PlaceWizardBasicInfo({
           placeholder="+233…"
         />
       </Field>
-
-      <Button title="Next" onPress={onNext} />
 
       <MapPickerSheet
         open={mapOpen}

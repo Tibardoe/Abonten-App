@@ -1,4 +1,5 @@
 import { StepDots } from "@/components/StepDots";
+import { AppHeader } from "@/components/app/AppHeader";
 import { EventWizardBasics } from "@/components/events/EventWizardBasics";
 import { EventWizardFlyer } from "@/components/events/EventWizardFlyer";
 import { EventWizardLocation } from "@/components/events/EventWizardLocation";
@@ -8,13 +9,7 @@ import { EventWizardSchedule } from "@/components/events/EventWizardSchedule";
 import { EventWizardTickets } from "@/components/events/EventWizardTickets";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
-import {
-  Link,
-  useLocalSearchParams,
-  useNavigation,
-  useRouter,
-} from "expo-router";
-import { useEffect } from "react";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -29,29 +24,20 @@ import {
 // that publishes an event via useEventCreate. With `?draftId=`, it resumes
 // a saved draft; the "Save as draft" button (WP-4g-2) writes the same
 // drafts/event_drafts rows the web saveEventDraft action does.
+//
+// Navigation lives entirely in the header: Back steps back (or leaves the
+// flow from step 0), Next / Publish advances. The per-step gates come from
+// `w.canAdvance`.
 
-const STEP_TITLES = [
-  "Create event · Basics",
-  "Create event · Flyer",
-  "Create event · Schedule",
-  "Create event · Location",
-  "Create event · Tickets",
-  "Create event · Promo codes",
-  "Create event · Review",
-];
+const LAST_STEP = 6;
 
 export default function CreateEventScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
   const w = useEventWizard(draftId);
   const draftsList = useEventDrafts();
   const draftCount =
     draftsList.data?.status === 200 ? draftsList.data.data.length : 0;
-
-  useEffect(() => {
-    navigation.setOptions({ title: STEP_TITLES[w.step] });
-  }, [navigation, w.step]);
 
   async function onPublish() {
     const res = await w.submit();
@@ -73,6 +59,27 @@ export default function CreateEventScreen() {
     );
   }
 
+  function goBack() {
+    if (w.step === 0) {
+      if (router.canGoBack()) router.back();
+      else router.replace("/(app)/organizer");
+      return;
+    }
+    w.setStep(w.step - 1);
+  }
+
+  function goNext() {
+    if (w.step === 0) {
+      if (w.validateBasics()) w.setStep(1);
+      return;
+    }
+    if (w.step === LAST_STEP) {
+      onPublish();
+      return;
+    }
+    w.setStep(w.step + 1);
+  }
+
   async function onSaveDraft() {
     const res = await w.saveDraft();
     if (res.status === 200) {
@@ -82,104 +89,72 @@ export default function CreateEventScreen() {
     }
   }
 
+  const header = (
+    <AppHeader
+      variant="form"
+      title="Create Event"
+      onBack={goBack}
+      onNext={goNext}
+      nextLabel={w.step === LAST_STEP ? "Publish" : "Next"}
+      nextDisabled={w.isSubmitting || (w.step !== 0 && !w.canAdvance)}
+    />
+  );
+
   if (w.isHydratingDraft) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
+      <View className="flex-1 bg-background">
+        {header}
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator />
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="gap-5 p-4 pb-16"
-      keyboardShouldPersistTaps="handled"
-    >
-      <View className="flex-row items-center justify-between">
-        <StepDots step={w.step} total={7} />
-        <Pressable
-          onPress={onSaveDraft}
-          disabled={w.isSavingDraft}
-          className="active:opacity-60 disabled:opacity-50"
-        >
-          <Text className="text-sm font-semibold text-primary">
-            {w.isSavingDraft ? "Saving…" : "Save as draft"}
-          </Text>
-        </Pressable>
-      </View>
-
-      {w.draftLoadError ? (
-        <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
-      ) : null}
-
-      {!draftId && draftCount > 0 ? (
-        <Link href="/(app)/organizer/event-drafts" asChild>
-          <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-            <Text className="text-sm text-foreground">
-              You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+    <View className="flex-1 bg-background">
+      {header}
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="gap-5 p-4 pb-16"
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="flex-row items-center justify-between">
+          <StepDots step={w.step} total={7} />
+          <Pressable
+            onPress={onSaveDraft}
+            disabled={w.isSavingDraft}
+            className="active:opacity-60 disabled:opacity-50"
+          >
+            <Text className="text-sm font-semibold text-primary">
+              {w.isSavingDraft ? "Saving…" : "Save as draft"}
             </Text>
-            <Text className="text-primary">Resume ›</Text>
           </Pressable>
-        </Link>
-      ) : null}
+        </View>
 
-      {w.step === 0 ? (
-        <EventWizardBasics
-          w={w}
-          onNext={() => {
-            if (w.validateBasics()) w.setStep(1);
-          }}
-        />
-      ) : null}
+        {w.draftLoadError ? (
+          <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
+        ) : null}
 
-      {w.step === 1 ? (
-        <EventWizardFlyer
-          w={w}
-          onBack={() => w.setStep(0)}
-          onNext={() => w.setStep(2)}
-        />
-      ) : null}
+        {!draftId && draftCount > 0 ? (
+          <Link href="/(app)/organizer/event-drafts" asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-sm text-foreground">
+                You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
+              </Text>
+              <Text className="text-primary">Resume ›</Text>
+            </Pressable>
+          </Link>
+        ) : null}
 
-      {w.step === 2 ? (
-        <EventWizardSchedule
-          w={w}
-          onBack={() => w.setStep(1)}
-          onNext={() => w.setStep(3)}
-        />
-      ) : null}
-
-      {w.step === 3 ? (
-        <EventWizardLocation
-          w={w}
-          onBack={() => w.setStep(2)}
-          onNext={() => w.setStep(4)}
-        />
-      ) : null}
-
-      {w.step === 4 ? (
-        <EventWizardTickets
-          w={w}
-          onBack={() => w.setStep(3)}
-          onNext={() => w.setStep(5)}
-        />
-      ) : null}
-
-      {w.step === 5 ? (
-        <EventWizardPromos
-          w={w}
-          onBack={() => w.setStep(4)}
-          onNext={() => w.setStep(6)}
-        />
-      ) : null}
-
-      {w.step === 6 ? (
-        <EventWizardReview
-          w={w}
-          onBack={() => w.setStep(5)}
-          onPublish={onPublish}
-        />
-      ) : null}
-    </ScrollView>
+        {w.step === 0 ? <EventWizardBasics w={w} /> : null}
+        {w.step === 1 ? <EventWizardFlyer w={w} /> : null}
+        {w.step === 2 ? <EventWizardSchedule w={w} /> : null}
+        {w.step === 3 ? <EventWizardLocation w={w} /> : null}
+        {w.step === 4 ? <EventWizardTickets w={w} /> : null}
+        {w.step === 5 ? <EventWizardPromos w={w} /> : null}
+        {w.step === 6 ? <EventWizardReview w={w} /> : null}
+      </ScrollView>
+    </View>
   );
 }

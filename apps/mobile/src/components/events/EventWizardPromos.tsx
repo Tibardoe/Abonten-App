@@ -8,15 +8,7 @@ import { Pressable, View } from "react-native";
 
 // Step 6 of the event wizard — optional promo codes, applied at checkout.
 // Mirrors the web PromoCodeInputs (code / discount % / max uses / expiry).
-export function EventWizardPromos({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: EventWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function EventWizardPromos({ w }: { w: EventWizard }) {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState("");
   const [maxUses, setMaxUses] = useState("");
@@ -118,16 +110,6 @@ export function EventWizardPromos({
           disabled={!canAdd}
           onPress={add}
         />
-      </View>
-
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button title="Next" className="flex-1" onPress={onNext} />
       </View>
     </View>
   );

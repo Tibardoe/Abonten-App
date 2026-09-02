@@ -6,15 +6,7 @@ import { View } from "react-native";
 // Step 2 of the event wizard — pick the flyer. Mirrors the web
 // EventUploadModal flyer-first flow (expo-image-picker's editor gives the
 // 4:5 crop the web ImageCropper does).
-export function EventWizardFlyer({
-  w,
-  onBack,
-  onNext,
-}: {
-  w: EventWizard;
-  onBack: () => void;
-  onNext: () => void;
-}) {
+export function EventWizardFlyer({ w }: { w: EventWizard }) {
   return (
     <View className="gap-4">
       <AppText variant="label">Event flyer</AppText>
@@ -37,20 +29,6 @@ export function EventWizardFlyer({
         variant="outline"
         onPress={w.pickFlyer}
       />
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title="Next"
-          className="flex-1"
-          disabled={!w.flyerUri}
-          onPress={onNext}
-        />
-      </View>
     </View>
   );
 }

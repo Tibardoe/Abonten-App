@@ -1,20 +1,13 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
-import { AppText, Button } from "@abonten/ui-native";
+import { AppText } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
 // Step 7 of the event wizard — a last look before publishing. Mirrors the
-// web review/publish step.
-export function EventWizardReview({
-  w,
-  onBack,
-  onPublish,
-}: {
-  w: EventWizard;
-  onBack: () => void;
-  onPublish: () => void;
-}) {
+// web review/publish step. Publish is the header's "Publish" button
+// (app/(app)/event/new.tsx).
+export function EventWizardReview({ w }: { w: EventWizard }) {
   const when =
     w.scheduleMode === "single"
       ? w.rangeStart
@@ -69,21 +62,6 @@ export function EventWizardReview({
           We couldn't post your event. Please try again.
         </AppText>
       ) : null}
-
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title={w.isSubmitting ? "Publishing…" : "Publish"}
-          className="flex-1"
-          loading={w.isSubmitting}
-          onPress={onPublish}
-        />
-      </View>
     </View>
   );
 }

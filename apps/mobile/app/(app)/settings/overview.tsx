@@ -1,3 +1,4 @@
+import { AppHeader } from "@/components/app/AppHeader";
 import { AppText, Card, Divider, Icon } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
@@ -26,26 +27,33 @@ export default function SettingsOverview() {
   );
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="gap-3 p-4"
-    >
-      <AppText variant="label">Quick links</AppText>
-      <Card padded>
-        <Row
-          label="Manage payment method"
-          onPress={() => router.push("/(app)/wallet")}
-        />
-        <Divider />
-        <Row
-          label="View transaction history"
-          onPress={() => router.push("/(app)/transactions")}
-        />
-      </Card>
-      <View className="h-2" />
-      <AppText variant="caption">
-        Active promotions aren't shown on mobile yet — manage them on the web.
-      </AppText>
-    </ScrollView>
+    <View className="flex-1 bg-background">
+      <AppHeader
+        variant="title"
+        title="Overview"
+        backFallback="/(app)/settings"
+      />
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="gap-3 p-4"
+      >
+        <AppText variant="label">Quick links</AppText>
+        <Card padded>
+          <Row
+            label="Manage payment method"
+            onPress={() => router.push("/(app)/wallet")}
+          />
+          <Divider />
+          <Row
+            label="View transaction history"
+            onPress={() => router.push("/(app)/transactions")}
+          />
+        </Card>
+        <View className="h-2" />
+        <AppText variant="caption">
+          Active promotions aren't shown on mobile yet — manage them on the web.
+        </AppText>
+      </ScrollView>
+    </View>
   );
 }

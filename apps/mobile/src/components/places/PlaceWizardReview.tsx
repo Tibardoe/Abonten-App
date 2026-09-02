@@ -1,19 +1,12 @@
 import { DAY_LABELS, type PlaceWizard } from "@/features/places/usePlaceWizard";
-import { AppText, Button } from "@abonten/ui-native";
+import { AppText } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
 // Step 4 of the place wizard — a last look before publishing. Mirrors the
-// web PlaceCreateStepReview.
-export function PlaceWizardReview({
-  w,
-  onBack,
-  onPublish,
-}: {
-  w: PlaceWizard;
-  onBack: () => void;
-  onPublish: () => void;
-}) {
+// web PlaceCreateStepReview. Publish is the header's "Publish" button
+// (app/(app)/place/new.tsx).
+export function PlaceWizardReview({ w }: { w: PlaceWizard }) {
   const categoryName =
     w.categories.find((c) => c.id === w.categoryId)?.name ?? "—";
   const openDays = w.openingHours
@@ -48,21 +41,6 @@ export function PlaceWizardReview({
           We couldn't publish your place. Please try again.
         </AppText>
       ) : null}
-
-      <View className="flex-row gap-3">
-        <Button
-          title="Back"
-          variant="ghost"
-          className="flex-1"
-          onPress={onBack}
-        />
-        <Button
-          title={w.isSubmitting ? "Publishing…" : "Publish"}
-          className="flex-1"
-          loading={w.isSubmitting}
-          onPress={onPublish}
-        />
-      </View>
     </View>
   );
 }

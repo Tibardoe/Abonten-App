@@ -1,3 +1,5 @@
+import { AppHeader } from "@/components/app/AppHeader";
+import { notificationHref } from "@/features/notifications/notificationLink";
 import {
   flattenNotifications,
   useMarkAllNotificationsRead,
@@ -6,7 +8,8 @@ import {
 } from "@/features/notifications/useNotifications";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
-import { EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
+import { AppText, EmptyState, ScreenLoader, Spinner } from "@abonten/ui-native";
+import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
 
@@ -46,63 +49,90 @@ function Row({
 }
 
 export default function Notifications() {
+  const router = useRouter();
   const q = useNotifications();
   const markAll = useMarkAllNotificationsRead();
   const markOne = useMarkNotificationRead();
 
   const items = flattenNotifications(q.data?.pages);
+  const hasUnread = items.some((i) => !i.read_at);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  if (q.isLoading) return <ScreenLoader />;
+  // Same as the web NotificationBell row: mark unread rows read on tap, then
+  // navigate to whatever the notification points at (event / place /
+  // organizer screen / edit profile). Unknown links just mark read.
+  const openRow = useCallback(
+    (item: NotificationType) => {
+      if (!item.read_at) markOne.mutate(item.id);
+      const href = notificationHref(item.link);
+      if (href) router.push(href);
+    },
+    [markOne, router],
+  );
 
   return (
     <View className="flex-1 bg-background">
-      {items.some((i) => !i.read_at) ? (
-        <View className="flex-row justify-end px-4 pb-1 pt-3">
-          <Pressable
-            onPress={() => markAll.mutate()}
-            disabled={markAll.isPending}
-          >
-            <Text className="text-sm font-medium text-primary disabled:opacity-40">
-              Mark all read
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
-
-      <FlatList
-        data={items}
-        keyExtractor={(n) => n.id}
-        renderItem={({ item }) => (
-          <Row item={item} onPress={() => markOne.mutate(item.id)} />
-        )}
-        contentContainerClassName="gap-3 px-4 pb-16 pt-2"
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={q.isRefetching && !q.isFetchingNextPage}
-            onRefresh={() => q.refetch()}
-          />
+      <AppHeader
+        variant="title"
+        title="Notifications"
+        backFallback="/(app)/account"
+        rightAccessory={
+          hasUnread ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Mark all read"
+              hitSlop={8}
+              onPress={() => markAll.mutate()}
+              disabled={markAll.isPending}
+              className="px-2 active:opacity-60"
+            >
+              <AppText className="text-[13px] font-medium text-primary">
+                Mark all read
+              </AppText>
+            </Pressable>
+          ) : null
         }
-        ListEmptyComponent={
-          <EmptyState
-            icon="notifications-outline"
-            title={
-              q.isError ? "Couldn't load notifications" : "No notifications yet"
-            }
-            description={
-              q.isError
-                ? "Pull down to try again."
-                : "Updates about your tickets and events show up here."
-            }
-          />
-        }
-        ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
       />
+
+      {q.isLoading ? (
+        <ScreenLoader />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(n) => n.id}
+          renderItem={({ item }) => (
+            <Row item={item} onPress={() => openRow(item)} />
+          )}
+          contentContainerClassName="gap-3 px-4 pb-16 pt-3"
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={q.isRefetching && !q.isFetchingNextPage}
+              onRefresh={() => q.refetch()}
+            />
+          }
+          ListEmptyComponent={
+            <EmptyState
+              icon="notifications-outline"
+              title={
+                q.isError
+                  ? "Couldn't load notifications"
+                  : "No notifications yet"
+              }
+              description={
+                q.isError
+                  ? "Pull down to try again."
+                  : "Updates about your tickets and events show up here."
+              }
+            />
+          }
+          ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}
+        />
+      )}
     </View>
   );
 }

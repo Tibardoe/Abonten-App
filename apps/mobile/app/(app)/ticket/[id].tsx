@@ -1,3 +1,4 @@
+import { AppHeader } from "@/components/app/AppHeader";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
@@ -114,101 +115,104 @@ export default function TicketDetailScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background"
-      contentContainerClassName="items-center gap-5 p-4 pb-10"
-    >
-      <View className="w-full items-center gap-4 rounded-2xl border border-border bg-card p-6">
-        {qr ? (
-          <Image
-            source={{ uri: qr }}
-            style={{ width: 240, height: 240 }}
-            contentFit="contain"
+    <View className="flex-1 bg-background">
+      <AppHeader variant="title" title="Ticket" backFallback="/(app)/tickets" />
+      <ScrollView
+        className="flex-1 bg-background"
+        contentContainerClassName="items-center gap-5 p-4 pb-10"
+      >
+        <View className="w-full items-center gap-4 rounded-2xl border border-border bg-card p-6">
+          {qr ? (
+            <Image
+              source={{ uri: qr }}
+              style={{ width: 240, height: 240 }}
+              contentFit="contain"
+            />
+          ) : (
+            <View className="h-60 w-60 items-center justify-center rounded-lg bg-muted">
+              <Icon name="qr-code-outline" size={40} tone="muted" />
+              <AppText className="mt-2 text-[12px] text-muted-foreground">
+                No QR code
+              </AppText>
+            </View>
+          )}
+
+          <TicketStatusBadge
+            status={ticket.status}
+            cancelledByOrganizer={cancelledByOrganizer}
+            eventCancelled={cancelledByOrganizer}
+            eventEnded={eventEnded}
           />
-        ) : (
-          <View className="h-60 w-60 items-center justify-center rounded-lg bg-muted">
-            <Icon name="qr-code-outline" size={40} tone="muted" />
-            <AppText className="mt-2 text-[12px] text-muted-foreground">
-              No QR code
-            </AppText>
-          </View>
-        )}
 
-        <TicketStatusBadge
-          status={ticket.status}
-          cancelledByOrganizer={cancelledByOrganizer}
-          eventCancelled={cancelledByOrganizer}
-          eventEnded={eventEnded}
-        />
-
-        <AppText className="text-center text-[18px] font-bold text-foreground">
-          {ticket.event.title}
-        </AppText>
-        <AppText className="text-[12px] tracking-[3px] text-muted-foreground">
-          {ticket.ticket_code}
-        </AppText>
-      </View>
-
-      <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">
-        <Row icon="pricetag-outline" label={ticket.ticket_type.type} />
-        <Row icon="calendar-outline" label={when.date} sub={when.time} />
-        <Row
-          icon="location-outline"
-          label={ticket.event.address?.full_address ?? "Location unavailable"}
-        />
-        {ticket.seat_number ? (
-          <Row icon="grid-outline" label={`Seat ${ticket.seat_number}`} />
-        ) : null}
-        {used && ticket.used_at ? (
-          <Row
-            icon="checkmark-done-circle-outline"
-            label="Checked in"
-            sub={formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
-          />
-        ) : null}
-      </View>
-
-      <View className="w-full gap-3">
-        <Button
-          title={
-            receipt.isGenerating
-              ? "Preparing receipt…"
-              : "Download receipt (PDF)"
-          }
-          fullWidth
-          leftIcon="download-outline"
-          onPress={() => receipt.downloadReceipt(ticket)}
-          disabled={receipt.isGenerating}
-          loading={receipt.isGenerating}
-        />
-
-        <Pressable
-          accessibilityRole="button"
-          className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
-          onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
-        >
-          <AppText className="text-[14px] font-semibold text-foreground">
-            View event
+          <AppText className="text-center text-[18px] font-bold text-foreground">
+            {ticket.event.title}
           </AppText>
-        </Pressable>
+          <AppText className="text-[12px] tracking-[3px] text-muted-foreground">
+            {ticket.ticket_code}
+          </AppText>
+        </View>
 
-        {canCancel ? (
+        <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">
+          <Row icon="pricetag-outline" label={ticket.ticket_type.type} />
+          <Row icon="calendar-outline" label={when.date} sub={when.time} />
+          <Row
+            icon="location-outline"
+            label={ticket.event.address?.full_address ?? "Location unavailable"}
+          />
+          {ticket.seat_number ? (
+            <Row icon="grid-outline" label={`Seat ${ticket.seat_number}`} />
+          ) : null}
+          {used && ticket.used_at ? (
+            <Row
+              icon="checkmark-done-circle-outline"
+              label="Checked in"
+              sub={formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
+            />
+          ) : null}
+        </View>
+
+        <View className="w-full gap-3">
+          <Button
+            title={
+              receipt.isGenerating
+                ? "Preparing receipt…"
+                : "Download receipt (PDF)"
+            }
+            fullWidth
+            leftIcon="download-outline"
+            onPress={() => receipt.downloadReceipt(ticket)}
+            disabled={receipt.isGenerating}
+            loading={receipt.isGenerating}
+          />
+
           <Pressable
             accessibilityRole="button"
-            disabled={cancel.isPending}
             className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
-            onPress={onCancelTicket}
+            onPress={() => router.push(`/(app)/event/${ticket.event.id}`)}
           >
-            <AppText className="text-[14px] font-semibold text-destructive">
-              {cancel.isPending
-                ? "Cancelling…"
-                : ticket.transaction_id
-                  ? "Cancel ticket & request refund"
-                  : "Cancel ticket"}
+            <AppText className="text-[14px] font-semibold text-foreground">
+              View event
             </AppText>
           </Pressable>
-        ) : null}
-      </View>
-    </ScrollView>
+
+          {canCancel ? (
+            <Pressable
+              accessibilityRole="button"
+              disabled={cancel.isPending}
+              className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
+              onPress={onCancelTicket}
+            >
+              <AppText className="text-[14px] font-semibold text-destructive">
+                {cancel.isPending
+                  ? "Cancelling…"
+                  : ticket.transaction_id
+                    ? "Cancel ticket & request refund"
+                    : "Cancel ticket"}
+              </AppText>
+            </Pressable>
+          ) : null}
+        </View>
+      </ScrollView>
+    </View>
   );
 }

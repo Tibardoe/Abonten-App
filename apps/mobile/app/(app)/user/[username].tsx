@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { EventCard } from "@/components/EventCard";
+import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { CreateActionSheet } from "@/components/profile/CreateActionSheet";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import {
@@ -21,22 +22,20 @@ import {
 import { usePublicProfile } from "@/features/profile/usePublicProfile";
 import {
   EmptyState,
-  Icon,
   ScreenError,
   ScreenLoader,
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { FlatList, View } from "react-native";
 
 type FavSub = "events" | "places";
 type ReviewSub = "event" | "place";
 
 export default function UserProfileScreen() {
   const { username } = useLocalSearchParams<{ username: string }>();
-  const navigation = useNavigation();
   const router = useRouter();
   const { session } = useSession();
 
@@ -57,38 +56,34 @@ export default function UserProfileScreen() {
     [isOwn],
   );
 
-  // Header: centred @username, no notification bell. Own profile also gets
-  // a "+" create menu and a Settings shortcut (item 3).
-  useEffect(() => {
-    navigation.setOptions({
-      title: username ? `@${username}` : "Profile",
-      headerTitleAlign: "center",
-      headerRight: isOwn
-        ? () => (
-            <View className="flex-row items-center pr-1">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Create"
-                hitSlop={8}
-                onPress={() => setCreateOpen(true)}
-                className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
-              >
-                <Icon name="add" size={26} tone="foreground" />
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Settings"
-                hitSlop={8}
-                onPress={() => router.push("/(app)/settings")}
-                className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
-              >
-                <Icon name="settings-outline" size={22} tone="foreground" />
-              </Pressable>
-            </View>
-          )
-        : () => null,
-    });
-  }, [navigation, username, isOwn, router]);
+  // Standard detail header: back (left) + centred @username. On your own
+  // profile the "+" create button sits on the LEFT (next to back) and the
+  // Settings shortcut is the right-hand contextual action. No bell.
+  const navHeader = (
+    <AppHeader
+      variant="detail"
+      title={username ? `@${username}` : "Profile"}
+      backFallback="/(app)"
+      leftAccessory={
+        isOwn ? (
+          <HeaderIconButton
+            name="add"
+            accessibilityLabel="Create"
+            onPress={() => setCreateOpen(true)}
+          />
+        ) : undefined
+      }
+      rightAccessory={
+        isOwn ? (
+          <HeaderIconButton
+            name="settings-outline"
+            accessibilityLabel="Settings"
+            onPress={() => router.push("/(app)/settings")}
+          />
+        ) : undefined
+      }
+    />
+  );
 
   const events = useProfileEvents(profile?.user_id);
   const places = useProfilePlaces(profile?.user_id);
@@ -122,13 +117,23 @@ export default function UserProfileScreen() {
       active.fetchNextPage();
   }, [active]);
 
-  if (profileQuery.isLoading) return <ScreenLoader />;
+  if (profileQuery.isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        {navHeader}
+        <ScreenLoader />
+      </View>
+    );
+  }
   if (profileQuery.isError || !profile) {
     return (
-      <ScreenError
-        message="This profile could not be loaded."
-        onRetry={() => profileQuery.refetch()}
-      />
+      <View className="flex-1 bg-background">
+        {navHeader}
+        <ScreenError
+          message="This profile could not be loaded."
+          onRetry={() => profileQuery.refetch()}
+        />
+      </View>
     );
   }
 
@@ -192,7 +197,8 @@ export default function UserProfileScreen() {
             : "No place reviews yet";
 
   return (
-    <>
+    <View className="flex-1 bg-background">
+      {navHeader}
       <FlatList
         className="flex-1 bg-background"
         data={rows}
@@ -240,6 +246,6 @@ export default function UserProfileScreen() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
       />
-    </>
+    </View>
   );
 }

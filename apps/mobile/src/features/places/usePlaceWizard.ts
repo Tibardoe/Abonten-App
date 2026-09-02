@@ -360,10 +360,25 @@ export function usePlaceWizard(resumeDraftId?: string) {
     });
   }
 
+  // Whether the current step's requirements are met, so the header's "Next"
+  // can be disabled. Step 0 runs validateBasics() on press instead. These
+  // gates used to live on each step component's own Next button.
+  const canAdvance = useMemo(() => {
+    switch (step) {
+      case 1:
+        return !!coverUri;
+      case 2:
+        return hoursComplete;
+      default:
+        return true;
+    }
+  }, [step, coverUri, hoursComplete]);
+
   return {
     // step
     step,
     setStep,
+    canAdvance,
     // categories
     categories,
     categoriesLoading: categoriesQuery.isLoading,

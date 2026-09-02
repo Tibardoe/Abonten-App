@@ -1,17 +1,12 @@
 import type { EventWizard } from "@/features/events/useEventWizard";
-import { AppText, Button, Field, Input } from "@abonten/ui-native";
+import { AppText, Field, Input } from "@abonten/ui-native";
 import { Pressable, Switch, View } from "react-native";
 
 // Step 1 of the event wizard — title, description, category + types,
 // capacity, website, and the require-registration toggle. Mirrors the web
 // EventUploadFormFields "Event basics" + "Event details" sections.
-export function EventWizardBasics({
-  w,
-  onNext,
-}: {
-  w: EventWizard;
-  onNext: () => void;
-}) {
+// Step navigation is owned by the screen header (app/(app)/event/new.tsx).
+export function EventWizardBasics({ w }: { w: EventWizard }) {
   return (
     <View className="gap-4">
       <Field label="Title" error={w.textErrors.title}>
@@ -131,8 +126,6 @@ export function EventWizardBasics({
           onValueChange={w.setRequireRegistration}
         />
       </View>
-
-      <Button title="Next" onPress={onNext} />
     </View>
   );
 }
