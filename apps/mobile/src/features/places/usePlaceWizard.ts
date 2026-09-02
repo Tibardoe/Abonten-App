@@ -1,21 +1,33 @@
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import { usePlacesAutocomplete } from "@/features/discovery/usePlacesAutocomplete";
 import { useCreatePlace } from "@/features/places/useCreatePlace";
+import {
+  usePlaceDraft,
+  useSavePlaceDraft,
+} from "@/features/places/usePlaceDrafts";
 import { uuidv4 } from "@/lib/uuid";
 import type {
   PlaceCreateResult,
+  PlaceDraftPayload,
   PlaceOpeningHoursInput,
+  SavePlaceDraftResult,
 } from "@abonten/api-client";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getPlaceSchema } from "@abonten/validation/placeSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 // All state, validation and submit logic for the native place-creation
 // wizard — the mobile echo of the web usePlaceUploadForm hook, so the
 // screen (app/(app)/place/new.tsx) and its four step components stay thin
-// and presentational. Create-only; save-as-draft is WP-4g.
+// and presentational. Publishes a place, and (WP-4g-3) saves / resumes a
+// draft against the same drafts/place_drafts rows the web savePlaceDraft
+// action writes.
+
+const isRemote = (uri: string | null): boolean =>
+  !!uri && /^https?:/i.test(uri);
 
 export const DAY_LABELS = [
   "Sunday",
@@ -55,13 +67,31 @@ export type PlaceWizardTextErrors = Partial<
   Record<"name" | "description" | "website_url" | "phone" | "whatsapp", string>
 >;
 
-export function usePlaceWizard() {
+export function usePlaceWizard(resumeDraftId?: string) {
   const categoriesQuery = usePlaceCategories();
   const autocomplete = usePlacesAutocomplete();
   const create = useCreatePlace();
+  const saveDraftMutation = useSavePlaceDraft();
+  const draftQuery = usePlaceDraft(resumeDraftId);
 
   const clientRequestId = useRef(uuidv4()).current;
   const placeSchema = useMemo(() => getPlaceSchema(PLACE_MESSAGES), []);
+
+  // Draft tracking: `currentDraftId` becomes set after the first save (or is
+  // seeded when resuming); `draftUpdatedAt` feeds the concurrency check;
+  // `savedCoverUri` is the cover already persisted, so an unchanged cover
+  // isn't re-uploaded on every save.
+  const [currentDraftId, setCurrentDraftId] = useState<string | undefined>(
+    resumeDraftId,
+  );
+  const draftUpdatedAt = useRef<string | undefined>(undefined);
+  const savedCoverUri = useRef<string | null>(null);
+  // The resumed draft's already-uploaded cover, reused on Publish instead of
+  // trying to re-upload a Cloudinary URL.
+  const resumedCover = useRef<{ publicId: string; version: string } | null>(
+    null,
+  );
+  const hydratedRef = useRef(false);
 
   const [step, setStep] = useState(0);
 
@@ -217,6 +247,83 @@ export function usePlaceWizard() {
     return true;
   }
 
+  // --- draft: hydrate on resume ----------------------------------
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-shot hydration guarded by hydratedRef; the setters are stable
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!resumeDraftId || draftQuery.data?.status !== 200) return;
+    hydratedRef.current = true;
+
+    const detail = draftQuery.data.data;
+    const p = detail.payload;
+    draftUpdatedAt.current = detail.updatedAt;
+
+    if (p.name) setName(p.name);
+    if (p.description) setDescription(p.description);
+    if (p.websiteUrl) setWebsite(p.websiteUrl);
+    if (p.phone) setPhone(p.phone);
+    if (p.whatsapp) setWhatsapp(p.whatsapp);
+    if (p.categoryId != null) setCategoryId(p.categoryId);
+    if (p.address) {
+      setAddress(p.address);
+      autocomplete.setQuery(p.address);
+    }
+    if (p.latitude != null && p.longitude != null)
+      setCoords({ lat: p.latitude, lng: p.longitude });
+    if (p.openingHours?.length === 7) setOpeningHours(p.openingHours);
+
+    if (detail.coverPublicId && detail.coverVersion) {
+      const url = buildCloudinaryUrl(
+        detail.coverPublicId,
+        detail.coverVersion,
+        { width: 1280, height: 720 },
+      );
+      setCoverUri(url);
+      savedCoverUri.current = url;
+      resumedCover.current = {
+        publicId: detail.coverPublicId,
+        version: detail.coverVersion,
+      };
+    }
+  }, [resumeDraftId, draftQuery.data]);
+
+  // --- draft: build payload from current state ------------------
+  function buildDraftPayload(): PlaceDraftPayload {
+    return {
+      name: name.trim() || undefined,
+      description: description.trim() || undefined,
+      categoryId: categoryId ?? undefined,
+      address: address.trim() || undefined,
+      latitude: coords?.lat,
+      longitude: coords?.lng,
+      websiteUrl: website.trim() || undefined,
+      phone: phone.trim() || undefined,
+      whatsapp: whatsapp.trim() || undefined,
+      openingHours,
+    };
+  }
+
+  async function saveDraft(): Promise<SavePlaceDraftResult> {
+    const localCover =
+      coverUri && !isRemote(coverUri) && coverUri !== savedCoverUri.current
+        ? coverUri
+        : null;
+
+    const res = await saveDraftMutation.mutateAsync({
+      draftId: currentDraftId,
+      payload: buildDraftPayload(),
+      expectedUpdatedAt: draftUpdatedAt.current,
+      coverUri: localCover,
+    });
+
+    if (res.status === 200) {
+      setCurrentDraftId(res.data.draftId);
+      draftUpdatedAt.current = res.data.updatedAt;
+      if (coverUri) savedCoverUri.current = coverUri;
+    }
+    return res;
+  }
+
   async function submit(): Promise<PlaceCreateResult | null> {
     if (categoryId === null || !coords || !coverUri) return null;
     if (!hoursComplete) {
@@ -227,6 +334,16 @@ export function usePlaceWizard() {
       return null;
     }
 
+    // A resumed draft's cover is a Cloudinary URL, not a local file —
+    // reuse its ids instead of re-uploading. A freshly picked cover is a
+    // local URI and gets uploaded by useCreatePlace.
+    const coverFields = isRemote(coverUri)
+      ? {
+          coverPublicId: resumedCover.current?.publicId,
+          coverVersion: resumedCover.current?.version,
+        }
+      : { coverUri };
+
     return create.mutateAsync({
       name: name.trim(),
       categoryId,
@@ -234,7 +351,7 @@ export function usePlaceWizard() {
       address: address.trim(),
       latitude: coords.lat,
       longitude: coords.lng,
-      coverUri,
+      ...coverFields,
       openingHours,
       websiteUrl: website.trim() || null,
       phone: phone.trim() || null,
@@ -284,6 +401,17 @@ export function usePlaceWizard() {
     submit,
     isSubmitting: create.isPending,
     isSubmitError: create.isError,
+    // draft
+    saveDraft,
+    isSavingDraft: saveDraftMutation.isPending,
+    currentDraftId,
+    isHydratingDraft: !!resumeDraftId && draftQuery.isLoading,
+    draftLoadError:
+      !!resumeDraftId &&
+      draftQuery.data != null &&
+      draftQuery.data.status !== 200
+        ? draftQuery.data.message
+        : null,
   };
 }
 

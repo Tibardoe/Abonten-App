@@ -561,6 +561,82 @@ export type DeleteEventDraftResult = {
   message: string;
 };
 
+// ---- place drafts (save-as-draft for the place create wizard) ------
+//
+// Structural mirror of @abonten/validation placeDraftPayloadSchema (no date
+// fields, so this is fully concrete). The routes re-validate with the real
+// Zod schema. openingHours rows reuse PlaceOpeningHoursInput.
+
+export type PlaceDraftService = {
+  name?: string;
+  description?: string;
+  price?: number;
+  priceUnit?: string;
+  showPrice?: boolean;
+};
+
+export type PlaceDraftPayload = {
+  name?: string;
+  description?: string;
+  categoryId?: number;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  websiteUrl?: string;
+  phone?: string;
+  whatsapp?: string;
+  socialLinks?: Record<string, string>;
+  openingHours?: PlaceOpeningHoursInput[];
+  services?: PlaceDraftService[];
+};
+
+export type PlaceDraftListItem = {
+  id: string;
+  title: string | null;
+  updatedAt: string;
+  expiresAt: string;
+  coverPublicId: string | null;
+  coverVersion: string | null;
+};
+
+export type PlaceDraftDetail = {
+  id: string;
+  updatedAt: string;
+  expiresAt: string;
+  payload: PlaceDraftPayload;
+  coverPublicId: string | null;
+  coverVersion: string | null;
+};
+
+export type PlaceDraftsListResult =
+  | { status: 200; data: PlaceDraftListItem[] }
+  | { status: 401 | 500; message: string; data?: PlaceDraftListItem[] };
+
+export type PlaceDraftDetailResult =
+  | { status: 200; data: PlaceDraftDetail }
+  | { status: 401 | 404 | 410 | 500; message: string };
+
+export type SavePlaceDraftBody = {
+  draftId?: string;
+  payload: PlaceDraftPayload;
+  expectedUpdatedAt?: string;
+  coverPublicId?: string;
+  coverVersion?: string;
+};
+
+export type SavePlaceDraftResult =
+  | {
+      status: 200;
+      message: string;
+      data: { draftId: string; updatedAt?: string };
+    }
+  | { status: 400 | 401 | 404 | 409 | 500; message: string };
+
+export type DeletePlaceDraftResult = {
+  status: 200 | 401 | 404 | 500;
+  message: string;
+};
+
 // ---- event insights (per-event analytics, read-only) ----------------
 //
 // The underlying get_event_*_analytics RPCs have no generated types; the

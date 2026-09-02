@@ -102,6 +102,11 @@ export function useEventWizard(resumeDraftId?: string) {
   );
   const draftUpdatedAt = useRef<string | undefined>(undefined);
   const savedFlyerUri = useRef<string | null>(null);
+  // The resumed draft's already-uploaded flyer, reused on Publish instead of
+  // trying to re-upload a Cloudinary URL.
+  const resumedFlyer = useRef<{ publicId: string; version: string } | null>(
+    null,
+  );
   const hydratedRef = useRef(false);
 
   const [step, setStep] = useState(0);
@@ -303,6 +308,10 @@ export function useEventWizard(resumeDraftId?: string) {
       );
       setFlyerUri(url);
       savedFlyerUri.current = url;
+      resumedFlyer.current = {
+        publicId: detail.flyerPublicId,
+        version: detail.flyerVersion,
+      };
     }
 
     if (p.dateType === "specific") {
@@ -605,6 +614,15 @@ export function useEventWizard(resumeDraftId?: string) {
     const capNum =
       capacity.trim() === "" ? null : Math.trunc(Number(capacity.trim()));
 
+    // A resumed draft's flyer is a Cloudinary URL, not a local file — reuse
+    // its ids rather than re-uploading. A freshly picked flyer is local.
+    const flyerFields = isRemote(flyerUri)
+      ? {
+          flyerPublicId: resumedFlyer.current?.publicId,
+          flyerVersion: resumedFlyer.current?.version,
+        }
+      : { flyerUri };
+
     return create.mutateAsync({
       title: title.trim(),
       description: description.trim(),
@@ -618,7 +636,7 @@ export function useEventWizard(resumeDraftId?: string) {
       requireRegistration,
       currency: CURRENCY,
       clientRequestId,
-      flyerUri,
+      ...flyerFields,
       startsAt: schedule.startsAt ?? null,
       endsAt: schedule.endsAt ?? null,
       specificDates: schedule.specificDates ?? null,

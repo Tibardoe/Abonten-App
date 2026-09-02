@@ -14,23 +14,38 @@ export type CreatePlaceInput = Omit<
   PlaceCreateBody,
   "coverPublicId" | "coverVersion"
 > & {
-  /** Local file URI of the picked (and cropped) cover photo. */
-  coverUri: string;
+  /** Local file URI of a freshly picked (and cropped) cover photo — uploaded
+   *  here. Omit and pass `coverPublicId` / `coverVersion` instead when
+   *  publishing a resumed draft whose cover is already on Cloudinary. */
+  coverUri?: string | null;
+  coverPublicId?: string;
+  coverVersion?: string;
 };
 
 export function useCreatePlace() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ coverUri, ...rest }: CreatePlaceInput) => {
-      const { publicId, version } = await uploadToCloudinary(
-        coverUri,
-        "place_photo",
-      );
+    mutationFn: async ({
+      coverUri,
+      coverPublicId,
+      coverVersion,
+      ...rest
+    }: CreatePlaceInput) => {
+      let publicId = coverPublicId;
+      let version = coverVersion;
+      if (coverUri) {
+        const up = await uploadToCloudinary(coverUri, "place_photo");
+        publicId = up.publicId;
+        version = String(up.version);
+      }
+      if (!publicId || !version) {
+        throw new Error("A cover photo is required");
+      }
       return api.places.create({
         ...rest,
         coverPublicId: publicId,
-        coverVersion: String(version),
+        coverVersion: version,
       });
     },
     onSuccess: (res) => {
