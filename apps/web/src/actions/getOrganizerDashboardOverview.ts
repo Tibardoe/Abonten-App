@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
 import {
   type OrganizerDashboardOverviewResult,
   fetchOrganizerDashboardOverview,
-} from "@/utils/organizerReadQuery";
-import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+} from "@abonten/services/organizer/organizerReadQuery";
 
 export default async function getOrganizerDashboardOverview(
   period: DashboardPeriod,

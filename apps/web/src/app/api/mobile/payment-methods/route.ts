@@ -1,10 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   addPaymentMethodCore,
   listPaymentMethodsCore,
-} from "@/utils/paymentMethodCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/payments/paymentMethodCore";
 import type { AddPaymentMethodInput } from "@abonten/validation/paymentMethodSchema";
 
 // GET  /api/mobile/payment-methods         -> the caller's active methods

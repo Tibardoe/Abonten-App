@@ -1,8 +1,11 @@
 "use server";
 
+import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
-import { registerForFreeEventCore } from "@/utils/registerForFreeEventCore";
+import { logger } from "@abonten/core/logger";
+import { registerForFreeEventCore } from "@abonten/services/checkout/registerForFreeEventCore";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 /**
  * One-click RSVP for events that only offer a free "FREE" ticket type — no
@@ -30,6 +33,15 @@ export default async function registerForFreeEvent(
     user.id,
     eventId,
     occurrenceId,
+    (ticketId) =>
+      after(() =>
+        ticketPurchaseNotification([ticketId], 0, {
+          supabase,
+          userId: user.id,
+        }).catch((error) =>
+          logger.error(`Failed sending ticket purchase email: ${error}`),
+        ),
+      ),
   );
 
   if (result.status === 200) {

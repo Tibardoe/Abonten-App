@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { insertEventPromotionCheckoutCore } from "@/utils/insertEventPromotionCheckoutCore";
 import { logger } from "@abonten/core/logger";
+import { insertEventPromotionCheckoutCore } from "@abonten/services/promotions/insertEventPromotionCheckoutCore";
 
 // POST /api/mobile/organizer/events/:eventId/promote  { tierId: number }
 // Reserve step: creates a pending event_promotion_checkout priced from the

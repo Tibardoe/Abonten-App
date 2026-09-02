@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { respondToPlaceReviewCore } from "@/utils/placeBookingsReviewsCore";
+import { respondToPlaceReviewCore } from "@abonten/services/places/placeBookingsReviewsCore";
 
 /**
  * Owner-only reply to a place review. Thin wrapper — auth here, the

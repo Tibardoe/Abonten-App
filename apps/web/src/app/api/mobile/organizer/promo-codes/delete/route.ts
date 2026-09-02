@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { deletePromoCodeCore } from "@/utils/eventPromoCodeManageCore";
 import { logger } from "@abonten/core/logger";
+import { deletePromoCodeCore } from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
 // POST /api/mobile/organizer/promo-codes/delete  { promoCodeId }
 // Deletes a never-used promo code; deactivates one that's already been

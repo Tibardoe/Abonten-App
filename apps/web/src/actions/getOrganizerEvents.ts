@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerEventsPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchOrganizerEventsPage } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 

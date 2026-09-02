@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchPlaceReviewsForOwner } from "@/utils/placeBookingsReviewsCore";
 import { logger } from "@abonten/core/logger";
+import { fetchPlaceReviewsForOwner } from "@abonten/services/places/placeBookingsReviewsCore";
 
 // GET /api/mobile/organizer/places/:placeId/reviews?cursor=&pageSize=
 // Owner-only, cursor-paginated approved reviews for one place (the same

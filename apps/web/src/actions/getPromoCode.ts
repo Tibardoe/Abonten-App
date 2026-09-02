@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type GetPromoCodeCoreResult,
   getPromoCodeCore,
-} from "@/utils/getPromoCodeCore";
+} from "@abonten/services/promo-codes/getPromoCodeCore";
 
 export default async function getPromoCode(
   code: string,

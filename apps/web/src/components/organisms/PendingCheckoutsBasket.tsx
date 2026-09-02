@@ -2,10 +2,10 @@
 
 import cancelTicketCheckoutSession from "@/actions/cancelTicketCheckoutSession";
 import deleteTicketSummaryCheckout from "@/actions/deleteTicketSummaryCheckout";
-import generateTicket from "@/actions/generateTicket";
 import getUserPendingTicketCheckouts, {
   type PendingCheckoutSession,
 } from "@/actions/getUserPendingTicketCheckouts";
+import issueFreeCheckoutTickets from "@/actions/issueFreeCheckoutTickets";
 import updateTicketCheckoutQuantity from "@/actions/updateTicketCheckoutQuantity";
 import TicketCheckoutSessionCard from "@/components/molecules/TicketCheckoutSessionCard";
 import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPanel";
@@ -421,7 +421,9 @@ export default function PendingCheckoutsBasket({
     const results: { eventTitle: string; ok: boolean; message?: string }[] = [];
 
     for (const session of selectedSessions) {
-      const response = await generateTicket(session.checkoutSessionId);
+      const response = await issueFreeCheckoutTickets(
+        session.checkoutSessionId,
+      );
       results.push({
         eventTitle: session.eventTitle,
         ok: response.status === 200,

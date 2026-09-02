@@ -4,13 +4,13 @@ import { createClient } from "@/config/supabase/server";
 import {
   type ListPaymentMethodsResult,
   listPaymentMethodsCore,
-} from "@/utils/paymentMethodCore";
+} from "@abonten/services/payments/paymentMethodCore";
 
 export type {
   CardPaymentMethodDetails,
   MomoPaymentMethodDetails,
   PaymentMethodRow,
-} from "@/utils/paymentMethodCore";
+} from "@abonten/services/payments/paymentMethodCore";
 
 /**
  * Every saved payment method for the current user — independent of any

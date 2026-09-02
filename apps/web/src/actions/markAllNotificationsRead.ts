@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { markAllNotificationsReadFor } from "@/utils/notificationsQuery";
+import { markAllNotificationsReadFor } from "@abonten/services/notifications/notificationsQuery";
 
 /**
  * Bulk "Mark all as read" for the NotificationBell panel header. Scoped to

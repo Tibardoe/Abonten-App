@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type ConfirmCardVerificationCoreResult,
   confirmCardVerificationCore,
-} from "@/utils/cardVerificationCore";
+} from "@abonten/services/payments/cardVerificationCore";
 
 /**
  * Completes the card-save flow after the Paystack popup reports success for

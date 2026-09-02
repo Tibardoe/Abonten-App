@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchPlaceInsights } from "@/utils/organizerReadQuery";
+import { fetchPlaceInsights } from "@abonten/services/organizer/organizerReadQuery";
 
 // Thin wrapper: auth, then delegate to the shared body used by the mobile
 // GET /api/mobile/organizer/places/:id/insights route too — no fork.

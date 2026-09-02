@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchOrganizerLedgerPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchOrganizerLedgerPage } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/ledger?cursor=<opaque>&pageSize=<n>
 // Cursor-paginated organizer transactions feed (ticket sales, platform

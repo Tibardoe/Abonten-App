@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
-} from "@/utils/cloudinaryUploadSignature";
+} from "@abonten/services/uploads/cloudinaryUploadSignature";
 
 // Authorizes a direct browser -> Cloudinary upload without ever exposing
 // CLOUDINARY_API_SECRET to the client. The folder is bound to the caller's
@@ -12,7 +12,7 @@ import {
 // the upload into another user's folder without invalidating the signature
 // -- this is what uploadHighlight.ts later checks against (publicId must
 // start with this same folder) to enforce ownership on write. Shared body:
-// src/utils/cloudinaryUploadSignature.ts.
+// @abonten/services/uploads/cloudinaryUploadSignature.
 export default async function getHighlightUploadSignature(): Promise<UploadSignatureResult> {
   const supabase = await createClient();
 

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchEventAttendanceListPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchEventAttendanceListPage } from "@abonten/services/organizer/organizerReadQuery";
 
 // GET /api/mobile/organizer/events/:eventId/attendees?cursor=<opaque>&pageSize=<n>
 // Cursor-paginated attendee list for one of the caller's own events, with

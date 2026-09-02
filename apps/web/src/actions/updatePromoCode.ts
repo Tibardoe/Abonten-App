@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UpdatePromoCodeCoreResult,
   updatePromoCodeCore,
-} from "@/utils/eventPromoCodeManageCore";
+} from "@abonten/services/promo-codes/eventPromoCodeManageCore";
 
 type UpdatePromoCodeInput = {
   promoCodeId: string;

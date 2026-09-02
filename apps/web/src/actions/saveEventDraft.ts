@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type SaveEventDraftCoreResult,
   saveEventDraftCore,
-} from "@/utils/eventDraftCore";
+} from "@abonten/services/events/eventDraftCore";
 import type { EventDraftPayload } from "@abonten/validation/eventDraftSchema";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 

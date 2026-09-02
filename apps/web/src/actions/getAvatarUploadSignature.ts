@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
-} from "@/utils/cloudinaryUploadSignature";
+} from "@abonten/services/uploads/cloudinaryUploadSignature";
 
 // Authorizes a direct browser -> Cloudinary avatar upload, replacing the old
 // saveAvatarToCloudinary.ts server-proxied upload (temp file write + SDK
@@ -13,7 +13,7 @@ import {
 // makes real upload-progress feedback possible, which a Server Action can't
 // report. Scoped to the user's own folder, mirroring
 // getEventReviewPhotoUploadSignature.ts/getPlaceReviewPhotoUploadSignature.ts.
-// Shared body lives in src/utils/cloudinaryUploadSignature.ts so the mobile
+// Shared body lives in @abonten/services/uploads/cloudinaryUploadSignature so the mobile
 // /api/mobile/uploads/signature route produces an identical signature.
 export default async function getAvatarUploadSignature(): Promise<UploadSignatureResult> {
   const supabase = await createClient();

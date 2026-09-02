@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { updateVerifiedPhoneCore } from "@/utils/updateVerifiedPhoneCore";
 import { logger } from "@abonten/core/logger";
+import { updateVerifiedPhoneCore } from "@abonten/services/profile/updateVerifiedPhoneCore";
 
 // POST /api/mobile/account/phone/verify  { phoneE164, code }
 // Confirms the Hubtel OTP and attaches the verified number to the caller

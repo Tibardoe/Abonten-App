@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { getUserPendingTicketCheckoutsCore } from "@/utils/getUserPendingTicketCheckoutsCore";
 import { logger } from "@abonten/core/logger";
+import { getUserPendingTicketCheckoutsCore } from "@abonten/services/checkout/getUserPendingTicketCheckoutsCore";
 
 // GET /api/mobile/checkout/pending
 //

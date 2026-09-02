@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { requestOrganizerPayoutCore } from "@/utils/requestOrganizerPayoutCore";
 import { logger } from "@abonten/core/logger";
+import { requestOrganizerPayoutCore } from "@abonten/services/organizer/requestOrganizerPayoutCore";
 
 // POST /api/mobile/organizer/payout { payoutAccountId, amount, currency }
 // Requests a withdrawal. Ownership + available-balance checks run inside the

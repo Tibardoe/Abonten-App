@@ -1,9 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchPlaceDraftDetail } from "@/utils/placeDraftCore";
+import { fetchPlaceDraftDetail } from "@abonten/services/places/placeDraftCore";
 
-export type { PlaceDraftDetail } from "@/utils/placeDraftCore";
+export type { PlaceDraftDetail } from "@abonten/services/places/placeDraftCore";
 
 // Full-payload fetch, used only when the owner chooses "Continue" on a
 // specific draft. Ownership and expiry are re-checked in the core. Body

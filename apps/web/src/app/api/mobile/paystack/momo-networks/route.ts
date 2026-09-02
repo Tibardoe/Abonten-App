@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { listMobileMoneyProviders } from "@/services/paystackService";
 import { logger } from "@abonten/core/logger";
+import { listMobileMoneyProviders } from "@abonten/services/payments/gateway/paystackService";
 
 // GET /api/mobile/paystack/momo-networks
 // Live list of Ghana mobile money networks Paystack supports — feeds the

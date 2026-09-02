@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type MutatePayoutAccountResult,
   setDefaultPayoutAccountCore,
-} from "@/utils/payoutAccountCore";
+} from "@abonten/services/organizer/payoutAccountCore";
 import { revalidatePath } from "next/cache";
 
 /**

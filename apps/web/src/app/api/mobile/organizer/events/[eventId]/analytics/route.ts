@@ -1,11 +1,11 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchEventInsights } from "@/utils/eventInsightsQuery";
 import { logger } from "@abonten/core/logger";
 import {
   type DashboardPeriod,
   getDashboardPeriodRange,
 } from "@abonten/core/organizerDashboardDateRange";
+import { fetchEventInsights } from "@abonten/services/organizer/eventInsightsQuery";
 
 const PERIODS: DashboardPeriod[] = ["today", "7d", "30d", "all"];
 

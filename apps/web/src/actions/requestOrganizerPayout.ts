@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type RequestOrganizerPayoutResult,
   requestOrganizerPayoutCore,
-} from "@/utils/requestOrganizerPayoutCore";
+} from "@abonten/services/organizer/requestOrganizerPayoutCore";
 import { revalidatePath } from "next/cache";
 
 /**

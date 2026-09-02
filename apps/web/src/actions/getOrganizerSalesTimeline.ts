@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerSalesTimeline } from "@/utils/organizerDashboardQuery";
 import type { DashboardPeriod } from "@abonten/core/organizerDashboardDateRange";
+import { fetchOrganizerSalesTimeline } from "@abonten/services/organizer/organizerDashboardQuery";
 
 export default async function getOrganizerSalesTimeline(
   period: DashboardPeriod,

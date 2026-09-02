@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchPlaceManageContext } from "@/utils/placeManageContextQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchPlaceManageContext } from "@abonten/services/places/placeManageContextQuery";
 
 // GET /api/mobile/organizer/places/:placeId/manage
 // The caller's own place row (editable fields), its weekly opening hours,

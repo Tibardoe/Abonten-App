@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchEventTicketTypeAnalytics } from "@/utils/eventInsightsQuery";
+import { fetchEventTicketTypeAnalytics } from "@abonten/services/organizer/eventInsightsQuery";
 
 export default async function getEventTicketTypeAnalytics(
   eventId: string,

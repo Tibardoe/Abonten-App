@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { deleteEventDraftCore } from "@/utils/eventDraftCore";
 import { logger } from "@abonten/core/logger";
+import { deleteEventDraftCore } from "@abonten/services/events/eventDraftCore";
 
 // POST /api/mobile/organizer/event-drafts/:draftId/delete
 // Deletes one event draft (row + best-effort Cloudinary flyer, Cloudinary

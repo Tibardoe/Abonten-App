@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { respondToPlaceBookingCore } from "@/utils/placeBookingsReviewsCore";
+import { respondToPlaceBookingCore } from "@abonten/services/places/placeBookingsReviewsCore";
 
 type RespondToPlaceBookingInput = {
   bookingId: string;

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { cancelUserTicketCore } from "@/utils/cancelUserTicketCore";
+import { cancelUserTicketCore } from "@abonten/services/tickets/cancelUserTicketCore";
 import { revalidatePath } from "next/cache";
 
 /**

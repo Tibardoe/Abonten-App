@@ -1,9 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchEventDraftDetail } from "@/utils/eventDraftCore";
+import { fetchEventDraftDetail } from "@abonten/services/events/eventDraftCore";
 
-export type { EventDraftDetail } from "@/utils/eventDraftCore";
+export type { EventDraftDetail } from "@abonten/services/events/eventDraftCore";
 
 // Full-payload fetch, used only when the user chooses "Continue" on a
 // specific draft. Ownership and expiry are both re-checked in the core.

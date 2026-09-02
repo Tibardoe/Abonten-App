@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { insertPlacePromotionCheckoutCore } from "@/utils/placePromotionCore";
+import { insertPlacePromotionCheckoutCore } from "@abonten/services/places/placePromotionCore";
 
 /**
  * Reserve step for a Featured Places purchase — the place equivalent of

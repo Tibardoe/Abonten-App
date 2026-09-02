@@ -1,12 +1,12 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   type CheckoutDetailsProp,
   type ValidateCheckoutResult,
   validateCheckoutCore,
-} from "@/utils/validateCheckoutCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/checkout/validateCheckoutCore";
 
 export default async function validateCheckout(
   details: CheckoutDetailsProp,

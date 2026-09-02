@@ -1,7 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { type PostEventCoreInput, postEventCore } from "@/utils/postEventCore";
 import { logger } from "@abonten/core/logger";
+import {
+  type PostEventCoreInput,
+  postEventCore,
+} from "@abonten/services/events/postEventCore";
 
 // POST /api/mobile/events
 //   { title, description, category, types[], address, latitude, longitude,

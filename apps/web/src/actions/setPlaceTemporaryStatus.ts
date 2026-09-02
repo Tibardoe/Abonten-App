@@ -5,7 +5,7 @@ import {
   type PlaceHoursStatusCoreResult,
   type PlaceTemporaryStatus,
   setPlaceTemporaryStatusCore,
-} from "@/utils/placeHoursStatusCore";
+} from "@abonten/services/places/placeHoursStatusCore";
 
 // Thin wrapper: auth, then delegate to the shared body (also used by the
 // mobile POST /api/mobile/organizer/places/:id/status route).

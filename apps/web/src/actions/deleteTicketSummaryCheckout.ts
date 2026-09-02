@@ -1,10 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { hasOpenPaymentAttempt } from "@/utils/paymentAttempt";
-import { adjustPromoUsageUnits } from "@/utils/promoUsage";
-import { releaseTicketQuantity } from "@/utils/ticketInventory";
 import { logger } from "@abonten/core/logger";
+import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
+import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
+import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 
 /**
  * Removes one ticket-type line item from a pending checkout (the trash-can
@@ -93,7 +93,11 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
       // is per user+event+promo, not per line). Deleting the usage row here
       // unconditionally used to let the user reapply the code to a fresh
       // checkout while a sibling line's discount was still live.
-      await adjustPromoUsageUnits(promoCode.id, -checkout.discounted_units);
+      await adjustPromoUsageUnits(
+        supabase,
+        promoCode.id,
+        -checkout.discounted_units,
+      );
 
       const { data: siblingDiscountedRows } = await supabase
         .from("ticket_checkout")

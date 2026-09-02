@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { setDefaultPaymentMethodCore } from "@/utils/paymentMethodCore";
+import { setDefaultPaymentMethodCore } from "@abonten/services/payments/paymentMethodCore";
 
 /**
  * Marks one payment method as the user's default, unsetting any previous

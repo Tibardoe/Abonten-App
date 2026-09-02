@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchNotificationsPage } from "@/utils/notificationsQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchNotificationsPage } from "@abonten/services/notifications/notificationsQuery";
 
 // GET /api/mobile/notifications?cursor=<opaque>&pageSize=<n>
 // Cursor-paginated list of the caller's own notifications, newest first.

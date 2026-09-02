@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { respondToPlaceReviewCore } from "@/utils/placeBookingsReviewsCore";
 import { logger } from "@abonten/core/logger";
+import { respondToPlaceReviewCore } from "@abonten/services/places/placeBookingsReviewsCore";
 
 // POST /api/mobile/organizer/places/:placeId/reviews/respond
 //   { reviewId, response }

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchEventAttendanceListPage } from "@/utils/organizerReadQuery";
+import { fetchEventAttendanceListPage } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 
 // Thin wrapper: auth, then delegate to the shared query body used by the

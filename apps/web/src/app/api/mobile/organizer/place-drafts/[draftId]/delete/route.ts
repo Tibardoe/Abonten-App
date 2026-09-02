@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { deletePlaceDraftCore } from "@/utils/placeDraftCore";
 import { logger } from "@abonten/core/logger";
+import { deletePlaceDraftCore } from "@abonten/services/places/placeDraftCore";
 
 // POST /api/mobile/organizer/place-drafts/:draftId/delete
 // Deletes one place draft (row + best-effort Cloudinary cover, Cloudinary

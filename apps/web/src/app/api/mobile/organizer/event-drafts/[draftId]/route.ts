@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchEventDraftDetail } from "@/utils/eventDraftCore";
 import { logger } from "@abonten/core/logger";
+import { fetchEventDraftDetail } from "@abonten/services/events/eventDraftCore";
 
 // GET /api/mobile/organizer/event-drafts/:draftId
 // The full jsonb payload + flyer ids for one of the caller's event drafts,

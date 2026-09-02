@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
-} from "@/utils/insertReviewPhotos";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/reviews/insertReviewPhotos";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";

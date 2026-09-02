@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type ListPayoutsResult,
   listPayoutsCore,
-} from "@/utils/payoutAccountCore";
+} from "@abonten/services/organizer/payoutAccountCore";
 
 /**
  * The organizer's withdrawal history for Finances > Payouts. Paginated with

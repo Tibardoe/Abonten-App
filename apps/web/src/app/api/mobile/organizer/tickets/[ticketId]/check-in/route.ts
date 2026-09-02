@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { checkInTicketCore } from "@/utils/checkInTicketCore";
 import { logger } from "@abonten/core/logger";
+import { checkInTicketCore } from "@abonten/services/tickets/checkInTicketCore";
 
 // POST /api/mobile/organizer/tickets/:ticketId/check-in  { checkedIn: boolean }
 // Flips a ticket between 'active' and 'used' — the same transition the web

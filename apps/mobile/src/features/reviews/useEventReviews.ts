@@ -1,6 +1,9 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
-import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import {
+  evaluateEventReviewEligibility,
+  isEventAwaitingReview,
+} from "@abonten/core/eventReviewEligibility";
 import { keysetOlderThan } from "@abonten/core/pagination";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 import type { Occurrence } from "@abonten/types/occurrenceType";
@@ -126,16 +129,30 @@ async function computeEligibility(
     };
   }
 
-  if (event.status === "canceled")
-    return { canReview: false, reason: "cancelled" };
-
-  const endDate = resolveEventEndDate(
-    event.starts_at,
-    event.ends_at,
-    (event.event_occurrence as Occurrence[] | undefined) ?? null,
-  );
-  if (!endDate || new Date() < endDate)
-    return { canReview: false, reason: "not_ended" };
+  // Only the attendance query is worth deferring past the cheap date/status
+  // checks; the shared decider is fed a placeholder for it first, then the
+  // real value once it's the last gate standing.
+  const preAttendance = evaluateEventReviewEligibility({
+    viewerUserId: userId,
+    organizerId: event.organizer_id,
+    eventStatus: event.status,
+    startsAt: event.starts_at,
+    endsAt: event.ends_at,
+    occurrences: (event.event_occurrence as Occurrence[] | undefined) ?? null,
+    hasOwnReview: false,
+    hasVerifiedAttendance: true,
+  });
+  // `hasOwnReview: false` above means the decider can only return a reason
+  // other than "has_review" here — narrow to this file's local type.
+  if (!preAttendance.canReview) {
+    return {
+      canReview: false,
+      reason: preAttendance.reason as Exclude<
+        typeof preAttendance.reason,
+        "has_review"
+      >,
+    };
+  }
 
   if (!(await hasCheckedInTicket(userId, event.id)))
     return { canReview: false, reason: "not_attended" };
@@ -205,15 +222,15 @@ async function fetchEventsAwaitingReview(
     event_occurrence: Occurrence[] | null;
   };
   return ((events ?? []) as unknown as Row[])
-    .filter((e) => {
-      if (e.status === "canceled") return false;
-      const end = resolveEventEndDate(
+    .filter((e) =>
+      isEventAwaitingReview(
+        e.status,
         e.starts_at,
         e.ends_at,
         e.event_occurrence,
-      );
-      return end ? now >= end : false;
-    })
+        now,
+      ),
+    )
     .map((e) => ({
       id: e.id,
       title: e.title,

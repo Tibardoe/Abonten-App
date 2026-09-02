@@ -1,11 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   type PreparedCheckoutPayment,
   prepareCheckoutPayment,
-} from "@/utils/checkoutPaymentPreparation";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/checkout/checkoutPaymentPreparation";
 
 type PrepareMultiCheckoutPaymentResult =
   | { status: 400 | 401 | 500; message: string }
@@ -37,7 +37,11 @@ export default async function prepareMultiCheckoutPayment(
   }
 
   try {
-    const prepared = await prepareCheckoutPayment(user.id, checkoutSessionIds);
+    const prepared = await prepareCheckoutPayment(
+      user.id,
+      checkoutSessionIds,
+      supabase,
+    );
     return { status: 200, ...prepared };
   } catch (error) {
     logger.error(`Failed preparing checkout payment: ${error}`);

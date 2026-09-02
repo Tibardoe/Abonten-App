@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type InitCardVerificationCoreResult,
   initCardVerificationCore,
-} from "@/utils/cardVerificationCore";
+} from "@abonten/services/payments/cardVerificationCore";
 
 /**
  * Starts a real GHS 1 Paystack charge purely to capture a reusable card

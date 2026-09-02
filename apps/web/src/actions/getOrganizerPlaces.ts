@@ -1,8 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerPlacesPage } from "@/utils/organizerReadQuery";
 import { logger } from "@abonten/core/logger";
+import { fetchOrganizerPlacesPage } from "@abonten/services/organizer/organizerReadQuery";
 import type { PaginatedResult } from "@abonten/types/pagination";
 
 export default async function getOrganizerPlaces(options?: {

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { deleteHighlightSlideCore } from "@/utils/highlightDeleteCore";
 import { logger } from "@abonten/core/logger";
+import { deleteHighlightSlideCore } from "@abonten/services/profile/highlightDeleteCore";
 
 // POST /api/mobile/highlights/slide/delete   { slideId }
 // Deletes one highlight slide the caller owns, Cloudinary asset first.

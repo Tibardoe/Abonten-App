@@ -1,7 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { type PostPlaceCoreInput, postPlaceCore } from "@/utils/postPlaceCore";
 import { logger } from "@abonten/core/logger";
+import {
+  type PostPlaceCoreInput,
+  postPlaceCore,
+} from "@abonten/services/places/postPlaceCore";
 import type {
   PlaceOpeningHoursInput,
   PlaceServiceInput,

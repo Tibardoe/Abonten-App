@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { deleteHighlightGroupCore } from "@/utils/highlightDeleteCore";
 import { logger } from "@abonten/core/logger";
+import { deleteHighlightGroupCore } from "@abonten/services/profile/highlightDeleteCore";
 
 // POST /api/mobile/highlights/group/delete   { groupId }
 // Deletes every slide in a highlight group the caller owns, Cloudinary

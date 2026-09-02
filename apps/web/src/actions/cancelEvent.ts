@@ -1,10 +1,13 @@
 "use server";
 
+import eventCancellationNotification from "@/actions/eventCancellationNotification";
 import { createClient } from "@/config/supabase/server";
+import { logger } from "@abonten/core/logger";
 import {
   type CancelEventResult,
   cancelEventCore,
-} from "@/utils/cancelEventCore";
+} from "@abonten/services/events/cancelEventCore";
+import { after } from "next/server";
 
 /**
  * Cancels an event and, atomically, cancels every ticket/attendance/paid
@@ -29,5 +32,11 @@ export default async function cancelEvent(
     return { status: 401, message: "User not Logged in" };
   }
 
-  return cancelEventCore(supabase, eventId);
+  return cancelEventCore(supabase, eventId, (eventTitle, attendees) =>
+    after(() =>
+      eventCancellationNotification(eventTitle, attendees).catch((error) =>
+        logger.error(`Failed sending event cancellation emails: ${error}`),
+      ),
+    ),
+  );
 }

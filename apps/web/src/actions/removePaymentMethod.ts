@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { removePaymentMethodCore } from "@/utils/paymentMethodCore";
+import { removePaymentMethodCore } from "@abonten/services/payments/paymentMethodCore";
 
 /**
  * Soft-deletes a payment method (status -> 'removed') rather than a hard

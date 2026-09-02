@@ -1,7 +1,9 @@
+import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { registerForFreeEventCore } from "@/utils/registerForFreeEventCore";
 import { logger } from "@abonten/core/logger";
+import { registerForFreeEventCore } from "@abonten/services/checkout/registerForFreeEventCore";
+import { after } from "next/server";
 
 // POST /api/mobile/checkout/free-rsvp  { eventId: string, occurrenceId?: string }
 //
@@ -31,6 +33,15 @@ export async function POST(req: Request) {
       auth.user.id,
       body.eventId,
       occurrenceId,
+      (ticketId) =>
+        after(() =>
+          ticketPurchaseNotification([ticketId], 0, {
+            supabase: auth.supabase,
+            userId: auth.user.id,
+          }).catch((error) =>
+            logger.error(`Failed sending ticket purchase email: ${error}`),
+          ),
+        ),
     );
 
     return apiJson({ status: result.status, message: result.message });

@@ -1,10 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   type UpdateEventCoreInput,
   updateEventCore,
-} from "@/utils/updateEventCore";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/events/updateEventCore";
 
 // PATCH /api/mobile/organizer/events/:eventId
 //   { title, description, address, latitude, longitude, category, types[],

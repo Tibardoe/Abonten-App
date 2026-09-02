@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerRecentActivity } from "@/utils/organizerDashboardQuery";
+import { fetchOrganizerRecentActivity } from "@abonten/services/organizer/organizerDashboardQuery";
 
 export default async function getOrganizerRecentActivity(limit = 8) {
   const supabase = await createClient();

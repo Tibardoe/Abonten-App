@@ -1,7 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { type PostPlaceCoreResult, postPlaceCore } from "@/utils/postPlaceCore";
+import {
+  type PostPlaceCoreResult,
+  postPlaceCore,
+} from "@abonten/services/places/postPlaceCore";
 import type { PlaceFormType } from "@abonten/types/placeType";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 

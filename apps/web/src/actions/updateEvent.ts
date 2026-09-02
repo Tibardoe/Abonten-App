@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UpdateEventCoreResult,
   updateEventCore,
-} from "@/utils/updateEventCore";
+} from "@abonten/services/events/updateEventCore";
 import { revalidatePath } from "next/cache";
 import { saveEventFlyerToCloudinary } from "./saveEventFlyerToCloudinary";
 

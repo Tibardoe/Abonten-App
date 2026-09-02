@@ -1,17 +1,17 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { logger } from "@abonten/core/logger";
 import {
   type PaymentAttemptRow,
   upsertPaymentAttemptForSession,
-} from "@/utils/paymentAttempt";
+} from "@abonten/services/payments/paymentAttempt";
 import {
   type SelectedPaymentMethod,
   initiatePaystackChargeForAttempt,
-} from "@/utils/paystackInit";
-import { getActiveServiceFeeRate } from "@/utils/platformFee";
-import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/payments/paystackInit";
+import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
 
 export type { PaymentAttemptRow };
 
@@ -208,6 +208,8 @@ export default async function createPaymentAttempt(
     amount,
     currency,
     input.paymentMethodId,
+    undefined,
+    supabase,
   );
 
   if (attemptResult.status !== 200) {

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { fetchEventPromotionContext } from "@/utils/fetchEventPromotionContext";
 import { logger } from "@abonten/core/logger";
+import { fetchEventPromotionContext } from "@abonten/services/promotions/fetchEventPromotionContext";
 
 // GET /api/mobile/organizer/events/:eventId/promotion
 // The Promotion tab payload: seeded tiers, the current active promotion (if

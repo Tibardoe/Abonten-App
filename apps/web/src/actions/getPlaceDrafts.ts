@@ -1,9 +1,9 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchPlaceDraftsList } from "@/utils/placeDraftCore";
+import { fetchPlaceDraftsList } from "@abonten/services/places/placeDraftCore";
 
-export type { PlaceDraftListItem } from "@/utils/placeDraftCore";
+export type { PlaceDraftListItem } from "@abonten/services/places/placeDraftCore";
 
 // List-page query: only list-display columns, never the full jsonb payload,
 // bounded to this user's own non-expired place drafts. Body shared with the

@@ -1,8 +1,8 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { getEventForEditCore } from "@/utils/getEventForEditCore";
-import { getEventHasConfirmedParticipationCore } from "@/utils/getEventHasConfirmedParticipationCore";
 import { logger } from "@abonten/core/logger";
+import { getEventForEditCore } from "@abonten/services/events/getEventForEditCore";
+import { getEventHasConfirmedParticipationCore } from "@abonten/services/events/getEventHasConfirmedParticipationCore";
 
 // GET /api/mobile/organizer/events/:eventId/edit
 // The owner-scoped event row for prefilling the native edit form, plus

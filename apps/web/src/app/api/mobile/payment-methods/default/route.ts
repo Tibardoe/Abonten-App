@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { setDefaultPaymentMethodCore } from "@/utils/paymentMethodCore";
 import { logger } from "@abonten/core/logger";
+import { setDefaultPaymentMethodCore } from "@abonten/services/payments/paymentMethodCore";
 
 // POST /api/mobile/payment-methods/default  { paymentMethodId: string }
 export async function POST(req: Request) {

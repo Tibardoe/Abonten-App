@@ -1,7 +1,8 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { verifyPaystackPaymentCore } from "@/utils/verifyPaystackPaymentCore";
+import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import { verifyPaystackPaymentCore } from "@abonten/services/payments/verifyPaystackPaymentCore";
 
 // POST /api/mobile/payments/verify  { paymentAttemptId: string }
 //
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
       auth.supabase,
       auth.user.id,
       body.paymentAttemptId,
+      paymentFulfillmentDeps,
     );
 
     return fromActionResult(result);

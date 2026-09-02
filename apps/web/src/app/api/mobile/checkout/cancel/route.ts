@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { cancelTicketCheckoutSessionCore } from "@/utils/cancelTicketCheckoutSessionCore";
 import { logger } from "@abonten/core/logger";
+import { cancelTicketCheckoutSessionCore } from "@abonten/services/checkout/cancelTicketCheckoutSessionCore";
 
 // POST /api/mobile/checkout/cancel  { checkoutSessionId: string }
 //

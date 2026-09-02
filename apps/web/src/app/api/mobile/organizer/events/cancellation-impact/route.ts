@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { getEventCancellationImpactCore } from "@/utils/cancelEventCore";
 import { logger } from "@abonten/core/logger";
+import { getEventCancellationImpactCore } from "@abonten/services/events/cancelEventCore";
 
 // GET /api/mobile/organizer/events/cancellation-impact?eventId=<uuid>
 // Server-verified counts for the cancel-event confirmation screen. Same

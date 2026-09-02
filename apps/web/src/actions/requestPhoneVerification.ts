@@ -1,13 +1,13 @@
 "use server";
 
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { sendHubtelOtp } from "@/services/hubtelOtpClient";
+import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
+import { sendHubtelOtp } from "@abonten/services/profile/hubtelOtpClient";
 import {
   type PhoneOtpPurpose,
   getResendCooldownRemainingMs,
   recordOtpSent,
-} from "@/services/phoneOtpStore";
-import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
+} from "@abonten/services/profile/phoneOtpStore";
 import { headers } from "next/headers";
 
 const MAX_SENDS_PER_IP_PER_HOUR = 10;

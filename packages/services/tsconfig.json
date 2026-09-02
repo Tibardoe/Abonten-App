@@ -1,0 +1,12 @@
+{
+  "extends": "@abonten/config/tsconfig.base.json",
+  "compilerOptions": {
+    // Server-only package, but it legitimately uses the fetch/Response/
+    // URLSearchParams/FormData globals (Paystack + Cloudinary) and node:*
+    // (crypto). "No DOM" is a design rule enforced by review, not by dropping
+    // the lib types — keep the base lib so these globals type-check as they
+    // did when this code lived in apps/web.
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

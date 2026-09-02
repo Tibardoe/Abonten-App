@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type OrganizerFinanceOverviewResult,
   fetchOrganizerFinanceOverview,
-} from "@/utils/organizerReadQuery";
+} from "@abonten/services/organizer/organizerReadQuery";
 
 /**
  * The single balance figure every surface reads — Finances Overview, the

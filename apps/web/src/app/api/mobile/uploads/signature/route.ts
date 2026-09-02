@@ -1,10 +1,10 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
+import { logger } from "@abonten/core/logger";
 import {
   buildCloudinaryUploadSignature,
   isUploadSignatureKind,
-} from "@/utils/cloudinaryUploadSignature";
-import { logger } from "@abonten/core/logger";
+} from "@abonten/services/uploads/cloudinaryUploadSignature";
 
 // POST /api/mobile/uploads/signature  { "kind": "avatar" | "highlight" | ... }
 // Returns a short-lived Cloudinary signature scoped to `<prefix>/<user id>`.

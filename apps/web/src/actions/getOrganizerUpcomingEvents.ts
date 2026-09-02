@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchOrganizerUpcomingEvents } from "@/utils/organizerDashboardQuery";
+import { fetchOrganizerUpcomingEvents } from "@abonten/services/organizer/organizerDashboardQuery";
 
 export default async function getOrganizerUpcomingEvents(limit = 5) {
   const supabase = await createClient();

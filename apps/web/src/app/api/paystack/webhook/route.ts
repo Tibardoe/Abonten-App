@@ -1,7 +1,8 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
-import { finalizePaystackPayment } from "@/utils/finalizePaystackPayment";
+import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import { finalizePaystackPayment } from "@abonten/services/payments/finalizePaystackPayment";
 import type {
   PaystackRefundWebhookData,
   PaystackWebhookEvent,
@@ -174,7 +175,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    const result = await finalizePaystackPayment(supabase, attempt.id);
+    const result = await finalizePaystackPayment(
+      supabase,
+      attempt.id,
+      paymentFulfillmentDeps,
+    );
 
     logger.info(
       `Paystack webhook: finalized attempt ${attempt.id} -> ${result.status}`,

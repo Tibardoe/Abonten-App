@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { submitPaystackChargeOtpCore } from "@/utils/submitPaystackChargeOtpCore";
 import { logger } from "@abonten/core/logger";
+import { submitPaystackChargeOtpCore } from "@abonten/services/payments/submitPaystackChargeOtpCore";
 
 // POST /api/mobile/payments/charge-otp  { paymentAttemptId: string, otp: string }
 //

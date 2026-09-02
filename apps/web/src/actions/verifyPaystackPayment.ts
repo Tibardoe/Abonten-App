@@ -1,10 +1,11 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import {
   type VerifyPaystackPaymentCoreResult,
   verifyPaystackPaymentCore,
-} from "@/utils/verifyPaystackPaymentCore";
+} from "@abonten/services/payments/verifyPaystackPaymentCore";
 
 /**
  * Optimistic, client-triggered verification step, called right after the
@@ -27,5 +28,10 @@ export default async function verifyPaystackPayment(
     return { status: 401, message: "User not logged in" };
   }
 
-  return verifyPaystackPaymentCore(supabase, user.id, paymentAttemptId);
+  return verifyPaystackPaymentCore(
+    supabase,
+    user.id,
+    paymentAttemptId,
+    paymentFulfillmentDeps,
+  );
 }

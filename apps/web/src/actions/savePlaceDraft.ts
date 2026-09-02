@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type SavePlaceDraftCoreResult,
   savePlaceDraftCore,
-} from "@/utils/placeDraftCore";
+} from "@abonten/services/places/placeDraftCore";
 import type { PlaceDraftPayload } from "@abonten/validation/placeDraftSchema";
 import { savePlacePhotoToCloudinary } from "./savePlacePhotoToCloudinary";
 
