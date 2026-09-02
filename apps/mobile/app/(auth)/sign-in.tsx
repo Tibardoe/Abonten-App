@@ -1,31 +1,44 @@
+import { CountryCodeField } from "@/auth/CountryCodeField";
+import { GoogleIcon } from "@/auth/GoogleIcon";
 import { signInWithGoogle } from "@/auth/googleSignIn";
 import { api } from "@/lib/api";
+import { type Country, DEFAULT_COUNTRY } from "@abonten/core/countries";
+import { AbontenLogo, AppText, Button, Icon } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
-  Text,
+  ScrollView,
   TextInput,
   View,
 } from "react-native";
-
-const DEFAULT_DIAL_CODE = "+233";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SignIn() {
   const router = useRouter();
   const c = useThemeColors();
+  const insets = useSafeAreaInsets();
+  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [rawPhone, setRawPhone] = useState("");
   const [busy, setBusy] = useState<"phone" | "google" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const phoneValid = rawPhone.replace(/\D/g, "").length >= 6;
+
   async function sendCode() {
+    if (!phoneValid) {
+      setError("Enter your phone number.");
+      return;
+    }
     setError(null);
     setBusy("phone");
     try {
       const res = await api.auth.requestPhoneOtp({
-        dialCode: DEFAULT_DIAL_CODE,
+        dialCode: country.callingCode,
         rawPhone: rawPhone.trim(),
       });
 
@@ -58,65 +71,115 @@ export default function SignIn() {
   }
 
   return (
-    <View className="flex-1 justify-center gap-6 bg-background px-6">
-      <View className="gap-2">
-        <Text className="text-3xl font-bold text-foreground">Sign in</Text>
-        <Text className="text-sm text-muted-foreground">
-          Enter your phone number and we'll text you a code.
-        </Text>
-      </View>
-
-      <View className="flex-row items-center gap-2">
-        <View className="rounded-md border border-border bg-card px-3 py-3">
-          <Text className="text-base text-foreground">{DEFAULT_DIAL_CODE}</Text>
-        </View>
-        <TextInput
-          className="flex-1 rounded-md border border-border bg-card px-3 py-3 text-base text-foreground"
-          placeholder="24 123 4567"
-          placeholderTextColor={c["muted-foreground"]}
-          keyboardType="phone-pad"
-          autoComplete="tel"
-          value={rawPhone}
-          onChangeText={setRawPhone}
-          editable={busy === null}
-        />
-      </View>
-
-      {error ? <Text className="text-sm text-destructive">{error}</Text> : null}
-
-      <Pressable
-        className="items-center rounded-md bg-primary px-4 py-3 active:opacity-80 disabled:opacity-50"
-        disabled={busy !== null || rawPhone.trim().length < 6}
-        onPress={sendCode}
-      >
-        {busy === "phone" ? (
-          <ActivityIndicator color="#fff" />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <View className="flex-1 bg-background">
+        {router.canGoBack() ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            onPress={() => router.back()}
+            hitSlop={10}
+            style={{ marginTop: insets.top + 4, marginLeft: 8 }}
+            className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
+          >
+            <Icon name="arrow-back" size={24} tone="foreground" />
+          </Pressable>
         ) : (
-          <Text className="text-base font-semibold text-primary-foreground">
-            Send code
-          </Text>
+          <View style={{ height: insets.top + 12 }} />
         )}
-      </Pressable>
 
-      <View className="flex-row items-center gap-3">
-        <View className="h-px flex-1 bg-border" />
-        <Text className="text-xs uppercase text-muted-foreground">or</Text>
-        <View className="h-px flex-1 bg-border" />
+        <ScrollView
+          contentContainerClassName="grow justify-center gap-7 px-6 pb-10 pt-6"
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="items-center gap-3">
+            <AbontenLogo size={52} />
+            <AppText className="text-[20px] font-bold text-foreground">
+              Abonten Hub
+            </AppText>
+          </View>
+
+          <View className="gap-1.5">
+            <AppText className="text-center text-[24px] font-bold text-foreground">
+              Sign in or create an account
+            </AppText>
+            <AppText className="text-center text-[14px] text-muted-foreground">
+              Continue with your phone number or Google account.
+            </AppText>
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Continue with Google"
+            disabled={busy !== null}
+            onPress={google}
+            className="h-[52px] flex-row items-center justify-center gap-3 rounded-lg border border-border bg-card active:opacity-80 disabled:opacity-50"
+          >
+            {busy === "google" ? (
+              <ActivityIndicator />
+            ) : (
+              <>
+                <GoogleIcon size={20} />
+                <AppText className="text-[15px] font-semibold text-foreground">
+                  Continue with Google
+                </AppText>
+              </>
+            )}
+          </Pressable>
+
+          <View className="flex-row items-center gap-3">
+            <View className="h-px flex-1 bg-border" />
+            <AppText className="text-[11px] uppercase tracking-wide text-muted-foreground">
+              or
+            </AppText>
+            <View className="h-px flex-1 bg-border" />
+          </View>
+
+          <View className="gap-2">
+            <AppText variant="label">Phone number</AppText>
+            <View className="flex-row gap-2">
+              <CountryCodeField value={country} onChange={setCountry} />
+              <TextInput
+                className="h-[48px] flex-1 rounded-lg border border-input bg-background px-3 text-[15px] text-foreground"
+                placeholder="24 123 4567"
+                placeholderTextColor={c["muted-foreground"]}
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                value={rawPhone}
+                onChangeText={(v) => {
+                  setRawPhone(v);
+                  if (error) setError(null);
+                }}
+                editable={busy === null}
+                onSubmitEditing={sendCode}
+                returnKeyType="send"
+              />
+            </View>
+
+            {error ? (
+              <AppText className="text-[13px] text-destructive">
+                {error}
+              </AppText>
+            ) : null}
+
+            <Button
+              title={busy === "phone" ? "Sending code…" : "Send code"}
+              fullWidth
+              loading={busy === "phone"}
+              disabled={busy !== null || !phoneValid}
+              onPress={sendCode}
+              className="mt-1"
+            />
+          </View>
+
+          <AppText className="text-center text-[12px] text-muted-foreground">
+            By continuing you agree to Abonten's Terms and Privacy Policy.
+          </AppText>
+        </ScrollView>
       </View>
-
-      <Pressable
-        className="items-center rounded-md border border-border px-4 py-3 active:opacity-80 disabled:opacity-50"
-        disabled={busy !== null}
-        onPress={google}
-      >
-        {busy === "google" ? (
-          <ActivityIndicator />
-        ) : (
-          <Text className="text-base font-semibold text-foreground">
-            Continue with Google
-          </Text>
-        )}
-      </Pressable>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
