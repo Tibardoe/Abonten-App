@@ -4,7 +4,7 @@ import type { HighlightGroup } from "@abonten/types/highlightType";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -50,6 +50,7 @@ const IMAGE_DURATION_MS = 5000;
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 900;
 const GROUP_SWIPE_DISTANCE = 60;
+const GROUP_SLIDE_MS = 190;
 
 type Props = {
   groups: HighlightGroup[];
@@ -90,6 +91,7 @@ export function HighlightViewer({
 
   const progress = useSharedValue(0);
   const dragY = useSharedValue(0);
+  const transX = useSharedValue(0);
   const chrome = useSharedValue(1);
 
   const player = useVideoPlayer(null, (p) => {
@@ -97,11 +99,40 @@ export function HighlightViewer({
     p.timeUpdateEventInterval = 0.25;
   });
 
+  // expo-video releases the player synchronously when this component
+  // unmounts (which is exactly what closing the viewer does). Any effect
+  // cleanup or listener that touches `player` after that throws
+  // "Cannot use shared object that was already released" — and a throw
+  // during React's unmount commit leaves Fabric mid-mount, which then
+  // surfaces as the "child already has a parent" / addViewAt crash on the
+  // next frame. Route every player call through here so a released player
+  // is a silent no-op.
+  const runPlayer = useCallback(
+    (fn: (p: typeof player) => void) => {
+      try {
+        fn(player);
+      } catch {
+        // player not ready yet, or already released on unmount
+      }
+    },
+    [player],
+  );
+
+  // onClose unmounts us; guard against the drag-dismiss timing callback and
+  // a stray tap both firing it.
+  const closedRef = useRef(false);
+  const close = useCallback(() => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    runPlayer((p) => p.pause());
+    onClose();
+  }, [onClose, runPlayer]);
+
   // ---- navigation -------------------------------------------------------
   const goToGroup = useCallback(
     (next: number, landOnLast = false) => {
       if (next < 0 || next >= groups.length) {
-        onClose();
+        close();
         return;
       }
       hapticLight();
@@ -110,7 +141,32 @@ export function HighlightViewer({
         landOnLast ? Math.max(0, (groups[next]?.length ?? 1) - 1) : 0,
       );
     },
-    [groups, onClose],
+    [groups, close],
+  );
+
+  // WhatsApp-Status-style horizontal transition between highlight GROUPS:
+  // slide the current group out, swap state at the midpoint, then slide the
+  // next one in from the opposite edge. `dir` is +1 for the next group,
+  // -1 for the previous (which lands on its last slide, like web).
+  const animateGroupSwipe = useCallback(
+    (dir: 1 | -1) => {
+      const target = groupIndex + dir;
+      if (target < 0 || target >= groups.length) {
+        close();
+        return;
+      }
+      transX.value = withTiming(
+        -dir * width,
+        { duration: GROUP_SLIDE_MS },
+        (finished) => {
+          if (!finished) return;
+          runOnJS(goToGroup)(target, dir === -1);
+          transX.value = dir * width;
+          transX.value = withTiming(0, { duration: GROUP_SLIDE_MS });
+        },
+      );
+    },
+    [groupIndex, groups.length, width, transX, goToGroup, close],
   );
 
   const nextSlide = useCallback(() => {
@@ -124,12 +180,12 @@ export function HighlightViewer({
   }, [slideIndex, goToGroup, groupIndex]);
 
   const nextGroup = useCallback(
-    () => goToGroup(groupIndex + 1),
-    [goToGroup, groupIndex],
+    () => animateGroupSwipe(1),
+    [animateGroupSwipe],
   );
   const prevGroup = useCallback(
-    () => goToGroup(groupIndex - 1, true),
-    [goToGroup, groupIndex],
+    () => animateGroupSwipe(-1),
+    [animateGroupSwipe],
   );
 
   // ---- reset per slide ------------------------------------------------
@@ -161,34 +217,43 @@ export function HighlightViewer({
     })();
     return () => {
       cancelled = true;
-      player.pause();
+      runPlayer((p) => p.pause());
     };
   }, [slide?.id, isVideo]);
 
   // ---- video: readiness + advance + drive the bar ------------------
   useEffect(() => {
     if (!isVideo) return;
-    const statusSub = player.addListener("statusChange", ({ status }) => {
-      if (status === "readyToPlay") setLoaded(true);
-    });
-    const endSub = player.addListener("playToEnd", () => nextSlide());
-    const timeSub = player.addListener("timeUpdate", (e) => {
-      const dur = player.duration || slide?.media_duration || 0;
-      if (dur > 0) progress.value = Math.min(1, e.currentTime / dur);
+    let statusSub: { remove: () => void } | undefined;
+    let endSub: { remove: () => void } | undefined;
+    let timeSub: { remove: () => void } | undefined;
+    runPlayer((p) => {
+      statusSub = p.addListener("statusChange", ({ status }) => {
+        if (status === "readyToPlay") setLoaded(true);
+      });
+      endSub = p.addListener("playToEnd", () => nextSlide());
+      timeSub = p.addListener("timeUpdate", (e) => {
+        const dur = p.duration || slide?.media_duration || 0;
+        if (dur > 0) progress.value = Math.min(1, e.currentTime / dur);
+      });
     });
     return () => {
-      statusSub.remove();
-      endSub.remove();
-      timeSub.remove();
+      try {
+        statusSub?.remove();
+        endSub?.remove();
+        timeSub?.remove();
+      } catch {
+        // player released on unmount
+      }
     };
-  }, [isVideo, player, nextSlide, progress, slide?.media_duration]);
+  }, [isVideo, nextSlide, progress, slide?.media_duration, runPlayer]);
 
   // ---- video: pause / resume with the shared paused state ----------
   useEffect(() => {
     if (!isVideo) return;
-    if (paused) player.pause();
-    else if (loaded) player.play();
-  }, [paused, isVideo, player, loaded]);
+    if (paused) runPlayer((p) => p.pause());
+    else if (loaded) runPlayer((p) => p.play());
+  }, [paused, isVideo, loaded, runPlayer]);
 
   // ---- image: run / freeze / resume the dwell timer ---------------
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on slide identity; progress is a stable shared value
@@ -226,21 +291,41 @@ export function HighlightViewer({
   const pan = Gesture.Pan()
     .minDistance(14)
     .onUpdate((e) => {
-      if (e.translationY > 0) dragY.value = e.translationY;
+      // Follow the finger: horizontal drag scrubs toward the next/prev
+      // group (WhatsApp-style), a downward drag scrubs toward dismiss.
+      if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
+        transX.value = e.translationX;
+        dragY.value = 0;
+      } else if (e.translationY > 0) {
+        dragY.value = e.translationY;
+        transX.value = 0;
+      }
     })
     .onEnd((e) => {
-      if (e.translationY > DISMISS_DISTANCE || e.velocityY > DISMISS_VELOCITY) {
+      const horizontal = Math.abs(e.translationX) > Math.abs(e.translationY);
+
+      if (
+        !horizontal &&
+        (e.translationY > DISMISS_DISTANCE || e.velocityY > DISMISS_VELOCITY)
+      ) {
         dragY.value = withTiming(height, { duration: 160 }, (f) => {
-          if (f) runOnJS(onClose)();
+          if (f) runOnJS(close)();
         });
         return;
       }
+
       if (
-        Math.abs(e.translationX) > GROUP_SWIPE_DISTANCE &&
-        Math.abs(e.translationX) > Math.abs(e.translationY)
+        horizontal &&
+        (Math.abs(e.translationX) > GROUP_SWIPE_DISTANCE ||
+          Math.abs(e.velocityX) > DISMISS_VELOCITY)
       ) {
-        runOnJS(e.translationX < 0 ? nextGroup : prevGroup)();
+        runOnJS(animateGroupSwipe)(e.translationX < 0 ? 1 : -1);
+        dragY.value = withSpring(0, { damping: 18 });
+        return;
       }
+
+      // Not far enough — settle everything back.
+      transX.value = withSpring(0, { damping: 18 });
       dragY.value = withSpring(0, { damping: 18 });
     });
 
@@ -248,8 +333,12 @@ export function HighlightViewer({
 
   // ---- animated styles ----------------------------------------------
   const surfaceStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: dragY.value }],
-    opacity: interpolate(dragY.value, [0, height], [1, 0.4]),
+    transform: [{ translateX: transX.value }, { translateY: dragY.value }],
+    opacity: interpolate(
+      Math.abs(dragY.value) + Math.abs(transX.value),
+      [0, height],
+      [1, 0.4],
+    ),
   }));
   const chromeStyle = useAnimatedStyle(() => ({ opacity: chrome.value }));
   const activeBarStyle = useAnimatedStyle(() => ({
@@ -300,7 +389,7 @@ export function HighlightViewer({
       transparent
       animationType="fade"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={close}
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <View style={{ flex: 1, backgroundColor: "#000" }}>
@@ -386,7 +475,7 @@ export function HighlightViewer({
             </View>
 
             <View className="mt-3 flex-row items-center gap-2 px-3">
-              <Pressable onPress={onClose} hitSlop={10}>
+              <Pressable onPress={close} hitSlop={10}>
                 <Icon name="arrow-back" size={24} color="#fff" />
               </Pressable>
               <Avatar

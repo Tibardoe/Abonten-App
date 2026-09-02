@@ -208,6 +208,12 @@ export default function UserProfileScreen() {
         data={rows}
         keyExtractor={(item: { id: string }, i) => item.id ?? String(i)}
         ListHeaderComponent={header}
+        // The highlights row lives in this list's header; opening/closing the
+        // full-screen HighlightViewer over a list that's clipping offscreen
+        // subviews is what surfaced the Fabric "child already has a parent"
+        // reparenting crash on Android. The list is short — turning clipping
+        // off here is cheap insurance.
+        removeClippedSubviews={false}
         contentContainerClassName="gap-3 pb-16"
         renderItem={({ item }) => {
           if (isReviewsRow)
