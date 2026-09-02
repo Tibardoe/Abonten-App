@@ -3,13 +3,13 @@ import { AppText, Button, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
-// Step 2 of the event wizard — pick the flyer. Mirrors the web
+// Step 1 (first) of the event wizard — pick the flyer. Mirrors the web
 // EventUploadModal flyer-first flow (expo-image-picker's editor gives the
-// 4:5 crop the web ImageCropper does).
+// 4:5 crop the web ImageCropper does). The section title/subtitle is drawn
+// by the wizard screen.
 export function EventWizardFlyer({ w }: { w: EventWizard }) {
   return (
     <View className="gap-4">
-      <AppText variant="label">Event flyer</AppText>
       {w.flyerUri ? (
         <Image
           source={{ uri: w.flyerUri }}

@@ -658,9 +658,12 @@ export function useEventWizard(resumeDraftId?: string) {
         TIME_RE.test(rangeEndTime)
       : occurrences.length > 0;
 
+  // Step order (see app/(app)/event/new.tsx): 0 Flyer · 1 Basics · 2 Schedule
+  // · 3 Location · 4 Tickets · 5 Promos · 6 Review. Basics (step 1) validates
+  // on Next-press via validateBasics(), so it isn't gated here.
   const canAdvance = useMemo(() => {
     switch (step) {
-      case 1:
+      case 0:
         return !!flyerUri;
       case 2:
         return scheduleValid;
