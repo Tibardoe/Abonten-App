@@ -33,11 +33,11 @@ import type { UserPostType } from "@abonten/types/postsType";
 import {
   AppText,
   Caption,
-  Chip,
   EmptyState,
   Icon,
   ScreenLoader,
   SectionTitle,
+  SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
 import { useCallback, useMemo, useState } from "react";
@@ -268,26 +268,28 @@ export default function Explore() {
         </Pressable>
       </View>
 
-      {/* Events / Places tabs — the web ExploreTabs — plus the List / Map
-          view toggle (the web EventsTabContent's list-vs-map switch). */}
-      <View className="flex-row items-center justify-between px-4 pb-1">
-        <View className="flex-row gap-2">
-          <Chip
-            label="Events"
-            selected={tab === "events"}
-            onPress={() => setTab("events")}
-          />
-          <Chip
-            label="Places"
-            selected={tab === "places"}
-            onPress={() => setTab("places")}
-          />
-        </View>
+      {/* Events / Places tabs — same segmented control as the web
+          ExploreTabs (shadcn Tabs): full-width track, active segment lifted
+          onto a bg-accent surface. */}
+      <View className="px-4 pb-1">
+        <SegmentedTabs
+          options={[
+            { key: "events", label: "Events" },
+            { key: "places", label: "Places" },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+      </View>
+
+      {/* List / Map view toggle — the web EventsTabContent's list-vs-map
+          switch, kept as a compact right-aligned control. */}
+      <View className="flex-row justify-end px-4 pb-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={view === "list" ? "Show map" : "Show list"}
           onPress={() => setView((v) => (v === "list" ? "map" : "list"))}
-          className="flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
+          className="min-h-[36px] flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
         >
           <Icon
             name={view === "list" ? "map-outline" : "list-outline"}

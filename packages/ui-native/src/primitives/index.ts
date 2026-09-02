@@ -36,6 +36,11 @@ export {
 } from "./Badge";
 export { Input, type InputProps, Field, type FieldProps } from "./Input";
 export { Chip, type ChipProps, Tag } from "./Chip";
+export {
+  SegmentedTabs,
+  type SegmentedTabsProps,
+  type SegmentedTabOption,
+} from "./SegmentedTabs";
 export { Stepper, type StepperProps } from "./Stepper";
 export { Skeleton, type SkeletonProps, SkeletonText } from "./Skeleton";
 export { EmptyState, type EmptyStateProps } from "./EmptyState";
