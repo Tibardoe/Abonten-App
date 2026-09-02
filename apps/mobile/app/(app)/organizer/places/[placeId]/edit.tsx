@@ -1,3 +1,4 @@
+import { TimeField } from "@/components/datetime/TimeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import {
   useAddPlaceService,
@@ -659,26 +660,23 @@ export default function EditPlaceScreen() {
               />
             </View>
             {!h.isClosed ? (
-              <View className="flex-row gap-3">
+              <View className="flex-row items-center gap-2">
                 <View className="flex-1">
-                  <Input
-                    value={h.openTime ?? ""}
-                    onChangeText={(v) =>
-                      w.setHours(h.dayOfWeek, { openTime: v })
-                    }
-                    placeholder="09:00"
-                    keyboardType="numbers-and-punctuation"
+                  <TimeField
+                    label="Opens"
+                    value={h.openTime ?? null}
+                    onChange={(v) => w.setHours(h.dayOfWeek, { openTime: v })}
                     invalid={!TIME_RE.test(h.openTime ?? "")}
                   />
                 </View>
+                <AppText className="text-[13px] text-muted-foreground">
+                  to
+                </AppText>
                 <View className="flex-1">
-                  <Input
-                    value={h.closeTime ?? ""}
-                    onChangeText={(v) =>
-                      w.setHours(h.dayOfWeek, { closeTime: v })
-                    }
-                    placeholder="17:00"
-                    keyboardType="numbers-and-punctuation"
+                  <TimeField
+                    label="Closes"
+                    value={h.closeTime ?? null}
+                    onChange={(v) => w.setHours(h.dayOfWeek, { closeTime: v })}
                     invalid={!TIME_RE.test(h.closeTime ?? "")}
                   />
                 </View>
