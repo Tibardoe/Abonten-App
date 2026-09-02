@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { WalletSkeleton } from "@/components/skeletons";
 import {
   useAddCard,
   useAddMomoWallet,
@@ -137,9 +138,7 @@ export default function WalletScreen() {
     return (
       <View className="flex-1 bg-background">
         <AppHeader variant="branded" />
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
+        <WalletSkeleton />
       </View>
     );
   }

@@ -11,6 +11,7 @@ import {
 } from "@/components/map/NativeMap";
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
+import { EventDetailSkeleton } from "@/components/skeletons";
 import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
@@ -36,7 +37,6 @@ import {
   Icon,
   type IoniconName,
   ScreenError,
-  ScreenLoader,
   SectionTitle,
   Stars,
 } from "@abonten/ui-native";
@@ -174,7 +174,7 @@ export default function EventDetailScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenLoader />
+        <EventDetailSkeleton />
       </View>
     );
   }

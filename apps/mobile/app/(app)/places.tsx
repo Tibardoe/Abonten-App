@@ -1,15 +1,10 @@
 import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { PlaceListSkeleton } from "@/components/skeletons";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import type { PlaceType } from "@abonten/types/placeType";
-import {
-  Button,
-  Caption,
-  EmptyState,
-  ScreenLoader,
-  Spinner,
-} from "@abonten/ui-native";
+import { Button, Caption, EmptyState, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
@@ -25,7 +20,18 @@ export default function Places() {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  if (q.isLoading) return <ScreenLoader />;
+  if (q.isLoading) {
+    return (
+      <View className="flex-1 bg-background">
+        <AppHeader
+          variant="title"
+          title="Places"
+          backFallback="/(app)/account"
+        />
+        <PlaceListSkeleton />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">

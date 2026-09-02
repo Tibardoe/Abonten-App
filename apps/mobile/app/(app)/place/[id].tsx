@@ -9,6 +9,7 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
+import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
 import {
@@ -29,7 +30,6 @@ import {
   Icon,
   type IoniconName,
   ScreenError,
-  ScreenLoader,
   SectionTitle,
   Stars,
 } from "@abonten/ui-native";
@@ -174,7 +174,7 @@ export default function PlaceDetailScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <ScreenLoader />
+        <PlaceDetailSkeleton />
       </View>
     );
   }
