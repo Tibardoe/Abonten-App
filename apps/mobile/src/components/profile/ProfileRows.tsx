@@ -79,6 +79,11 @@ export function ProfileReviewRow({ review }: { review: ProfileReview }) {
         </AppText>
         <Stars rating={review.rating} />
       </View>
+      {review.place?.name ? (
+        <AppText variant="caption" numberOfLines={1}>
+          on {review.place.name}
+        </AppText>
+      ) : null}
       {review.title ? (
         <AppText variant="body" className="font-semibold">
           {review.title}

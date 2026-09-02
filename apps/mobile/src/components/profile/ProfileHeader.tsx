@@ -4,9 +4,11 @@ import { AppText, Avatar, Button } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
-// Native echo of the web ProfileDetails header (mobile layout): avatar +
-// username, full name, the Posts / Favorites / Ratings counts, bio, the
-// highlights strip, and — on your own profile — an Edit profile action.
+// Native echo of the web ProfileDetails header (mobile layout): avatar,
+// full name, the Posts / Favorites / Ratings counts, bio, the highlights
+// strip, and — on your own profile — an Edit profile action. The @username
+// itself is the screen's centred nav title (set from the profile screen),
+// so it isn't repeated here.
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -36,7 +38,7 @@ export function ProfileHeader({
         />
         <View className="flex-1 gap-2">
           <AppText variant="bodyStrong" numberOfLines={1}>
-            {profile.username}
+            {profile.full_name ?? `@${profile.username}`}
           </AppText>
           <View className="flex-row justify-between">
             <Stat value={profile.total_posts} label="Posts" />
@@ -49,9 +51,6 @@ export function ProfileHeader({
         </View>
       </View>
 
-      {profile.full_name ? (
-        <AppText variant="bodyStrong">{profile.full_name}</AppText>
-      ) : null}
       {profile.bio ? <AppText variant="body">{profile.bio}</AppText> : null}
 
       {isOwn ? (
