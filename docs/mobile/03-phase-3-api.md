@@ -1,5 +1,12 @@
 # Phase 3 — Mobile HTTP API layer
 
+> **Update (2026-09-02, `feat/shared-backend-architecture`):** the "shared
+> core" this phase introduced ad hoc in `apps/web/src/utils/*Core.ts` is now
+> the framework-free **`@abonten/services`** package — the single source of
+> business logic for both the web Server Actions and these `/api/mobile`
+> routes. The "no logic fork" rule below is unchanged; the core just lives in
+> a real package now. See [../architecture/shared-backend.md](../architecture/shared-backend.md).
+
 `apps/web/src/app/api/mobile/**` — the endpoints the Expo app calls for
 anything that needs a server (a secret, service-role, or a mutation the app
 should not do straight against Supabase). Everything else (event/place

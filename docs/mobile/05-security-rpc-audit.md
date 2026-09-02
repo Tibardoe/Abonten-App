@@ -1,11 +1,22 @@
 # Phase 5.0 — SECURITY DEFINER RPC audit
 
+> **Update (2026-09-02, `feat/shared-backend-architecture`):** the "High"
+> finding below (the six `record_*` functions EXECUTE-granted to
+> `authenticated`) is now **fixed in code** and a migration is written.
+> Every `authenticated`-role call path was moved to the service-role client
+> (`finalizePaystackPayment` → `record_platform_fee`; `generateTicket` →
+> `record_organizer_earning`; `issueRefundCore` → `record_refund_hold` /
+> `record_fee_refund_adjustment`), and
+> `supabase/migrations/20260903200000_revoke_record_fns_from_authenticated.sql`
+> revokes the grant. **Not yet applied** — run it via Supabase MCP and
+> re-run `get_advisors`. See [../architecture/shared-backend.md](../architecture/shared-backend.md) §"Security posture".
+
 Read-only audit (Supabase MCP, project `sderrexhawjbmsugndcq`) of every
 `public` `SECURITY DEFINER` function and who may `EXECUTE` it, done before
 exposing anything to direct `supabase.rpc()` from the shipped mobile bundle.
 
-**Nothing was changed.** Grant changes need a deliberate, signed-off
-migration (CLAUDE.md §2).
+**Nothing was changed** _(at the time of this audit — see the update above)_.
+Grant changes need a deliberate, signed-off migration (CLAUDE.md §2).
 
 ## Safe for direct `authenticated` calls (incl. from mobile)
 

@@ -55,9 +55,10 @@ This document describes the current, verified state of the codebase for future d
 ## 3. Application Architecture
 
 **Confirmed**
-- Single Next.js App Router monolith. No separate backend service in this repo.
-- Data mutations/reads for app logic go through **Server Actions** (`"use server"` files in [src/actions/](src/actions)) called directly from client/server components — not through a REST/GraphQL API layer.
-- Only 3 route handlers exist under `src/app/api/`, used for cases that need HTTP semantics (webhooks/uploads/proxying), not general CRUD:
+- Single Next.js App Router monolith. No separate deployed backend service — `apps/web` **is** the backend, by design (modular monolith).
+- **Business logic lives in the framework-free `@abonten/services` package** (`packages/services/src/<domain>/`), the single source of truth: `(supabase, userId, input) => { status, message?, data? }`. Two thin transports consume it — web **Server Actions** (`apps/web/src/actions/**`, cookie session) and the **mobile HTTP API** (`apps/web/src/app/api/mobile/**` route handlers, Bearer JWT via `getMobileAuth`, typed by `@abonten/api-client`). `apps/mobile` never imports `@abonten/services`; it calls the HTTP API plus direct `supabase.*` for RLS-safe class-A reads. Full picture, incl. the A/B/C operation classification and the M1/S2 security changes: [docs/architecture/shared-backend.md](docs/architecture/shared-backend.md). (Established on `feat/shared-backend-architecture`, 2026-09-02.)
+- Data mutations/reads for app logic go through those **Server Actions** (`"use server"` files in [src/actions/](src/actions)) called directly from client/server components — not a REST/GraphQL layer for the web app. Non-trivial actions are thin wrappers over an `@abonten/services` function.
+- Route handlers under `src/app/api/` that are NOT `/api/mobile/**` (HTTP-semantics cases — webhooks/uploads/proxying, not general CRUD):
   - [src/app/api/geocode/route.ts](src/app/api/geocode/route.ts)
   - [src/app/api/upload-profile-picture/route.ts](src/app/api/upload-profile-picture/route.ts)
   - [src/app/api/user-profile/route.tsx](src/app/api/user-profile/route.tsx)

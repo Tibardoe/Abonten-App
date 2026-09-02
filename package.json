@@ -8,6 +8,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
+    "check:api-parity": "node scripts/check-mobile-api-parity.mjs",
     "web": "npm run -w @abonten/web",
     "web:dev": "npm run dev -w @abonten/web",
     "web:build": "npm run build -w @abonten/web",
