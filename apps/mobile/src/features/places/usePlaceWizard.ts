@@ -110,6 +110,10 @@ export function usePlaceWizard(resumeDraftId?: string) {
   const [resolvingLocation, setResolvingLocation] = useState(false);
 
   const [coverUri, setCoverUri] = useState<string | null>(null);
+  // Picked source dimensions, for re-opening the crop/rotate/flip editor.
+  const [coverSize, setCoverSize] = useState<{ w: number; h: number } | null>(
+    null,
+  );
 
   const [openingHours, setOpeningHours] = useState<PlaceOpeningHoursInput[]>(
     DEFAULT_OPENING_HOURS,
@@ -205,23 +209,40 @@ export function usePlaceWizard(resumeDraftId?: string) {
     applyLocation(loc.lat, loc.lng, loc.label);
   }
 
-  async function pickCover() {
+  // Returns the freshly-picked local asset so the caller can open the in-app
+  // editor on it; no OS crop UI (the editor does crop/rotate/flip).
+  async function pickCover(): Promise<{
+    uri: string;
+    width: number;
+    height: number;
+  } | null> {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
         "Photo access needed",
         "Allow photo access to pick a cover photo.",
       );
-      return;
+      return null;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
+      quality: 1,
     });
-    if (picked.canceled || !picked.assets?.[0]) return;
-    setCoverUri(picked.assets[0].uri);
+    const asset = picked.canceled ? null : picked.assets?.[0];
+    if (!asset) return null;
+    setCoverUri(asset.uri);
+    setCoverSize({ w: asset.width ?? 0, h: asset.height ?? 0 });
+    return {
+      uri: asset.uri,
+      width: asset.width ?? 0,
+      height: asset.height ?? 0,
+    };
+  }
+
+  // Commit the editor's baked result.
+  function setCover(uri: string, w: number, h: number) {
+    setCoverUri(uri);
+    setCoverSize({ w, h });
   }
 
   function setHours(dayOfWeek: number, patch: Partial<PlaceOpeningHoursInput>) {
@@ -406,7 +427,9 @@ export function usePlaceWizard(resumeDraftId?: string) {
     setMapLocation,
     // cover
     coverUri,
+    coverSize,
     pickCover,
+    setCover,
     // hours
     openingHours,
     setHours,

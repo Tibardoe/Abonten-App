@@ -1,7 +1,7 @@
 import { hapticLight } from "@/lib/haptics";
 import { AppText, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { FlipType, ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -23,11 +23,15 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Full-screen photo cropper — pan + pinch an image under a fixed crop frame,
-// pick an aspect, optionally rotate, then bake the result with
+// Full-screen photo editor — pan + pinch an image under a fixed crop frame,
+// pick an aspect, rotate, flip, then bake the result with
 // expo-image-manipulator. The native echo of the web `ImageCropper`
-// (zoom / rotate / aspect presets). Cancel discards; Done replaces the
-// item's uri via the composer's `replaceCropped`.
+// (zoom / rotate / flip / aspect presets). Cancel discards; Done returns
+// the baked { uri, width, height }.
+//
+// `lockedAspect` forces a single ratio and hides the aspect chips — used by
+// the event-flyer (4:5) and place-cover (16:9) wizards, which must produce a
+// fixed shape.
 
 type AspectOption = { label: string; value: number | null };
 const ASPECTS: AspectOption[] = [
@@ -47,6 +51,8 @@ type Props = {
   sourceHeight: number;
   onCancel: () => void;
   onDone: (result: { uri: string; width: number; height: number }) => void;
+  /** Force one crop ratio (w/h) and hide the aspect picker. */
+  lockedAspect?: number;
 };
 
 export function ImageCropModal({
@@ -56,6 +62,7 @@ export function ImageCropModal({
   sourceHeight,
   onCancel,
   onDone,
+  lockedAspect,
 }: Props) {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -81,7 +88,7 @@ export function ImageCropModal({
   const areaW = screenW - 32;
   const areaH = screenH - insets.top - insets.bottom - 220;
 
-  const aspect = ASPECTS[aspectIdx].value;
+  const aspect = lockedAspect ?? ASPECTS[aspectIdx].value;
   const imgAspect = work.w / work.h;
 
   // Frame size on screen.
@@ -184,6 +191,26 @@ export function ImageCropModal({
       hapticLight();
       const ref = await ImageManipulator.manipulate(work.uri)
         .rotate(90)
+        .renderAsync();
+      const saved = await ref.saveAsync({
+        compress: 1,
+        format: SaveFormat.JPEG,
+      });
+      setWork({ uri: saved.uri, w: saved.width, h: saved.height });
+    } catch {
+      // Leave the image as-is on failure.
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function flip(direction: FlipType) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      hapticLight();
+      const ref = await ImageManipulator.manipulate(work.uri)
+        .flip(direction)
         .renderAsync();
       const saved = await ref.saveAsync({
         compress: 1,
@@ -325,9 +352,32 @@ export function ImageCropModal({
                 Cancel
               </AppText>
             </Pressable>
-            <Pressable onPress={rotate} hitSlop={10} disabled={busy}>
-              <Icon name="refresh-outline" size={22} color="#fff" />
-            </Pressable>
+            <View className="flex-row items-center gap-5">
+              <Pressable
+                onPress={rotate}
+                hitSlop={10}
+                disabled={busy}
+                accessibilityLabel="Rotate"
+              >
+                <Icon name="refresh-outline" size={22} color="#fff" />
+              </Pressable>
+              <Pressable
+                onPress={() => flip(FlipType.Horizontal)}
+                hitSlop={10}
+                disabled={busy}
+                accessibilityLabel="Flip horizontally"
+              >
+                <Icon name="swap-horizontal-outline" size={22} color="#fff" />
+              </Pressable>
+              <Pressable
+                onPress={() => flip(FlipType.Vertical)}
+                hitSlop={10}
+                disabled={busy}
+                accessibilityLabel="Flip vertically"
+              >
+                <Icon name="swap-vertical-outline" size={22} color="#fff" />
+              </Pressable>
+            </View>
             <Pressable onPress={done} hitSlop={10} disabled={busy}>
               <AppText className="text-[15px] font-bold text-mint">
                 Done
@@ -335,12 +385,12 @@ export function ImageCropModal({
             </Pressable>
           </View>
 
-          {/* aspect chips */}
+          {/* aspect chips — hidden when the caller locks the ratio */}
           <View
             style={{ paddingBottom: insets.bottom + 16 }}
             className="absolute bottom-0 left-0 right-0 flex-row justify-center gap-2 px-4"
           >
-            {ASPECTS.map((opt, i) => (
+            {(lockedAspect ? [] : ASPECTS).map((opt, i) => (
               <Pressable
                 key={opt.label}
                 onPress={() => setAspectIdx(i)}
