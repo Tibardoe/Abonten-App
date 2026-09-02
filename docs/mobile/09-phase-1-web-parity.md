@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery done, see below |
 
 ---
 
@@ -1524,5 +1524,45 @@ rows). Prefill already comes free from the 4f-2a `/manage` context.
 
 **Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
 `@abonten/api-client`) green, `next build` exit 0 (all 3 service routes
+compiled), `expo export --platform android` clean, `biome check` clean.
+Not device-verified.
+
+#### WP-4f-3 — Place edit: photo gallery (done 2026-09-02)
+
+The web `ManagePlacePhotosSection` — add (signed direct-to-Cloudinary),
+remove, and reorder (left/right, no drag-and-drop dep) the multi-photo
+gallery.
+
+- **`apps/web/src/utils/placePhotoCore.ts`** — `addPlacePhotoCore` (owner
+  check + the `place_photos/<userId>/` folder-prefix check that proves the
+  upload was the caller's + `position` from count), `removePlacePhotoCore`
+  (join-ownership + row delete + best-effort `cloudinary.destroy`),
+  `reorderPlacePhotosCore` (owner check + one `position = index` update per
+  id). The three actions (`addPlacePhoto` / `removePlacePhoto` /
+  `reorderPlacePhotos`) thinned to `auth (401 as const) → delegate`.
+- **`fetchPlaceManageContext`** now also returns `photos` (fourth parallel
+  query) — the mobile screen reads the gallery from the same `/manage`
+  context, no new GET.
+- **Routes** — `POST /api/mobile/organizer/places/[placeId]/photos`
+  (`{ publicId, version }`), `POST .../photos/reorder` (`{ photoIds }`),
+  `POST .../photos/[photoId]/delete`.
+- **api-client** — `PlacePhotoRow` (= a `PlaceManageContext` photos
+  element), `AddPlacePhotoBody`, `PlacePhotoResult`;
+  `api.organizer.addPlacePhoto(placeId, body)` /
+  `reorderPlacePhotos(placeId, photoIds)` /
+  `removePlacePhoto(placeId, photoId)`.
+- **Mobile** — `useManagePlace.ts` gains `useAddPlacePhoto` (uploads one
+  picked URI via `uploadToCloudinary(uri, "place_photo")` then records it)
+  / `useReorderPlacePhotos` / `useRemovePlacePhoto`, all invalidating the
+  `place-manage` context.
+  `app/(app)/organizer/places/[placeId]/photos.tsx` — a separate screen
+  (like the per-event attendees / promo-codes screens): "Add photos"
+  (`ImagePicker` multi-select, uploaded one at a time), a 2-col thumbnail
+  grid with ◀ ▶ reorder (optimistic local order, re-synced on the server
+  list) and a trash + `Alert` confirm. The place management screen gains a
+  **"Manage photos ›"** link row; route registered `href: null`.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all 3 photo routes
 compiled), `expo export --platform android` clean, `biome check` clean.
 Not device-verified.
