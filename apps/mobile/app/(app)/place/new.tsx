@@ -6,9 +6,9 @@ import { PlaceWizardHours } from "@/components/places/PlaceWizardHours";
 import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
-import { AppText, ScreenLoader, ScreenTitle } from "@abonten/ui-native";
+import { AppText, Hero, Overline, ScreenLoader } from "@abonten/ui-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 // Native echo of the web PlaceUploadModal: a 4-step wizard that publishes a
 // place via useCreatePlace. With `?draftId=`, it resumes a saved draft; the
@@ -121,40 +121,45 @@ export default function CreatePlaceScreen() {
         contentContainerClassName="gap-5 p-4 pb-16"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="gap-3">
+        <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
             <StepDots step={w.step} total={STEPS.length} />
             <Pressable
               onPress={onSaveDraft}
               disabled={w.isSavingDraft}
+              hitSlop={8}
               className="active:opacity-60 disabled:opacity-50"
             >
-              <Text className="text-sm font-semibold text-primary">
+              <AppText className="text-[13px] font-semibold text-primary">
                 {w.isSavingDraft ? "Saving…" : "Save as draft"}
-              </Text>
+              </AppText>
             </Pressable>
           </View>
 
-          <View className="gap-0.5">
-            <AppText variant="caption">
+          <View className="gap-1">
+            <Overline>
               Step {w.step + 1} of {STEPS.length}
-            </AppText>
-            <ScreenTitle>{stepInfo.title}</ScreenTitle>
+            </Overline>
+            <Hero>{stepInfo.title}</Hero>
             <AppText variant="muted">{stepInfo.subtitle}</AppText>
           </View>
         </View>
 
         {w.draftLoadError ? (
-          <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
+          <AppText className="text-[13px] text-destructive">
+            {w.draftLoadError}
+          </AppText>
         ) : null}
 
         {!draftId && draftCount > 0 && w.step === 0 ? (
           <Link href="/(app)/organizer/place-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
-              <Text className="text-sm text-foreground">
+              <AppText className="text-[14px] text-foreground">
                 You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
-              </Text>
-              <Text className="text-primary">Resume ›</Text>
+              </AppText>
+              <AppText className="text-[14px] font-semibold text-primary">
+                Resume ›
+              </AppText>
             </Pressable>
           </Link>
         ) : null}
