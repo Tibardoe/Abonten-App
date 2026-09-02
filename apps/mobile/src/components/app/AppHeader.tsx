@@ -216,7 +216,7 @@ export function AppHeader({
           }}
         >
           {variant === "branded" ? (
-            <AbontenLogo size={26} />
+            <AbontenLogo size={34} />
           ) : title ? (
             <AppText
               numberOfLines={1}

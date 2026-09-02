@@ -3,6 +3,7 @@ import {
   type TextProps as RNTextProps,
   StyleSheet,
 } from "react-native";
+import { MAX_FONT_SIZE_MULTIPLIER, scaleFont } from "../theme/fontScale";
 import { family } from "../theme/tokens";
 
 // Native echo of apps/web/src/components/ui/typography.tsx. Same role names
@@ -119,17 +120,23 @@ function lastMatch(re: RegExp, s: string): RegExpMatchArray | null {
   return last;
 }
 
-// Android renders custom .ttf faces (Euclid Circular B) with extra font
-// padding and, when a caller overrides `text-[Npx]` without a matching
-// `leading-*`, the variant's own (now-too-small) line height stays and
-// clips ascenders/descenders. This derives a safe line height from the
-// *effective* font size whenever the resolved leading would be too tight,
-// and drops Android's font padding so button/label text sits centred.
-// An explicit `style.lineHeight` always wins.
+// Two jobs:
+//   1. Device-responsive sizing — the authored px size (from `text-[Npx]`,
+//      a `text-<token>` class, or `style.fontSize`) is run through
+//      `scaleFont` so every piece of text in the app scales with the screen
+//      width together, instead of each screen remembering to do it. The
+//      line height keeps the authored leading:size proportion.
+//   2. Android renders custom .ttf faces (Euclid Circular B) with extra
+//      font padding and clips ascenders/descenders when the leading is too
+//      tight; this drops that padding and floors the line height.
+// An explicit `style.fontSize` / `style.lineHeight` still wins (it's applied
+// after these metrics in AppText's style array) — callers who set an exact
+// pixel value get exactly that.
 function resolveTextMetrics(
   combinedClassName: string,
   style: RNTextProps["style"],
 ): {
+  fontSize?: number;
   lineHeight?: number;
   includeFontPadding: boolean;
   textAlignVertical: "center";
@@ -141,7 +148,6 @@ function resolveTextMetrics(
     includeFontPadding: false,
     textAlignVertical: "center" as const,
   };
-  if (typeof flat?.lineHeight === "number") return base;
 
   let size: number | undefined;
   if (typeof flat?.fontSize === "number") size = flat.fontSize;
@@ -151,10 +157,13 @@ function resolveTextMetrics(
     combinedClassName,
   );
   if (arbSize) size = Number.parseFloat(arbSize[1]);
-  else if (!size && tokenSize) size = SIZE_TOKEN_PX[`text-${tokenSize[1]}`];
-  if (!size) return base;
+  else if (size == null && tokenSize)
+    size = SIZE_TOKEN_PX[`text-${tokenSize[1]}`];
+  // Nothing resolvable to scale — keep only the Android font-padding fix.
+  if (size == null) return base;
 
   let leading: number | undefined;
+  if (typeof flat?.lineHeight === "number") leading = flat.lineHeight;
   const arbLeading = lastMatch(
     /leading-\[(\d+(?:\.\d+)?)px\]/,
     combinedClassName,
@@ -167,13 +176,20 @@ function resolveTextMetrics(
   else if (namedLeading)
     leading = size * NAMED_LEADING_RATIO[`leading-${namedLeading[1]}`];
 
-  const ratio = size >= 20 ? 1.3 : 1.4;
-  const safe = Math.round(size * ratio);
-  // Only step in when the resolved leading is missing or tight enough to clip.
-  if (leading == null || leading < size * 1.15) {
-    return { ...base, lineHeight: safe };
-  }
-  return base;
+  const scaledSize = scaleFont(size);
+  // Preserve the authored leading:size ratio when it's roomy enough;
+  // otherwise fall back to a safe ratio (tighter for display sizes).
+  const ratio =
+    leading != null && leading >= size * 1.15
+      ? leading / size
+      : size >= 20
+        ? 1.3
+        : 1.4;
+  return {
+    ...base,
+    fontSize: scaledSize,
+    lineHeight: Math.round(scaledSize * ratio),
+  };
 }
 
 export type AppTextProps = RNTextProps & {
@@ -185,6 +201,7 @@ export function AppText({
   variant = "body",
   className,
   style,
+  maxFontSizeMultiplier = MAX_FONT_SIZE_MULTIPLIER,
   ...rest
 }: AppTextProps) {
   const combined = `${VARIANT_CLASS[variant]}${className ? ` ${className}` : ""}`;
@@ -194,6 +211,7 @@ export function AppText({
     <RNText
       className={combined}
       style={[metrics, fontFamily ? { fontFamily } : null, style]}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
       {...rest}
     />
   );
