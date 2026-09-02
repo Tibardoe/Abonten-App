@@ -1,5 +1,6 @@
 import { signInWithGoogle } from "@/auth/googleSignIn";
 import { api } from "@/lib/api";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -14,6 +15,7 @@ const DEFAULT_DIAL_CODE = "+233";
 
 export default function SignIn() {
   const router = useRouter();
+  const c = useThemeColors();
   const [rawPhone, setRawPhone] = useState("");
   const [busy, setBusy] = useState<"phone" | "google" | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export default function SignIn() {
         <TextInput
           className="flex-1 rounded-md border border-border bg-card px-3 py-3 text-base text-foreground"
           placeholder="24 123 4567"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={c["muted-foreground"]}
           keyboardType="phone-pad"
           autoComplete="tel"
           value={rawPhone}

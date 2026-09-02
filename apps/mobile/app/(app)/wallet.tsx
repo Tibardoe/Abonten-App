@@ -7,7 +7,8 @@ import {
   useSetDefaultPaymentMethod,
 } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
-import { Ionicons } from "@expo/vector-icons";
+import { Icon } from "@abonten/ui-native";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -30,6 +31,7 @@ function methodTitle(m: PaymentMethodRow): string {
 }
 
 export default function WalletScreen() {
+  const c = useThemeColors();
   const { data, isLoading, isError, refetch } = usePaymentMethods();
   const networks = useMomoNetworks();
   const addMomo = useAddMomoWallet();
@@ -209,7 +211,7 @@ export default function WalletScreen() {
             keyboardType="phone-pad"
             autoCapitalize="none"
             className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
-            placeholderTextColor="#999"
+            placeholderTextColor={c["muted-foreground"]}
           />
 
           <View className="flex-row gap-2">
@@ -240,7 +242,7 @@ export default function WalletScreen() {
             onPress={() => setShowForm(true)}
             className="flex-row items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3"
           >
-            <Ionicons name="add" size={18} color="#888" />
+            <Icon name="add" size={18} tone="muted" />
             <Text className="text-sm font-semibold text-foreground">
               Add mobile money
             </Text>
@@ -255,7 +257,7 @@ export default function WalletScreen() {
               <ActivityIndicator />
             ) : (
               <>
-                <Ionicons name="card-outline" size={18} color="#888" />
+                <Icon name="card-outline" size={18} tone="muted" />
                 <Text className="text-sm font-semibold text-foreground">
                   Add debit / credit card
                 </Text>

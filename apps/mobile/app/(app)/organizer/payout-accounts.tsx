@@ -9,6 +9,7 @@ import type {
   AddPayoutAccountBody,
   PayoutAccountRow,
 } from "@abonten/api-client";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -28,6 +29,7 @@ function accountTitle(a: PayoutAccountRow): string {
 }
 
 export default function PayoutAccountsScreen() {
+  const c = useThemeColors();
   const { data, isLoading, isError, refetch } = usePayoutAccounts();
   const networks = useMomoNetworks();
   const add = useAddPayoutAccount();
@@ -229,7 +231,7 @@ export default function PayoutAccountsScreen() {
             onChangeText={setHolder}
             placeholder="Account holder name"
             className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
-            placeholderTextColor="#999"
+            placeholderTextColor={c["muted-foreground"]}
           />
 
           {mode === "mobile_money" ? (
@@ -268,7 +270,7 @@ export default function PayoutAccountsScreen() {
                 keyboardType="phone-pad"
                 autoCapitalize="none"
                 className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
-                placeholderTextColor="#999"
+                placeholderTextColor={c["muted-foreground"]}
               />
             </>
           ) : (
@@ -278,7 +280,7 @@ export default function PayoutAccountsScreen() {
                 onChangeText={setBankName}
                 placeholder="Bank name"
                 className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
-                placeholderTextColor="#999"
+                placeholderTextColor={c["muted-foreground"]}
               />
               <TextInput
                 value={accountNumber}
@@ -286,7 +288,7 @@ export default function PayoutAccountsScreen() {
                 placeholder="Account number"
                 keyboardType="number-pad"
                 className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
-                placeholderTextColor="#999"
+                placeholderTextColor={c["muted-foreground"]}
               />
             </>
           )}

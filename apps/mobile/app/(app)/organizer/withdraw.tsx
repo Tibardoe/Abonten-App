@@ -3,6 +3,7 @@ import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -17,6 +18,7 @@ import {
 
 export default function WithdrawScreen() {
   const router = useRouter();
+  const c = useThemeColors();
   const finance = useOrganizerFinance();
   const accountsQ = usePayoutAccounts();
   const request = useRequestPayout();
@@ -195,7 +197,7 @@ export default function WithdrawScreen() {
           placeholder="0.00"
           keyboardType="decimal-pad"
           className="rounded-lg border border-border bg-background px-3 py-2 text-lg text-foreground"
-          placeholderTextColor="#999"
+          placeholderTextColor={c["muted-foreground"]}
         />
       </View>
 

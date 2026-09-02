@@ -25,7 +25,7 @@ const WEB_ORIGIN = process.env.EXPO_PUBLIC_API_BASE_URL;
 function VerifiedTag({ verified }: { verified: boolean }) {
   return verified ? (
     <View className="flex-row items-center gap-1">
-      <Icon name="checkmark-circle" size={16} color="#22c55e" />
+      <Icon name="checkmark-circle" size={16} tone="success" />
       <AppText className="text-[12px] text-primary">Verified</AppText>
     </View>
   ) : (
