@@ -33,38 +33,39 @@ function GlassButton({
       accessibilityLabel={label}
       hitSlop={8}
       onPress={onPress}
-      className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
+      className="h-10 w-10 items-center justify-center rounded-full active:opacity-70"
       style={{ backgroundColor: "rgba(17,24,32,0.55)" }}
     >
-      <Icon name={icon} size={18} color="#fff" />
+      <Icon name={icon} size={20} color="#fff" />
     </Pressable>
   );
 }
 
-// Native EventCard. On the flyer: a favourite toggle + a ⋯ menu (top-right),
-// a "You're going" badge (top-left), a price pill (bottom-left) and the
-// canceled / sold-out / ended status wash. Below: title, one date + start
-// time, the venue, then spots-left + attendance.
+// Native EventCard. The flyer stays image-first — only a favourite toggle + a
+// ⋯ menu (top-right), a "You're going" badge (top-left) and the
+// canceled / sold-out / ended status wash sit over it. Everything factual
+// lives in the body, in a fixed hierarchy so a glance ranks it:
+//   title (16/700)  ·  date+time (14/600)  ·  venue (13)  ·  price (14/600)
+//   ·  attendance + spots (13, "few left" turns amber)
 //
-// Edge cases (long title / date / venue) are all handled by clamping to a
-// bounded number of lines with a tail ellipsis and letting the text flex
-// inside its row so it can never widen the card:
-//   • title  — 2 lines
-//   • date   — a SINGLE day + time (getEventCardDateTime never returns a
-//              "from – to" span; extra dates collapse to a "+N more" hint)
-//   • venue  — 2 lines, icon pinned to the top of the block
+// Edge cases (long title / date / venue / price) are all handled by clamping
+// to a bounded number of lines with a tail ellipsis and letting the text flex
+// inside its row so it can never widen the card.
 
 function priceLabel(event: UserPostType): string {
   const price = event.min_price ?? event.ticket_price;
   if (price == null || price === 0) return "Free entry";
   const currency = event.currency ?? event.ticket_currency ?? "GHS";
-  return `${currency} ${price.toLocaleString()}`;
+  const from =
+    event.min_price != null && event.min_price !== event.ticket_price
+      ? "From "
+      : "";
+  return `${from}${currency} ${price.toLocaleString()}`;
 }
 
-function spotsLabel(event: UserPostType, attendees: number): string {
-  return event.capacity && event.capacity > 0
-    ? `${Math.max(event.capacity - attendees, 0).toLocaleString()} spots left`
-    : "Unlimited spots";
+function spotsLeft(event: UserPostType, attendees: number): number | null {
+  if (!event.capacity || event.capacity <= 0) return null;
+  return Math.max(event.capacity - attendees, 0);
 }
 
 // Same precedence as the web centerOverlay: canceled wins, then sold-out,
@@ -92,14 +93,16 @@ export function EventCard({ event }: { event: UserPostType }) {
   const router = useRouter();
   const attendingIds = useAttendingEventIds();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const flyer =
     event.flyer_public_id && event.flyer_version
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
-          width: 420,
-          height: 280,
+          width: 480,
+          height: 320,
         })
       : null;
+  const showImage = flyer != null && !imageFailed;
   const overlay = statusOverlay(event);
   const dt = getEventCardDateTime(
     event.starts_at,
@@ -107,6 +110,8 @@ export function EventCard({ event }: { event: UserPostType }) {
     event.occurrences,
   );
   const attendees = event.attendanceCount ?? event.attendance_count ?? 0;
+  const remaining = spotsLeft(event, attendees);
+  const fewLeft = remaining != null && remaining > 0 && remaining <= 10;
   const lifecycle = getEventStatus(
     event.starts_at,
     event.ends_at,
@@ -127,16 +132,18 @@ export function EventCard({ event }: { event: UserPostType }) {
       onPress={() => router.push(`/(app)/event/${event.id}`)}
     >
       <View className="relative aspect-[3/2] bg-muted">
-        {flyer ? (
+        {showImage ? (
           <Image
             source={{ uri: flyer }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             transition={150}
+            recyclingKey={event.id}
+            onError={() => setImageFailed(true)}
           />
         ) : (
-          <View className="flex-1 items-center justify-center">
-            <Icon name="image-outline" size={24} tone="muted" />
+          <View className="flex-1 items-center justify-center gap-1">
+            <Icon name="image-outline" size={26} tone="muted" />
           </View>
         )}
 
@@ -144,9 +151,9 @@ export function EventCard({ event }: { event: UserPostType }) {
 
         {showGoing ? (
           <View className="absolute left-2.5 top-2.5 max-w-[70%] flex-row items-center gap-1 rounded-full bg-success px-2.5 py-1">
-            <Icon name="ticket" size={12} tone="inverse" />
+            <Icon name="ticket" size={13} tone="inverse" />
             <AppText
-              className="text-[11px] font-semibold text-success-foreground"
+              className="text-[12px] font-semibold text-success-foreground"
               numberOfLines={1}
             >
               You're going
@@ -155,21 +162,12 @@ export function EventCard({ event }: { event: UserPostType }) {
         ) : null}
 
         <View className="absolute right-2.5 top-2.5 flex-row items-center gap-2">
-          <FavoriteButton kind="event" id={event.id} onSurface size={18} />
+          <FavoriteButton kind="event" id={event.id} onSurface size={20} />
           <GlassButton
             icon="ellipsis-horizontal"
             label="More options"
             onPress={() => setMenuOpen(true)}
           />
-        </View>
-
-        <View className="absolute bottom-2.5 left-2.5 max-w-[60%] rounded-full bg-primary px-3 py-1">
-          <AppText
-            className="text-[12px] font-semibold text-primary-foreground"
-            numberOfLines={1}
-          >
-            {priceLabel(event)}
-          </AppText>
         </View>
 
         {overlay ? (
@@ -180,46 +178,52 @@ export function EventCard({ event }: { event: UserPostType }) {
         ) : null}
       </View>
 
-      <View className="gap-2 p-3.5">
+      <View className="gap-2 p-4">
         <AppText variant="cardTitle" numberOfLines={2}>
           {event.title}
         </AppText>
 
         <View className="flex-row items-center gap-1.5">
-          <Icon name="calendar-outline" size={13} tone="muted" />
-          <AppText
-            className="flex-1 text-[12px] text-muted-foreground"
-            numberOfLines={1}
-          >
+          <Icon name="calendar-outline" size={14} tone="foreground" />
+          <AppText variant="metaStrong" className="flex-1" numberOfLines={1}>
             {dt.date}
             {dt.time ? `  ·  ${dt.time}` : ""}
             {dt.extraDates > 0 ? `  ·  +${dt.extraDates} more` : ""}
           </AppText>
         </View>
 
-        <View className="flex-row items-start gap-1.5">
-          <Icon
-            name="location-outline"
-            size={13}
-            tone="muted"
-            style={{ marginTop: 1 }}
-          />
-          <AppText
-            className="flex-1 text-[12px] text-muted-foreground"
-            numberOfLines={2}
-          >
+        <View className="flex-row items-center gap-1.5">
+          <Icon name="location-outline" size={14} tone="muted" />
+          <AppText variant="meta" className="flex-1" numberOfLines={1}>
             {venue}
           </AppText>
         </View>
 
         <View className="flex-row items-center gap-1.5">
-          <Icon name="people-outline" size={13} tone="muted" />
-          <AppText
-            className="flex-1 text-[11px] text-muted-foreground"
-            numberOfLines={1}
-          >
-            {spotsLabel(event, attendees)} · {attendees.toLocaleString()} going
+          <Icon name="pricetag-outline" size={14} tone="foreground" />
+          <AppText variant="metaStrong" className="flex-1" numberOfLines={1}>
+            {priceLabel(event)}
           </AppText>
+        </View>
+
+        <View className="flex-row items-center gap-1.5">
+          <Icon name="people-outline" size={14} tone="muted" />
+          <AppText variant="meta" numberOfLines={1}>
+            {attendees.toLocaleString()} going
+          </AppText>
+          {remaining != null ? (
+            <>
+              <AppText variant="meta">·</AppText>
+              <AppText
+                variant="meta"
+                tone={fewLeft ? "warning" : "muted"}
+                className={`shrink ${fewLeft ? "font-semibold" : ""}`}
+                numberOfLines={1}
+              >
+                {remaining.toLocaleString()} spots left
+              </AppText>
+            </>
+          ) : null}
         </View>
       </View>
 
@@ -238,10 +242,12 @@ export function EventCardSkeleton() {
       <View className="aspect-[3/2] w-full">
         <Skeleton width="100%" radius={0} style={{ flex: 1 }} />
       </View>
-      <View className="gap-2 p-3.5">
-        <Skeleton width="85%" height={15} />
-        <Skeleton width="55%" height={12} />
-        <Skeleton width="70%" height={12} />
+      <View className="gap-2 p-4">
+        <Skeleton width="85%" height={16} />
+        <Skeleton width="60%" height={14} />
+        <Skeleton width="70%" height={13} />
+        <Skeleton width="40%" height={14} />
+        <Skeleton width="55%" height={13} />
       </View>
     </View>
   );

@@ -7,17 +7,19 @@ import { AppText, Icon, Skeleton, Stars } from "@abonten/ui-native";
 import { shadow } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, View } from "react-native";
 
-// Native PlaceCard. On the cover: a rating pill + a distance pill
-// (bottom-left) and a favourite toggle (top-right), plus an optional
-// "Sponsored" pill. Below: name, place type, open / closed, venue.
+// Native PlaceCard. The cover stays image-first — only a favourite toggle
+// (top-right) and an optional "Sponsored" pill (top-left) sit over it.
+// Everything factual lives in the body, read top-to-bottom as
+//   What is this?  ->  Where?  ->  Is it open?  ->  How far?  ->  How good?
 //
-// Edge cases are handled by clamping and letting text flex inside its row:
-//   • name   — 2 lines, the verified tick pinned beside it
-//   • type   — 1 line, shares its row with the open/closed pill which never
-//              shrinks
-//   • venue  — 2 lines, icon pinned to the top of the block
+//   name (16/700)  ·  type (13)  ·  open/closed (14/600, green/red)
+//   ·  venue (13)  ·  rating + distance (13)
+//
+// Edge cases: long name/type/venue clamp to a bounded line count; rating and
+// distance each render only when actually available (no "0.0" / placeholder).
 
 function addressText(address: PlaceType["address"]): string {
   if (address && typeof address === "object" && "full_address" in address) {
@@ -35,13 +37,16 @@ export function PlaceCard({
   sponsored?: boolean;
 }) {
   const router = useRouter();
+  const [imageFailed, setImageFailed] = useState(false);
+
   const cover =
     place.cover_public_id && place.cover_version
       ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
-          width: 420,
-          height: 280,
+          width: 480,
+          height: 320,
         })
       : null;
+  const showImage = cover != null && !imageFailed;
 
   // Same derivation as the web PlaceCard / PlaceOpenStatusBadge:
   // temporary_status wins over the SQL-computed is_open boolean.
@@ -51,6 +56,8 @@ export function PlaceCard({
   );
   const address = addressText(place.address);
   const rating = place.avg_rating ?? 0;
+  const hasRating = rating > 0;
+  const hasDistance = typeof place.distance_km === "number";
 
   return (
     <Pressable
@@ -61,16 +68,18 @@ export function PlaceCard({
       onPress={() => router.push(`/(app)/place/${place.id}`)}
     >
       <View className="relative aspect-[3/2] bg-muted">
-        {cover ? (
+        {showImage ? (
           <Image
             source={{ uri: cover }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             transition={150}
+            recyclingKey={place.id}
+            onError={() => setImageFailed(true)}
           />
         ) : (
           <View className="flex-1 items-center justify-center">
-            <Icon name="image-outline" size={24} tone="muted" />
+            <Icon name="image-outline" size={26} tone="muted" />
           </View>
         )}
 
@@ -81,44 +90,18 @@ export function PlaceCard({
             className="absolute left-2.5 top-2.5 rounded-full px-2.5 py-1"
             style={{ backgroundColor: "rgba(17,24,32,0.72)" }}
           >
-            <AppText className="text-[10px] font-medium text-white">
+            <AppText className="text-[11px] font-semibold text-white">
               Sponsored
             </AppText>
           </View>
         ) : null}
 
         <View className="absolute right-2.5 top-2.5">
-          <FavoriteButton kind="place" id={place.id} onSurface size={18} />
-        </View>
-
-        {/* rating + distance, bottom-left over the scrim */}
-        <View className="absolute bottom-2.5 left-2.5 right-2.5 flex-row items-center gap-2">
-          {rating > 0 ? (
-            <View className="flex-row items-center gap-1 rounded-full bg-card px-2 py-1">
-              <Stars rating={rating} size={12} />
-              <AppText className="text-[11px] font-semibold text-foreground">
-                {rating.toFixed(1)}
-              </AppText>
-              <AppText className="text-[11px] text-muted-foreground">
-                ({place.review_count ?? 0})
-              </AppText>
-            </View>
-          ) : null}
-          {typeof place.distance_km === "number" ? (
-            <View
-              className="flex-row items-center gap-1 rounded-full px-2 py-1"
-              style={{ backgroundColor: "rgba(17,24,32,0.6)" }}
-            >
-              <Icon name="navigate-outline" size={11} color="#fff" />
-              <AppText className="text-[11px] font-medium text-white">
-                {place.distance_km.toFixed(1)} km
-              </AppText>
-            </View>
-          ) : null}
+          <FavoriteButton kind="place" id={place.id} onSurface size={20} />
         </View>
       </View>
 
-      <View className="gap-2 p-3.5">
+      <View className="gap-2 p-4">
         <View className="flex-row items-start gap-1.5">
           <AppText variant="cardTitle" numberOfLines={2} className="flex-1">
             {place.name}
@@ -128,53 +111,61 @@ export function PlaceCard({
               name="checkmark-circle"
               size={16}
               tone="primary"
-              style={{ marginTop: 1 }}
+              style={{ marginTop: 2 }}
             />
           ) : null}
         </View>
 
-        <View className="flex-row items-center gap-2">
-          {place.category_name ? (
-            <AppText
-              className="flex-1 text-[12px] text-muted-foreground"
-              numberOfLines={1}
-            >
-              {place.category_name}
-            </AppText>
-          ) : (
-            <View className="flex-1" />
-          )}
-          <View className="flex-row items-center gap-1">
-            <View
-              className={`h-1.5 w-1.5 rounded-full ${
-                openStatus.isOpen ? "bg-primary" : "bg-destructive"
-              }`}
-            />
-            <AppText
-              className={`text-[11px] font-medium ${
-                openStatus.isOpen ? "text-primary" : "text-muted-foreground"
-              }`}
-              numberOfLines={1}
-            >
-              {openStatus.label}
-            </AppText>
-          </View>
+        {place.category_name ? (
+          <AppText variant="meta" numberOfLines={1}>
+            {place.category_name}
+          </AppText>
+        ) : null}
+
+        <View className="flex-row items-center gap-1.5">
+          <View
+            className={`h-2 w-2 rounded-full ${
+              openStatus.isOpen ? "bg-success" : "bg-destructive"
+            }`}
+          />
+          <AppText
+            variant="metaStrong"
+            tone={openStatus.isOpen ? "success" : "error"}
+            numberOfLines={1}
+          >
+            {openStatus.label}
+          </AppText>
         </View>
 
         {address ? (
-          <View className="flex-row items-start gap-1.5">
-            <Icon
-              name="location-outline"
-              size={13}
-              tone="muted"
-              style={{ marginTop: 1 }}
-            />
-            <AppText
-              className="flex-1 text-[12px] text-muted-foreground"
-              numberOfLines={2}
-            >
+          <View className="flex-row items-center gap-1.5">
+            <Icon name="location-outline" size={14} tone="muted" />
+            <AppText variant="meta" className="flex-1" numberOfLines={1}>
               {address}
             </AppText>
+          </View>
+        ) : null}
+
+        {hasRating || hasDistance ? (
+          <View className="flex-row items-center gap-2">
+            {hasRating ? (
+              <View className="flex-row items-center gap-1">
+                <Stars rating={rating} size={13} />
+                <AppText variant="metaStrong">{rating.toFixed(1)}</AppText>
+                <AppText variant="meta">({place.review_count ?? 0})</AppText>
+              </View>
+            ) : null}
+            {hasRating && hasDistance ? (
+              <AppText variant="meta">·</AppText>
+            ) : null}
+            {hasDistance ? (
+              <View className="flex-row items-center gap-1">
+                <Icon name="navigate-outline" size={13} tone="muted" />
+                <AppText variant="meta">
+                  {(place.distance_km as number).toFixed(1)} km
+                </AppText>
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -188,10 +179,11 @@ export function PlaceCardSkeleton() {
       <View className="aspect-[3/2] w-full">
         <Skeleton width="100%" radius={0} style={{ flex: 1 }} />
       </View>
-      <View className="gap-2 p-3.5">
-        <Skeleton width="65%" height={15} />
-        <Skeleton width="45%" height={12} />
-        <Skeleton width="70%" height={12} />
+      <View className="gap-2 p-4">
+        <Skeleton width="65%" height={16} />
+        <Skeleton width="40%" height={13} />
+        <Skeleton width="35%" height={14} />
+        <Skeleton width="70%" height={13} />
       </View>
     </View>
   );

@@ -3,6 +3,7 @@ import { PlaceCard } from "@/components/PlaceCard";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { AppText, Icon, Overline } from "@abonten/ui-native";
+import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { FlatList, Pressable, View } from "react-native";
 
 // Native echo of the web EventsSlider / PlacesSlider — a titled horizontal
@@ -15,8 +16,6 @@ import { FlatList, Pressable, View } from "react-native";
 // tracked, muted-foreground kicker (the `Overline` variant) — and "View all"
 // is a brand-primary link with a chevron. Web shows "View all" whenever the
 // row has any items (no minimum-count gate).
-
-const CARD_WIDTH = 260;
 
 function Header({
   title,
@@ -38,10 +37,10 @@ function Header({
           hitSlop={8}
           className="flex-row items-center gap-0.5 active:opacity-60"
         >
-          <AppText className="text-[13px] font-medium text-primary">
+          <AppText variant="small" tone="brand" className="font-semibold">
             View all
           </AppText>
-          <Icon name="chevron-forward" size={15} tone="primary" />
+          <Icon name="chevron-forward" size={16} tone="primary" />
         </Pressable>
       ) : null}
     </View>
@@ -57,6 +56,7 @@ export function EventSliderRow({
   events: UserPostType[];
   onViewAll?: () => void;
 }) {
+  const cardWidth = useCarouselCardWidth();
   if (events.length === 0) return null;
   return (
     <View className="gap-2 pt-4">
@@ -68,7 +68,7 @@ export function EventSliderRow({
         keyExtractor={(e) => e.id}
         contentContainerClassName="gap-3 px-4"
         renderItem={({ item }) => (
-          <View style={{ width: CARD_WIDTH }}>
+          <View style={{ width: cardWidth }}>
             <EventCard event={item} />
           </View>
         )}
@@ -89,6 +89,7 @@ export function PlaceSliderRow({
   sponsored?: boolean;
   onViewAll?: () => void;
 }) {
+  const cardWidth = useCarouselCardWidth();
   if (places.length === 0) return null;
   return (
     <View className="gap-2 pt-4">
@@ -100,7 +101,7 @@ export function PlaceSliderRow({
         keyExtractor={(p) => p.id}
         contentContainerClassName="gap-3 px-4"
         renderItem={({ item }) => (
-          <View style={{ width: CARD_WIDTH }}>
+          <View style={{ width: cardWidth }}>
             <PlaceCard place={item} sponsored={sponsored} />
           </View>
         )}

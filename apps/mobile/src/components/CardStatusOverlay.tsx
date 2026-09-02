@@ -21,7 +21,7 @@ export function CardStatusOverlay({
         backgroundColor: canceled ? "rgba(127,29,29,0.8)" : "rgba(0,0,0,0.65)",
       }}
     >
-      <AppText className="text-center text-lg font-bold text-white">
+      <AppText variant="sectionTitle" tone="inverse" className="text-center">
         {label}
       </AppText>
     </View>
