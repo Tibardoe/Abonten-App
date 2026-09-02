@@ -30,7 +30,7 @@ export function CountryCodeField({
         accessibilityRole="button"
         accessibilityLabel={`Country code, currently ${value.name} ${value.callingCode}`}
         onPress={() => setOpen(true)}
-        className="h-[48px] flex-row items-center gap-1.5 rounded-lg border border-input bg-background px-3 active:opacity-70"
+        className="h-[52px] flex-row items-center gap-1.5 rounded-xl border border-input bg-background px-3 active:opacity-70"
       >
         <AppText className="text-[16px]">{value.flag}</AppText>
         <AppText className="text-[15px] font-medium text-foreground">
