@@ -1,7 +1,9 @@
+import eventCancellationNotification from "@/actions/eventCancellationNotification";
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { cancelEventCore } from "@/utils/cancelEventCore";
 import { logger } from "@abonten/core/logger";
+import { cancelEventCore } from "@abonten/services/events/cancelEventCore";
+import { after } from "next/server";
 
 // POST /api/mobile/organizer/events/cancel { eventId }
 // Cancels an event, releases every ticket, starts attendee refunds and
@@ -23,7 +25,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    const result = await cancelEventCore(auth.supabase, body.eventId);
+    const result = await cancelEventCore(
+      auth.supabase,
+      body.eventId,
+      (eventTitle, attendees) =>
+        after(() =>
+          eventCancellationNotification(eventTitle, attendees).catch((error) =>
+            logger.error(`Failed sending event cancellation emails: ${error}`),
+          ),
+        ),
+    );
     return fromActionResult(result);
   } catch (error) {
     logger.error("mobile POST /organizer/events/cancel failed", error);

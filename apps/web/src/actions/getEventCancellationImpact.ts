@@ -5,7 +5,7 @@ import {
   type EventCancellationImpact,
   type EventCancellationImpactResult,
   getEventCancellationImpactCore,
-} from "@/utils/cancelEventCore";
+} from "@abonten/services/events/cancelEventCore";
 
 export type { EventCancellationImpact };
 

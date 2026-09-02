@@ -1,4 +1,3 @@
-import createNotification from "@/actions/createNotification";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -13,6 +12,7 @@ import type {
   OwnerPlaceBooking,
 } from "@abonten/types/placeBookingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createNotificationCore } from "../notifications/createNotification";
 
 // Post-auth bodies of getPlaceBookings / respondToPlaceBooking /
 // getPlaceReviews (owner Reviews tab) / respondToPlaceReview, lifted so the
@@ -199,22 +199,19 @@ export async function respondToPlaceBookingCore(
 
   const placeName = place?.name ?? "the place";
 
-  const notifyResult = await createNotification(
-    {
-      userId: booking.customer_id,
-      type: `place_booking_${newStatus}`,
-      title:
-        newStatus === "accepted"
-          ? "Your booking was accepted"
-          : "Your booking was declined",
-      body:
-        newStatus === "accepted"
-          ? `Your booking request for ${placeName} was accepted.`
-          : `Your booking request for ${placeName} was declined.`,
-      link: place?.slug ? `/places/${place.slug}` : null,
-    },
-    supabase,
-  );
+  const notifyResult = await createNotificationCore(supabase, {
+    userId: booking.customer_id,
+    type: `place_booking_${newStatus}`,
+    title:
+      newStatus === "accepted"
+        ? "Your booking was accepted"
+        : "Your booking was declined",
+    body:
+      newStatus === "accepted"
+        ? `Your booking request for ${placeName} was accepted.`
+        : `Your booking request for ${placeName} was declined.`,
+    link: place?.slug ? `/places/${place.slug}` : null,
+  });
 
   if (notifyResult.status !== 200) {
     logger.error(

@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
-import { respondToPlaceBookingCore } from "@/utils/placeBookingsReviewsCore";
 import { logger } from "@abonten/core/logger";
+import { respondToPlaceBookingCore } from "@abonten/services/places/placeBookingsReviewsCore";
 
 // POST /api/mobile/organizer/places/:placeId/bookings/respond
 //   { bookingId, decision: "accept" | "decline" }

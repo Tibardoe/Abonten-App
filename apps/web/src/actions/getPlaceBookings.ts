@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { fetchPlaceBookingsPage } from "@/utils/placeBookingsReviewsCore";
+import { fetchPlaceBookingsPage } from "@abonten/services/places/placeBookingsReviewsCore";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,

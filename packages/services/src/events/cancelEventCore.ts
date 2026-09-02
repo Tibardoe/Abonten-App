@@ -1,11 +1,7 @@
-import eventCancellationNotification, {
-  type CancelledAttendeeRefund,
-} from "@/actions/eventCancellationNotification";
-import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
-import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { after } from "next/server";
+import { issueRefundCore } from "../organizer/issueRefundCore";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth bodies of getEventCancellationImpact + cancelEvent, shared by
 // the Server Actions (cookie session) and the mobile HTTP routes (Bearer
@@ -16,8 +12,16 @@ import { after } from "next/server";
 // no logic fork. The Paystack refunds afterward run on a service-role
 // client because the transactions belong to the *attendees*, not the
 // organizer, and are idempotent + safe to retry (see cancelEvent's original
-// header for the full rationale). `revalidatePath` is Next-specific and
-// stays in the action wrapper.
+// header for the full rationale). `revalidatePath` and the attendee
+// cancellation emails (React templates + Resend) are Next-/apps/web-specific:
+// the caller passes `onRefundsInitiated`, which the web wrapper schedules
+// via next/server `after`.
+
+export type CancelledAttendeeRefund = {
+  userId: string;
+  amount: number;
+  currency: string;
+};
 
 export type EventCancellationImpact = {
   paidTicketCount: number;
@@ -90,6 +94,10 @@ export async function getEventCancellationImpactCore(
 export async function cancelEventCore(
   supabase: SupabaseClient,
   eventId: string,
+  onRefundsInitiated?: (
+    eventTitle: string,
+    attendees: CancelledAttendeeRefund[],
+  ) => void,
 ): Promise<CancelEventResult> {
   const { data: refundable, error: rpcError } = await supabase.rpc(
     "cancel_event_and_release_tickets",
@@ -136,7 +144,7 @@ export async function cancelEventCore(
     }
   }
 
-  if (transactions.length > 0) {
+  if (transactions.length > 0 && onRefundsInitiated) {
     const eventTitle = transactions[0].event_title;
     const attendees: CancelledAttendeeRefund[] = transactions.map((row) => ({
       userId: row.attendee_user_id,
@@ -144,11 +152,7 @@ export async function cancelEventCore(
       currency: row.transaction_currency,
     }));
 
-    after(() =>
-      eventCancellationNotification(eventTitle, attendees).catch((error) =>
-        logger.error(`Failed sending event cancellation emails: ${error}`),
-      ),
-    );
+    onRefundsInitiated(eventTitle, attendees);
   }
 
   const message =

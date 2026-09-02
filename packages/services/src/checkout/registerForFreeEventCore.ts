@@ -1,27 +1,24 @@
-import insertUserAttendance from "@/actions/insertUserAttendance";
-import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
-import {
-  releaseTicketQuantity,
-  reserveTicketQuantity,
-} from "@abonten/services/checkout/ticketInventory";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
-} from "@abonten/services/tickets/generateTicketCode";
-import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
-import type { AuthOverride } from "@abonten/types/authOverrideType";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { after } from "next/server";
+} from "../tickets/generateTicketCode";
+import { insertUserAttendanceCore } from "../tickets/insertUserAttendance";
+import { saveEventQrCodeToCloudinary } from "../tickets/saveEventQrCodeToCloudinary";
+import {
+  releaseTicketQuantity,
+  reserveTicketQuantity,
+} from "./ticketInventory";
 
-// Post-auth body of registerForFreeEvent, lifted so the mobile API route
-// (`/api/mobile/checkout/free-rsvp`) and the "use server" action run the
-// exact same one-click RSVP. Caller supplies an already-authenticated
+// Post-auth body of registerForFreeEvent, shared by the "use server" action
+// and the mobile API route (`/api/mobile/checkout/free-rsvp`) so both run
+// the exact same one-click RSVP. Caller supplies an already-authenticated
 // Supabase client + resolved userId. Quantity is always exactly 1 and is
-// never taken from the client. `revalidatePath` stays in the web wrapper;
-// the confirmation email is scheduled here (via `after`) so both platforms
-// send it. Deliberately NOT a "use server" file (see validateCheckoutCore.ts).
+// never taken from the client. `revalidatePath` and the confirmation email
+// (React template + Resend) stay in apps/web: the caller passes
+// `onRegistered`, which the web wrapper schedules via next/server `after`.
 
 type TicketWithEvent = {
   user_id: string;
@@ -40,9 +37,8 @@ export async function registerForFreeEventCore(
   userId: string,
   eventId: string,
   occurrenceId?: string | null,
+  onRegistered?: (ticketId: string) => void,
 ): Promise<RegisterForFreeEventCoreResult> {
-  const authOverride: AuthOverride = { supabase, userId };
-
   const { data: rawTicketData, error: ticketDataError } = await supabase
     .from("ticket")
     .select("user_id, status, ticket_type_id(event_id)")
@@ -170,11 +166,12 @@ export async function registerForFreeEventCore(
     return { status: 500, message: "Something went wrong!" };
   }
 
-  const attendanceInsertResponse = await insertUserAttendance(
+  const attendanceInsertResponse = await insertUserAttendanceCore(
+    supabase,
+    userId,
     eventId,
     ticketType.id,
     [insertedTicket.id],
-    authOverride,
   );
 
   if (attendanceInsertResponse.status !== 200) {
@@ -184,12 +181,9 @@ export async function registerForFreeEventCore(
     };
   }
 
-  // Runs after the response is sent — see generateTicket.ts. Never throws.
-  after(() =>
-    ticketPurchaseNotification([insertedTicket.id], 0, authOverride).catch(
-      (error) => logger.error(`Failed sending ticket purchase email: ${error}`),
-    ),
-  );
+  // The confirmation email (React PDF + Resend) is apps/web-only — the
+  // caller schedules it via next/server `after` once this returns 200.
+  onRegistered?.(insertedTicket.id);
 
   return {
     status: 200,

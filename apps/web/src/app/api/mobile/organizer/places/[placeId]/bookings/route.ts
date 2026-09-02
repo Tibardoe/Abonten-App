@@ -1,7 +1,7 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
-import { fetchPlaceBookingsPage } from "@/utils/placeBookingsReviewsCore";
 import { logger } from "@abonten/core/logger";
+import { fetchPlaceBookingsPage } from "@abonten/services/places/placeBookingsReviewsCore";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 
 const VALID_STATUSES: BookingStatus[] = [

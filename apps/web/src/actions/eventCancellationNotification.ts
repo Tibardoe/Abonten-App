@@ -3,13 +3,10 @@
 import EventCancellationEmailTemplate from "@/components/organisms/EventCancellationEmailTemplate";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
+import type { CancelledAttendeeRefund } from "@abonten/services/events/cancelEventCore";
 import { Resend } from "resend";
 
-export type CancelledAttendeeRefund = {
-  userId: string;
-  amount: number;
-  currency: string;
-};
+export type { CancelledAttendeeRefund };
 
 /**
  * Fire-and-forget cancellation emails for PAID ticket holders of a
