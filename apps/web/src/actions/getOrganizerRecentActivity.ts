@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
+import { fetchOrganizerRecentActivity } from "@/utils/organizerDashboardQuery";
 
 export default async function getOrganizerRecentActivity(limit = 8) {
   const supabase = await createClient();
@@ -15,15 +15,5 @@ export default async function getOrganizerRecentActivity(limit = 8) {
     return { status: 401 as const, message: "User not logged in" };
   }
 
-  const { data, error } = await supabase.rpc("get_organizer_recent_activity", {
-    p_limit: limit,
-  });
-
-  if (error) {
-    logger.error("Supabase error:", error.message);
-    return { status: 500 as const, message: "Something went wrong!" };
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
-  return { status: 200 as const, data: (data ?? []) as any[] };
+  return fetchOrganizerRecentActivity(supabase, limit);
 }

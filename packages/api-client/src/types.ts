@@ -392,6 +392,72 @@ export type OrganizerFinanceResult =
   | { status: 200; data: OrganizerFinanceOverviewRow[] }
   | { status: 401 | 500; message: string };
 
+// ---- organizer dashboard widgets (read-only) ------------------------
+//
+// One aggregate call feeds every widget below the overview cards, mirroring
+// the web Dashboard's five getOrganizer* section actions. The underlying
+// get_organizer_* RPCs have no generated types and PostgREST can serialise
+// their bigint/numeric columns as strings, so the mobile screen coerces
+// every numeric field with Number() on read.
+
+export type DashboardBucket = "hour" | "day" | "month";
+
+export type OrganizerTimelineRow = {
+  bucket_start: string;
+  gross: number | string;
+  orders: number | string;
+  [key: string]: unknown;
+};
+
+export type OrganizerPerformanceRow = {
+  event_id: string;
+  title: string | null;
+  starts_at: string | null;
+  status: string | null;
+  currency: string | null;
+  revenue: number | string;
+  tickets_sold: number | string;
+  [key: string]: unknown;
+};
+
+export type OrganizerUpcomingRow = {
+  event_id: string;
+  title: string | null;
+  next_occurrence_starts_at: string | null;
+  status: string | null;
+  tickets_sold: number | string;
+  capacity: number | string | null;
+  [key: string]: unknown;
+};
+
+export type OrganizerAttentionRow = {
+  event_id: string;
+  event_title: string | null;
+  message: string;
+  rule_type: string;
+  [key: string]: unknown;
+};
+
+export type OrganizerActivityRow = {
+  event_id: string;
+  event_title: string | null;
+  activity_type: string;
+  occurred_at: string;
+  [key: string]: unknown;
+};
+
+export type OrganizerDashboardWidgets = {
+  timeline: { rows: OrganizerTimelineRow[]; bucket: DashboardBucket };
+  performance: OrganizerPerformanceRow[];
+  upcoming: OrganizerUpcomingRow[];
+  attention: OrganizerAttentionRow[];
+  activity: OrganizerActivityRow[];
+};
+
+export type OrganizerDashboardWidgetsResult =
+  | { status: 200; data: OrganizerDashboardWidgets }
+  | { status: 401 | 500; message: string };
+
 // ---- event insights (per-event analytics, read-only) ----------------
 //
 // The underlying get_event_*_analytics RPCs have no generated types; the

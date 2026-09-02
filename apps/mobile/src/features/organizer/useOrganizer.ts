@@ -28,6 +28,18 @@ export function useOrganizerFinance() {
   });
 }
 
+// The Dashboard widget sections below the KPI cards (sales timeline, event
+// performance, upcoming events, needs attention, recent activity) — one
+// aggregate call, mirroring the web OrganizerDashboard's five section
+// queries.
+export function useOrganizerDashboardWidgets(period: OrganizerDashboardPeriod) {
+  return useQuery({
+    queryKey: [...KEY, "dashboard-widgets", period],
+    queryFn: () => api.organizer.dashboardWidgets(period),
+    staleTime: STALE_TIME,
+  });
+}
+
 export function useOrganizerEvents() {
   return useInfiniteQuery({
     queryKey: [...KEY, "events"],

@@ -1,4 +1,8 @@
-import { useOrganizerOverview } from "@/features/organizer/useOrganizer";
+import { DashboardWidgets } from "@/components/organizer/DashboardWidgets";
+import {
+  useOrganizerDashboardWidgets,
+  useOrganizerOverview,
+} from "@/features/organizer/useOrganizer";
 import type {
   OrganizerDashboardPeriod,
   OrganizerOverviewRow,
@@ -55,6 +59,7 @@ function NavRow({ href, label }: { href: string; label: string }) {
 export default function OrganizerDashboard() {
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("30d");
   const q = useOrganizerOverview(period);
+  const widgetsQuery = useOrganizerDashboardWidgets(period);
 
   const result = q.data;
   const rows: OrganizerOverviewRow[] =
@@ -65,6 +70,9 @@ export default function OrganizerDashboard() {
   // Money is per sales currency; tickets + event counts are organiser-wide
   // and identical on every row.
   const moneyRows = rows.filter((r) => r.currency != null);
+  const primaryCurrency = moneyRows[0]?.currency ?? "GHS";
+  const widgets =
+    widgetsQuery.data?.status === 200 ? widgetsQuery.data.data : null;
 
   return (
     <ScrollView
@@ -72,8 +80,11 @@ export default function OrganizerDashboard() {
       contentContainerClassName="gap-5 p-4 pb-12"
       refreshControl={
         <RefreshControl
-          refreshing={q.isRefetching}
-          onRefresh={() => q.refetch()}
+          refreshing={q.isRefetching || widgetsQuery.isRefetching}
+          onRefresh={() => {
+            q.refetch();
+            widgetsQuery.refetch();
+          }}
         />
       }
     >
@@ -215,6 +226,10 @@ export default function OrganizerDashboard() {
               <Stat label="Total" value={String(n(head?.total_events_count))} />
             </View>
           </View>
+
+          {widgets ? (
+            <DashboardWidgets widgets={widgets} currency={primaryCurrency} />
+          ) : null}
         </>
       )}
 
@@ -227,12 +242,9 @@ export default function OrganizerDashboard() {
           </Pressable>
         </Link>
         <NavRow href="/(app)/organizer/events" label="My events" />
+        <NavRow href="/(app)/organizer/places" label="My places" />
         <NavRow href="/(app)/organizer/finance" label="Finances" />
       </View>
-
-      <Text className="text-center text-[11px] text-muted-foreground">
-        Editing an event is still done on the Abonten website.
-      </Text>
     </ScrollView>
   );
 }

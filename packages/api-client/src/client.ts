@@ -32,6 +32,7 @@ import type {
   MutatePayoutAccountResult,
   NotificationType,
   OrganizerDashboardPeriod,
+  OrganizerDashboardWidgetsResult,
   OrganizerFinanceResult,
   OrganizerLedgerTransactionRow,
   OrganizerOverviewResult,
@@ -471,6 +472,17 @@ export function createApiClient(options: ApiClientOptions) {
       finance() {
         return request<OrganizerFinanceResult>(
           "/api/mobile/organizer/finance",
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * Every Dashboard widget section (sales timeline, event performance,
+       * upcoming events, needs attention, recent activity) for the period,
+       * in one call — the counterpart to overview()'s KPI cards.
+       */
+      dashboardWidgets(period: OrganizerDashboardPeriod = "30d") {
+        return request<OrganizerDashboardWidgetsResult>(
+          `/api/mobile/organizer/dashboard?period=${period}`,
           { method: "GET", auth: true },
         );
       },
