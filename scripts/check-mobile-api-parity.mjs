@@ -46,7 +46,7 @@ if (missing.length > 0) {
     console.error(`  ${m.route}   (looked for "${m.needle}" in client.ts)`);
   }
   console.error(
-    `\nAdd the method to packages/api-client/src/client.ts, or confirm the path literal matches.\n`,
+    "\nAdd the method to packages/api-client/src/client.ts, or confirm the path literal matches.\n",
   );
   process.exit(1);
 }
