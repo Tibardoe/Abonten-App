@@ -37,7 +37,7 @@ export function FavoriteButton({
       router.push("/(auth)/sign-in");
       return;
     }
-    if (!toggle.isPending) toggle.mutate();
+    if (!toggle.isPending) toggle.mutate(!favorited);
   }
 
   return (
