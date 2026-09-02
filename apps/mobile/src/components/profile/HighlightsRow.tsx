@@ -1,15 +1,12 @@
-import { PostHighlightSheet } from "@/components/profile/PostHighlightSheet";
+import { HighlightUploadStatus } from "@/components/profile/HighlightUploadStatus";
+import { useHighlightUpload } from "@/features/profile/HighlightUploadProvider";
 import {
-  type HighlightMediaPick,
-  MAX_HIGHLIGHT_IMAGE_BYTES,
-  MAX_HIGHLIGHT_VIDEO_BYTES,
-  MAX_HIGHLIGHT_VIDEO_SECONDS,
   useDeleteHighlightGroup,
   useHighlights,
 } from "@/features/profile/useHighlights";
 import { Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 import { HighlightViewer } from "./HighlightViewer";
@@ -17,9 +14,9 @@ import { HighlightViewer } from "./HighlightViewer";
 // Native echo of the web `UserHighlights` row: a horizontal strip of circular
 // highlight covers (mint ring). Tapping one opens the story-style
 // `HighlightViewer`. On your own profile the strip also has an "add" circle
-// (pick images/videos → PostHighlightSheet review + upload) and a long-press
-// on a cover deletes that whole group — creator tooling mirroring the web
-// `HighlightModal` + `HighlightMenu`.
+// that opens the full-screen composer (`/highlight/new` — pick, crop, trim,
+// post) and a long-press on a cover deletes that whole group — creator
+// tooling mirroring the web `HighlightModal` + `HighlightMenu`.
 
 export function HighlightsRow({
   userId,
@@ -34,70 +31,14 @@ export function HighlightsRow({
   avatarPublicId?: string | null;
   avatarVersion?: number | string | null;
 }) {
+  const router = useRouter();
   const { data: groups } = useHighlights(userId);
   const deleteGroup = useDeleteHighlightGroup(userId);
+  const { isUploading } = useHighlightUpload();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [pendingMedia, setPendingMedia] = useState<HighlightMediaPick[] | null>(
-    null,
-  );
 
   const hasGroups = !!groups && groups.length > 0;
   if (!hasGroups && !isOwn) return null;
-
-  async function pickMedia() {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to add highlights.",
-      );
-      return;
-    }
-    const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images", "videos"],
-      allowsMultipleSelection: true,
-      quality: 0.8,
-    });
-    if (picked.canceled || !picked.assets?.length) return;
-
-    const media: HighlightMediaPick[] = [];
-    for (const asset of picked.assets) {
-      const isVideo = asset.type === "video";
-      const maxBytes = isVideo
-        ? MAX_HIGHLIGHT_VIDEO_BYTES
-        : MAX_HIGHLIGHT_IMAGE_BYTES;
-      if (typeof asset.fileSize === "number" && asset.fileSize > maxBytes) {
-        Alert.alert(
-          "File too large",
-          `${isVideo ? "Videos" : "Images"} must be ${Math.round(
-            maxBytes / (1024 * 1024),
-          )}MB or smaller.`,
-        );
-        return;
-      }
-      const durationSeconds =
-        isVideo && typeof asset.duration === "number"
-          ? asset.duration / 1000
-          : null;
-      if (
-        durationSeconds &&
-        durationSeconds > MAX_HIGHLIGHT_VIDEO_SECONDS + 1
-      ) {
-        Alert.alert(
-          "Video too long",
-          `Highlight videos must be ${MAX_HIGHLIGHT_VIDEO_SECONDS} seconds or shorter. Trim it on the Abonten website first.`,
-        );
-        return;
-      }
-      media.push({
-        uri: asset.uri,
-        type: isVideo ? "video" : "image",
-        durationSeconds,
-      });
-    }
-
-    setPendingMedia(media);
-  }
 
   function confirmDeleteGroup(groupId: string) {
     Alert.alert("Delete highlight?", "This removes every slide in it.", [
@@ -119,6 +60,8 @@ export function HighlightsRow({
 
   return (
     <View>
+      {isOwn ? <HighlightUploadStatus /> : null}
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -126,8 +69,10 @@ export function HighlightsRow({
       >
         {isOwn ? (
           <Pressable
-            onPress={pickMedia}
+            onPress={() => router.push("/(app)/highlight/new")}
+            disabled={isUploading}
             className="items-center justify-center active:opacity-80"
+            style={{ opacity: isUploading ? 0.4 : 1 }}
             accessibilityRole="button"
             accessibilityLabel="Add highlight"
           >
@@ -174,16 +119,6 @@ export function HighlightsRow({
           avatarPublicId={avatarPublicId}
           avatarVersion={avatarVersion}
           onClose={() => setOpenIndex(null)}
-        />
-      ) : null}
-
-      {pendingMedia ? (
-        <PostHighlightSheet
-          open
-          media={pendingMedia}
-          userId={userId}
-          onClose={() => setPendingMedia(null)}
-          onPosted={() => setPendingMedia(null)}
         />
       ) : null}
     </View>

@@ -63,6 +63,35 @@ function postForm(
   });
 }
 
+// Pick a sensible multipart filename + MIME from the local file's own
+// extension instead of always claiming "upload.mp4" / "upload.jpg" — a
+// cropped JPEG, a PNG, or a .mov from the library then reaches Cloudinary
+// labelled correctly.
+function describeFile(
+  uri: string,
+  isVideo: boolean,
+): { name: string; type: string } {
+  const ext = (uri.split(/[?#]/)[0]?.split(".").pop() ?? "").toLowerCase();
+  if (isVideo) {
+    const type =
+      ext === "mov"
+        ? "video/quicktime"
+        : ext === "webm"
+          ? "video/webm"
+          : "video/mp4";
+    return { name: `upload.${ext || "mp4"}`, type };
+  }
+  const type =
+    ext === "png"
+      ? "image/png"
+      : ext === "webp"
+        ? "image/webp"
+        : ext === "heic" || ext === "heif"
+          ? "image/heic"
+          : "image/jpeg";
+  return { name: `upload.${ext || "jpg"}`, type };
+}
+
 export async function uploadToCloudinary(
   uri: string,
   kind: UploadSignatureKind,
@@ -77,11 +106,12 @@ export async function uploadToCloudinary(
   if (!cloud) throw new Error("Cloudinary is not configured.");
 
   const isVideo = !!opts?.video;
+  const file = describeFile(uri, isVideo);
   const form = new FormData();
   form.append("file", {
     uri,
-    name: isVideo ? "upload.mp4" : "upload.jpg",
-    type: isVideo ? "video/mp4" : "image/jpeg",
+    name: file.name,
+    type: file.type,
     // biome-ignore lint/suspicious/noExplicitAny: RN FormData file part
   } as any);
   form.append("api_key", String(apiKey ?? ""));
