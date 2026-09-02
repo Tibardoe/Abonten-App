@@ -1152,6 +1152,28 @@ export type PlaceBookingRespondResult = {
   message: string;
 };
 
+// ---- customer-side booking (place detail "Book" + "My bookings") ----
+
+// Reservation REQUEST only: no payment, no slot model. `requestedTime` is an
+// ISO string and must be in the future; `serviceId` is one of the place's
+// own services (optional); `partySize` >= 1 (optional).
+export type RequestPlaceBookingBody = {
+  serviceId?: string | null;
+  requestedTime: string;
+  partySize?: number | null;
+  note?: string | null;
+};
+
+export type RequestPlaceBookingResult = {
+  status: 200 | 400 | 401 | 403 | 404 | 500;
+  message: string;
+};
+
+export type CancelPlaceBookingResult = {
+  status: 200 | 401 | 403 | 404 | 409 | 500;
+  message: string;
+};
+
 // One `place_review` row as the owner Reviews tab reads it — the approved
 // review plus the reviewer's handle/avatar and its photos. Untyped like
 // every other joined Supabase row in this repo (no generated types); read

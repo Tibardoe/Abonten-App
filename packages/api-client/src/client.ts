@@ -8,6 +8,7 @@ import type {
   AttendanceRow,
   BookingStatus,
   CancelEventResult,
+  CancelPlaceBookingResult,
   CancelTicketBody,
   CancelTicketResult,
   CardVerificationInitData,
@@ -73,6 +74,8 @@ import type {
   RequestPayoutResult,
   RequestPhoneOtpBody,
   RequestPhoneOtpData,
+  RequestPlaceBookingBody,
+  RequestPlaceBookingResult,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
   SaveEventDraftBody,
@@ -419,6 +422,23 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+
+      /** Request a reservation at a place (pending; the owner accepts or
+       *  declines). Same rules as the web requestPlaceBooking action. */
+      requestBooking(placeId: string, body: RequestPlaceBookingBody) {
+        return request<RequestPlaceBookingResult>(
+          `/api/mobile/places/${encodeURIComponent(placeId)}/bookings`,
+          { method: "POST", body, auth: true },
+        );
+      },
+
+      /** Cancel one of the caller's own bookings (pending or accepted). */
+      cancelBooking(placeId: string, bookingId: string) {
+        return request<CancelPlaceBookingResult>(
+          `/api/mobile/places/${encodeURIComponent(placeId)}/bookings/cancel`,
+          { method: "POST", body: { bookingId }, auth: true },
+        );
       },
     },
 
