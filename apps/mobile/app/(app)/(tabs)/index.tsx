@@ -43,6 +43,7 @@ import {
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
+import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { FlatList, Pressable, RefreshControl, View } from "react-native";
 
@@ -55,8 +56,19 @@ type Tab = "events" | "places";
 // Today-Week-Month / Top Rated), and the filterable "All events" / "All
 // places" list with filter-aware empty states.
 export default function Explore() {
+  const router = useRouter();
   const { location, resolving } = useExploreLocation();
   const coords = location ? { lat: location.lat, lng: location.lng } : null;
+
+  const openSection = useCallback(
+    (kind: "event" | "place", sliderKey: string, title: string) => {
+      router.push({
+        pathname: "/(app)/explore/[type]",
+        params: { type: sliderKey, kind, title },
+      });
+    },
+    [router],
+  );
 
   const [tab, setTab] = useState<Tab>("events");
   const [view, setView] = useState<"list" | "map">("list");
@@ -141,22 +153,35 @@ export default function Explore() {
         <EventSliderRow
           title="Around you"
           events={eventSliders.data.aroundYou}
+          onViewAll={() => openSection("event", "aroundYou", "Around you")}
         />
         <EventSliderRow
           title="Top-rated organizers"
           events={eventSliders.data.topRatedOrganizers}
+          onViewAll={() =>
+            openSection("event", "topRatedOrganizers", "Top-rated organizers")
+          }
         />
         <EventSliderRow
           title="Happening today"
           events={eventSliders.data.happeningToday}
+          onViewAll={() =>
+            openSection("event", "happeningToday", "Happening today")
+          }
         />
         <EventSliderRow
           title="Happening this week"
           events={eventSliders.data.happeningThisWeek}
+          onViewAll={() =>
+            openSection("event", "happeningThisWeek", "Happening this week")
+          }
         />
         <EventSliderRow
           title="Happening this month"
           events={eventSliders.data.happeningThisMonth}
+          onViewAll={() =>
+            openSection("event", "happeningThisMonth", "Happening this month")
+          }
         />
       </View>
     ) : (
@@ -170,9 +195,18 @@ export default function Explore() {
         <PlaceSliderRow
           title="Around you"
           places={placeSliders.data.aroundYou}
+          onViewAll={() => openSection("place", "aroundYou", "Around you")}
         />
-        <PlaceSliderRow title="Open now" places={placeSliders.data.openNow} />
-        <PlaceSliderRow title="Top rated" places={placeSliders.data.topRated} />
+        <PlaceSliderRow
+          title="Open now"
+          places={placeSliders.data.openNow}
+          onViewAll={() => openSection("place", "openNow", "Open now")}
+        />
+        <PlaceSliderRow
+          title="Top rated"
+          places={placeSliders.data.topRated}
+          onViewAll={() => openSection("place", "topRated", "Top rated")}
+        />
       </View>
     );
 

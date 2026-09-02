@@ -2,30 +2,62 @@ import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
-import { SectionTitle } from "@abonten/ui-native";
-import { FlatList, View } from "react-native";
+import { AppText, Icon, SectionTitle } from "@abonten/ui-native";
+import { FlatList, Pressable, View } from "react-native";
 
 // Native echo of the web EventsSlider / PlacesSlider — a titled horizontal
-// strip of cards above the filterable "All" list. The web sliders also
-// carry a "see all" link to a dedicated window page
-// (/explore/.../happening-today etc.); those routes don't exist on mobile
-// yet, so the heading is not yet linked (tracked in docs/mobile/09).
-// Featured events get the FeaturedEventsCarousel banner treatment instead
-// of this row.
+// strip of cards above the filterable "All" list, now with a "See all"
+// action that opens the full window (app/(app)/explore/[type]). Featured
+// events get the FeaturedEventsCarousel banner treatment instead of this
+// row.
 
 const CARD_WIDTH = 260;
+// Below this the strip already shows everything, so "See all" is noise.
+const VIEW_ALL_MIN = 4;
+
+function Header({
+  title,
+  onViewAll,
+  count,
+}: {
+  title: string;
+  onViewAll?: () => void;
+  count: number;
+}) {
+  return (
+    <View className="flex-row items-center justify-between px-4">
+      <SectionTitle>{title}</SectionTitle>
+      {onViewAll && count >= VIEW_ALL_MIN ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`See all ${title}`}
+          onPress={onViewAll}
+          hitSlop={8}
+          className="flex-row items-center gap-0.5 active:opacity-60"
+        >
+          <AppText className="text-[13px] font-semibold text-primary">
+            See all
+          </AppText>
+          <Icon name="chevron-forward" size={15} tone="primary" />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
 
 export function EventSliderRow({
   title,
   events,
+  onViewAll,
 }: {
   title: string;
   events: UserPostType[];
+  onViewAll?: () => void;
 }) {
   if (events.length === 0) return null;
   return (
     <View className="gap-2 pt-4">
-      <SectionTitle className="px-4">{title}</SectionTitle>
+      <Header title={title} onViewAll={onViewAll} count={events.length} />
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -46,16 +78,18 @@ export function PlaceSliderRow({
   title,
   places,
   sponsored = false,
+  onViewAll,
 }: {
   title: string;
   places: PlaceType[];
   /** Featured (paid-placement) row — cards show a "Sponsored" pill. */
   sponsored?: boolean;
+  onViewAll?: () => void;
 }) {
   if (places.length === 0) return null;
   return (
     <View className="gap-2 pt-4">
-      <SectionTitle className="px-4">{title}</SectionTitle>
+      <Header title={title} onViewAll={onViewAll} count={places.length} />
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
