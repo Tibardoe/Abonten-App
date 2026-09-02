@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { keysetOlderThan } from "@abonten/core/pagination";
+import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import {
   useInfiniteQuery,
@@ -20,6 +21,40 @@ import {
 
 const PAGE_SIZE = 20;
 
+// Native echo of insertReviewPhotos.ts: once the review row exists (so its id
+// is known and its reviewer_id is guaranteed to be the caller), attach the
+// caller's already-uploaded photos. A publicId outside the caller's own
+// signed folder means tampered metadata — silently dropped, since the review
+// itself already saved. Anything past MAX_REVIEW_PHOTOS is dropped too.
+export type ReviewPhotoInput = { publicId: string; version: string };
+
+export type ReviewPhotoRow = {
+  id: string;
+  public_id: string;
+  version: string;
+  position: number;
+};
+
+async function attachEventReviewPhotos(
+  userId: string,
+  reviewId: string,
+  photos: ReviewPhotoInput[] | undefined,
+): Promise<void> {
+  if (!photos?.length) return;
+  const prefix = `event_review_photos/${userId}/`;
+  const rows = photos
+    .filter((p) => p.publicId.startsWith(prefix))
+    .slice(0, MAX_REVIEW_PHOTOS)
+    .map((p, index) => ({
+      event_review_id: reviewId,
+      public_id: p.publicId,
+      version: p.version,
+      position: index,
+    }));
+  if (!rows.length) return;
+  await supabase.from("event_review_photo").insert(rows);
+}
+
 export type EventForReview = {
   id: string;
   organizer_id: string;
@@ -34,6 +69,7 @@ export type OwnEventReview = {
   rating: number;
   title: string | null;
   comment: string | null;
+  event_review_photo?: ReviewPhotoRow[] | null;
 };
 
 export type EventReviewEligibility =
@@ -75,7 +111,9 @@ async function computeEligibility(
 
   const { data: own } = await supabase
     .from("event_review")
-    .select("id, rating, title, comment")
+    .select(
+      "id, rating, title, comment, event_review_photo(id, public_id, version, position)",
+    )
     .eq("event_id", event.id)
     .eq("reviewer_id", userId)
     .maybeSingle();
@@ -202,6 +240,7 @@ export type UserEventReview = {
   comment: string | null;
   created_at: string;
   is_verified_attendee: boolean;
+  event_review_photo?: ReviewPhotoRow[] | null;
   event: {
     id: string;
     title: string;
@@ -225,7 +264,7 @@ export function useUserEventReviews() {
       let query = supabase
         .from("event_review")
         .select(
-          "id, rating, title, comment, created_at, is_verified_attendee, event:event_id(id, title, event_code, flyer_public_id, flyer_version)",
+          "id, rating, title, comment, created_at, is_verified_attendee, event_review_photo(id, public_id, version, position), event:event_id(id, title, event_code, flyer_public_id, flyer_version)",
         )
         .eq("reviewer_id", userId ?? "")
         .order("created_at", { ascending: false })
@@ -269,23 +308,31 @@ export function usePostEventReview() {
       rating: number;
       title?: string;
       comment?: string;
+      photos?: ReviewPhotoInput[];
     }) => {
       if (!userId) throw new Error("Not signed in");
-      const { error } = await supabase.from("event_review").insert({
-        event_id: input.eventId,
-        reviewer_id: userId,
-        rating: input.rating,
-        title: input.title ? titleCase(input.title) : null,
-        comment: input.comment?.trim() ? input.comment.trim() : null,
-        status: "approved",
-        is_verified_attendee: true,
-      });
+      const { data: review, error } = await supabase
+        .from("event_review")
+        .insert({
+          event_id: input.eventId,
+          reviewer_id: userId,
+          rating: input.rating,
+          title: input.title ? titleCase(input.title) : null,
+          comment: input.comment?.trim() ? input.comment.trim() : null,
+          status: "approved",
+          is_verified_attendee: true,
+        })
+        .select("id")
+        .single();
       if (error) {
         // 23505 = unique_violation on UNIQUE(event_id, reviewer_id).
         if (error.code === "23505")
           throw new Error("You've already reviewed this event.");
         throw error;
       }
+      // The review itself is saved; a photo-attach failure never fails it
+      // (mirrors insertReviewPhotos.ts).
+      await attachEventReviewPhotos(userId, review.id, input.photos);
     },
     onSuccess: (_data, input) => {
       qc.invalidateQueries({ queryKey: ["reviews", "awaiting", userId] });
