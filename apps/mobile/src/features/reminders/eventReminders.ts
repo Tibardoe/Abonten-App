@@ -7,16 +7,13 @@ import { Platform } from "react-native";
 // a device reboot (expo-notifications re-arms scheduled notifications on
 // BOOT_COMPLETED on Android; iOS holds them in the OS).
 //
-// The user's choice per event is persisted in expo-secure-store — one small
-// JSON record per event plus an index — so it can be reconciled later:
-// whenever the event's detail is (re)loaded we compare the stored start time
-// with the fresh one and re-arm on a change, and drop everything if the
-// event is cancelled or gone.
-//
-// LIMITATION: this is device-local. There is no reminders table in the
-// backend, so a reminder set on one device is not mirrored to the user's
-// other devices. Adding that would need a new table + an /api/mobile route;
-// out of scope here and flagged in the Phase-2 notes.
+// The user's choice per event is persisted in expo-secure-store (one small
+// JSON record per event + an index) AND mirrored to the RLS-scoped
+// `event_reminder` table (see reminderSync.ts) so a reminder set on one
+// device is picked up by the user's other devices. Reconciliation
+// (useEventReminder / useRemindersSync) re-arms the local schedule on a
+// start-time change or a cross-device change, and clears it if the event is
+// cancelled or deleted (FK cascade removes the row).
 
 export const ANDROID_CHANNEL_ID = "event-reminders";
 
@@ -33,6 +30,10 @@ export type EventReminderRecord = {
   startsAtIso: string;
   offsets: number[]; // minutes-before, subset of REMINDER_OFFSETS
   notificationIds: string[];
+  /** true once these offsets are known to be on the `event_reminder` row.
+   * false = the server push failed (offline) and a later sync should retry
+   * rather than treat a missing server row as "removed elsewhere". */
+  serverSynced: boolean;
 };
 
 const recordKey = (eventId: string) =>
@@ -92,6 +93,13 @@ async function cancelIds(ids: string[]): Promise<void> {
   );
 }
 
+/** Order-insensitive equality for two offset lists. */
+export function sameOffsets(a: number[], b: number[]): boolean {
+  if (a.length !== b.length) return false;
+  const sb = [...b].sort((x, y) => x - y);
+  return [...a].sort((x, y) => x - y).every((v, i) => v === sb[i]);
+}
+
 function offsetLabel(minutes: number): string {
   return (
     REMINDER_OFFSETS.find((o) => o.minutes === minutes)?.label ??
@@ -109,6 +117,8 @@ export async function setEventReminders(input: {
   eventTitle: string;
   startsAtIso: string;
   offsets: number[];
+  /** Written onto the stored record (see EventReminderRecord.serverSynced). */
+  serverSynced?: boolean;
 }): Promise<EventReminderRecord | null> {
   const existing = await getEventReminder(input.eventId);
   if (existing) await cancelIds(existing.notificationIds);
@@ -151,6 +161,7 @@ export async function setEventReminders(input: {
     startsAtIso: input.startsAtIso,
     offsets: keptOffsets,
     notificationIds,
+    serverSynced: input.serverSynced ?? false,
   };
 
   if (keptOffsets.length === 0) {
@@ -206,8 +217,22 @@ export async function reconcileEventReminder(input: {
       eventTitle: record.eventTitle,
       startsAtIso: input.startsAtIso,
       offsets: record.offsets,
+      serverSynced: record.serverSynced,
     });
   }
+}
+
+/** Flip only the serverSynced flag on the stored record (no reschedule). */
+export async function markLocalServerSynced(
+  eventId: string,
+  synced: boolean,
+): Promise<void> {
+  const record = await getEventReminder(eventId);
+  if (!record) return;
+  await SecureStore.setItemAsync(
+    recordKey(eventId),
+    JSON.stringify({ ...record, serverSynced: synced }),
+  );
 }
 
 export async function listEventReminders(): Promise<EventReminderRecord[]> {
