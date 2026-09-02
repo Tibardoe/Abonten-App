@@ -223,6 +223,63 @@ function resolveEventDateRange(
   return null;
 }
 
+/**
+ * Compact single-line date/time for a discovery card, per the mobile card
+ * spec: always show ONE date — the first upcoming occurrence for a
+ * multi-date event, the "from" day for a multi-day range, or the single day
+ * — plus its start time, never a "from – to" span (those don't fit a card
+ * and get truncated to noise). `extraDates` is how many further dates exist
+ * beyond the one shown, so the card can add a quiet "+N dates" hint instead
+ * of concatenating them. The year is included only when it isn't the
+ * current year.
+ */
+export function getEventCardDateTime(
+  startsAt: string | Date | null | undefined,
+  endsAt: string | Date | null | undefined,
+  fallbackOccurrences?: Occurrence[] | null,
+): { date: string; time: string; extraDates: number } {
+  const range = resolveEventDateRange(startsAt, endsAt, fallbackOccurrences);
+  if (!range) return { date: "Date TBC", time: "", extraDates: 0 };
+
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const s = range.starts;
+  const now = new Date();
+  const sameYear = s.getFullYear() === now.getFullYear();
+  const date = `${daysOfWeek[s.getDay()]}, ${s.getDate()} ${months[s.getMonth()]}${
+    sameYear ? "" : ` ${s.getFullYear()}`
+  }`;
+  const time = s.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  // How many *other* dates this event has beyond the one shown.
+  const occCount = fallbackOccurrences?.length ?? 0;
+  let extraDates = occCount > 1 ? occCount - 1 : 0;
+  if (extraDates === 0) {
+    // A single multi-day range still "has more than one date" to a reader.
+    const spansDays = new Date(range.ends).toDateString() !== s.toDateString();
+    if (spansDays) extraDates = 1;
+  }
+
+  return { date, time, extraDates };
+}
+
 export function getFormattedEventDate(
   startsAt: string | Date | null | undefined,
   endsAt: string | Date | null | undefined,

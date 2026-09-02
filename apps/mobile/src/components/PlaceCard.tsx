@@ -9,11 +9,15 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 
-// Native PlaceCard — same information and hierarchy as the web
-// places/molecules/PlaceCard: a clean cover, then a title + favourite row, a
-// category / verified / open-status badge row, the address, and a
-// rating + "X km away" row. As with EventCard the favourite toggle stays on
-// the image (app-wide convention) rather than sitting in the title row.
+// Native PlaceCard. On the cover: a rating pill + a distance pill
+// (bottom-left) and a favourite toggle (top-right), plus an optional
+// "Sponsored" pill. Below: name, place type, open / closed, venue.
+//
+// Edge cases are handled by clamping and letting text flex inside its row:
+//   • name   — 2 lines, the verified tick pinned beside it
+//   • type   — 1 line, shares its row with the open/closed pill which never
+//              shrinks
+//   • venue  — 2 lines, icon pinned to the top of the block
 
 function addressText(address: PlaceType["address"]): string {
   if (address && typeof address === "object" && "full_address" in address) {
@@ -35,7 +39,7 @@ export function PlaceCard({
     place.cover_public_id && place.cover_version
       ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
           width: 420,
-          height: 236,
+          height: 280,
         })
       : null;
 
@@ -46,7 +50,6 @@ export function PlaceCard({
     place.temporary_status ?? null,
   );
   const address = addressText(place.address);
-
   const rating = place.avg_rating ?? 0;
 
   return (
@@ -87,28 +90,61 @@ export function PlaceCard({
         <View className="absolute right-2.5 top-2.5">
           <FavoriteButton kind="place" id={place.id} onSurface size={18} />
         </View>
+
+        {/* rating + distance, bottom-left over the scrim */}
+        <View className="absolute bottom-2.5 left-2.5 right-2.5 flex-row items-center gap-2">
+          {rating > 0 ? (
+            <View className="flex-row items-center gap-1 rounded-full bg-card px-2 py-1">
+              <Stars rating={rating} size={12} />
+              <AppText className="text-[11px] font-semibold text-foreground">
+                {rating.toFixed(1)}
+              </AppText>
+              <AppText className="text-[11px] text-muted-foreground">
+                ({place.review_count ?? 0})
+              </AppText>
+            </View>
+          ) : null}
+          {typeof place.distance_km === "number" ? (
+            <View
+              className="flex-row items-center gap-1 rounded-full px-2 py-1"
+              style={{ backgroundColor: "rgba(17,24,32,0.6)" }}
+            >
+              <Icon name="navigate-outline" size={11} color="#fff" />
+              <AppText className="text-[11px] font-medium text-white">
+                {place.distance_km.toFixed(1)} km
+              </AppText>
+            </View>
+          ) : null}
+        </View>
       </View>
 
-      <View className="gap-2.5 p-3.5">
-        <View className="flex-row items-start gap-2">
+      <View className="gap-2 p-3.5">
+        <View className="flex-row items-start gap-1.5">
           <AppText variant="cardTitle" numberOfLines={2} className="flex-1">
             {place.name}
           </AppText>
           {place.verified ? (
-            <Icon name="checkmark-circle" size={16} tone="primary" />
+            <Icon
+              name="checkmark-circle"
+              size={16}
+              tone="primary"
+              style={{ marginTop: 1 }}
+            />
           ) : null}
         </View>
 
-        {/* category / open-status pill row — web's flex-wrap badge row */}
-        <View className="flex-row flex-wrap items-center gap-1.5">
+        <View className="flex-row items-center gap-2">
           {place.category_name ? (
-            <View className="rounded-full bg-muted px-2.5 py-1">
-              <AppText className="text-[11px] text-muted-foreground">
-                {place.category_name}
-              </AppText>
-            </View>
-          ) : null}
-          <View className="flex-row items-center gap-1 rounded-full bg-muted px-2.5 py-1">
+            <AppText
+              className="flex-1 text-[12px] text-muted-foreground"
+              numberOfLines={1}
+            >
+              {place.category_name}
+            </AppText>
+          ) : (
+            <View className="flex-1" />
+          )}
+          <View className="flex-row items-center gap-1">
             <View
               className={`h-1.5 w-1.5 rounded-full ${
                 openStatus.isOpen ? "bg-primary" : "bg-destructive"
@@ -118,6 +154,7 @@ export function PlaceCard({
               className={`text-[11px] font-medium ${
                 openStatus.isOpen ? "text-primary" : "text-muted-foreground"
               }`}
+              numberOfLines={1}
             >
               {openStatus.label}
             </AppText>
@@ -126,7 +163,12 @@ export function PlaceCard({
 
         {address ? (
           <View className="flex-row items-start gap-1.5">
-            <Icon name="location-outline" size={14} tone="muted" />
+            <Icon
+              name="location-outline"
+              size={13}
+              tone="muted"
+              style={{ marginTop: 1 }}
+            />
             <AppText
               className="flex-1 text-[12px] text-muted-foreground"
               numberOfLines={2}
@@ -135,29 +177,6 @@ export function PlaceCard({
             </AppText>
           </View>
         ) : null}
-
-        {/* rating (left) + distance pill (right) — web's bottom row */}
-        <View className="flex-row flex-wrap items-center justify-between gap-2 pt-0.5">
-          {rating > 0 ? (
-            <View className="flex-row items-center gap-1">
-              <Stars rating={rating} size={13} />
-              <AppText className="text-[12px] text-muted-foreground">
-                ({place.review_count ?? 0})
-              </AppText>
-            </View>
-          ) : (
-            <AppText className="text-[12px] text-muted-foreground">
-              No reviews yet
-            </AppText>
-          )}
-          {typeof place.distance_km === "number" ? (
-            <View className="rounded-full bg-muted px-2 py-1">
-              <AppText className="text-[11px] text-muted-foreground">
-                {place.distance_km.toFixed(1)} km away
-              </AppText>
-            </View>
-          ) : null}
-        </View>
       </View>
     </Pressable>
   );

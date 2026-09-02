@@ -4,7 +4,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { getFormattedEventDate } from "@abonten/core/dateFormatter";
+import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
@@ -16,14 +16,43 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
-// Native EventCard — same information and hierarchy as the web
-// molecules/EventCard: a clean cover (favourite toggle + "You're going"
-// corner badge + a canceled / sold-out / ended status wash), then a
-// title + 3-dot-menu row, the location, a date + time row, and a
-// spots-left / attending / price pill row. The only deliberate departure
-// from web is keeping the favourite toggle on the image (every discovery
-// surface in the app puts it there, and FavoriteButton has an `onSurface`
-// mode for exactly this).
+// A translucent-dark circular button for controls that sit over a photo —
+// readable on any image, unlike bg-card.
+function GlassButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: "ellipsis-horizontal";
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      onPress={onPress}
+      className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
+      style={{ backgroundColor: "rgba(17,24,32,0.55)" }}
+    >
+      <Icon name={icon} size={18} color="#fff" />
+    </Pressable>
+  );
+}
+
+// Native EventCard. On the flyer: a favourite toggle + a ⋯ menu (top-right),
+// a "You're going" badge (top-left), a price pill (bottom-left) and the
+// canceled / sold-out / ended status wash. Below: title, one date + start
+// time, the venue, then spots-left + attendance.
+//
+// Edge cases (long title / date / venue) are all handled by clamping to a
+// bounded number of lines with a tail ellipsis and letting the text flex
+// inside its row so it can never widen the card:
+//   • title  — 2 lines
+//   • date   — a SINGLE day + time (getEventCardDateTime never returns a
+//              "from – to" span; extra dates collapse to a "+N more" hint)
+//   • venue  — 2 lines, icon pinned to the top of the block
 
 function priceLabel(event: UserPostType): string {
   const price = event.min_price ?? event.ticket_price;
@@ -34,8 +63,8 @@ function priceLabel(event: UserPostType): string {
 
 function spotsLabel(event: UserPostType, attendees: number): string {
   return event.capacity && event.capacity > 0
-    ? `${Math.max(event.capacity - attendees, 0)} spots left`
-    : "Unlimited";
+    ? `${Math.max(event.capacity - attendees, 0).toLocaleString()} spots left`
+    : "Unlimited spots";
 }
 
 // Same precedence as the web centerOverlay: canceled wins, then sold-out,
@@ -68,11 +97,11 @@ export function EventCard({ event }: { event: UserPostType }) {
     event.flyer_public_id && event.flyer_version
       ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
           width: 420,
-          height: 236,
+          height: 280,
         })
       : null;
   const overlay = statusOverlay(event);
-  const dateTime = getFormattedEventDate(
+  const dt = getEventCardDateTime(
     event.starts_at,
     event.ends_at,
     event.occurrences,
@@ -87,6 +116,7 @@ export function EventCard({ event }: { event: UserPostType }) {
     attendingIds.has(event.id) &&
     event.status !== "canceled" &&
     lifecycle !== "ended";
+  const venue = event.address?.full_address || "Location not specified";
 
   return (
     <Pressable
@@ -113,16 +143,33 @@ export function EventCard({ event }: { event: UserPostType }) {
         <CardImageScrim />
 
         {showGoing ? (
-          <View className="absolute left-2.5 top-2.5 flex-row items-center gap-1 rounded-full bg-success px-2.5 py-1">
+          <View className="absolute left-2.5 top-2.5 max-w-[70%] flex-row items-center gap-1 rounded-full bg-success px-2.5 py-1">
             <Icon name="ticket" size={12} tone="inverse" />
-            <AppText className="text-[11px] font-semibold text-success-foreground">
+            <AppText
+              className="text-[11px] font-semibold text-success-foreground"
+              numberOfLines={1}
+            >
               You're going
             </AppText>
           </View>
         ) : null}
 
-        <View className="absolute right-2.5 top-2.5">
+        <View className="absolute right-2.5 top-2.5 flex-row items-center gap-2">
           <FavoriteButton kind="event" id={event.id} onSurface size={18} />
+          <GlassButton
+            icon="ellipsis-horizontal"
+            label="More options"
+            onPress={() => setMenuOpen(true)}
+          />
+        </View>
+
+        <View className="absolute bottom-2.5 left-2.5 max-w-[60%] rounded-full bg-primary px-3 py-1">
+          <AppText
+            className="text-[12px] font-semibold text-primary-foreground"
+            numberOfLines={1}
+          >
+            {priceLabel(event)}
+          </AppText>
         </View>
 
         {overlay ? (
@@ -133,69 +180,46 @@ export function EventCard({ event }: { event: UserPostType }) {
         ) : null}
       </View>
 
-      <View className="gap-2.5 p-3.5">
-        {/* title + 3-dot menu row — web DiscoveryCardTitleRow */}
-        <View className="flex-row items-start justify-between gap-3">
-          <AppText variant="cardTitle" numberOfLines={2} className="flex-1">
-            {event.title}
-          </AppText>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="More options"
-            hitSlop={8}
-            onPress={() => setMenuOpen(true)}
-            className="-m-1 p-1 active:opacity-60"
+      <View className="gap-2 p-3.5">
+        <AppText variant="cardTitle" numberOfLines={2}>
+          {event.title}
+        </AppText>
+
+        <View className="flex-row items-center gap-1.5">
+          <Icon name="calendar-outline" size={13} tone="muted" />
+          <AppText
+            className="flex-1 text-[12px] text-muted-foreground"
+            numberOfLines={1}
           >
-            <Icon name="ellipsis-horizontal" size={18} tone="muted" />
-          </Pressable>
+            {dt.date}
+            {dt.time ? `  ·  ${dt.time}` : ""}
+            {dt.extraDates > 0 ? `  ·  +${dt.extraDates} more` : ""}
+          </AppText>
         </View>
 
         <View className="flex-row items-start gap-1.5">
-          <Icon name="location-outline" size={14} tone="muted" />
+          <Icon
+            name="location-outline"
+            size={13}
+            tone="muted"
+            style={{ marginTop: 1 }}
+          />
           <AppText
             className="flex-1 text-[12px] text-muted-foreground"
             numberOfLines={2}
           >
-            {event.address?.full_address ?? "Location not specified"}
+            {venue}
           </AppText>
         </View>
 
-        <View className="flex-row flex-wrap items-center gap-x-4 gap-y-1">
-          <View className="flex-row items-center gap-1.5">
-            <Icon name="calendar-outline" size={13} tone="muted" />
-            <AppText className="text-[12px] text-muted-foreground">
-              {dateTime?.date ?? "Date TBC"}
-            </AppText>
-          </View>
-          {dateTime?.time ? (
-            <View className="flex-row items-center gap-1.5">
-              <Icon name="time-outline" size={13} tone="muted" />
-              <AppText className="text-[12px] text-muted-foreground">
-                {dateTime.time}
-              </AppText>
-            </View>
-          ) : null}
-        </View>
-
-        {/* spots-left / attending / price — web's bottom metadata row */}
-        <View className="flex-row flex-wrap items-center justify-between gap-2 pt-0.5">
-          <View className="flex-row flex-wrap items-center gap-1.5">
-            <View className="rounded-full bg-muted px-2 py-1">
-              <AppText className="text-[11px] text-muted-foreground">
-                {spotsLabel(event, attendees)}
-              </AppText>
-            </View>
-            <View className="rounded-full bg-muted px-2 py-1">
-              <AppText className="text-[11px] text-muted-foreground">
-                {attendees} attending
-              </AppText>
-            </View>
-          </View>
-          <View className="rounded-full bg-primary px-3 py-1">
-            <AppText className="text-[12px] font-semibold text-primary-foreground">
-              {priceLabel(event)}
-            </AppText>
-          </View>
+        <View className="flex-row items-center gap-1.5">
+          <Icon name="people-outline" size={13} tone="muted" />
+          <AppText
+            className="flex-1 text-[11px] text-muted-foreground"
+            numberOfLines={1}
+          >
+            {spotsLabel(event, attendees)} · {attendees.toLocaleString()} going
+          </AppText>
         </View>
       </View>
 
