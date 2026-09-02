@@ -8,9 +8,26 @@ import { AppText, Button, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Full-screen highlight composer: pick → preview → crop / trim → post.
@@ -36,10 +53,53 @@ export default function NewHighlight() {
   const active = composer.activeItem;
   const isVideo = active?.type === "video";
 
+  const { width } = useWindowDimensions();
+  const previewX = useSharedValue(0);
+
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
     p.timeUpdateEventInterval = 0.2;
   });
+
+  // Swipe the preview stage left/right to move between the picked items —
+  // the same WhatsApp-style transition the HighlightViewer uses. `dir` is
+  // +1 for the next item, -1 for the previous.
+  const swipeItem = useCallback(
+    (dir: 1 | -1) => {
+      const idx = composer.activeIndex;
+      const target = idx + dir;
+      if (idx < 0 || target < 0 || target >= composer.items.length) {
+        previewX.value = withSpring(0, { damping: 18 });
+        return;
+      }
+      const nextId = composer.items[target].id;
+      previewX.value = withTiming(-dir * width, { duration: 180 }, (f) => {
+        if (!f) return;
+        runOnJS(composer.select)(nextId);
+        previewX.value = dir * width;
+        previewX.value = withTiming(0, { duration: 180 });
+      });
+    },
+    [composer.activeIndex, composer.items, composer.select, previewX, width],
+  );
+
+  const previewPan = Gesture.Pan()
+    .activeOffsetX([-16, 16])
+    .failOffsetY([-14, 14])
+    .onUpdate((e) => {
+      previewX.value = e.translationX;
+    })
+    .onEnd((e) => {
+      if (Math.abs(e.translationX) > 70 || Math.abs(e.velocityX) > 700) {
+        runOnJS(swipeItem)(e.translationX < 0 ? 1 : -1);
+      } else {
+        previewX.value = withSpring(0, { damping: 18 });
+      }
+    });
+
+  const previewStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: previewX.value }],
+  }));
 
   // Fall back to the picker step if every item was removed.
   useEffect(() => {
@@ -198,75 +258,77 @@ export default function NewHighlight() {
           </Pressable>
         </View>
 
-        {/* preview stage */}
-        <View className="flex-1">
-          {active ? (
-            active.type === "image" ? (
-              <Image
-                source={{ uri: active.uri }}
-                style={{ flex: 1 }}
-                contentFit="contain"
-                onLoadEnd={() => setPreviewReady(true)}
-              />
-            ) : (
-              <View className="flex-1">
-                <VideoView
-                  player={player}
+        {/* preview stage — swipe left/right to move between picked items */}
+        <GestureDetector gesture={previewPan}>
+          <Animated.View className="flex-1" style={previewStyle}>
+            {active ? (
+              active.type === "image" ? (
+                <Image
+                  source={{ uri: active.uri }}
                   style={{ flex: 1 }}
                   contentFit="contain"
-                  nativeControls={false}
+                  onLoadEnd={() => setPreviewReady(true)}
                 />
-                <Pressable
-                  onPress={togglePlay}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {!playing ? (
-                    <View className="h-16 w-16 items-center justify-center rounded-full bg-black/50">
-                      <Icon name="play" size={30} color="#fff" />
-                    </View>
-                  ) : null}
-                </Pressable>
-                <Pressable
-                  onPress={toggleMute}
-                  hitSlop={10}
-                  style={{ position: "absolute", right: 14, top: 12 }}
-                  className="h-9 w-9 items-center justify-center rounded-full bg-black/50"
-                >
-                  <Icon
-                    name={muted ? "volume-mute" : "volume-high"}
-                    size={18}
-                    color="#fff"
+              ) : (
+                <View className="flex-1">
+                  <VideoView
+                    player={player}
+                    style={{ flex: 1 }}
+                    contentFit="contain"
+                    nativeControls={false}
                   />
-                </Pressable>
-              </View>
-            )
-          ) : null}
+                  <Pressable
+                    onPress={togglePlay}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {!playing ? (
+                      <View className="h-16 w-16 items-center justify-center rounded-full bg-black/50">
+                        <Icon name="play" size={30} color="#fff" />
+                      </View>
+                    ) : null}
+                  </Pressable>
+                  <Pressable
+                    onPress={toggleMute}
+                    hitSlop={10}
+                    style={{ position: "absolute", right: 14, top: 12 }}
+                    className="h-9 w-9 items-center justify-center rounded-full bg-black/50"
+                  >
+                    <Icon
+                      name={muted ? "volume-mute" : "volume-high"}
+                      size={18}
+                      color="#fff"
+                    />
+                  </Pressable>
+                </View>
+              )
+            ) : null}
 
-          {!previewReady ? (
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator color="#fff" />
-            </View>
-          ) : null}
-        </View>
+            {!previewReady ? (
+              <View
+                pointerEvents="none"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator color="#fff" />
+              </View>
+            ) : null}
+          </Animated.View>
+        </GestureDetector>
 
         {/* trim bar (video only) */}
         {active && active.type === "video" ? (
