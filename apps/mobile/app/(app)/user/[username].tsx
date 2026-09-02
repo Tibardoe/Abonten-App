@@ -29,7 +29,7 @@ import {
 } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { FlatList, View } from "react-native";
+import { FlatList, RefreshControl, View } from "react-native";
 
 type FavSub = "events" | "places";
 type ReviewSub = "event" | "place";
@@ -116,6 +116,12 @@ export default function UserProfileScreen() {
     if (active.hasNextPage && !active.isFetchingNextPage)
       active.fetchNextPage();
   }, [active]);
+
+  // A tab is still "loading" until its query has produced data at least
+  // once — `isPending` (no data yet), not `isLoading` (which is false while
+  // a switched-to / re-enabled query spins up), so a slow or just-enabled
+  // tab shows a spinner rather than flashing its empty state.
+  const showTabLoader = active.isPending && !active.isError;
 
   if (profileQuery.isLoading) {
     return (
@@ -229,14 +235,23 @@ export default function UserProfileScreen() {
         }}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={active.isRefetching && !active.isFetchingNextPage}
+            onRefresh={() => active.refetch()}
+          />
+        }
         ListEmptyComponent={
-          active.isLoading ? (
+          showTabLoader ? (
             <Spinner className="mt-6" />
-          ) : tab === "favorites" && !session ? null : (
+          ) : tab === "favorites" && !session ? null : active.isError ? (
             <EmptyState
-              icon="albums-outline"
-              title={active.isError ? "Couldn't load" : emptyTitle}
+              icon="cloud-offline-outline"
+              title="Couldn't load"
+              description="Pull down to try again."
             />
+          ) : (
+            <EmptyState icon="albums-outline" title={emptyTitle} />
           )
         }
         ListFooterComponent={active.isFetchingNextPage ? <Spinner /> : null}
