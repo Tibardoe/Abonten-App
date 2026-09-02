@@ -65,7 +65,7 @@ Grouped the way the audit was requested:
 | **WP-1 Navigation & IA** | anonymous browsing; app header (notification bell + badge + menu); bottom-tab realignment; themed native detail headers; side-sheet with legal/footer links | **done** (2026-09-01) — see below |
 | **WP-2 High-traffic screens** | Explore (location switch, Events/Places tabs, filter sheet, chips, empty states); full Profile + tabs; Settings hub + 5 sub-pages; `/transactions` analytics; My-Tickets tab set; favourites + reviews + share; card status overlays | **done** (2026-09-01) — 2a–2f, see below |
 | **WP-3 Checkout & buyer** | pending-checkouts basket; promo codes; free RSVP; live expiry countdown; fulfillment recovery; cancel-ticket/refund; ticket PDF/receipt; AddBankCard | **done** (2026-09-01) — 3a–3i, see below; money-path items not device/Paystack-verified |
-| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery done, see below |
+| **WP-4 Organizer & creator** | event/place creation; per-event management (analytics, attendance/check-in, promo CRUD, edit/delete, promotion); dashboard widgets; drafts; place management; payout detail; map views | in progress (2026-09-01) — 4a place creation, 4b event creation, 4c-1 insights, 4c-2a/2b edit + ticket types, 4c-3 promotion, 4d attendee list + check-in, 4e promo-code management, 4f-1 My places + place insights, 4f-2a place edit (details + hours & status), 4f-2b place services CRUD, 4f-3 place photo gallery, 4f-4 place bookings + reviews (owner) done, see below |
 
 ---
 
@@ -1566,3 +1566,54 @@ gallery.
 `@abonten/api-client`) green, `next build` exit 0 (all 3 photo routes
 compiled), `expo export --platform android` clean, `biome check` clean.
 Not device-verified.
+
+#### WP-4f-4 — Per-place Bookings + Reviews (owner view) (done 2026-09-02)
+
+The web `ManagePlaceBookingsSection` (booking-request list + accept/decline,
+status filter) and `ManagePlaceReviewsSection` (approved reviews + the
+owner's public reply).
+
+- **`apps/web/src/utils/placeBookingsReviewsCore.ts`** —
+  `fetchPlaceBookingsPage` (owner check → 403, then the keyset
+  `place_booking` query joined to `user_info!customer_id(username)` +
+  `place_service(name)`; `status` optional for the "All" view),
+  `respondToPlaceBookingCore` (ownership through the owning place, the
+  `.eq("status", "pending")` race guard on the update, the customer
+  notification either way), `fetchPlaceReviewsForOwner` (owner check → 403,
+  then the same approved-only `place_review` query `getPlaceReviews` runs
+  for the public page), `respondToPlaceReviewCore` (join-through-to-place
+  ownership + `owner_response` / `owner_response_at` update). `getPlaceBookings`,
+  `respondToPlaceBooking`, `respondToPlaceReview` thinned to
+  `auth (401 as const) → delegate`; `getPlaceReviews` left as-is (a public
+  `publicSupabase` read the detail page also uses).
+- **Routes** — `GET /api/mobile/organizer/places/[placeId]/bookings`
+  (`?status=&cursor=&pageSize=`), `POST .../bookings/respond`
+  (`{ bookingId, decision }`), `GET .../reviews` (`?cursor=&pageSize=`),
+  `POST .../reviews/respond` (`{ reviewId, response }`).
+- **api-client** — re-exports `BookingStatus` / `OwnerPlaceBooking` from
+  `@abonten/types/placeBookingType`; adds `OwnerPlaceReviewRow`,
+  `RespondToPlaceBookingBody` / `PlaceBookingRespondResult`,
+  `RespondToPlaceReviewBody` / `PlaceReviewRespondResult`;
+  `api.organizer.placeBookings(placeId, params?)` /
+  `respondToPlaceBooking(placeId, body)` /
+  `placeReviews(placeId, params?)` / `respondToPlaceReview(placeId, body)`.
+- **Mobile** — `src/features/organizer/usePlaceBookingsReviews.ts`:
+  `usePlaceBookings(placeId, filter)` infinite query
+  (`["mobile","organizer","place-bookings", placeId, filter]`, `"all"` →
+  no `status`), `flattenBookings`, `useRespondToPlaceBooking` (invalidates
+  every filter's list + the place insights key), `usePlaceReviews` infinite
+  query (`["mobile","organizer","place-reviews", placeId]`),
+  `flattenReviews`, `useRespondToPlaceReview`. Two screens:
+  `app/(app)/organizer/places/[placeId]/bookings.tsx` (status-filter pills
+  mirroring the web tabs; each row = customer / requested time
+  (`formatSingleDateTime`) / service / party size / note / status badge;
+  pending rows get a direct **Accept** and an `Alert`-confirmed **Decline**)
+  and `.../reviews.tsx` (avatar + handle + relative time + star row + title
+  + comment + photo thumbnails; an `owner_response` block, else an inline
+  Respond form). The place management screen gains **"Bookings ›"** and
+  **"Reviews ›"** link rows; both routes registered `href: null`.
+
+**Verified:** `turbo run typecheck` (`@abonten/web` + `@abonten/mobile` +
+`@abonten/api-client`) green, `next build` exit 0 (all 4 new routes
+compiled), `expo export --platform android` clean, `biome check` clean. Not
+device-verified.

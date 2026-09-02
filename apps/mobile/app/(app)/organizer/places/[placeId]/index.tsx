@@ -99,6 +99,18 @@ export default function PlaceManageScreen() {
               <Text className="text-muted-foreground">›</Text>
             </Pressable>
           </Link>
+          <Link href={`/(app)/organizer/places/${id}/bookings`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base text-foreground">Bookings</Text>
+              <Text className="text-muted-foreground">›</Text>
+            </Pressable>
+          </Link>
+          <Link href={`/(app)/organizer/places/${id}/reviews`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <Text className="text-base text-foreground">Reviews</Text>
+              <Text className="text-muted-foreground">›</Text>
+            </Pressable>
+          </Link>
           <Link href={`/(app)/place/${id}`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <Text className="text-base text-foreground">
