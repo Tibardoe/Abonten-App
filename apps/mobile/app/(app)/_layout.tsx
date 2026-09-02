@@ -85,7 +85,10 @@ function Layout() {
           name="search"
           options={{
             title: t("search"),
-            headerLeft,
+            // Dedicated search experience owns its own top area — the
+            // search field sits at the very top with no nav header, menu,
+            // or bell above it (Phase 2 area 2 / item 7).
+            headerShown: false,
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="search-outline" color={color} size={size} />
             ),
