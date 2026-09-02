@@ -1820,3 +1820,47 @@ device-verified.
 
 **WP-4g COMPLETE** (4g-1 dashboard widgets · 4g-2 event drafts · 4g-3 place
 drafts). **WP-4 (Organizer & creator) COMPLETE** — 4a … 4g.
+
+---
+
+## WP-4h — Deferral cleanup (2026-09-02)
+
+Clears the four Phase-1 items that had been carried since WP-2g / WP-3:
+review photo attachments, highlight upload/delete, highlight video
+playback, OTP-based email/phone change. Same per-chunk git flow.
+
+### WP-4h-1 — Event review photo attachments (done 2026-09-02)
+
+Client-only, no `/api/mobile` route and no web change. `event_review_photo`
+has `event_review_photo_reviewer_all` RLS (`FOR ALL` where the parent
+`event_review.reviewer_id = auth.uid()`), so the reviewer attaches/reads
+their own review's photos straight from the client — the same pattern the
+rest of the mobile event-review flow already uses. Upload uses the existing
+`uploadToCloudinary(uri, "event_review_photo")` (kind already wired through
+the api-client + `/api/mobile/uploads/signature`).
+
+- **`src/features/reviews/useEventReviews.ts`** — `attachEventReviewPhotos`
+  (native echo of `insertReviewPhotos.ts`: drops any `publicId` outside
+  `event_review_photos/<uid>/`, caps at `MAX_REVIEW_PHOTOS`, inserts
+  `{event_review_id, public_id, version, position}`). `usePostEventReview`
+  now `.select("id").single()` on the review insert and calls it — a
+  photo-attach failure never fails the saved review. `computeEligibility`'s
+  own-review select and `useUserEventReviews`' select now pull
+  `event_review_photo(id, public_id, version, position)`;
+  `OwnEventReview` / `UserEventReview` gained `event_review_photo`.
+- **`src/components/reviews/ReviewPhotoStrip.tsx`** (new) — native echo of
+  the web `ReviewPhotoGrid` + `ReviewPhotoLightbox`: a horizontal
+  thumbnail strip (`buildCloudinaryUrl`), tap to page through full-screen
+  in a `Modal`.
+- **`src/components/reviews/AddReviewSheet.tsx`** — a "Photos (optional) ·
+  n/5" row: `expo-image-picker` multi-select (`selectionLimit` = remaining
+  slots), per-file `MAX_REVIEW_PHOTO_SIZE_BYTES` check, thumbnails with a
+  remove button, "Uploading photos…" state; uploads on submit, passes the
+  `{publicId, version}[]` to `usePostEventReview`.
+- **Display** — `ReviewPhotoStrip` mounted in `ReviewedEventsList` rows and
+  the event-detail "Your review" card.
+
+**Verified:** `turbo run typecheck --filter=@abonten/mobile` green,
+`expo export --platform android` clean, `biome check` clean on touched
+files. Not device-verified (needs a signed-in user with a checked-in
+ticket + a photo library).

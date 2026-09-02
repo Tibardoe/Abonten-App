@@ -16,6 +16,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Alert, FlatList, Pressable, View } from "react-native";
+import { ReviewPhotoStrip } from "./ReviewPhotoStrip";
 
 // Native echo of the web ReviewedEventsList: the reviewer's own event_review
 // history, cursor-paginated. Tap the title to open the event; the trash icon
@@ -131,6 +132,7 @@ export function ReviewedEventsList() {
           {item.comment ? (
             <AppText variant="small">{item.comment}</AppText>
           ) : null}
+          <ReviewPhotoStrip photos={item.event_review_photo} />
           {item.is_verified_attendee ? (
             <View className="self-start">
               <Badge tone="success" label="Verified Attendee" />

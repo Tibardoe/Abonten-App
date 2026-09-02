@@ -1,6 +1,7 @@
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
+import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { TicketPicker } from "@/features/checkout/TicketPicker";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useEventReviewEligibility } from "@/features/reviews/useEventReviews";
@@ -263,6 +264,9 @@ export default function EventDetailScreen() {
                 {eligibility.ownReview.comment}
               </Text>
             ) : null}
+            <ReviewPhotoStrip
+              photos={eligibility.ownReview.event_review_photo}
+            />
           </View>
         ) : null}
 
