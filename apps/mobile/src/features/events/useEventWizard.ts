@@ -121,8 +121,12 @@ export function useEventWizard(resumeDraftId?: string) {
   const [requireRegistration, setRequireRegistration] = useState(false);
   const [textErrors, setTextErrors] = useState<EventWizardTextErrors>({});
 
-  // flyer
+  // flyer — the picked source dimensions ride along so the in-app
+  // crop/rotate/flip editor (ImageCropModal) can be re-opened on it.
   const [flyerUri, setFlyerUri] = useState<string | null>(null);
+  const [flyerSize, setFlyerSize] = useState<{ w: number; h: number } | null>(
+    null,
+  );
 
   // schedule
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("single");
@@ -265,23 +269,40 @@ export function useEventWizard(resumeDraftId?: string) {
     applyLocation(loc.lat, loc.lng, loc.label);
   }
 
-  async function pickFlyer() {
+  // Returns the freshly-picked local asset so the caller can open the
+  // in-app editor on it; no OS crop UI (the editor does crop/rotate/flip).
+  async function pickFlyer(): Promise<{
+    uri: string;
+    width: number;
+    height: number;
+  } | null> {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(
         "Photo access needed",
         "Allow photo access to pick an event flyer.",
       );
-      return;
+      return null;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [4, 5],
-      quality: 0.8,
+      quality: 1,
     });
-    if (picked.canceled || !picked.assets?.[0]) return;
-    setFlyerUri(picked.assets[0].uri);
+    const asset = picked.canceled ? null : picked.assets?.[0];
+    if (!asset) return null;
+    setFlyerUri(asset.uri);
+    setFlyerSize({ w: asset.width ?? 0, h: asset.height ?? 0 });
+    return {
+      uri: asset.uri,
+      width: asset.width ?? 0,
+      height: asset.height ?? 0,
+    };
+  }
+
+  // Commit the editor's baked result.
+  function setFlyer(uri: string, w: number, h: number) {
+    setFlyerUri(uri);
+    setFlyerSize({ w, h });
   }
 
   // --- draft: hydrate on resume ------------------------------------
@@ -708,7 +729,9 @@ export function useEventWizard(resumeDraftId?: string) {
     validateBasics,
     // flyer
     flyerUri,
+    flyerSize,
     pickFlyer,
+    setFlyer,
     // schedule
     scheduleMode,
     setScheduleMode,
