@@ -1,4 +1,5 @@
 import {
+  MapConfigured,
   MapErrorBoundary,
   MapView,
   Marker,
@@ -69,6 +70,19 @@ export function ExploreMap({
       } => r.point != null,
     );
   }, [kind, events, places]);
+
+  // A MapView with the Google provider hard-crashes (native, uncatchable)
+  // when the installed binary was built without the Maps API key — degrade
+  // to a message instead of taking the app down.
+  if (!MapConfigured) {
+    return (
+      <EmptyState
+        icon="map-outline"
+        title="Map needs the latest app"
+        description="Update Abonten (or rebuild the dev client with the Google Maps key) to use the map view."
+      />
+    );
+  }
 
   if (markers.length === 0) {
     return (

@@ -2,7 +2,7 @@ import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import {
-  MapAvailable,
+  MapConfigured,
   MapErrorBoundary,
   MapView,
   Marker,
@@ -329,7 +329,7 @@ export default function EventDetailScreen() {
             sub={event.capacity ? `Capacity ${event.capacity}` : undefined}
           />
 
-          {MapAvailable && MapView && coords ? (
+          {MapConfigured && MapView && coords ? (
             <MapErrorBoundary fallback={null}>
               <View className="mt-1 h-40 overflow-hidden rounded-lg">
                 <MapView
