@@ -84,6 +84,8 @@ export function ProfileHeader({
         userId={profile.user_id}
         username={profile.username}
         isOwn={isOwn}
+        avatarPublicId={profile.avatar_public_id}
+        avatarVersion={profile.avatar_version}
       />
 
       <ImageViewer

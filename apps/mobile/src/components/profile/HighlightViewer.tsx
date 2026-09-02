@@ -1,29 +1,55 @@
 import { useDeleteHighlightSlide } from "@/features/profile/useHighlights";
+import { hapticLight } from "@/lib/haptics";
 import type { HighlightGroup } from "@abonten/types/highlightType";
-import { Icon } from "@abonten/ui-native";
+import { AppText, Avatar, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  Animated,
   Modal,
-  PanResponder,
   Pressable,
-  Text,
+  StyleSheet,
   View,
   useWindowDimensions,
 } from "react-native";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  Easing,
+  cancelAnimation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Native echo of the web `HighlightViewer` organism: a WhatsApp-Status /
-// Instagram-highlights player. Progress bars across the top, tap the left /
-// right half to step, press-and-hold to pause, auto-advances between slides
-// and rolls on to the next group at the end. Image slides play for a fixed
-// dwell; video slides play through with `expo-video` and advance on end.
-// When `canManage` (own profile) the header shows a delete button that
-// removes the current slide.
+// Native WhatsApp-Status / Instagram-Highlights player, rebuilt on
+// react-native-gesture-handler + reanimated so the progress bar and the
+// drag-to-dismiss run on the UI thread. Behaviour mirrors the web
+// `useHighlightViewer` hook:
+//   • tap left third → previous slide, tap the rest → next slide
+//   • press-and-hold → pause + hide all chrome; release → resume
+//   • drag down → dismiss (tracks the finger); horizontal fling → prev / next
+//     GROUP (previous lands on that group's last slide, like web)
+//   • image slides run a fixed dwell that freezes on hold and resumes from
+//     where it stopped; video slides play through and drive the bar from
+//     their own time updates
+//   • loading never counts toward view time — the timer only starts once the
+//     media signals it is ready
+//   • on your own profile a ⋯ menu removes the current slide
 
 const IMAGE_DURATION_MS = 5000;
+const DISMISS_DISTANCE = 120;
+const DISMISS_VELOCITY = 900;
+const GROUP_SWIPE_DISTANCE = 60;
 
 type Props = {
   groups: HighlightGroup[];
@@ -32,6 +58,8 @@ type Props = {
   onClose: () => void;
   canManage?: boolean;
   userId?: string;
+  avatarPublicId?: string | null;
+  avatarVersion?: number | string | null;
 };
 
 export function HighlightViewer({
@@ -41,100 +69,93 @@ export function HighlightViewer({
   onClose,
   canManage = false,
   userId,
+  avatarPublicId,
+  avatarVersion,
 }: Props) {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
   const [groupIndex, setGroupIndex] = useState(initialGroupIndex);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const group = groups[groupIndex] ?? [];
   const slide = group[slideIndex];
   const isVideo = slide?.media_type === "video";
+  const paused = holding || menuOpen;
 
   const deleteSlide = useDeleteHighlightSlide(userId);
 
-  const progress = useRef(new Animated.Value(0)).current;
-  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const heldRef = useRef(false);
-
-  // Swipe-down-to-close — the familiar Stories dismiss gesture. Claims the
-  // responder only on a clear downward drag, so quick taps and press-hold
-  // still reach the tap/hold surface below.
-  const dragY = useRef(new Animated.Value(0)).current;
-  const panResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_e, g) =>
-          g.dy > 12 && g.dy > Math.abs(g.dx) * 1.5,
-        onPanResponderMove: (_e, g) => {
-          if (g.dy > 0) dragY.setValue(g.dy);
-        },
-        onPanResponderRelease: (_e, g) => {
-          if (g.dy > 120 || g.vy > 1.2) {
-            Animated.timing(dragY, {
-              toValue: height,
-              duration: 160,
-              useNativeDriver: true,
-            }).start(() => onClose());
-          } else {
-            Animated.spring(dragY, {
-              toValue: 0,
-              useNativeDriver: true,
-              bounciness: 4,
-            }).start();
-          }
-        },
-      }),
-    [dragY, height, onClose],
-  );
+  const progress = useSharedValue(0);
+  const dragY = useSharedValue(0);
+  const chrome = useSharedValue(1);
 
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
-    p.timeUpdateEventInterval = 0.2;
+    p.timeUpdateEventInterval = 0.25;
   });
 
+  // ---- navigation -------------------------------------------------------
   const goToGroup = useCallback(
-    (next: number) => {
-      if (next < 0) return;
-      if (next >= groups.length) {
+    (next: number, landOnLast = false) => {
+      if (next < 0 || next >= groups.length) {
         onClose();
         return;
       }
+      hapticLight();
       setGroupIndex(next);
-      setSlideIndex(0);
+      setSlideIndex(
+        landOnLast ? Math.max(0, (groups[next]?.length ?? 1) - 1) : 0,
+      );
     },
-    [groups.length, onClose],
+    [groups, onClose],
   );
 
   const nextSlide = useCallback(() => {
-    if (slideIndex + 1 < group.length) {
-      setSlideIndex((i) => i + 1);
-    } else {
-      goToGroup(groupIndex + 1);
-    }
+    if (slideIndex + 1 < group.length) setSlideIndex((i) => i + 1);
+    else goToGroup(groupIndex + 1);
   }, [slideIndex, group.length, goToGroup, groupIndex]);
 
   const prevSlide = useCallback(() => {
-    if (slideIndex - 1 >= 0) {
-      setSlideIndex((i) => i - 1);
-    } else {
-      goToGroup(groupIndex - 1);
-    }
+    if (slideIndex - 1 >= 0) setSlideIndex((i) => i - 1);
+    else goToGroup(groupIndex - 1, true);
   }, [slideIndex, goToGroup, groupIndex]);
 
-  // Load / play the current video slide.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the slide identity; player is stable.
+  const nextGroup = useCallback(
+    () => goToGroup(groupIndex + 1),
+    [goToGroup, groupIndex],
+  );
+  const prevGroup = useCallback(
+    () => goToGroup(groupIndex - 1, true),
+    [goToGroup, groupIndex],
+  );
+
+  // ---- reset per slide ------------------------------------------------
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the slide identity; progress is a stable shared value
+  useEffect(() => {
+    cancelAnimation(progress);
+    progress.value = 0;
+    setLoaded(false);
+  }, [slide?.id]);
+
+  // ---- chrome fade with hold ---------------------------------------
+  useEffect(() => {
+    chrome.value = withTiming(holding ? 0 : 1, { duration: 150 });
+  }, [holding, chrome]);
+
+  // ---- video: load the current slide ---------------------------------
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the slide identity; player is stable
   useEffect(() => {
     if (!slide || !isVideo) return;
     let cancelled = false;
-    progress.setValue(0);
     (async () => {
       try {
         await player.replaceAsync({ uri: slide.media_url });
         if (cancelled) return;
         if (!paused) player.play();
       } catch {
-        // A failed video load shouldn't strand the viewer — move on.
         if (!cancelled) nextSlide();
       }
     })();
@@ -144,189 +165,290 @@ export function HighlightViewer({
     };
   }, [slide?.id, isVideo]);
 
-  // Advance a video slide on end + drive its progress bar.
+  // ---- video: readiness + advance + drive the bar ------------------
   useEffect(() => {
     if (!isVideo) return;
+    const statusSub = player.addListener("statusChange", ({ status }) => {
+      if (status === "readyToPlay") setLoaded(true);
+    });
     const endSub = player.addListener("playToEnd", () => nextSlide());
     const timeSub = player.addListener("timeUpdate", (e) => {
       const dur = player.duration || slide?.media_duration || 0;
-      if (dur > 0) progress.setValue(Math.min(1, e.currentTime / dur));
+      if (dur > 0) progress.value = Math.min(1, e.currentTime / dur);
     });
     return () => {
+      statusSub.remove();
       endSub.remove();
       timeSub.remove();
     };
   }, [isVideo, player, nextSlide, progress, slide?.media_duration]);
 
-  // Pause / resume the video with the shared paused state.
+  // ---- video: pause / resume with the shared paused state ----------
   useEffect(() => {
     if (!isVideo) return;
     if (paused) player.pause();
-    else player.play();
-  }, [paused, isVideo, player]);
+    else if (loaded) player.play();
+  }, [paused, isVideo, player, loaded]);
 
-  // Drive the active bar for image slides; on completion advance.
+  // ---- image: run / freeze / resume the dwell timer ---------------
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on slide identity; progress is a stable shared value
   useEffect(() => {
-    if (!slide || isVideo || paused) return;
-    progress.setValue(0);
-    const anim = Animated.timing(progress, {
-      toValue: 1,
-      duration: IMAGE_DURATION_MS,
-      useNativeDriver: false,
-    });
-    anim.start(({ finished }) => {
-      if (finished) nextSlide();
-    });
-    return () => anim.stop();
-  }, [slide, isVideo, paused, progress, nextSlide]);
-
-  const onPressIn = () => {
-    heldRef.current = false;
-    holdTimer.current = setTimeout(() => {
-      heldRef.current = true;
-      setPaused(true);
-    }, 200);
-  };
-
-  const onPressOut = (x: number) => {
-    if (holdTimer.current) {
-      clearTimeout(holdTimer.current);
-      holdTimer.current = null;
-    }
-    if (heldRef.current) {
-      setPaused(false);
-      heldRef.current = false;
+    if (!slide || isVideo || !loaded) return;
+    if (paused) {
+      cancelAnimation(progress);
       return;
     }
-    // A genuine tap: left third steps back, the rest steps forward.
-    if (x < width / 3) prevSlide();
-    else nextSlide();
-  };
+    const remaining = IMAGE_DURATION_MS * (1 - progress.value);
+    progress.value = withTiming(
+      1,
+      { duration: Math.max(0, remaining), easing: Easing.linear },
+      (finished) => {
+        if (finished) runOnJS(nextSlide)();
+      },
+    );
+    return () => cancelAnimation(progress);
+  }, [slide?.id, isVideo, loaded, paused, nextSlide]);
 
+  // ---- gestures (created per render, like ImageViewer) --------------
+  const tap = Gesture.Tap()
+    .maxDuration(250)
+    .onEnd((e) => {
+      if (e.x < width / 3) runOnJS(prevSlide)();
+      else runOnJS(nextSlide)();
+    });
+
+  const longPress = Gesture.LongPress()
+    .minDuration(200)
+    .maxDistance(10_000)
+    .onStart(() => runOnJS(setHolding)(true))
+    .onFinalize(() => runOnJS(setHolding)(false));
+
+  const pan = Gesture.Pan()
+    .minDistance(14)
+    .onUpdate((e) => {
+      if (e.translationY > 0) dragY.value = e.translationY;
+    })
+    .onEnd((e) => {
+      if (e.translationY > DISMISS_DISTANCE || e.velocityY > DISMISS_VELOCITY) {
+        dragY.value = withTiming(height, { duration: 160 }, (f) => {
+          if (f) runOnJS(onClose)();
+        });
+        return;
+      }
+      if (
+        Math.abs(e.translationX) > GROUP_SWIPE_DISTANCE &&
+        Math.abs(e.translationX) > Math.abs(e.translationY)
+      ) {
+        runOnJS(e.translationX < 0 ? nextGroup : prevGroup)();
+      }
+      dragY.value = withSpring(0, { damping: 18 });
+    });
+
+  const gesture = Gesture.Race(pan, longPress, tap);
+
+  // ---- animated styles ----------------------------------------------
+  const surfaceStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: dragY.value }],
+    opacity: interpolate(dragY.value, [0, height], [1, 0.4]),
+  }));
+  const chromeStyle = useAnimatedStyle(() => ({ opacity: chrome.value }));
+  const activeBarStyle = useAnimatedStyle(() => ({
+    width: `${Math.min(100, Math.max(0, progress.value * 100))}%`,
+  }));
+
+  // ---- delete --------------------------------------------------------
   const onDelete = () => {
     if (!slide) return;
-    Alert.alert("Delete this slide?", "This can't be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () =>
-          deleteSlide.mutate(slide.id, {
-            onSuccess: () => {
-              // If it was the last slide in the group, the group is gone.
-              if (group.length <= 1) goToGroup(groupIndex + 1);
-              else
-                setSlideIndex((i) =>
-                  Math.max(0, Math.min(i, group.length - 2)),
-                );
-            },
-            onError: (e) =>
-              Alert.alert(
-                "Couldn't delete",
-                e instanceof Error ? e.message : "Please try again.",
-              ),
-          }),
-      },
-    ]);
+    setMenuOpen(false);
+    Alert.alert(
+      `Delete this ${isVideo ? "video" : "photo"}?`,
+      "This can't be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () =>
+            deleteSlide.mutate(slide.id, {
+              onSuccess: () => {
+                if (group.length <= 1) goToGroup(groupIndex + 1);
+                else
+                  setSlideIndex((i) =>
+                    Math.max(0, Math.min(i, group.length - 2)),
+                  );
+              },
+              onError: (err) =>
+                Alert.alert(
+                  "Couldn't delete",
+                  err instanceof Error ? err.message : "Please try again.",
+                ),
+            }),
+        },
+      ],
+    );
   };
 
-  const bg = useMemo(
-    () => (isVideo ? (slide?.thumbnail_url ?? undefined) : slide?.media_url),
-    [isVideo, slide],
-  );
+  const backdrop = isVideo
+    ? (slide?.thumbnail_url ?? undefined)
+    : slide?.media_url;
 
   if (!slide) return null;
 
   return (
-    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "#000" }}>
-        <Animated.View
-          style={{ flex: 1, transform: [{ translateY: dragY }] }}
-          {...panResponder.panHandlers}
-        >
-          {isVideo ? (
-            <VideoView
-              player={player}
-              style={{ position: "absolute", width, height }}
-              contentFit="contain"
-              nativeControls={false}
-            />
-          ) : null}
-          {bg ? (
-            <Image
-              source={{ uri: bg }}
-              style={{ position: "absolute", width, height }}
-              contentFit="contain"
-              transition={120}
-              onError={() => nextSlide()}
-            />
-          ) : null}
-
-          {/* progress bars */}
-          <View
-            className="absolute left-0 right-0 flex-row gap-1 px-3"
-            style={{ top: 12 }}
-          >
-            {group.map((s, i) => (
-              <View
-                key={s.id}
-                className="h-1 flex-1 overflow-hidden rounded-full"
-                style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
-              >
-                <Animated.View
-                  style={{
-                    height: "100%",
-                    backgroundColor: "#fff",
-                    width:
-                      i < slideIndex
-                        ? "100%"
-                        : i === slideIndex
-                          ? progress.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: ["0%", "100%"],
-                            })
-                          : "0%",
-                  }}
+    <Modal
+      visible
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: "#000" }}>
+          <GestureDetector gesture={gesture}>
+            <Animated.View style={[{ flex: 1 }, surfaceStyle]}>
+              {backdrop ? (
+                <Image
+                  source={{ uri: backdrop }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  blurRadius={40}
+                  transition={120}
                 />
-              </View>
-            ))}
-          </View>
+              ) : null}
+              <View
+                style={[
+                  StyleSheet.absoluteFill,
+                  { backgroundColor: "rgba(0,0,0,0.45)" },
+                ]}
+              />
 
-          {/* header */}
-          <View
-            className="absolute left-0 right-0 flex-row items-center gap-2 px-3"
-            style={{ top: 26 }}
+              {isVideo ? (
+                <VideoView
+                  player={player}
+                  style={{ position: "absolute", width, height }}
+                  contentFit="contain"
+                  nativeControls={false}
+                />
+              ) : (
+                <Image
+                  source={{ uri: slide.media_url }}
+                  style={{ position: "absolute", width, height }}
+                  contentFit="contain"
+                  transition={150}
+                  onLoadEnd={() => setLoaded(true)}
+                  onError={() => nextSlide()}
+                />
+              )}
+
+              {!loaded ? (
+                <View
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { alignItems: "center", justifyContent: "center" },
+                  ]}
+                  pointerEvents="none"
+                >
+                  <ActivityIndicator color="#fff" />
+                </View>
+              ) : null}
+            </Animated.View>
+          </GestureDetector>
+
+          {/* chrome — a sibling of the gesture surface (like ImageViewer's
+              close button) so its buttons get their taps cleanly and it
+              stays put while the content drags to dismiss. */}
+          <Animated.View
+            style={[
+              { position: "absolute", left: 0, right: 0, top: insets.top + 8 },
+              chromeStyle,
+            ]}
+            pointerEvents={holding ? "none" : "box-none"}
           >
-            <Text
-              className="flex-1 text-sm font-bold text-white"
-              numberOfLines={1}
-            >
-              {username}
-            </Text>
-            {canManage ? (
-              <Pressable
-                onPress={onDelete}
-                hitSlop={12}
-                disabled={deleteSlide.isPending}
-                accessibilityRole="button"
-                accessibilityLabel="Delete slide"
-              >
-                <Icon name="trash-outline" size={22} color="#fff" />
-              </Pressable>
-            ) : null}
-            <Pressable onPress={onClose} hitSlop={12}>
-              <Icon name="close" size={24} color="#fff" />
-            </Pressable>
-          </View>
+            <View className="flex-row gap-1 px-3">
+              {group.map((s, i) => (
+                <View
+                  key={s.id}
+                  className="h-[3px] flex-1 overflow-hidden rounded-full"
+                  style={{ backgroundColor: "rgba(255,255,255,0.4)" }}
+                >
+                  {i < slideIndex ? (
+                    <View style={{ flex: 1, backgroundColor: "#fff" }} />
+                  ) : i === slideIndex ? (
+                    <Animated.View
+                      style={[
+                        { height: "100%", backgroundColor: "#fff" },
+                        activeBarStyle,
+                      ]}
+                    />
+                  ) : null}
+                </View>
+              ))}
+            </View>
 
-          {/* tap / hold surface */}
-          <Pressable
-            style={{ flex: 1 }}
-            onPressIn={onPressIn}
-            onPressOut={(e) => onPressOut(e.nativeEvent.locationX)}
-          />
-        </Animated.View>
-      </View>
+            <View className="mt-3 flex-row items-center gap-2 px-3">
+              <Pressable onPress={onClose} hitSlop={10}>
+                <Icon name="arrow-back" size={24} color="#fff" />
+              </Pressable>
+              <Avatar
+                publicId={avatarPublicId ?? undefined}
+                version={avatarVersion ?? undefined}
+                size={32}
+              />
+              <AppText
+                className="flex-1 text-[14px] font-semibold text-white"
+                numberOfLines={1}
+              >
+                {username}
+              </AppText>
+              <Icon
+                name={paused ? "pause" : "play"}
+                size={18}
+                color="rgba(255,255,255,0.9)"
+              />
+              {canManage ? (
+                <Pressable
+                  onPress={() => setMenuOpen((v) => !v)}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel="Slide options"
+                >
+                  <Icon name="ellipsis-vertical" size={20} color="#fff" />
+                </Pressable>
+              ) : null}
+            </View>
+          </Animated.View>
+
+          {/* ⋯ menu — an in-Modal popover, not a nested Modal. Its scrim
+              keeps playback paused (menuOpen ⇒ paused) but leaves chrome up. */}
+          {menuOpen && canManage ? (
+            <>
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPress={() => setMenuOpen(false)}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: insets.top + 52,
+                }}
+                className="overflow-hidden rounded-xl border border-border bg-popover"
+              >
+                <Pressable
+                  onPress={onDelete}
+                  disabled={deleteSlide.isPending}
+                  className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
+                >
+                  <Icon name="trash-outline" size={18} tone="destructive" />
+                  <AppText className="text-[14px] font-medium text-destructive">
+                    Delete {isVideo ? "video" : "photo"}
+                  </AppText>
+                </Pressable>
+              </View>
+            </>
+          ) : null}
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
