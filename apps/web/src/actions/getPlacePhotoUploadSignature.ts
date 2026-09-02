@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
-} from "@/utils/cloudinaryUploadSignature";
+} from "@abonten/services/uploads/cloudinaryUploadSignature";
 
 // Authorizes a direct browser -> Cloudinary upload for the place photo
 // gallery, without ever exposing CLOUDINARY_API_SECRET to the client.
@@ -14,7 +14,7 @@ import {
 // invalidating the signature — this is what a future uploadPlacePhoto
 // action should check against (publicId must start with this same folder)
 // to enforce ownership on write, same as uploadHighlight.ts does today.
-// Shared body: src/utils/cloudinaryUploadSignature.ts.
+// Shared body: @abonten/services/uploads/cloudinaryUploadSignature.
 export default async function getPlacePhotoUploadSignature(): Promise<UploadSignatureResult> {
   const supabase = await createClient();
 

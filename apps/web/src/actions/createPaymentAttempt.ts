@@ -9,9 +9,9 @@ import {
   type SelectedPaymentMethod,
   initiatePaystackChargeForAttempt,
 } from "@/utils/paystackInit";
-import { getActiveServiceFeeRate } from "@/utils/platformFee";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
 import { logger } from "@abonten/core/logger";
+import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
 
 export type { PaymentAttemptRow };
 

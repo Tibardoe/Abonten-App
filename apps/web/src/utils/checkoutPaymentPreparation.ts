@@ -11,8 +11,8 @@
 // fresh on every call after self-healing expiry.
 
 import { createClient } from "@/config/supabase/server";
-import { getActiveServiceFeeRate } from "@/utils/platformFee";
 import { computeCheckoutFee } from "@abonten/core/checkoutPricing";
+import { getActiveServiceFeeRate } from "@abonten/services/platform/platformFee";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type CheckoutRow = {

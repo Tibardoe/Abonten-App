@@ -4,7 +4,7 @@ import { createClient } from "@/config/supabase/server";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
-} from "@/utils/cloudinaryUploadSignature";
+} from "@abonten/services/uploads/cloudinaryUploadSignature";
 
 // Authorizes a direct browser -> Cloudinary upload for a place review's
 // photo attachments, mirroring getPlacePhotoUploadSignature.ts. The folder
@@ -15,7 +15,7 @@ import {
 // re-validates this same folder prefix before inserting each
 // place_review_photo row, once the review (and therefore its owning
 // reviewer_id) actually exists. Shared body:
-// src/utils/cloudinaryUploadSignature.ts.
+// @abonten/services/uploads/cloudinaryUploadSignature.
 export default async function getPlaceReviewPhotoUploadSignature(): Promise<UploadSignatureResult> {
   const supabase = await createClient();
 
