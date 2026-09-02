@@ -11,7 +11,9 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 // then category / name / location / rating / "View place". Rendered by
 // FeaturedPlacesCarousel on Explore → Places.
 
-const BANNER_HEIGHT = 208;
+// Kept in step with FeaturedEventBanner (web h-[250px]) so the two banner
+// types are the same height inside the shared FeaturedBannerCarousel.
+const BANNER_HEIGHT = 250;
 const WHITE_85 = "rgba(255,255,255,0.85)";
 const INK = "#0b1220";
 
