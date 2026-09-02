@@ -78,9 +78,9 @@ function Row({
         tone={destructive ? "destructive" : "muted"}
       />
       <AppText
-        className={`flex-1 text-[15px] ${
-          destructive ? "text-destructive" : "text-foreground"
-        }`}
+        variant="body"
+        tone={destructive ? "error" : "primary"}
+        className="flex-1"
       >
         {label}
       </AppText>

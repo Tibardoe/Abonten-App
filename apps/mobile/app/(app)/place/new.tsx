@@ -157,7 +157,7 @@ export default function CreatePlaceScreen() {
               <AppText variant="body">
                 You have {draftCount} saved draft{draftCount === 1 ? "" : "s"}
               </AppText>
-              <AppText className="text-[14px] font-semibold text-primary">
+              <AppText variant="small" tone="brand" className="font-semibold">
                 Resume ›
               </AppText>
             </Pressable>

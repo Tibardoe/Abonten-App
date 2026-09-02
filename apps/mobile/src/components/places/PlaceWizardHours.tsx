@@ -35,7 +35,7 @@ export function PlaceWizardHours({ w }: { w: PlaceWizard }) {
             hitSlop={8}
             className="active:opacity-60"
           >
-            <AppText className="text-[12px] font-semibold text-primary">
+            <AppText variant="small" tone="brand" className="font-semibold">
               Copy to every day
             </AppText>
           </Pressable>

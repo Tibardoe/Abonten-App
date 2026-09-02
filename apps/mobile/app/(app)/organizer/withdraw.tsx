@@ -3,7 +3,7 @@ import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
-import { AppText } from "@abonten/ui-native";
+import { AppText, Overline } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -121,9 +121,7 @@ export default function WithdrawScreen() {
     >
       {balances.length > 1 ? (
         <View className="gap-2">
-          <AppText className="text-[13px] font-semibold uppercase text-muted-foreground">
-            Currency
-          </AppText>
+          <Overline>Currency</Overline>
           <View className="flex-row flex-wrap gap-2">
             {balances.map((b) => {
               const active = b.currency === selectedCurrency;
@@ -154,18 +152,14 @@ export default function WithdrawScreen() {
       ) : null}
 
       <View className="rounded-xl border border-border bg-card p-4">
-        <AppText className="text-[13px] uppercase text-muted-foreground">
-          Available
-        </AppText>
+        <Overline>Available</Overline>
         <AppText variant="pageTitle">
           {selectedCurrency ?? "GHS"} {available.toFixed(2)}
         </AppText>
       </View>
 
       <View className="gap-2">
-        <AppText className="text-[13px] font-semibold uppercase text-muted-foreground">
-          To account
-        </AppText>
+        <Overline>To account</Overline>
         {accounts.map((a) => {
           const active = a.id === defaultAccountId;
           return (
@@ -186,9 +180,7 @@ export default function WithdrawScreen() {
       </View>
 
       <View className="gap-2">
-        <AppText className="text-[13px] font-semibold uppercase text-muted-foreground">
-          Amount
-        </AppText>
+        <Overline>Amount</Overline>
         <TextInput
           value={amount}
           onChangeText={setAmount}
@@ -213,7 +205,7 @@ export default function WithdrawScreen() {
         )}
       </Pressable>
 
-      <AppText className="text-center text-[11px] text-muted-foreground">
+      <AppText variant="caption" className="text-center">
         Withdrawals are reviewed before the funds are sent.
       </AppText>
     </ScrollView>

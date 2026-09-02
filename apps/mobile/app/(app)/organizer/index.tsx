@@ -168,9 +168,7 @@ export default function OrganizerDashboard() {
                   className="gap-3 rounded-xl border border-border bg-card p-4"
                 >
                   <View className="flex-row items-center justify-between">
-                    <AppText className="text-[13px] uppercase text-muted-foreground">
-                      Gross sales
-                    </AppText>
+                    <Overline>Gross sales</Overline>
                     <AppText variant="screenTitle">
                       {money(r.currency, r.gross_sales)}
                     </AppText>

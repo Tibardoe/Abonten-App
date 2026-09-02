@@ -48,9 +48,7 @@ function OrganizerPlaceCard({ place }: { place: OrganizerPlaceRow }) {
         />
       ) : (
         <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
-          <AppText className="text-[10px] text-muted-foreground">
-            No image
-          </AppText>
+          <AppText variant="caption">No image</AppText>
         </View>
       )}
       <View className="flex-1 justify-center gap-1">

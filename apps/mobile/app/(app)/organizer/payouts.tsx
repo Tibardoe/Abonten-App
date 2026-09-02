@@ -27,7 +27,7 @@ function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
             maximumFractionDigits: 2,
           })}
         </AppText>
-        <AppText className="text-[10px] text-muted-foreground">
+        <AppText variant="caption">
           {formatDateWithSuffix(row.requested_at)} · {row.reference}
         </AppText>
       </View>

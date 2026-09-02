@@ -222,7 +222,7 @@ export default function CheckoutReviewScreen() {
           )}
         </Pressable>
 
-        <AppText className="text-center text-[11px] text-muted-foreground">
+        <AppText variant="caption" className="text-center">
           Your seats are held for a limited time.
         </AppText>
       </ScrollView>

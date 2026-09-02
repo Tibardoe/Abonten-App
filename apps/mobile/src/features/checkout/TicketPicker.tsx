@@ -179,7 +179,10 @@ export function TicketPicker({ event }: { event: EventDetail }) {
                   disabled={disabled || qty === 0}
                   onPress={() => step(t.id, -1, cap)}
                 />
-                <AppText className="w-5 text-center text-[14px] text-foreground">
+                <AppText
+                  variant="body"
+                  className="w-5 text-center font-semibold"
+                >
                   {qty}
                 </AppText>
                 <StepButton
@@ -211,7 +214,7 @@ export function TicketPicker({ event }: { event: EventDetail }) {
           placeholderTextColor={c["muted-foreground"]}
         />
         {promoError ? (
-          <AppText className="text-[11px] text-destructive">
+          <AppText variant="caption" tone="error">
             {promoError}
           </AppText>
         ) : (
@@ -226,7 +229,7 @@ export function TicketPicker({ event }: { event: EventDetail }) {
           <AppText variant="muted">
             {totalCount} ticket{totalCount === 1 ? "" : "s"}
           </AppText>
-          <AppText className="text-[15px] font-bold text-foreground">
+          <AppText variant="cardTitle">
             {currency} {subtotal}
           </AppText>
         </View>

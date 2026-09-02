@@ -89,7 +89,7 @@ function SessionCard({
           </AppText>
         </View>
         <Pressable disabled={release.isPending} onPress={onRelease} hitSlop={8}>
-          <AppText className="text-[13px] font-medium text-destructive">
+          <AppText variant="small" tone="error" className="font-medium">
             {release.isPending ? "Releasing…" : "Release"}
           </AppText>
         </Pressable>
@@ -103,11 +103,12 @@ function SessionCard({
             tone={isExpired || isWarning ? "destructive" : "muted"}
           />
           <AppText
-            className={`text-[11px] ${
+            variant="caption"
+            className={
               isExpired || isWarning
                 ? "font-medium text-destructive"
-                : "text-muted-foreground"
-            }`}
+                : undefined
+            }
           >
             {isExpired
               ? "This checkout has expired."

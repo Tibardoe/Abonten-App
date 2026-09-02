@@ -197,7 +197,7 @@ export default function PayoutAccountsScreen() {
                 </AppText>
                 {a.is_default ? (
                   <View className="rounded-full bg-accent px-2 py-0.5">
-                    <AppText className="text-[10px] font-semibold uppercase text-accent-foreground">
+                    <AppText className="text-[12px] font-semibold uppercase text-accent-foreground">
                       Default
                     </AppText>
                   </View>
@@ -223,7 +223,11 @@ export default function PayoutAccountsScreen() {
                   onPress={() => confirmRemove(a.id)}
                   disabled={remove.isPending}
                 >
-                  <AppText className="text-[13px] font-semibold text-destructive">
+                  <AppText
+                    variant="small"
+                    tone="error"
+                    className="font-semibold"
+                  >
                     Remove
                   </AppText>
                 </Pressable>
@@ -257,7 +261,7 @@ export default function PayoutAccountsScreen() {
             <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
               <Icon name="checkmark" size={30} tone="primary" />
             </View>
-            <AppText className="text-center text-[15px] text-foreground">
+            <AppText variant="body" className="text-center">
               {success}
             </AppText>
             <Button title="Done" fullWidth onPress={closeSheet} />

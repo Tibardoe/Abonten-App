@@ -55,9 +55,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           />
         ) : (
           <View className="h-16 w-16 items-center justify-center rounded-lg bg-muted">
-            <AppText className="text-[10px] text-muted-foreground">
-              No image
-            </AppText>
+            <AppText variant="caption">No image</AppText>
           </View>
         )}
         <View className="flex-1 gap-1">
@@ -74,14 +72,12 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           ) : null}
           <View className="mt-0.5 flex-row items-center gap-2">
             <View className="self-start rounded-full bg-muted px-2 py-0.5">
-              <AppText className="text-[10px] font-medium uppercase text-muted-foreground">
+              <AppText variant="overline">
                 {STATUS_LABEL[status] ?? status ?? "—"}
               </AppText>
             </View>
             {event.event_code ? (
-              <AppText className="text-[10px] text-muted-foreground">
-                {event.event_code}
-              </AppText>
+              <AppText variant="caption">{event.event_code}</AppText>
             ) : null}
           </View>
         </View>
@@ -95,7 +91,7 @@ function OrganizerEventCard({ event }: { event: UserPostType }) {
           asChild
         >
           <Pressable className="self-start px-1 py-1 active:opacity-70">
-            <AppText className="text-[13px] font-semibold text-destructive">
+            <AppText variant="small" tone="error" className="font-semibold">
               Cancel event
             </AppText>
           </Pressable>

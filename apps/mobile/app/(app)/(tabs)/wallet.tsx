@@ -187,7 +187,7 @@ export default function WalletScreen() {
                 </AppText>
                 {m.is_default ? (
                   <View className="rounded-full bg-accent px-2 py-1">
-                    <AppText className="text-[11px] font-semibold uppercase text-accent-foreground">
+                    <AppText className="text-[12px] font-semibold uppercase text-accent-foreground">
                       Default
                     </AppText>
                   </View>

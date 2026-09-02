@@ -51,9 +51,7 @@ function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
   return (
     <View className="gap-3 rounded-xl border border-border bg-card p-4">
       <View className="flex-row items-center justify-between">
-        <AppText className="text-[13px] uppercase text-muted-foreground">
-          Available ({row.currency})
-        </AppText>
+        <Overline>Available ({row.currency})</Overline>
         <AppText variant="screenTitle">
           {amount(row.currency, row.available_balance)}
         </AppText>
@@ -90,7 +88,7 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
         >
           {row.event_title ?? row.reference ?? "—"}
         </AppText>
-        <AppText className="text-[10px] text-muted-foreground">
+        <AppText variant="caption">
           {formatDateWithSuffix(row.created_at)} · {row.status}
         </AppText>
       </View>

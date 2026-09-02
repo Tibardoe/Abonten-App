@@ -142,10 +142,10 @@ export default function TicketDetailScreen() {
             eventEnded={eventEnded}
           />
 
-          <AppText className="text-center text-[18px] font-bold text-foreground">
+          <AppText variant="sectionTitle" className="text-center">
             {ticket.event.title}
           </AppText>
-          <AppText className="text-[12px] tracking-[3px] text-muted-foreground">
+          <AppText variant="meta" className="tracking-[3px]">
             {ticket.ticket_code}
           </AppText>
         </View>
@@ -198,7 +198,7 @@ export default function TicketDetailScreen() {
               className="min-h-[44px] items-center justify-center rounded-xl border border-border active:opacity-80"
               onPress={onCancelTicket}
             >
-              <AppText className="text-[14px] font-semibold text-destructive">
+              <AppText variant="small" tone="error" className="font-semibold">
                 {cancel.isPending
                   ? "Cancelling…"
                   : ticket.transaction_id
