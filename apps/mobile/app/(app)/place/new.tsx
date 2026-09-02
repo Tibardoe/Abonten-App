@@ -6,20 +6,35 @@ import { PlaceWizardHours } from "@/components/places/PlaceWizardHours";
 import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
-import { ScreenLoader } from "@abonten/ui-native";
+import { AppText, ScreenLoader, ScreenTitle } from "@abonten/ui-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
-// Native echo of the web PlaceUploadModal: a 4-step wizard — Basic info,
-// Cover photo, Hours, Review — that publishes a place via useCreatePlace.
-// With `?draftId=`, it resumes a saved draft; the "Save as draft" button
-// (WP-4g-3) writes the same drafts/place_drafts rows the web savePlaceDraft
-// action does.
+// Native echo of the web PlaceUploadModal: a 4-step wizard that publishes a
+// place via useCreatePlace. With `?draftId=`, it resumes a saved draft; the
+// "Save as draft" button writes the same drafts/place_drafts rows the web
+// savePlaceDraft action does.
 //
-// Navigation lives entirely in the header: Back steps back (or leaves the
-// flow from step 0), Next / Publish advances. Per-step gates: `w.canAdvance`.
+// The cover photo comes first — consistent with Create Event, and it's what
+// a listing is recognised by. Then Basic info → Hours → Review. Navigation
+// lives in the header: Back steps back (or leaves the flow from step 0),
+// Next / Publish advances; per-step gates come from `w.canAdvance`, except
+// Basic info which validates on Next-press.
 
-const LAST_STEP = 3;
+const STEPS: { title: string; subtitle: string }[] = [
+  {
+    title: "Cover photo",
+    subtitle: "The image people recognise the place by — add it first.",
+  },
+  {
+    title: "Basic info",
+    subtitle: "Name, category, description and address.",
+  },
+  { title: "Opening hours", subtitle: "When the place is open." },
+  { title: "Review & publish", subtitle: "Check everything, then go live." },
+];
+const LAST_STEP = STEPS.length - 1;
+const BASICS_STEP = 1;
 
 export default function CreatePlaceScreen() {
   const router = useRouter();
@@ -59,14 +74,11 @@ export default function CreatePlaceScreen() {
   }
 
   function goNext() {
-    if (w.step === 0) {
-      if (w.validateBasics()) w.setStep(1);
-      return;
-    }
     if (w.step === LAST_STEP) {
       onPublish();
       return;
     }
+    if (w.step === BASICS_STEP && !w.validateBasics()) return;
     w.setStep(w.step + 1);
   }
 
@@ -86,7 +98,7 @@ export default function CreatePlaceScreen() {
       onBack={goBack}
       onNext={goNext}
       nextLabel={w.step === LAST_STEP ? "Publish" : "Next"}
-      nextDisabled={w.isSubmitting || (w.step !== 0 && !w.canAdvance)}
+      nextDisabled={w.isSubmitting || (w.step !== BASICS_STEP && !w.canAdvance)}
     />
   );
 
@@ -99,6 +111,8 @@ export default function CreatePlaceScreen() {
     );
   }
 
+  const stepInfo = STEPS[w.step];
+
   return (
     <View className="flex-1 bg-background">
       {header}
@@ -107,24 +121,34 @@ export default function CreatePlaceScreen() {
         contentContainerClassName="gap-5 p-4 pb-16"
         keyboardShouldPersistTaps="handled"
       >
-        <View className="flex-row items-center justify-between">
-          <StepDots step={w.step} total={4} />
-          <Pressable
-            onPress={onSaveDraft}
-            disabled={w.isSavingDraft}
-            className="active:opacity-60 disabled:opacity-50"
-          >
-            <Text className="text-sm font-semibold text-primary">
-              {w.isSavingDraft ? "Saving…" : "Save as draft"}
-            </Text>
-          </Pressable>
+        <View className="gap-3">
+          <View className="flex-row items-center justify-between">
+            <StepDots step={w.step} total={STEPS.length} />
+            <Pressable
+              onPress={onSaveDraft}
+              disabled={w.isSavingDraft}
+              className="active:opacity-60 disabled:opacity-50"
+            >
+              <Text className="text-sm font-semibold text-primary">
+                {w.isSavingDraft ? "Saving…" : "Save as draft"}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View className="gap-0.5">
+            <AppText variant="caption">
+              Step {w.step + 1} of {STEPS.length}
+            </AppText>
+            <ScreenTitle>{stepInfo.title}</ScreenTitle>
+            <AppText variant="muted">{stepInfo.subtitle}</AppText>
+          </View>
         </View>
 
         {w.draftLoadError ? (
           <Text className="text-sm text-destructive">{w.draftLoadError}</Text>
         ) : null}
 
-        {!draftId && draftCount > 0 ? (
+        {!draftId && draftCount > 0 && w.step === 0 ? (
           <Link href="/(app)/organizer/place-drafts" asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
               <Text className="text-sm text-foreground">
@@ -135,8 +159,8 @@ export default function CreatePlaceScreen() {
           </Link>
         ) : null}
 
-        {w.step === 0 ? <PlaceWizardBasicInfo w={w} /> : null}
-        {w.step === 1 ? <PlaceWizardCover w={w} /> : null}
+        {w.step === 0 ? <PlaceWizardCover w={w} /> : null}
+        {w.step === 1 ? <PlaceWizardBasicInfo w={w} /> : null}
         {w.step === 2 ? <PlaceWizardHours w={w} /> : null}
         {w.step === 3 ? <PlaceWizardReview w={w} /> : null}
       </ScrollView>

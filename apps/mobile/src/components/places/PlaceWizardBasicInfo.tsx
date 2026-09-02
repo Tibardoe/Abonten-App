@@ -4,7 +4,7 @@ import { AppText, Field, Icon, Input } from "@abonten/ui-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
-// Step 1 of the place wizard — the schema-covered text fields plus the
+// Step 2 of the place wizard — the schema-covered text fields plus the
 // category picker and the address resolver (autocomplete suggestions,
 // "choose on map", or current location). Mirrors the web
 // PlaceCreateStepBasicInfo.
