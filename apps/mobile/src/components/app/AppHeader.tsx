@@ -33,7 +33,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // so the title / logo sits at the true screen midpoint no matter how wide
 // the left and right clusters are (never `justify-content: space-between`).
 
-const HEADER_HEIGHT = 52;
+const HEADER_HEIGHT = 54;
 const ICON_SIZE = 24;
 const HIT = 40; // touch-target square for every header control
 const SIDE_INSET = 4; // outer gap from the screen edge to the first control
@@ -216,12 +216,12 @@ export function AppHeader({
           }}
         >
           {variant === "branded" ? (
-            <AbontenLogo size={34} />
+            <AbontenLogo size={38} />
           ) : title ? (
             <AppText
               numberOfLines={1}
               ellipsizeMode="tail"
-              className="text-[17px] font-semibold text-foreground"
+              className="text-[17px] font-bold text-foreground"
             >
               {title}
             </AppText>

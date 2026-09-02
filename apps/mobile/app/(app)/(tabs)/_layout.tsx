@@ -1,5 +1,5 @@
 import { useTranslations } from "@abonten/ui-native/i18n";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
@@ -20,6 +20,13 @@ export default function TabsLayout() {
         animation: "shift",
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c["muted-foreground"],
+        // Brand font + a legible weight on the bottom nav; 11px is the
+        // iOS/Android norm for a tab label.
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
+          fontFamily: family.byWeight["600"],
+        },
         tabBarStyle: {
           backgroundColor: c.sidebar,
           borderTopColor: c["sidebar-border"],
