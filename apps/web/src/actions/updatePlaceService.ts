@@ -1,6 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import {
+  type PlaceServiceCoreResult,
+  updatePlaceServiceCore,
+} from "@/utils/placeServiceCore";
 
 type UpdatePlaceServiceInput = {
   serviceId: string;
@@ -11,7 +15,11 @@ type UpdatePlaceServiceInput = {
   showPrice?: boolean;
 };
 
-export async function updatePlaceService(input: UpdatePlaceServiceInput) {
+// Thin wrapper: auth, then delegate to the shared body (also used by the
+// mobile PATCH /api/mobile/organizer/places/services/:serviceId route).
+export async function updatePlaceService(
+  input: UpdatePlaceServiceInput,
+): Promise<PlaceServiceCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -20,48 +28,8 @@ export async function updatePlaceService(input: UpdatePlaceServiceInput) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401 as const, message: "User not authenticated" };
   }
 
-  const { serviceId, name, description, price, priceUnit, showPrice } = input;
-
-  // A place_service row has no owner_id of its own, so ownership is
-  // enforced by joining through to the owning place (same pattern as
-  // respondToPlaceReview.ts/removePlacePhoto.ts).
-  const { data: service, error: fetchError } = await supabase
-    .from("place_service")
-    .select("id, place:place_id(owner_id)")
-    .eq("id", serviceId)
-    .maybeSingle();
-
-  if (fetchError || !service) {
-    return { status: 404, message: "Service not found" };
-  }
-
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST's embedded-resource shape isn't worth a dedicated type for this one ownership check; no generated Supabase types exist in this repo (see PROJECT.md)
-  const ownerId = (service as any).place?.owner_id;
-
-  if (ownerId !== user.id) {
-    return { status: 403, message: "Not authorized to edit this service" };
-  }
-
-  const { error: updateError } = await supabase
-    .from("place_service")
-    .update({
-      ...(name !== undefined && { name }),
-      ...(description !== undefined && { description }),
-      ...(price !== undefined && { price }),
-      ...(priceUnit !== undefined && { price_unit: priceUnit }),
-      ...(showPrice !== undefined && { show_price: showPrice }),
-    })
-    .eq("id", serviceId);
-
-  if (updateError) {
-    return {
-      status: 500,
-      message: `Error updating service: ${updateError.message}`,
-    };
-  }
-
-  return { status: 200, message: "Service updated successfully!" };
+  return updatePlaceServiceCore(supabase, user.id, input);
 }

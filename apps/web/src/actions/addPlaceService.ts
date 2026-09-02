@@ -1,6 +1,10 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import {
+  type PlaceServiceCoreResult,
+  addPlaceServiceCore,
+} from "@/utils/placeServiceCore";
 
 type AddPlaceServiceInput = {
   placeId: string;
@@ -11,7 +15,11 @@ type AddPlaceServiceInput = {
   showPrice: boolean;
 };
 
-export async function addPlaceService(input: AddPlaceServiceInput) {
+// Thin wrapper: auth, then delegate to the shared body (also used by the
+// mobile POST /api/mobile/organizer/places/:placeId/services route).
+export async function addPlaceService(
+  input: AddPlaceServiceInput,
+): Promise<PlaceServiceCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
   const {
@@ -20,47 +28,8 @@ export async function addPlaceService(input: AddPlaceServiceInput) {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return { status: 401, message: "User not authenticated" };
+    return { status: 401 as const, message: "User not authenticated" };
   }
 
-  const { placeId, name, description, price, priceUnit, showPrice } = input;
-
-  const { data: place, error: fetchError } = await supabase
-    .from("place")
-    .select("id")
-    .eq("id", placeId)
-    .eq("owner_id", user.id)
-    .maybeSingle();
-
-  if (fetchError || !place) {
-    return { status: 404, message: "Place not found or unauthorized" };
-  }
-
-  const { count } = await supabase
-    .from("place_service")
-    .select("id", { count: "exact", head: true })
-    .eq("place_id", placeId);
-
-  const { data: service, error: insertError } = await supabase
-    .from("place_service")
-    .insert({
-      place_id: placeId,
-      name,
-      description: description ?? null,
-      price: price ?? null,
-      price_unit: priceUnit ?? null,
-      show_price: showPrice,
-      position: count ?? 0,
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    return {
-      status: 500,
-      message: `Error adding service: ${insertError.message}`,
-    };
-  }
-
-  return { status: 200, message: "Service added successfully!", data: service };
+  return addPlaceServiceCore(supabase, user.id, input);
 }

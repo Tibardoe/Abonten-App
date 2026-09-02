@@ -786,6 +786,31 @@ export type PlaceHoursStatusResult =
   | { status: 200; message: string }
   | { status: 400 | 401 | 403 | 404 | 500; message: string };
 
+// One `place_service` row as the manage context returns it.
+export type PlaceServiceRow = PlaceManageContext["services"][number];
+
+export type AddPlaceServiceBody = {
+  name: string;
+  description?: string | null;
+  price?: number | null;
+  priceUnit?: string | null;
+  showPrice: boolean;
+};
+
+// `null` clears a field; an omitted key leaves it unchanged.
+export type UpdatePlaceServiceBody = {
+  name?: string;
+  description?: string | null;
+  price?: number | null;
+  priceUnit?: string | null;
+  showPrice?: boolean;
+};
+
+// add / update / remove all report success the same way.
+export type PlaceServiceResult =
+  | { status: 200; message: string; data?: PlaceServiceRow }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+
 // ---- organizer write actions ----------------------------------------
 
 export type PayoutAccountsResult =

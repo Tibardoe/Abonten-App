@@ -9,6 +9,7 @@ import {
 import type {
   PlaceHoursStatusResult,
   PlaceOpeningHoursInput,
+  PlaceServiceRow,
   PlaceTemporaryStatus,
   UpdatePlaceResult,
 } from "@abonten/api-client";
@@ -314,9 +315,13 @@ export function usePlaceEdit(placeId: string) {
     return res;
   }
 
+  const services: PlaceServiceRow[] =
+    query.data && query.data.status === 200 ? query.data.data.services : [];
+
   return {
     isLoading: query.isLoading,
     isReady: prefilled,
+    services,
     loadError:
       query.isError ||
       (query.data && query.data.status !== 200 ? query.data.message : false),
