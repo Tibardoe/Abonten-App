@@ -34,6 +34,10 @@ export {
   type BadgeTone,
   StatusBadge,
 } from "./Badge";
+export {
+  TicketStatusBadge,
+  type TicketStatusBadgeProps,
+} from "./TicketStatusBadge";
 export { Input, type InputProps, Field, type FieldProps } from "./Input";
 export { Chip, type ChipProps, Tag } from "./Chip";
 export {
