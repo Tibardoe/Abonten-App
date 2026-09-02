@@ -1,14 +1,17 @@
+import { ImageViewer } from "@/components/ImageViewer";
 import { HighlightsRow } from "@/components/profile/HighlightsRow";
 import type { PublicProfile } from "@/features/profile/usePublicProfile";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Avatar, Button } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
-import { View } from "react-native";
+import { useState } from "react";
+import { Pressable, View } from "react-native";
 
 // Native echo of the web ProfileDetails header (mobile layout): avatar,
 // full name, the Posts / Favorites / Ratings counts, bio, the highlights
 // strip, and — on your own profile — an Edit profile action. The @username
 // itself is the screen's centred nav title (set from the profile screen),
-// so it isn't repeated here.
+// so it isn't repeated here. Tapping the avatar opens it full-screen.
 
 function Stat({ value, label }: { value: string | number; label: string }) {
   return (
@@ -27,15 +30,31 @@ export function ProfileHeader({
   isOwn: boolean;
 }) {
   const router = useRouter();
+  const [viewerOpen, setViewerOpen] = useState(false);
+
+  const fullPhoto = profile.avatar_public_id
+    ? buildCloudinaryUrl(
+        profile.avatar_public_id,
+        String(profile.avatar_version ?? ""),
+        { width: 1080, height: 1080 },
+      )
+    : null;
 
   return (
     <View className="gap-4 px-4 pt-4">
       <View className="flex-row items-center gap-4">
-        <Avatar
-          publicId={profile.avatar_public_id ?? undefined}
-          version={profile.avatar_version ?? undefined}
-          size={84}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="View profile photo"
+          disabled={!fullPhoto}
+          onPress={() => setViewerOpen(true)}
+        >
+          <Avatar
+            publicId={profile.avatar_public_id ?? undefined}
+            version={profile.avatar_version ?? undefined}
+            size={84}
+          />
+        </Pressable>
         <View className="flex-1 gap-2">
           <AppText variant="bodyStrong" numberOfLines={1}>
             {profile.full_name ?? `@${profile.username}`}
@@ -65,6 +84,12 @@ export function ProfileHeader({
         userId={profile.user_id}
         username={profile.username}
         isOwn={isOwn}
+      />
+
+      <ImageViewer
+        uri={fullPhoto}
+        open={viewerOpen}
+        onClose={() => setViewerOpen(false)}
       />
     </View>
   );
