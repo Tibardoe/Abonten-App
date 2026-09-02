@@ -1,8 +1,10 @@
+import { ImageViewer } from "@/components/ImageViewer";
 import { AppHeader } from "@/components/app/AppHeader";
 import { ProfileCompletionCard } from "@/components/profile/ProfileCompletionCard";
 import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
 import { useUpdateProfile } from "@/features/profile/useUpdateProfile";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   AppText,
   Avatar,
@@ -38,6 +40,7 @@ export default function EditProfile() {
   const { data: profile, isLoading } = useProfile();
   const update = useUpdateProfile();
   const avatar = useAvatarUpload();
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
 
   const [form, setForm] = useState<FormState>({
     username: "",
@@ -126,10 +129,10 @@ export default function EditProfile() {
 
           <View className="flex-row items-center gap-3">
             <Pressable
-              onPress={() => avatar.mutate()}
-              disabled={avatar.isPending}
+              onPress={() => setPhotoViewerOpen(true)}
+              disabled={!profile.avatar_public_id}
               accessibilityRole="button"
-              accessibilityLabel="Change profile photo"
+              accessibilityLabel="View profile photo"
             >
               <Avatar
                 publicId={profile.avatar_public_id ?? undefined}
@@ -212,6 +215,20 @@ export default function EditProfile() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ImageViewer
+        uri={
+          profile.avatar_public_id
+            ? buildCloudinaryUrl(
+                profile.avatar_public_id,
+                String(profile.avatar_version ?? ""),
+                { width: 1080, height: 1080 },
+              )
+            : null
+        }
+        open={photoViewerOpen}
+        onClose={() => setPhotoViewerOpen(false)}
+      />
     </View>
   );
 }

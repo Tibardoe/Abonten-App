@@ -1,11 +1,14 @@
 import type { ReactNode } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   View,
   useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { shadow } from "../theme/tokens";
 import { Icon } from "./Icon";
@@ -15,6 +18,12 @@ import { SectionTitle } from "./Typography";
 // the web app uses for the filter modal, date pickers, and anchored menus.
 // Same prop shape (`open` / `onClose` / `title` / `footer`) so those flows
 // port across. Built on RN's Modal so it needs no extra dependency.
+//
+// The panel is wrapped in a KeyboardAvoidingView so a focused input inside
+// the sheet lifts it clear of the keyboard instead of being hidden behind
+// it, and its scroll + footer carry the bottom safe-area inset so nothing
+// sits under the home indicator. Every bottom sheet in the app renders
+// through here, so this behaviour is uniform.
 
 export type SheetProps = {
   open: boolean;
@@ -38,6 +47,7 @@ export function Sheet({
   maxHeightRatio = 0.85,
 }: SheetProps) {
   const { height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const c = useThemeColors();
 
   return (
@@ -48,7 +58,10 @@ export function Sheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View className="flex-1 justify-end">
+      <KeyboardAvoidingView
+        style={{ flex: 1, justifyContent: "flex-end" }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
         <Pressable
           accessibilityLabel="Close"
           onPress={onClose}
@@ -95,17 +108,25 @@ export function Sheet({
           ) : null}
 
           <ScrollView
-            contentContainerClassName="p-4"
+            contentContainerStyle={{
+              padding: 16,
+              paddingBottom: 16 + (footer ? 0 : insets.bottom),
+            }}
             keyboardShouldPersistTaps="handled"
           >
             {children}
           </ScrollView>
 
           {footer ? (
-            <View className="border-t border-border p-4">{footer}</View>
+            <View
+              className="border-t border-border px-4 pt-4"
+              style={{ paddingBottom: 16 + insets.bottom }}
+            >
+              {footer}
+            </View>
           ) : null}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
