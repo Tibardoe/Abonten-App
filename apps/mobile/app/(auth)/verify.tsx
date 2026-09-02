@@ -83,57 +83,61 @@ export default function Verify() {
         </Pressable>
 
         <ScrollView
-          contentContainerClassName="grow justify-center gap-7 px-6 pb-10 pt-6"
+          contentContainerClassName="grow px-6 pb-10"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="items-center gap-3">
+          <View className="items-center gap-3 pb-2 pt-2">
             <AbontenLogo size={52} />
             <AbontenWordmark size={22} />
           </View>
 
-          <View className="gap-1.5">
-            <AppText className="text-center text-[24px] font-bold text-foreground">
-              Enter your code
-            </AppText>
-            <AppText className="text-center text-[14px] text-muted-foreground">
-              We sent a 6-digit code to {phoneE164 ?? "your phone"}.
-            </AppText>
+          <View className="grow justify-center gap-6">
+            <View className="gap-1.5">
+              <AppText className="text-center text-[24px] font-bold text-foreground">
+                Enter your code
+              </AppText>
+              <AppText className="text-center text-[14px] text-muted-foreground">
+                We sent a 6-digit code to {phoneE164 ?? "your phone"}.
+              </AppText>
+            </View>
+
+            <TextInput
+              className="rounded-lg border border-input bg-background px-3 py-3.5 text-center text-2xl tracking-[8px] text-foreground"
+              placeholder="000000"
+              placeholderTextColor={c["muted-foreground"]}
+              keyboardType="number-pad"
+              autoComplete="sms-otp"
+              maxLength={6}
+              value={code}
+              onChangeText={(v) => {
+                setCode(v);
+                if (error) setError(null);
+              }}
+              editable={!busy}
+              onSubmitEditing={verify}
+              returnKeyType="done"
+            />
+
+            {error ? (
+              <AppText className="text-[13px] text-destructive">
+                {error}
+              </AppText>
+            ) : null}
+
+            <Button
+              title={busy ? "Verifying…" : "Verify"}
+              fullWidth
+              loading={busy}
+              disabled={busy || code.trim().length < 6}
+              onPress={verify}
+            />
+
+            <Pressable onPress={() => router.back()} disabled={busy}>
+              <AppText className="text-center text-[13px] text-muted-foreground">
+                Use a different number
+              </AppText>
+            </Pressable>
           </View>
-
-          <TextInput
-            className="rounded-lg border border-input bg-background px-3 py-3.5 text-center text-2xl tracking-[8px] text-foreground"
-            placeholder="000000"
-            placeholderTextColor={c["muted-foreground"]}
-            keyboardType="number-pad"
-            autoComplete="sms-otp"
-            maxLength={6}
-            value={code}
-            onChangeText={(v) => {
-              setCode(v);
-              if (error) setError(null);
-            }}
-            editable={!busy}
-            onSubmitEditing={verify}
-            returnKeyType="done"
-          />
-
-          {error ? (
-            <AppText className="text-[13px] text-destructive">{error}</AppText>
-          ) : null}
-
-          <Button
-            title={busy ? "Verifying…" : "Verify"}
-            fullWidth
-            loading={busy}
-            disabled={busy || code.trim().length < 6}
-            onPress={verify}
-          />
-
-          <Pressable onPress={() => router.back()} disabled={busy}>
-            <AppText className="text-center text-[13px] text-muted-foreground">
-              Use a different number
-            </AppText>
-          </Pressable>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>

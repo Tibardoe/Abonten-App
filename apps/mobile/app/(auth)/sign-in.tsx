@@ -100,90 +100,92 @@ export default function SignIn() {
         </Pressable>
 
         <ScrollView
-          contentContainerClassName="grow justify-center gap-7 px-6 pb-10 pt-6"
+          contentContainerClassName="grow px-6 pb-10"
           keyboardShouldPersistTaps="handled"
         >
-          <View className="items-center gap-3">
+          <View className="items-center gap-3 pb-2 pt-2">
             <AbontenLogo size={52} />
             <AbontenWordmark size={22} />
           </View>
 
-          <View className="gap-1.5">
-            <AppText className="text-center text-[24px] font-bold text-foreground">
-              Log in or sign up
-            </AppText>
-            <AppText className="text-center text-[14px] text-muted-foreground">
-              Continue with your phone number or Google account.
-            </AppText>
-          </View>
+          <View className="grow justify-center gap-6">
+            <View className="gap-1.5">
+              <AppText className="text-center text-[24px] font-bold text-foreground">
+                Log in or sign up
+              </AppText>
+              <AppText className="text-center text-[14px] text-muted-foreground">
+                Continue with your phone number or Google account.
+              </AppText>
+            </View>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Continue with Google"
-            disabled={busy !== null}
-            onPress={google}
-            className="h-[52px] flex-row items-center justify-center gap-3 rounded-lg border border-border bg-card active:opacity-80 disabled:opacity-50"
-          >
-            {busy === "google" ? (
-              <ActivityIndicator />
-            ) : (
-              <>
-                <GoogleIcon size={20} />
-                <AppText className="text-[15px] font-semibold text-foreground">
-                  Continue with Google
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Continue with Google"
+              disabled={busy !== null}
+              onPress={google}
+              className="h-[52px] flex-row items-center justify-center gap-3 rounded-lg border border-border bg-card active:opacity-80 disabled:opacity-50"
+            >
+              {busy === "google" ? (
+                <ActivityIndicator />
+              ) : (
+                <>
+                  <GoogleIcon size={20} />
+                  <AppText className="text-[15px] font-semibold text-foreground">
+                    Continue with Google
+                  </AppText>
+                </>
+              )}
+            </Pressable>
+
+            <View className="flex-row items-center gap-3">
+              <View className="h-px flex-1 bg-border" />
+              <AppText className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                or
+              </AppText>
+              <View className="h-px flex-1 bg-border" />
+            </View>
+
+            <View className="gap-2">
+              <AppText variant="label">Phone number</AppText>
+              <View className="flex-row gap-2">
+                <CountryCodeField value={country} onChange={setCountry} />
+                <TextInput
+                  className="h-[48px] flex-1 rounded-lg border border-input bg-background px-3 text-[15px] text-foreground"
+                  placeholder="24 123 4567"
+                  placeholderTextColor={c["muted-foreground"]}
+                  keyboardType="phone-pad"
+                  autoComplete="tel"
+                  value={rawPhone}
+                  onChangeText={(v) => {
+                    setRawPhone(v);
+                    if (error) setError(null);
+                  }}
+                  editable={busy === null}
+                  onSubmitEditing={sendCode}
+                  returnKeyType="send"
+                />
+              </View>
+
+              {error ? (
+                <AppText className="text-[13px] text-destructive">
+                  {error}
                 </AppText>
-              </>
-            )}
-          </Pressable>
+              ) : null}
 
-          <View className="flex-row items-center gap-3">
-            <View className="h-px flex-1 bg-border" />
-            <AppText className="text-[11px] uppercase tracking-wide text-muted-foreground">
-              or
-            </AppText>
-            <View className="h-px flex-1 bg-border" />
-          </View>
-
-          <View className="gap-2">
-            <AppText variant="label">Phone number</AppText>
-            <View className="flex-row gap-2">
-              <CountryCodeField value={country} onChange={setCountry} />
-              <TextInput
-                className="h-[48px] flex-1 rounded-lg border border-input bg-background px-3 text-[15px] text-foreground"
-                placeholder="24 123 4567"
-                placeholderTextColor={c["muted-foreground"]}
-                keyboardType="phone-pad"
-                autoComplete="tel"
-                value={rawPhone}
-                onChangeText={(v) => {
-                  setRawPhone(v);
-                  if (error) setError(null);
-                }}
-                editable={busy === null}
-                onSubmitEditing={sendCode}
-                returnKeyType="send"
+              <Button
+                title={busy === "phone" ? "Sending code…" : "Send code"}
+                fullWidth
+                loading={busy === "phone"}
+                disabled={busy !== null || !phoneValid}
+                onPress={sendCode}
+                className="mt-1"
               />
             </View>
 
-            {error ? (
-              <AppText className="text-[13px] text-destructive">
-                {error}
-              </AppText>
-            ) : null}
-
-            <Button
-              title={busy === "phone" ? "Sending code…" : "Send code"}
-              fullWidth
-              loading={busy === "phone"}
-              disabled={busy !== null || !phoneValid}
-              onPress={sendCode}
-              className="mt-1"
-            />
+            <AppText className="text-center text-[12px] text-muted-foreground">
+              By continuing you agree to Abonten's Terms and Privacy Policy.
+            </AppText>
           </View>
-
-          <AppText className="text-center text-[12px] text-muted-foreground">
-            By continuing you agree to Abonten's Terms and Privacy Policy.
-          </AppText>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>
