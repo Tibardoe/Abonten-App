@@ -1,4 +1,4 @@
-import { EventCard } from "@/components/EventCard";
+import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import {
@@ -292,7 +292,7 @@ export default function Search() {
             results.isLoading ? (
               <View className="gap-4 px-1 pt-2">
                 {["a", "b", "c"].map((k) => (
-                  <Skeleton key={k} height={220} radius={12} />
+                  <EventCardSkeleton key={k} />
                 ))}
               </View>
             ) : (

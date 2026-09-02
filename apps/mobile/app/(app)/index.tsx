@@ -1,5 +1,5 @@
-import { EventCard } from "@/components/EventCard";
-import { PlaceCard } from "@/components/PlaceCard";
+import { EventCard, EventCardSkeleton } from "@/components/EventCard";
+import { PlaceCard, PlaceCardSkeleton } from "@/components/PlaceCard";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
@@ -336,7 +336,17 @@ export default function Explore() {
               }}
             />
           }
-          ListEmptyComponent={eventsQuery.isLoading ? <Spinner /> : emptyState}
+          ListEmptyComponent={
+            eventsQuery.isLoading ? (
+              <View className="gap-4 px-4 pt-2">
+                {["a", "b", "c"].map((k) => (
+                  <EventCardSkeleton key={k} />
+                ))}
+              </View>
+            ) : (
+              emptyState
+            )
+          }
           ListFooterComponent={
             eventsQuery.isFetchingNextPage ? <Spinner /> : null
           }
@@ -362,7 +372,17 @@ export default function Explore() {
               }}
             />
           }
-          ListEmptyComponent={placesQuery.isLoading ? <Spinner /> : emptyState}
+          ListEmptyComponent={
+            placesQuery.isLoading ? (
+              <View className="gap-4 px-4 pt-2">
+                {["a", "b", "c"].map((k) => (
+                  <PlaceCardSkeleton key={k} />
+                ))}
+              </View>
+            ) : (
+              emptyState
+            )
+          }
           ListFooterComponent={
             placesQuery.isFetchingNextPage ? <Spinner /> : null
           }
