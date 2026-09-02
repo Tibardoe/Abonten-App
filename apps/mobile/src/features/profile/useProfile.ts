@@ -3,9 +3,9 @@ import { api } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 // The signed-in user's own `user_profile_details` row (same view the web
-// header / profile page read). The API route types it loosely
-// (`Record<string, unknown>`), so narrow the handful of fields the app uses
-// here.
+// header / profile page read). `@abonten/api-client`'s `ProfileData` types
+// the view columns; this maps them to the app's camelless shape and coerces
+// the bigint/numeric aggregates PostgREST serialises as strings.
 
 export type MyProfile = {
   user_id: string;
@@ -34,7 +34,7 @@ export function useProfile() {
     queryFn: async (): Promise<MyProfile | null> => {
       const res = await api.profile.get();
       if (res.status !== 200 || !res.data) return null;
-      const d = res.data as Record<string, unknown>;
+      const d = res.data;
       return {
         user_id: String(d.user_id ?? session?.user.id ?? ""),
         username: str(d.username),

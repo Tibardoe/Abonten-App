@@ -97,9 +97,20 @@ export type CloudinarySignatureData = {
 
 // ---- profile ---------------------------------------------------------------
 
-// The profile route returns the `user_profile_details` view row as-is; its
-// column set is broad and DB-driven, so it is intentionally left loose here.
-export type ProfileData = Record<string, unknown>;
+// The `user_profile_details` view row, returned by the profile route as-is.
+// Verified column set (PostgREST serialises the bigint/numeric aggregates as
+// strings, hence `number | string`).
+export type ProfileData = {
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_public_id: string | null;
+  avatar_version: string | null;
+  bio: string | null;
+  total_posts: number | string | null;
+  total_favorites: number | string | null;
+  average_rating: number | string | null;
+};
 
 // ---- checkout -------------------------------------------------------------
 
@@ -254,9 +265,38 @@ export type PreparedCheckoutPayment = {
   currency: string;
 };
 
-// One `ticket_checkout` row joined with its event + ticket type. The select
-// is `*, event(...), ticket_type(...)` — broad and DB-driven, kept loose.
-export type CheckoutSessionRow = Record<string, unknown>;
+// One `ticket_checkout` row joined with a slim event + ticket-type embed.
+// The `*` is that table's own columns (verified — PROJECT.md §7.3); the two
+// embeds are exactly the columns the route selects. `event_occurrence` under
+// `event` is left loose. An index signature covers any column added to
+// `ticket_checkout` later without breaking callers.
+export type CheckoutSessionRow = {
+  id: string;
+  user_id: string | null;
+  event_id: string;
+  ticket_type_id: string;
+  checkout_session_id: string;
+  quantity: number;
+  unit_price: number;
+  promo_code: string | null;
+  discount: number;
+  discounted_units: number;
+  total_price: number;
+  status: string;
+  occurrence_id: string | null;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string | null;
+  event: {
+    title: string;
+    event_code: string;
+    starts_at: string | null;
+    ends_at: string | null;
+    event_occurrence: Record<string, unknown>[] | null;
+  } | null;
+  ticket_type: { type: string; currency: string } | null;
+  [key: string]: unknown;
+};
 
 // ---- pending-checkout basket -------------------------------------------
 // Mirrors getUserPendingTicketCheckoutsCore's PendingCheckoutSession /

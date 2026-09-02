@@ -1,7 +1,7 @@
 "use server";
 
-import generateTicket from "@/actions/generateTicket";
 import { createClient } from "@/config/supabase/server";
+import generateTicket from "@/utils/generateTicket";
 import { logger } from "@abonten/core/logger";
 
 /**

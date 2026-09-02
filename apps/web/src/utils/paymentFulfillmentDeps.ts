@@ -1,6 +1,6 @@
 import activateEventPromotion from "@/actions/activateEventPromotion";
 import activatePlacePromotion from "@/actions/activatePlacePromotion";
-import generateTicket from "@/actions/generateTicket";
+import generateTicket from "@/utils/generateTicket";
 import type { PaymentFulfillmentDeps } from "@abonten/services/payments/fulfillmentDeps";
 
 // The concrete apps/web implementations of the three purchase-fulfilment

@@ -1,5 +1,4 @@
-"use server";
-
+import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
@@ -9,12 +8,11 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "@abonten/services/tickets/generateTicketCode";
+import { insertUserAttendanceCore } from "@abonten/services/tickets/insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import insertUserAttendance from "./insertUserAttendance";
-import ticketPurchaseNotification from "./ticketPurchaseNotification";
 
 type TicketWithEvent = {
   user_id: string;
@@ -44,16 +42,19 @@ type CheckoutRow = {
  * server-side) is the only source of truth for what gets issued. Nothing
  * about "how many tickets of which type" is trusted from the client here.
  * The event's end date (for ticket.expires_at) is resolved server-side from
- * the event's own rows too — previously this was a client-supplied Date
- * parsed back out of an already-formatted display string, which was fragile
- * for one session and outright unreliable once a single "Proceed to
- * Payment" click can walk several different events' sessions in a row.
+ * the event's own rows too.
+ *
+ * **Server-only module function, not a Server Action.** It uses next/cache
+ * `revalidatePath` + next/server `after`, so it can only run inside a Server
+ * Action or Route Handler — its two callers are `issueFreeCheckoutTickets`
+ * (the free-basket "use server" action, gated to 0-price sessions) and
+ * `paymentFulfillmentDeps` (injected into `finalizePaystackPayment`). There
+ * is no client entry point.
  *
  * `authOverride` lets the Paystack webhook (no cookies/session) call this
- * exact same function to finalize a paid checkout instead of duplicating
- * the ticket-issuing logic — see src/types/authOverrideType.ts and
- * src/utils/finalizePaystackPayment.ts. Every existing call site omits it
- * and keeps deriving the user from cookies exactly as before.
+ * with an already-resolved user + service-role client instead of deriving
+ * the session from cookies — see @abonten/types/authOverrideType and
+ * @abonten/services/payments/finalizePaystackPayment.
  */
 export default async function generateTicket(
   checkoutSessionId: string,
@@ -265,11 +266,12 @@ export default async function generateTicket(
       };
     }
 
-    const attendanceInsertResponse = await insertUserAttendance(
+    const attendanceInsertResponse = await insertUserAttendanceCore(
+      supabase,
+      userId,
       eventId,
       row.ticket_type_id,
       insertedTickets.map((ticket) => ticket.id),
-      authOverride,
     );
 
     if (attendanceInsertResponse.status !== 200) {
