@@ -1,8 +1,10 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import type { PlaceType } from "@abonten/types/placeType";
 import { AppText, Icon, Skeleton, Stars } from "@abonten/ui-native";
+import { shadow } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -44,14 +46,17 @@ export function PlaceCard({
   );
   const address = addressText(place.address);
 
+  const rating = place.avg_rating ?? 0;
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={place.name}
-      className="overflow-hidden rounded-xl border border-border bg-card active:opacity-95"
+      className="overflow-hidden rounded-2xl border border-border bg-card active:opacity-95"
+      style={shadow.card}
       onPress={() => router.push(`/(app)/place/${place.id}`)}
     >
-      <View className="relative aspect-[16/9] bg-muted">
+      <View className="relative aspect-[3/2] bg-muted">
         {cover ? (
           <Image
             source={{ uri: cover }}
@@ -61,51 +66,74 @@ export function PlaceCard({
           />
         ) : (
           <View className="flex-1 items-center justify-center">
-            <Icon name="image-outline" size={22} tone="muted" />
+            <Icon name="image-outline" size={24} tone="muted" />
           </View>
         )}
-        {sponsored ? (
-          <View
-            className="absolute left-2 top-2 rounded-full px-2.5 py-1"
-            style={{ backgroundColor: "rgba(17,24,32,0.82)" }}
-          >
-            <AppText className="text-[10px] font-medium text-white">
-              Sponsored
+
+        <CardImageScrim />
+
+        <View className="absolute left-2.5 top-2.5 flex-row gap-1.5">
+          {sponsored ? (
+            <View
+              className="rounded-full px-2.5 py-1"
+              style={{ backgroundColor: "rgba(17,24,32,0.72)" }}
+            >
+              <AppText className="text-[10px] font-medium text-white">
+                Sponsored
+              </AppText>
+            </View>
+          ) : null}
+          {typeof place.distance_km === "number" ? (
+            <View
+              className="rounded-full px-2.5 py-1"
+              style={{ backgroundColor: "rgba(17,24,32,0.55)" }}
+            >
+              <AppText className="text-[10px] font-medium text-white">
+                {place.distance_km.toFixed(1)} km
+              </AppText>
+            </View>
+          ) : null}
+        </View>
+
+        <View className="absolute right-2.5 top-2.5">
+          <FavoriteButton kind="place" id={place.id} onSurface size={18} />
+        </View>
+
+        {rating > 0 ? (
+          <View className="absolute bottom-2.5 left-2.5 flex-row items-center gap-1 rounded-full bg-card px-2.5 py-1">
+            <Stars rating={rating} size={12} />
+            <AppText className="text-[11px] font-semibold text-foreground">
+              {rating.toFixed(1)}
+            </AppText>
+            <AppText className="text-[11px] text-muted-foreground">
+              ({place.review_count ?? 0})
             </AppText>
           </View>
         ) : null}
-        <View className="absolute right-2 top-2">
-          <FavoriteButton kind="place" id={place.id} onSurface size={18} />
-        </View>
       </View>
 
-      <View className="gap-2 p-3">
-        <AppText
-          className="text-[16px] font-semibold text-foreground"
-          numberOfLines={1}
-        >
-          {place.name}
-        </AppText>
-
-        <View className="flex-row flex-wrap items-center gap-2">
-          {place.category_name ? (
-            <View className="rounded-full bg-muted px-2.5 py-1">
-              <AppText className="text-[11px] text-muted-foreground">
-                {place.category_name}
-              </AppText>
-            </View>
-          ) : null}
+      <View className="gap-1.5 p-3.5">
+        <View className="flex-row items-center gap-1.5">
+          <AppText variant="cardTitle" numberOfLines={1} className="flex-1">
+            {place.name}
+          </AppText>
           {place.verified ? (
-            <View className="flex-row items-center gap-1">
-              <Icon name="checkmark-circle" size={13} tone="primary" />
-              <AppText className="text-[11px] font-medium text-primary">
-                Verified
-              </AppText>
-            </View>
+            <Icon name="checkmark-circle" size={15} tone="primary" />
           ) : null}
-          <View className="flex-row items-center gap-1.5">
+        </View>
+
+        <View className="flex-row items-center gap-2">
+          {place.category_name ? (
+            <AppText
+              className="text-[12px] text-muted-foreground"
+              numberOfLines={1}
+            >
+              {place.category_name}
+            </AppText>
+          ) : null}
+          <View className="flex-row items-center gap-1">
             <View
-              className={`h-2 w-2 rounded-full ${
+              className={`h-1.5 w-1.5 rounded-full ${
                 openStatus.isOpen ? "bg-primary" : "bg-destructive"
               }`}
             />
@@ -120,37 +148,16 @@ export function PlaceCard({
         </View>
 
         {address ? (
-          <View className="flex-row items-start gap-1.5">
-            <Icon
-              name="location-outline"
-              size={14}
-              tone="muted"
-              style={{ marginTop: 2 }}
-            />
+          <View className="flex-row items-center gap-1.5">
+            <Icon name="location-outline" size={13} tone="muted" />
             <AppText
               className="flex-1 text-[12px] text-muted-foreground"
-              numberOfLines={2}
+              numberOfLines={1}
             >
               {address}
             </AppText>
           </View>
         ) : null}
-
-        <View className="mt-0.5 flex-row items-center justify-between gap-2">
-          <View className="flex-row items-center gap-1.5">
-            <Stars rating={place.avg_rating ?? 0} size={13} />
-            <AppText className="text-[12px] text-muted-foreground">
-              ({place.review_count ?? 0})
-            </AppText>
-          </View>
-          {typeof place.distance_km === "number" ? (
-            <View className="rounded-full bg-muted px-2 py-1">
-              <AppText className="text-[11px] text-muted-foreground">
-                {place.distance_km.toFixed(1)} km away
-              </AppText>
-            </View>
-          ) : null}
-        </View>
       </View>
     </Pressable>
   );
@@ -158,16 +165,14 @@ export function PlaceCard({
 
 export function PlaceCardSkeleton() {
   return (
-    <View className="overflow-hidden rounded-xl border border-border bg-card">
-      <Skeleton height={180} radius={0} />
-      <View className="gap-2 p-3">
-        <Skeleton width="70%" height={16} />
-        <Skeleton width="55%" height={12} />
+    <View className="overflow-hidden rounded-2xl border border-border bg-card">
+      <View className="aspect-[3/2] w-full">
+        <Skeleton width="100%" radius={0} style={{ flex: 1 }} />
+      </View>
+      <View className="gap-2 p-3.5">
+        <Skeleton width="65%" height={15} />
         <Skeleton width="45%" height={12} />
-        <View className="mt-1 flex-row justify-between">
-          <Skeleton width={90} height={16} />
-          <Skeleton width={72} height={20} radius={999} />
-        </View>
+        <Skeleton width="70%" height={12} />
       </View>
     </View>
   );
