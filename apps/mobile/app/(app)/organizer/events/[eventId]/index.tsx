@@ -486,6 +486,14 @@ export default function EventInsightsScreen() {
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
+          <Link href={`/(app)/organizer/events/${eventId}/reviews`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <AppText className="text-base text-foreground">
+                Reviews &amp; replies
+              </AppText>
+              <AppText className="text-muted-foreground">›</AppText>
+            </Pressable>
+          </Link>
         </View>
       ) : null}
 

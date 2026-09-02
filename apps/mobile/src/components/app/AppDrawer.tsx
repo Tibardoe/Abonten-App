@@ -14,7 +14,7 @@ import {
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import {
   BackHandler,
@@ -102,6 +102,13 @@ export function AppDrawer() {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const segments = useSegments();
+  // The edge-swipe-to-open only lives on the tab root screens. On a pushed
+  // screen (event/place detail, organizer, settings, the wizards…) the left
+  // edge belongs to the native stack's back-swipe, so opening the drawer
+  // there would fight "go back". The header menu button is only on the tab
+  // screens anyway.
+  const onTabRoot = (segments as string[]).includes("(tabs)");
 
   // progress: 0 = closed, 1 = fully open. tx: panel translateX in px.
   const tx = useSharedValue(-width);
@@ -208,8 +215,8 @@ export function AppDrawer() {
     // box-none: this overlay never blocks touches itself — only its
     // interactive children (edge strip / backdrop / panel) do.
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
-      {/* Left-edge catcher — live only while the drawer is closed. */}
-      {open ? null : (
+      {/* Left-edge catcher — only on the tab roots, and only while closed. */}
+      {!open && onTabRoot ? (
         <GestureDetector gesture={edgePan}>
           <View
             style={{
@@ -221,7 +228,7 @@ export function AppDrawer() {
             }}
           />
         </GestureDetector>
-      )}
+      ) : null}
 
       {/* Backdrop — interactive only when open. */}
       <Animated.View

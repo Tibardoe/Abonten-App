@@ -10,12 +10,12 @@ import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Pressable, View } from "react-native";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
+// react-native's Image (not expo-image) inside a <Marker> child: the native
+// map rasterises the marker view to a bitmap, and RN Image is the reliable
+// source for that snapshot on Android — an expo-image often snapshots empty,
+// which is why photo markers were falling back to the default red pin.
+import { Platform, Pressable, Image as RNImage, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   runOnJS,
   useAnimatedStyle,
@@ -103,18 +103,22 @@ function clusterize(items: SocialMapItem[], region: Region): Cluster[] {
 
 function PhotoMarker({
   url,
+  kind,
   selected,
+  onImageLoad,
 }: {
   url: string | null;
+  kind: "event" | "place";
   selected: boolean;
+  onImageLoad?: () => void;
 }) {
   const c = useThemeColors();
-  const size = selected ? 58 : 46;
+  const size = selected ? 56 : 44;
   return (
     <View
       style={{
-        width: size + 8,
-        height: size + 8,
+        width: size + 10,
+        height: size + 10,
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -126,44 +130,39 @@ function PhotoMarker({
           borderRadius: size / 2,
           borderWidth: 3,
           borderColor: selected ? c.primary : "#fff",
-          backgroundColor: c.muted,
+          backgroundColor: selected ? c.primary : c.card,
           overflow: "hidden",
           shadowColor: "#000",
-          shadowOpacity: 0.3,
+          shadowOpacity: 0.35,
           shadowRadius: 4,
           shadowOffset: { width: 0, height: 2 },
-          elevation: 5,
+          elevation: 6,
         }}
       >
         {url ? (
-          <Image
+          <RNImage
             source={{ uri: url }}
             style={{ width: "100%", height: "100%" }}
-            contentFit="cover"
-            // tracksViewChanges is driven from the parent; the marker only
-            // needs re-rasterising while the photo is still loading.
-            cachePolicy="memory-disk"
+            resizeMode="cover"
+            onLoad={onImageLoad}
           />
         ) : (
-          <View className="flex-1 items-center justify-center">
-            <Icon name="image-outline" size={18} tone="muted" />
+          <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: c.primary,
+            }}
+          >
+            <Icon
+              name={kind === "event" ? "ticket" : "location"}
+              size={20}
+              color="#fff"
+            />
           </View>
         )}
       </View>
-      {/* little pointer */}
-      <View
-        style={{
-          width: 0,
-          height: 0,
-          borderLeftWidth: 5,
-          borderRightWidth: 5,
-          borderTopWidth: 7,
-          borderLeftColor: "transparent",
-          borderRightColor: "transparent",
-          borderTopColor: selected ? c.primary : "#fff",
-          marginTop: -2,
-        }}
-      />
     </View>
   );
 }
@@ -344,7 +343,21 @@ export function SocialMap({
   // biome-ignore lint/suspicious/noExplicitAny: react-native-maps ref has no types through the shim
   const mapRef = useRef<any>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [track, setTrack] = useState(true);
+  // A marker press on Android also bubbles a MapView onPress right after —
+  // without this guard the map's "tap empty space to dismiss" handler fires
+  // immediately and the preview card never appears.
+  const markerTapAt = useRef(0);
+  // Which photo markers have finished loading their image — once loaded a
+  // marker no longer needs re-rasterising, so tracksViewChanges can go off.
+  const [loaded, setLoaded] = useState<Set<string>>(new Set());
+  const markLoaded = useCallback((id: string) => {
+    setLoaded((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
 
   const withPoint = useMemo(
     () => items.filter((i) => Number.isFinite(i.point.lat)),
@@ -363,13 +376,6 @@ export function SocialMap({
   }, [center, withPoint]);
 
   const [region, setRegion] = useState<Region>(initialRegion);
-
-  // Re-rasterise custom markers only briefly after the set changes (perf).
-  useEffect(() => {
-    setTrack(true);
-    const t = setTimeout(() => setTrack(false), 1500);
-    return () => clearTimeout(t);
-  }, []);
 
   const clusters = useMemo(
     () => clusterize(withPoint, region),
@@ -412,14 +418,18 @@ export function SocialMap({
 
   return (
     <MapErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         <MapView
           ref={mapRef}
           style={{ flex: 1 }}
           provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
           initialRegion={initialRegion}
           onRegionChangeComplete={(r: Region) => setRegion(r)}
-          onPress={() => setSelectedId(null)}
+          onPress={() => {
+            // Ignore the onPress that immediately follows a marker tap.
+            if (Date.now() - markerTapAt.current < 350) return;
+            setSelectedId(null);
+          }}
           showsUserLocation
           showsMyLocationButton={false}
         >
@@ -428,21 +438,34 @@ export function SocialMap({
               <Marker
                 key={cl.item.id}
                 coordinate={{ latitude: cl.lat, longitude: cl.lng }}
-                tracksViewChanges={track}
-                onPress={() => setSelectedId(cl.item.id)}
-                anchor={{ x: 0.5, y: 1 }}
+                // Keep re-rasterising until the photo has loaded (or forever
+                // if there's no photo — the fallback view is cheap). A
+                // selected marker also re-tracks so its ring updates.
+                tracksViewChanges={
+                  !loaded.has(cl.item.id) || cl.item.id === selectedId
+                }
+                onPress={() => {
+                  markerTapAt.current = Date.now();
+                  setSelectedId(cl.item.id);
+                }}
+                anchor={{ x: 0.5, y: 0.5 }}
               >
                 <PhotoMarker
                   url={cl.item.imageUrl}
+                  kind={cl.item.kind}
                   selected={cl.item.id === selectedId}
+                  onImageLoad={() => markLoaded(cl.item.id)}
                 />
               </Marker>
             ) : (
               <Marker
                 key={`c:${cl.lat.toFixed(4)}:${cl.lng.toFixed(4)}:${cl.count}`}
                 coordinate={{ latitude: cl.lat, longitude: cl.lng }}
-                tracksViewChanges={track}
-                onPress={() => zoomInto(cl.lat, cl.lng)}
+                tracksViewChanges={false}
+                onPress={() => {
+                  markerTapAt.current = Date.now();
+                  zoomInto(cl.lat, cl.lng);
+                }}
                 anchor={{ x: 0.5, y: 0.5 }}
               >
                 <ClusterMarker count={cl.count} />
@@ -459,7 +482,7 @@ export function SocialMap({
             bottomInset={insets.bottom}
           />
         ) : null}
-      </GestureHandlerRootView>
+      </View>
     </MapErrorBoundary>
   );
 }

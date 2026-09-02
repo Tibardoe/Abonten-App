@@ -12,6 +12,7 @@ import {
 } from "@/components/map/NativeMap";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
+import { ReportSheet } from "@/components/places/ReportSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
@@ -99,7 +100,13 @@ function ContactRow({
   );
 }
 
-function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
+function PlaceReviewCard({
+  review,
+  onReport,
+}: {
+  review: PlaceReviewItem;
+  onReport?: () => void;
+}) {
   return (
     <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
       <View className="flex-row items-center justify-between gap-2">
@@ -136,7 +143,21 @@ function PlaceReviewCard({ review }: { review: PlaceReviewItem }) {
           <AppText variant="meta">{review.owner_response}</AppText>
         </View>
       ) : null}
-      <AppText variant="caption">{getRelativeTime(review.created_at)}</AppText>
+      <View className="flex-row items-center justify-between">
+        <AppText variant="caption">
+          {getRelativeTime(review.created_at)}
+        </AppText>
+        {onReport ? (
+          <AppText
+            variant="caption"
+            tone="muted"
+            className="font-medium"
+            onPress={onReport}
+          >
+            Report
+          </AppText>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -149,6 +170,11 @@ export default function PlaceDetailScreen() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<
+    | { kind: "place"; placeId: string; label: string }
+    | { kind: "review"; reviewId: string; label: string }
+    | null
+  >(null);
   const { session } = useSession();
 
   const placeSlug = place?.slug;
@@ -671,7 +697,20 @@ export default function PlaceDetailScreen() {
             ) : (
               <View className="gap-2">
                 {reviews.map((r) => (
-                  <PlaceReviewCard key={r.id} review={r} />
+                  <PlaceReviewCard
+                    key={r.id}
+                    review={r}
+                    onReport={
+                      session
+                        ? () =>
+                            setReportTarget({
+                              kind: "review",
+                              reviewId: r.id,
+                              label: `Review by ${r.reviewer?.username ?? "a guest"}`,
+                            })
+                        : undefined
+                    }
+                  />
                 ))}
                 {reviewsList.hasNextPage ? (
                   <Pressable
@@ -732,6 +771,24 @@ export default function PlaceDetailScreen() {
               />
             </View>
           ) : null}
+
+          {session && place.owner_id !== session.user.id ? (
+            <Pressable
+              accessibilityRole="button"
+              className="items-center py-2 active:opacity-60"
+              onPress={() =>
+                setReportTarget({
+                  kind: "place",
+                  placeId: place.id,
+                  label: place.name,
+                })
+              }
+            >
+              <AppText variant="caption" tone="muted" className="font-medium">
+                Report this place
+              </AppText>
+            </Pressable>
+          ) : null}
         </View>
 
         <ClaimPlaceSheet
@@ -739,6 +796,18 @@ export default function PlaceDetailScreen() {
           onClose={() => setClaimOpen(false)}
           placeId={place.id}
           placeName={place.name}
+        />
+
+        <ReportSheet
+          open={reportTarget != null}
+          onClose={() => setReportTarget(null)}
+          target={
+            reportTarget ?? {
+              kind: "place",
+              placeId: place.id,
+              label: place.name,
+            }
+          }
         />
 
         <BookPlaceSheet
