@@ -5,7 +5,14 @@ import { useEventEdit } from "@/features/events/useEventEdit";
 import { TIME_RE, prettyDate } from "@/lib/datetime";
 import { uuidv4 as makeId } from "@/lib/uuid";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { AppText, Button, Field, Icon, Input } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Field,
+  Icon,
+  Input,
+  SegmentedTabs,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -251,13 +258,42 @@ export default function EditEventScreen() {
         {w.scheduleMode === "single" ? (
           <View className="gap-3">
             {!w.locked ? (
-              <Field label="Dates" hint="Tap a start day, then an end day">
-                <DateRangeField
-                  start={w.rangeStart}
-                  end={w.rangeEnd}
-                  onChange={w.setRange}
+              <View className="gap-3">
+                <SegmentedTabs
+                  options={[
+                    { key: "single", label: "Single date" },
+                    { key: "range", label: "Date range" },
+                  ]}
+                  value={w.dateMode}
+                  onChange={w.setDateMode}
                 />
-              </Field>
+                {w.dateMode === "single" ? (
+                  <Field
+                    label="Event date"
+                    hint="Tap the day your event happens"
+                  >
+                    <DateRangeField
+                      mode="single"
+                      start={w.rangeStart}
+                      end={null}
+                      onChange={(r) =>
+                        w.setRange({ start: r.start, end: null })
+                      }
+                    />
+                  </Field>
+                ) : (
+                  <Field
+                    label="Start & end date"
+                    hint="Tap the first day, then the last day"
+                  >
+                    <DateRangeField
+                      start={w.rangeStart}
+                      end={w.rangeEnd}
+                      onChange={w.setRange}
+                    />
+                  </Field>
+                )}
+              </View>
             ) : w.rangeStart ? (
               <AppText className="text-[13px] text-foreground">
                 {prettyDate(w.rangeStart)}

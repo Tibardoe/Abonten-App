@@ -89,6 +89,9 @@ export function useEventEdit(eventId: string) {
 
   // schedule
   const [scheduleMode, setScheduleMode] = useState<ScheduleMode>("single");
+  // One day vs an explicit start→end span (mirrors useEventWizard). "single"
+  // leaves rangeEnd null; buildSchedule falls back to rangeStart.
+  const [dateMode, setDateMode] = useState<"single" | "range">("single");
   const [rangeStart, setRangeStart] = useState<string | null>(null);
   const [rangeEnd, setRangeEnd] = useState<string | null>(null);
   const [rangeStartTime, setRangeStartTime] = useState("18:00");
@@ -156,9 +159,13 @@ export function useEventEdit(eventId: string) {
       const s = splitIso(event.starts_at);
       const e = splitIso(event.ends_at);
       setRangeStart(s.date);
-      setRangeEnd(e.date);
       setRangeStartTime(s.time);
       setRangeEndTime(e.time);
+      // Only a real multi-day event opens in "range" mode.
+      if (e.date !== s.date) {
+        setDateMode("range");
+        setRangeEnd(e.date);
+      }
     }
 
     // Ticket types — mirrors the web inferInitialTicketState.
@@ -516,6 +523,11 @@ export function useEventEdit(eventId: string) {
     // schedule
     scheduleMode,
     setScheduleMode,
+    dateMode,
+    setDateMode: (m: "single" | "range") => {
+      setDateMode(m);
+      if (m === "single") setRangeEnd(null);
+    },
     rangeStart,
     rangeEnd,
     setRange: (r: { start: string | null; end: string | null }) => {
