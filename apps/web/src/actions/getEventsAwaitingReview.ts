@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import { isEventAwaitingReview } from "@abonten/core/eventReviewEligibility";
 import { logger } from "@abonten/core/logger";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 
@@ -111,15 +111,14 @@ export async function getEventsAwaitingReview(): Promise<{
 
   const now = new Date();
   const eligible = ((events as unknown as EventRow[] | null) ?? []).filter(
-    (event) => {
-      if (event.status === "canceled") return false;
-      const endDate = resolveEventEndDate(
+    (event) =>
+      isEventAwaitingReview(
+        event.status,
         event.starts_at,
         event.ends_at,
         event.event_occurrence,
-      );
-      return endDate ? now >= endDate : false;
-    },
+        now,
+      ),
   );
 
   return {

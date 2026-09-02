@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import { evaluateEventReviewEligibility } from "@abonten/core/eventReviewEligibility";
 import { logger } from "@abonten/core/logger";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 
@@ -44,6 +44,8 @@ type TicketRow = { ticket_type: { event_id: string } | null };
 // checkInTicket.ts -- is the actual "verified attendance" signal; a
 // purchased/RSVP'd-but-never-checked-in ticket does not count. postEventReview.ts
 // re-enforces the same two checks server-side, independent of this action.
+// The decision itself is @abonten/core/eventReviewEligibility, shared
+// verbatim with the mobile useEventReviews hook.
 export async function getEventReviewEligibility(
   eventId: string,
   organizerId: string,
@@ -81,15 +83,6 @@ export async function getEventReviewEligibility(
     };
   }
 
-  if (eventStatus === "canceled") {
-    return { canReview: false, reason: "cancelled" };
-  }
-
-  const endDate = resolveEventEndDate(startsAt, endsAt, occurrences);
-  if (!endDate || new Date() < endDate) {
-    return { canReview: false, reason: "not_ended" };
-  }
-
   const { data: rawTickets, error: ticketsError } = await supabase
     .from("ticket")
     .select("ticket_type:ticket_type_id(event_id)")
@@ -103,13 +96,20 @@ export async function getEventReviewEligibility(
     return { canReview: false, reason: "not_attended" };
   }
 
-  const hasVerifiedTicket = (rawTickets as unknown as TicketRow[] | null)?.some(
-    (t) => t.ticket_type?.event_id === eventId,
-  );
+  const hasVerifiedAttendance = !!(
+    rawTickets as unknown as TicketRow[] | null
+  )?.some((t) => t.ticket_type?.event_id === eventId);
 
-  if (!hasVerifiedTicket) {
-    return { canReview: false, reason: "not_attended" };
-  }
+  const result = evaluateEventReviewEligibility({
+    viewerUserId: user.id,
+    organizerId,
+    eventStatus,
+    startsAt,
+    endsAt,
+    occurrences,
+    hasOwnReview: false,
+    hasVerifiedAttendance,
+  });
 
-  return { canReview: true };
+  return result as EventReviewEligibility;
 }
