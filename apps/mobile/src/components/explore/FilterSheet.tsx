@@ -5,6 +5,8 @@ import {
   type EventFilters,
   type PlaceFilters,
   RATING_OPTIONS,
+  countActiveEventFilters,
+  countActivePlaceFilters,
 } from "@/features/discovery/exploreFilters";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
@@ -72,6 +74,9 @@ export function FilterSheet({
   }, [open, eventFilters, placeFilters]);
 
   const isEvents = tab === "events";
+  const activeCount = isEvents
+    ? countActiveEventFilters(eDraft)
+    : countActivePlaceFilters(pDraft);
 
   const selectedCategoryTypes = isEvents
     ? (eventCategoriesAndTypes.find((c) => c.category === eDraft.category)
@@ -97,10 +102,18 @@ export function FilterSheet({
       footer={
         <View className="flex-row gap-3">
           <View className="flex-1">
-            <Button title="Clear all" variant="outline" onPress={clearAll} />
+            <Button
+              title="Clear all"
+              variant="outline"
+              onPress={clearAll}
+              disabled={activeCount === 0}
+            />
           </View>
           <View className="flex-1">
-            <Button title="Apply" onPress={apply} />
+            <Button
+              title={activeCount > 0 ? `Apply · ${activeCount}` : "Apply"}
+              onPress={apply}
+            />
           </View>
         </View>
       }
