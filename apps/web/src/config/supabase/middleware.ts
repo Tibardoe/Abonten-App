@@ -52,7 +52,12 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/user/") ||
     pathname.startsWith("/reviews") ||
     pathname.startsWith("/search") ||
-    pathname.startsWith("/auth");
+    pathname.startsWith("/auth") ||
+    // Digital Asset Links / Apple App Site Association — must be publicly
+    // fetchable (by Google/Apple's verifiers and by curl) for Android App
+    // Links + iOS Universal Links to verify. Without this the middleware
+    // 302s the unauthenticated fetch to /auth/signin.
+    pathname.startsWith("/.well-known/");
 
   const {
     data: { user },
