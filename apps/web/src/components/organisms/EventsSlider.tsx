@@ -29,6 +29,14 @@ export default function EventsSlider({
   const scrollRef = useRef<HTMLUListElement>(null);
 
   const { location } = useParams();
+  // `EventsSlider` is also rendered on /events/[eventCode], which has no
+  // [location] route param — so `location` is `undefined` there and the
+  // "View all" / "Browse all events" links used to point at the literal
+  // path /events/location/undefined. Fall back to /explore in that case.
+  const locationSlug =
+    typeof location === "string" && location && location !== "undefined"
+      ? location
+      : null;
 
   const checkScrollPosition = useCallback(() => {
     if (scrollRef.current) {
@@ -65,11 +73,11 @@ export default function EventsSlider({
 
   const viewAllLink = urlPath
     ? `/events/${urlPath}`
-    : eventCategory
-      ? `/events/location/${location}/explore/similar-events?category=${generateSlug(
+    : eventCategory && locationSlug
+      ? `/events/location/${locationSlug}/explore/similar-events?category=${generateSlug(
           eventCategory,
         )}`
-      : "#";
+      : null;
 
   return (
     <div>
@@ -83,7 +91,7 @@ export default function EventsSlider({
           {heading}
         </h2>
 
-        {events.length > 0 && (
+        {events.length > 0 && viewAllLink && (
           <Link
             href={viewAllLink}
             className="flex items-center gap-0.5 text-sm font-medium text-primary group transition-all"
@@ -107,7 +115,9 @@ export default function EventsSlider({
               No events in this category yet.
             </p>
             <Link
-              href={`/events/location/${location}`}
+              href={
+                locationSlug ? `/events/location/${locationSlug}` : "/explore"
+              }
               className="text-sm font-medium text-primary hover:underline whitespace-nowrap"
             >
               Browse all events
