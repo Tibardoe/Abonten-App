@@ -267,8 +267,8 @@ export function AppDrawer() {
             style={{ paddingTop: insets.top }}
             className="border-b border-border"
           >
-            <View className="h-12 flex-row items-center justify-center px-1">
-              <AbontenLogo size={24} />
+            <View className="h-[54px] flex-row items-center justify-center px-1">
+              <AbontenLogo size={38} />
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close menu"

@@ -155,22 +155,34 @@ export default function Verify() {
           onPress={() => router.back()}
           disabled={busy}
           hitSlop={10}
-          style={{ marginTop: insets.top + 4, marginLeft: 8 }}
+          style={{
+            position: "absolute",
+            top: insets.top + 4,
+            left: 8,
+            zIndex: 10,
+          }}
           className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
         >
           <Icon name="arrow-back" size={24} tone="foreground" />
         </Pressable>
 
         <ScrollView
-          contentContainerClassName="grow px-6 pb-10"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 24,
+            paddingTop: insets.top + 56,
+            paddingBottom: 32,
+          }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View className="items-center gap-3 pb-2 pt-2">
-            <AbontenLogo size={48} />
-            <AbontenWordmark size={20} />
-          </View>
+          <View className="gap-8">
+            <View className="items-center gap-3">
+              <AbontenLogo size={48} />
+              <AbontenWordmark size={20} />
+            </View>
 
-          <View className="grow justify-center gap-8">
             <View className="gap-2">
               <AppText variant="pageTitle" className="text-center">
                 Enter your code

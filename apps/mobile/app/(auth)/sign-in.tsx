@@ -107,7 +107,12 @@ export default function SignIn() {
             router.canGoBack() ? router.back() : router.replace("/(app)/(tabs)")
           }
           hitSlop={10}
-          style={{ marginTop: insets.top + 4, marginLeft: 8 }}
+          style={{
+            position: "absolute",
+            top: insets.top + 4,
+            left: 8,
+            zIndex: 10,
+          }}
           className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
         >
           <Icon
@@ -118,15 +123,22 @@ export default function SignIn() {
         </Pressable>
 
         <ScrollView
-          contentContainerClassName="grow px-6 pb-10"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 24,
+            paddingTop: insets.top + 56,
+            paddingBottom: 32,
+          }}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View className="items-center gap-3 pb-2 pt-2">
-            <AbontenLogo size={52} />
-            <AbontenWordmark size={22} />
-          </View>
+          <View className="gap-7">
+            <View className="items-center gap-3">
+              <AbontenLogo size={52} />
+              <AbontenWordmark size={22} />
+            </View>
 
-          <View className="grow justify-center gap-7">
             <View className="gap-2">
               <AppText variant="pageTitle" className="text-center">
                 Log in or sign up
