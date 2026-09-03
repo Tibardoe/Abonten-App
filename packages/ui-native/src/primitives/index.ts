@@ -44,6 +44,15 @@ export {
   type BadgeTone,
   StatusBadge,
 } from "./Badge";
+export { StatusPill, type StatusPillProps } from "./StatusPill";
+export {
+  resolveStatus,
+  statusEntry,
+  type StatusEntry,
+  type StatusKind,
+  type StatusTone,
+  type ResolveOptions,
+} from "./status";
 export {
   TicketStatusBadge,
   type TicketStatusBadgeProps,

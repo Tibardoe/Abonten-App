@@ -96,12 +96,24 @@ export async function registerForFreeEventCore(
   }
 
   // occurrenceId is client-supplied and affects a DB write, so verify it
-  // belongs to this event (same check validateCheckoutCore does).
-  if (
-    occurrenceId &&
-    !event.event_occurrence.some((occ) => occ.id === occurrenceId)
-  ) {
-    return { status: 400, message: "Invalid event date" };
+  // belongs to this event (same check validateCheckoutCore does) AND that
+  // the chosen date hasn't already passed while later dates remain.
+  if (occurrenceId) {
+    const occurrence = event.event_occurrence.find(
+      (occ) => occ.id === occurrenceId,
+    );
+    if (!occurrence) {
+      return { status: 400, message: "Invalid event date" };
+    }
+    if (
+      occurrence.ends_at &&
+      new Date(occurrence.ends_at).getTime() < Date.now()
+    ) {
+      return {
+        status: 409,
+        message: "That date has already passed — pick another date.",
+      };
+    }
   }
 
   const { data: ticketType, error: ticketTypeError } = await supabase

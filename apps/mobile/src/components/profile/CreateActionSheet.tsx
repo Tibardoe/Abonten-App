@@ -23,7 +23,7 @@ export function CreateActionSheet({
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Create">
+    <Sheet open={open} onClose={onClose} title="Create" minHeightRatio={0.42}>
       <View className="gap-3">
         <SheetOption
           icon="calendar-outline"

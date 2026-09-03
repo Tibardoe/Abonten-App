@@ -496,6 +496,7 @@ export function useEventEdit(eventId: string) {
         ? (query.data as { message?: string }).message ||
           "Couldn't load this event."
         : null),
+    reload: () => query.refetch(),
     isReady: prefilled,
     locked,
     // basics

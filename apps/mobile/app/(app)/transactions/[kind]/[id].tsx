@@ -5,37 +5,28 @@ import type { TransactionKind } from "@abonten/types/transactions";
 import {
   AppText,
   Icon,
-  type IoniconName,
   ScreenError,
   ScreenLoader,
+  StatusPill,
+  resolveStatus,
 } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { ScrollView, View } from "react-native";
 
 // Native echo of the web /transactions/[kind]/[id] page: an amount banner, a
-// status banner, and a labelled detail block. Same fields, same wording.
+// status banner, and a labelled detail block. Status wording, icon and tone
+// come from the shared resolveStatus registry so this matches the
+// transactions list, Finances and the ticket screen.
 
-const STATUS_META: Record<
+const STATUS_ICON_TONE: Record<
   string,
-  {
-    label: string;
-    icon: IoniconName;
-    tone: "success" | "muted" | "destructive";
-  }
+  "success" | "warning" | "destructive" | "primary" | "muted"
 > = {
-  paid: { label: "Paid", icon: "checkmark-circle-outline", tone: "success" },
-  pending: { label: "Pending", icon: "time-outline", tone: "muted" },
-  failed: {
-    label: "Failed",
-    icon: "close-circle-outline",
-    tone: "destructive",
-  },
-  cancelled: {
-    label: "Cancelled",
-    icon: "close-circle-outline",
-    tone: "destructive",
-  },
-  expired: { label: "Expired", icon: "close-circle-outline", tone: "muted" },
+  success: "success",
+  warning: "warning",
+  danger: "destructive",
+  brand: "primary",
+  neutral: "muted",
 };
 
 function Row({
@@ -78,7 +69,7 @@ export default function TransactionDetailScreen() {
     );
   }
 
-  const meta = STATUS_META[data.status] ?? STATUS_META.pending;
+  const statusInfo = resolveStatus(data.status, { fallback: "pending" });
   const currency =
     data.kind === "ticket" ? (data.ticket_type?.currency ?? "GHS") : "GHS";
   const amount =
@@ -126,9 +117,13 @@ export default function TransactionDetailScreen() {
       </View>
 
       <View className="flex-row items-center gap-3 rounded-xl bg-muted p-4">
-        <Icon name={meta.icon} size={28} tone={meta.tone} />
+        <Icon
+          name={statusInfo.icon}
+          size={28}
+          tone={STATUS_ICON_TONE[statusInfo.tone]}
+        />
         <View>
-          <AppText variant="bodyStrong">{meta.label}</AppText>
+          <AppText variant="bodyStrong">{statusInfo.label}</AppText>
           {contextualDate ? (
             <AppText variant="caption">
               {contextualLabel}: {dt(contextualDate)}

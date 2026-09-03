@@ -58,36 +58,7 @@ export function Badge({
   );
 }
 
-// Common domain statuses → pill. Extend as screens are ported; keep the
-// label wording identical to the web copy.
-const STATUS: Record<string, { tone: BadgeTone; label: string }> = {
-  // event lifecycle
-  published: { tone: "success", label: "Published" },
-  draft: { tone: "muted", label: "Draft" },
-  canceled: { tone: "destructive", label: "Canceled" },
-  cancelled: { tone: "destructive", label: "Canceled" },
-  completed: { tone: "muted", label: "Ended" },
-  ended: { tone: "muted", label: "Ended" },
-  // ticket lifecycle
-  active: { tone: "accent", label: "Active" },
-  used: { tone: "muted", label: "Used" },
-  expired: { tone: "muted", label: "Expired" },
-  // payment / refund
-  successful: { tone: "success", label: "Successful" },
-  pending: { tone: "warning", label: "Pending" },
-  processing: { tone: "warning", label: "Processing" },
-  failed: { tone: "destructive", label: "Failed" },
-  refunded: { tone: "muted", label: "Refunded" },
-  refund_pending: { tone: "warning", label: "Refund pending" },
-};
-
-export function StatusBadge({
-  status,
-  className,
-}: {
-  status: string;
-  className?: string;
-}) {
-  const entry = STATUS[status] ?? { tone: "muted" as BadgeTone, label: status };
-  return <Badge label={entry.label} tone={entry.tone} className={className} />;
-}
+// Back-compat shim: `StatusBadge` predates the shared status system. New code
+// should use <StatusPill> (icon + tinted surface, driven by `resolveStatus`).
+// Kept so existing call sites keep working.
+export { StatusPill as StatusBadge } from "./StatusPill";

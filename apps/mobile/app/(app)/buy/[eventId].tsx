@@ -12,6 +12,7 @@ import {
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import {
   AppText,
@@ -74,7 +75,14 @@ export default function BuyTicketsScreen() {
   const event = data?.event;
   const now = Date.now();
   const occurrences = event?.event_occurrence ?? [];
-  const activeOccurrenceId = occurrenceId ?? occurrences[0]?.id ?? null;
+  // A multi-date event where some dates have already passed: only the future
+  // ones are selectable, and the default selection is the first future one
+  // (never a past date the buyer would otherwise checkout against).
+  const isOccurrencePast = (o: { ends_at: string | null }) =>
+    !!o.ends_at && new Date(o.ends_at).getTime() < now;
+  const firstFutureOccurrenceId =
+    occurrences.find((o) => !isOccurrencePast(o))?.id ?? null;
+  const activeOccurrenceId = occurrenceId ?? firstFutureOccurrenceId;
   const currency = event?.ticket_type[0]?.currency ?? "GHS";
 
   const lines = useMemo(
@@ -155,13 +163,16 @@ export default function BuyTicketsScreen() {
   }
 
   const canceled = event.status === "canceled";
+  const ended =
+    getEventStatus(event.starts_at, event.ends_at, event.event_occurrence) ===
+    "ended";
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: data.attendanceCount,
     ticketTypes: event.ticket_type,
   });
 
-  if (canceled || soldOut || event.ticket_type.length === 0) {
+  if (canceled || ended || soldOut || event.ticket_type.length === 0) {
     return (
       <View className="flex-1 bg-background">
         {header}
@@ -170,9 +181,11 @@ export default function BuyTicketsScreen() {
           <AppText variant="muted" className="text-center">
             {canceled
               ? "This event was canceled."
-              : soldOut
-                ? "This event is sold out."
-                : "No tickets are available for this event."}
+              : ended
+                ? "Ticket sales for this event have closed — it has ended."
+                : soldOut
+                  ? "This event is sold out."
+                  : "No tickets are available for this event."}
           </AppText>
           <Button title="Back to event" onPress={() => router.back()} />
         </View>
@@ -233,6 +246,18 @@ export default function BuyTicketsScreen() {
       router.replace(`/(app)/checkout/${res.checkoutId}`);
       return;
     }
+    // 409 = an availability problem the client's cached view didn't know
+    // about (event ended/canceled while open, date passed, ticket just sold
+    // out). Re-pull the event so the screen re-renders its ended/sold-out
+    // gate instead of leaving a dead "Proceed" button.
+    if (res.status === 409) {
+      refetch();
+      Alert.alert(
+        "Can't start checkout",
+        res.message ?? "This event is no longer available.",
+      );
+      return;
+    }
     if (applied) {
       // The code passed preview but failed the authoritative claim — surface
       // it against the promo row and drop it so Proceed can succeed without.
@@ -267,15 +292,34 @@ export default function BuyTicketsScreen() {
           <View className="gap-2">
             <AppText variant="overline">Date</AppText>
             <View className="flex-row flex-wrap gap-2">
-              {occurrences.map((o) => (
-                <Chip
-                  key={o.id}
-                  label={formatDateWithSuffix(o.starts_at)}
-                  selected={o.id === activeOccurrenceId}
-                  onPress={() => setOccurrenceId(o.id)}
-                />
-              ))}
+              {occurrences.map((o) => {
+                const past = isOccurrencePast(o);
+                return past ? (
+                  <View
+                    key={o.id}
+                    className="opacity-40"
+                    accessibilityLabel={`${formatDateWithSuffix(o.starts_at)} — this date has passed`}
+                    accessibilityState={{ disabled: true }}
+                  >
+                    <Chip
+                      label={`${formatDateWithSuffix(o.starts_at)} · past`}
+                    />
+                  </View>
+                ) : (
+                  <Chip
+                    key={o.id}
+                    label={formatDateWithSuffix(o.starts_at)}
+                    selected={o.id === activeOccurrenceId}
+                    onPress={() => setOccurrenceId(o.id)}
+                  />
+                );
+              })}
             </View>
+            {firstFutureOccurrenceId == null ? (
+              <AppText variant="caption" tone="error">
+                All dates for this event have passed.
+              </AppText>
+            ) : null}
           </View>
         ) : null}
 
@@ -440,7 +484,11 @@ export default function BuyTicketsScreen() {
           }
           fullWidth
           loading={validate.isPending}
-          disabled={validate.isPending || totalCount === 0}
+          disabled={
+            validate.isPending ||
+            totalCount === 0 ||
+            (occurrences.length > 1 && activeOccurrenceId == null)
+          }
           onPress={proceed}
         />
       </View>

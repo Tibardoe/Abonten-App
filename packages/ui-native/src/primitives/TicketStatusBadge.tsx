@@ -1,109 +1,57 @@
-import { View } from "react-native";
-import { Icon, type IoniconName } from "./Icon";
-import { AppText } from "./Typography";
+import { StatusPill } from "./StatusPill";
+import type { StatusKind } from "./status";
 
-// Native echo of apps/web/src/components/atoms/TicketStatusBadge.tsx.
-// Status is never colour-only: every state pairs an icon with its own
-// label. Handles the four real ticket.status values (active | used |
-// expired | cancelled) plus the event-lifecycle overrides that can make
-// "Active" the wrong thing to say for a still-held ticket.
+// Ticket-aware wrapper over the shared <StatusPill> / status registry. The
+// four real ticket.status values (active | used | expired | cancelled) plus
+// the event-lifecycle overrides that can make "Active" the wrong thing to
+// say for a still-held ticket. Rendering (tinted surface, icon, wording)
+// comes from the shared system so a ticket status looks identical to the
+// same state on Finances / Transactions.
 
 export type TicketStatusBadgeProps = {
   /** Raw ticket.status — active | used | expired | cancelled. */
   status: string;
-  /** Organizer cancelled the whole event (vs. the attendee cancelling
-   * just this ticket) — both land on status="cancelled". */
+  /** Organizer cancelled the whole event (vs. the attendee cancelling just
+   * this ticket) — both land on status="cancelled". */
   cancelledByOrganizer?: boolean;
-  /** The event itself was cancelled by the organizer — overrides "Active"
-   * on a still-held ticket. */
+  /** The event itself was cancelled — overrides "Active" on a held ticket. */
   eventCancelled?: boolean;
   /** Every session of the event is in the past — reads as "Ended". */
   eventEnded?: boolean;
   className?: string;
 };
 
-type Config = {
-  label: string;
-  icon: IoniconName;
-  box: string;
-  text: string;
-};
-
-function resolve({
-  status,
-  cancelledByOrganizer,
-  eventCancelled,
-  eventEnded,
-}: TicketStatusBadgeProps): Config {
-  switch (status) {
+function resolve(props: TicketStatusBadgeProps): {
+  kind: StatusKind;
+  label?: string;
+} {
+  switch (props.status) {
     case "cancelled":
       return {
-        label: cancelledByOrganizer ? "Cancelled by organizer" : "Cancelled",
-        icon: "close-circle",
-        box: "bg-muted",
-        text: "text-destructive",
+        kind: "cancelled",
+        label: props.cancelledByOrganizer
+          ? "Cancelled by organizer"
+          : "Cancelled",
       };
     case "used":
-      return {
-        label: "Checked in",
-        icon: "checkmark-done-circle",
-        box: "bg-muted",
-        text: "text-success",
-      };
+      return { kind: "used", label: "Checked in" };
     case "expired":
-      return {
-        label: "Expired",
-        icon: "time-outline",
-        box: "bg-muted",
-        text: "text-muted-foreground",
-      };
+      return { kind: "expired" };
     default:
-      if (eventCancelled)
-        return {
-          label: "Event cancelled",
-          icon: "close-circle",
-          box: "bg-muted",
-          text: "text-destructive",
-        };
-      if (eventEnded)
-        return {
-          label: "Ended",
-          icon: "time-outline",
-          box: "bg-muted",
-          text: "text-muted-foreground",
-        };
-      return {
-        label: "Active",
-        icon: "checkmark-circle",
-        box: "bg-muted",
-        text: "text-success",
-      };
+      if (props.eventCancelled)
+        return { kind: "cancelled", label: "Event cancelled" };
+      if (props.eventEnded) return { kind: "ended" };
+      return { kind: "active" };
   }
 }
 
 export function TicketStatusBadge(props: TicketStatusBadgeProps) {
-  const c = resolve(props);
-  const tone =
-    c.text === "text-destructive"
-      ? "destructive"
-      : c.text === "text-success"
-        ? "success"
-        : "muted";
-
+  const { kind, label } = resolve(props);
   return (
-    <View
-      className={[
-        "flex-row items-center gap-1 self-start rounded-full px-2.5 py-1",
-        c.box,
-        props.className ?? "",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
-      <Icon name={c.icon} size={13} tone={tone} />
-      <AppText className={`text-[11px] font-semibold ${c.text}`}>
-        {c.label}
-      </AppText>
-    </View>
+    <StatusPill
+      status={kind}
+      options={{ fallback: kind, label }}
+      className={props.className}
+    />
   );
 }

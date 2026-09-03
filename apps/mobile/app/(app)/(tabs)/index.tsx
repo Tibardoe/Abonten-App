@@ -12,18 +12,18 @@ import {
 import { FeaturedEventsCarousel } from "@/components/explore/FeaturedEventsCarousel";
 import { FeaturedPlacesCarousel } from "@/components/explore/FeaturedPlacesCarousel";
 import { FilterSheet } from "@/components/explore/FilterSheet";
+import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
-  EMPTY_EVENT_FILTERS,
-  EMPTY_PLACE_FILTERS,
-  type EventFilters,
-  type PlaceFilters,
   clearEventFilterKey,
   clearPlaceFilterKey,
   countActiveEventFilters,
   countActivePlaceFilters,
   describeEventFilters,
   describePlaceFilters,
+  eventFiltersNeedServerData,
+  filterEventList,
+  filterPlaceList,
 } from "@/features/discovery/exploreFilters";
 import { useExploreEventSliders } from "@/features/discovery/useExploreEventSliders";
 import { useExplorePlaceSliders } from "@/features/discovery/useExplorePlaceSliders";
@@ -72,10 +72,14 @@ export default function Explore() {
 
   const [tab, setTab] = useState<Tab>("events");
   const [view, setView] = useState<"list" | "map">("list");
-  const [eventFilters, setEventFilters] =
-    useState<EventFilters>(EMPTY_EVENT_FILTERS);
-  const [placeFilters, setPlaceFilters] =
-    useState<PlaceFilters>(EMPTY_PLACE_FILTERS);
+  const {
+    eventFilters,
+    placeFilters,
+    setEventFilters,
+    setPlaceFilters,
+    clearEventFilters,
+    clearPlaceFilters,
+  } = useExploreFilters();
   const [filterOpen, setFilterOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
 
@@ -92,6 +96,43 @@ export default function Explore() {
     eventsQuery.data?.pages.flatMap((p) => p.rows) ?? [];
   const places: PlaceType[] =
     placesQuery.data?.pages.flatMap((p) => p.rows) ?? [];
+
+  // The filter sheet feeds every relevant section, not just the "All" list:
+  // each curated slider is client-filtered against the same nearby fetch it
+  // was already derived from (no extra network). A slider that ends up empty
+  // is hidden further down; when a rating filter is set — a dimension the
+  // events payload can't express — the whole curated block collapses and the
+  // rating-aware "All" list carries the screen.
+  const eventFilterCount = countActiveEventFilters(eventFilters);
+  const placeFilterCount = countActivePlaceFilters(placeFilters);
+  const curatedEventsSuppressed = eventFiltersNeedServerData(eventFilters);
+
+  const eventSlidersFiltered = useMemo(() => {
+    const d = eventSliders.data;
+    if (eventFilterCount === 0) return d;
+    const f = (list: UserPostType[]) =>
+      filterEventList(list, eventFilters, coords);
+    return {
+      featured: f(d.featured),
+      aroundYou: f(d.aroundYou),
+      topRatedOrganizers: f(d.topRatedOrganizers),
+      happeningToday: f(d.happeningToday),
+      happeningThisWeek: f(d.happeningThisWeek),
+      happeningThisMonth: f(d.happeningThisMonth),
+    };
+  }, [eventSliders.data, eventFilters, eventFilterCount, coords]);
+
+  const placeSlidersFiltered = useMemo(() => {
+    const d = placeSliders.data;
+    if (placeFilterCount === 0) return d;
+    const f = (list: PlaceType[]) => filterPlaceList(list, placeFilters);
+    return {
+      featured: f(d.featured),
+      aroundYou: f(d.aroundYou),
+      openNow: f(d.openNow),
+      topRated: f(d.topRated),
+    };
+  }, [placeSliders.data, placeFilters, placeFilterCount]);
 
   const eventCategoryChips = useMemo(
     () =>
@@ -117,10 +158,7 @@ export default function Explore() {
       ? describeEventFilters(eventFilters)
       : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
 
-  const activeCount =
-    tab === "events"
-      ? countActiveEventFilters(eventFilters)
-      : countActivePlaceFilters(placeFilters);
+  const activeCount = tab === "events" ? eventFilterCount : placeFilterCount;
 
   const onEndReached = useCallback(() => {
     const q = tab === "events" ? eventsQuery : placesQuery;
@@ -128,83 +166,107 @@ export default function Explore() {
   }, [tab, eventsQuery, placesQuery]);
 
   function removeChip(key: string) {
-    if (tab === "events") setEventFilters((f) => clearEventFilterKey(f, key));
-    else setPlaceFilters((f) => clearPlaceFilterKey(f, key));
+    if (tab === "events")
+      setEventFilters(clearEventFilterKey(eventFilters, key));
+    else setPlaceFilters(clearPlaceFilterKey(placeFilters, key));
   }
 
   function clearAllChips() {
-    if (tab === "events") setEventFilters(EMPTY_EVENT_FILTERS);
-    else setPlaceFilters(EMPTY_PLACE_FILTERS);
+    if (tab === "events") clearEventFilters();
+    else clearPlaceFilters();
   }
 
   if (resolving) return <ScreenLoader />;
 
   const activeQuery = tab === "events" ? eventsQuery : placesQuery;
 
+  const eventCuratedEmpty =
+    eventFilterCount > 0 &&
+    !curatedEventsSuppressed &&
+    eventSlidersFiltered.featured.length === 0 &&
+    eventSlidersFiltered.aroundYou.length === 0 &&
+    eventSlidersFiltered.topRatedOrganizers.length === 0 &&
+    eventSlidersFiltered.happeningToday.length === 0 &&
+    eventSlidersFiltered.happeningThisWeek.length === 0 &&
+    eventSlidersFiltered.happeningThisMonth.length === 0;
+
+  const placeCuratedEmpty =
+    placeFilterCount > 0 &&
+    placeSlidersFiltered.featured.length === 0 &&
+    placeSlidersFiltered.aroundYou.length === 0 &&
+    placeSlidersFiltered.openNow.length === 0 &&
+    placeSlidersFiltered.topRated.length === 0;
+
   const sliders =
     tab === "events" ? (
+      curatedEventsSuppressed ? (
+        <Caption className="px-4 pt-4">
+          Rating filter applied — showing the full matching list below.
+        </Caption>
+      ) : eventCuratedEmpty ? null : (
+        <View>
+          {eventSlidersFiltered.featured.length > 0 ? (
+            <View className="gap-2 pt-4">
+              <SectionTitle className="px-4">Featured</SectionTitle>
+              <FeaturedEventsCarousel events={eventSlidersFiltered.featured} />
+            </View>
+          ) : null}
+          <EventSliderRow
+            title="Around you"
+            events={eventSlidersFiltered.aroundYou}
+            onViewAll={() => openSection("event", "aroundYou", "Around you")}
+          />
+          <EventSliderRow
+            title="Top-rated organizers"
+            events={eventSlidersFiltered.topRatedOrganizers}
+            onViewAll={() =>
+              openSection("event", "topRatedOrganizers", "Top-rated organizers")
+            }
+          />
+          <EventSliderRow
+            title="Happening today"
+            events={eventSlidersFiltered.happeningToday}
+            onViewAll={() =>
+              openSection("event", "happeningToday", "Happening today")
+            }
+          />
+          <EventSliderRow
+            title="Happening this week"
+            events={eventSlidersFiltered.happeningThisWeek}
+            onViewAll={() =>
+              openSection("event", "happeningThisWeek", "Happening this week")
+            }
+          />
+          <EventSliderRow
+            title="Happening this month"
+            events={eventSlidersFiltered.happeningThisMonth}
+            onViewAll={() =>
+              openSection("event", "happeningThisMonth", "Happening this month")
+            }
+          />
+        </View>
+      )
+    ) : placeCuratedEmpty ? null : (
       <View>
-        {eventSliders.data.featured.length > 0 ? (
+        {placeSlidersFiltered.featured.length > 0 ? (
           <View className="gap-2 pt-4">
             <SectionTitle className="px-4">Featured</SectionTitle>
-            <FeaturedEventsCarousel events={eventSliders.data.featured} />
-          </View>
-        ) : null}
-        <EventSliderRow
-          title="Around you"
-          events={eventSliders.data.aroundYou}
-          onViewAll={() => openSection("event", "aroundYou", "Around you")}
-        />
-        <EventSliderRow
-          title="Top-rated organizers"
-          events={eventSliders.data.topRatedOrganizers}
-          onViewAll={() =>
-            openSection("event", "topRatedOrganizers", "Top-rated organizers")
-          }
-        />
-        <EventSliderRow
-          title="Happening today"
-          events={eventSliders.data.happeningToday}
-          onViewAll={() =>
-            openSection("event", "happeningToday", "Happening today")
-          }
-        />
-        <EventSliderRow
-          title="Happening this week"
-          events={eventSliders.data.happeningThisWeek}
-          onViewAll={() =>
-            openSection("event", "happeningThisWeek", "Happening this week")
-          }
-        />
-        <EventSliderRow
-          title="Happening this month"
-          events={eventSliders.data.happeningThisMonth}
-          onViewAll={() =>
-            openSection("event", "happeningThisMonth", "Happening this month")
-          }
-        />
-      </View>
-    ) : (
-      <View>
-        {placeSliders.data.featured.length > 0 ? (
-          <View className="gap-2 pt-4">
-            <SectionTitle className="px-4">Featured</SectionTitle>
-            <FeaturedPlacesCarousel places={placeSliders.data.featured} />
+            <FeaturedPlacesCarousel places={placeSlidersFiltered.featured} />
           </View>
         ) : null}
         <PlaceSliderRow
           title="Around you"
-          places={placeSliders.data.aroundYou}
+          places={placeSlidersFiltered.aroundYou}
           onViewAll={() => openSection("place", "aroundYou", "Around you")}
         />
         <PlaceSliderRow
           title="Open now"
-          places={placeSliders.data.openNow}
+          places={placeSlidersFiltered.openNow}
           onViewAll={() => openSection("place", "openNow", "Open now")}
         />
         <PlaceSliderRow
           title="Top rated"
-          places={placeSliders.data.topRated}
+          places={placeSlidersFiltered.topRated}
           onViewAll={() => openSection("place", "topRated", "Top rated")}
         />
       </View>
@@ -225,16 +287,16 @@ export default function Explore() {
         }
         onSelect={(key) => {
           if (tab === "events") {
-            setEventFilters((f) => ({
-              ...f,
+            setEventFilters({
+              ...eventFilters,
               category: key,
-              types: key ? f.types : [],
-            }));
+              types: key ? eventFilters.types : [],
+            });
           } else {
-            setPlaceFilters((f) => ({
-              ...f,
+            setPlaceFilters({
+              ...placeFilters,
               categoryId: key != null ? Number(key) : null,
-            }));
+            });
           }
         }}
       />

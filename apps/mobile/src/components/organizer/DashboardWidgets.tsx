@@ -1,3 +1,4 @@
+import { OrganizerEventCard } from "@/components/organizer/OrganizerEventCard";
 import { SalesTimelineChart } from "@/components/organizer/SalesTimelineChart";
 import { useOrganizerFinance } from "@/features/organizer/useOrganizer";
 import type {
@@ -7,10 +8,7 @@ import type {
   OrganizerPerformanceRow,
   OrganizerUpcomingRow,
 } from "@abonten/api-client";
-import {
-  formatDateWithSuffix,
-  getRelativeTime,
-} from "@abonten/core/dateFormatter";
+import { getRelativeTime } from "@abonten/core/dateFormatter";
 import { AppText, Icon, type IoniconName, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { Pressable, View } from "react-native";
@@ -61,62 +59,29 @@ function FinanceSummary() {
   );
 }
 
-function EventRow({
-  eventId,
-  title,
-  subtitle,
-  primary,
-  secondary,
-}: {
-  eventId: string;
-  title: string;
-  subtitle: string;
-  primary: string;
-  secondary: string;
-}) {
-  return (
-    <Link href={`/(app)/organizer/events/${eventId}`} asChild>
-      <Pressable className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 active:opacity-80">
-        <View className="flex-1">
-          <AppText variant="body" className="font-medium" numberOfLines={1}>
-            {title}
-          </AppText>
-          <AppText variant="meta">{subtitle}</AppText>
-        </View>
-        <View className="shrink-0 items-end">
-          <AppText variant="bodyStrong">{primary}</AppText>
-          <AppText variant="meta">{secondary}</AppText>
-        </View>
-      </Pressable>
-    </Link>
-  );
-}
-
-const STATUS_LABEL: Record<string, string> = {
-  upcoming: "Upcoming",
-  ongoing: "Ongoing",
-  ended: "Ended",
-};
-
 function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
   return (
-    <View className="gap-2">
+    <View className="gap-2.5">
       <Overline>Event performance</Overline>
       {events.length === 0 ? (
-        <AppText variant="muted">No event sales in this period yet.</AppText>
+        <View className="items-center gap-1 rounded-2xl border border-border bg-card px-3 py-6">
+          <Icon name="bar-chart-outline" size={20} tone="muted" />
+          <AppText variant="muted" className="text-center">
+            No event sales in this period yet.
+          </AppText>
+        </View>
       ) : (
         events.map((e) => (
-          <EventRow
+          <OrganizerEventCard
             key={e.event_id}
+            variant="performance"
             eventId={e.event_id}
-            title={e.title ?? "Untitled event"}
-            subtitle={`${
-              e.starts_at ? formatDateWithSuffix(e.starts_at) : "Date not set"
-            } · ${STATUS_LABEL[e.status ?? ""] ?? e.status ?? ""}`}
-            primary={`${e.currency ? `${e.currency} ` : ""}${n(
-              e.revenue,
-            ).toLocaleString()}`}
-            secondary={`${n(e.tickets_sold).toLocaleString()} tickets`}
+            title={e.title}
+            date={e.starts_at}
+            status={e.status}
+            currency={e.currency}
+            revenue={e.revenue}
+            ticketsSold={e.tickets_sold}
           />
         ))
       )}
@@ -135,25 +100,26 @@ function EventPerformance({ events }: { events: OrganizerPerformanceRow[] }) {
 
 function UpcomingEvents({ events }: { events: OrganizerUpcomingRow[] }) {
   return (
-    <View className="gap-2">
+    <View className="gap-2.5">
       <Overline>Upcoming events</Overline>
       {events.length === 0 ? (
-        <AppText variant="muted">No upcoming events in the next while.</AppText>
+        <View className="items-center gap-1 rounded-2xl border border-border bg-card px-3 py-6">
+          <Icon name="calendar-outline" size={20} tone="muted" />
+          <AppText variant="muted" className="text-center">
+            No upcoming events in the next while.
+          </AppText>
+        </View>
       ) : (
         events.map((e) => (
-          <EventRow
+          <OrganizerEventCard
             key={e.event_id}
+            variant="upcoming"
             eventId={e.event_id}
-            title={e.title ?? "Untitled event"}
-            subtitle={`${
-              e.next_occurrence_starts_at
-                ? formatDateWithSuffix(e.next_occurrence_starts_at)
-                : "Date not set"
-            } · ${e.status === "ongoing" ? "Ongoing" : "Upcoming"}`}
-            primary={`${n(e.tickets_sold).toLocaleString()}${
-              e.capacity != null ? ` / ${n(e.capacity).toLocaleString()}` : ""
-            }`}
-            secondary={e.capacity != null ? "sold" : "sold (no cap)"}
+            title={e.title}
+            date={e.next_occurrence_starts_at}
+            status={e.status}
+            ticketsSold={e.tickets_sold}
+            capacity={e.capacity}
           />
         ))
       )}

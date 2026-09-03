@@ -12,6 +12,8 @@ import {
   Field,
   Icon,
   Input,
+  ScreenError,
+  ScreenLoader,
   SegmentedTabs,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
@@ -34,20 +36,17 @@ export default function EditEventScreen() {
   if (w.isLoading || !w.isReady) {
     if (w.loadError) {
       return (
-        <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
-          <AppText className="text-center text-muted-foreground">
-            {typeof w.loadError === "string"
+        <ScreenError
+          message={
+            typeof w.loadError === "string"
               ? w.loadError
-              : "Couldn't load this event."}
-          </AppText>
-        </View>
+              : "Couldn't load this event."
+          }
+          onRetry={() => w.reload()}
+        />
       );
     }
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
+    return <ScreenLoader />;
   }
 
   const flyerPreview = w.newFlyerUri

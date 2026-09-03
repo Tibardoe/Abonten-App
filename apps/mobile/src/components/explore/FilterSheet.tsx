@@ -20,25 +20,34 @@ import { DateRangeField } from "./DateRangeField";
 import { PriceRangeField } from "./PriceRangeField";
 
 // Native echo of apps/web/src/components/organisms/FilterModalPopup.tsx.
-// Tab-aware, same as the web modal: Category / Types / Price / Date /
-// Rating / Distance for Events; Category / Open now / Rating / Distance for
-// Places. Edits a local draft; "Apply" lifts it, "Clear all" resets to the
-// EMPTY_* defaults. Each section shows an active dot + inline "Clear" so a
-// long scroll still tells you what's set.
+// Tab-aware: Category / Types / Price / Date / Rating / Distance for Events;
+// Category / Open now / Rating / Distance for Places. Edits a local draft;
+// "Apply" lifts it, "Clear all" resets to the EMPTY_* defaults.
+//
+// Layout notes: the sheet floats up to ~70% of the screen so the sections
+// aren't buried; each group is a card-less block separated by a hairline
+// with an active dot + inline "Clear"; the price slider owns its own
+// horizontal pan (activeOffsetX / failOffsetY in PriceRangeField) so the
+// parent sheet never scrolls while a thumb is dragged, and the chip groups
+// wrap rather than scroll horizontally so there's no gesture contention.
 
 function Section({
   label,
+  hint,
   active,
   onClear,
   children,
+  first,
 }: {
   label: string;
+  hint?: string;
   active?: boolean;
   onClear?: () => void;
   children: React.ReactNode;
+  first?: boolean;
 }) {
   return (
-    <View className="gap-2 border-t border-border/60 pt-4">
+    <View className={first ? "gap-2.5" : "gap-2.5 border-t border-border pt-5"}>
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <Label>{label}</Label>
@@ -47,13 +56,23 @@ function Section({
           ) : null}
         </View>
         {active && onClear ? (
-          <Pressable onPress={onClear} hitSlop={8} accessibilityRole="button">
-            <AppText variant="caption" tone="brand" className="font-medium">
+          <Pressable
+            onPress={onClear}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={`Clear ${label} filter`}
+          >
+            <AppText variant="caption" tone="brand" className="font-semibold">
               Clear
             </AppText>
           </Pressable>
         ) : null}
       </View>
+      {hint ? (
+        <AppText variant="caption" className="-mt-1">
+          {hint}
+        </AppText>
+      ) : null}
       {children}
     </View>
   );
@@ -86,8 +105,7 @@ export function FilterSheet({
   const [pDraft, setPDraft] = useState<PlaceFilters>(placeFilters);
 
   // Re-seed the draft whenever the sheet is (re)opened so it reflects the
-  // filters currently applied, not a stale edit — same as the web modal's
-  // initial* props.
+  // filters currently applied, not a stale edit.
   useEffect(() => {
     if (open) {
       setEDraft(eventFilters);
@@ -99,6 +117,9 @@ export function FilterSheet({
   const activeCount = isEvents
     ? countActiveEventFilters(eDraft)
     : countActivePlaceFilters(pDraft);
+  const dirty = isEvents
+    ? JSON.stringify(eDraft) !== JSON.stringify(eventFilters)
+    : JSON.stringify(pDraft) !== JSON.stringify(placeFilters);
 
   const selectedCategoryTypes = isEvents
     ? (eventCategoriesAndTypes.find((c) => c.category === eDraft.category)
@@ -121,36 +142,47 @@ export function FilterSheet({
       open={open}
       onClose={onClose}
       title="Filters"
+      minHeightRatio={0.7}
+      maxHeightRatio={0.92}
       footer={
-        <View className="flex-row gap-3">
-          <View className="flex-1">
+        <View className="gap-2">
+          <Button
+            title={
+              activeCount > 0
+                ? `Show results · ${activeCount} filter${activeCount === 1 ? "" : "s"}`
+                : "Show results"
+            }
+            onPress={apply}
+          />
+          {activeCount > 0 ? (
             <Button
-              title="Clear all"
-              variant="outline"
+              title="Clear all filters"
+              variant="ghost"
               onPress={clearAll}
-              disabled={activeCount === 0}
             />
-          </View>
-          <View className="flex-1">
-            <Button
-              title={activeCount > 0 ? `Apply · ${activeCount}` : "Apply"}
-              onPress={apply}
-            />
-          </View>
+          ) : null}
         </View>
       }
     >
-      <View className="pb-1">
+      <View className="flex-row items-center justify-between pb-4">
         <AppText variant="meta">
           {activeCount === 0
             ? "No filters applied"
-            : `${activeCount} filter${activeCount === 1 ? "" : "s"} applied`}
+            : `${activeCount} filter${activeCount === 1 ? "" : "s"} set${dirty ? " · not applied yet" : ""}`}
         </AppText>
+        {activeCount > 0 ? (
+          <View className="rounded-full bg-primary px-2 py-0.5">
+            <AppText className="text-[12px] font-bold text-primary-foreground">
+              {activeCount}
+            </AppText>
+          </View>
+        ) : null}
       </View>
 
       {isEvents ? (
-        <View className="gap-4">
+        <View className="gap-5">
           <Section
+            first
             label="Category"
             active={eDraft.category != null}
             onClear={() => setEDraft((d) => clearEventFilterKey(d, "category"))}
@@ -165,7 +197,6 @@ export function FilterSheet({
                     setEDraft((d) => ({
                       ...d,
                       category: d.category === c.category ? null : c.category,
-                      // Dropping the category drops its type selection too.
                       types: d.category === c.category ? [] : d.types,
                     }))
                   }
@@ -177,6 +208,7 @@ export function FilterSheet({
           {eDraft.category ? (
             <Section
               label="Type"
+              hint={`Types within ${eDraft.category}`}
               active={eDraft.types.length > 0}
               onClear={() => setEDraft((d) => ({ ...d, types: [] }))}
             >
@@ -204,7 +236,8 @@ export function FilterSheet({
           ) : null}
 
           <Section
-            label="Price (GHS)"
+            label="Price"
+            hint="Ticket price in GHS"
             active={
               eDraft.minPrice != null ||
               (eDraft.maxPrice != null && eDraft.maxPrice < PRICE_ANY_MAX)
@@ -221,7 +254,8 @@ export function FilterSheet({
           </Section>
 
           <Section
-            label="Date range"
+            label="Dates"
+            hint="Events with a session in this range"
             active={!!(eDraft.startDate || eDraft.endDate)}
             onClear={() => setEDraft((d) => clearEventFilterKey(d, "date"))}
           >
@@ -279,8 +313,9 @@ export function FilterSheet({
           </Section>
         </View>
       ) : (
-        <View className="gap-4">
+        <View className="gap-5">
           <Section
+            first
             label="Category"
             active={pDraft.categoryId != null}
             onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "category"))}

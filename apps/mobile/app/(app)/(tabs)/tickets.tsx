@@ -75,11 +75,13 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
       }
       ListEmptyComponent={
         <EmptyState
-          icon="receipt-outline"
+          icon={q.isError ? "cloud-offline-outline" : "receipt-outline"}
           title={q.isError ? "Couldn't load tickets" : EMPTY_COPY[tab].title}
           description={
             q.isError ? "Pull down to try again." : EMPTY_COPY[tab].description
           }
+          actionLabel={q.isError ? "Retry" : undefined}
+          onAction={q.isError ? () => q.refetch() : undefined}
         />
       }
       ListFooterComponent={q.isFetchingNextPage ? <Spinner /> : null}

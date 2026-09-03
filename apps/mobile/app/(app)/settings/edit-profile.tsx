@@ -11,6 +11,7 @@ import {
   Button,
   Field,
   Input,
+  ScreenError,
   ScreenLoader,
 } from "@abonten/ui-native";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
@@ -37,7 +38,12 @@ type FormState = {
 };
 
 export default function EditProfile() {
-  const { data: profile, isLoading } = useProfile();
+  const {
+    data: profile,
+    isLoading,
+    isError: profileError,
+    refetch: refetchProfile,
+  } = useProfile();
   const update = useUpdateProfile();
   const avatar = useAvatarUpload();
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
@@ -108,7 +114,15 @@ export default function EditProfile() {
     );
   }
 
-  if (isLoading || !profile) return <ScreenLoader />;
+  if (isLoading) return <ScreenLoader />;
+  if (profileError || !profile) {
+    return (
+      <ScreenError
+        message="Couldn't load your profile."
+        onRetry={() => refetchProfile()}
+      />
+    );
+  }
 
   return (
     <View className="flex-1 bg-background">

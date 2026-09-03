@@ -16,7 +16,16 @@ import type {
   PlaceTemporaryStatus,
 } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { AppText, Button, Chip, Field, Icon, Input } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Chip,
+  Field,
+  Icon,
+  Input,
+  ScreenError,
+  ScreenLoader,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -333,20 +342,17 @@ export default function EditPlaceScreen() {
   if (w.isLoading || !w.isReady) {
     if (w.loadError) {
       return (
-        <View className="flex-1 items-center justify-center gap-3 bg-background p-6">
-          <AppText className="text-center text-muted-foreground">
-            {typeof w.loadError === "string"
+        <ScreenError
+          message={
+            typeof w.loadError === "string"
               ? w.loadError
-              : "Couldn't load this place."}
-          </AppText>
-        </View>
+              : "Couldn't load this place."
+          }
+          onRetry={() => w.reload()}
+        />
       );
     }
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
-    );
+    return <ScreenLoader />;
   }
 
   const coverPreview = w.newCoverUri

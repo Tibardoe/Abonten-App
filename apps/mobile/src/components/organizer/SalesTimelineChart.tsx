@@ -14,8 +14,12 @@ import Svg, { Line, Rect } from "react-native-svg";
 // its exact figure. Last 12 buckets.
 
 const n = (v: number | string | null | undefined): number => Number(v ?? 0);
-const CHART_H = 132;
-const TOP_PAD = 8; // headroom above the tallest bar
+// A touch taller than before so 12 buckets of data actually breathe — the
+// value labels, gridlines and x-axis ticks were cramped at 132. Still
+// width-responsive (bars + gaps derive from the measured plot width), so
+// this reads fine on a small phone.
+const CHART_H = 176;
+const TOP_PAD = 12; // headroom above the tallest bar
 
 function money(currency: string, amount: number): string {
   return `${currency} ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;

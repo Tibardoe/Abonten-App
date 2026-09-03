@@ -8,7 +8,7 @@ import type {
   OrganizerLedgerTransactionRow,
 } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText, Chip, Overline } from "@abonten/ui-native";
+import { AppText, Chip, Icon, Overline, StatusPill } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
@@ -66,26 +66,48 @@ function amount(currency: string, value: number): string {
   })}`;
 }
 
+function BalanceLine({
+  icon,
+  label,
+  value,
+}: {
+  icon: "time-outline" | "wallet-outline";
+  label: string;
+  value: string;
+}) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <View className="flex-row items-center gap-2">
+        <Icon name={icon} size={15} tone="muted" />
+        <AppText variant="small" tone="muted">
+          {label}
+        </AppText>
+      </View>
+      <AppText variant="metaStrong">{value}</AppText>
+    </View>
+  );
+}
+
 function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
   return (
-    <View className="gap-3 rounded-xl border border-border bg-card p-4">
-      <View className="flex-row items-center justify-between">
-        <Overline>Available ({row.currency})</Overline>
-        <AppText variant="screenTitle">
+    <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+      <View className="gap-1">
+        <Overline>Available to withdraw ({row.currency})</Overline>
+        <AppText variant="hero" numberOfLines={1} adjustsFontSizeToFit>
           {amount(row.currency, row.available_balance)}
         </AppText>
       </View>
-      <View className="flex-row justify-between">
-        <AppText variant="muted">Pending</AppText>
-        <AppText variant="small">
-          {amount(row.currency, row.pending_balance)}
-        </AppText>
-      </View>
-      <View className="flex-row justify-between">
-        <AppText variant="muted">Total earned</AppText>
-        <AppText variant="small">
-          {amount(row.currency, row.total_earnings)}
-        </AppText>
+      <View className="gap-2 border-t border-border pt-3">
+        <BalanceLine
+          icon="time-outline"
+          label="Pending (settles after each event)"
+          value={amount(row.currency, row.pending_balance)}
+        />
+        <BalanceLine
+          icon="wallet-outline"
+          label="Total earned to date"
+          value={amount(row.currency, row.total_earnings)}
+        />
       </View>
     </View>
   );
@@ -93,33 +115,32 @@ function BalanceCard({ row }: { row: OrganizerFinanceOverviewRow }) {
 
 function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
   return (
-    <View className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-3">
-      <View className="flex-1 gap-0.5">
+    <View className="gap-2 rounded-2xl border border-border bg-card p-3">
+      <View className="flex-row items-start justify-between gap-3">
+        <View className="flex-1 gap-0.5">
+          <AppText variant="bodyStrong" numberOfLines={1}>
+            {LINE_LABEL[row.line] ?? row.line}
+          </AppText>
+          <AppText variant="caption" numberOfLines={1}>
+            {row.event_title ?? row.reference ?? "—"}
+          </AppText>
+        </View>
         <AppText
-          className="text-sm font-medium text-foreground"
-          numberOfLines={1}
+          className={
+            row.amount < 0
+              ? "text-[15px] font-bold text-destructive"
+              : "text-[15px] font-bold text-success"
+          }
         >
-          {LINE_LABEL[row.line] ?? row.line}
-        </AppText>
-        <AppText
-          className="text-[13px] text-muted-foreground"
-          numberOfLines={1}
-        >
-          {row.event_title ?? row.reference ?? "—"}
-        </AppText>
-        <AppText variant="caption">
-          {formatDateWithSuffix(row.created_at)} · {row.status}
+          {amount(row.currency, row.amount)}
         </AppText>
       </View>
-      <AppText
-        className={
-          row.amount < 0
-            ? "text-[15px] font-semibold text-destructive"
-            : "text-[15px] font-semibold text-success"
-        }
-      >
-        {amount(row.currency, row.amount)}
-      </AppText>
+      <View className="flex-row items-center justify-between">
+        <AppText variant="caption">
+          {formatDateWithSuffix(row.created_at)}
+        </AppText>
+        <StatusPill status={row.status} size="sm" />
+      </View>
     </View>
   );
 }

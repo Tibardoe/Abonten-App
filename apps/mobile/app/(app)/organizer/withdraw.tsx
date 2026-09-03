@@ -3,7 +3,15 @@ import {
   usePayoutAccounts,
   useRequestPayout,
 } from "@/features/organizer/usePayouts";
-import { AppText, Button, Chip, Icon, Overline } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Chip,
+  Icon,
+  Overline,
+  ScreenError,
+  ScreenLoader,
+} from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
@@ -70,6 +78,15 @@ export default function WithdrawScreen() {
     !!selectedCurrency && !!defaultAccountId && amountValid && !overBalance;
 
   const loading = finance.isLoading || accountsQ.isLoading;
+  // A failed load must not masquerade as "no payout accounts / zero balance"
+  // — those states drive real UI ("add an account", a disabled form) that
+  // would be wrong and confusing when the truth is a network error.
+  const loadFailed =
+    !loading &&
+    (finance.isError ||
+      accountsQ.isError ||
+      (finance.data != null && finance.data.status !== 200) ||
+      (accountsQ.data != null && accountsQ.data.status !== 200));
 
   async function submit() {
     if (submittedRef.current || !canProceed || !selectedCurrency) return;
@@ -92,11 +109,17 @@ export default function WithdrawScreen() {
     );
   }
 
-  if (loading) {
+  if (loading) return <ScreenLoader />;
+
+  if (loadFailed) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator />
-      </View>
+      <ScreenError
+        message="Couldn't load your balance or payout accounts."
+        onRetry={() => {
+          finance.refetch();
+          accountsQ.refetch();
+        }}
+      />
     );
   }
 

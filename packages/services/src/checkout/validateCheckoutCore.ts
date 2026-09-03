@@ -4,6 +4,7 @@ import {
   allocatePromoEligibility,
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
+import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import {
   claimPromoUsage,
@@ -140,7 +141,9 @@ export async function validateCheckoutCore(
 
   const { data: event, error: eventError } = await supabase
     .from("event")
-    .select("id")
+    .select(
+      "id, status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+    )
     .eq("id", eventId)
     .maybeSingle();
 
@@ -154,19 +157,63 @@ export async function validateCheckoutCore(
     return { status: 404, message: "No event found!" };
   }
 
-  // occurrenceId is client-supplied and now affects a DB write, so verify it
-  // actually belongs to this event before trusting it (a tampered client
-  // could otherwise stamp a purchase with another event's occurrence id).
-  if (occurrenceId) {
-    const { data: occurrence, error: occurrenceError } = await supabase
-      .from("event_occurrence")
-      .select("id")
-      .eq("id", occurrenceId)
-      .eq("event_id", eventId)
-      .maybeSingle();
+  // The caller's copy of the event can be stale (a cached detail page held
+  // open while the organizer cancels or the last date passes). These are the
+  // authoritative sales-window checks — the same ones registerForFreeEventCore
+  // already runs for the free path; the paid path was missing them, so an
+  // ended or cancelled event could still open a paid checkout. Fixing it in
+  // the shared core means web Server Actions and the mobile API both get it.
+  if (event.status !== "published") {
+    return {
+      status: 409,
+      message:
+        event.status === "canceled"
+          ? "This event has been canceled."
+          : "This event is not currently on sale.",
+    };
+  }
 
-    if (occurrenceError || !occurrence) {
+  const eventEndDate = resolveEventEndDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+  );
+
+  if (!eventEndDate) {
+    logger.error(`Event ${eventId} has no resolvable start/end date`);
+    return { status: 500, message: "This event has no scheduled date" };
+  }
+
+  // Whole event is over — every session's end time is in the past (covers
+  // single-date past-end, all-past multi-date, and past date ranges).
+  if (eventEndDate.getTime() < Date.now()) {
+    return {
+      status: 409,
+      message: "Ticket sales for this event have closed — it has ended.",
+    };
+  }
+
+  // occurrenceId is client-supplied and affects a DB write, so verify it
+  // belongs to this event (a tampered client could otherwise stamp a
+  // purchase with another event's occurrence id) AND that the chosen date
+  // hasn't already passed while future dates of the same event remain.
+  if (occurrenceId) {
+    const occurrence = event.event_occurrence?.find(
+      (occ: { id: string }) => occ.id === occurrenceId,
+    );
+
+    if (!occurrence) {
       return { status: 400, message: "Invalid event date" };
+    }
+
+    if (
+      occurrence.ends_at &&
+      new Date(occurrence.ends_at).getTime() < Date.now()
+    ) {
+      return {
+        status: 409,
+        message: "That date has already passed — pick another date.",
+      };
     }
   }
 

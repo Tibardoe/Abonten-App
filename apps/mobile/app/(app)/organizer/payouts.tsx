@@ -1,7 +1,7 @@
 import { usePayouts } from "@/features/organizer/usePayouts";
 import type { OrganizerPayoutRow } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText } from "@abonten/ui-native";
+import { AppText, StatusPill } from "@abonten/ui-native";
 import {
   ActivityIndicator,
   FlatList,
@@ -9,34 +9,21 @@ import {
   View,
 } from "react-native";
 
-const STATUS_TONE: Record<string, string> = {
-  completed: "text-foreground",
-  processing: "text-muted-foreground",
-  failed: "text-destructive",
-  cancelled: "text-destructive",
-};
-
 function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
   return (
-    <View className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-3">
-      <View className="flex-1 gap-0.5">
-        <AppText className="text-sm font-medium text-foreground">
+    <View className="gap-2 rounded-2xl border border-border bg-card p-3">
+      <View className="flex-row items-start justify-between gap-3">
+        <AppText variant="bodyStrong">
           {row.currency}{" "}
           {row.amount.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
         </AppText>
-        <AppText variant="caption">
-          {formatDateWithSuffix(row.requested_at)} · {row.reference}
-        </AppText>
+        <StatusPill status={row.status} size="sm" />
       </View>
-      <AppText
-        className={`text-[13px] font-semibold uppercase ${
-          STATUS_TONE[row.status] ?? "text-muted-foreground"
-        }`}
-      >
-        {row.status}
+      <AppText variant="caption" numberOfLines={1}>
+        {formatDateWithSuffix(row.requested_at)} · {row.reference}
       </AppText>
     </View>
   );

@@ -68,10 +68,23 @@ export default function CancelEventScreen() {
       </AppText>
 
       {impactError ? (
-        <AppText className="text-sm text-destructive">
-          {(impact.data && impact.data.status !== 200 && impact.data.message) ||
-            "Couldn't load the cancellation details."}
-        </AppText>
+        <View className="gap-2 rounded-xl border border-destructive/40 bg-destructive/5 p-4">
+          <AppText className="text-sm text-destructive">
+            {(impact.data &&
+              impact.data.status !== 200 &&
+              impact.data.message) ||
+              "Couldn't load the cancellation details — how many tickets and buyers this affects. Cancelling is disabled until this loads."}
+          </AppText>
+          <Pressable
+            onPress={() => impact.refetch()}
+            accessibilityRole="button"
+            className="self-start rounded-lg border border-border px-3 py-1.5 active:opacity-80"
+          >
+            <AppText variant="small" className="font-semibold text-foreground">
+              {impact.isFetching ? "Retrying…" : "Retry"}
+            </AppText>
+          </Pressable>
+        </View>
       ) : (
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
           <Row
