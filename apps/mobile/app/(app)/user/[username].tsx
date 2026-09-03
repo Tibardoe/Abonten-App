@@ -26,8 +26,15 @@ import {
   Spinner,
 } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 
 type FavSub = "events" | "places";
 type ReviewSub = "event" | "place";
@@ -45,6 +52,26 @@ export default function UserProfileScreen() {
   const [favSub, setFavSub] = useState<FavSub>("events");
   const [reviewSub, setReviewSub] = useState<ReviewSub>("event");
   const [createOpen, setCreateOpen] = useState(false);
+
+  // A quick content cross-fade on every tab / sub-tab change: the list data
+  // swaps instantly (React Query serves each tab from cache — no refetch),
+  // and a 90ms dip-and-restore stops that swap reading as a hard cut. The
+  // list itself is never remounted, so scroll naturally resets to the top of
+  // the new tab, which is the right behaviour here.
+  const reduceMotion = useReducedMotion();
+  const contentOpacity = useSharedValue(1);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: tab/favSub/reviewSub are the triggers, not read in the body
+  useEffect(() => {
+    if (reduceMotion) return;
+    contentOpacity.value = withSequence(
+      withTiming(0.45, { duration: 90 }),
+      withTiming(1, { duration: 130 }),
+    );
+  }, [tab, favSub, reviewSub, reduceMotion, contentOpacity]);
+  const contentStyle = useAnimatedStyle(() => ({
+    flex: 1,
+    opacity: contentOpacity.value,
+  }));
 
   const tabs = useMemo<ProfileTabKey[]>(
     () =>
@@ -203,63 +230,65 @@ export default function UserProfileScreen() {
   return (
     <View className="flex-1 bg-background">
       {navHeader}
-      <FlatList
-        className="flex-1 bg-background"
-        data={rows}
-        keyExtractor={(item: { id: string }, i) => item.id ?? String(i)}
-        ListHeaderComponent={header}
-        // The highlights row lives in this list's header; opening/closing the
-        // full-screen HighlightViewer over a list that's clipping offscreen
-        // subviews is what surfaced the Fabric "child already has a parent"
-        // reparenting crash on Android. The list is short — turning clipping
-        // off here is cheap insurance.
-        removeClippedSubviews={false}
-        contentContainerClassName="gap-3 pb-16"
-        renderItem={({ item }) => {
-          if (isReviewsRow)
+      <Animated.View style={contentStyle}>
+        <FlatList
+          className="flex-1 bg-background"
+          data={rows}
+          keyExtractor={(item: { id: string }, i) => item.id ?? String(i)}
+          ListHeaderComponent={header}
+          // The highlights row lives in this list's header; opening/closing the
+          // full-screen HighlightViewer over a list that's clipping offscreen
+          // subviews is what surfaced the Fabric "child already has a parent"
+          // reparenting crash on Android. The list is short — turning clipping
+          // off here is cheap insurance.
+          removeClippedSubviews={false}
+          contentContainerClassName="gap-3 pb-16"
+          renderItem={({ item }) => {
+            if (isReviewsRow)
+              return (
+                <View className="px-4">
+                  {/* biome-ignore lint/suspicious/noExplicitAny: row type switches per tab */}
+                  <ProfileReviewRow review={item as any} />
+                </View>
+              );
+            if (isPlaceRow)
+              return (
+                <View className="px-4">
+                  {/* biome-ignore lint/suspicious/noExplicitAny: row type switches per tab */}
+                  <PlaceCard place={item as any} />
+                </View>
+              );
             return (
               <View className="px-4">
                 {/* biome-ignore lint/suspicious/noExplicitAny: row type switches per tab */}
-                <ProfileReviewRow review={item as any} />
+                <EventCard event={item as any} />
               </View>
             );
-          if (isPlaceRow)
-            return (
-              <View className="px-4">
-                {/* biome-ignore lint/suspicious/noExplicitAny: row type switches per tab */}
-                <PlaceCard place={item as any} />
-              </View>
-            );
-          return (
-            <View className="px-4">
-              {/* biome-ignore lint/suspicious/noExplicitAny: row type switches per tab */}
-              <EventCard event={item as any} />
-            </View>
-          );
-        }}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={active.isRefetching && !active.isFetchingNextPage}
-            onRefresh={() => active.refetch()}
-          />
-        }
-        ListEmptyComponent={
-          showTabLoader ? (
-            <Spinner className="mt-6" />
-          ) : tab === "favorites" && !session ? null : active.isError ? (
-            <EmptyState
-              icon="cloud-offline-outline"
-              title="Couldn't load"
-              description="Pull down to try again."
+          }}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={active.isRefetching && !active.isFetchingNextPage}
+              onRefresh={() => active.refetch()}
             />
-          ) : (
-            <EmptyState icon="albums-outline" title={emptyTitle} />
-          )
-        }
-        ListFooterComponent={active.isFetchingNextPage ? <Spinner /> : null}
-      />
+          }
+          ListEmptyComponent={
+            showTabLoader ? (
+              <Spinner className="mt-6" />
+            ) : tab === "favorites" && !session ? null : active.isError ? (
+              <EmptyState
+                icon="cloud-offline-outline"
+                title="Couldn't load"
+                description="Pull down to try again."
+              />
+            ) : (
+              <EmptyState icon="albums-outline" title={emptyTitle} />
+            )
+          }
+          ListFooterComponent={active.isFetchingNextPage ? <Spinner /> : null}
+        />
+      </Animated.View>
 
       <CreateActionSheet
         open={createOpen}

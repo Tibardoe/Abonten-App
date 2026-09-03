@@ -74,7 +74,12 @@ export function ChangeLocationSheet({
 
   return (
     <>
-      <Sheet open={open} onClose={onClose} title="Set your location">
+      <Sheet
+        open={open}
+        onClose={onClose}
+        title="Set your location"
+        minHeightRatio={0.62}
+      >
         <View className="gap-4">
           {location ? (
             <AppText variant="caption">

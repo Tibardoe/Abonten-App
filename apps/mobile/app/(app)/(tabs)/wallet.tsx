@@ -235,6 +235,7 @@ export default function WalletScreen() {
       <Sheet
         open={step !== "closed"}
         onClose={closeSheet}
+        minHeightRatio={step === "choose" ? 0.5 : 0.6}
         onBack={
           !success && (step === "momo" || step === "card")
             ? () => {
