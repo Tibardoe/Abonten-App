@@ -3,16 +3,19 @@ import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
   type EventFilters,
+  PRICE_ANY_MAX,
   type PlaceFilters,
   RATING_OPTIONS,
+  clearEventFilterKey,
+  clearPlaceFilterKey,
   countActiveEventFilters,
   countActivePlaceFilters,
 } from "@/features/discovery/exploreFilters";
 import { eventCategoriesAndTypes } from "@abonten/core/eventCategoriesAndTypes";
 import type { PlaceCategory } from "@abonten/types/placeType";
-import { Button, Chip, Label, Sheet } from "@abonten/ui-native";
+import { AppText, Button, Chip, Label, Sheet } from "@abonten/ui-native";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { DateRangeField } from "./DateRangeField";
 import { PriceRangeField } from "./PriceRangeField";
 
@@ -20,18 +23,37 @@ import { PriceRangeField } from "./PriceRangeField";
 // Tab-aware, same as the web modal: Category / Types / Price / Date /
 // Rating / Distance for Events; Category / Open now / Rating / Distance for
 // Places. Edits a local draft; "Apply" lifts it, "Clear all" resets to the
-// EMPTY_* defaults.
+// EMPTY_* defaults. Each section shows an active dot + inline "Clear" so a
+// long scroll still tells you what's set.
 
 function Section({
   label,
+  active,
+  onClear,
   children,
 }: {
   label: string;
+  active?: boolean;
+  onClear?: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <View className="gap-2">
-      <Label>{label}</Label>
+    <View className="gap-2 border-t border-border/60 pt-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center gap-2">
+          <Label>{label}</Label>
+          {active ? (
+            <View className="h-1.5 w-1.5 rounded-full bg-primary" />
+          ) : null}
+        </View>
+        {active && onClear ? (
+          <Pressable onPress={onClear} hitSlop={8} accessibilityRole="button">
+            <AppText variant="caption" tone="brand" className="font-medium">
+              Clear
+            </AppText>
+          </Pressable>
+        ) : null}
+      </View>
       {children}
     </View>
   );
@@ -118,9 +140,21 @@ export function FilterSheet({
         </View>
       }
     >
+      <View className="pb-1">
+        <AppText variant="meta">
+          {activeCount === 0
+            ? "No filters applied"
+            : `${activeCount} filter${activeCount === 1 ? "" : "s"} applied`}
+        </AppText>
+      </View>
+
       {isEvents ? (
-        <View className="gap-5">
-          <Section label="Category">
+        <View className="gap-4">
+          <Section
+            label="Category"
+            active={eDraft.category != null}
+            onClear={() => setEDraft((d) => clearEventFilterKey(d, "category"))}
+          >
             <Wrap>
               {eventCategoriesAndTypes.map((c) => (
                 <Chip
@@ -141,7 +175,11 @@ export function FilterSheet({
           </Section>
 
           {eDraft.category ? (
-            <Section label="Type">
+            <Section
+              label="Type"
+              active={eDraft.types.length > 0}
+              onClear={() => setEDraft((d) => ({ ...d, types: [] }))}
+            >
               <Wrap>
                 {selectedCategoryTypes.map((type) => {
                   const on = eDraft.types.includes(type);
@@ -165,7 +203,14 @@ export function FilterSheet({
             </Section>
           ) : null}
 
-          <Section label="Price (GHS)">
+          <Section
+            label="Price (GHS)"
+            active={
+              eDraft.minPrice != null ||
+              (eDraft.maxPrice != null && eDraft.maxPrice < PRICE_ANY_MAX)
+            }
+            onClear={() => setEDraft((d) => clearEventFilterKey(d, "price"))}
+          >
             <PriceRangeField
               min={eDraft.minPrice}
               max={eDraft.maxPrice}
@@ -175,7 +220,11 @@ export function FilterSheet({
             />
           </Section>
 
-          <Section label="Date range">
+          <Section
+            label="Date range"
+            active={!!(eDraft.startDate || eDraft.endDate)}
+            onClear={() => setEDraft((d) => clearEventFilterKey(d, "date"))}
+          >
             <DateRangeField
               start={eDraft.startDate}
               end={eDraft.endDate}
@@ -185,7 +234,11 @@ export function FilterSheet({
             />
           </Section>
 
-          <Section label="Minimum rating">
+          <Section
+            label="Minimum rating"
+            active={eDraft.minRating != null}
+            onClear={() => setEDraft((d) => clearEventFilterKey(d, "rating"))}
+          >
             <Wrap>
               {RATING_OPTIONS.map((r) => (
                 <Chip
@@ -203,7 +256,11 @@ export function FilterSheet({
             </Wrap>
           </Section>
 
-          <Section label="Distance">
+          <Section
+            label="Distance"
+            active={eDraft.maxDistanceKm != null}
+            onClear={() => setEDraft((d) => clearEventFilterKey(d, "distance"))}
+          >
             <Wrap>
               {DISTANCE_OPTIONS.map((opt) => (
                 <Chip
@@ -222,8 +279,12 @@ export function FilterSheet({
           </Section>
         </View>
       ) : (
-        <View className="gap-5">
-          <Section label="Category">
+        <View className="gap-4">
+          <Section
+            label="Category"
+            active={pDraft.categoryId != null}
+            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "category"))}
+          >
             <Wrap>
               {placeCategories.map((c) => (
                 <Chip
@@ -241,7 +302,11 @@ export function FilterSheet({
             </Wrap>
           </Section>
 
-          <Section label="Availability">
+          <Section
+            label="Availability"
+            active={pDraft.openNow}
+            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "openNow"))}
+          >
             <Wrap>
               <Chip
                 label="Open now"
@@ -253,7 +318,11 @@ export function FilterSheet({
             </Wrap>
           </Section>
 
-          <Section label="Minimum rating">
+          <Section
+            label="Minimum rating"
+            active={pDraft.minRating != null}
+            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "rating"))}
+          >
             <Wrap>
               {RATING_OPTIONS.map((r) => (
                 <Chip
@@ -271,7 +340,11 @@ export function FilterSheet({
             </Wrap>
           </Section>
 
-          <Section label="Distance">
+          <Section
+            label="Distance"
+            active={pDraft.maxDistanceKm != null}
+            onClear={() => setPDraft((d) => clearPlaceFilterKey(d, "distance"))}
+          >
             <Wrap>
               {DISTANCE_OPTIONS.map((opt) => (
                 <Chip
