@@ -28,6 +28,8 @@ type UploadSignatureResponse = {
     apiKey?: string;
     cloudName?: string;
     folder: string;
+    allowedFormats: string;
+    maxFileSizeBytes: number;
   };
 };
 
@@ -86,8 +88,15 @@ export function useReviewPhotoUpload(
         return;
       }
 
-      const { timestamp, signature, apiKey, cloudName, folder } =
-        signatureResponse.data;
+      const {
+        timestamp,
+        signature,
+        apiKey,
+        cloudName,
+        folder,
+        allowedFormats,
+        maxFileSizeBytes,
+      } = signatureResponse.data;
 
       patch(id, { status: "uploading" });
 
@@ -99,6 +108,8 @@ export function useReviewPhotoUpload(
           timestamp,
           signature,
           folder,
+          allowedFormats,
+          maxFileSizeBytes,
           resourceType: "image",
           onProgress: (percent) => patch(id, { progress: percent }),
         });

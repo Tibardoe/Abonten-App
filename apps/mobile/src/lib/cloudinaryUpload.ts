@@ -101,7 +101,15 @@ export async function uploadToCloudinary(
   if (sig.status !== 200 || !sig.data) {
     throw new Error(sig.message ?? "Could not authorize the upload.");
   }
-  const { timestamp, signature, apiKey, cloudName, folder } = sig.data;
+  const {
+    timestamp,
+    signature,
+    apiKey,
+    cloudName,
+    folder,
+    allowedFormats,
+    maxFileSizeBytes,
+  } = sig.data;
   const cloud = cloudName ?? CLOUD_NAME;
   if (!cloud) throw new Error("Cloudinary is not configured.");
 
@@ -118,6 +126,10 @@ export async function uploadToCloudinary(
   form.append("timestamp", String(timestamp));
   form.append("signature", signature);
   form.append("folder", folder);
+  // Signed params — Cloudinary rejects the upload (wrong format / too large)
+  // and fails the signature check unless these are echoed verbatim.
+  form.append("allowed_formats", allowedFormats);
+  form.append("max_file_size", String(maxFileSizeBytes));
 
   const json = await postForm(
     `https://api.cloudinary.com/v1_1/${cloud}/${isVideo ? "video" : "image"}/upload`,

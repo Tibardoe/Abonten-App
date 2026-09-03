@@ -1,3 +1,4 @@
+import { withEventAttendanceCounts } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -29,8 +30,11 @@ async function fetchPage(
 
   const all = (data ?? []) as Row[];
   const hasNext = all.length > PAGE_SIZE;
-  const rows = hasNext ? all.slice(0, PAGE_SIZE) : all;
-  const last = rows[rows.length - 1];
+  const page = hasNext ? all.slice(0, PAGE_SIZE) : all;
+  const last = page[page.length - 1];
+  // get_nearby_events omits attendance — backfill it so the cards can show
+  // real "going" / spots-left / Sold-out (same as the web getNearByEvents).
+  const rows = (await withEventAttendanceCounts(page)) as Row[];
 
   return {
     rows,

@@ -114,6 +114,11 @@ function useInvalidateAfterReview(placeId: string | undefined) {
       queryKey: ["mobile", "place-review-eligibility", placeId, userId],
     });
     qc.invalidateQueries({ queryKey: ["profile", "place-reviews", userId] });
+    // PlaceCard on the Explore / Around You feeds shows avg_rating +
+    // review_count straight from get_filtered_places / get_nearby_places —
+    // a new/edited/deleted review moves both, so refresh those lists.
+    qc.invalidateQueries({ queryKey: ["discovery", "places"] });
+    qc.invalidateQueries({ queryKey: ["explore"] });
   };
 }
 

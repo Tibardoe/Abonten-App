@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { favoritesListKey } from "@/features/favorites/useFavorites";
+import { withEventAttendanceCounts } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import {
   type PlaceOpeningHourRow,
@@ -87,12 +88,15 @@ export function useProfileEvents(userId: string | undefined) {
         created_at: string;
       })[];
       const hasNext = all.length > PAGE;
-      const rows = (hasNext ? all.slice(0, PAGE) : all).map((e) => ({
+      const page = (hasNext ? all.slice(0, PAGE) : all).map((e) => ({
         ...e,
         ...minPrice(e.ticket_type),
         occurrences: e.event_occurrence ?? e.occurrences,
       })) as UserPostType[];
-      const last = all[rows.length - 1];
+      const last = all[page.length - 1];
+      // Raw `event` read carries no attendance — backfill so the profile
+      // Events tab cards match every other EventCard surface.
+      const rows = await withEventAttendanceCounts(page);
       return {
         rows,
         nextCursor:

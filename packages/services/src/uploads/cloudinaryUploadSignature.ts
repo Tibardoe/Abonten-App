@@ -1,3 +1,12 @@
+import {
+  ALLOWED_IMAGE_UPLOAD_FORMATS,
+  ALLOWED_VIDEO_UPLOAD_FORMATS,
+  MAX_AVATAR_UPLOAD_SIZE_BYTES,
+  MAX_EVENT_FLYER_SIZE_BYTES,
+  MAX_HIGHLIGHT_UPLOAD_SIZE_BYTES,
+  MAX_PLACE_PHOTO_SIZE_BYTES,
+  MAX_REVIEW_PHOTO_SIZE_BYTES,
+} from "@abonten/core/uploadLimits";
 import { v2 as cloudinary } from "cloudinary";
 
 cloudinary.config({
@@ -11,10 +20,22 @@ cloudinary.config({
 // (getAvatarUploadSignature.ts, getHighlightUploadSignature.ts, the two
 // review-photo ones, getPlacePhotoUploadSignature.ts) and the mobile
 // /api/mobile/uploads/signature route. CLOUDINARY_API_SECRET never leaves
-// the server; the folder is bound to the caller's own user id and included
-// in the signature, so the upload cannot be redirected into another user's
-// folder without invalidating it — the matching write action re-checks the
-// folder prefix to enforce ownership.
+// the server.
+//
+// The signature covers FOUR params, all of which Cloudinary re-derives and
+// verifies against the request:
+//   • folder          — bound to the caller's own user id, so an upload
+//                        can't be redirected into another user's folder
+//                        (the matching write action re-checks the prefix).
+//   • allowed_formats — Cloudinary rejects any other format server-side, so
+//                        a client can't smuggle in an executable / SVG /
+//                        arbitrary "raw" blob.
+//   • max_file_size   — Cloudinary rejects anything larger server-side, so
+//                        upload size no longer depends on a client-asserted
+//                        `bytes` field (see uploadHighlight.ts) or on trust.
+// The client MUST send these three plus `timestamp` verbatim or the
+// signature check fails — @abonten/api-client's uploadToCloudinary helpers
+// forward exactly what this returns.
 
 export type UploadSignatureKind =
   | "avatar"
@@ -37,12 +58,49 @@ const FOLDER_PREFIX: Record<UploadSignatureKind, string> = {
   place_review_photo: "place_review_photos",
 };
 
+// Per-kind format + size ceiling baked into the signature. Everything but
+// `highlight` is images-only; `highlight` also accepts a short video, so it
+// takes the video format list and the video size cap.
+const UPLOAD_CONSTRAINTS: Record<
+  UploadSignatureKind,
+  { allowedFormats: string; maxFileSizeBytes: number }
+> = {
+  avatar: {
+    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
+    maxFileSizeBytes: MAX_AVATAR_UPLOAD_SIZE_BYTES,
+  },
+  highlight: {
+    allowedFormats: `${ALLOWED_IMAGE_UPLOAD_FORMATS},${ALLOWED_VIDEO_UPLOAD_FORMATS}`,
+    maxFileSizeBytes: MAX_HIGHLIGHT_UPLOAD_SIZE_BYTES,
+  },
+  place_photo: {
+    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
+    maxFileSizeBytes: MAX_PLACE_PHOTO_SIZE_BYTES,
+  },
+  event_flyer: {
+    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
+    maxFileSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
+  },
+  event_review_photo: {
+    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
+    maxFileSizeBytes: MAX_REVIEW_PHOTO_SIZE_BYTES,
+  },
+  place_review_photo: {
+    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
+    maxFileSizeBytes: MAX_REVIEW_PHOTO_SIZE_BYTES,
+  },
+};
+
 export type CloudinarySignatureData = {
   timestamp: number;
   signature: string;
   apiKey: string | undefined;
   cloudName: string | undefined;
   folder: string;
+  /** Comma-separated allow-list; send verbatim as the `allowed_formats` param. */
+  allowedFormats: string;
+  /** Send verbatim as the `max_file_size` param (bytes). */
+  maxFileSizeBytes: number;
 };
 
 // Same shape the get*UploadSignature Server Actions have always returned:
@@ -65,9 +123,18 @@ export function buildCloudinaryUploadSignature(
 ): { status: 200; data: CloudinarySignatureData; message?: undefined } {
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `${FOLDER_PREFIX[kind]}/${userId}`;
+  const { allowedFormats, maxFileSizeBytes } = UPLOAD_CONSTRAINTS[kind];
 
+  // Every signed param must be echoed verbatim by the client or Cloudinary's
+  // own signature check fails. Param names are Cloudinary's snake_case
+  // upload-API names, not the camelCase we return.
   const signature = cloudinary.utils.api_sign_request(
-    { timestamp, folder },
+    {
+      timestamp,
+      folder,
+      allowed_formats: allowedFormats,
+      max_file_size: maxFileSizeBytes,
+    },
     process.env.CLOUDINARY_API_SECRET as string,
   );
 
@@ -79,6 +146,8 @@ export function buildCloudinaryUploadSignature(
       apiKey: process.env.CLOUDINARY_API_KEY,
       cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
       folder,
+      allowedFormats,
+      maxFileSizeBytes,
     },
   };
 }

@@ -358,6 +358,10 @@ export function usePostEventReview() {
         queryKey: ["reviews", "eligibility", input.eventId, userId],
       });
       qc.invalidateQueries({ queryKey: ["mobile", "event", input.eventId] });
+      // EventCard on the "All events" list (get_filtered_events) shows a live
+      // avg_rating — a new review moves it.
+      qc.invalidateQueries({ queryKey: ["explore"] });
+      qc.invalidateQueries({ queryKey: ["discovery"] });
     },
   });
 }
@@ -379,6 +383,8 @@ export function useDeleteEventReview() {
       qc.invalidateQueries({ queryKey: ["reviews", "awaiting", userId] });
       qc.invalidateQueries({ queryKey: ["reviews", "mine", userId] });
       qc.invalidateQueries({ queryKey: ["reviews", "eligibility"] });
+      qc.invalidateQueries({ queryKey: ["explore"] });
+      qc.invalidateQueries({ queryKey: ["discovery"] });
     },
   });
 }

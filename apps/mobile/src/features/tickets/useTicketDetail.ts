@@ -1,5 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
+import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
+import { isUuid } from "@/lib/uuid";
 import { TICKET_WITH_EVENT_SELECT } from "@abonten/core/ticketSelect";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +15,8 @@ async function fetchTicketDetail(
   // `.eq("user_id", …)` is redundant with the `ticket` owner-select RLS
   // policy but keeps the query explicit and identical in intent to
   // useMyTickets.
+  if (!isUuid(id)) throw new NotFoundError("Ticket");
+
   const { data, error } = await supabase
     .from("ticket")
     .select(TICKET_WITH_EVENT_SELECT)
@@ -21,7 +25,7 @@ async function fetchTicketDetail(
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) throw new Error("Ticket not found");
+  if (!data) throw new NotFoundError("Ticket");
 
   const row = data as unknown as Row;
   return { ...row, event: row.ticket_type.event };

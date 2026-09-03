@@ -49,8 +49,15 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
           return;
         }
 
-        const { timestamp, signature, apiKey, cloudName, folder } =
-          signatureResponse.data;
+        const {
+          timestamp,
+          signature,
+          apiKey,
+          cloudName,
+          folder,
+          allowedFormats,
+          maxFileSizeBytes,
+        } = signatureResponse.data;
 
         const { promise, xhr } = uploadToCloudinary({
           file,
@@ -59,6 +66,8 @@ export function useAvatarUpload({ onSuccess }: UseAvatarUploadOptions = {}) {
           timestamp,
           signature,
           folder,
+          allowedFormats,
+          maxFileSizeBytes,
           resourceType: "image",
           onProgress: setProgress,
         });

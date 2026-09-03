@@ -1,4 +1,6 @@
+import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
+import { isUuid } from "@/lib/uuid";
 import { useQuery } from "@tanstack/react-query";
 
 // Same select shape the web event detail page (`events/[eventCode]/page.tsx`)
@@ -55,6 +57,8 @@ async function fetchEventDetail(id: string): Promise<{
   attendanceCount: number;
   organizerRating: OrganizerRating;
 }> {
+  if (!isUuid(id)) throw new NotFoundError("Event");
+
   const { data, error } = await supabase
     .from("event")
     .select(EVENT_DETAIL_SELECT)
@@ -62,7 +66,7 @@ async function fetchEventDetail(id: string): Promise<{
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) throw new Error("Event not found");
+  if (!data) throw new NotFoundError("Event");
 
   const event = data as unknown as EventDetail;
 

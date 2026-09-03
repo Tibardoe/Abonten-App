@@ -36,6 +36,10 @@ function invalidate(
   qc.invalidateQueries({ queryKey: ["discovery", "places"] });
   qc.invalidateQueries({ queryKey: ["explore"] });
   qc.invalidateQueries({ queryKey: ["mobile", "place", placeId] });
+  // The owner's public profile "Places" tab renders PlaceCard from its own
+  // ["profile","places",userId] query — refresh it too (useCreatePlace
+  // already does; edits/photos/hours/status did not).
+  qc.invalidateQueries({ queryKey: ["profile"] });
 }
 
 export type UpdatePlaceInput = Omit<

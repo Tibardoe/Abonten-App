@@ -10,3 +10,16 @@ export function uuidv4(): string {
     return v.toString(16);
   });
 }
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * True for a well-formed RFC-4122 UUID string. Used to reject a malformed
+ * route/deep-link param before it reaches Postgres (where it would fail with
+ * `invalid input syntax for type uuid` — a deterministic error the query
+ * layer would otherwise retry).
+ */
+export function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_RE.test(value);
+}
