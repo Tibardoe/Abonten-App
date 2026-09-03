@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/app/AppHeader";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import {
   type ManageEventReview,
@@ -156,28 +155,16 @@ export default function ManageEventReviewsScreen() {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  const header = (
-    <AppHeader
-      variant="title"
-      title="Reviews"
-      backFallback={`/(app)/organizer/events/${id}`}
-    />
-  );
-
   if (q.isLoading) {
     return (
-      <View className="flex-1 bg-background">
-        {header}
-        <View className="flex-1 items-center justify-center">
-          <Spinner />
-        </View>
+      <View className="flex-1 items-center justify-center bg-background">
+        <Spinner />
       </View>
     );
   }
   if (q.isError) {
     return (
       <View className="flex-1 bg-background">
-        {header}
         <ScreenError
           message="Couldn't load reviews."
           onRetry={() => q.refetch()}
@@ -188,7 +175,6 @@ export default function ManageEventReviewsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      {header}
       <FlatList
         data={rows}
         keyExtractor={(r) => r.id}
