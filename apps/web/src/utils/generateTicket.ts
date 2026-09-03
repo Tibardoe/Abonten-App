@@ -360,27 +360,29 @@ export default async function generateTicket(
     ),
   );
 
-  // In-app "ticket confirmed" notification (+ mobile push). Best-effort — a
-  // failure here can never affect the issued tickets, which already exist.
-  after(() =>
-    createNotificationCore(supabase, {
-      userId,
-      type: "ticket_confirmed",
-      title: "Ticket confirmed",
-      body: event.title
-        ? `Your ticket for ${event.title} is confirmed.`
-        : "Your ticket is confirmed.",
-      link: "/manage/my-events",
-      data: {
-        kind: "ticket",
-        eventId,
-        ticketId: allInsertedTicketIds[0],
-      },
-      imagePublicId: event.flyer_public_id ?? null,
-      imageVersion: event.flyer_version ?? null,
-    }).catch((error) =>
-      logger.error(`Failed creating ticket notification: ${error}`),
-    ),
+  // In-app "ticket confirmed" notification (+ mobile push). Awaited inline
+  // rather than deferred with after(): it's a single fast insert, and the
+  // webhook fulfilment path (which is where most confirmations settle) can
+  // suspend the function the instant it responds, dropping after()
+  // callbacks before they flush. Still fully best-effort — the tickets
+  // already exist, so a failure here only costs the notification.
+  await createNotificationCore(supabase, {
+    userId,
+    type: "ticket_confirmed",
+    title: "Ticket confirmed",
+    body: event.title
+      ? `Your ticket for ${event.title} is confirmed.`
+      : "Your ticket is confirmed.",
+    link: "/manage/my-events",
+    data: {
+      kind: "ticket",
+      eventId,
+      ticketId: allInsertedTicketIds[0],
+    },
+    imagePublicId: event.flyer_public_id ?? null,
+    imageVersion: event.flyer_version ?? null,
+  }).catch((error) =>
+    logger.error(`Failed creating ticket notification: ${error}`),
   );
 
   return { status: 200, message: "Tickets generated successfully" };
