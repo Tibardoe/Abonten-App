@@ -10,7 +10,13 @@ import type {
   OrganizerDashboardPeriod,
   OrganizerOverviewRow,
 } from "@abonten/api-client";
-import { AppText, Chip, Overline } from "@abonten/ui-native";
+import {
+  AppText,
+  Chip,
+  Icon,
+  type IoniconName,
+  Overline,
+} from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
@@ -31,13 +37,60 @@ function money(currency: string | null, amount: number | string): string {
   })}`;
 }
 
-function Headline({ label, value }: { label: string; value: string }) {
+// Percent change vs. the previous period. null when there's no comparable
+// prior figure (e.g. "All time", or the organizer had nothing last period).
+function pctChange(current: number, previous: number | null | undefined) {
+  if (previous == null) return null;
+  if (previous === 0) return current > 0 ? 100 : null;
+  return ((current - previous) / previous) * 100;
+}
+
+function Delta({ pct }: { pct: number | null }) {
+  if (pct == null) {
+    return <AppText variant="caption">— vs last period</AppText>;
+  }
+  const up = pct >= 0;
   return (
-    <View className="min-w-[30%] flex-1 gap-1 rounded-2xl border border-border bg-card p-4">
-      <Overline>{label}</Overline>
+    <View className="flex-row items-center gap-1">
+      <Icon
+        name={up ? "trending-up" : "trending-down"}
+        size={13}
+        tone={up ? "success" : "destructive"}
+      />
+      <AppText
+        variant="caption"
+        tone={up ? "success" : "error"}
+        className="font-medium"
+      >
+        {up ? "+" : "−"}
+        {Math.abs(Math.round(pct))}%
+      </AppText>
+      <AppText variant="caption">vs last period</AppText>
+    </View>
+  );
+}
+
+function Headline({
+  label,
+  value,
+  icon,
+  delta,
+}: {
+  label: string;
+  value: string;
+  icon: IoniconName;
+  delta?: number | null;
+}) {
+  return (
+    <View className="min-w-[30%] flex-1 gap-1.5 rounded-2xl border border-border bg-card p-4">
+      <View className="flex-row items-center gap-1.5">
+        <Icon name={icon} size={14} tone="muted" />
+        <Overline>{label}</Overline>
+      </View>
       <AppText variant="screenTitle" numberOfLines={1}>
         {value}
       </AppText>
+      {delta !== undefined ? <Delta pct={delta} /> : null}
     </View>
   );
 }
@@ -78,13 +131,30 @@ export default function OrganizerDashboard() {
   const result = q.data;
   const rows: OrganizerOverviewRow[] =
     result && result.status === 200 ? result.data.current : [];
+  const prevRows: OrganizerOverviewRow[] | null =
+    result && result.status === 200 ? result.data.previous : null;
   const head = rows[0];
+  const prevHead = prevRows?.[0] ?? null;
   const hasEvents = n(head?.total_events_count) > 0;
 
   // Money is per sales currency; tickets + event counts are organiser-wide
   // and identical on every row.
   const moneyRows = rows.filter((r) => r.currency != null);
+  const prevMoney = prevRows?.filter((r) => r.currency != null) ?? null;
   const primaryCurrency = moneyRows[0]?.currency ?? "GHS";
+  // Match the primary currency row across periods so the delta compares
+  // like with like rather than "row 0" against "row 0".
+  const prevPrimaryMoney =
+    prevMoney?.find((r) => r.currency === primaryCurrency) ??
+    prevMoney?.[0] ??
+    null;
+  const grossDelta = moneyRows[0]
+    ? pctChange(n(moneyRows[0].gross_sales), prevPrimaryMoney?.gross_sales)
+    : null;
+  const ticketsDelta = pctChange(
+    n(head?.tickets_sold),
+    prevHead ? n(prevHead.tickets_sold) : null,
+  );
   const widgets =
     widgetsQuery.data?.status === 200 ? widgetsQuery.data.data : null;
 
@@ -150,18 +220,23 @@ export default function OrganizerDashboard() {
           <View className="flex-row flex-wrap gap-2">
             <Headline
               label="Gross sales"
+              icon="cash-outline"
               value={
                 moneyRows[0]
                   ? money(moneyRows[0].currency, moneyRows[0].gross_sales)
                   : money(primaryCurrency, 0)
               }
+              delta={period === "all" ? undefined : grossDelta}
             />
             <Headline
               label="Tickets sold"
+              icon="ticket-outline"
               value={n(head?.tickets_sold).toLocaleString()}
+              delta={period === "all" ? undefined : ticketsDelta}
             />
             <Headline
               label="Active events"
+              icon="calendar-outline"
               value={n(head?.active_events_count).toLocaleString()}
             />
           </View>
