@@ -132,7 +132,7 @@ export default async function activatePlacePromotion(
 
   const { data: place } = await supabase
     .from("place")
-    .select("name")
+    .select("name, slug, cover_public_id, cover_version")
     .eq("id", checkout.place_id)
     .maybeSingle();
 
@@ -145,6 +145,13 @@ export default async function activatePlacePromotion(
         ? `${place.name} is now featured (${tier.duration_label}).`
         : `Your promotion is now active (${tier.duration_label}).`,
       link: `/manage/places/${checkout.place_id}`,
+      data: {
+        kind: "place_featured",
+        placeId: checkout.place_id,
+        placeSlug: place?.slug ?? undefined,
+      },
+      imagePublicId: place?.cover_public_id ?? null,
+      imageVersion: place?.cover_version ?? null,
     },
     supabase,
   );

@@ -13,6 +13,8 @@ type PushPayload = {
   title: string;
   body?: string | null;
   link?: string | null;
+  /** Structured target (kind + entity ids) for native tap routing. */
+  data?: Record<string, unknown>;
 };
 
 export async function sendPushToUser(
@@ -37,7 +39,10 @@ export async function sendPushToUser(
     title: payload.title,
     body: payload.body ?? undefined,
     sound: "default" as const,
-    data: payload.link ? { link: payload.link } : {},
+    data: {
+      ...(payload.link ? { link: payload.link } : {}),
+      ...(payload.data ?? {}),
+    },
   }));
 
   try {
