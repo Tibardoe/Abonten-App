@@ -5,6 +5,8 @@ import {
   usePlaceDraft,
   useSavePlaceDraft,
 } from "@/features/places/usePlaceDrafts";
+import { api } from "@/lib/api";
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { uuidv4 } from "@/lib/uuid";
 import type {
   PlaceCreateResult,
@@ -63,6 +65,9 @@ const PLACE_MESSAGES = {
 
 export const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+// Keep place creation fast — the owner can add more from Edit Place later.
+export const MAX_WIZARD_GALLERY_PHOTOS = 8;
+
 export type PlaceWizardTextErrors = Partial<
   Record<"name" | "description" | "website_url" | "phone" | "whatsapp", string>
 >;
@@ -118,6 +123,12 @@ export function usePlaceWizard(resumeDraftId?: string) {
   const [openingHours, setOpeningHours] = useState<PlaceOpeningHoursInput[]>(
     DEFAULT_OPENING_HOURS,
   );
+
+  // Optional gallery photos, staged as local URIs and uploaded only after
+  // the place row exists (uploadStagedPhotos). Not persisted into the draft
+  // — same as web, where the create modal is cover-only.
+  const [photoUris, setPhotoUris] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   const categories = categoriesQuery.data ?? [];
 
@@ -243,6 +254,58 @@ export function usePlaceWizard(resumeDraftId?: string) {
   function setCover(uri: string, w: number, h: number) {
     setCoverUri(uri);
     setCoverSize({ w, h });
+  }
+
+  async function pickGalleryPhotos() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert(
+        "Photo access needed",
+        "Allow photo access to add gallery photos.",
+      );
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+    if (picked.canceled || !picked.assets?.length) return;
+    setPhotoUris((prev) =>
+      [...prev, ...picked.assets.map((a) => a.uri)].slice(
+        0,
+        MAX_WIZARD_GALLERY_PHOTOS,
+      ),
+    );
+  }
+
+  function removeGalleryPhoto(uri: string) {
+    setPhotoUris((prev) => prev.filter((u) => u !== uri));
+  }
+
+  // Best-effort: a failed gallery upload must never undo a published place.
+  // Returns how many of the staged photos were saved.
+  async function uploadStagedPhotos(placeId: string): Promise<number> {
+    if (photoUris.length === 0) return 0;
+    setUploadingPhotos(true);
+    let saved = 0;
+    try {
+      for (const uri of photoUris) {
+        try {
+          const up = await uploadToCloudinary(uri, "place_photo");
+          const res = await api.organizer.addPlacePhoto(placeId, {
+            publicId: up.publicId,
+            version: String(up.version),
+          });
+          if (res.status === 200) saved += 1;
+        } catch {
+          // keep going — the rest may still succeed
+        }
+      }
+    } finally {
+      setUploadingPhotos(false);
+    }
+    return saved;
   }
 
   function setHours(dayOfWeek: number, patch: Partial<PlaceOpeningHoursInput>) {
@@ -381,14 +444,14 @@ export function usePlaceWizard(resumeDraftId?: string) {
     });
   }
 
-  // Step order (see app/(app)/place/new.tsx): 0 Cover · 1 Basic info · 2
-  // Hours · 3 Review. Basic info (step 1) runs validateBasics() on
-  // Next-press, so it isn't gated here.
+  // Step order (see app/(app)/place/new.tsx): 0 Cover · 1 Photos (optional) ·
+  // 2 Basic info · 3 Hours · 4 Review. Basic info (step 2) runs
+  // validateBasics() on Next-press, so it isn't gated here.
   const canAdvance = useMemo(() => {
     switch (step) {
       case 0:
         return !!coverUri;
-      case 2:
+      case 3:
         return hoursComplete;
       default:
         return true;
@@ -430,6 +493,12 @@ export function usePlaceWizard(resumeDraftId?: string) {
     coverSize,
     pickCover,
     setCover,
+    // gallery photos (optional)
+    photoUris,
+    pickGalleryPhotos,
+    removeGalleryPhoto,
+    uploadStagedPhotos,
+    uploadingPhotos,
     // hours
     openingHours,
     setHours,

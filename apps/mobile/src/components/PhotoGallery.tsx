@@ -9,6 +9,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // A horizontal thumbnail strip that opens a full-screen, swipeable pager.
 // Used for place galleries (place_photo). Takes Cloudinary id/version pairs
@@ -25,6 +26,7 @@ export function PhotoGallery({
   thumbSize?: number;
 }) {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   if (!photos || photos.length === 0) return null;
@@ -92,7 +94,7 @@ export function PhotoGallery({
 
             <View
               className="absolute left-0 right-0 flex-row items-center justify-between px-4"
-              style={{ top: 28 }}
+              style={{ top: insets.top + 12 }}
             >
               <View className="rounded-full bg-black/60 px-3 py-1">
                 <Icon name="images-outline" size={16} color="#fff" />
@@ -102,8 +104,9 @@ export function PhotoGallery({
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
+                className="h-9 w-9 items-center justify-center rounded-full bg-black/60"
               >
-                <Icon name="close" size={26} color="#fff" />
+                <Icon name="close" size={22} color="#fff" />
               </Pressable>
             </View>
           </View>
