@@ -135,6 +135,19 @@ export type ValidateCheckoutResult = {
   checkoutId?: string;
 };
 
+// Read-only promo-code check (getPromoCodeCore) for the Buy Tickets preview.
+// Flat reply, matching the web `getPromoCode` action: 200 carries the
+// discount; other statuses carry `message` (invalid / inactive / expired /
+// already used / usage limit).
+export type PromoPreviewResult =
+  | {
+      status: 200;
+      id: string;
+      discountPercentage: number;
+      remainingUses: number | null;
+    }
+  | { status: 400 | 401 | 404 | 500; message: string };
+
 // One-click RSVP for a free event (registerForFreeEventCore). Flat reply:
 // 200 = registered; 300 = already have a ticket; 404 = no free
 // registration; 409 = not accepting / ended; 400 = bad occurrence.

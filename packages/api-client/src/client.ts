@@ -67,6 +67,7 @@ import type {
   PlaceServiceResult,
   PreparedCheckoutPayment,
   ProfileData,
+  PromoPreviewResult,
   PromoteEventResult,
   PromotePlaceResult,
   PromotionPaymentAttemptResult,
@@ -281,6 +282,15 @@ export function createApiClient(options: ApiClientOptions) {
             body,
             auth: true,
           },
+        );
+      },
+      /** Read-only promo-code check for the Buy Tickets screen. Returns the
+       *  discount % + remaining uses so the client can preview the saving;
+       *  the code is only *claimed* later, by validate(). */
+      promoPreview(eventId: string, code: string) {
+        return request<PromoPreviewResult>(
+          "/api/mobile/checkout/promo-preview",
+          { method: "POST", body: { eventId, code }, auth: true },
         );
       },
       /** One-click RSVP for a free ("FREE" ticket type) event — no session,
