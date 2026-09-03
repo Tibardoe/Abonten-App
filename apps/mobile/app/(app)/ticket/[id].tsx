@@ -1,3 +1,4 @@
+import { RefundStatusPanel } from "@/components/RefundStatusPanel";
 import { AppHeader } from "@/components/app/AppHeader";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
@@ -168,6 +169,16 @@ export default function TicketDetailScreen() {
             </View>
           </View>
         </View>
+
+        {/* Refund status — only for a cancelled ticket that had a payment */}
+        {ticket.status === "cancelled" && ticket.transaction ? (
+          <RefundStatusPanel
+            transactionStatus={ticket.transaction.status}
+            refundRequestedAt={ticket.transaction.refund_requested_at}
+            amount={ticket.transaction.amount}
+            currency={ticket.transaction.currency}
+          />
+        ) : null}
 
         {/* Ticket details */}
         <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">

@@ -1,8 +1,8 @@
+import { RefundStatusPanel } from "@/components/RefundStatusPanel";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
-import { getRefundStatusLabel } from "@abonten/core/refundStatus";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import { AppText, Icon, TicketStatusBadge } from "@abonten/ui-native";
 import { Image } from "expo-image";
@@ -39,11 +39,8 @@ export function TicketCard({
     "ended";
 
   const txn = ticket.transaction;
-  const refundBadge =
-    showRefundInfo && ticket.status === "cancelled" && txn
-      ? getRefundStatusLabel(txn.status, txn.refund_requested_at)
-      : null;
-  const refundAmount = txn?.amount;
+  const showRefundPanel =
+    showRefundInfo && ticket.status === "cancelled" && !!txn;
 
   const canCancel =
     ticket.status === "active" && !cancelledByOrganizer && !eventEnded;
@@ -121,22 +118,13 @@ export function TicketCard({
           ) : null}
         </View>
 
-        {refundBadge ? (
-          <View className="gap-1 rounded-lg bg-muted p-2.5">
-            <View className="flex-row items-center justify-between gap-2">
-              <AppText variant="small" className="font-semibold">
-                {refundBadge.label}
-              </AppText>
-              {refundAmount !== undefined ? (
-                <AppText variant="small" className="font-semibold">
-                  {txn?.currency} {refundAmount.toFixed(2)}
-                </AppText>
-              ) : null}
-            </View>
-            {refundBadge.description ? (
-              <AppText variant="caption">{refundBadge.description}</AppText>
-            ) : null}
-          </View>
+        {showRefundPanel && txn ? (
+          <RefundStatusPanel
+            transactionStatus={txn.status}
+            refundRequestedAt={txn.refund_requested_at}
+            amount={txn.amount}
+            currency={txn.currency}
+          />
         ) : null}
 
         {showRefundInfo && ticket.status === "cancelled" && !txn ? (
