@@ -7,6 +7,10 @@ type UploadToCloudinaryParams = {
   timestamp: number;
   signature: string;
   folder: string;
+  /** Comma-separated allow-list from the signature — sent as `allowed_formats`. */
+  allowedFormats: string;
+  /** Byte ceiling from the signature — sent as `max_file_size`. */
+  maxFileSizeBytes: number;
   resourceType: "image" | "video";
   onProgress?: (percent: number) => void;
 };
@@ -22,6 +26,8 @@ export function uploadToCloudinary({
   timestamp,
   signature,
   folder,
+  allowedFormats,
+  maxFileSizeBytes,
   resourceType,
   onProgress,
 }: UploadToCloudinaryParams): {
@@ -38,6 +44,10 @@ export function uploadToCloudinary({
       formData.append("timestamp", String(timestamp));
       formData.append("signature", signature);
       formData.append("folder", folder);
+      // Signed params — must be echoed verbatim or Cloudinary rejects the
+      // request; they also make Cloudinary enforce format + size server-side.
+      formData.append("allowed_formats", allowedFormats);
+      formData.append("max_file_size", String(maxFileSizeBytes));
 
       xhr.open(
         "POST",

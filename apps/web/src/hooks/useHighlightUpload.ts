@@ -53,8 +53,15 @@ export function useHighlightUpload(username: string) {
         return;
       }
 
-      const { timestamp, signature, apiKey, cloudName, folder } =
-        signatureResponse.data;
+      const {
+        timestamp,
+        signature,
+        apiKey,
+        cloudName,
+        folder,
+        allowedFormats,
+        maxFileSizeBytes,
+      } = signatureResponse.data;
 
       patch(setItems, id, { status: "uploading" });
 
@@ -70,6 +77,8 @@ export function useHighlightUpload(username: string) {
           timestamp,
           signature,
           folder,
+          allowedFormats,
+          maxFileSizeBytes,
           resourceType: mediaItem.type,
           onProgress: (percent) => patch(setItems, id, { progress: percent }),
         });

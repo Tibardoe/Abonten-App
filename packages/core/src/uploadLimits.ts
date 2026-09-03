@@ -31,3 +31,22 @@ export const MAX_AVATAR_SOURCE_SIZE_BYTES = 15 * 1024 * 1024;
 // a sane max dimension, a typical avatar lands well under 1MB, so this is a
 // safety net rather than the everyday gate.
 export const MAX_AVATAR_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+
+// Place gallery photos come straight from a phone camera roll (not cropped
+// marketing images like the cover), so a more generous ceiling than the 5MB
+// flyer cap. Enforced client-side (usePlaceGalleryUpload / mobile
+// useManagePlace) AND baked into the signed Cloudinary upload params.
+export const MAX_PLACE_PHOTO_SIZE_BYTES = 10 * 1024 * 1024;
+
+// A highlight can be a short video, so this is the video ceiling (Cloudinary
+// free-tier non-chunked upload tops out at 100MB). uploadHighlight.ts keeps
+// a tighter 20MB sub-limit for the image case; this is the hard cap the
+// signed Cloudinary upload params enforce for either media type.
+export const MAX_HIGHLIGHT_UPLOAD_SIZE_BYTES = 90 * 1024 * 1024;
+
+// Formats the signed Cloudinary upload signatures accept, by media class.
+// Sent verbatim as the `allowed_formats` upload param (and included in the
+// signature), so Cloudinary itself rejects anything else — the client can't
+// widen this. Kept here so client-side pickers and the server signer agree.
+export const ALLOWED_IMAGE_UPLOAD_FORMATS = "jpg,jpeg,png,webp,heic,heif";
+export const ALLOWED_VIDEO_UPLOAD_FORMATS = "mp4,mov,webm,m4v,qt";

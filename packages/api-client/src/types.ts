@@ -93,6 +93,10 @@ export type CloudinarySignatureData = {
   apiKey: string | undefined;
   cloudName: string | undefined;
   folder: string;
+  /** Comma-separated allow-list; send verbatim as the `allowed_formats` param. */
+  allowedFormats: string;
+  /** Send verbatim as the `max_file_size` param (bytes). */
+  maxFileSizeBytes: number;
 };
 
 // ---- profile ---------------------------------------------------------------
