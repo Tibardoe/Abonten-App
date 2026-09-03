@@ -1,7 +1,7 @@
-import { REMINDER_OFFSETS } from "@/features/reminders/eventReminders";
+import { ReminderOptionsSheet } from "@/components/reminders/ReminderOptionsSheet";
 import { useEventReminder } from "@/features/reminders/useEventReminder";
-import { AppText, Button, Icon, Sheet } from "@abonten/ui-native";
-import { useEffect, useState } from "react";
+import { AppText, Icon } from "@abonten/ui-native";
+import { useState } from "react";
 import { Alert, Linking, Pressable, View } from "react-native";
 
 // "Remind me" control for the event detail screen. Opens a sheet to pick one
@@ -27,19 +27,8 @@ export function EventReminderButton({
     eventTitle,
   );
   const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState<number[]>(offsets);
 
-  useEffect(() => {
-    if (open) setDraft(offsets);
-  }, [open, offsets]);
-
-  function toggle(minutes: number) {
-    setDraft((d) =>
-      d.includes(minutes) ? d.filter((m) => m !== minutes) : [...d, minutes],
-    );
-  }
-
-  async function onSave() {
+  async function onSave(draft: number[]) {
     const res = await save(draft, { eventTitle, startsAtIso });
     if (res.ok) {
       setOpen(false);
@@ -92,53 +81,14 @@ export function EventReminderButton({
         <Icon name="chevron-forward" size={16} tone="muted" />
       </Pressable>
 
-      <Sheet open={open} onClose={() => setOpen(false)} title="Remind me">
-        <View className="gap-2">
-          <AppText variant="muted">
-            Pick when to be reminded. Notifications fire even if the app is
-            closed, and your choice syncs to your other devices.
-          </AppText>
-
-          {REMINDER_OFFSETS.map((o) => {
-            const checked = draft.includes(o.minutes);
-            return (
-              <Pressable
-                key={o.minutes}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked }}
-                onPress={() => toggle(o.minutes)}
-                className="min-h-[48px] flex-row items-center gap-3 rounded-lg px-1 py-2 active:opacity-70"
-              >
-                <Icon
-                  name={checked ? "checkbox" : "square-outline"}
-                  size={22}
-                  tone={checked ? "primary" : "muted"}
-                />
-                <AppText variant="body" className="flex-1">
-                  {o.label}
-                </AppText>
-              </Pressable>
-            );
-          })}
-
-          <View className="mt-2 gap-2">
-            <Button
-              title="Save reminders"
-              fullWidth
-              loading={saving}
-              onPress={onSave}
-            />
-            {active ? (
-              <Button
-                title="Turn off reminders"
-                variant="outline"
-                fullWidth
-                onPress={onTurnOff}
-              />
-            ) : null}
-          </View>
-        </View>
-      </Sheet>
+      <ReminderOptionsSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        offsets={offsets}
+        saving={saving}
+        onSave={onSave}
+        onTurnOff={onTurnOff}
+      />
     </>
   );
 }
