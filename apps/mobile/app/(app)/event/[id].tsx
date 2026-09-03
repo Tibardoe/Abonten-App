@@ -162,6 +162,8 @@ export default function EventDetailScreen() {
           id={id}
           shareTitle={eventTitle ?? "Event"}
           shareUrl={eventCode ? eventShareUrl(eventCode) : null}
+          imagePublicId={data?.event.flyer_public_id}
+          imageVersion={data?.event.flyer_version}
         />
       }
     />

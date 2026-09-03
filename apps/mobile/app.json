@@ -13,14 +13,26 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.abonten.app"
+      "bundleIdentifier": "com.abonten.app",
+      "associatedDomains": ["applinks:abontenhub.com"]
     },
     "android": {
       "package": "com.abonten.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#121410"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "abontenhub.com", "pathPrefix": "/events" },
+            { "scheme": "https", "host": "abontenhub.com", "pathPrefix": "/places" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

@@ -23,6 +23,7 @@ import {
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import type { UserPostType } from "@abonten/types/postsType";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { FiArrowUpRight } from "react-icons/fi";
@@ -40,6 +41,53 @@ import { PiTicketBold } from "react-icons/pi";
 // price/attendance/sold-out status shown here are display-only — checkout
 // re-validates stock live) against not hitting the DB on every hit.
 export const revalidate = 60;
+
+// Rich link previews when an event is shared (from web or the mobile share
+// sheet). The flyer is served straight from Cloudinary at OG dimensions —
+// no ImageResponse route needed.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ eventCode: string }>;
+}): Promise<Metadata> {
+  const { eventCode } = await params;
+  const { data: event } = await publicSupabase
+    .from("event")
+    .select("title, description, flyer_public_id, flyer_version")
+    .eq("event_code", eventCode.toUpperCase())
+    .single();
+
+  if (!event) return { title: "Event not found" };
+
+  const title = `${event.title} | Abonten Hub`;
+  const description = event.description
+    ? String(event.description).slice(0, 155)
+    : undefined;
+  const image =
+    event.flyer_public_id && event.flyer_version
+      ? buildCloudinaryUrl(event.flyer_public_id, event.flyer_version, {
+          width: 1200,
+          height: 630,
+        })
+      : undefined;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: image ? [{ url: image, width: 1200, height: 630 }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function page({
   params,
