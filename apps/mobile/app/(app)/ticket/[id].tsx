@@ -63,6 +63,14 @@ export default function TicketDetailScreen() {
           lossless: true,
         })
       : null;
+  const flyer =
+    ticket.event.flyer_public_id && ticket.event.flyer_version
+      ? buildCloudinaryUrl(
+          ticket.event.flyer_public_id,
+          ticket.event.flyer_version,
+          { width: 900, height: 560 },
+        )
+      : null;
   const when = formatFullDateTimeRange(
     ticket.event.starts_at,
     ticket.event.ends_at,
@@ -117,49 +125,61 @@ export default function TicketDetailScreen() {
       <AppHeader variant="title" title="Ticket" backFallback="/(app)/tickets" />
       <ScrollView
         className="flex-1 bg-background"
-        contentContainerClassName="items-center gap-5 p-4 pb-10"
+        contentContainerClassName="gap-5 p-4 pb-10"
       >
-        <View className="w-full items-center gap-4 rounded-2xl border border-border bg-card p-6">
-          {qr ? (
+        {/* Flyer hero — makes the ticket recognisable at a glance */}
+        <View className="overflow-hidden rounded-2xl border border-border bg-card">
+          {flyer ? (
             <Image
-              source={{ uri: qr }}
-              style={{ width: 240, height: 240 }}
-              contentFit="contain"
+              source={{ uri: flyer }}
+              style={{ width: "100%", aspectRatio: 16 / 10 }}
+              contentFit="cover"
+              transition={150}
             />
           ) : (
-            <View className="h-60 w-60 items-center justify-center rounded-lg bg-muted">
-              <Icon name="qr-code-outline" size={40} tone="muted" />
-              <AppText variant="meta" className="mt-2">
-                No QR code
-              </AppText>
+            <View
+              className="w-full items-center justify-center bg-muted"
+              style={{ aspectRatio: 16 / 10 }}
+            >
+              <Icon name="image-outline" size={32} tone="muted" />
             </View>
           )}
-
-          <TicketStatusBadge
-            status={ticket.status}
-            cancelledByOrganizer={cancelledByOrganizer}
-            eventCancelled={cancelledByOrganizer}
-            eventEnded={eventEnded}
-          />
-
-          <AppText variant="sectionTitle" className="text-center">
-            {ticket.event.title}
-          </AppText>
-          <AppText variant="meta" className="tracking-[3px]">
-            {ticket.ticket_code}
-          </AppText>
+          <View className="gap-2 p-4">
+            <AppText variant="sectionTitle">{ticket.event.title}</AppText>
+            <View className="flex-row items-center gap-2">
+              <Icon name="calendar-outline" size={15} tone="muted" />
+              <AppText variant="meta">
+                {when.date} · {when.time}
+              </AppText>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <Icon name="location-outline" size={15} tone="muted" />
+              <AppText variant="meta" numberOfLines={1}>
+                {ticket.event.address?.full_address ?? "Location unavailable"}
+              </AppText>
+            </View>
+            <View className="mt-1">
+              <TicketStatusBadge
+                status={ticket.status}
+                cancelledByOrganizer={cancelledByOrganizer}
+                eventCancelled={cancelledByOrganizer}
+                eventEnded={eventEnded}
+              />
+            </View>
+          </View>
         </View>
 
+        {/* Ticket details */}
         <View className="w-full gap-3 rounded-xl border border-border bg-card p-4">
           <Row icon="pricetag-outline" label={ticket.ticket_type.type} />
-          <Row icon="calendar-outline" label={when.date} sub={when.time} />
-          <Row
-            icon="location-outline"
-            label={ticket.event.address?.full_address ?? "Location unavailable"}
-          />
           {ticket.seat_number ? (
             <Row icon="grid-outline" label={`Seat ${ticket.seat_number}`} />
           ) : null}
+          <Row
+            icon="barcode-outline"
+            label="Ticket reference"
+            sub={ticket.ticket_code}
+          />
           {used && ticket.used_at ? (
             <Row
               icon="checkmark-done-circle-outline"
@@ -167,6 +187,28 @@ export default function TicketDetailScreen() {
               sub={formatFullDateTimeRange(ticket.used_at, ticket.used_at).time}
             />
           ) : null}
+        </View>
+
+        {/* QR — still prominent for scanning */}
+        <View className="w-full items-center gap-2 rounded-2xl border border-border bg-card p-6">
+          {qr ? (
+            <Image
+              source={{ uri: qr }}
+              style={{ width: 220, height: 220 }}
+              contentFit="contain"
+            />
+          ) : (
+            <View className="h-56 w-56 items-center justify-center rounded-lg bg-muted">
+              <Icon name="qr-code-outline" size={40} tone="muted" />
+              <AppText variant="meta" className="mt-2">
+                No QR code
+              </AppText>
+            </View>
+          )}
+          <AppText variant="caption">Show this at entry</AppText>
+          <AppText variant="meta" className="tracking-[3px]">
+            {ticket.ticket_code}
+          </AppText>
         </View>
 
         <View className="w-full gap-3">
