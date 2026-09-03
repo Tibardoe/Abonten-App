@@ -1,3 +1,4 @@
+import { isNotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 
@@ -45,6 +46,9 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       retry: (failureCount, error) => {
         if (isAuthExpiryError(error)) return false;
+        // A missing/invalid resource won't materialise on a retry — let the
+        // screen reach its "not found" state without the backoff wait.
+        if (isNotFoundError(error)) return false;
         return failureCount < 2;
       },
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),

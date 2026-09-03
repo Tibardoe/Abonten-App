@@ -1,4 +1,6 @@
+import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
+import { isUuid } from "@/lib/uuid";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
 import { useQuery } from "@tanstack/react-query";
 
@@ -40,6 +42,8 @@ export type PlaceDetail = {
 };
 
 async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
+  if (!isUuid(id)) throw new NotFoundError("Place");
+
   const { data: place, error } = await supabase
     .from("place")
     .select("*, place_category(name, slug)")
@@ -48,7 +52,7 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
     .maybeSingle();
 
   if (error) throw error;
-  if (!place) throw new Error("Place not found");
+  if (!place) throw new NotFoundError("Place");
 
   const [
     { data: openingHours },
