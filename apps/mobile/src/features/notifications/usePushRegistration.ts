@@ -1,5 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
+import { notificationTarget } from "@/features/notifications/notificationLink";
 import { api } from "@/lib/api";
+import type { NotificationData } from "@abonten/types/notificationType";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
@@ -81,14 +83,21 @@ export function usePushRegistration() {
     };
   }, [session]);
 
-  // Route a tapped notification to its link.
+  // Route a tapped push notification. The push payload carries the same
+  // `link` + structured `data` (kind + entity ids) the in-app list uses, so
+  // routing goes through the identical notificationTarget translation —
+  // never the raw web path.
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        const link = response.notification.request.content.data?.link;
-        if (typeof link === "string" && link.length > 0) {
-          router.push(link as never);
-        }
+        const payload = response.notification.request.content.data as
+          | (NotificationData & { link?: string | null })
+          | undefined;
+        const href = notificationTarget({
+          link: payload?.link ?? null,
+          data: payload ?? null,
+        });
+        if (href) router.push(href);
       },
     );
     return () => sub.remove();

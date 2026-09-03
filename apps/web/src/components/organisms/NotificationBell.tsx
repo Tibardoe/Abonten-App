@@ -12,6 +12,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useToast } from "@/hooks/useToast";
 import { useUnreadNotificationCount } from "@/hooks/useUnreadNotificationCount";
+import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult } from "@abonten/types/pagination";
@@ -20,6 +21,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { IoNotificationsOutline } from "react-icons/io5";
@@ -311,6 +313,21 @@ export default function NotificationBell({
                       isUnread ? "bg-primary" : "bg-transparent"
                     }`}
                   />
+
+                  {notification.image_public_id &&
+                  notification.image_version ? (
+                    <Image
+                      src={buildCloudinaryUrl(
+                        notification.image_public_id,
+                        notification.image_version,
+                        { width: 96, height: 96 },
+                      )}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="mt-0.5 h-10 w-10 shrink-0 rounded-md object-cover"
+                    />
+                  ) : null}
 
                   <span className="flex-1 min-w-0">
                     <span
