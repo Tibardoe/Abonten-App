@@ -143,8 +143,6 @@ export default function PlacePhotosScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-4 p-4 pb-16"
     >
-      <AppText variant="screenTitle">Gallery photos</AppText>
-
       <Button
         title={addPhoto.isPending ? "Uploading…" : "Add photos"}
         variant="outline"

@@ -50,8 +50,6 @@ export default function PlaceManageScreen() {
         />
       }
     >
-      <AppText variant="screenTitle">Place insights</AppText>
-
       {q.isLoading ? (
         <View className="items-center py-12">
           <ActivityIndicator />

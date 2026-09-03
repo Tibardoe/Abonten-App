@@ -57,6 +57,10 @@ export default function OrganizerLayout() {
         options={{ title: "Promo codes" }}
       />
       <Stack.Screen
+        name="events/[eventId]/reviews"
+        options={{ title: "Reviews" }}
+      />
+      <Stack.Screen
         name="places/[placeId]/index"
         options={{ title: "Place insights" }}
       />

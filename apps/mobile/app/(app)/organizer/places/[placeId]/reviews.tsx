@@ -200,11 +200,6 @@ export default function PlaceReviewsScreen() {
       keyExtractor={(r) => r.id}
       renderItem={({ item }) => <ReviewCard review={item} placeId={id} />}
       contentContainerClassName="gap-3 p-4 pb-16"
-      ListHeaderComponent={
-        <AppText variant="screenTitle" className="mb-1">
-          Reviews
-        </AppText>
-      }
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
