@@ -85,6 +85,8 @@ import type {
   SavePlaceDraftResult,
   SetPlaceStatusBody,
   SubmitChargeOtpResult,
+  SubmitReportBody,
+  SubmitReportResult,
   UpdateEventBody,
   UpdateEventResult,
   UpdateEventTicketTypesBody,
@@ -1102,6 +1104,22 @@ export function createApiClient(options: ApiClientOptions) {
           `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/promote`,
           { method: "POST", body: { tierId }, auth: true },
         );
+      },
+    },
+
+    reports: {
+      /**
+       * File a user-facing content report (event / place / review / user /
+       * organizer / highlight). The reporter identity is taken from the
+       * Bearer token server-side — never the body. A second open report on
+       * the same target by the same user returns 409; a burst returns 429.
+       */
+      submit(body: SubmitReportBody) {
+        return request<SubmitReportResult>("/api/mobile/reports", {
+          method: "POST",
+          body,
+          auth: true,
+        });
       },
     },
   };

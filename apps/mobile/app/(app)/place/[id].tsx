@@ -3,6 +3,7 @@ import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { PlaceCard } from "@/components/PlaceCard";
+import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import {
   MapConfigured,
@@ -13,7 +14,6 @@ import {
 } from "@/components/map/NativeMap";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
-import { ReportSheet } from "@/components/places/ReportSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
@@ -171,11 +171,11 @@ export default function PlaceDetailScreen() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
-  const [reportTarget, setReportTarget] = useState<
-    | { kind: "place"; placeId: string; label: string }
-    | { kind: "review"; reviewId: string; label: string }
-    | null
-  >(null);
+  const [reportTarget, setReportTarget] = useState<{
+    targetType: "place" | "place_review";
+    targetId: string;
+    label: string;
+  } | null>(null);
   const { session } = useSession();
 
   const placeSlug = place?.slug;
@@ -691,8 +691,8 @@ export default function PlaceDetailScreen() {
                       session
                         ? () =>
                             setReportTarget({
-                              kind: "review",
-                              reviewId: r.id,
+                              targetType: "place_review",
+                              targetId: r.id,
                               label: `Review by ${r.reviewer?.username ?? "a guest"}`,
                             })
                         : undefined
@@ -765,8 +765,8 @@ export default function PlaceDetailScreen() {
               className="items-center py-2 active:opacity-60"
               onPress={() =>
                 setReportTarget({
-                  kind: "place",
-                  placeId: place.id,
+                  targetType: "place",
+                  targetId: place.id,
                   label: place.name,
                 })
               }
@@ -788,13 +788,9 @@ export default function PlaceDetailScreen() {
         <ReportSheet
           open={reportTarget != null}
           onClose={() => setReportTarget(null)}
-          target={
-            reportTarget ?? {
-              kind: "place",
-              placeId: place.id,
-              label: place.name,
-            }
-          }
+          targetType={reportTarget?.targetType ?? "place"}
+          targetId={reportTarget?.targetId ?? place.id}
+          label={reportTarget?.label ?? place.name}
         />
 
         <BookPlaceSheet

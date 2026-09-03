@@ -1,6 +1,7 @@
 import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import { getUserRating } from "@/actions/getUserRating";
 import AddReviewButton from "@/components/atoms/AddReviewButton";
+import ReportButton from "@/components/atoms/ReportButton";
 import UserHighlights from "@/components/molecules/UserHighlights";
 import ViewableAvatar from "@/components/molecules/ViewableAvatar";
 import { Button } from "@/components/ui/button";
@@ -70,7 +71,14 @@ export default async function ProfileDetails({
               <SettingsButton />
             </div>
           ) : (
-            <AddReviewButton username={username} />
+            <div className="flex items-center gap-3">
+              <AddReviewButton username={username} />
+              <ReportButton
+                targetType="user"
+                targetId={userDetails.data.user_id}
+                targetLabel={data?.username ?? username}
+              />
+            </div>
           )}
         </div>
         <div className="flex flex-col gap-2">
@@ -166,8 +174,13 @@ export default async function ProfileDetails({
                 <SettingsButton />
               </div>
             ) : (
-              <div className="col-span-2 font-bold">
+              <div className="col-span-2 flex items-center gap-3 font-bold">
                 <AddReviewButton username={username} />
+                <ReportButton
+                  targetType="user"
+                  targetId={userDetails.data.user_id}
+                  targetLabel={data?.username ?? username}
+                />
               </div>
             )}
 

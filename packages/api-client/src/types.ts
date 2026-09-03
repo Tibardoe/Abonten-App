@@ -1331,3 +1331,40 @@ export type DeviceTokenResult = {
   status: 200 | 400 | 401 | 500;
   message: string;
 };
+
+// ---- reports (user-facing content reporting) -----------------------
+
+export type SubmitReportBody = {
+  targetType:
+    | "event"
+    | "place"
+    | "event_review"
+    | "place_review"
+    | "user_review"
+    | "user"
+    | "organizer"
+    | "highlight";
+  targetId: string;
+  category:
+    | "spam"
+    | "fraud_scam"
+    | "misleading"
+    | "harassment"
+    | "inappropriate"
+    | "fake_listing"
+    | "safety"
+    | "copyright"
+    | "impersonation"
+    | "other";
+  details?: string | null;
+  attachment?: {
+    storagePath: string;
+    fileName: string | null;
+    mimeType: string | null;
+    sizeBytes: number | null;
+  } | null;
+};
+
+export type SubmitReportResult =
+  | { status: 200; message: string; data: { reportId: string } }
+  | { status: 400 | 401 | 404 | 409 | 429 | 500; message: string };
