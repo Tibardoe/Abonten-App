@@ -13,6 +13,7 @@ export type NotificationEntityKind =
   | "event_featured"
   | "place_featured"
   | "review_reply"
+  | "review_received"
   | "profile"
   | "place_claim"
   | "place_booking";

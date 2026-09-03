@@ -55,6 +55,14 @@ function targetFromData(
       if (data.eventId) return `/(app)/event/${data.eventId}`;
       if (data.placeId) return `/(app)/place/${data.placeId}`;
       return null;
+    case "review_received":
+      // The owner/organizer got a new review — open the screen where they
+      // can read and reply to it, not the public listing.
+      if (data.eventId)
+        return `/(app)/organizer/events/${data.eventId}/reviews`;
+      if (data.placeId)
+        return `/(app)/organizer/places/${data.placeId}/reviews`;
+      return null;
     case "profile":
       return "/(app)/settings/edit-profile";
     case "place_claim":

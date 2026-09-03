@@ -16,6 +16,7 @@ const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   place: "storefront-outline",
   place_featured: "sparkles-outline",
   review_reply: "chatbubble-ellipses-outline",
+  review_received: "star-outline",
   profile: "person-circle-outline",
   place_claim: "shield-checkmark-outline",
   place_booking: "bookmark-outline",
