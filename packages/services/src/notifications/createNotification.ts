@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendPushToUser } from "./sendPushNotification";
@@ -10,16 +11,29 @@ import { sendPushToUser } from "./sendPushNotification";
  * arbitrary users), so it is only ever called from other server-side code
  * that has already resolved and authorised the caller.
  *
- * The caller passes the Supabase client to use: an ordinary cookie/Bearer
- * client for the "notify myself as a side effect of my own action" case, or
- * a service-role client for webhook / cron paths that have no session. The
- * target user is always `input.userId`, never "whoever is signed in".
+ * The `notification` table has RLS enabled with owner-only SELECT/UPDATE
+ * and **no INSERT policy** (20260825105625_enable_rls_social_batch4), so a
+ * normal session client — even the caller's own — cannot insert a row,
+ * their own or anyone else's. Every notification write therefore goes
+ * through the service-role client here. `input.userId` is the target; the
+ * `supabase` param is kept only as a last-resort fallback if the
+ * service-role env vars are somehow unset (e.g. an unusual test harness).
  */
 export async function createNotificationCore(
   supabase: SupabaseClient,
   input: CreateNotificationInput,
 ): Promise<{ status: number; message?: string }> {
-  const { error } = await supabase.from("notification").insert({
+  let db: SupabaseClient;
+  try {
+    db = getSupabaseServiceClient();
+  } catch (e) {
+    logger.error(
+      `createNotificationCore: service client unavailable, falling back to session client: ${e}`,
+    );
+    db = supabase;
+  }
+
+  const { error } = await db.from("notification").insert({
     user_id: input.userId,
     type: input.type,
     title: input.title,
