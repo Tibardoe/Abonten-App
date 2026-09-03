@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { PlaceWizardBasicInfo } from "@/components/places/PlaceWizardBasicInfo";
 import { PlaceWizardCover } from "@/components/places/PlaceWizardCover";
 import { PlaceWizardHours } from "@/components/places/PlaceWizardHours";
+import { PlaceWizardPhotos } from "@/components/places/PlaceWizardPhotos";
 import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
@@ -27,6 +28,10 @@ const STEPS: { title: string; subtitle: string }[] = [
     subtitle: "The image people recognise the place by — add it first.",
   },
   {
+    title: "Gallery photos",
+    subtitle: "Optional — a few shots of the space. Add more later any time.",
+  },
+  {
     title: "Basic info",
     subtitle: "Name, category, description and address.",
   },
@@ -34,7 +39,7 @@ const STEPS: { title: string; subtitle: string }[] = [
   { title: "Review & publish", subtitle: "Check everything, then go live." },
 ];
 const LAST_STEP = STEPS.length - 1;
-const BASICS_STEP = 1;
+const BASICS_STEP = 2;
 
 export default function CreatePlaceScreen() {
   const router = useRouter();
@@ -49,6 +54,9 @@ export default function CreatePlaceScreen() {
     if (!res) return;
 
     if (res.status === 200 && "placeId" in res) {
+      // Best-effort — never blocks the "published" state. Failures just mean
+      // the owner adds those photos from Edit Place instead.
+      await w.uploadStagedPhotos(res.placeId);
       Alert.alert("Place published", "Your place is now live.", [
         {
           text: "View it",
@@ -98,7 +106,11 @@ export default function CreatePlaceScreen() {
       onBack={goBack}
       onNext={goNext}
       nextLabel={w.step === LAST_STEP ? "Publish" : "Next"}
-      nextDisabled={w.isSubmitting || (w.step !== BASICS_STEP && !w.canAdvance)}
+      nextDisabled={
+        w.isSubmitting ||
+        w.uploadingPhotos ||
+        (w.step !== BASICS_STEP && !w.canAdvance)
+      }
     />
   );
 
@@ -165,9 +177,10 @@ export default function CreatePlaceScreen() {
         ) : null}
 
         {w.step === 0 ? <PlaceWizardCover w={w} /> : null}
-        {w.step === 1 ? <PlaceWizardBasicInfo w={w} /> : null}
-        {w.step === 2 ? <PlaceWizardHours w={w} /> : null}
-        {w.step === 3 ? <PlaceWizardReview w={w} /> : null}
+        {w.step === 1 ? <PlaceWizardPhotos w={w} /> : null}
+        {w.step === 2 ? <PlaceWizardBasicInfo w={w} /> : null}
+        {w.step === 3 ? <PlaceWizardHours w={w} /> : null}
+        {w.step === 4 ? <PlaceWizardReview w={w} /> : null}
       </ScrollView>
     </View>
   );
