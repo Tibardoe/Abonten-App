@@ -1,49 +1,44 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { NotificationItem } from "@/components/notifications/NotificationItem";
 import { NotificationsSkeleton } from "@/components/skeletons";
-import { notificationHref } from "@/features/notifications/notificationLink";
+import { notificationTarget } from "@/features/notifications/notificationLink";
 import {
   flattenNotifications,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotifications,
 } from "@/features/notifications/useNotifications";
-import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { NotificationType } from "@abonten/types/notificationType";
 import { AppText, EmptyState, ListFooter } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
-import { FlatList, Pressable, RefreshControl, View } from "react-native";
+import { useCallback, useMemo } from "react";
+import { Pressable, RefreshControl, SectionList, View } from "react-native";
 
-function Row({
-  item,
-  onPress,
-}: {
-  item: NotificationType;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="gap-1 rounded-xl border border-border bg-card p-3 active:opacity-80"
-    >
-      <View className="flex-row items-center gap-2">
-        {item.read_at ? null : (
-          <View className="h-2 w-2 rounded-full bg-primary" />
-        )}
-        <AppText variant="bodyStrong" className="flex-1" numberOfLines={1}>
-          {item.title}
-        </AppText>
-      </View>
-      {item.body ? (
-        <AppText variant="meta" numberOfLines={2}>
-          {item.body}
-        </AppText>
-      ) : null}
-      <AppText variant="caption">
-        {formatDateWithSuffix(item.created_at)}
-      </AppText>
-    </Pressable>
-  );
+type Section = { title: string; data: NotificationType[] };
+
+function startOfDay(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+// Today / Yesterday / Earlier — the grouping is derived, not stored, so it
+// always reflects "now".
+function groupByDay(items: NotificationType[]): Section[] {
+  const today = startOfDay(new Date());
+  const yesterday = today - 86_400_000;
+  const buckets: Record<string, NotificationType[]> = {
+    Today: [],
+    Yesterday: [],
+    Earlier: [],
+  };
+  for (const n of items) {
+    const day = startOfDay(new Date(n.created_at));
+    if (day >= today) buckets.Today.push(n);
+    else if (day >= yesterday) buckets.Yesterday.push(n);
+    else buckets.Earlier.push(n);
+  }
+  return (["Today", "Yesterday", "Earlier"] as const)
+    .filter((k) => buckets[k].length > 0)
+    .map((k) => ({ title: k, data: buckets[k] }));
 }
 
 export default function Notifications() {
@@ -53,19 +48,20 @@ export default function Notifications() {
   const markOne = useMarkNotificationRead();
 
   const items = flattenNotifications(q.data?.pages);
+  const sections = useMemo(() => groupByDay(items), [items]);
   const hasUnread = items.some((i) => !i.read_at);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
 
-  // Same as the web NotificationBell row: mark unread rows read on tap, then
-  // navigate to whatever the notification points at (event / place /
-  // organizer screen / edit profile). Unknown links just mark read.
+  // Mark unread rows read on tap, then navigate to whatever the notification
+  // points at (prefers the structured `data`, falls back to the `link`).
+  // An unrecognised / removed target just marks read — never a broken screen.
   const openRow = useCallback(
     (item: NotificationType) => {
       if (!item.read_at) markOne.mutate(item.id);
-      const href = notificationHref(item.link);
+      const href = notificationTarget(item);
       if (href) router.push(href);
     },
     [markOne, router],
@@ -98,13 +94,21 @@ export default function Notifications() {
       {q.isLoading ? (
         <NotificationsSkeleton />
       ) : (
-        <FlatList
-          data={items}
+        <SectionList
+          sections={sections}
           keyExtractor={(n) => n.id}
-          renderItem={({ item }) => (
-            <Row item={item} onPress={() => openRow(item)} />
+          stickySectionHeadersEnabled={false}
+          renderSectionHeader={({ section }) => (
+            <AppText variant="overline" className="px-4 pb-1.5 pt-4">
+              {section.title}
+            </AppText>
           )}
-          contentContainerClassName="gap-3 px-4 pb-16 pt-3"
+          renderItem={({ item }) => (
+            <View className="px-4 pb-2">
+              <NotificationItem item={item} onPress={() => openRow(item)} />
+            </View>
+          )}
+          contentContainerClassName="pb-16"
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
