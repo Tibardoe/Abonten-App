@@ -25,6 +25,9 @@ export async function createNotificationCore(
     title: input.title,
     body: input.body ?? null,
     link: input.link ?? null,
+    data: input.data ?? {},
+    image_public_id: input.imagePublicId ?? null,
+    image_version: input.imageVersion ?? null,
   });
 
   if (error) {
@@ -34,11 +37,13 @@ export async function createNotificationCore(
 
   // Best-effort mobile push for the same event. Never blocks or fails the
   // in-app notification write — sendPushToUser swallows all its own errors,
-  // and a no-token user is a cheap no-op.
+  // and a no-token user is a cheap no-op. `data` (kind + entity ids) rides
+  // along so a push tap can route natively without parsing `link`.
   await sendPushToUser(input.userId, {
     title: input.title,
     body: input.body ?? null,
     link: input.link ?? null,
+    data: input.data ?? {},
   }).catch(() => {});
 
   return { status: 200 };

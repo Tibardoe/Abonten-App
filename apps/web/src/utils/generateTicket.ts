@@ -4,6 +4,7 @@ import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
+import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import {
   generateQRCodeDataURL,
   generateTicketCode,
@@ -169,7 +170,7 @@ export default async function generateTicket(
   const { data: event, error: eventFetchError } = await supabase
     .from("event")
     .select(
-      "event_code, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+      "event_code, title, flyer_public_id, flyer_version, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -356,6 +357,29 @@ export default async function generateTicket(
       authOverride,
     ).catch((error) =>
       logger.error(`Failed sending ticket purchase email: ${error}`),
+    ),
+  );
+
+  // In-app "ticket confirmed" notification (+ mobile push). Best-effort — a
+  // failure here can never affect the issued tickets, which already exist.
+  after(() =>
+    createNotificationCore(supabase, {
+      userId,
+      type: "ticket_confirmed",
+      title: "Ticket confirmed",
+      body: event.title
+        ? `Your ticket for ${event.title} is confirmed.`
+        : "Your ticket is confirmed.",
+      link: "/manage/my-events",
+      data: {
+        kind: "ticket",
+        eventId,
+        ticketId: allInsertedTicketIds[0],
+      },
+      imagePublicId: event.flyer_public_id ?? null,
+      imageVersion: event.flyer_version ?? null,
+    }).catch((error) =>
+      logger.error(`Failed creating ticket notification: ${error}`),
     ),
   );
 

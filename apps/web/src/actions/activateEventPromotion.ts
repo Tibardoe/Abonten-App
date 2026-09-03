@@ -132,7 +132,7 @@ export default async function activateEventPromotion(
 
   const { data: event } = await supabase
     .from("event")
-    .select("title")
+    .select("title, flyer_public_id, flyer_version")
     .eq("id", checkout.event_id)
     .maybeSingle();
 
@@ -145,6 +145,9 @@ export default async function activateEventPromotion(
         ? `${event.title} is now featured (${tier.duration_label}).`
         : `Your promotion is now active (${tier.duration_label}).`,
       link: `/manage/events/${checkout.event_id}`,
+      data: { kind: "event_featured", eventId: checkout.event_id },
+      imagePublicId: event?.flyer_public_id ?? null,
+      imageVersion: event?.flyer_version ?? null,
     },
     supabase,
   );

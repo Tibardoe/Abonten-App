@@ -345,7 +345,9 @@ export async function respondToPlaceReviewCore(
 ): Promise<RespondToPlaceReviewCoreResult> {
   const { data: review, error: fetchError } = await supabase
     .from("place_review")
-    .select("id, place:place_id(owner_id)")
+    .select(
+      "id, reviewer_id, place:place_id(id, owner_id, name, slug, cover_public_id, cover_version)",
+    )
     .eq("id", reviewId)
     .maybeSingle();
 
@@ -354,9 +356,10 @@ export async function respondToPlaceReviewCore(
   }
 
   // biome-ignore lint/suspicious/noExplicitAny: PostgREST's embedded-resource shape isn't worth a dedicated type for this one ownership check; no generated Supabase types exist in this repo (see PROJECT.md)
-  const ownerId = (review as any).place?.owner_id;
+  const typedReview = review as any;
+  const place = typedReview.place;
 
-  if (ownerId !== userId) {
+  if (place?.owner_id !== userId) {
     return {
       status: 403,
       message: "Not authorized to respond to this review",
@@ -376,6 +379,27 @@ export async function respondToPlaceReviewCore(
       status: 500,
       message: `Error responding to review: ${updateError.message}`,
     };
+  }
+
+  // Tell the reviewer the owner replied. Best-effort; skip self-replies.
+  if (typedReview.reviewer_id && typedReview.reviewer_id !== userId) {
+    await createNotificationCore(supabase, {
+      userId: typedReview.reviewer_id,
+      type: "review_reply",
+      title: "The owner replied to your review",
+      body: place?.name
+        ? `See the reply on your review of ${place.name}.`
+        : "See the reply on your place review.",
+      link: place?.slug ? `/places/${place.slug}` : null,
+      data: {
+        kind: "review_reply",
+        placeId: place?.id,
+        placeSlug: place?.slug ?? undefined,
+        reviewId,
+      },
+      imagePublicId: place?.cover_public_id ?? null,
+      imageVersion: place?.cover_version ?? null,
+    }).catch(() => {});
   }
 
   return { status: 200, message: "Response posted successfully!" };
