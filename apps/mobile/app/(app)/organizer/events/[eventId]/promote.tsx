@@ -134,6 +134,7 @@ export default function PromoteEventScreen() {
           </View>
           <PromotionPaymentSection
             checkoutId={reserved.checkoutId}
+            entityId={id}
             currency={reserved.currency}
             amount={reserved.amount}
             onFeatured={() => invalidate(id)}

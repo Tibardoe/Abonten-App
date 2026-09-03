@@ -47,6 +47,10 @@ function StackHost() {
         name="checkout/[sessionId]"
         options={{ animation: "slide_from_bottom" }}
       />
+      <Stack.Screen
+        name="payment/[attemptId]"
+        options={{ animation: "slide_from_bottom", gestureEnabled: false }}
+      />
     </Stack>
   );
 }
