@@ -125,6 +125,7 @@ export default function PromotePlaceScreen() {
           <PromotionPaymentSection
             kind="place"
             checkoutId={reserved.checkoutId}
+            entityId={id}
             currency={reserved.currency}
             amount={reserved.amount}
             onFeatured={() => invalidate(id)}

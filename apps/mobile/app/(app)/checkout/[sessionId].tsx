@@ -210,6 +210,7 @@ export default function CheckoutReviewScreen() {
           sessionId={sessionId ?? ""}
           currency={currency}
           total={session.total}
+          eventTitle={session.eventTitle}
         />
 
         <Pressable
