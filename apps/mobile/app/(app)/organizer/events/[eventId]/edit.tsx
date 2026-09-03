@@ -307,29 +307,37 @@ export default function EditEventScreen() {
           </View>
         ) : (
           <View className="gap-2">
-            {w.occurrences.map((o, i) => (
-              <View
-                key={o.id}
-                className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
-              >
-                <AppText variant="small">
-                  {prettyDate(o.dateIso)} · {o.start}–{o.end}
-                </AppText>
-                {!w.locked ? (
-                  <Pressable
-                    onPress={() =>
-                      w.setOccurrences((prev) =>
-                        prev.filter((_, idx) => idx !== i),
-                      )
-                    }
-                  >
-                    <AppText variant="small" tone="error">
-                      Remove
-                    </AppText>
-                  </Pressable>
-                ) : null}
-              </View>
-            ))}
+            {w.occurrences.length > 0 ? (
+              <AppText variant="overline">
+                {w.occurrences.length} date
+                {w.occurrences.length === 1 ? "" : "s"}
+              </AppText>
+            ) : null}
+            {[...w.occurrences]
+              .sort((a, b) => a.dateIso.localeCompare(b.dateIso))
+              .map((o) => (
+                <View
+                  key={o.id}
+                  className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
+                >
+                  <AppText variant="small">
+                    {prettyDate(o.dateIso)} · {o.start}–{o.end}
+                  </AppText>
+                  {!w.locked ? (
+                    <Pressable
+                      onPress={() =>
+                        w.setOccurrences((prev) =>
+                          prev.filter((x) => x.id !== o.id),
+                        )
+                      }
+                    >
+                      <AppText variant="small" tone="error">
+                        Remove
+                      </AppText>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ))}
           </View>
         )}
       </View>
