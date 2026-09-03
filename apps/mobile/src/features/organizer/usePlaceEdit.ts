@@ -315,8 +315,15 @@ export function usePlaceEdit(placeId: string) {
     return res;
   }
 
-  const services: PlaceServiceRow[] =
-    query.data && query.data.status === 200 ? query.data.data.services : [];
+  const manageData =
+    query.data && query.data.status === 200 ? query.data.data : null;
+  const services: PlaceServiceRow[] = manageData?.services ?? [];
+  // Gallery photos + the live cover public_id, read fresh from the query so
+  // the Photos section reflects add / remove / set-cover without a reload.
+  // Memoised so the empty-while-loading array stays referentially stable
+  // (PlacePhotoManager re-syncs local order off this).
+  const photos = useMemo(() => manageData?.photos ?? [], [manageData]);
+  const coverPublicId = manageData?.place.cover_public_id ?? null;
 
   return {
     isLoading: query.isLoading,
@@ -345,6 +352,9 @@ export function usePlaceEdit(placeId: string) {
     existingCover,
     newCoverUri,
     pickCover,
+    // gallery
+    photos,
+    coverPublicId,
     // location
     autocomplete,
     address,

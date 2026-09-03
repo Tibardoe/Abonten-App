@@ -1,5 +1,6 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
+import { PlacePhotoManager } from "@/components/places/PlacePhotoManager";
 import {
   useAddPlaceService,
   useRemovePlaceService,
@@ -490,6 +491,18 @@ export default function EditPlaceScreen() {
             onPress={w.pickCover}
           />
         </View>
+      </Field>
+
+      {/* Gallery photos */}
+      <Field
+        label="Photos"
+        hint="These show in the place's photo gallery. Set any one as the cover."
+      >
+        <PlacePhotoManager
+          placeId={placeId ?? ""}
+          photos={w.photos}
+          currentCoverPublicId={w.coverPublicId}
+        />
       </Field>
 
       {/* Location */}

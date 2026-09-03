@@ -1002,6 +1002,15 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", auth: true },
         );
       },
+      /** Promote an existing gallery photo to the place's cover. */
+      setPlaceCover(placeId: string, photoId: string) {
+        return request<PlacePhotoResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/photos/${encodeURIComponent(photoId)}/set-cover`,
+          { method: "POST", auth: true },
+        );
+      },
       /**
        * Cursor-paginated booking requests for one of the caller's own
        * places. Omit `status` for the "All" view. 403 if not owned.

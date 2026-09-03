@@ -118,6 +118,53 @@ export async function removePlacePhotoCore(
   return { status: 200, message: "Photo removed successfully!" };
 }
 
+// Promote an existing gallery photo to the place's cover
+// (place.cover_public_id / cover_version). No Cloudinary destroy — the asset
+// stays referenced by its place_photo row. This is the mobile/web "Set as
+// cover" action; the only other way to change a cover is updatePlaceCore
+// with a freshly uploaded image.
+export async function setPlaceCoverFromPhotoCore(
+  supabase: SupabaseClient,
+  userId: string,
+  placeId: string,
+  photoId: string,
+): Promise<PlacePhotoCoreResult> {
+  const { data: photo, error: fetchError } = await supabase
+    .from("place_photo")
+    .select("id, public_id, version, place_id, place:place_id(owner_id)")
+    .eq("id", photoId)
+    .eq("place_id", placeId)
+    .maybeSingle();
+
+  if (fetchError || !photo) {
+    return { status: 404, message: "Photo not found" };
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: embedded-resource shape, no generated Supabase types (see PROJECT.md)
+  const typedPhoto = photo as any;
+  if (typedPhoto.place?.owner_id !== userId) {
+    return { status: 403, message: "Not authorized for this place" };
+  }
+
+  const { error: updateError } = await supabase
+    .from("place")
+    .update({
+      cover_public_id: typedPhoto.public_id,
+      cover_version: typedPhoto.version,
+    })
+    .eq("id", placeId)
+    .eq("owner_id", userId);
+
+  if (updateError) {
+    return {
+      status: 500,
+      message: `Failed to set cover: ${updateError.message}`,
+    };
+  }
+
+  return { status: 200, message: "Cover photo updated!" };
+}
+
 export async function reorderPlacePhotosCore(
   supabase: SupabaseClient,
   userId: string,

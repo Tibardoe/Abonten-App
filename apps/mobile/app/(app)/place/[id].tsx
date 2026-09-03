@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
+import { PhotoGallery } from "@/components/PhotoGallery";
 import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import {
@@ -581,21 +582,7 @@ export default function PlaceDetailScreen() {
           {place.photos.length > 0 ? (
             <View className="gap-2">
               <SectionTitle>Photos</SectionTitle>
-              <View className="flex-row flex-wrap gap-2">
-                {place.photos.map((photo) => (
-                  <Image
-                    key={photo.id}
-                    source={{
-                      uri: buildCloudinaryUrl(photo.public_id, photo.version, {
-                        width: 300,
-                        height: 300,
-                      }),
-                    }}
-                    style={{ width: "31%", aspectRatio: 1, borderRadius: 8 }}
-                    contentFit="cover"
-                  />
-                ))}
-              </View>
+              <PhotoGallery photos={place.photos} />
             </View>
           ) : null}
 
