@@ -4,12 +4,14 @@ import "../global.css";
 import "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/auth/SessionProvider";
 import { BrandedSplash } from "@/components/BrandedSplash";
+import { OfflineBanner } from "@/components/app/OfflineBanner";
 import {
   consumePendingRedirect,
   isProtectedPath,
   setPendingRedirect,
 } from "@/lib/authRedirect";
 import { euclidFonts } from "@/lib/fonts";
+import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { I18nProvider } from "@abonten/ui-native/i18n";
@@ -71,7 +73,12 @@ function RootNavigator() {
     return <BrandedSplash />;
   }
 
-  return <Slot />;
+  return (
+    <>
+      <Slot />
+      <OfflineBanner />
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -79,6 +86,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     startSupabaseAutoRefresh();
+    startNetworkSync();
   }, []);
 
   // Never let the splash outlive a slow cold start.

@@ -57,8 +57,15 @@ export default function WalletScreen() {
   const [phone, setPhone] = useState("");
 
   const methods = data?.status === 200 ? (data.data ?? []) : [];
+  // A non-200 envelope (401 / 500) isn't an `isError` throw — treat it as one
+  // so the screen shows a retry, not a misleading "no wallets yet".
+  const loadFailed = isError || (data != null && data.status !== 200);
   const networkList =
     networks.data?.status === 200 ? (networks.data.data ?? []) : [];
+  const networksFailed =
+    !networks.isLoading &&
+    networkList.length === 0 &&
+    (networks.isError || networks.data?.status !== 200);
 
   function closeSheet() {
     setStep("closed");
@@ -142,13 +149,15 @@ export default function WalletScreen() {
     );
   }
 
-  if (isError) {
+  if (loadFailed) {
     return (
       <View className="flex-1 bg-background">
         <AppHeader variant="branded" />
         <View className="flex-1 items-center justify-center gap-3 px-6">
+          <Icon name="cloud-offline-outline" size={28} tone="muted" />
           <AppText variant="muted" className="text-center">
-            Couldn't load your payment methods.
+            {(data != null && data.status !== 200 && data.message) ||
+              "Couldn't load your payment methods."}
           </AppText>
           <Button title="Retry" onPress={() => refetch()} />
         </View>
@@ -196,7 +205,23 @@ export default function WalletScreen() {
               <View className="flex-row gap-4">
                 {!m.is_default ? (
                   <Pressable
-                    onPress={() => setDefault.mutate(m.id)}
+                    onPress={() =>
+                      setDefault.mutate(m.id, {
+                        onSettled: (res) => {
+                          if (res && res.status !== 200) {
+                            Alert.alert(
+                              "Couldn't set default",
+                              res.message ?? "Please try again.",
+                            );
+                          }
+                        },
+                        onError: () =>
+                          Alert.alert(
+                            "Couldn't set default",
+                            "Please try again.",
+                          ),
+                      })
+                    }
                     disabled={setDefault.isPending}
                   >
                     <AppText
@@ -274,6 +299,19 @@ export default function WalletScreen() {
         ) : step === "momo" ? (
           <View className="gap-3">
             <AppText variant="label">Network</AppText>
+            {networksFailed ? (
+              <View className="gap-2 rounded-xl border border-border bg-card p-3">
+                <AppText variant="small" tone="muted">
+                  Couldn't load the mobile money networks.
+                </AppText>
+                <Button
+                  title="Retry"
+                  size="sm"
+                  variant="outline"
+                  onPress={() => networks.refetch()}
+                />
+              </View>
+            ) : null}
             <View className="flex-row flex-wrap gap-2">
               {networkList.map((n) => {
                 const selected = n.code === networkCode;
@@ -320,6 +358,7 @@ export default function WalletScreen() {
               title="Save wallet"
               fullWidth
               loading={addMomo.isPending}
+              disabled={addMomo.isPending || networkList.length === 0}
               onPress={submitMomo}
             />
           </View>

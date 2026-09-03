@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import {
   CLAIM_DOC_MAX_FILES,
   type StagedClaimDoc,
+  guessMime,
   uploadClaimDocument,
   useSubmitPlaceClaim,
   validateClaimDoc,
@@ -163,10 +164,11 @@ export function ClaimPlaceSheet({
     });
     if (picked.canceled || !picked.assets?.length) return;
     const a = picked.assets[0];
+    const name = a.fileName ?? `photo-${Date.now()}.jpg`;
     stage({
       uri: a.uri,
-      name: a.fileName ?? `photo-${Date.now()}.jpg`,
-      mimeType: a.mimeType ?? "image/jpeg",
+      name,
+      mimeType: guessMime(a.uri, name, a.mimeType ?? undefined, "image/jpeg"),
       sizeBytes: typeof a.fileSize === "number" ? a.fileSize : null,
       isImage: true,
     });
@@ -180,10 +182,16 @@ export function ClaimPlaceSheet({
     });
     if (picked.canceled || !picked.assets?.length) return;
     const a = picked.assets[0];
-    const mime = a.mimeType ?? "application/octet-stream";
+    const name = a.name ?? `document-${Date.now()}`;
+    const mime = guessMime(
+      a.uri,
+      name,
+      a.mimeType ?? undefined,
+      "application/octet-stream",
+    );
     stage({
       uri: a.uri,
-      name: a.name ?? `document-${Date.now()}`,
+      name,
       mimeType: mime,
       sizeBytes: typeof a.size === "number" ? a.size : null,
       isImage: mime.startsWith("image/"),

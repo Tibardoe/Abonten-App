@@ -63,6 +63,35 @@ export function validateClaimDoc(file: {
   return null;
 }
 
+const EXT_TO_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  heic: "image/heic",
+  heif: "image/heic",
+  pdf: "application/pdf",
+};
+
+/**
+ * Best-effort MIME for a picked file. The image picker often omits
+ * `mimeType`, and a bare fallback would let an unsupported file (e.g. a
+ * `.gif` or `.tiff`) slip past validateClaimDoc. Prefer the picker's value,
+ * then the URI/name extension, then the caller's fallback.
+ */
+export function guessMime(
+  uri: string,
+  name: string | undefined,
+  pickerMime: string | undefined,
+  fallback: string,
+): string {
+  if (pickerMime && pickerMime !== "application/octet-stream")
+    return pickerMime;
+  const ext = (name ?? uri).split("?")[0].split(".").pop()?.toLowerCase();
+  if (ext && EXT_TO_MIME[ext]) return EXT_TO_MIME[ext];
+  return fallback;
+}
+
 function extensionFor(mimeType: string, name: string): string {
   const fromName = name.includes(".") ? name.split(".").pop() : null;
   if (fromName) return fromName.toLowerCase();
