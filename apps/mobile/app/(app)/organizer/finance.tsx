@@ -133,8 +133,21 @@ export default function OrganizerFinanceScreen() {
     finance.data && finance.data.status === 200 ? finance.data.data : [];
   const allRows = flattenOrganizerLedger(ledger.data?.pages);
   const rows = useMemo(() => {
+    // One ledger entry can surface as several transaction rows (a ticket
+    // sale and its service fee share an entry_id), and keyset pages can
+    // re-emit a boundary row. Collapse on (entry_id, line) so the list has
+    // genuinely unique items — the FlatList key is derived from the same
+    // pair. (The RPC cursor using the non-unique entry_id as its id column
+    // is a pre-existing server-side fragility — flagged, not changed here.)
+    const seen = new Set<string>();
+    const deduped = allRows.filter((r) => {
+      const key = `${r.entry_id}:${r.line}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
     const lines = FILTER_LINES[filter];
-    return lines ? allRows.filter((r) => lines.includes(r.line)) : allRows;
+    return lines ? deduped.filter((r) => lines.includes(r.line)) : deduped;
   }, [allRows, filter]);
   const ledgerFailed =
     ledger.isError ||
@@ -190,7 +203,7 @@ export default function OrganizerFinanceScreen() {
     <FlatList
       className="flex-1 bg-background"
       data={rows}
-      keyExtractor={(r) => r.entry_id}
+      keyExtractor={(r) => `${r.entry_id}:${r.line}`}
       renderItem={({ item }) => <LedgerRow row={item} />}
       ListHeaderComponent={header}
       contentContainerClassName="gap-3 p-4 pb-16"
