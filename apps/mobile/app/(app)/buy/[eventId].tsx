@@ -1,8 +1,16 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
-import { useValidateCheckout } from "@/features/checkout/useCheckout";
+import {
+  usePromoPreview,
+  useValidateCheckout,
+} from "@/features/checkout/useCheckout";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
+import {
+  allocatePromoEligibility,
+  computeCheckoutFee,
+  computeLineAmount,
+} from "@abonten/core/checkoutPricing";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import {
@@ -10,16 +18,22 @@ import {
   Button,
   Chip,
   Icon,
+  Input,
   ScreenError,
   Spinner,
   Stepper,
 } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, ScrollView, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
 const MAX_PER_TYPE = 10;
+
+type AppliedPromo = {
+  code: string;
+  discountPercentage: number;
+  remainingUses: number | null;
+};
 
 function isOnSale(
   t: { available_from: string | null; available_until: string | null },
@@ -32,42 +46,87 @@ function isOnSale(
   return true;
 }
 
-// The mobile "Buy tickets" screen — one scroll, like the web checkout modal:
-// pick an occurrence + quantities, add a promo code, see the running
-// subtotal, then Proceed. The promo code is validated + claimed server-side
-// by api.checkout.validate on Proceed; a bad code surfaces its message here.
-// No money moves on this screen — that happens on /checkout/[sessionId].
+function money(currency: string, n: number): string {
+  return `${currency} ${n.toFixed(2)}`;
+}
+
+// The mobile "Buy tickets" screen: pick an occurrence + quantities, optionally
+// apply a promo code (previewed live via api.checkout.promoPreview — the same
+// getPromoCodeCore the web CheckoutPromoCodeBox uses), review the order, then
+// Proceed. No money moves here — the code is claimed + the fee finalised by
+// api.checkout.validate on /checkout/[sessionId].
 export default function BuyTicketsScreen() {
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
   const pathname = usePathname();
-  const c = useThemeColors();
   const { session } = useSession();
   const { data, isLoading, isError, refetch } = useEventDetail(eventId);
   const validate = useValidateCheckout();
+  const promoPreview = usePromoPreview();
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [occurrenceId, setOccurrenceId] = useState<string | null>(null);
-  const [promo, setPromo] = useState("");
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [applied, setApplied] = useState<AppliedPromo | null>(null);
 
   const event = data?.event;
   const now = Date.now();
   const occurrences = event?.event_occurrence ?? [];
   const activeOccurrenceId = occurrenceId ?? occurrences[0]?.id ?? null;
-
   const currency = event?.ticket_type[0]?.currency ?? "GHS";
-  const subtotal = useMemo(() => {
-    if (!event) return 0;
-    return event.ticket_type.reduce(
-      (sum, t) => sum + (quantities[t.id] ?? 0) * t.price,
-      0,
-    );
-  }, [event, quantities]);
-  const totalCount = useMemo(
-    () => Object.values(quantities).reduce((a, b) => a + b, 0),
-    [quantities],
+
+  const lines = useMemo(
+    () =>
+      (event?.ticket_type ?? [])
+        .map((t) => ({
+          id: t.id,
+          quantity: quantities[t.id] ?? 0,
+          price: t.price,
+        }))
+        .filter((l) => l.quantity > 0),
+    [event, quantities],
   );
+
+  const totalCount = useMemo(
+    () => lines.reduce((a, l) => a + l.quantity, 0),
+    [lines],
+  );
+  const subtotal = useMemo(
+    () => lines.reduce((sum, l) => sum + l.quantity * l.price, 0),
+    [lines],
+  );
+
+  // Live discount preview — mirrors the web CheckoutModal: allocate the code's
+  // remaining uses across the selected lines, discount only the eligible units.
+  const { discount, eligibleUnits } = useMemo(() => {
+    if (!applied || applied.discountPercentage <= 0)
+      return { discount: 0, eligibleUnits: 0 };
+    const eligibleByLine = allocatePromoEligibility(
+      lines,
+      applied.remainingUses,
+    );
+    let d = 0;
+    let units = 0;
+    for (const l of lines) {
+      const elig = eligibleByLine[l.id] ?? 0;
+      units += elig;
+      d += computeLineAmount(
+        l.quantity,
+        l.price,
+        applied.discountPercentage,
+        elig,
+      ).discount;
+    }
+    return { discount: d, eligibleUnits: units };
+  }, [applied, lines]);
+
+  const discountedSubtotal = Math.max(0, subtotal - discount);
+  const feePreview = computeCheckoutFee(discountedSubtotal);
+  const totalPreview = discountedSubtotal + feePreview;
+  const partialPromo =
+    applied != null && eligibleUnits > 0 && eligibleUnits < totalCount;
 
   const header = (
     <AppHeader variant="title" title="Buy tickets" backFallback="/(app)" />
@@ -128,6 +187,30 @@ export default function BuyTicketsScreen() {
     }));
   }
 
+  async function applyPromo() {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoError(null);
+    const res = await promoPreview.mutateAsync({ eventId, code });
+    if (res.status === 200) {
+      setApplied({
+        code,
+        discountPercentage: res.discountPercentage,
+        remainingUses: res.remainingUses,
+      });
+      setPromoOpen(false);
+      setPromoInput("");
+      return;
+    }
+    setPromoError(res.message ?? "That promo code couldn't be applied.");
+  }
+
+  function removePromo() {
+    setApplied(null);
+    setPromoError(null);
+    setPromoInput("");
+  }
+
   async function proceed() {
     if (totalCount === 0) return;
     if (!session) {
@@ -135,13 +218,11 @@ export default function BuyTicketsScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
-    setPromoError(null);
-    const trimmed = promo.trim();
     const res = await validate.mutateAsync({
       eventId,
       quantities,
       occurrenceId: activeOccurrenceId,
-      promoCode: trimmed || null,
+      promoCode: applied?.code ?? null,
     });
 
     if (res.status === 200 && res.checkoutSessionId) {
@@ -152,7 +233,10 @@ export default function BuyTicketsScreen() {
       router.replace(`/(app)/checkout/${res.checkoutId}`);
       return;
     }
-    if (trimmed) {
+    if (applied) {
+      // The code passed preview but failed the authoritative claim — surface
+      // it against the promo row and drop it so Proceed can succeed without.
+      setApplied(null);
       setPromoError(res.message ?? "That promo code couldn't be applied.");
       return;
     }
@@ -167,16 +251,21 @@ export default function BuyTicketsScreen() {
       {header}
       <ScrollView
         className="flex-1"
-        contentContainerClassName="gap-5 p-4 pb-8"
+        contentContainerClassName="gap-6 p-4 pb-8"
         keyboardShouldPersistTaps="handled"
       >
-        <AppText variant="sectionHeading">{event.title}</AppText>
+        <View className="gap-1">
+          <AppText variant="sectionHeading">{event.title}</AppText>
+          {occurrences.length <= 1 && occurrences[0]?.starts_at ? (
+            <AppText variant="meta">
+              {formatDateWithSuffix(occurrences[0].starts_at)}
+            </AppText>
+          ) : null}
+        </View>
 
         {occurrences.length > 1 ? (
           <View className="gap-2">
-            <AppText variant="small" className="font-semibold">
-              Date
-            </AppText>
+            <AppText variant="overline">Date</AppText>
             <View className="flex-row flex-wrap gap-2">
               {occurrences.map((o) => (
                 <Chip
@@ -192,9 +281,7 @@ export default function BuyTicketsScreen() {
 
         {/* Ticket types + quantity */}
         <View className="gap-2">
-          <AppText variant="small" className="font-semibold">
-            Tickets
-          </AppText>
+          <AppText variant="overline">Tickets</AppText>
           {event.ticket_type.map((t) => {
             const onSale = isOnSale(t, now);
             const stockOut = t.quantity != null && t.quantity <= 0;
@@ -204,14 +291,14 @@ export default function BuyTicketsScreen() {
             return (
               <View
                 key={t.id}
-                className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card p-3"
+                className="flex-row items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5"
               >
                 <View className="flex-1">
                   <AppText variant="body" className="font-medium">
                     {t.type}
                   </AppText>
                   <AppText variant="meta">
-                    {t.price === 0 ? "Free" : `${t.currency} ${t.price}`}
+                    {t.price === 0 ? "Free" : money(t.currency, t.price)}
                     {stockOut
                       ? " · Sold out"
                       : !onSale
@@ -240,45 +327,108 @@ export default function BuyTicketsScreen() {
 
         {/* Promo code */}
         <View className="gap-2">
-          <AppText variant="small" className="font-semibold">
-            Promo code
-          </AppText>
-          <TextInput
-            value={promo}
-            onChangeText={(v) => {
-              setPromo(v);
-              if (promoError) setPromoError(null);
-            }}
-            placeholder="Enter code (optional)"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            className="rounded-lg border border-input bg-background px-3 py-2.5 text-[14px] text-foreground"
-            placeholderTextColor={c["muted-foreground"]}
-          />
-          {promoError ? (
+          {applied ? (
+            <View className="gap-1.5 rounded-xl border border-primary/40 bg-primary/5 p-3.5">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-2">
+                  <Icon name="pricetag" size={15} tone="primary" />
+                  <AppText variant="body" className="font-semibold">
+                    {applied.code}
+                  </AppText>
+                  <AppText variant="meta" tone="brand">
+                    {applied.discountPercentage}% off
+                  </AppText>
+                </View>
+                <Pressable onPress={removePromo} hitSlop={8}>
+                  <AppText
+                    variant="small"
+                    tone="brand"
+                    className="font-semibold"
+                  >
+                    Remove
+                  </AppText>
+                </Pressable>
+              </View>
+              {partialPromo ? (
+                <AppText variant="caption">
+                  Applies to {eligibleUnits} of {totalCount} tickets.
+                </AppText>
+              ) : null}
+            </View>
+          ) : promoOpen ? (
+            <View className="gap-2">
+              <AppText variant="overline">Promo code</AppText>
+              <View className="flex-row gap-2">
+                <Input
+                  value={promoInput}
+                  onChangeText={(v) => {
+                    setPromoInput(v);
+                    if (promoError) setPromoError(null);
+                  }}
+                  placeholder="Enter code"
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  className="flex-1"
+                  onSubmitEditing={applyPromo}
+                  returnKeyType="done"
+                />
+                <Button
+                  title="Apply"
+                  onPress={applyPromo}
+                  loading={promoPreview.isPending}
+                  disabled={promoPreview.isPending || !promoInput.trim()}
+                />
+              </View>
+              {promoError ? (
+                <AppText variant="caption" tone="error">
+                  {promoError}
+                </AppText>
+              ) : null}
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => setPromoOpen(true)}
+              className="flex-row items-center gap-2 py-1 active:opacity-60"
+            >
+              <Icon name="pricetag-outline" size={15} tone="primary" />
+              <AppText variant="small" tone="brand" className="font-semibold">
+                Have a promo code?
+              </AppText>
+            </Pressable>
+          )}
+          {applied && promoError ? (
             <AppText variant="caption" tone="error">
               {promoError}
             </AppText>
-          ) : (
-            <AppText variant="caption">
-              Checked when you continue. Any discount shows on the next screen.
-            </AppText>
-          )}
+          ) : null}
         </View>
 
-        {/* Summary */}
+        {/* Order summary */}
         <View className="gap-2 rounded-xl border border-border bg-card p-4">
-          <View className="flex-row items-center justify-between">
-            <AppText variant="muted">
-              {totalCount} ticket{totalCount === 1 ? "" : "s"}
-            </AppText>
-            <AppText variant="cardTitle">
-              {currency} {subtotal}
-            </AppText>
-          </View>
+          <AppText variant="overline">Order summary</AppText>
+          <SummaryLine
+            label={`Subtotal · ${totalCount} ticket${totalCount === 1 ? "" : "s"}`}
+            value={money(currency, subtotal)}
+          />
+          {discount > 0 ? (
+            <SummaryLine
+              label="Discount"
+              value={`− ${money(currency, discount)}`}
+              tone="brand"
+            />
+          ) : null}
+          <SummaryLine
+            label="Service fee (est.)"
+            value={money(currency, feePreview)}
+          />
+          <View className="my-1 h-px bg-border" />
+          <SummaryLine
+            label="Estimated total"
+            value={money(currency, totalPreview)}
+            strong
+          />
           <AppText variant="caption">
-            An Abonten service fee is added at checkout, where you'll confirm
-            the final total before paying.
+            The final total is confirmed on the next screen before you pay.
           </AppText>
         </View>
       </ScrollView>
@@ -294,6 +444,37 @@ export default function BuyTicketsScreen() {
           onPress={proceed}
         />
       </View>
+    </View>
+  );
+}
+
+function SummaryLine({
+  label,
+  value,
+  strong,
+  tone,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  tone?: "brand";
+}) {
+  return (
+    <View className="flex-row items-center justify-between">
+      <AppText
+        variant={strong ? "body" : "small"}
+        tone={tone}
+        className={strong ? "font-semibold" : undefined}
+      >
+        {label}
+      </AppText>
+      <AppText
+        variant={strong ? "body" : "small"}
+        tone={tone}
+        className={strong ? "font-semibold" : "font-medium"}
+      >
+        {value}
+      </AppText>
     </View>
   );
 }

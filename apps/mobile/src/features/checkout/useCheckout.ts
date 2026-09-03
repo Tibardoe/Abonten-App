@@ -16,6 +16,15 @@ export function useValidateCheckout() {
   });
 }
 
+// Read-only "Apply promo code" check on the Buy Tickets screen. The code is
+// only *claimed* later, by validate() on Proceed.
+export function usePromoPreview() {
+  return useMutation({
+    mutationFn: (v: { eventId: string; code: string }) =>
+      api.checkout.promoPreview(v.eventId, v.code),
+  });
+}
+
 // Authoritative amount owed for one pending session (subtotal / discount /
 // service fee / total), re-read live server-side.
 export function useCheckoutPrepare(checkoutSessionId: string | undefined) {
