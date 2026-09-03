@@ -3,7 +3,7 @@
     "name": "Abonten",
     "slug": "abonten",
     "scheme": "abonten",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
@@ -19,7 +19,7 @@
       "package": "com.abonten.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#4FD9C4"
+        "backgroundColor": "#121410"
       }
     },
     "web": {
@@ -39,11 +39,10 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF",
+          "resizeMode": "cover",
+          "backgroundColor": "#121410",
           "dark": {
-            "backgroundColor": "#0B0B0B"
+            "backgroundColor": "#121410"
           }
         }
       ],
