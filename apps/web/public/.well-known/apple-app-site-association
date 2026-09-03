@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.abonten.app"],
+        "components": [
+          { "/": "/events/*", "comment": "Open an event in the app" },
+          { "/": "/places/*", "comment": "Open a place in the app" }
+        ]
+      }
+    ]
+  }
+}

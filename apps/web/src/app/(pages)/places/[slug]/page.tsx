@@ -58,14 +58,35 @@ export async function generateMetadata({
   const categoryName = place.place_category?.name as string | undefined;
   const addressText = (place.address as PlaceAddress)?.full_address;
   const location = [categoryName, addressText].filter(Boolean).join(" · ");
+  const title = categoryName
+    ? `${place.name} - ${categoryName} | Abonten Hub`
+    : `${place.name} | Abonten Hub`;
+  const description = place.description
+    ? place.description.slice(0, 155)
+    : location || undefined;
+  const image =
+    place.cover_public_id && place.cover_version
+      ? buildCloudinaryUrl(place.cover_public_id, place.cover_version, {
+          width: 1200,
+          height: 630,
+        })
+      : undefined;
 
   return {
-    title: categoryName
-      ? `${place.name} - ${categoryName} | Abonten Hub`
-      : `${place.name} | Abonten Hub`,
-    description: place.description
-      ? place.description.slice(0, 155)
-      : location || undefined,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: image ? [{ url: image, width: 1200, height: 630 }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
 }
 

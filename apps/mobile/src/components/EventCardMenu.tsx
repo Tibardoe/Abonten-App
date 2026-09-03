@@ -6,7 +6,7 @@ import {
 } from "@/features/favorites/useFavorites";
 import { useEventReminder } from "@/features/reminders/useEventReminder";
 import { setPendingRedirect } from "@/lib/authRedirect";
-import { eventShareUrl, shareLink } from "@/lib/share";
+import { shareEventWithImage } from "@/lib/share";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { AppText, Icon, type IoniconName, Sheet } from "@abonten/ui-native";
@@ -199,7 +199,12 @@ export function EventCardMenu({
           label="Share"
           onPress={() => {
             onClose();
-            shareLink(event.title, eventShareUrl(event.event_code));
+            shareEventWithImage(
+              event.title,
+              event.event_code,
+              event.flyer_public_id,
+              event.flyer_version,
+            );
           }}
         />
 

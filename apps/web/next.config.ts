@@ -10,7 +10,13 @@ const nextConfig: NextConfig = {
 
   // Workspace packages shipped as raw TypeScript source (no build step) —
   // Next/Turbopack must compile them the same as app code.
-  transpilePackages: ["@abonten/core", "@abonten/types", "@abonten/validation", "@abonten/i18n", "@abonten/ui-tokens"],
+  transpilePackages: [
+    "@abonten/core",
+    "@abonten/types",
+    "@abonten/validation",
+    "@abonten/i18n",
+    "@abonten/ui-tokens",
+  ],
 
   experimental: {
     serverActions: { bodySizeLimit: "5mb" }, // ✅ Enable Server Actions
@@ -33,6 +39,18 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
     ],
+  },
+
+  // The Apple App Site Association file is extension-less; iOS requires it be
+  // served as application/json. (assetlinks.json already gets the right type
+  // from its extension.)
+  async headers() {
+    return [
+      {
+        source: "/.well-known/apple-app-site-association",
+        headers: [{ key: "Content-Type", value: "application/json" }],
+      },
+    ];
   },
 
   // /manage/attendance/* was removed — its functionality was fully absorbed
