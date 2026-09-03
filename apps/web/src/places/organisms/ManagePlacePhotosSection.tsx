@@ -2,6 +2,7 @@
 
 import { removePlacePhoto } from "@/actions/removePlacePhoto";
 import { reorderPlacePhotos } from "@/actions/reorderPlacePhotos";
+import { setPlaceCoverFromPhoto } from "@/actions/setPlaceCoverFromPhoto";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { usePlaceGalleryUpload } from "@/hooks/usePlaceGalleryUpload";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -39,6 +40,7 @@ export default function ManagePlacePhotosSection({
   );
   const [isRemoving, setIsRemoving] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
+  const [settingCoverId, setSettingCoverId] = useState<string | null>(null);
 
   const { items, start, dismiss, isUploading } = usePlaceGalleryUpload(
     placeId,
@@ -60,6 +62,16 @@ export default function ManagePlacePhotosSection({
     } finally {
       setIsRemoving(false);
       setPhotoPendingRemoval(null);
+    }
+  };
+
+  const handleSetCover = async (photoId: string) => {
+    setSettingCoverId(photoId);
+    try {
+      await setPlaceCoverFromPhoto(placeId, photoId);
+      onChanged();
+    } finally {
+      setSettingCoverId(null);
     }
   };
 
@@ -182,6 +194,15 @@ export default function ManagePlacePhotosSection({
                   <IoTrashOutline />
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleSetCover(photo.id)}
+                disabled={settingCoverId !== null}
+                className="text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+              >
+                {settingCoverId === photo.id ? "Setting…" : "Set as cover"}
+              </button>
             </div>
           ))}
         </div>

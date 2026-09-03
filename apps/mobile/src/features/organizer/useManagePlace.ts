@@ -151,3 +151,13 @@ export function useRemovePlacePhoto(placeId: string) {
     onSuccess: () => invalidate(qc, placeId),
   });
 }
+
+// Promote a gallery photo to the place cover (place.cover_public_id/version).
+export function useSetPlaceCover(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (photoId: string) =>
+      api.organizer.setPlaceCover(placeId, photoId),
+    onSuccess: () => invalidate(qc, placeId),
+  });
+}
