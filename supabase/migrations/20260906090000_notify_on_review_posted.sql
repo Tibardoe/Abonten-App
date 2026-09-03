@@ -13,16 +13,23 @@
 -- writes (type + data jsonb + image ids) so the mobile notifications screen
 -- renders a thumbnail and deep-links to the owner's review-management screen.
 --
--- No RLS on `notification` (unchanged, app-layer-only by design), and
--- `authenticated` already has INSERT on it, so the trigger functions run as
--- INVOKER with no new grants. `set search_path = ''` + fully-qualified
--- names satisfy the function_search_path_mutable linter. Best-effort by
--- nature: a self-review or a review whose parent row can't be found is
--- skipped, never errored, so a review insert can't fail on this.
+-- `notification` has RLS enabled with owner-only SELECT/UPDATE and NO
+-- INSERT policy (20260825105625_enable_rls_social_batch4) — a normal
+-- session client cannot insert a row for another user. These triggers
+-- insert for the event organizer / place owner, who is a different user
+-- from the reviewer whose insert fires them, so they must be
+-- SECURITY DEFINER (owned by postgres, bypasses RLS) — the same pattern
+-- cancel_event_and_release_tickets and the ledger RPCs use. Without it the
+-- AFTER INSERT trigger failure would roll back the whole review insert.
+-- `set search_path = ''` + fully-qualified names satisfy the
+-- function_search_path_mutable linter and are mandatory for a DEFINER
+-- function. Best-effort by nature: a self-review or a review whose parent
+-- row can't be found is skipped, never errored.
 
 create or replace function public.notify_event_organizer_on_review()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 declare
@@ -60,6 +67,7 @@ $$;
 create or replace function public.notify_place_owner_on_review()
 returns trigger
 language plpgsql
+security definer
 set search_path = ''
 as $$
 declare
@@ -104,3 +112,11 @@ drop trigger if exists trg_notify_place_owner_on_review on public.place_review;
 create trigger trg_notify_place_owner_on_review
   after insert on public.place_review
   for each row execute function public.notify_place_owner_on_review();
+
+-- Trigger functions are never meant to be called as RPCs (a direct call
+-- errors, "trigger functions can only be called as triggers"), and trigger
+-- execution doesn't need the invoking role to hold EXECUTE. Revoke it so
+-- the anon/authenticated_security_definer_function_executable linter is
+-- clean.
+revoke execute on function public.notify_event_organizer_on_review() from anon, authenticated, public;
+revoke execute on function public.notify_place_owner_on_review() from anon, authenticated, public;
