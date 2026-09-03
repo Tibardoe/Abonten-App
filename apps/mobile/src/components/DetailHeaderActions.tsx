@@ -1,25 +1,22 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { shareLink, shareLinkWithImage } from "@/lib/share";
+import { shareLink } from "@/lib/share";
 import { Icon } from "@abonten/ui-native";
 import { Pressable, View } from "react-native";
 
 // The event / place detail header's right-side actions: share + favourite,
-// mirroring the web detail hero's control cluster. When the flyer/cover pair
-// is passed, the share sheet carries the image too.
+// mirroring the web detail hero's control cluster. Sharing sends the https
+// URL as text so the target app unfurls it into a rich preview card from
+// the page's Open Graph tags (flyer / cover included there).
 export function DetailHeaderActions({
   kind,
   id,
   shareTitle,
   shareUrl,
-  imagePublicId,
-  imageVersion,
 }: {
   kind: "event" | "place";
   id: string | undefined;
   shareTitle: string;
   shareUrl: string | null;
-  imagePublicId?: string | null;
-  imageVersion?: string | null;
 }) {
   return (
     <View className="flex-row items-center gap-1">
@@ -28,16 +25,7 @@ export function DetailHeaderActions({
           accessibilityRole="button"
           accessibilityLabel="Share"
           hitSlop={8}
-          onPress={() =>
-            imagePublicId && imageVersion
-              ? shareLinkWithImage(
-                  shareTitle,
-                  shareUrl,
-                  imagePublicId,
-                  imageVersion,
-                )
-              : shareLink(shareTitle, shareUrl)
-          }
+          onPress={() => shareLink(shareTitle, shareUrl)}
           className="p-1 active:opacity-70"
         >
           <Icon name="share-outline" size={22} tone="foreground" />
