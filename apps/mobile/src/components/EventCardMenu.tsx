@@ -1,14 +1,102 @@
 import { useSession } from "@/auth/SessionProvider";
+import { ReminderOptionsSheet } from "@/components/reminders/ReminderOptionsSheet";
 import {
   useIsFavorited,
   useToggleFavorite,
 } from "@/features/favorites/useFavorites";
+import { useEventReminder } from "@/features/reminders/useEventReminder";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { eventShareUrl, shareLink } from "@/lib/share";
+import type { Occurrence } from "@abonten/types/occurrenceType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { AppText, Icon, type IoniconName, Sheet } from "@abonten/ui-native";
 import { usePathname, useRouter } from "expo-router";
-import { Pressable, View } from "react-native";
+import { useState } from "react";
+import { Alert, Linking, Pressable, View } from "react-native";
+
+function toIso(v: string | Date | undefined | null): string | null {
+  if (!v) return null;
+  return typeof v === "string" ? v : v.toISOString();
+}
+
+// Reminder needs a concrete start time; specific-date events have starts_at
+// null, so fall back to the next upcoming occurrence (else the first).
+function reminderStart(event: UserPostType): string | null {
+  const direct = toIso(event.starts_at);
+  if (direct) return direct;
+  const occ: Occurrence[] = event.occurrences ?? event.event_occurrence ?? [];
+  const now = Date.now();
+  const times = occ
+    .map((o) => toIso(o.starts_at))
+    .filter((s): s is string => !!s)
+    .sort();
+  return times.find((s) => new Date(s).getTime() > now) ?? times[0] ?? null;
+}
+
+// Own the useEventReminder instance only when the menu can actually show the
+// row (hooks can't be conditional, so this is a child rather than an inline
+// branch).
+function ReminderMenuRow({
+  event,
+  startsAtIso,
+  onClose,
+}: {
+  event: UserPostType;
+  startsAtIso: string;
+  onClose: () => void;
+}) {
+  const { offsets, saving, save } = useEventReminder(
+    event.id,
+    startsAtIso,
+    event.status,
+    event.title,
+  );
+  const [open, setOpen] = useState(false);
+  const active = offsets.length > 0;
+
+  async function onSave(draft: number[]) {
+    const res = await save(draft, { eventTitle: event.title, startsAtIso });
+    if (res.ok) {
+      setOpen(false);
+      onClose();
+      return;
+    }
+    if (res.reason === "permission") {
+      Alert.alert(
+        "Notifications are off",
+        "Turn on notifications for Abonten to get event reminders.",
+        [
+          { text: "Not now", style: "cancel" },
+          { text: "Open settings", onPress: () => Linking.openSettings() },
+        ],
+      );
+    }
+  }
+
+  async function onTurnOff() {
+    await save([], { eventTitle: event.title, startsAtIso });
+    setOpen(false);
+    onClose();
+  }
+
+  return (
+    <>
+      <MenuRow
+        icon={active ? "notifications" : "notifications-outline"}
+        label={active ? "Reminder set" : "Set reminder"}
+        onPress={() => setOpen(true)}
+      />
+      <ReminderOptionsSheet
+        open={open}
+        onClose={() => setOpen(false)}
+        offsets={offsets}
+        saving={saving}
+        onSave={onSave}
+        onTurnOff={onTurnOff}
+      />
+    </>
+  );
+}
 
 // The mobile EventCard contextual menu — the native echo of the web
 // EventCardMenuModal (Radix dropdown). Same actions, same permission gates:
@@ -68,6 +156,11 @@ export function EventCardMenu({
 
   const isOrganizer = !!session && session.user.id === event.organizer_id;
   const isCancelled = event.status === "canceled";
+  const remindStart = reminderStart(event);
+  const canRemind =
+    !isCancelled &&
+    !!remindStart &&
+    new Date(remindStart).getTime() > Date.now();
 
   function requireAuth(): boolean {
     if (session) return true;
@@ -85,6 +178,13 @@ export function EventCardMenu({
   return (
     <Sheet open={open} onClose={onClose} title={event.title}>
       <View className="gap-1">
+        {canRemind && remindStart ? (
+          <ReminderMenuRow
+            event={event}
+            startsAtIso={remindStart}
+            onClose={onClose}
+          />
+        ) : null}
         <MenuRow
           icon={favorited ? "heart" : "heart-outline"}
           label={favorited ? "Remove from favourites" : "Add to favourites"}

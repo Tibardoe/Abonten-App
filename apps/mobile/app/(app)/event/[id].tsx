@@ -398,14 +398,27 @@ export default function EventDetailScreen() {
             </View>
           </View>
 
-          {!canceled && !hasEnded && event.starts_at ? (
-            <EventReminderButton
-              eventId={event.id}
-              eventTitle={event.title}
-              startsAtIso={event.starts_at}
-              status={event.status}
-            />
-          ) : null}
+          {(() => {
+            // Specific-date events have starts_at null — fall back to the
+            // next upcoming occurrence so multi-date events get a reminder.
+            const times = occ
+              .map((o) => String(o.starts_at))
+              .filter(Boolean)
+              .sort();
+            const remindStart =
+              event.starts_at ??
+              times.find((s) => new Date(s).getTime() > Date.now()) ??
+              times[0] ??
+              null;
+            return !canceled && !hasEnded && remindStart ? (
+              <EventReminderButton
+                eventId={event.id}
+                eventTitle={event.title}
+                startsAtIso={remindStart}
+                status={event.status}
+              />
+            ) : null;
+          })()}
 
           {event.website_url ? (
             <Button
