@@ -3,6 +3,7 @@ import { getPlaceBySlug } from "@/actions/getPlaceBySlug";
 import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { getPlaceUpcomingEvents } from "@/actions/getPlaceUpcomingEvents";
 import StarRatingDisplay from "@/components/atoms/Rating";
+import ReportButton from "@/components/atoms/ReportButton";
 import EventCard from "@/components/molecules/EventCard";
 import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
@@ -179,6 +180,14 @@ export default async function page({
                 ownerId={place.owner_id}
               />
               <AddPlaceToFavoriteButton placeId={place.id} compact />
+              <ReportButton
+                targetType="place"
+                targetId={place.id}
+                targetLabel={place.name}
+                ownerId={place.owner_id}
+                variant="icon"
+                className="inline-flex items-center text-white/80 hover:text-white"
+              />
             </div>
           </div>
 

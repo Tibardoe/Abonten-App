@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dense, neutral operations palette — light */
+    --background: 220 20% 97%;
+    --foreground: 220 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+    --muted: 220 14% 95%;
+    --muted-foreground: 220 10% 42%;
+    --primary: 171 65% 40%;
+    --primary-foreground: 0 0% 100%;
+    --border: 220 14% 88%;
+    --ring: 171 65% 45%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 55% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 90% 42%;
+    --warning-foreground: 32 40% 12%;
+    --radius: 0.5rem;
+  }
+
+  :root[data-theme="dark"],
+  .dark {
+    --background: 222 24% 9%;
+    --foreground: 210 20% 92%;
+    --card: 222 22% 12%;
+    --card-foreground: 210 20% 92%;
+    --muted: 220 16% 18%;
+    --muted-foreground: 218 12% 62%;
+    --primary: 171 60% 45%;
+    --primary-foreground: 171 40% 10%;
+    --border: 220 14% 22%;
+    --ring: 171 60% 45%;
+    --destructive: 0 62% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 45% 46%;
+    --success-foreground: 152 40% 10%;
+    --warning: 36 80% 55%;
+    --warning-foreground: 32 40% 10%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "tnum" 1;
+  }
+}

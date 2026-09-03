@@ -132,6 +132,8 @@ export type {
   AddPlaceServiceBody,
   SetPlaceStatusBody,
   SubmitChargeOtpResult,
+  SubmitReportBody,
+  SubmitReportResult,
   UpdateEventBody,
   UpdateEventResult,
   UpdateEventTicketTypesBody,

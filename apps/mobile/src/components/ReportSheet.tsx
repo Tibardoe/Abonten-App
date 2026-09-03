@@ -1,4 +1,11 @@
-import { useReportPlace } from "@/features/places/useReportPlace";
+import { useSubmitReport } from "@/features/reports/useSubmitReport";
+import type { SubmitReportBody } from "@abonten/api-client";
+import {
+  REPORTABLE_CATEGORIES,
+  REPORT_CATEGORY_LABEL,
+  REPORT_TARGET_LABEL,
+  type ReportTargetType,
+} from "@abonten/types/adminTypes";
 import {
   AppText,
   Button,
@@ -11,45 +18,36 @@ import {
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 
-const PLACE_REASONS = [
-  "Inaccurate information",
-  "Permanently closed / doesn't exist",
-  "Spam or fake listing",
-  "Offensive or inappropriate",
-  "Other",
-];
-const REVIEW_REASONS = [
-  "Spam or fake",
-  "Offensive language",
-  "Not about this place",
-  "Personal / private information",
-  "Other",
-];
-
-// Report a place or one of its reviews. `reason` is the picked category plus
-// any free-text detail, joined — the same free-text `reason` column the web
-// reportPlace / reportPlaceReview actions write. Only an admin sees reports.
+// Generic "Report this content" sheet — replaces the place-only ReportSheet.
+// Works for any reportable entity; the reason chips are the categories that
+// make sense for that target (REPORTABLE_CATEGORIES). Submits through
+// POST /api/mobile/reports; the reporter identity is server-derived.
 export function ReportSheet({
   open,
   onClose,
-  target,
+  targetType,
+  targetId,
+  label,
 }: {
   open: boolean;
   onClose: () => void;
-  target:
-    | { kind: "place"; placeId: string; label: string }
-    | { kind: "review"; reviewId: string; label: string };
+  targetType: ReportTargetType;
+  targetId: string;
+  /** short human description of what's being reported, e.g. the event title */
+  label: string;
 }) {
-  const reasons = target.kind === "place" ? PLACE_REASONS : REVIEW_REASONS;
-  const [reason, setReason] = useState<string | null>(null);
+  const categories = REPORTABLE_CATEGORIES[targetType];
+  const [category, setCategory] = useState<SubmitReportBody["category"] | null>(
+    null,
+  );
   const [detail, setDetail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const report = useReportPlace();
+  const report = useSubmitReport();
 
   useEffect(() => {
     if (!open) return;
-    setReason(null);
+    setCategory(null);
     setDetail("");
     setSubmitted(false);
     setError(null);
@@ -57,15 +55,17 @@ export function ReportSheet({
 
   function submit() {
     setError(null);
-    if (!reason) {
+    if (!category) {
       setError("Pick a reason.");
       return;
     }
-    const full = detail.trim() ? `${reason} — ${detail.trim()}` : reason;
     report.mutate(
-      target.kind === "place"
-        ? { placeId: target.placeId, reason: full }
-        : { reviewId: target.reviewId, reason: full },
+      {
+        targetType,
+        targetId,
+        category,
+        details: detail.trim() ? detail.trim() : null,
+      },
       {
         onSuccess: () => setSubmitted(true),
         onError: (e) =>
@@ -78,7 +78,7 @@ export function ReportSheet({
     <Sheet
       open={open}
       onClose={onClose}
-      title={target.kind === "place" ? "Report this place" : "Report review"}
+      title={`Report this ${REPORT_TARGET_LABEL[targetType]}`}
       footer={
         submitted ? (
           <Button title="Done" onPress={onClose} />
@@ -104,18 +104,18 @@ export function ReportSheet({
       ) : (
         <View className="gap-4">
           <AppText variant="muted" numberOfLines={2}>
-            {target.label}
+            {label}
           </AppText>
 
           <View className="gap-2">
             <AppText variant="label">Reason</AppText>
             <View className="flex-row flex-wrap gap-2">
-              {reasons.map((r) => (
+              {categories.map((c) => (
                 <Chip
-                  key={r}
-                  label={r}
-                  selected={reason === r}
-                  onPress={() => setReason(r)}
+                  key={c}
+                  label={REPORT_CATEGORY_LABEL[c]}
+                  selected={category === c}
+                  onPress={() => setCategory(c)}
                 />
               ))}
             </View>
@@ -128,7 +128,7 @@ export function ReportSheet({
               placeholder="Add any detail that helps"
               multiline
               numberOfLines={3}
-              maxLength={500}
+              maxLength={2000}
               style={{ minHeight: 72, textAlignVertical: "top" }}
             />
           </Field>

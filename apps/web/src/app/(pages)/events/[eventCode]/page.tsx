@@ -4,6 +4,7 @@ import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import { getUserRating } from "@/actions/getUserRating";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
 import OutlinedShareBtn from "@/components/atoms/OutlinedShareBtn";
+import ReportButton from "@/components/atoms/ReportButton";
 import {
   EventAttendanceHeroBadges,
   EventCapacityCard,
@@ -343,11 +344,17 @@ export default async function page({
             </div>
 
             {/* Action Buttons - Mobile Top */}
-            <div className="lg:hidden">
+            <div className="lg:hidden flex items-center gap-4">
               <OutlinedShareBtn
                 title={event.title}
                 address={event.address.full_address}
                 eventCode={event.event_code}
+              />
+              <ReportButton
+                targetType="event"
+                targetId={event.id}
+                targetLabel={event.title}
+                ownerId={event.organizer_id}
               />
             </div>
 

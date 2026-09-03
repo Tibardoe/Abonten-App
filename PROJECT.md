@@ -644,4 +644,154 @@ The one Phase 2 area touching real payments — confirmed design decisions, made
 
 ---
 
+## 23. Admin Console (`apps/admin`) + Reporting + Observability — Phase 1
+
+**A third app in the monorepo.** `apps/admin` (`@abonten/admin`) is a **separate, protected Next 16
+App Router application** — the internal operations console. It is another authorized client of the
+same `@abonten/services` shared backend; it never forks business logic. Deployed as its own Vercel
+project on an internal subdomain; `SUPABASE_SERVICE_ROLE_KEY` lives only in that project's env
+(never in `apps/web` client bundles, never in `apps/mobile`).
+
+### 23.1 RBAC + admin identity (migration `20260907090000_admin_rbac.sql`)
+
+- `admin_role` / `admin_permission` / `admin_role_permission` — seeded role→permission matrix.
+  Roles: `super_admin`, `operations`, `moderator`, `finance_admin`, `support_admin`, `analyst`.
+  ~38 permission keys (`reports.*`, `moderation.*`, `users.*`, `finance.*`, `monitoring.*`,
+  `audit.view`, `settings.*`, `admins.manage`, …). Least-privilege: a moderator cannot touch
+  finance/settings; an analyst is `*.view` only.
+- `admin_user` (`user_id → auth.users`, `status active|disabled`) — presence + `active` is what
+  grants console access. `admin_user_role` join grants roles; effective permissions = union.
+- A trigger keeps `user_info.is_admin` in sync (true iff an active `admin_user` row exists) so the
+  legacy `/admin/place-claims` page + `approve_place_claim` RPC keep working.
+- Self-only SECURITY DEFINER helpers `is_staff()` / `admin_has_permission(text)` /
+  `admin_effective_permissions()` — `auth.uid()`-based, matching the existing `is_admin()` pattern
+  (no `p_user_id` parameter, so no cross-user disclosure).
+- All RBAC tables: RLS on, **no `authenticated`/`anon` grant** — access is service-role only, from
+  `@abonten/services/admin/**` behind `resolveAdminContext()` in app code.
+- The mirror in code: `@abonten/core/adminPermissions` (`ROLE_PERMISSIONS`, `can()`,
+  `requirePermission()`, `STEP_UP_PERMISSIONS`). Types in `@abonten/types/adminTypes`.
+
+### 23.2 Admin auth (`apps/admin/src/lib/adminGuard.ts`)
+
+`requireAdmin()` runs on every console page + server action:
+1. Supabase SSR cookie session (Google OAuth) → a signed-in user, else redirect to sign-in.
+2. `ADMIN_EMAIL_ALLOWLIST` env check → not listed: `/no-access` (console existence not revealed).
+3. `resolveAdminContext(serviceClient, userId)` — re-derives active-admin status + roles from the
+   DB **every request**. A disabled admin or changed roles take effect immediately.
+4. **Step-up re-auth**: `users.ban` / `finance.*` / `admins.manage` / `settings.manage` require a
+   fresh OAuth round-trip within 10 min (`admin_stepup_at` httpOnly cookie stamped by
+   `/auth/callback?stepup=1`). `assertStepUpFresh(ctx)` guards those server actions.
+`src/proxy.ts` (Next 16 middleware) is the coarse first gate — refresh cookie, bounce anon.
+
+### 23.3 Audit log (migration `20260907090100_admin_audit_log.sql`)
+
+`admin_audit_log` — append-only (no UPDATE/DELETE grant + a `BEFORE UPDATE/DELETE` trigger that
+raises). Every mutating admin service calls `recordAdminAudit()` after the change: actor, roles,
+action, target, before/after JSON, reason, request meta (ip/ua). Read-only in the console via the
+Audit Logs module (`audit.view`).
+
+### 23.4 Generic reporting (migration `20260907090200_generic_reports.sql`)
+
+- **`report`** — polymorphic. `target_type` ∈ event/place/event_review/place_review/user_review/
+  user/organizer/highlight; `category` (10 values); `status` new→under_review→awaiting_info→
+  escalated→resolved/dismissed/false_report; `priority` (seeded high for fraud/safety/harassment/
+  impersonation); `source` web|mobile; `dedupe_key` = `<type>:<id>`; `assigned_to`, `resolution*`.
+  **Partial unique index** on `(reporter_id, dedupe_key) where status in (open set)` — one open
+  report per user per target (dedup + anti-spam). RLS: a reporter may INSERT/SELECT **own** rows
+  only; never UPDATE/DELETE. Triage is service-role-only.
+- **`report_attachment`** + private Storage bucket `report-attachments` (`<uid>/…` key layout,
+  owner-write, `is_staff()`-read; admin console mints 5-min signed URLs).
+- **`report_event`** (investigation timeline) + **`admin_note`** (internal notes, immutable —
+  edits create a new row w/ `supersedes_id`). Both staff-only.
+- **`admin_report_group`** view + `admin_dashboard_counts()` RPC (migration `…090900`) — the
+  grouped "this event has 17 reports" queue + the dashboard "needs attention" numbers in one call.
+- Shared core: `@abonten/services/reports/submitReportCore.ts` — reporter id from session
+  (client value ignored), target-exists + reportable check, self-report block, rolling-hour rate
+  cap (10), friendly dedupe. Consumed by web action `submitReport.ts` and
+  `POST /api/mobile/reports` (typed `api.reports.submit()` in `@abonten/api-client`).
+- `place_report` (place-only, 0 rows) was migrated into `report` and **dropped**
+  (`20260907091200`). `reportPlace.ts` / `reportPlaceReview.ts` now delegate to `submitReportCore`.
+
+### 23.5 Content moderation (migration `20260907090300` + `20260907090800`)
+
+- Additive nullable `moderation_state` (`visible|restricted|hidden|removed`) + `moderated_at/by` +
+  `moderation_reason` on `event`, `place`, `highlight`, `review`, `event_review`, `place_review`.
+  Independent of the existing `status` columns — those are untouched.
+- **`moderation_action`** table (canonical log, `idempotency_key unique`).
+- **`apply_moderation_action(...)` RPC** — atomic: insert action (idempotency guard) + flip
+  target `moderation_state` + append `report_event` when linked. SECURITY DEFINER, service_role.
+- **Public read paths exclude `hidden`/`removed`**: the 7 PostGIS discovery RPCs
+  (`get_filtered_events`, `get_nearby_events` ×2, `get_events_in_window`, `get_similar_events`,
+  `get_filtered_places`, `get_nearby_places`) each got
+  `AND <alias>.moderation_state IS DISTINCT FROM 'hidden' AND … <> 'removed'` next to their
+  `status = 'published'` filter (migration `20260907090800`, a deliberate reviewed change).
+  `restricted` stays publicly visible (flagged, e.g. not featurable). ⚠️ Non-RPC
+  `@abonten/services` read modules for event/place/review detail + `/api/mobile` plain-table reads
+  still need the same filter — tracked as a follow-up (see §23.9).
+
+### 23.6 Observability — hybrid, self-hosted (migration `20260907090400` + `20260907091300`)
+
+No third-party APM. Real pipeline:
+- **`app_error_event`** (one row per captured error) + **`app_error_group`** (trigger-maintained
+  rollup by `fingerprint`; reopens on new occurrence). Fed by `packages/core/reportError.ts`
+  (`buildErrorEventPayload` + `sendErrorReport`) → `POST /api/observability/error` →
+  `ingestErrorCore` (service role). Wired into `apps/web/src/app/global-error.tsx` +
+  `src/lib/reportClientError.ts`. Mobile root boundary wiring is a follow-up.
+- **`app_request_metric`** (sampled timings) + `app_request_metric_hourly` view → dashboard.
+- **`health_check_result`** — `runHealthChecksCore` does **real probes** (DB, auth, storage,
+  Paystack `/bank`, Resend, Hubtel, Cloudinary ping, Expo push) at `GET /api/observability/health`,
+  called every 2 min by a `pg_cron` job (`abonten-health-check` → `run_scheduled_health_check()`)
+  that reads URL + secret from the **`observability_config`** one-row table an operator fills in
+  post-deploy. Until then the job is a no-op and the dashboard honestly shows "no health results
+  yet".
+- **`incident`** — minimal record; full incident workflow deferred.
+- Designed with a Sentry-adapter seam: the Admin UI reads DTOs from the service layer and does not
+  care about the source.
+
+### 23.7 Admin service layer (`packages/services/src/admin/**`)
+
+Framework-free, service-role client injected, every fn re-checks its permission via
+`assertPermission(ctx, …)`, mutations audited + optimistic-concurrency guarded (`expectedUpdatedAt`
+→ 409) + idempotent (RPCs). Modules: `adminContext` (resolveAdminContext / recordAdminAudit /
+adminError), `reports/reportsAdminCore` (list, groups, detail, assign, status, requestInfo, note,
+resolve), `moderation/applyModerationActionCore`, `users/usersAdminCore` (list, detail,
+setUserStatus — writes `user_info.status_id`, no hard delete), `audit/listAuditLogCore`,
+`observability/*`, `settings/adminSettingsCore` (staff list, matrix, grant/revoke role,
+enable/disable admin), `dashboard/getDashboardCore` (real aggregates; `PLATFORM_TZ = Africa/Accra`
+= UTC+0 so UTC day boundaries are local).
+
+### 23.8 Admin Console modules (Phase 1)
+
+`apps/admin/src/app/(console)/`: **Dashboard** (KPIs + dependency health + needs-attention, time
+ranges), **Reports & Moderation** (queue list + grouped-by-target view + investigation workspace
+with permission-gated actions: assign / under-review / escalate / request-info / note / hide /
+restrict / remove / restore / resolve / dismiss / false-report), **Users** (search + status
+filter; detail with PII gated by `users.view_pii`; suspend/unsuspend/ban/restore with required
+reason + confirm + step-up for ban), **Audit Logs** (read-only), **Monitoring** (health / error
+groups with ack-resolve-ignore / request-telemetry / incidents; a banner distinguishes real
+telemetry from derived operational metrics), **Admin Settings** (staff list + role grant/revoke +
+enable/disable, all step-up-gated; the role matrix is code-defined). Later-phase modules (Finance,
+Claims, Events, Places, Analytics) render disabled "soon" in the nav.
+
+### 23.9 Phase 1 — deferred / open
+
+- Finance/Transactions/Refunds/Withdrawals ops centre + payment-trace; Events/Places/Organizers
+  management modules; a dedicated content-browse moderation queue; Notification ops; deep
+  Web/Mobile/API monitoring dashboards + incident workflow + app-version analytics; Platform
+  Analytics; global cross-entity search; bulk actions; runtime-editable role matrix; Sentry adapter.
+- **Moderation filter reach**: non-RPC `@abonten/services` read modules + `/api/mobile`
+  plain-table reads for event/place/review detail must add the `moderation_state` exclusion, or
+  hidden/removed content leaks on those surfaces. RPC paths + discovery are done.
+- Mobile: root `ErrorBoundary`/`ErrorUtils` → `reportError`; report attachment picker in the
+  mobile `ReportSheet` (schema/core support it; UI is text-only for now).
+- Web report entry points wired: event detail, place detail, user profile. Event-review /
+  place-review / highlight report affordances on web are a follow-up (mobile place-review has one).
+- Ops: create the `apps/admin` Vercel project + `admin.abonten.*` DNS; set
+  `OBSERVABILITY_INGEST_SECRET` in `apps/web` + insert the `observability_config` row; seed the
+  first `super_admin` (`insert into admin_user … ; insert into admin_user_role …`).
+- Not device/live verified: the reporting round-trip on a real device, the money-path admin
+  actions (none in Phase 1), push, the health cron against a live deploy.
+
+---
+
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*
