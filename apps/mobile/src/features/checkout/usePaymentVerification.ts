@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { invalidateAfterTicketMutation } from "@/lib/ticketMutationInvalidation";
 import { useQueryClient } from "@tanstack/react-query";
 import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -88,19 +89,12 @@ export function usePaymentVerification(params: PaymentVerificationParams) {
     settledRef.current = true;
     clearTimer();
     setState({ status: "succeeded" });
-    // The purchased thing (ticket / featured listing) + any inventory or
-    // balance it touched. Broad on purpose — a successful payment can ripple
-    // through several screens.
-    for (const key of [
-      ["mobile", "tickets"],
-      ["mobile", "checkout"],
-      ["mobile", "event"],
-      ["mobile", "place"],
-      ["mobile", "organizer"],
-      ["mobile", "review-eligibility"],
-    ]) {
-      qc.invalidateQueries({ queryKey: key });
-    }
+    // The purchased thing (ticket / featured listing) + everything its
+    // inventory/attendance change ripples through: My Tickets, the
+    // discovery + explore feeds (stale "X going / Y spots left" on cards),
+    // the "You're going" badge, event/place detail, organizer views,
+    // review eligibility. See lib/ticketMutationInvalidation.ts.
+    invalidateAfterTicketMutation(qc);
   }, [qc, clearTimer]);
 
   const applyVerifyResult = useCallback(

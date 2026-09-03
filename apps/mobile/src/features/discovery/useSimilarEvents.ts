@@ -1,3 +1,4 @@
+import { withEventAttendanceCounts } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useQuery } from "@tanstack/react-query";
@@ -7,9 +8,8 @@ import type { Coords } from "./useGeocode";
 // get_similar_events RPC, category + a 10km radius around the event's
 // location. Its rows carry ticket_price / ticket_currency (not
 // min_price / currency), so map those the same way the web action does for
-// EventCard. Attendance counts aren't merged here (the web action does a
-// second query for them) — the similar-events cards show 0 attending,
-// which the card treats as "0 attending", acceptable for this small rail.
+// EventCard. Live attendance is merged in the same second batched RPC call
+// the web action makes, so the rail's cards show real "going" / spots-left.
 
 const RADIUS_KM = 10;
 
@@ -38,7 +38,7 @@ export function useSimilarEvents(
         })
         .limit(20);
       if (error) throw error;
-      return ((data ?? []) as Record<string, unknown>[])
+      const rows = ((data ?? []) as Record<string, unknown>[])
         .filter((e) => e.id !== eventId)
         .map(
           (e) =>
@@ -48,6 +48,7 @@ export function useSimilarEvents(
               currency: e.ticket_currency,
             }) as unknown as UserPostType,
         );
+      return withEventAttendanceCounts(rows);
     },
   });
 }

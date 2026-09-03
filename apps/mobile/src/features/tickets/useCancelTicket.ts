@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { invalidateAfterTicketMutation } from "@/lib/ticketMutationInvalidation";
 import type { CancelTicketBody } from "@abonten/api-client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -11,8 +12,10 @@ export function useCancelTicket() {
     mutationFn: (body: CancelTicketBody) => api.tickets.cancel(body),
     onSuccess: (res) => {
       if (res.status !== 200) return;
-      qc.invalidateQueries({ queryKey: ["mobile", "tickets"] });
-      qc.invalidateQueries({ queryKey: ["mobile", "ticket"] });
+      // Cancelling frees the spot back: the discovery/explore cards, the
+      // "You're going" badge, event detail and the organizer's attendee
+      // list all need to reflect it — same fan-out as a purchase.
+      invalidateAfterTicketMutation(qc);
     },
   });
 }
