@@ -19,7 +19,13 @@ import {
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { FlatList, Pressable, ScrollView, View } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
 
 // Native echo of the web /transactions page: a period filter, summary
 // tiles, and the merged ticket + subscription history timeline. Status
@@ -190,18 +196,42 @@ export default function Transactions() {
       )}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
+      refreshControl={
+        <RefreshControl
+          refreshing={
+            (summaryQuery.isRefetching || historyQuery.isRefetching) &&
+            !historyQuery.isFetchingNextPage
+          }
+          onRefresh={() => {
+            summaryQuery.refetch();
+            historyQuery.refetch();
+          }}
+        />
+      }
       ListEmptyComponent={
         historyQuery.isLoading ? (
           <Spinner className="mt-6" />
         ) : (
           <EmptyState
-            icon="swap-horizontal-outline"
+            icon={
+              historyQuery.isError
+                ? "cloud-offline-outline"
+                : "swap-horizontal-outline"
+            }
             title={
               historyQuery.isError
                 ? "Couldn't load transactions"
                 : "No transactions for this period"
             }
-            description="Purchases and promotions you pay for show up here."
+            description={
+              historyQuery.isError
+                ? "Pull down to try again."
+                : "Purchases and promotions you pay for show up here."
+            }
+            actionLabel={historyQuery.isError ? "Retry" : undefined}
+            onAction={
+              historyQuery.isError ? () => historyQuery.refetch() : undefined
+            }
           />
         )
       }

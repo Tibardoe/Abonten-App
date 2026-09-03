@@ -332,6 +332,7 @@ export function usePlaceEdit(placeId: string) {
     loadError:
       query.isError ||
       (query.data && query.data.status !== 200 ? query.data.message : false),
+    reload: () => query.refetch(),
     // core fields
     name,
     setName,
