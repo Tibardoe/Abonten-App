@@ -45,9 +45,17 @@ function pctChange(current: number, previous: number | null | undefined) {
   return ((current - previous) / previous) * 100;
 }
 
-function Delta({ pct }: { pct: number | null }) {
+function Delta({
+  pct,
+  compact = false,
+}: {
+  pct: number | null;
+  compact?: boolean;
+}) {
   if (pct == null) {
-    return <AppText variant="caption">— vs last period</AppText>;
+    return (
+      <AppText variant="caption">{compact ? "—" : "— vs last period"}</AppText>
+    );
   }
   const up = pct >= 0;
   return (
@@ -65,12 +73,13 @@ function Delta({ pct }: { pct: number | null }) {
         {up ? "+" : "−"}
         {Math.abs(Math.round(pct))}%
       </AppText>
-      <AppText variant="caption">vs last period</AppText>
+      {compact ? null : <AppText variant="caption">vs last period</AppText>}
     </View>
   );
 }
 
-function Headline({
+// Gross sales is the headline number — its own full-width card.
+function KpiHero({
   label,
   value,
   icon,
@@ -82,15 +91,41 @@ function Headline({
   delta?: number | null;
 }) {
   return (
-    <View className="min-w-[30%] flex-1 gap-1.5 rounded-2xl border border-border bg-card p-4">
+    <View className="gap-1 rounded-2xl border border-border bg-card p-4">
       <View className="flex-row items-center gap-1.5">
         <Icon name={icon} size={14} tone="muted" />
         <Overline>{label}</Overline>
       </View>
-      <AppText variant="screenTitle" numberOfLines={1}>
+      <AppText variant="hero" numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </AppText>
       {delta !== undefined ? <Delta pct={delta} /> : null}
+    </View>
+  );
+}
+
+// The two supporting counts — a 2-up row of smaller cards under the hero.
+function KpiMini({
+  label,
+  value,
+  icon,
+  delta,
+}: {
+  label: string;
+  value: string;
+  icon: IoniconName;
+  delta?: number | null;
+}) {
+  return (
+    <View className="flex-1 gap-1 rounded-2xl border border-border bg-card p-4">
+      <View className="flex-row items-center gap-1.5">
+        <Icon name={icon} size={13} tone="muted" />
+        <Overline>{label}</Overline>
+      </View>
+      <AppText variant="sectionTitle" numberOfLines={1}>
+        {value}
+      </AppText>
+      {delta !== undefined ? <Delta pct={delta} compact /> : null}
     </View>
   );
 }
@@ -216,9 +251,9 @@ export default function OrganizerDashboard() {
         </View>
       ) : (
         <>
-          {/* Headline KPIs */}
-          <View className="flex-row flex-wrap gap-2">
-            <Headline
+          {/* Headline KPIs — gross sales leads, the two counts sit under it */}
+          <View className="gap-2">
+            <KpiHero
               label="Gross sales"
               icon="cash-outline"
               value={
@@ -228,17 +263,19 @@ export default function OrganizerDashboard() {
               }
               delta={period === "all" ? undefined : grossDelta}
             />
-            <Headline
-              label="Tickets sold"
-              icon="ticket-outline"
-              value={n(head?.tickets_sold).toLocaleString()}
-              delta={period === "all" ? undefined : ticketsDelta}
-            />
-            <Headline
-              label="Active events"
-              icon="calendar-outline"
-              value={n(head?.active_events_count).toLocaleString()}
-            />
+            <View className="flex-row gap-2">
+              <KpiMini
+                label="Tickets sold"
+                icon="ticket-outline"
+                value={n(head?.tickets_sold).toLocaleString()}
+                delta={period === "all" ? undefined : ticketsDelta}
+              />
+              <KpiMini
+                label="Active events"
+                icon="calendar-outline"
+                value={n(head?.active_events_count).toLocaleString()}
+              />
+            </View>
           </View>
 
           {moneyRows.length > 1 ? (
