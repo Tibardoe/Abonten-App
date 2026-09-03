@@ -24,6 +24,15 @@ export async function saveToSupabase(
     return { status: 401, message: "You need to be signed in to do that." };
   }
 
+  // The public_id's folder was bound to this user's id when the upload
+  // signature was issued (getAvatarUploadSignature.ts -> "user_profiles/<id>").
+  // A public_id outside that folder means the client-supplied metadata was
+  // tampered with — a real upload could never have landed elsewhere. Same
+  // guard uploadHighlight.ts / addPlacePhotoCore / insertReviewPhotos apply.
+  if (!publicId.startsWith(`user_profiles/${user.user.id}/`)) {
+    return { status: 403, message: "Not authorized for this image." };
+  }
+
   const { error: updateError } = await supabase
     .from("user_info")
     .update({ avatar_public_id: publicId, avatar_version: version })
