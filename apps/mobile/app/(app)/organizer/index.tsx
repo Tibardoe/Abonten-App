@@ -31,11 +31,22 @@ function money(currency: string | null, amount: number | string): string {
   })}`;
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Headline({ label, value }: { label: string; value: string }) {
   return (
-    <View className="min-w-[45%] flex-1 gap-1 rounded-xl border border-border bg-card p-3">
+    <View className="min-w-[30%] flex-1 gap-1 rounded-2xl border border-border bg-card p-4">
       <Overline>{label}</Overline>
-      <AppText variant="sectionHeading">{value}</AppText>
+      <AppText variant="screenTitle" numberOfLines={1}>
+        {value}
+      </AppText>
+    </View>
+  );
+}
+
+function MetricRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View className="w-[47%] gap-0.5">
+      <AppText variant="caption">{label}</AppText>
+      <AppText variant="bodyStrong">{value}</AppText>
     </View>
   );
 }
@@ -135,72 +146,72 @@ export default function OrganizerDashboard() {
         </View>
       ) : (
         <>
-          <View className="gap-2">
-            <Overline>Sales</Overline>
-            {moneyRows.length === 0 ? (
-              <View className="rounded-xl border border-border bg-card p-3">
-                <AppText className="text-sm text-muted-foreground">
-                  No paid orders in this period.
+          {/* Headline KPIs */}
+          <View className="flex-row flex-wrap gap-2">
+            <Headline
+              label="Gross sales"
+              value={
+                moneyRows[0]
+                  ? money(moneyRows[0].currency, moneyRows[0].gross_sales)
+                  : money(primaryCurrency, 0)
+              }
+            />
+            <Headline
+              label="Tickets sold"
+              value={n(head?.tickets_sold).toLocaleString()}
+            />
+            <Headline
+              label="Active events"
+              value={n(head?.active_events_count).toLocaleString()}
+            />
+          </View>
+
+          {moneyRows.length > 1 ? (
+            <View className="rounded-xl border border-border bg-card p-3">
+              <AppText variant="caption">Other currencies</AppText>
+              {moneyRows.slice(1).map((r) => (
+                <AppText key={r.currency} variant="metaStrong">
+                  {money(r.currency, r.gross_sales)}
                 </AppText>
-              </View>
-            ) : (
-              moneyRows.map((r) => (
-                <View
-                  key={r.currency}
-                  className="gap-3 rounded-xl border border-border bg-card p-4"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <Overline>Gross sales</Overline>
-                    <AppText variant="screenTitle">
-                      {money(r.currency, r.gross_sales)}
-                    </AppText>
-                  </View>
-                  <View className="flex-row flex-wrap gap-2">
-                    <Stat
-                      label="Paid orders"
-                      value={String(n(r.paid_orders))}
-                    />
-                    <Stat
-                      label="Buyers"
-                      value={String(n(r.distinct_purchasers))}
-                    />
-                    <Stat
-                      label="Discounts"
-                      value={money(r.currency, r.total_discount)}
-                    />
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-
-          <View className="gap-2">
-            <Overline>Tickets</Overline>
-            <View className="flex-row flex-wrap gap-2">
-              <Stat label="Sold" value={String(n(head?.tickets_sold))} />
-              <Stat
-                label="Registrations"
-                value={String(n(head?.registrations))}
-              />
-              <Stat
-                label="Cancelled"
-                value={String(n(head?.tickets_cancelled))}
-              />
+              ))}
             </View>
-          </View>
+          ) : null}
 
-          <View className="gap-2">
-            <Overline>Events</Overline>
-            <View className="flex-row flex-wrap gap-2">
-              <Stat
-                label="Active"
-                value={String(n(head?.active_events_count))}
+          {/* Secondary metrics */}
+          <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+            <Overline>This period</Overline>
+            <View className="flex-row flex-wrap gap-y-3">
+              <MetricRow
+                label="Paid orders"
+                value={n(moneyRows[0]?.paid_orders).toLocaleString()}
               />
-              <Stat
-                label="Upcoming"
-                value={String(n(head?.upcoming_events_count))}
+              <MetricRow
+                label="Buyers"
+                value={n(moneyRows[0]?.distinct_purchasers).toLocaleString()}
               />
-              <Stat label="Total" value={String(n(head?.total_events_count))} />
+              <MetricRow
+                label="Discounts"
+                value={money(
+                  moneyRows[0]?.currency ?? primaryCurrency,
+                  moneyRows[0]?.total_discount ?? 0,
+                )}
+              />
+              <MetricRow
+                label="Registrations"
+                value={n(head?.registrations).toLocaleString()}
+              />
+              <MetricRow
+                label="Cancelled"
+                value={n(head?.tickets_cancelled).toLocaleString()}
+              />
+              <MetricRow
+                label="Upcoming events"
+                value={n(head?.upcoming_events_count).toLocaleString()}
+              />
+              <MetricRow
+                label="Total events"
+                value={n(head?.total_events_count).toLocaleString()}
+              />
             </View>
           </View>
 

@@ -1,11 +1,10 @@
+import { SalesTimelineChart } from "@/components/organizer/SalesTimelineChart";
 import { useOrganizerFinance } from "@/features/organizer/useOrganizer";
 import type {
-  DashboardBucket,
   OrganizerActivityRow,
   OrganizerAttentionRow,
   OrganizerDashboardWidgets,
   OrganizerPerformanceRow,
-  OrganizerTimelineRow,
   OrganizerUpcomingRow,
 } from "@abonten/api-client";
 import {
@@ -28,15 +27,6 @@ function money(currency: string | null | undefined, amount: number): string {
   return `${currency ?? "GHS"} ${amount.toLocaleString(undefined, {
     maximumFractionDigits: 0,
   })}`;
-}
-
-function bucketLabel(bucketStart: string, bucket: DashboardBucket): string {
-  const d = new Date(bucketStart);
-  if (bucket === "hour")
-    return d.toLocaleTimeString("en-US", { hour: "numeric" });
-  if (bucket === "month")
-    return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-  return d.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
 }
 
 function FinanceSummary() {
@@ -68,55 +58,6 @@ function FinanceSummary() {
         </AppText>
       </Pressable>
     </Link>
-  );
-}
-
-function SalesTimeline({
-  rows,
-  bucket,
-  currency,
-}: {
-  rows: OrganizerTimelineRow[];
-  bucket: DashboardBucket;
-  currency: string;
-}) {
-  const recent = rows.slice(-14);
-  const max = Math.max(1, ...recent.map((r) => n(r.gross)));
-
-  return (
-    <View className="gap-2">
-      <Overline>Sales over time</Overline>
-      {recent.length === 0 ? (
-        <View className="rounded-xl border border-border bg-card p-3">
-          <AppText variant="muted">No sales in this period yet.</AppText>
-        </View>
-      ) : (
-        <View className="gap-2 rounded-xl border border-border bg-card p-4">
-          {recent.map((r) => {
-            const gross = n(r.gross);
-            return (
-              <View key={r.bucket_start} className="gap-1">
-                <View className="flex-row justify-between">
-                  <AppText variant="caption">
-                    {bucketLabel(r.bucket_start, bucket)}
-                  </AppText>
-                  <AppText variant="caption" tone="primary">
-                    {money(currency, gross)} · {n(r.orders)} order
-                    {n(r.orders) === 1 ? "" : "s"}
-                  </AppText>
-                </View>
-                <View className="h-2 overflow-hidden rounded-full bg-muted">
-                  <View
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${Math.max(2, (gross / max) * 100)}%` }}
-                  />
-                </View>
-              </View>
-            );
-          })}
-        </View>
-      )}
-    </View>
   );
 }
 
@@ -320,7 +261,7 @@ export function DashboardWidgets({
   return (
     <>
       <FinanceSummary />
-      <SalesTimeline
+      <SalesTimelineChart
         rows={widgets.timeline.rows}
         bucket={widgets.timeline.bucket}
         currency={currency}
