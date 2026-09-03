@@ -1,8 +1,9 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
-import { TIME_RE, prettyDate } from "@/lib/datetime";
+import { TIME_RE, combineDateAndTime, prettyDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
+import { getBufferedNow } from "@abonten/core/eventDateValidation";
 import {
   AppText,
   Button,
@@ -22,15 +23,35 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
   const [draftDate, setDraftDate] = useState<string | null>(null);
   const [draftStart, setDraftStart] = useState("18:00");
   const [draftEnd, setDraftEnd] = useState("22:00");
+  const [dateError, setDateError] = useState<string | null>(null);
 
   function addOccurrence() {
+    setDateError(null);
     if (!draftDate || !TIME_RE.test(draftStart) || !TIME_RE.test(draftEnd)) {
       return;
     }
-    w.setOccurrences((prev) => [
-      ...prev,
-      { id: uuidv4(), dateIso: draftDate, start: draftStart, end: draftEnd },
-    ]);
+    if (w.occurrences.some((o) => o.dateIso === draftDate)) {
+      setDateError("That date is already in the list.");
+      return;
+    }
+    const startAt = combineDateAndTime(draftDate, draftStart);
+    const endAt = combineDateAndTime(draftDate, draftEnd);
+    if (!startAt || !endAt) return;
+    // Same 5-hour notice rule the server + web enforce.
+    if (startAt < getBufferedNow()) {
+      setDateError("Pick a date at least 5 hours from now.");
+      return;
+    }
+    if (endAt <= startAt) {
+      setDateError("The end time must be after the start time.");
+      return;
+    }
+    w.setOccurrences((prev) =>
+      [
+        ...prev,
+        { id: uuidv4(), dateIso: draftDate, start: draftStart, end: draftEnd },
+      ].sort((a, b) => a.dateIso.localeCompare(b.dateIso)),
+    );
     setDraftDate(null);
   }
 
@@ -107,7 +128,13 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
         </View>
       ) : (
         <View className="gap-3">
-          {w.occurrences.map((o, i) => (
+          {w.occurrences.length > 0 ? (
+            <AppText variant="overline">
+              {w.occurrences.length} date
+              {w.occurrences.length === 1 ? "" : "s"} selected
+            </AppText>
+          ) : null}
+          {w.occurrences.map((o) => (
             <View
               key={o.id}
               className="flex-row items-center justify-between rounded-xl border border-border bg-card p-3"
@@ -117,7 +144,7 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
               </AppText>
               <Pressable
                 onPress={() =>
-                  w.setOccurrences((prev) => prev.filter((_, idx) => idx !== i))
+                  w.setOccurrences((prev) => prev.filter((x) => x.id !== o.id))
                 }
               >
                 <AppText variant="small" tone="error">
@@ -153,6 +180,11 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
                 />
               </View>
             </View>
+            {dateError ? (
+              <AppText variant="caption" tone="error">
+                {dateError}
+              </AppText>
+            ) : null}
             <Button
               title="Add date"
               variant="outline"
