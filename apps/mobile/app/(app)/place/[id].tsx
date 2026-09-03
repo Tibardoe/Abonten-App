@@ -190,8 +190,6 @@ export default function PlaceDetailScreen() {
           id={id}
           shareTitle={place?.name ?? "Place"}
           shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
-          imagePublicId={place?.cover_public_id}
-          imageVersion={place?.cover_version}
         />
       }
     />
