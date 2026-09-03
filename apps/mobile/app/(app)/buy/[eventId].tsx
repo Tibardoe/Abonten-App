@@ -295,7 +295,12 @@ export default function BuyTicketsScreen() {
               {occurrences.map((o) => {
                 const past = isOccurrencePast(o);
                 return past ? (
-                  <View key={o.id} className="opacity-40">
+                  <View
+                    key={o.id}
+                    className="opacity-40"
+                    accessibilityLabel={`${formatDateWithSuffix(o.starts_at)} — this date has passed`}
+                    accessibilityState={{ disabled: true }}
+                  >
                     <Chip
                       label={`${formatDateWithSuffix(o.starts_at)} · past`}
                     />

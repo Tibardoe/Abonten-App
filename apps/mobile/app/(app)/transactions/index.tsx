@@ -70,6 +70,11 @@ function TransactionRow({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${
+        row.title ??
+        (row.kind === "ticket" ? "Ticket purchase" : "Subscription")
+      }, ${money(row.total_paid ?? row.amount, row.currency)}, ${row.status}`}
       className="gap-2 rounded-2xl border border-border bg-card p-3 active:opacity-90"
     >
       <View className="flex-row items-start justify-between gap-3">

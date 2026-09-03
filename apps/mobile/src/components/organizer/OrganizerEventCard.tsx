@@ -34,15 +34,28 @@ function Metric({
   label,
   value,
   emphasis,
+  align = "left",
 }: {
   label: string;
   value: string;
   emphasis?: boolean;
+  align?: "left" | "right";
 }) {
   return (
-    <View className="gap-0.5">
-      <AppText variant="caption">{label}</AppText>
-      <AppText variant={emphasis ? "sectionTitle" : "bodyStrong"}>
+    <View
+      className={`min-w-0 gap-0.5 ${emphasis ? "flex-1" : "shrink-0 pl-3"} ${
+        align === "right" ? "items-end" : ""
+      }`}
+    >
+      <AppText variant="caption" numberOfLines={1}>
+        {label}
+      </AppText>
+      <AppText
+        variant={emphasis ? "sectionTitle" : "bodyStrong"}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
+      >
         {value}
       </AppText>
     </View>
@@ -99,7 +112,11 @@ export function OrganizerEventCard({
 
   return (
     <Link href={`/(app)/organizer/events/${eventId}`} asChild>
-      <Pressable className="gap-3 rounded-2xl border border-border bg-card p-4 active:opacity-80">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${title ?? "Untitled event"} — open`}
+        className="gap-3 rounded-2xl border border-border bg-card p-4 active:opacity-80"
+      >
         <View className="flex-row items-start justify-between gap-3">
           <AppText
             variant="bodyStrong"
@@ -125,7 +142,11 @@ export function OrganizerEventCard({
               value={money(currency, num(revenue))}
               emphasis
             />
-            <Metric label="Tickets sold" value={sold.toLocaleString()} />
+            <Metric
+              label="Tickets sold"
+              value={sold.toLocaleString()}
+              align="right"
+            />
           </View>
         ) : (
           <View className="gap-2">
@@ -143,6 +164,7 @@ export function OrganizerEventCard({
                 <Metric
                   label={soldOut ? "Status" : "Spots left"}
                   value={soldOut ? "Sold out" : remaining.toLocaleString()}
+                  align="right"
                 />
               ) : null}
             </View>
