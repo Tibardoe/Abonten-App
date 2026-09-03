@@ -8,9 +8,9 @@ import type {
   OrganizerLedgerTransactionRow,
 } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText, Overline } from "@abonten/ui-native";
+import { AppText, Chip, Overline } from "@abonten/ui-native";
 import { Link } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -37,6 +37,25 @@ const LINE_LABEL: Record<OrganizerLedgerTransactionRow["line"], string> = {
   refund_release: "Refund released",
   payout: "Payout",
   payout_release: "Payout released",
+};
+
+type LedgerFilter = "all" | "sales" | "fees" | "refunds" | "payouts";
+const FILTERS: { key: LedgerFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "sales", label: "Sales" },
+  { key: "fees", label: "Fees" },
+  { key: "refunds", label: "Refunds" },
+  { key: "payouts", label: "Payouts" },
+];
+const FILTER_LINES: Record<
+  LedgerFilter,
+  OrganizerLedgerTransactionRow["line"][] | null
+> = {
+  all: null,
+  sales: ["ticket_sale"],
+  fees: ["platform_fee"],
+  refunds: ["refund", "refund_release"],
+  payouts: ["payout", "payout_release"],
 };
 
 function amount(currency: string, value: number): string {
@@ -95,8 +114,8 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
       <AppText
         className={
           row.amount < 0
-            ? "text-sm font-semibold text-destructive"
-            : "text-sm font-semibold text-foreground"
+            ? "text-[15px] font-semibold text-destructive"
+            : "text-[15px] font-semibold text-success"
         }
       >
         {amount(row.currency, row.amount)}
@@ -108,10 +127,15 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
 export default function OrganizerFinanceScreen() {
   const finance = useOrganizerFinance();
   const ledger = useOrganizerLedger();
+  const [filter, setFilter] = useState<LedgerFilter>("all");
 
   const balances: OrganizerFinanceOverviewRow[] =
     finance.data && finance.data.status === 200 ? finance.data.data : [];
-  const rows = flattenOrganizerLedger(ledger.data?.pages);
+  const allRows = flattenOrganizerLedger(ledger.data?.pages);
+  const rows = useMemo(() => {
+    const lines = FILTER_LINES[filter];
+    return lines ? allRows.filter((r) => lines.includes(r.line)) : allRows;
+  }, [allRows, filter]);
   const ledgerFailed =
     ledger.isError ||
     (ledger.data?.pages[0] && ledger.data.pages[0].status >= 400);
@@ -149,6 +173,16 @@ export default function OrganizerFinanceScreen() {
       </View>
 
       <Overline className="pt-2">Transactions</Overline>
+      <View className="flex-row flex-wrap gap-2">
+        {FILTERS.map((f) => (
+          <Chip
+            key={f.key}
+            label={f.label}
+            selected={filter === f.key}
+            onPress={() => setFilter(f.key)}
+          />
+        ))}
+      </View>
     </View>
   );
 
