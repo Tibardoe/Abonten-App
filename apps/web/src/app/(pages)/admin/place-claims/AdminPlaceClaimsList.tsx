@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  type PlaceClaimDocument,
+  getPlaceClaimDocuments,
+} from "@/actions/getPlaceClaimDocuments";
 import { reviewPlaceClaimRequest } from "@/actions/reviewPlaceClaimRequest";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
@@ -9,6 +13,70 @@ import type { PlaceClaimRequest } from "@abonten/types/placeType";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
+
+// Lazy-loaded, admin-only viewer for a claim's private supporting documents
+// (§12). Signed URLs are short-lived (5 min) and fetched only on expand.
+function ClaimDocuments({
+  requestId,
+  count,
+}: {
+  requestId: string;
+  count: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [docs, setDocs] = useState<PlaceClaimDocument[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (count === 0) return null;
+
+  async function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && docs === null && !loading) {
+      setLoading(true);
+      setError(null);
+      const res = await getPlaceClaimDocuments(requestId);
+      setLoading(false);
+      if (res.status === 200) setDocs(res.data);
+      else setError(res.message ?? "Couldn't load documents.");
+    }
+  }
+
+  return (
+    <div className="pt-1">
+      <button
+        type="button"
+        onClick={toggle}
+        className="text-sm text-primary hover:underline"
+      >
+        {open ? "Hide" : "View"} {count} document{count === 1 ? "" : "s"}
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2">
+          {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {docs?.map((doc) => (
+            <a
+              key={doc.id}
+              href={doc.url ?? "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm hover:bg-accent"
+            >
+              <span className="truncate">
+                {doc.fileName ?? doc.mimeType ?? "Document"}
+              </span>
+              <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                open ↗
+              </span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const QUERY_KEY = ["admin-place-claim-requests", "pending"];
 
@@ -122,6 +190,11 @@ export default function AdminPlaceClaimsList({
                 {request.contact_email}
               </p>
             )}
+
+            <ClaimDocuments
+              requestId={request.id}
+              count={request.document_count ?? 0}
+            />
 
             <div className="flex gap-2 pt-1">
               <button

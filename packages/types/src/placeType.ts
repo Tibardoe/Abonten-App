@@ -108,6 +108,10 @@ export type PlaceClaimRequest = {
   created_at: string;
   place: { name: string; slug: string } | null;
   user_info: { username: string } | null;
+  // §12: count of private supporting documents attached to this claim.
+  // Populated by getPlaceClaimRequests.ts via a `place_claim_document(count)`
+  // embed; the documents themselves come from getPlaceClaimDocuments.ts.
+  document_count?: number;
 };
 
 // Params accepted by getQueriedPlaces / get_filtered_places.

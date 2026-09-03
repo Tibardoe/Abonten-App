@@ -75,7 +75,9 @@ export async function getPlaceClaimRequests(options?: {
 
   let query = supabase
     .from("place_claim_request")
-    .select("*, place(name, slug), user_info!claimant_id(username)")
+    .select(
+      "*, place(name, slug), user_info!claimant_id(username), place_claim_document(count)",
+    )
     .eq("status", status)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -99,8 +101,20 @@ export async function getPlaceClaimRequests(options?: {
     };
   }
 
+  // PostgREST returns the `place_claim_document(count)` embed as
+  // `[{ count: N }]` — flatten it to a plain number.
+  const normalised = (data ?? []).map((row) => {
+    const embed = (row as { place_claim_document?: { count: number }[] })
+      .place_claim_document;
+    const { place_claim_document, ...rest } = row as Record<string, unknown>;
+    return {
+      ...rest,
+      document_count: Array.isArray(embed) ? (embed[0]?.count ?? 0) : 0,
+    };
+  }) as unknown as PlaceClaimRequest[];
+
   const { page, hasNextPage } = splitPage<PlaceClaimRequest>(
-    (data ?? []) as unknown as PlaceClaimRequest[],
+    normalised,
     pageSize,
   );
 
