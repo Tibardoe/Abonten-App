@@ -12,15 +12,20 @@ import {
   Card,
   Chip,
   EmptyState,
+  Icon,
   ScreenLoader,
   Spinner,
+  StatusPill,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 
 // Native echo of the web /transactions page: a period filter, summary
-// tiles, and the merged ticket + subscription history timeline.
+// tiles, and the merged ticket + subscription history timeline. Status
+// treatment (and the refund sub-status) come from the shared StatusPill /
+// resolveStatus system, so "Pending" / "Failed" / "Refunded" here look
+// identical to the same states on Finances and the Tickets screen.
 
 const PERIODS: TransactionPeriod[] = [
   "today",
@@ -29,14 +34,6 @@ const PERIODS: TransactionPeriod[] = [
   "last3Months",
   "all",
 ];
-
-const STATUS_TONE: Record<string, string> = {
-  paid: "text-primary",
-  pending: "text-muted-foreground",
-  failed: "text-destructive",
-  cancelled: "text-destructive",
-  expired: "text-muted-foreground",
-};
 
 function money(amount: number, currency: string) {
   return `${currency || "GHS"} ${Number(amount ?? 0).toLocaleString()}`;
@@ -58,35 +55,56 @@ function TransactionRow({
   row: UserTransactionRow;
   onPress: () => void;
 }) {
-  const refunded =
-    !!row.refund_status && row.refund_status !== "none"
-      ? ` · refund ${row.refund_status}`
-      : "";
+  const hasRefund = !!row.refund_status && row.refund_status !== "none";
+  // A cancelled ticket whose transaction still reads "successful" but has a
+  // refund request on file = the refund attempt failed (see refundStatus.ts).
+  const refundLabel =
+    row.refund_status === "refunded"
+      ? "Refund issued"
+      : row.refund_status === "refund_pending"
+        ? "Refund pending"
+        : row.refund_status === "successful" && row.refund_requested_at
+          ? "Refund failed"
+          : undefined;
+
   return (
     <Pressable
       onPress={onPress}
-      className="gap-1 rounded-xl border border-border bg-card p-3 active:opacity-90"
+      className="gap-2 rounded-2xl border border-border bg-card p-3 active:opacity-90"
     >
-      <View className="flex-row items-center justify-between">
-        <AppText variant="bodyStrong" numberOfLines={1} className="flex-1">
-          {row.title ??
-            (row.kind === "ticket" ? "Ticket purchase" : "Subscription")}
-        </AppText>
+      <View className="flex-row items-start justify-between gap-3">
+        <View className="flex-1 flex-row items-start gap-2">
+          <Icon
+            name={row.kind === "ticket" ? "ticket-outline" : "repeat-outline"}
+            size={16}
+            tone="muted"
+            style={{ marginTop: 2 }}
+          />
+          <View className="flex-1">
+            <AppText variant="bodyStrong" numberOfLines={1}>
+              {row.title ??
+                (row.kind === "ticket" ? "Ticket purchase" : "Subscription")}
+            </AppText>
+            <AppText variant="caption" numberOfLines={1}>
+              {row.subtitle ?? row.reference}
+            </AppText>
+          </View>
+        </View>
         <AppText variant="bodyStrong">
           {money(row.total_paid ?? row.amount, row.currency)}
         </AppText>
       </View>
-      <AppText variant="caption" numberOfLines={1}>
-        {row.subtitle ?? row.reference}
-      </AppText>
       <View className="flex-row items-center justify-between">
-        <AppText
-          variant="small"
-          className={`font-medium ${STATUS_TONE[row.status] ?? "text-muted-foreground"}`}
-        >
-          {row.status}
-          {refunded}
-        </AppText>
+        <View className="flex-row flex-wrap items-center gap-1.5">
+          <StatusPill status={row.status} size="sm" />
+          {hasRefund && refundLabel ? (
+            <StatusPill
+              status={row.refund_status ?? ""}
+              options={{ label: refundLabel }}
+              size="sm"
+            />
+          ) : null}
+        </View>
         <AppText variant="caption">
           {new Date(row.created_at).toLocaleDateString()}
         </AppText>
