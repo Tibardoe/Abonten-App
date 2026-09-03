@@ -1,8 +1,20 @@
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
 import { AppHeader } from "@/components/app/AppHeader";
+import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { EventListSkeleton, PlaceListSkeleton } from "@/components/skeletons";
+import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import {
+  clearEventFilterKey,
+  clearPlaceFilterKey,
+  countActiveEventFilters,
+  countActivePlaceFilters,
+  describeEventFilters,
+  describePlaceFilters,
+  filterEventList,
+  filterPlaceList,
+} from "@/features/discovery/exploreFilters";
 import {
   type EventSliders,
   useExploreEventSliders,
@@ -11,10 +23,12 @@ import {
   type PlaceSliders,
   useExplorePlaceSliders,
 } from "@/features/discovery/useExplorePlaceSliders";
+import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { EmptyState } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
+import { useMemo } from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 
 // The "See all" window for one curated Explore slider. It re-uses the exact
@@ -40,26 +54,71 @@ export default function ExploreSectionScreen() {
   }>();
   const { location } = useExploreLocation();
   const coords = location ? { lat: location.lat, lng: location.lng } : null;
+  const {
+    eventFilters,
+    placeFilters,
+    setEventFilters,
+    setPlaceFilters,
+    clearEventFilters,
+    clearPlaceFilters,
+  } = useExploreFilters();
 
   const eventSliders = useExploreEventSliders(coords, location?.label ?? "");
   const placeSliders = useExplorePlaceSliders(coords);
+  const placeCategories = usePlaceCategories().data ?? [];
 
   const isEvent = kind === "event";
   const query = isEvent ? eventSliders : placeSliders;
-  const events = isEvent
+
+  // The "See all" window must honour whatever filters were active on the
+  // strip it expanded — same client-side predicate the Explore screen runs.
+  const rawEvents = isEvent
     ? (eventSliders.data[sliderKey as EventKey] ?? [])
     : [];
-  const places = !isEvent
+  const rawPlaces = !isEvent
     ? (placeSliders.data[sliderKey as PlaceKey] ?? [])
     : [];
+  const events = useMemo(
+    () => filterEventList(rawEvents, eventFilters, coords),
+    [rawEvents, eventFilters, coords],
+  );
+  const places = useMemo(
+    () => filterPlaceList(rawPlaces, placeFilters),
+    [rawPlaces, placeFilters],
+  );
   const loading = query.isLoading;
 
+  const filterCount = isEvent
+    ? countActiveEventFilters(eventFilters)
+    : countActivePlaceFilters(placeFilters);
+  const selectedPlaceCategoryName =
+    placeFilters.categoryId != null
+      ? (placeCategories.find((c) => c.id === placeFilters.categoryId)?.name ??
+        null)
+      : null;
+  const activeChips = isEvent
+    ? describeEventFilters(eventFilters)
+    : describePlaceFilters(placeFilters, selectedPlaceCategoryName);
+
   const header = (
-    <AppHeader
-      variant="title"
-      title={title ?? "All"}
-      backFallback="/(app)/(tabs)"
-    />
+    <View>
+      <AppHeader
+        variant="title"
+        title={title ?? "All"}
+        backFallback="/(app)/(tabs)"
+      />
+      {filterCount > 0 ? (
+        <ActiveFilterChips
+          chips={activeChips}
+          onRemove={(key) => {
+            if (isEvent)
+              setEventFilters(clearEventFilterKey(eventFilters, key));
+            else setPlaceFilters(clearPlaceFilterKey(placeFilters, key));
+          }}
+          onClearAll={isEvent ? clearEventFilters : clearPlaceFilters}
+        />
+      ) : null}
+    </View>
   );
 
   if (loading) {
@@ -89,8 +148,18 @@ export default function ExploreSectionScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="calendar-outline"
-              title="Nothing here right now"
-              description="Check back soon, or change your location."
+              title={
+                filterCount > 0
+                  ? "No events match your filters"
+                  : "Nothing here right now"
+              }
+              description={
+                filterCount > 0
+                  ? "Try widening or clearing your filters."
+                  : "Check back soon, or change your location."
+              }
+              actionLabel={filterCount > 0 ? "Clear filters" : undefined}
+              onAction={filterCount > 0 ? clearEventFilters : undefined}
             />
           }
         />
@@ -109,8 +178,18 @@ export default function ExploreSectionScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="location-outline"
-              title="Nothing here right now"
-              description="Check back soon, or change your location."
+              title={
+                filterCount > 0
+                  ? "No places match your filters"
+                  : "Nothing here right now"
+              }
+              description={
+                filterCount > 0
+                  ? "Try widening or clearing your filters."
+                  : "Check back soon, or change your location."
+              }
+              actionLabel={filterCount > 0 ? "Clear filters" : undefined}
+              onAction={filterCount > 0 ? clearPlaceFilters : undefined}
             />
           }
         />

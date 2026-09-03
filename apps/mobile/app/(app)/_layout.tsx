@@ -1,5 +1,6 @@
 import { AppDrawer } from "@/components/app/AppDrawer";
 import { MenuSheetProvider } from "@/components/app/menuSheet";
+import { ExploreFiltersProvider } from "@/features/discovery/ExploreFiltersProvider";
 import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationProvider";
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
@@ -58,12 +59,14 @@ function StackHost() {
 export default function AppLayout() {
   return (
     <ExploreLocationProvider>
-      <HighlightUploadProvider>
-        <MenuSheetProvider>
-          <StackHost />
-          <AppDrawer />
-        </MenuSheetProvider>
-      </HighlightUploadProvider>
+      <ExploreFiltersProvider>
+        <HighlightUploadProvider>
+          <MenuSheetProvider>
+            <StackHost />
+            <AppDrawer />
+          </MenuSheetProvider>
+        </HighlightUploadProvider>
+      </ExploreFiltersProvider>
     </ExploreLocationProvider>
   );
 }

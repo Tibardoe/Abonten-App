@@ -35,6 +35,13 @@ export type SheetProps = {
   children: ReactNode;
   /** Cap the sheet height as a fraction of the screen (default 0.85). */
   maxHeightRatio?: number;
+  /**
+   * Float the sheet up to at least this fraction of the screen even when its
+   * content is short — so important sheets (location picker, add wallet,
+   * create actions, filters) don't sit buried at the bottom edge. Responsive:
+   * it's a ratio of the live window height, never a fixed pixel value.
+   */
+  minHeightRatio?: number;
 };
 
 export function Sheet({
@@ -45,10 +52,15 @@ export function Sheet({
   footer,
   children,
   maxHeightRatio = 0.85,
+  minHeightRatio,
 }: SheetProps) {
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
+  const minHeight =
+    minHeightRatio != null
+      ? Math.min(height * maxHeightRatio, height * minHeightRatio)
+      : undefined;
 
   return (
     <Modal
@@ -77,7 +89,11 @@ export function Sheet({
         />
         <View
           className="rounded-t-2xl border-t border-border bg-popover"
-          style={[{ maxHeight: height * maxHeightRatio }, shadow.sheet]}
+          style={[
+            { maxHeight: height * maxHeightRatio },
+            minHeight != null ? { minHeight } : null,
+            shadow.sheet,
+          ]}
         >
           <View className="items-center pb-1 pt-3">
             <View className="h-1 w-10 rounded-full bg-border" />
@@ -108,6 +124,7 @@ export function Sheet({
           ) : null}
 
           <ScrollView
+            style={minHeight != null ? { flexGrow: 1 } : undefined}
             contentContainerStyle={{
               padding: 16,
               paddingBottom: 16 + (footer ? 0 : insets.bottom),

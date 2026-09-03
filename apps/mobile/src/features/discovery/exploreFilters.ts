@@ -1,4 +1,8 @@
 import { distances, rating } from "@abonten/core/distanceAndRating";
+import { parseEventTypes } from "@abonten/core/parseEventTypes";
+import { parseWKBHex } from "@abonten/core/parseWKBHex";
+import type { PlaceType } from "@abonten/types/placeType";
+import type { UserPostType } from "@abonten/types/postsType";
 
 // Native mirror of the web Filter modal's field set (see
 // apps/web/src/components/organisms/FilterModalPopup.tsx). The Events tab
@@ -151,4 +155,165 @@ export function clearPlaceFilterKey(
   if (key === "rating") return { ...f, minRating: null };
   if (key === "distance") return { ...f, maxDistanceKm: null };
   return f;
+}
+
+// ---------------------------------------------------------------------------
+// Client-side predicates — so the curated Explore sliders (Around You,
+// Happening Today/Week/Month, Featured, Open Now, Top Rated) honour the
+// filter sheet instead of only the "All" list doing so. They run against the
+// single bounded nearby fetch every slider is already derived from, so this
+// adds no network. A dimension the discovery payload can't express falls
+// through as "matches" (see eventFiltersNeedServerData for the one case that
+// forces the curated block to collapse instead).
+// ---------------------------------------------------------------------------
+
+const EARTH_RADIUS_KM = 6371;
+
+export function haversineKm(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return EARTH_RADIUS_KM * 2 * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+/** Every session start for an event (occurrences, else the main starts_at). */
+function eventStarts(event: UserPostType): number[] {
+  const occ =
+    event.occurrences && event.occurrences.length > 0
+      ? event.occurrences
+      : (event.event_occurrence ?? []);
+  const raw =
+    occ.length > 0
+      ? occ.map((o) => o.starts_at)
+      : event.starts_at
+        ? [event.starts_at]
+        : [];
+  return raw
+    .map((s) => new Date(s as unknown as string).getTime())
+    .filter((t) => !Number.isNaN(t));
+}
+
+function eventPrice(event: UserPostType): number | null {
+  const candidates = [
+    event.min_price,
+    event.minTicket?.price,
+    event.ticket_price,
+    event.ticket_type?.[0]?.price,
+  ];
+  for (const c of candidates) {
+    if (typeof c === "number" && !Number.isNaN(c)) return c;
+  }
+  return null;
+}
+
+function eventCoords(event: UserPostType): { lat: number; lng: number } | null {
+  if (!event.location || typeof event.location !== "string") return null;
+  try {
+    const { eventLat, eventLng } = parseWKBHex(event.location);
+    if (Number.isNaN(eventLat) || Number.isNaN(eventLng)) return null;
+    return { lat: eventLat, lng: eventLng };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The Explore Events tab's nearby payload carries no rating, so a
+ * `minRating` filter can't be honoured on the curated sliders. When it's
+ * set the screen collapses the curated block and leans on the "All" list
+ * (which filters by rating server-side) rather than showing rows that
+ * silently ignore the constraint.
+ */
+export function eventFiltersNeedServerData(f: EventFilters): boolean {
+  return f.minRating != null;
+}
+
+export function eventMatchesFilters(
+  event: UserPostType,
+  f: EventFilters,
+  userCoords: { lat: number; lng: number } | null,
+): boolean {
+  if (f.category && event.event_category !== f.category) return false;
+
+  if (f.types.length > 0) {
+    const eventTypes = parseEventTypes(
+      (event as { event_type?: unknown }).event_type,
+    );
+    if (!f.types.some((t) => eventTypes.includes(t))) return false;
+  }
+
+  if (
+    f.minPrice != null ||
+    (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX)
+  ) {
+    const price = eventPrice(event) ?? 0;
+    if (f.minPrice != null && price < f.minPrice) return false;
+    if (f.maxPrice != null && f.maxPrice < PRICE_ANY_MAX && price > f.maxPrice)
+      return false;
+  }
+
+  if (f.startDate || f.endDate) {
+    const starts = eventStarts(event);
+    if (starts.length === 0) return false;
+    const from = f.startDate
+      ? new Date(`${f.startDate}T00:00:00`).getTime()
+      : Number.NEGATIVE_INFINITY;
+    const to = f.endDate
+      ? new Date(`${f.endDate}T23:59:59`).getTime()
+      : Number.POSITIVE_INFINITY;
+    if (!starts.some((t) => t >= from && t <= to)) return false;
+  }
+
+  if (f.maxDistanceKm != null && userCoords) {
+    const known =
+      typeof event.distance_km === "number"
+        ? event.distance_km
+        : (() => {
+            const ec = eventCoords(event);
+            return ec ? haversineKm(userCoords, ec) : null;
+          })();
+    if (known != null && known > f.maxDistanceKm) return false;
+  }
+
+  return true;
+}
+
+export function placeMatchesFilters(
+  place: PlaceType,
+  f: PlaceFilters,
+): boolean {
+  if (f.categoryId != null && place.category_id !== f.categoryId) return false;
+  if (f.openNow && !place.is_open) return false;
+  if (f.minRating != null && (place.avg_rating ?? 0) < f.minRating)
+    return false;
+  if (
+    f.maxDistanceKm != null &&
+    typeof place.distance_km === "number" &&
+    place.distance_km > f.maxDistanceKm
+  )
+    return false;
+  return true;
+}
+
+export function filterEventList(
+  events: UserPostType[],
+  f: EventFilters,
+  userCoords: { lat: number; lng: number } | null,
+): UserPostType[] {
+  if (countActiveEventFilters(f) === 0) return events;
+  return events.filter((e) => eventMatchesFilters(e, f, userCoords));
+}
+
+export function filterPlaceList(
+  places: PlaceType[],
+  f: PlaceFilters,
+): PlaceType[] {
+  if (countActivePlaceFilters(f) === 0) return places;
+  return places.filter((p) => placeMatchesFilters(p, f));
 }
