@@ -5,6 +5,7 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type {
   AdminContext,
   NotificationAdminDetail,
@@ -29,6 +30,10 @@ import {
 // write millions of rows. Raise deliberately if the user base outgrows it.
 const BROADCAST_MAX_RECIPIENTS = 50_000;
 const INSERT_CHUNK = 500;
+// A legitimate broadcast is a deliberate, occasional admin action -- this
+// bounds a mis-click loop or a compromised admin session from spamming
+// every user's notification feed repeatedly.
+const MAX_BROADCASTS_PER_HOUR = 5;
 
 export type ListNotificationsFilters = {
   type?: string | null;
@@ -261,6 +266,19 @@ export async function broadcastNotificationCore(
     return { status: 403, message: (e as Error).message };
   }
 
+  const allowed = await checkRateLimit(
+    `notification-broadcast:${ctx.userId}`,
+    MAX_BROADCASTS_PER_HOUR,
+    3600,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many broadcasts sent recently. Please try again later.",
+    };
+  }
+
   const resolved = await resolveRecipients(supabase, input.segment);
   if (!resolved.ok) {
     return { status: resolved.status, message: resolved.message };
@@ -360,7 +378,14 @@ async function resolveRecipients(
   }
 
   if (segment.kind === "all_users") {
-    const { data, error } = await supabase.from("user_info").select("id");
+    // Fetch one row past the cap so an oversized user base is detected by
+    // the BROADCAST_MAX_RECIPIENTS check below instead of the query itself
+    // pulling every row (PostgREST would otherwise transfer the whole
+    // table before that check ever runs).
+    const { data, error } = await supabase
+      .from("user_info")
+      .select("id")
+      .limit(BROADCAST_MAX_RECIPIENTS + 1);
     if (error)
       return { ok: false, status: 500, message: "Couldn't list users." };
     return {
@@ -389,7 +414,8 @@ async function resolveRecipients(
     .from("ticket")
     .select("user_id")
     .in("ticket_type_id", typeIds)
-    .in("status", ["active", "used"]);
+    .in("status", ["active", "used"])
+    .limit(BROADCAST_MAX_RECIPIENTS + 1);
   if (kErr)
     return { ok: false, status: 500, message: "Couldn't read attendees." };
   const userIds = [...new Set((tickets ?? []).map((t) => t.user_id))].filter(

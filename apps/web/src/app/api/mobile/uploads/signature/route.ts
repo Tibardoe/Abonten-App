@@ -26,7 +26,9 @@ export async function POST(req: Request) {
       });
     }
 
-    return apiJson(buildCloudinaryUploadSignature(auth.user.id, body.kind));
+    return apiJson(
+      await buildCloudinaryUploadSignature(auth.user.id, body.kind),
+    );
   } catch (error) {
     logger.error("mobile POST /uploads/signature failed", error);
     return apiJson({ status: 500, message: "Something went wrong!" });

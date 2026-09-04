@@ -7,7 +7,15 @@ import {
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+// A checkout retried right as its reservation expires re-runs this whole
+// function (event lookup, promo lookup, create_ticket_checkout) each time,
+// so an aggressive client-side retry loop (or a bot) churns real inventory
+// reservations instead of just re-reading state. Capped generously above
+// any real user's click-retry rate.
+const MAX_CHECKOUT_VALIDATIONS_PER_MINUTE = 30;
 
 // Post-auth body of validateCheckout, lifted verbatim so the mobile API
 // route (`/api/mobile/checkout/validate`) and the "use server" action run
@@ -62,6 +70,19 @@ export async function validateCheckoutCore(
 
   if (!quantityCheck.ok) {
     return { status: 400, message: quantityCheck.message };
+  }
+
+  const allowed = await checkRateLimit(
+    `checkout-validate:${userId}`,
+    MAX_CHECKOUT_VALIDATIONS_PER_MINUTE,
+    60,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many checkout attempts. Please try again shortly.",
+    };
   }
 
   // Reclaim anything that's timed out — for this user or anyone else —

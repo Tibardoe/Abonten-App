@@ -7,10 +7,17 @@ import {
   type ReviewPhotoInput,
   insertReviewPhotos,
 } from "@abonten/services/reviews/insertReviewPhotos";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";
+
+// The one-review-per-event UNIQUE constraint stops re-reviewing the SAME
+// event, but a user with many attended events could still post many reviews
+// in a burst. Generous relative to how often anyone genuinely finishes an
+// event and sits down to review it.
+const MAX_REVIEWS_PER_HOUR = 10;
 
 type PostEventReviewInput = {
   eventId: string;
@@ -55,6 +62,19 @@ export async function postEventReview(formData: PostEventReviewInput) {
 
   if (!user) {
     return { status: 401, message: "User not authenticated" };
+  }
+
+  const allowed = await checkRateLimit(
+    `event-review-post:${user.id}`,
+    MAX_REVIEWS_PER_HOUR,
+    3600,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many reviews posted recently. Please try again later.",
+    };
   }
 
   const { eventId, rating, title, comment, photos } = formData;

@@ -2,9 +2,15 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";
+
+// The partial unique index stops a duplicate pending request for the SAME
+// place, but not a burst of claims across many different places, each of
+// which needs a human (owner/admin) to eventually review.
+const MAX_CLAIM_REQUESTS_PER_HOUR = 5;
 
 type SubmitPlaceClaimRequestInput = {
   placeId: string;
@@ -45,6 +51,19 @@ export async function submitPlaceClaimRequest(
 
   if (!user) {
     return { status: 401, message: "User not authenticated" };
+  }
+
+  const allowed = await checkRateLimit(
+    `place-claim:${user.id}`,
+    MAX_CLAIM_REQUESTS_PER_HOUR,
+    3600,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many claim requests recently. Please try again later.",
+    };
   }
 
   const { placeId, note, contactPhone, contactEmail } = formData;

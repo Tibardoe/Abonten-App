@@ -6,9 +6,15 @@ import {
   type ReviewPhotoInput,
   insertReviewPhotos,
 } from "@abonten/services/reviews/insertReviewPhotos";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 
 // Postgres error code for a unique-constraint violation.
 const UNIQUE_VIOLATION = "23505";
+
+// No attendance gate here (unlike postEventReview.ts) -- any authenticated
+// user can review any published place, so the one-review-per-place UNIQUE
+// constraint alone doesn't stop spamming many different places in a burst.
+const MAX_REVIEWS_PER_HOUR = 10;
 
 type PostPlaceReviewInput = {
   placeId: string;
@@ -45,6 +51,19 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
 
   if (!user) {
     return { status: 401, message: "User not authenticated" };
+  }
+
+  const allowed = await checkRateLimit(
+    `place-review-post:${user.id}`,
+    MAX_REVIEWS_PER_HOUR,
+    3600,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many reviews posted recently. Please try again later.",
+    };
   }
 
   const { placeId, rating, title, comment, photos } = formData;

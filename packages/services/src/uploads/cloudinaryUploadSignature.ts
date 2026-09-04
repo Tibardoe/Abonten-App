@@ -7,7 +7,14 @@ import {
   MAX_PLACE_PHOTO_SIZE_BYTES,
   MAX_REVIEW_PHOTO_SIZE_BYTES,
 } from "@abonten/core/uploadLimits";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import { v2 as cloudinary } from "cloudinary";
+
+// A signature costs nothing server-side to produce but authorizes one real
+// Cloudinary upload -- unbounded requests here is unbounded upload volume
+// against the account's storage/bandwidth quota. Generous relative to any
+// real multi-photo gallery upload.
+const MAX_SIGNATURES_PER_MINUTE = 60;
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -104,12 +111,13 @@ export type CloudinarySignatureData = {
 };
 
 // Same shape the get*UploadSignature Server Actions have always returned:
-// a 200 with `data`, or a 401 with `message`. Kept as a discriminated union
-// so existing callers (useAvatarUpload.ts etc.) narrow on `status` exactly
-// as before.
+// a 200 with `data`, a 401 with `message`, or (new) a 429 when the caller is
+// requesting signatures faster than any real upload flow would. Kept as a
+// discriminated union so existing callers (useAvatarUpload.ts etc.) narrow
+// on `status` exactly as before.
 export type UploadSignatureResult =
   | { status: 200; data: CloudinarySignatureData; message?: undefined }
-  | { status: 401; message: string; data?: undefined };
+  | { status: 401 | 429; message: string; data?: undefined };
 
 export function isUploadSignatureKind(
   value: unknown,
@@ -117,10 +125,23 @@ export function isUploadSignatureKind(
   return typeof value === "string" && value in FOLDER_PREFIX;
 }
 
-export function buildCloudinaryUploadSignature(
+export async function buildCloudinaryUploadSignature(
   userId: string,
   kind: UploadSignatureKind,
-): { status: 200; data: CloudinarySignatureData; message?: undefined } {
+): Promise<UploadSignatureResult> {
+  const allowed = await checkRateLimit(
+    `cloudinary-signature:${userId}`,
+    MAX_SIGNATURES_PER_MINUTE,
+    60,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many upload requests. Please try again shortly.",
+    };
+  }
+
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `${FOLDER_PREFIX[kind]}/${userId}`;
   const { allowedFormats, maxFileSizeBytes } = UPLOAD_CONSTRAINTS[kind];
