@@ -2,25 +2,13 @@
 // Components, Route Handlers, Server Actions). Imported from
 // src/instrumentation.ts when NEXT_RUNTIME === "nodejs".
 //
-// Same pattern as apps/web: only enabled in a production build AND only
-// when a DSN is configured, so local `next dev` (port 3100) never reports.
-// Vercel preview + production both send, separated by the `environment`
-// tag. Events land in the `abonten-admin` Sentry project — the DSN value,
-// set per Vercel project, is what routes them there.
+// All the actual configuration — gating, environment resolution, error
+// filtering, sensitive-data redaction — lives in ./lib/sentry so the
+// three runtime entrypoints can't drift apart. Events land in the
+// `abonten-admin` Sentry project (the DSN, set per Vercel project, routes
+// them there).
 
 import * as Sentry from "@sentry/nextjs";
+import { adminSentryOptions } from "./lib/sentry";
 
-const dsn = process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN;
-
-Sentry.init({
-  dsn,
-  enabled: Boolean(dsn) && process.env.NODE_ENV === "production",
-  environment:
-    process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ||
-    process.env.VERCEL_ENV ||
-    process.env.NODE_ENV,
-  // release is injected at build time by the Sentry bundler plugin
-  // (git SHA / VERCEL_GIT_COMMIT_SHA) — see next.config.ts.
-  tracesSampleRate: 0.1,
-  sendDefaultPii: false,
-});
+Sentry.init(adminSentryOptions("server"));

@@ -4,9 +4,13 @@ import {
   STEP_UP_MAX_AGE_MS,
 } from "@abonten/core/adminPermissions";
 import { resolveAdminContext } from "@abonten/services/admin/adminContext";
-import type { AdminContext, AdminPermissionKey } from "@abonten/types/adminTypes";
+import type {
+  AdminContext,
+  AdminPermissionKey,
+} from "@abonten/types/adminTypes";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { tagAdminRequest } from "./sentry";
 import { getServiceClient } from "./serviceClient";
 import { createSsrClient } from "./supabaseServer";
 
@@ -59,10 +63,16 @@ export async function requireAdmin(opts?: {
   const reauthenticatedAt = stepUpRaw ? Number.parseInt(stepUpRaw, 10) : null;
 
   try {
-    return await resolveAdminContext(getServiceClient(), user.id, {
+    const ctx = await resolveAdminContext(getServiceClient(), user.id, {
       email: user.email ?? null,
-      reauthenticatedAt: Number.isFinite(reauthenticatedAt) ? reauthenticatedAt : null,
+      reauthenticatedAt: Number.isFinite(reauthenticatedAt)
+        ? reauthenticatedAt
+        : null,
     });
+    // Attach the admin's id + role keys to this request's Sentry scope
+    // (request-isolated in @sentry/nextjs) — no email / other PII.
+    tagAdminRequest(ctx);
+    return ctx;
   } catch (err) {
     if (redirectOnFail) redirect("/no-access");
     throw err;
@@ -80,7 +90,10 @@ export async function requirePermissionPage(
 
 /** For sensitive server actions: throws unless a step-up re-auth is fresh. */
 export function assertStepUpFresh(ctx: AdminContext): void {
-  if (!ctx.reauthenticatedAt || Date.now() - ctx.reauthenticatedAt > STEP_UP_MAX_AGE_MS) {
+  if (
+    !ctx.reauthenticatedAt ||
+    Date.now() - ctx.reauthenticatedAt > STEP_UP_MAX_AGE_MS
+  ) {
     throw new AdminForbiddenError(
       undefined,
       "This action needs a fresh re-authentication. Confirm your identity and try again.",

@@ -934,8 +934,9 @@ org-level `SENTRY_AUTH_TOKEN`, three different DSNs.
 - **Config files** (`<app>/src/`): `instrumentation.ts` (`register()` + `onRequestError =
   Sentry.captureRequestError` — covers Server Components, Route Handlers, Server Actions),
   `instrumentation-client.ts` (browser init + `onRouterTransitionStart`), `sentry.server.config.ts`,
-  `sentry.edge.config.ts` (edge = `proxy.ts` / middleware). Byte-for-byte the same across the two
-  apps except the top comment.
+  `sentry.edge.config.ts` (edge = `proxy.ts` / middleware). web's three inits are near-identical;
+  **admin's three call one shared `src/lib/sentry.ts` factory** (`adminSentryOptions(runtime)`) so
+  they can't drift — see the admin-hardening bullet below.
 - **Gating**: every `Sentry.init` sets `enabled: Boolean(dsn) && NODE_ENV === "production"`, so
   local `next dev` never reports. Vercel **preview and production both send**, separated by the
   `environment` tag (`VERCEL_ENV` → `NEXT_PUBLIC_VERCEL_ENV` on the client, then `NODE_ENV`).
@@ -952,6 +953,25 @@ org-level `SENTRY_AUTH_TOKEN`, three different DSNs.
 - **`global-error.tsx`**: web's also calls `Sentry.captureException` alongside its existing
   `reportClientError`; admin had no error boundary at all, so a minimal new one was added
   (`Sentry.captureException` + a plain recovery screen).
+- **admin hardening** (`apps/admin/src/lib/sentry.ts`, 2026-09-04) — admin's Sentry project is its
+  *only* monitoring sink, so the factory adds:
+  - **noise filter** — `ignoreErrors` + a `beforeSend` that drops the guard's expected throws
+    (`AdminUnauthenticatedError` / `AdminForbiddenError` — fired on every non-allowlisted or
+    disabled-admin hit) plus `ResizeObserver` / `AbortError` browser noise. `redirect()` /
+    `notFound()` control-flow is already dropped by the SDK.
+  - **redaction** — `beforeSend` / `beforeSendTransaction` / `beforeBreadcrumb` strip
+    `request.cookies`, sensitive headers (`cookie`, `authorization`, `x-*-token`, `x-supabase-*`,
+    forwarded-IP), secret-looking keys in `extra` / `contexts` / `request.data`, and
+    `?token=/code=/access_token=`-style query params from URLs. On top of `sendDefaultPii: false`.
+  - **request identity** — `requireAdmin()` calls `tagAdminRequest(ctx)` after a caller is verified,
+    setting `Sentry.setUser({ id })` + an `admin.roles` tag (role keys only, no email/PII;
+    request-isolated by `@sentry/nextjs`).
+  - **swallowed Server Action failures** — actions catch their throw and return an envelope, so
+    `onRequestError` never sees them; `server/actions.ts` now routes non-expected errors through a
+    local `adminError()` → `captureAdminActionError()` (`source: admin_server_action` tag).
+  - **controlled test** — `GET /monitoring/sentry-check` (gated `monitoring.view`) sends one
+    deliberate event and returns its id + whether the SDK is enabled; a "Send test event" button on
+    the Monitoring page (`monitoring.manage`) triggers it.
 - **also-send adapter (web only)**: `POST /api/observability/error` mirrors every ingested error
   into Sentry via `forwardToSentry()` — **only `platform === "web" | "api"`**, a no-op when the
   SDK is disabled. The self-hosted `app_error_event` / `app_error_group` pipeline is unchanged and
@@ -991,9 +1011,10 @@ org-level `SENTRY_AUTH_TOKEN`, three different DSNs.
   `EXPO_PUBLIC_SENTRY_DSN` (public, per EAS env) + optional `EXPO_PUBLIC_SENTRY_ENVIRONMENT`;
   `SENTRY_AUTH_TOKEN` as an **EAS secret** (sensitive, build-only, never bundled). `.gitignore`
   excludes `.env.sentry-build-plugin`.
-- Verified: `turbo typecheck` (web + admin + mobile) green; `next build` for web + admin green
-  with the wrapper active, no deprecation warnings; `expo config` + `expo export --platform
-  android` green with the Sentry plugin + `getSentryExpoConfig`; biome clean. Not verified live —
+- Verified: `turbo typecheck` (all 11) green; `next build` for web + admin green with the wrapper
+  + admin hardening active, no deprecation / Sentry warnings; `expo config` + `expo export
+  --platform android` green with the Sentry plugin + `getSentryExpoConfig`; biome clean. Not
+  verified live —
   each app needs a deploy/build with its DSN set and a triggered test error; mobile also needs a
   dev-client / EAS build (native crash reporting is a no-op in Expo Go).
 

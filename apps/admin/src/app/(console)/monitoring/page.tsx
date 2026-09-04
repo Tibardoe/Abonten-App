@@ -12,6 +12,7 @@ import { loadMonitoring } from "@/lib/data";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { ErrorGroupRow } from "./ErrorGroupRow";
 import { IncidentPanel } from "./IncidentPanel";
+import { SentryCheckButton } from "./SentryCheckButton";
 
 export default async function MonitoringPage() {
   const { ctx, health, errors, metrics, incidents } = await loadMonitoring();
@@ -48,6 +49,8 @@ export default async function MonitoringPage() {
           project.
         </span>
       </p>
+
+      {canManage && <SentryCheckButton />}
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
