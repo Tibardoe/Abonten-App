@@ -1,4 +1,4 @@
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
@@ -97,9 +97,6 @@ export default withSentryConfig(withNextIntl(nextConfig), {
 
   // Upload a wider set of client maps so minified stack traces resolve.
   widenClientFileUpload: true,
-
-  // Tree-shake Sentry's own debug logging out of the production bundle.
-  disableLogger: true,
 
   // Upload maps to Sentry for prod debugging, then delete them from the
   // deployed output so they're never served publicly.
