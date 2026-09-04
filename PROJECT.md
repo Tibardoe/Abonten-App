@@ -754,8 +754,17 @@ No third-party APM. Real pipeline:
   Paystack `/bank`, Resend, Hubtel, Cloudinary ping, Expo push) at `GET /api/observability/health`,
   called every 2 min by a `pg_cron` job (`abonten-health-check` → `run_scheduled_health_check()`)
   that reads URL + secret from the **`observability_config`** one-row table an operator fills in
-  post-deploy. Until then the job is a no-op and the dashboard honestly shows "no health results
-  yet".
+  post-deploy. Auth is the shared `OBSERVABILITY_INGEST_SECRET` in the `x-observability-secret`
+  header (query `?secret=` still accepted for a manual curl). **`run_scheduled_health_check()`
+  self-reports** (migration `20260907091900`): each tick it reconciles the *previous* dispatch's
+  `net._http_response` and writes a synthetic `check_key='self'` row — `ok=true` on 2xx, else
+  `ok=false` with `{http_status, reason}` (e.g. a 401 = "endpoint rejected the shared secret —
+  check `OBSERVABILITY_INGEST_SECRET` on the web deployment"). So a broken pipeline shows on the
+  Admin Monitor as **Endpoint reachability — down** instead of an empty panel. The panel is only
+  truly empty if the cron has never run once. (Route env-var fix same migration wave: the probe
+  was reading `HUBTEL_CLIENT_ID/SECRET` + `CLOUDINARY_CLOUD_NAME`; corrected to
+  `HUBTEL_API_CLIENT_ID/SECRET` + `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` — those two probes were
+  silently skipped before.)
 - **`incident`** — minimal record; full incident workflow deferred.
 - Designed with a Sentry-adapter seam: the Admin UI reads DTOs from the service layer and does not
   care about the source.

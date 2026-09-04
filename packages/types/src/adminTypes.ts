@@ -451,7 +451,11 @@ export type HealthCheckKey =
   | "resend"
   | "hubtel"
   | "push"
-  | "cloudinary";
+  | "cloudinary"
+  // synthetic: written by the pg_cron job itself from the HTTP status it
+  // gets back calling /api/observability/health, so a rejected/unreachable
+  // endpoint is visible instead of the dashboard just looking empty.
+  | "self";
 
 export type HealthCheckSnapshot = {
   key: HealthCheckKey;
