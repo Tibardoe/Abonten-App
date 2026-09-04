@@ -1,37 +1,27 @@
 import { logger } from "@abonten/core/logger";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import { NextResponse } from "next/server";
 
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 20;
-// Basic in-memory per-IP rate limit so this billed Google Geocoding proxy
-// can't be hit unbounded — this is unauthenticated by design (used before
-// login), so IP is the only identity available. Resets on cold start and
-// doesn't share state across instances/replicas — a first line of defense,
-// not a distributed guarantee.
-const requestTimestampsByIp = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (requestTimestampsByIp.get(ip) ?? []).filter(
-    (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS,
-  );
-
-  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
-    requestTimestampsByIp.set(ip, recent);
-    return true;
-  }
-
-  recent.push(now);
-  requestTimestampsByIp.set(ip, recent);
-  return false;
-}
 
 export async function GET(req: Request) {
   try {
     const ip =
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
-    if (isRateLimited(ip)) {
+    // DB-backed (limitation OBS-001): the previous in-memory counter reset
+    // on every cold start and didn't share state across serverless
+    // instances, making it close to a no-op under real traffic on this
+    // billed Google Geocoding proxy. This is unauthenticated by design
+    // (used before login), so IP is the only identity available.
+    const allowed = await checkRateLimit(
+      `geocode:${ip}`,
+      RATE_LIMIT_MAX_REQUESTS,
+      RATE_LIMIT_WINDOW_SECONDS,
+    );
+
+    if (!allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please try again shortly." },
         { status: 429 },

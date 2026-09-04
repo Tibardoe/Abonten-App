@@ -1,19 +1,11 @@
-import { randomUUID } from "node:crypto";
 import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
+import { validateCheckoutQuantities } from "@abonten/core/checkoutLimits";
 import {
   allocatePromoEligibility,
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
-import {
-  claimPromoUsage,
-  releasePromoUsage,
-} from "@abonten/services/checkout/promoUsage";
-import {
-  releaseTicketQuantity,
-  reserveTicketQuantity,
-} from "@abonten/services/checkout/ticketInventory";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -29,14 +21,6 @@ export type CheckoutDetailsProp = {
   quantities: { [ticketTypeId: string]: number };
   promoCode?: string | null;
   occurrenceId?: string | null;
-};
-
-type TicketWithEvent = {
-  user_id: string;
-  ticket_type_id: {
-    event_id: string;
-  };
-  status: string;
 };
 
 type PendingCheckoutRow = {
@@ -61,7 +45,7 @@ export type ValidateCheckoutResult = {
   status: number;
   checkoutSessionId?: string;
   message?: string;
-  reason?: "pending_checkout" | "already_purchased";
+  reason?: "pending_checkout";
   checkoutId?: string;
 };
 
@@ -70,6 +54,16 @@ export async function validateCheckoutCore(
   userId: string,
   { eventId, quantities, promoCode, occurrenceId }: CheckoutDetailsProp,
 ): Promise<ValidateCheckoutResult> {
+  // Upper-bound the requested quantities before touching inventory. Both
+  // transports (web action + /api/mobile/checkout/validate) reach this
+  // shared core, so this one guard covers them both — see
+  // @abonten/core/checkoutLimits (limitation DOS-001).
+  const quantityCheck = validateCheckoutQuantities(quantities);
+
+  if (!quantityCheck.ok) {
+    return { status: 400, message: quantityCheck.message };
+  }
+
   // Reclaim anything that's timed out — for this user or anyone else —
   // before deciding whether a pending checkout is blocking this request.
   // This calls the same atomic sweep the scheduled cron job runs (see
@@ -111,34 +105,14 @@ export async function validateCheckoutCore(
     };
   }
 
-  // Check if user has already bought ticket for the event
-  const { data: rawTicketData, error: ticketDataError } = await supabase
-    .from("ticket")
-    .select("user_id, ticket_type_id(event_id), status")
-    .eq("user_id", userId);
-
-  if (ticketDataError || !rawTicketData) {
-    logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
-
-    return { status: 500, message: "Something went wrong" };
-  }
-
-  const ticketData = rawTicketData as unknown as TicketWithEvent[];
-
-  const alreadyBought = ticketData?.some(
-    (ticket) =>
-      ticket.ticket_type_id.event_id === eventId &&
-      (ticket.status === "active" || ticket.status === "used"),
-  );
-
-  if (alreadyBought) {
-    return {
-      status: 300,
-      reason: "already_purchased" as const,
-      message: "Ticket for this event already bought",
-    };
-  }
-
+  // Deliberately no "already own a ticket for this event" block here: a
+  // customer may buy any number of tickets — including multiple ticket
+  // types — for the same event in one or more checkouts, limited only by
+  // each ticket type's own configured `quantity` and the per-order caps in
+  // @abonten/core/checkoutLimits (product decision, 2026-09-04 — see BIZ-001
+  // in docs/audit/01-limitations-register.md). The pending-checkout guard
+  // above is a concurrency safeguard (one in-flight reservation per event at
+  // a time), not a purchase-count limit, so it stays.
   const { data: event, error: eventError } = await supabase
     .from("event")
     .select(
@@ -217,11 +191,16 @@ export async function validateCheckoutCore(
     }
   }
 
+  const requestedEntries = Object.entries(quantities).filter(
+    ([, value]) => value > 0,
+  );
+
   let promoCodeId: string | null = null;
   let discountPercentage = 0;
-  const requestedLines = Object.entries(quantities)
-    .filter(([, value]) => value > 0)
-    .map(([ticketTypeId, quantity]) => ({ id: ticketTypeId, quantity }));
+  const requestedLines = requestedEntries.map(([ticketTypeId, quantity]) => ({
+    id: ticketTypeId,
+    quantity,
+  }));
 
   // Eligible-unit allocation is computed up front, across every requested
   // ticket type in one pass (first-come in requestedLines order) — see
@@ -253,14 +232,30 @@ export async function validateCheckoutCore(
     );
   }
 
-  // Reserve inventory for every requested ticket type up front (this is the
-  // "checkout begins" reservation — Option B from the checkout redesign:
-  // holding the units now, and releasing them on expiry/cancellation, avoids
-  // telling a buyer their checkout is valid only to find the ticket gone at
-  // payment time). Each reservation uses the same atomic compare-and-swap
-  // as reserveTicketQuantity always has; if any later item in this request
-  // fails, everything reserved so far in THIS request is rolled back.
-  const reserved: { ticketTypeId: string; quantity: number }[] = [];
+  // Price every requested line here (read-only) — the RPC below re-verifies
+  // the price and quantity atomically at write time, but the pricing
+  // *decision* (unit price, discount, which lines a promo code covers)
+  // stays a plain read + @abonten/core/checkoutPricing, the same function
+  // the live checkout preview UI uses, so the two can never drift apart.
+  const ticketTypeIds = requestedEntries.map(([id]) => id);
+
+  const { data: ticketTypeRows, error: ticketTypeError } = await supabase
+    .from("ticket_type")
+    .select("id, price")
+    .in("id", ticketTypeIds);
+
+  if (ticketTypeError) {
+    logger.error(`Failed to fetch ticket types: ${ticketTypeError.message}`);
+    return { status: 500, message: "Something went wrong!" };
+  }
+
+  const priceById = new Map(
+    (ticketTypeRows ?? []).map((row) => [
+      row.id as string,
+      row.price as number,
+    ]),
+  );
+
   const rows: {
     ticketTypeId: string;
     quantity: number;
@@ -270,42 +265,16 @@ export async function validateCheckoutCore(
     amount: number;
   }[] = [];
 
-  const rollbackReservations = async () => {
-    for (const item of reserved) {
-      await releaseTicketQuantity(item.ticketTypeId, item.quantity);
-    }
-  };
+  for (const [ticketTypeId, quantity] of requestedEntries) {
+    const unitPrice = priceById.get(ticketTypeId);
 
-  for (const [ticketTypeId, quantity] of Object.entries(quantities).filter(
-    ([_id, value]) => value > 0,
-  )) {
-    const { data: ticketType, error: ticketError } = await supabase
-      .from("ticket_type")
-      .select("*")
-      .eq("id", ticketTypeId)
-      .maybeSingle();
-
-    if (ticketError || !ticketType) {
-      await rollbackReservations();
+    if (unitPrice === undefined) {
       return {
         status: 404,
         message: `Ticket of type ${ticketTypeId} not found`,
       };
     }
 
-    const reservation = await reserveTicketQuantity(ticketTypeId, quantity);
-
-    if (reservation.status !== 200) {
-      await rollbackReservations();
-      return {
-        status: reservation.status,
-        message: reservation.message ?? "That ticket is no longer available.",
-      };
-    }
-
-    reserved.push({ ticketTypeId, quantity });
-
-    const unitPrice = ticketType.price;
     const eligibleUnits = eligibleUnitsByTicketType[ticketTypeId] ?? 0;
     const { discount, amount } = computeLineAmount(
       quantity,
@@ -324,76 +293,46 @@ export async function validateCheckoutCore(
     });
   }
 
-  if (rows.length === 0) {
-    await rollbackReservations();
-    return { status: 404, message: "Please select at least one ticket." };
-  }
-
-  const totalDiscountedUnits = rows.reduce(
-    (sum, row) => sum + row.discountedUnits,
-    0,
-  );
-
-  if (promoCodeId && totalDiscountedUnits > 0) {
-    const claim = await claimPromoUsage(
-      promoCodeId,
-      userId,
-      eventId,
-      totalDiscountedUnits,
-      supabase,
-    );
-
-    if (claim.status !== 200) {
-      await rollbackReservations();
-      return {
-        status: claim.status,
-        message: claim.message ?? "That promo code couldn't be applied.",
-      };
-    }
-  }
-
-  const checkoutSessionId = randomUUID();
   const expiresAt = getCheckoutExpiryTimestamp();
 
-  const { error: checkoutInsertError } = await supabase
-    .from("ticket_checkout")
-    .insert(
-      rows.map((row) => ({
-        checkout_session_id: checkoutSessionId,
-        user_id: userId,
-        event_id: eventId,
+  // Reservation + promo claim + checkout-row insert all happen inside one
+  // database transaction (create_ticket_checkout): a failure at any step —
+  // including the process crashing — rolls back everything atomically, so
+  // there is no manual compensation to get wrong or skip (limitations
+  // INV-001, INV-002). The RPC also re-checks "no other pending checkout for
+  // this event" under the same transaction as a backstop against the same
+  // race this function already checked for above.
+  const { data: checkoutSessionId, error: createError } = await supabase.rpc(
+    "create_ticket_checkout",
+    {
+      p_user_id: userId,
+      p_event_id: eventId,
+      p_occurrence_id: occurrenceId ?? null,
+      p_promo_code_id: promoCodeId,
+      p_promo_code_text: promoCode ?? null,
+      p_expires_at: expiresAt.toISOString(),
+      p_lines: rows.map((row) => ({
         ticket_type_id: row.ticketTypeId,
         quantity: row.quantity,
         unit_price: row.unitPrice,
-        promo_code: promoCode ?? null,
         discount: row.discount,
         discounted_units: row.discountedUnits,
-        total_price: row.amount,
-        status: "pending",
-        expires_at: expiresAt,
-        occurrence_id: occurrenceId ?? null,
+        amount: row.amount,
       })),
+    },
+  );
+
+  if (createError || !checkoutSessionId) {
+    logger.error(
+      `create_ticket_checkout failed for event ${eventId}, user ${userId}: ${createError?.message}`,
     );
-
-  if (checkoutInsertError) {
-    logger.error(`Failed to insert checkout: ${checkoutInsertError.message}`);
-
-    await rollbackReservations();
-    if (promoCodeId && totalDiscountedUnits > 0) {
-      await releasePromoUsage(
-        promoCodeId,
-        userId,
-        eventId,
-        totalDiscountedUnits,
-        supabase,
-      );
-    }
-
+    // The RPC's own exception messages are user-safe (it never raises with
+    // internal detail) — surface them instead of a generic message.
     return {
-      status: 500,
-      message: "Something went wrong!",
+      status: 409,
+      message: createError?.message || "Something went wrong!",
     };
   }
 
-  return { status: 200, checkoutSessionId };
+  return { status: 200, checkoutSessionId: checkoutSessionId as string };
 }
