@@ -13,14 +13,6 @@ import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
-type TicketWithEvent = {
-  user_id: string;
-  ticket_type_id: {
-    event_id: string;
-  };
-  status: string;
-};
-
 type CheckoutRow = {
   id: string;
   event_id: string;
@@ -100,9 +92,9 @@ export default async function generateTicket(
   // Read every row of this session (any status) up front so an already-paid
   // session — a webhook redelivery, or a retry after the response was cut
   // off post-issuance — is recognised as done instead of falling through to
-  // the "already bought a ticket for this event" guard and returning a
-  // non-200 the payment finalizer would treat as a failure forever
-  // (the reconciliation black hole in limitation FIN-001).
+  // a stale-state error and returning a non-200 the payment finalizer would
+  // treat as a failure forever (the reconciliation black hole in limitation
+  // FIN-001).
   const { data: allRowsRaw, error: allRowsError } = await supabase
     .from("ticket_checkout")
     .select(checkoutSelect)
@@ -157,33 +149,6 @@ export default async function generateTicket(
   }
 
   const eventId = rows[0].event_id;
-
-  // Defensive: a paid ticket for this event from some *other* checkout
-  // should be impossible (validateCheckout blocks a second checkout while a
-  // ticket exists), but keep the guard. The already-paid case for *this*
-  // session is handled above, so this no longer strands a retry.
-  const { data: rawTicketData, error: ticketDataError } = await supabase
-    .from("ticket")
-    .select("user_id, status, ticket_type_id(event_id)")
-    .eq("user_id", userId);
-
-  if (ticketDataError || !rawTicketData) {
-    logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
-
-    return { status: 500, message: "Something went wrong" };
-  }
-
-  const ticketData = rawTicketData as unknown as TicketWithEvent[];
-
-  const alreadyBought = ticketData?.some(
-    (ticket) =>
-      ticket.ticket_type_id.event_id === eventId &&
-      (ticket.status === "active" || ticket.status === "used"),
-  );
-
-  if (alreadyBought) {
-    return { status: 300, message: "Ticket for this event already bought" };
-  }
 
   const { data: event, error: eventFetchError } = await supabase
     .from("event")

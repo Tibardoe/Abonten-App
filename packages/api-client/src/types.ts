@@ -135,7 +135,7 @@ export type ValidateCheckoutResult = {
   status: number;
   message?: string;
   checkoutSessionId?: string;
-  reason?: "pending_checkout" | "already_purchased";
+  reason?: "pending_checkout";
   checkoutId?: string;
 };
 

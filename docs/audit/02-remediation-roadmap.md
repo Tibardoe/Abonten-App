@@ -218,8 +218,7 @@ as a rider on this audit.
 
 | ID | Why deferred | Risk if left | Next action |
 |---|---|---|---|
-| SEC-004 | Needs a coordinated service-role key rotation | Med — key exposure via schema/backup | Schedule rotation; move token to Vault |
-| SEC-003 | Dashboard toggle + Postgres upgrade window | Low-Med | Enable leaked-password protection; book minor-version upgrade |
-| BIZ-001 | Product decision on "one ticket per event" semantics | Med — real users blocked / confused | Confirm intended rule; then scope the guard to `(event, occurrence)` + allow post-cancellation re-purchase |
+| SEC-004 | Needs a coordinated service-role key rotation — investigated 2026-09-04, rotation not yet performed (owner's call) | Med — key exposure via schema/backup | Schedule rotation; move token to Vault |
+| SEC-003 | Dashboard toggle + Postgres upgrade window — exact settings identified live 2026-09-04, not yet applied (owner's call) | Low-Med | Enable leaked-password protection; book minor-version upgrade |
 | MOB-001 | Product call on server-side push volume/UX | Med — reminders silently lost | Decide if a server-side reminder sender is wanted |
 | Unused indexes (DB-PERF-001 part 2) | Needs ~30 days production traffic to judge | Low — extra write cost | Re-run performance advisor, drop only truly-cold indexes |

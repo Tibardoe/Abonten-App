@@ -23,14 +23,6 @@ export type CheckoutDetailsProp = {
   occurrenceId?: string | null;
 };
 
-type TicketWithEvent = {
-  user_id: string;
-  ticket_type_id: {
-    event_id: string;
-  };
-  status: string;
-};
-
 type PendingCheckoutRow = {
   id: string;
   checkout_session_id: string;
@@ -53,7 +45,7 @@ export type ValidateCheckoutResult = {
   status: number;
   checkoutSessionId?: string;
   message?: string;
-  reason?: "pending_checkout" | "already_purchased";
+  reason?: "pending_checkout";
   checkoutId?: string;
 };
 
@@ -113,34 +105,14 @@ export async function validateCheckoutCore(
     };
   }
 
-  // Check if user has already bought ticket for the event
-  const { data: rawTicketData, error: ticketDataError } = await supabase
-    .from("ticket")
-    .select("user_id, ticket_type_id(event_id), status")
-    .eq("user_id", userId);
-
-  if (ticketDataError || !rawTicketData) {
-    logger.error(`Error fetching ticket data: ${ticketDataError?.message}`);
-
-    return { status: 500, message: "Something went wrong" };
-  }
-
-  const ticketData = rawTicketData as unknown as TicketWithEvent[];
-
-  const alreadyBought = ticketData?.some(
-    (ticket) =>
-      ticket.ticket_type_id.event_id === eventId &&
-      (ticket.status === "active" || ticket.status === "used"),
-  );
-
-  if (alreadyBought) {
-    return {
-      status: 300,
-      reason: "already_purchased" as const,
-      message: "Ticket for this event already bought",
-    };
-  }
-
+  // Deliberately no "already own a ticket for this event" block here: a
+  // customer may buy any number of tickets — including multiple ticket
+  // types — for the same event in one or more checkouts, limited only by
+  // each ticket type's own configured `quantity` and the per-order caps in
+  // @abonten/core/checkoutLimits (product decision, 2026-09-04 — see BIZ-001
+  // in docs/audit/01-limitations-register.md). The pending-checkout guard
+  // above is a concurrency safeguard (one in-flight reservation per event at
+  // a time), not a purchase-count limit, so it stays.
   const { data: event, error: eventError } = await supabase
     .from("event")
     .select(
@@ -328,9 +300,8 @@ export async function validateCheckoutCore(
   // including the process crashing — rolls back everything atomically, so
   // there is no manual compensation to get wrong or skip (limitations
   // INV-001, INV-002). The RPC also re-checks "no other pending checkout for
-  // this event" and "ticket not already bought" under the same transaction
-  // as a backstop against the same race this function already checked for
-  // above.
+  // this event" under the same transaction as a backstop against the same
+  // race this function already checked for above.
   const { data: checkoutSessionId, error: createError } = await supabase.rpc(
     "create_ticket_checkout",
     {

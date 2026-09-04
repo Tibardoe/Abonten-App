@@ -222,16 +222,6 @@ export default function CheckoutModal({
       return;
     }
 
-    if (response.status !== 200 && response.reason === "already_purchased") {
-      toast.info(
-        response.message ?? "You already own a ticket for this event.",
-      );
-      router.push("/manage/my-events");
-
-      setIsProceeding(false);
-      return;
-    }
-
     if (response.status !== 200 || !response.checkoutSessionId) {
       toast.error(
         response.message ?? "We couldn't start checkout. Please try again.",
