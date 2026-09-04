@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Store,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -66,6 +67,12 @@ const ITEMS: Item[] = [
   },
   { href: "/places", label: "Places", icon: Store, permission: "places.view" },
   {
+    href: "/finance",
+    label: "Finance",
+    icon: Wallet,
+    permission: "finance.view",
+  },
+  {
     href: "/monitoring",
     label: "Monitoring",
     icon: Activity,
@@ -85,7 +92,7 @@ const ITEMS: Item[] = [
   },
 ];
 
-const SOON = ["Finance", "Analytics"];
+const SOON = ["Analytics"];
 
 export function Sidebar({
   permissions,

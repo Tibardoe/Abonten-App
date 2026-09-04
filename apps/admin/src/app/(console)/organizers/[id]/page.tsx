@@ -201,7 +201,18 @@ export default async function OrganizerDetailPage({
           )}
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
+          <Card className="p-4 text-sm">
+            <Link
+              href={`/finance/organizers/${o.id}`}
+              className="font-medium text-primary hover:underline"
+            >
+              Finance summary →
+            </Link>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Earnings, holds, payout accounts and ledger.
+            </p>
+          </Card>
           <Card className="p-4 text-sm text-muted-foreground">
             Suspend / ban this account from{" "}
             <Link
