@@ -12,6 +12,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // NOT a "use server" file (see validateCheckoutCore.ts).
 
 type TicketRow = {
+  status: string;
   ticket_type_id: string;
   ticket_checkout_id: string | null;
   ticket_type: {
@@ -36,7 +37,7 @@ export async function cancelUserTicketCore(
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id(event_id, event:event_id(event_code))",
+      "status, ticket_type_id, ticket_checkout_id, ticket_type:ticket_type_id(event_id, event:event_id(event_code))",
     )
     .eq("id", ticketId)
     .eq("user_id", userId)
@@ -51,6 +52,22 @@ export async function cancelUserTicketCore(
   const ticketTypeId = ticket.ticket_type_id;
   const eventId = ticket.ticket_type?.event_id;
   const eventCode = ticket.ticket_type?.event?.event_code;
+
+  // Idempotency guard: this whole function releases a real reserved
+  // inventory unit and (conditionally) requests a real refund — neither of
+  // which is safe to repeat. Without this, a retried call (a client-side
+  // network retry hitting the server twice, say) on an already-cancelled
+  // ticket would call releaseTicketQuantity a second time (inflating
+  // available inventory with a phantom seat) even though issueRefundCore
+  // itself is separately guarded against a double refund.
+  if (ticket.status === "cancelled") {
+    return {
+      status: 200,
+      message: "Ticket cancelled successfully",
+      eventId: eventId ?? undefined,
+      eventCode: eventCode ?? undefined,
+    };
+  }
 
   const { error: updateStatusError } = await supabase
     .from("ticket")

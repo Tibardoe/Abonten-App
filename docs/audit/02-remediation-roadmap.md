@@ -142,13 +142,38 @@ Cloudinary-signature requests, notification-broadcast preview. Also open:
 
 ## Phase 4 — Architecture consolidation
 
-- **ARCH-001**: land the Phase-2 RPC extraction as the structural fix — DB
-  mutations in `@abonten/services` + Postgres, Next primitives only in the
-  `apps/web` wrappers. Same for `issueRefund`.
-- Sweep remaining `apps/web/src/utils/*` and `apps/web/src/actions/*` for any
-  other file doing multi-table writes that should be a service core + RPC.
-- Consolidate status/en/ sentinel values (`status: 300` sentinels → real
-  discriminated unions or documented codes).
+**Shipped**: **ARCH-001**'s structural fix landed as part of Phase 2 — the DB
+mutation halves of ticket issuance and checkout creation now live in Postgres
+RPCs, with only Next primitives (`revalidatePath`, `after`, email) left in
+the `apps/web` wrappers. `issueRefundCore` was reviewed against the same
+"multi-step, no transaction" pattern: it's already reasonably well-designed
+for a flow that has to call an external API (Paystack) partway through — the
+Paystack call happens first and DB state is only recorded after, so a
+failure there leaves no partial DB state, and Paystack's own idempotency is
+the backstop against a request retry double-refunding. Not rewritten;
+lower risk than the issuance path was.
+
+**Sweep of `apps/web/src/utils/*`/`apps/web/src/actions/*` and
+`packages/services` for the same "multi-step, no idempotency guard" shape**
+found and fixed one more: **INV-003** — `cancelUserTicketCore` (ticket
+cancel → conditional refund → attendance update → conditional checkout-cancel
+→ inventory release → promo-usage release) had no guard against being
+re-run on an already-cancelled ticket, which would call `releaseTicketQuantity`
+a second time and inflate available inventory. Fixed with an early-return
+idempotency guard — cheaper and lower-risk than a full atomic RPC, and
+sufficient to close the actual failure mode. `checkInTicketCore` was checked
+too and is already correctly guarded (single-statement update, pre-checked
+against the current status).
+
+**Not attempted this pass**: consolidating the `status: 300` sentinel
+pattern used across `validateCheckoutCore`/`generateTicket`/
+`registerForFreeEventCore` into a real discriminated union or documented
+error-code enum. This is a real maintainability wart (a plain `number`
+doubling as both an HTTP-style status and an app-specific sentinel), but
+fixing it touches every caller of these three functions across web and
+mobile — a wide-blast-radius refactor for a cosmetic/type-safety win, not a
+correctness fix. Recommended for a dedicated pass with its own review, not
+as a rider on this audit.
 
 ## Phase 5 — Observability & operations
 

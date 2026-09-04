@@ -130,6 +130,15 @@ architecture → performance → observability → maintainability → DX → UX
 - **Dependencies**: needs a deliberate secret-rotation window.
 - **Status**: Deferred — flagged for owner (needs key rotation coordination).
 
+### INV-003 — Ticket cancellation was not idempotent (found during the Phase 4 architecture sweep)
+- **Area**: Ticketing / Data integrity
+- **Problem**: `cancelUserTicketCore` (ticket cancel + conditional refund + attendance update + conditional checkout-cancel + inventory release + promo-usage release) had no guard against being called twice for the same already-cancelled ticket. A retried call (client-side network retry re-hitting the server, for example) would call `releaseTicketQuantity` a second time, inflating available inventory with a phantom seat. `issueRefundCore` was already separately guarded against a double refund, but the inventory release wasn't.
+- **Root cause**: same class as FIN-001/INV-001 — a multi-step sequence with no idempotency check at the top.
+- **Impact**: inventory could read higher than actually available, eventually causing an oversell once the phantom seat is "sold."
+- **Severity**: Medium · **Likelihood**: Low-Med (needs an actual retry, not just a user re-clicking a disabled button).
+- **Recommended solution**: an early-return guard — if the ticket is already `cancelled`, treat the call as a no-op success instead of re-running every mutation.
+- **Status**: **Fixed** — added the guard; no schema change needed. Not folded into a full atomic RPC like the issuance/checkout-creation paths, since the guard alone closes the actual failure mode at much lower cost/risk; revisit only if this function accumulates more steps.
+
 ---
 
 ## MEDIUM
