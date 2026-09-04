@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -29,4 +30,18 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Same Sentry build-plugin setup as apps/web, pointed at the
+// `abonten-admin` project. The plugin only uploads source maps when
+// SENTRY_AUTH_TOKEN is present (set per Vercel project / CI, never
+// committed) — a local `next build` succeeds without it, just skipping
+// upload. The auth token is an org-level Sentry credential; reuse the same
+// value across the web and admin projects.
+export default withSentryConfig(nextConfig, {
+  org: "abonten-hub",
+  project: "abonten-admin",
+  silent: !process.env.CI,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  widenClientFileUpload: true,
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
+  telemetry: false,
+});
