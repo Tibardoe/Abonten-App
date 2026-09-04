@@ -950,3 +950,22 @@ export type GlobalSearchResults = {
   transactions: GlobalSearchHit[];
   reports: GlobalSearchHit[];
 };
+
+// ─────────────────────────────────────────────────────────────
+// Runtime-editable role → permission matrix (Admin › Settings)
+// ─────────────────────────────────────────────────────────────
+
+export type RoleMatrixEntry = {
+  key: string;
+  label: string;
+  description: string | null;
+};
+
+export type RoleMatrix = {
+  roles: RoleMatrixEntry[];
+  permissions: RoleMatrixEntry[];
+  /** role key → the permission keys it currently grants (from the DB). */
+  grants: Record<string, string[]>;
+  /** roles whose grant set is immutable (super_admin). */
+  lockedRoles: string[];
+};

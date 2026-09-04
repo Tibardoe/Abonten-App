@@ -26,6 +26,7 @@ import {
   grantAdminRoleCore,
   revokeAdminRoleCore,
   setAdminUserStatusCore,
+  setRolePermissionCore,
 } from "@abonten/services/admin/settings/adminSettingsCore";
 import { setUserStatusCore } from "@abonten/services/admin/users/usersAdminCore";
 import {
@@ -42,6 +43,7 @@ import {
   reviewClaimSchema,
   revokeAdminRoleSchema,
   setAdminUserStatusSchema,
+  setRolePermissionSchema,
   setUserStatusSchema,
 } from "@abonten/validation/adminSchemas";
 import { revalidatePath } from "next/cache";
@@ -360,6 +362,30 @@ export async function setAdminUserStatus(input: unknown) {
     const ctx = await requireAdmin({ redirectOnFail: false });
     assertStepUpFresh(ctx);
     const res = await setAdminUserStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/settings");
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+export async function setRolePermission(input: unknown) {
+  const parsed = setRolePermissionSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await setRolePermissionCore(
       svc(),
       ctx,
       parsed.data,
