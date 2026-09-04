@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/adminGuard";
 import { getServiceClient } from "@/lib/serviceClient";
+import { getPlatformAnalyticsCore } from "@abonten/services/admin/analytics/analyticsAdminCore";
 import { listAuditLogCore } from "@abonten/services/admin/audit/listAuditLogCore";
 import {
   type ListEventsFilters,
@@ -33,6 +34,7 @@ import {
   listTransactionsCore,
 } from "@abonten/services/admin/finance/financeAdminCore";
 import {
+  getErrorGroupCore,
   getHealthSnapshotCore,
   getMetricsOverviewCore,
   listErrorGroupsCore,
@@ -222,4 +224,20 @@ export async function loadPayouts(
 export async function loadOrganizerFinance(id: string) {
   const ctx = await requireAdmin();
   return getOrganizerFinanceCore(getServiceClient(), ctx, id);
+}
+
+// ── Phase 4: error-group detail + analytics ────────────────
+
+export async function loadErrorGroup(fingerprint: string) {
+  const ctx = await requireAdmin();
+  return getErrorGroupCore(getServiceClient(), ctx, fingerprint);
+}
+
+export async function loadAnalytics(
+  range: DashboardRange,
+  from?: string,
+  to?: string,
+) {
+  const ctx = await requireAdmin();
+  return getPlatformAnalyticsCore(getServiceClient(), ctx, { range, from, to });
 }

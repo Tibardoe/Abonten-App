@@ -843,13 +843,42 @@ Sidebar: only **Analytics** now renders "soon". Verified: turbo typecheck 11/11 
 web + admin exit 0 · biome · live aggregate cross-check against prod (fee totals, tx-by-status,
 ledger totals incl. the negative `refund_hold`, active rate 5%).
 
+### 23.8d Phase 4 modules — Monitoring deepening · Incidents · Analytics
+
+Code-only — **no migration, no new schema** (the `incident` table + `upsertIncidentCore` +
+`incidentUpsertSchema` already existed from Phase 1; Phase 4 wires the UI + adds Analytics).
+
+- **Error-group detail** (`/monitoring/errors/[fingerprint]`) — `getErrorGroupCore` (already
+  present) now has a page: rollup KPIs, recent `app_error_event` samples with stack / route /
+  platform / app-version / severity / context, and a from-samples breakdown by platform / version /
+  route. Status controls (acknowledge / resolve / ignore / reopen) for `monitoring.manage`. The
+  error-groups table row title now links here instead of an inline toggle.
+- **Incident workflow** — new `upsertIncident` server action (`incidents.manage`, no step-up) +
+  `IncidentPanel` client component on the monitoring page: create a new incident, inline-edit any
+  incident's title / status / severity / component / summary. `status='resolved'` stamps
+  `resolved_at`. CHECK-verified enums (investigating|identified|monitoring|resolved,
+  low|medium|high|critical). Live insert+update smoke passed (rolled back).
+- **Platform Analytics** (`packages/services/src/admin/analytics/analyticsAdminCore.ts`,
+  `analytics.view`, `/analytics`) — `getPlatformAnalyticsCore`, time-range aware: all-time totals
+  (users / organizers / events±published / places / tickets / gross customer payments / net
+  platform revenue via head-counts + a `platform_fee_entry` sum), in-range deltas + active
+  organizers, a daily series (raw `created_at` columns bucketed in JS, capped 50k rows) rendered as
+  CSS bar sparklines, and top-10 events by tickets-issued-in-range + top-10 organizers by
+  gross-in-range (derived from `platform_fee_entry.event_id` → `event.organizer_id`). No recharts —
+  SSR CSS bars.
+
+Sidebar: **no more "soon" items** — every planned nav entry is live. Verified: turbo typecheck
+11/11 · next build web + admin exit 0 · biome · live aggregate cross-check against prod (users 10,
+events 14/11 pub, tickets 18, fee gross 430 / net 17.7) + incident insert/update smoke.
+
 ### 23.9 Phase 1 — deferred / open
 
-- Admin-initiated refunds/payouts (Finance module is read-only for now); Notification ops; deep
-  Web/Mobile/API monitoring dashboards + incident workflow + app-version analytics; Platform
-  Analytics; global cross-entity search; bulk actions; runtime-editable role matrix; Sentry adapter.
-  _(Claims + content-browse queue + Events/Places/Organizers views shipped in Phase 2 §23.8b;
-  read-only Finance in Phase 3 §23.8c.)_
+- Admin-initiated refunds/payouts (Finance module is read-only); a sampled request-timing
+  middleware feeding `app_request_metric` (the ingest route + rollup view exist; nothing samples
+  into them yet); mobile request metrics; global cross-entity search; bulk actions;
+  runtime-editable role matrix; Sentry `also-send` adapter; Notification ops.
+  _(Claims + content-browse + Events/Places/Organizers = Phase 2 §23.8b; read-only Finance = Phase 3
+  §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d.)_
 - ~~Moderation filter reach~~ **DONE** (migration `20260907091500`): the public `SELECT` policies
   on all six moderatable tables now exclude `hidden`/`removed` on their public branch, so every
   non-RPC read path (detail pages, review lists, profile tabs, ratings, `/api/mobile` plain-table

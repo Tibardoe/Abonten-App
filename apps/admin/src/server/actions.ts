@@ -10,7 +10,10 @@ import { createSsrClient } from "@/lib/supabaseServer";
 import { adminError } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
 import { applyModerationActionCore } from "@abonten/services/admin/moderation/applyModerationActionCore";
-import { updateErrorGroupStatusCore } from "@abonten/services/admin/observability/observabilityCore";
+import {
+  updateErrorGroupStatusCore,
+  upsertIncidentCore,
+} from "@abonten/services/admin/observability/observabilityCore";
 import {
   addAdminNoteCore,
   assignReportCore,
@@ -28,6 +31,7 @@ import {
   adminNoteSchema,
   errorGroupStatusSchema,
   grantAdminRoleSchema,
+  incidentUpsertSchema,
   moderationActionSchema,
   reportAssignSchema,
   reportRequestInfoSchema,
@@ -249,6 +253,29 @@ export async function setErrorGroupStatus(input: unknown) {
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
     const res = await updateErrorGroupStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/monitoring");
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+export async function upsertIncident(input: unknown) {
+  const parsed = incidentUpsertSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await upsertIncidentCore(
       svc(),
       ctx,
       parsed.data,
