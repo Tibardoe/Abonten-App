@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of getPromoCode — shared with validateCheckoutCore (and,
@@ -6,8 +7,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // authenticated Supabase client + resolved userId. Deliberately NOT a
 // "use server" file (see validateCheckoutCore.ts).
 
+const MAX_PROMO_LOOKUPS_PER_MINUTE = 20;
+
 export type GetPromoCodeCoreResult =
-  | { status: 400 | 401 | 404 | 500; message: string }
+  | { status: 400 | 401 | 404 | 429 | 500; message: string }
   | {
       status: 200;
       id: string;
@@ -21,6 +24,24 @@ export async function getPromoCodeCore(
   code: string,
   eventId: string,
 ): Promise<GetPromoCodeCoreResult> {
+  // A failed lookup leaves no row anywhere to run the usual "COUNT this
+  // user's rows in the last hour" cap this codebase otherwise uses (see
+  // submitReportCore) — codes are short, so unthrottled guessing could
+  // brute-force one and claim its discount. Scoped per user, not per event,
+  // since the guess space (any code on any event) is what matters.
+  const allowed = await checkRateLimit(
+    `promo-lookup:${userId}`,
+    MAX_PROMO_LOOKUPS_PER_MINUTE,
+    60,
+  );
+
+  if (!allowed) {
+    return {
+      status: 429,
+      message: "Too many promo code attempts. Please try again shortly.",
+    };
+  }
+
   // Promo codes are unique per (event_id, normalized code), not globally, so
   // the lookup must be scoped by event_id and normalized the same way codes
   // are stored (upper/trim).

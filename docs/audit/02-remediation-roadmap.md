@@ -111,11 +111,25 @@ loop per the existing project convention.
 
 ## Phase 3 — Scalability & abuse resistance
 
-- **API-001 / OBS-001**: durable rate limiter — `rate_limit_bucket` table +
-  `consume_rate_limit(key, limit, window)` `SECURITY DEFINER` RPC + a
-  `@abonten/services/security/rateLimit` helper. Apply to reports, reviews,
-  claims, checkout-validate, promo-validate, cloudinary-signature, broadcast,
-  geocode. Enable Vercel platform protection.
+**Shipped** (this pass): **API-001 / OBS-001** — durable rate limiter,
+migration `20260907094200_rate_limit_primitive.sql` (`rate_limit_bucket`
+fixed-window table + `consume_rate_limit` `SECURITY DEFINER` RPC,
+`service_role`-only, plus a daily cleanup cron) + `@abonten/services/
+security/rateLimit`'s `checkRateLimit()` helper (fails open on an infra
+error). Wired into the two endpoints that were genuinely unprotected:
+`/api/geocode` (replaces the ineffective in-memory per-instance counter) and
+`getPromoCodeCore` (closes a promo-code brute-force gap — covers the web
+action, the mobile promo-preview route, and checkout validation, since all
+three call this one function). On investigation, reports and OTP flows
+already had adequate protection via this codebase's own established
+COUNT-query pattern — the register entries were corrected to reflect that
+rather than left overstated.
+
+**Still open, not attempted this pass** (the same `checkRateLimit` helper
+applies directly — each is a small, mechanical addition once picked up):
+checkout-validate reservation churn, review posting, place-claim requests,
+Cloudinary-signature requests, notification-broadcast preview. Also open:
+
 - **Pagination audit**: confirm every list RPC / `.select()` in admin tables,
   organizer dashboards, Explore, Search, notifications has a bounded page size
   and keyset cursor (spot-checks show `pagination.ts` keyset is used widely —
@@ -124,6 +138,7 @@ loop per the existing project convention.
 - **Search**: `event_search` matview refresh every 15 min is fine to ~100k
   events; note the ceiling and the eventual move to incremental refresh /
   Postgres FTS trigger.
+- Enable Vercel platform-level abuse protection (dashboard setting, not code).
 
 ## Phase 4 — Architecture consolidation
 
