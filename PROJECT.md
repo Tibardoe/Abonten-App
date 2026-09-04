@@ -924,11 +924,12 @@ path smoke above.
 - Not device/live verified: the reporting round-trip on a real device, the money-path admin
   actions (none in Phase 1), push, the health cron against a live deploy.
 
-### 23.10 Sentry (apps/web + apps/admin) — 2026-09-04
+### 23.10 Sentry (apps/web + apps/admin + apps/mobile) — 2026-09-04
 
-`@sentry/nextjs` v10, manual App-Router setup (no wizard cruft), in **`apps/web`** (project
-`abonten-web`) and **`apps/admin`** (project `abonten-admin`) — same pattern, one Sentry project
-each. The mobile app gets its own project later.
+Manual setup (no wizard cruft), **one Sentry project per app**: `abonten-web`, `abonten-admin`
+(both `@sentry/nextjs` v10, App Router), `abonten-mobile` (`@sentry/react-native` ~7.11, the
+SDK-57-compatible version `npx expo install` picks). Same org (`abonten-hub`), one shared
+org-level `SENTRY_AUTH_TOKEN`, three different DSNs.
 
 - **Config files** (`<app>/src/`): `instrumentation.ts` (`register()` + `onRequestError =
   Sentry.captureRequestError` — covers Server Components, Route Handlers, Server Actions),
@@ -962,9 +963,39 @@ each. The mobile app gets its own project later.
   `NEXT_PUBLIC_SENTRY_ENVIRONMENT`. `turbo.json`'s `build` task already declares `SENTRY_DSN` +
   `SENTRY_AUTH_TOKEN`; `NEXT_PUBLIC_*` is auto via Turborepo's Next.js framework inference.
   `.gitignore` excludes `.env.sentry-build-plugin`.
-- Verified: `turbo typecheck` (web + admin) + `next build` for both apps green with the wrapper
-  active, no deprecation warnings; biome clean. Not verified live — needs a deploy with the DSNs
-  set and a triggered test error per app.
+- **Mobile** (`@sentry/react-native`, project `abonten-mobile`): runs **alongside** the existing
+  self-hosted `reportClientError` pipeline — that is untouched; Sentry is a second parallel sink.
+  - `src/lib/sentry.ts` (new): `initSentry()` + the `reactNavigationIntegration` instance.
+    `enabled: !__DEV__ && Boolean(dsn)` (DSN = `EXPO_PUBLIC_SENTRY_DSN`), `environment` from
+    `EXPO_PUBLIC_SENTRY_ENVIRONMENT` else `"production"`, `tracesSampleRate: 0.1`,
+    `sendDefaultPii: false`. **`release`/`dist` left unset** — auto-detected from the native
+    build; setting them by hand breaks symbolication.
+  - `app/_layout.tsx`: `initSentry()` at module scope (before the global JS error handler chains
+    in, so uncaught errors reach both sinks); `useNavigationContainerRef()` →
+    `navigationIntegration.registerNavigationContainer` for screen breadcrumbs; default export
+    wrapped in `Sentry.wrap()`.
+  - `src/components/RootErrorBoundary.tsx`: the route-level boundary catches render errors before
+    `Sentry.wrap`'s would, so it now also calls `Sentry.captureException(error, {level:"fatal"})`
+    next to `reportClientError`. `errorTracking.ts` is unchanged — Sentry's own global handler is
+    already in the chain as `previous`.
+  - `metro.config.js`: `getDefaultConfig` → `getSentryExpoConfig` (keeps `withNativeWind` +
+    the monorepo `watchFolders` / `nodeModulesPaths`).
+  - `app.json` `plugins`: `["@sentry/react-native/expo", { url: "https://sentry.io/",
+    organization: "abonten-hub", project: "abonten-mobile" }]` — during `expo prebuild` (which
+    EAS Build runs) this injects the Android Gradle + iOS Xcode source-map/debug-symbol upload
+    steps. They read `SENTRY_AUTH_TOKEN` from the build env; nothing native is committed (CNG —
+    `apps/mobile/android/` is gitignored).
+- **Env**: web/admin — `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_DSN` (server fallback), `SENTRY_AUTH_TOKEN`
+  (CI/Vercel only), optional `NEXT_PUBLIC_SENTRY_ENVIRONMENT`; documented in each `.env.example`,
+  `turbo.json`'s `build` task declares the non-`NEXT_PUBLIC_` names. mobile —
+  `EXPO_PUBLIC_SENTRY_DSN` (public, per EAS env) + optional `EXPO_PUBLIC_SENTRY_ENVIRONMENT`;
+  `SENTRY_AUTH_TOKEN` as an **EAS secret** (sensitive, build-only, never bundled). `.gitignore`
+  excludes `.env.sentry-build-plugin`.
+- Verified: `turbo typecheck` (web + admin + mobile) green; `next build` for web + admin green
+  with the wrapper active, no deprecation warnings; `expo config` + `expo export --platform
+  android` green with the Sentry plugin + `getSentryExpoConfig`; biome clean. Not verified live —
+  each app needs a deploy/build with its DSN set and a triggered test error; mobile also needs a
+  dev-client / EAS build (native crash reporting is a no-op in Expo Go).
 
 ### 23.11 Mobile request-timing metrics — 2026-09-04
 

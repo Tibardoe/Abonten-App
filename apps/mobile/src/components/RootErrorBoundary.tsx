@@ -1,4 +1,5 @@
 import { reportClientError } from "@/lib/reportClientError";
+import { Sentry } from "@/lib/sentry";
 import { AppText, Button } from "@abonten/ui-native";
 import type { ErrorBoundaryProps } from "expo-router";
 import { usePathname } from "expo-router";
@@ -19,11 +20,15 @@ export function RootErrorBoundary({ error, retry }: ErrorBoundaryProps) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Both sinks: the self-hosted pipeline and the abonten-mobile Sentry
+    // project. This route-level boundary catches render errors before
+    // Sentry.wrap's boundary would, so Sentry needs the explicit capture.
     reportClientError(error, {
       route: pathname,
       severity: "fatal",
       extra: { boundary: "root" },
     });
+    Sentry.captureException(error, { level: "fatal" });
   }, [error, pathname]);
 
   return (
