@@ -98,6 +98,14 @@ export const setAdminUserStatusSchema = z.object({
   status: z.enum(["active", "disabled"]),
 });
 
+export const reviewClaimSchema = z.object({
+  claimId: z.string().uuid(),
+  decision: z.enum(["approve", "reject"]),
+  reason: z.string().trim().max(2000).optional(),
+  // optimistic concurrency: the status the client last saw ("pending")
+  expectedStatus: z.enum(["pending", "approved", "rejected"]).optional(),
+});
+
 export const errorGroupStatusSchema = z.object({
   fingerprint: z.string().min(1).max(200),
   status: z.enum(["open", "acknowledged", "resolved", "ignored"]),
