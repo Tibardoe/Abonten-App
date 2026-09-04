@@ -45,9 +45,10 @@ async function httpProbe(
   url: string,
   init: RequestInit,
   acceptableStatuses: number[] = [200],
+  timeoutMs = 8000,
 ): Promise<{ ok: boolean; status: number }> {
   const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 8000);
+  const t = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, { ...init, signal: controller.signal });
     return { ok: acceptableStatuses.includes(res.status), status: res.status };
@@ -60,6 +61,7 @@ export async function runHealthChecksCore(
   serviceClient: SupabaseClient,
   config: HealthCheckConfig,
 ): Promise<{ status: number; results: HealthCheckOutcome[] }> {
+  const startedAt = Date.now();
   const results: HealthCheckOutcome[] = [];
   const push = (
     key: HealthCheckKey,
@@ -149,7 +151,10 @@ export async function runHealthChecksCore(
     });
   }
 
-  // hubtel (OTP/SMS) — auth ping only
+  // hubtel (OTP/SMS) — auth ping only. The gateway can be slow to answer a
+  // bare root GET, so give it a longer ceiling than the other probes and
+  // treat "reachable (any HTTP response) = ok; only a network failure is
+  // down" — a single slow response should not page anyone.
   if (config.hubtelClientId && config.hubtelClientSecret) {
     const basic = Buffer.from(
       `${config.hubtelClientId}:${config.hubtelClientSecret}`,
@@ -157,11 +162,11 @@ export async function runHealthChecksCore(
     const hb = await timed(() =>
       httpProbe(
         "https://api-otp.hubtel.com/",
-        { headers: { Authorization: `Basic ${basic}` } },
-        [200, 401, 403, 404],
+        { method: "HEAD", headers: { Authorization: `Basic ${basic}` } },
+        [200, 401, 403, 404, 405],
+        10_000,
       ),
     );
-    // reachable (any HTTP response) = ok; only a network failure is "down"
     push("hubtel", hb, hb.err === null, { httpStatus: hb.value?.status });
   }
 
@@ -184,6 +189,19 @@ export async function runHealthChecksCore(
   );
   push("push", expo, expo.err === null && (expo.value?.ok ?? false), {
     httpStatus: expo.value?.status,
+  });
+
+  // `self` = "the health endpoint ran to completion". Written here so the
+  // Admin Monitor shows Endpoint reachability = ok whenever this function
+  // finishes — independent of whether the pg_cron caller's HTTP client
+  // waited long enough for the response. The cron only ever writes a
+  // `self` = down row (401 / unreachable / no response); it never writes
+  // the ok row, so the two can't race.
+  results.push({
+    key: "self",
+    ok: true,
+    latencyMs: Date.now() - startedAt,
+    detail: { source: "endpoint", checks: results.length },
   });
 
   const write = await recordHealthResultsCore(serviceClient, results);
