@@ -5,9 +5,10 @@ import {
   currentRequestMeta,
   requireAdmin,
 } from "@/lib/adminGuard";
+import { captureAdminActionError } from "@/lib/sentry";
 import { getServiceClient } from "@/lib/serviceClient";
 import { createSsrClient } from "@/lib/supabaseServer";
-import { adminError } from "@abonten/services/admin/adminContext";
+import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
 import {
   createPayoutAdminCore,
@@ -64,6 +65,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 const svc = () => getServiceClient();
+
+// Every action catches its throw and returns a { status, message }
+// envelope, so Next's onRequestError never sees the failure. Forward the
+// genuinely unexpected ones (not the guard's expected 401/403) to the
+// `abonten-admin` Sentry project before mapping to the envelope.
+function adminError(e: unknown, action?: string) {
+  captureAdminActionError(e, action);
+  return toAdminEnvelope(e);
+}
 
 export async function signOut() {
   const supabase = await createSsrClient();
