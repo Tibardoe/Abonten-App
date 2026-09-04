@@ -1,5 +1,6 @@
 import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -29,7 +30,7 @@ export type PlacePromotionContextResult =
  * gate (matching the web section).
  */
 export async function fetchPlacePromotionContext(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
 ): Promise<PlacePromotionContextResult> {
@@ -114,7 +115,7 @@ export type InsertPlacePromotionCheckoutResult =
  * place_promotion_checkout priced from the seeded tier (never the client).
  */
 export async function insertPlacePromotionCheckoutCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   tierId: number,
@@ -153,7 +154,7 @@ export async function insertPlacePromotionCheckoutCore(
       total_price: tier.price,
       currency: tier.currency,
       status: "pending",
-      expires_at: getCheckoutExpiryTimestamp(),
+      expires_at: getCheckoutExpiryTimestamp().toISOString(),
     })
     .select("id")
     .single();

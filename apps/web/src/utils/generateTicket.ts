@@ -10,6 +10,7 @@ import {
 } from "@abonten/services/tickets/generateTicketCode";
 import { saveEventQrCodeToCloudinary } from "@abonten/services/tickets/saveEventQrCodeToCloudinary";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
+import type { Database } from "@abonten/types/database.types";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
@@ -252,7 +253,7 @@ export default async function generateTicket(
       p_metadata: parsedMetadata,
       p_ticket_expires_at: eventEndDate.toISOString(),
       p_tickets: uploadedTickets,
-    },
+    } as unknown as Database["public"]["Functions"]["issue_tickets_for_checkout"]["Args"],
   );
 
   if (issueError || !issueData) {

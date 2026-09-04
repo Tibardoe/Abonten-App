@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import {
   type PlaceDraftPayload,
   placeDraftPayloadSchema,
@@ -49,7 +50,7 @@ export type SavePlaceDraftCoreResult =
   | { status: 400 | 404 | 409 | 500; message: string };
 
 export async function savePlaceDraftCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: {
     draftId?: string;
@@ -216,7 +217,7 @@ export type PlaceDraftsListResult =
   | { status: 500; message: string; data: PlaceDraftListItem[] };
 
 export async function fetchPlaceDraftsList(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<PlaceDraftsListResult> {
   const { data: drafts, error: draftsError } = await supabase
@@ -266,7 +267,7 @@ export type PlaceDraftDetailResult =
   | { status: 404 | 410 | 500; message: string };
 
 export async function fetchPlaceDraftDetail(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   draftId: string,
 ): Promise<PlaceDraftDetailResult> {
@@ -321,7 +322,7 @@ export type DeletePlaceDraftCoreResult = {
 };
 
 export async function deletePlaceDraftCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   draftId: string,
 ): Promise<DeletePlaceDraftCoreResult> {

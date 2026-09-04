@@ -76,7 +76,12 @@ export default async function getUserTicketRefunds(options?: {
 
   const { page, hasNextPage } = splitPage<
     UserTicketType & { ticket_type: { event: UserTicketType["event"] } }
-  >(tickets, pageSize);
+  >(
+    tickets as unknown as (UserTicketType & {
+      ticket_type: { event: UserTicketType["event"] };
+    })[],
+    pageSize,
+  );
 
   const refundsWithEvents = page.map((ticket) => ({
     ...ticket,

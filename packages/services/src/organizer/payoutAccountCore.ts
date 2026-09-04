@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type {
   OrganizerPayoutRow,
   PayoutAccountRow,
@@ -34,7 +35,7 @@ export type ListPayoutsResult =
   | { status: 200; data: OrganizerPayoutRow[] };
 
 export async function listPayoutAccountsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<ListPayoutAccountsResult> {
   const { data, error } = await supabase
@@ -54,7 +55,7 @@ export async function listPayoutAccountsCore(
 }
 
 export async function addPayoutAccountCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: unknown,
 ): Promise<AddPayoutAccountResult> {
@@ -107,7 +108,7 @@ export async function addPayoutAccountCore(
 }
 
 export async function removePayoutAccountCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   payoutAccountId: string,
 ): Promise<MutatePayoutAccountResult> {
@@ -168,7 +169,11 @@ export async function removePayoutAccountCore(
 
   const { error: removeError } = await supabase
     .from("payout_account")
-    .update({ status: "removed", is_default: false, updated_at: new Date() })
+    .update({
+      status: "removed",
+      is_default: false,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", payoutAccountId)
     .eq("organizer_id", userId);
 
@@ -190,7 +195,7 @@ export async function removePayoutAccountCore(
     if (nextDefault) {
       await supabase
         .from("payout_account")
-        .update({ is_default: true, updated_at: new Date() })
+        .update({ is_default: true, updated_at: new Date().toISOString() })
         .eq("id", nextDefault.id)
         .eq("organizer_id", userId);
     }
@@ -200,7 +205,7 @@ export async function removePayoutAccountCore(
 }
 
 export async function setDefaultPayoutAccountCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   payoutAccountId: string,
 ): Promise<MutatePayoutAccountResult> {
@@ -223,7 +228,7 @@ export async function setDefaultPayoutAccountCore(
 
   const { error: unsetError } = await supabase
     .from("payout_account")
-    .update({ is_default: false, updated_at: new Date() })
+    .update({ is_default: false, updated_at: new Date().toISOString() })
     .eq("organizer_id", userId)
     .eq("is_default", true)
     .neq("id", payoutAccountId);
@@ -235,7 +240,7 @@ export async function setDefaultPayoutAccountCore(
 
   const { error: setError } = await supabase
     .from("payout_account")
-    .update({ is_default: true, updated_at: new Date() })
+    .update({ is_default: true, updated_at: new Date().toISOString() })
     .eq("id", payoutAccountId)
     .eq("organizer_id", userId)
     .eq("status", "active");
@@ -249,7 +254,7 @@ export async function setDefaultPayoutAccountCore(
 }
 
 export async function listPayoutsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   offset = 0,
   limit = 20,

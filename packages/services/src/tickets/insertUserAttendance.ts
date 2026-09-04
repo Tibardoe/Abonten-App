@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -12,7 +13,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * ticket's later cancellation can target exactly one row via `ticket_id`.
  */
 export async function insertUserAttendanceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   ticketTypeId: string,

@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of requestOrganizerPayout, shared by the Server Action
@@ -14,7 +15,7 @@ export type RequestOrganizerPayoutResult =
   | { status: 200; data: { payoutId: string; reference: string } };
 
 export async function requestOrganizerPayoutCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   input: { payoutAccountId: string; amount: number; currency: string },
 ): Promise<RequestOrganizerPayoutResult> {
   const { payoutAccountId, amount, currency } = input;

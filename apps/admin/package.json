@@ -15,7 +15,7 @@
     "@abonten/types": "*",
     "@abonten/validation": "*",
     "@sentry/nextjs": "^10.73.0",
-    "@supabase/ssr": "^0.5.2",
+    "@supabase/ssr": "^0.12.6",
     "@supabase/supabase-js": "^2.49.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.476.0",

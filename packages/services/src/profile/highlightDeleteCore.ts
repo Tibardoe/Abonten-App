@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -29,7 +30,7 @@ export type DeleteHighlightCoreResult = {
 };
 
 export async function deleteHighlightGroupCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   groupId: string,
 ): Promise<DeleteHighlightCoreResult> {
@@ -102,7 +103,7 @@ export async function deleteHighlightGroupCore(
 }
 
 export async function deleteHighlightSlideCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   slideId: string,
 ): Promise<DeleteHighlightCoreResult> {

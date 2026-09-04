@@ -83,7 +83,10 @@ export function useProfileEvents(userId: string | undefined) {
       }
       const { data, error } = await q;
       if (error) throw error;
-      const all = (data ?? []) as (UserPostType & {
+      // Same RPC/query-to-app-model translation boundary as the discovery
+      // hooks -- the real embedded-join row shape doesn't exactly match
+      // UserPostType.
+      const all = (data ?? []) as unknown as (UserPostType & {
         ticket_type: { price: number; currency: string }[] | null;
         created_at: string;
       })[];

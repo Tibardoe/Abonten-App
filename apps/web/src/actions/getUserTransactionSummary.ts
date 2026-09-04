@@ -6,6 +6,7 @@ import {
   type TransactionPeriod,
   getTransactionPeriodRange,
 } from "@abonten/core/transactionsDateRange";
+import type { Database } from "@abonten/types/database.types";
 import type { UserTransactionSummaryRow } from "@abonten/types/transactions";
 
 export async function getUserTransactionSummary(period: TransactionPeriod) {
@@ -25,7 +26,7 @@ export async function getUserTransactionSummary(period: TransactionPeriod) {
   const { data, error } = await supabase.rpc("get_user_transaction_summary", {
     p_start: start ? start.toISOString() : null,
     p_end: end ? end.toISOString() : null,
-  });
+  } as unknown as Database["public"]["Functions"]["get_user_transaction_summary"]["Args"]);
 
   if (error) {
     logger.error("Supabase error:", error.message);

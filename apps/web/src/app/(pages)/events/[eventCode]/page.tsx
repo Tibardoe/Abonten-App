@@ -199,8 +199,8 @@ export default async function page({
     lat,
   );
   const similarEvents: UserPostType[] = (
-    similarEventsResponse.similarEvents ?? []
-  ).filter((evt: UserPostType) => evt.id !== event.id);
+    (similarEventsResponse.similarEvents ?? []) as unknown as UserPostType[]
+  ).filter((evt) => evt.id !== event.id);
 
   const postedAt = getRelativeTime(event.created_at);
   const eventDateAndTime = getFormattedEventDate(

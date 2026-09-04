@@ -11,6 +11,7 @@ import {
   type TransactionPeriod,
   getTransactionPeriodRange,
 } from "@abonten/core/transactionsDateRange";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { UserTransactionRow } from "@abonten/types/transactions";
 
@@ -58,7 +59,7 @@ export async function getUserTransactionHistory(
       p_cursor_created_at: cursor?.sortValue ?? null,
       p_cursor_id: cursor?.id ?? null,
       p_limit: pageSize + 1,
-    },
+    } as unknown as Database["public"]["Functions"]["get_user_transaction_history"]["Args"],
   );
 
   if (error) {

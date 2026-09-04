@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 // The customer-paid Abonten service-fee rate, resolved from the
 // platform_fee_config DB table via the get_active_platform_fee_rate RPC —
 // the single source of truth, editable without a code deploy. Shared by the
@@ -17,11 +18,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * a transient DB hiccup never silently charges a 0% fee.
  */
 export async function getActiveServiceFeeRate(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   currency?: string | null,
 ): Promise<number> {
   const { data, error } = await supabase.rpc("get_active_platform_fee_rate", {
-    p_currency: currency ?? null,
+    p_currency: currency ?? undefined,
   });
 
   if (error || data == null) {

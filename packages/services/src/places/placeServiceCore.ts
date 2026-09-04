@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth bodies of addPlaceService / updatePlaceService /
@@ -33,7 +34,7 @@ export type PlaceServiceCoreResult = {
 };
 
 export async function addPlaceServiceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: AddPlaceServiceCoreInput,
 ): Promise<PlaceServiceCoreResult> {
@@ -80,7 +81,7 @@ export async function addPlaceServiceCore(
 }
 
 async function serviceOwnerId(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   serviceId: string,
 ): Promise<{ found: boolean; ownerId: string | null }> {
   const { data: service, error } = await supabase
@@ -97,7 +98,7 @@ async function serviceOwnerId(
 }
 
 export async function updatePlaceServiceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: UpdatePlaceServiceCoreInput,
 ): Promise<PlaceServiceCoreResult> {
@@ -131,7 +132,7 @@ export async function updatePlaceServiceCore(
 }
 
 export async function removePlaceServiceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   serviceId: string,
 ): Promise<PlaceServiceCoreResult> {

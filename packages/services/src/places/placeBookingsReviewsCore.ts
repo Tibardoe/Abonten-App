@@ -6,6 +6,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type {
   BookingStatus,
@@ -18,7 +19,7 @@ import { createNotificationCore } from "../notifications/createNotification";
 // getPlaceReviews (owner Reviews tab) / respondToPlaceReview, lifted so the
 // mobile per-place Bookings + Reviews screens run the same logic. NOT a
 // "use server" file — every function takes an already-resolved
-// SupabaseClient + userId.
+// SupabaseClient<Database> + userId.
 
 // ---- Bookings -------------------------------------------------------
 
@@ -30,7 +31,7 @@ import { createNotificationCore } from "../notifications/createNotification";
  * show an unfiltered "All" view.
  */
 export async function fetchPlaceBookingsPage(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   options?: {
@@ -137,7 +138,7 @@ export type RespondToPlaceBookingCoreResult = {
  * notification either way.
  */
 export async function respondToPlaceBookingCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   bookingId: string,
   decision: "accept" | "decline",
@@ -239,7 +240,7 @@ export type OwnerPlaceReviewsResult = PaginatedResult<any>;
  * as the web owner Reviews tab.
  */
 export async function fetchPlaceReviewsForOwner(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   options?: { cursor?: string | null; pageSize?: number },
@@ -338,7 +339,7 @@ export type RespondToPlaceReviewCoreResult = {
  * place_review row has no owner_id of its own).
  */
 export async function respondToPlaceReviewCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   reviewId: string,
   response: string,
@@ -370,7 +371,7 @@ export async function respondToPlaceReviewCore(
     .from("place_review")
     .update({
       owner_response: response,
-      owner_response_at: new Date(),
+      owner_response_at: new Date().toISOString(),
     })
     .eq("id", reviewId);
 

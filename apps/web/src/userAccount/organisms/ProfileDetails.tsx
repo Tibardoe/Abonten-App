@@ -23,6 +23,14 @@ export default async function ProfileDetails({
   const userDetails =
     prefetchedUserDetails ?? (await getUserProfileDetails(username));
 
+  if (userDetails.status !== 200 || userDetails.data.user_id === null) {
+    return (
+      <p className="text-destructive">
+        {userDetails.status === 200 ? "Profile not found" : userDetails.message}
+      </p>
+    );
+  }
+
   const isCurrentUser = userDetails.ownUsername === username;
 
   const { data } = userDetails;
@@ -146,7 +154,9 @@ export default async function ProfileDetails({
           </div>
         </div>
 
-        <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
+        <UserAccountTabsNavigation
+          ownUsername={userDetails.ownUsername ?? ""}
+        />
       </div>
 
       {/* On tablet and desktop */}
@@ -224,7 +234,9 @@ export default async function ProfileDetails({
           </div>
         </div>
 
-        <UserAccountTabsNavigation ownUsername={userDetails.ownUsername} />
+        <UserAccountTabsNavigation
+          ownUsername={userDetails.ownUsername ?? ""}
+        />
       </div>
     </>
   );

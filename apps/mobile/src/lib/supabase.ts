@@ -1,4 +1,5 @@
 import "react-native-url-polyfill/auto";
+import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { AppState } from "react-native";
 import { secureStorage } from "./secureStore";
@@ -18,7 +19,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-export const supabase: SupabaseClient = createClient(
+export const supabase: SupabaseClient<Database> = createClient(
   supabaseUrl,
   supabaseAnonKey,
   {

@@ -18,13 +18,13 @@ export default async function page({
 
   const userDetails = await getUserProfileDetails(username);
 
-  const { data } = userDetails;
-
   return (
     <div className="flex flex-col gap-7">
       <ProfileDetails username={username} userDetails={userDetails} />
 
-      {data.username === username && <Higlight username={username} />}
+      {userDetails.status === 200 && userDetails.data.username === username && (
+        <Higlight username={username} />
+      )}
 
       {/* <ContentArea /> */}
     </div>

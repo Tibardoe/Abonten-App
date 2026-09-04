@@ -92,7 +92,11 @@ export type EventDates = {
 export type UserPostType = {
   id: string;
   ticket_type?: { price: number; currency: string }[]; // ✅ Fix here
-  created_at: Date | undefined;
+  // Postgres returns this as an ISO timestamp string over PostgREST — it
+  // was never actually a real Date object at runtime (every consumer
+  // already treats it as string-like: String(), .localeCompare, or a
+  // date-formatting helper that accepts string | Date).
+  created_at: string;
   organizer_id?: string;
   event_category?: string;
   flyer_public_id?: string;

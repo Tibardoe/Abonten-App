@@ -1,8 +1,15 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import type { Database } from "@abonten/types/database.types";
 
-export async function getUserDetails() {
+type UserInfoRow = Database["public"]["Tables"]["user_info"]["Row"];
+
+export type GetUserDetailsResult =
+  | { status: 500 | 401; message: string; userDetails?: undefined }
+  | { status: 200; userDetails: UserInfoRow; message?: undefined };
+
+export async function getUserDetails(): Promise<GetUserDetailsResult> {
   const supabase = await createClient();
 
   const { data: user, error: userError } = await supabase.auth.getUser();

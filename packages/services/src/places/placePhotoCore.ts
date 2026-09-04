@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -24,7 +25,7 @@ export type PlacePhotoCoreResult = {
 };
 
 export async function addPlacePhotoCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   publicId: string,
@@ -74,7 +75,7 @@ export async function addPlacePhotoCore(
 }
 
 export async function removePlacePhotoCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   photoId: string,
 ): Promise<PlacePhotoCoreResult> {
@@ -124,7 +125,7 @@ export async function removePlacePhotoCore(
 // cover" action; the only other way to change a cover is updatePlaceCore
 // with a freshly uploaded image.
 export async function setPlaceCoverFromPhotoCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   photoId: string,
@@ -166,7 +167,7 @@ export async function setPlaceCoverFromPhotoCore(
 }
 
 export async function reorderPlacePhotosCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   photoIds: string[],

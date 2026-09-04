@@ -18,6 +18,7 @@ import type {
   ReportListItem,
   UserAccountStatus,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
@@ -36,7 +37,7 @@ const STATUS_NAME: Record<number, UserAccountStatus> = {
 };
 
 async function names(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
@@ -52,7 +53,7 @@ async function names(
 }
 
 async function reportCounts(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   targetType: string,
   ids: string[],
 ): Promise<Map<string, number>> {
@@ -69,7 +70,7 @@ async function reportCounts(
 }
 
 async function recentReportsFor(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   targetType: string,
   targetId: string,
 ): Promise<ReportListItem[]> {
@@ -82,6 +83,8 @@ async function recentReportsFor(
     .eq("target_id", targetId)
     .order("created_at", { ascending: false })
     .limit(10);
+  // Same DB-CHECK-constrained-text-vs-literal-union translation as
+  // reportsAdminCore.ts's listReportsCore.
   return (data ?? []).map((r) => ({
     id: r.id,
     targetType: r.target_type,
@@ -95,11 +98,11 @@ async function recentReportsFor(
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     targetReportCount: 0,
-  }));
+  })) as unknown as ReportListItem[];
 }
 
 async function adminNotes(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   targetType: string,
   targetId: string,
 ): Promise<AdminNoteEntry[]> {
@@ -123,17 +126,29 @@ async function adminNotes(
 }
 
 async function ratingFor(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: "event_review" | "place_review",
   fkCol: "event_id" | "place_id",
   id: string,
 ): Promise<{ avg: number; count: number }> {
-  const { data } = await supabase
-    .from(table)
-    .select("rating")
-    .eq(fkCol, id)
-    .eq("status", "approved")
-    .limit(5000);
+  // Branched (rather than a single .from(table)/.eq(fkCol,...) call) so
+  // each arm resolves a single, literal table and column -- the typed
+  // client can't narrow a query built from table name and column name
+  // varying together. See useFavorites.ts (mobile) for the same reasoning.
+  const { data } =
+    table === "event_review"
+      ? await supabase
+          .from("event_review")
+          .select("rating")
+          .eq("event_id", id)
+          .eq("status", "approved")
+          .limit(5000)
+      : await supabase
+          .from("place_review")
+          .select("rating")
+          .eq("place_id", id)
+          .eq("status", "approved")
+          .limit(5000);
   const rows = (data ?? []) as { rating: number }[];
   if (rows.length === 0) return { avg: 0, count: 0 };
   const avg = rows.reduce((s, r) => s + (r.rating ?? 0), 0) / rows.length;
@@ -141,7 +156,7 @@ async function ratingFor(
 }
 
 async function eventSales(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
 ): Promise<{ ticketsSold: number; grossSales: number; currency: string }> {
   const { data: tts } = await supabase
@@ -178,7 +193,7 @@ export type ListEventsFilters = {
 };
 
 export async function listEventsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListEventsFilters = {},
 ): Promise<PaginatedResult<EventAdminListItem>> {
@@ -275,7 +290,7 @@ export async function listEventsCore(
 }
 
 export async function getEventDetailCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   eventId: string,
 ): Promise<AdminEnvelope<EventAdminDetail>> {
@@ -321,7 +336,9 @@ export async function getEventDetailCore(
       createdAt: e.created_at,
       description: e.description ?? null,
       category: e.event_category ?? null,
-      address: e.address ?? null,
+      address:
+        (e.address as unknown as string | Record<string, unknown> | null) ??
+        null,
       capacity: e.capacity ?? null,
       placeId: e.place_id ?? null,
       ticketsSold: sales.ticketsSold,
@@ -351,7 +368,7 @@ export type ListPlacesFilters = {
 };
 
 export async function listPlacesCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListPlacesFilters = {},
 ): Promise<PaginatedResult<PlaceAdminListItem>> {
@@ -449,7 +466,7 @@ export async function listPlacesCore(
 }
 
 export async function getPlaceDetailCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   placeId: string,
 ): Promise<AdminEnvelope<PlaceAdminDetail>> {
@@ -504,7 +521,9 @@ export async function getPlaceDetailCore(
       reportCount: rc.get(placeId) ?? 0,
       createdAt: p.created_at,
       description: p.description ?? null,
-      address: p.address ?? null,
+      address:
+        (p.address as unknown as string | Record<string, unknown> | null) ??
+        null,
       categoryId: p.category_id ?? null,
       avgRating: rating.avg,
       reviewCount: rating.count,
@@ -528,7 +547,7 @@ export type ListOrganizersFilters = {
 };
 
 export async function listOrganizersCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListOrganizersFilters = {},
 ): Promise<PaginatedResult<OrganizerListItem>> {
@@ -641,7 +660,7 @@ export async function listOrganizersCore(
 }
 
 export async function getOrganizerDetailCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   organizerId: string,
 ): Promise<AdminEnvelope<OrganizerDetail>> {

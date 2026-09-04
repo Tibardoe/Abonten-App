@@ -112,10 +112,14 @@ export default function ReviewModal({
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (formData: z.infer<typeof eventSchema>) => {
+      if (!reviewedId) {
+        throw new Error("Could not resolve the reviewed user. Try again.");
+      }
+
       const finalData = {
         ...formData,
         rating: rating,
-        reviewedId: reviewedId,
+        reviewedId,
         draftId: currentDraftId,
       };
 

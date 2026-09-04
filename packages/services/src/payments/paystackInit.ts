@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 // Ensures exactly one Paystack transaction exists for a given payment_attempt
 // row, reusing a still-open one instead of re-initializing on every retry —
 // mirrors upsertPaymentAttemptForSession's own "reuse an open attempt"
@@ -36,7 +37,7 @@ type EnsurePaystackTransactionResult =
  * second Paystack transaction for the same attempt.
  */
 export async function ensurePaystackTransaction(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -89,7 +90,7 @@ export async function ensurePaystackTransaction(
         access_code: initialized.access_code,
         authorization_url: initialized.authorization_url,
       },
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", attempt.id);
 
@@ -137,7 +138,7 @@ type PaystackChargeInitResult =
     };
 
 async function chargeCardDirect(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -168,7 +169,7 @@ async function chargeCardDirect(
     .update({
       provider_reference: charge.reference,
       metadata: { mode: "direct" },
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", attempt.id);
 
@@ -194,7 +195,7 @@ async function chargeCardDirect(
 }
 
 async function chargeMomoDirect(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -227,7 +228,7 @@ async function chargeMomoDirect(
     .update({
       provider_reference: charge.reference,
       metadata: { mode: "direct" },
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", attempt.id);
 
@@ -275,7 +276,7 @@ async function chargeMomoDirect(
  * re-initiated, on pain of double-charging the customer.
  */
 export async function initiatePaystackChargeForAttempt(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,

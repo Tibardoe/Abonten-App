@@ -22,8 +22,12 @@ async function nearby(lat: number, lng: number): Promise<PlaceType[]> {
     user_lat: lat,
     user_lng: lng,
     search_radius: AROUND_YOU_RADIUS_METERS,
-    p_cursor_distance: null,
-    p_cursor_id: null,
+    // These params are all `DEFAULT NULL` in SQL -- `undefined` (dropped
+    // from the JSON body entirely) reaches the function exactly the same
+    // as an explicit `null` would, but satisfies the generated optional
+    // (`?:`) arg type.
+    p_cursor_distance: undefined,
+    p_cursor_id: undefined,
     p_page_size: 20,
   });
   if (error) throw error;
@@ -36,15 +40,17 @@ async function filtered(
   opts: { openNow?: boolean; minRating?: number; pageSize: number },
 ): Promise<PlaceType[]> {
   const { data, error } = await supabase.rpc("get_filtered_places", {
-    p_search_text: null,
-    p_category_id: null,
-    p_min_rating: opts.minRating ?? null,
-    p_open_now: opts.openNow ?? null,
+    // All `DEFAULT NULL`/optional in SQL -- see the comment in nearby()
+    // above for why `undefined` replaces `null` here.
+    p_search_text: undefined,
+    p_category_id: undefined,
+    p_min_rating: opts.minRating,
+    p_open_now: opts.openNow,
     p_user_lat: lat,
     p_user_lng: lng,
     p_max_distance_km: WIDE_RADIUS_KM,
-    p_cursor_distance: null,
-    p_cursor_id: null,
+    p_cursor_distance: undefined,
+    p_cursor_id: undefined,
     p_page_size: opts.pageSize,
   });
   if (error) throw error;
@@ -53,9 +59,9 @@ async function filtered(
 
 async function promotions(): Promise<PlaceType[]> {
   const { data, error } = await supabase.rpc("get_active_place_promotions", {
-    p_user_lat: null,
-    p_user_lng: null,
-    p_max_distance_km: null,
+    p_user_lat: undefined,
+    p_user_lng: undefined,
+    p_max_distance_km: undefined,
     p_limit: 10,
   });
   if (error) throw error;

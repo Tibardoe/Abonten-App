@@ -11,15 +11,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type Kind = "event" | "place";
 
-const TABLE: Record<Kind, "favorite" | "favorite_place"> = {
-  event: "favorite",
-  place: "favorite_place",
-};
-const FK: Record<Kind, "event_id" | "place_id"> = {
-  event: "event_id",
-  place: "place_id",
-};
-
 function itemKey(kind: Kind, id: string) {
   return ["favorite", kind, id] as const;
 }
@@ -61,10 +52,24 @@ function bumpProfileFavorites(
 }
 
 async function fetchIsFavorited(kind: Kind, id: string): Promise<boolean> {
+  // Branched (rather than indexed through TABLE[kind]/FK[kind]) so each arm
+  // resolves a single, literal table + column pair -- the typed client
+  // can't narrow a query built from a *union* of table name and column
+  // name varying together, even though each individual combination here is
+  // perfectly ordinary.
+  if (kind === "event") {
+    const { data, error } = await supabase
+      .from("favorite")
+      .select("event_id")
+      .eq("event_id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
   const { data, error } = await supabase
-    .from(TABLE[kind])
-    .select(FK[kind])
-    .eq(FK[kind], id)
+    .from("favorite_place")
+    .select("place_id")
+    .eq("place_id", id)
     .maybeSingle();
   if (error) throw error;
   return !!data;
@@ -92,19 +97,37 @@ export function useToggleFavorite(kind: Kind, id: string | undefined) {
     mutationFn: async (next: boolean) => {
       if (!session || !id) throw new Error("not-authenticated");
 
-      if (next) {
-        const { error } = await supabase.from(TABLE[kind]).insert({
-          user_id: session.user.id,
-          [FK[kind]]: id,
-          created_at: new Date().toISOString(),
-        });
-        if (error) throw error;
+      // Same branching-over-indexing reasoning as fetchIsFavorited above.
+      if (kind === "event") {
+        if (next) {
+          const { error } = await supabase.from("favorite").insert({
+            user_id: session.user.id,
+            event_id: id,
+            created_at: new Date().toISOString(),
+          });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("favorite")
+            .delete()
+            .eq("event_id", id);
+          if (error) throw error;
+        }
       } else {
-        const { error } = await supabase
-          .from(TABLE[kind])
-          .delete()
-          .eq(FK[kind], id);
-        if (error) throw error;
+        if (next) {
+          const { error } = await supabase.from("favorite_place").insert({
+            user_id: session.user.id,
+            place_id: id,
+            created_at: new Date().toISOString(),
+          });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("favorite_place")
+            .delete()
+            .eq("place_id", id);
+          if (error) throw error;
+        }
       }
     },
 

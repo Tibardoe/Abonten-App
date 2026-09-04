@@ -11,6 +11,7 @@ import type {
   MetricsOverviewPoint,
   ObservedPlatform,
 } from "@abonten/types/adminTypes";
+import type { Database, Json } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type AdminEnvelope,
@@ -23,7 +24,7 @@ import {
 // The app_error_group rollup is maintained by a DB trigger.
 
 export async function ingestErrorCore(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   payload: ErrorEventPayload,
 ): Promise<{ status: number }> {
   const { error } = await serviceClient.from("app_error_event").insert({
@@ -36,7 +37,11 @@ export async function ingestErrorCore(
     route: payload.route,
     app_version: payload.appVersion,
     severity: payload.severity,
-    context: payload.context,
+    // Record<string, unknown> is a wider type than Json (its values aren't
+    // guaranteed JSON-safe) -- the ingest route only ever forwards an
+    // already-JSON-serialized payload, so this is a translation cast, not
+    // a real risk.
+    context: payload.context as unknown as Json,
     user_id: payload.userId,
     occurred_at: payload.occurredAt,
   });
@@ -57,7 +62,7 @@ export type RequestMetricInput = {
 };
 
 export async function ingestMetricCore(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   input: RequestMetricInput,
 ): Promise<{ status: number }> {
   const { error } = await serviceClient.from("app_request_metric").insert({
@@ -83,7 +88,7 @@ export type HealthCheckOutcome = {
 };
 
 export async function recordHealthResultsCore(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   results: HealthCheckOutcome[],
 ): Promise<{ status: number }> {
   if (results.length === 0) return { status: 200 };
@@ -92,7 +97,8 @@ export async function recordHealthResultsCore(
       check_key: r.key,
       ok: r.ok,
       latency_ms: r.latencyMs,
-      detail: r.detail,
+      // Same Record<string, unknown>-vs-Json translation as ingestErrorCore.
+      detail: r.detail as unknown as Json,
     })),
   );
   if (error) {
@@ -105,7 +111,7 @@ export async function recordHealthResultsCore(
 // ── READ side (Admin Monitoring module) ──────────────────────
 
 export async function getHealthSnapshotCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<HealthCheckSnapshot[]>> {
   try {
@@ -128,10 +134,13 @@ export async function getHealthSnapshotCore(
     if (seen.has(row.check_key)) continue;
     seen.add(row.check_key);
     out.push({
-      key: row.check_key,
+      // check_key is free-text in the DB but only ever populated from the
+      // fixed set of health checks this project runs -- HealthCheckKey is
+      // that closed set at the app-model boundary.
+      key: row.check_key as HealthCheckKey,
       ok: row.ok,
       latencyMs: row.latency_ms,
-      detail: row.detail,
+      detail: row.detail as Record<string, unknown> | null,
       checkedAt: row.checked_at,
     });
   }
@@ -139,7 +148,7 @@ export async function getHealthSnapshotCore(
 }
 
 export async function listErrorGroupsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: { status?: ErrorGroupStatus | "all"; limit?: number } = {},
 ): Promise<AdminEnvelope<ErrorGroup[]>> {
@@ -162,6 +171,10 @@ export async function listErrorGroupsCore(
   }
   return {
     status: 200,
+    // platforms/status are free-text columns constrained by the app to a
+    // known set (ObservedPlatform / ErrorGroupStatus) -- the DB doesn't
+    // encode that as an enum, so this is a translation cast, not a real
+    // risk.
     data: (data ?? []).map((g) => ({
       fingerprint: g.fingerprint,
       title: g.title,
@@ -175,12 +188,12 @@ export async function listErrorGroupsCore(
       lastAppVersion: g.last_app_version,
       status: g.status,
       assignedTo: g.assigned_to,
-    })),
+    })) as unknown as ErrorGroup[],
   };
 }
 
 export async function getErrorGroupCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   fingerprint: string,
 ): Promise<AdminEnvelope<{ group: ErrorGroup; samples: ErrorEventSample[] }>> {
@@ -213,6 +226,8 @@ export async function getErrorGroupCore(
   return {
     status: 200,
     data: {
+      // Same free-text-constrained-to-a-known-set translation as
+      // listErrorGroupsCore above.
       group: {
         fingerprint: g.fingerprint,
         title: g.title,
@@ -226,7 +241,7 @@ export async function getErrorGroupCore(
         lastAppVersion: g.last_app_version,
         status: g.status,
         assignedTo: g.assigned_to,
-      },
+      } as unknown as ErrorGroup,
       samples: (samples ?? []).map((s) => ({
         id: s.id,
         message: s.message,
@@ -237,13 +252,13 @@ export async function getErrorGroupCore(
         severity: s.severity,
         context: s.context,
         occurredAt: s.occurred_at,
-      })),
+      })) as unknown as ErrorEventSample[],
     },
   };
 }
 
 export async function updateErrorGroupStatusCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { fingerprint: string; status: ErrorGroupStatus },
   requestMeta?: Record<string, unknown>,
@@ -275,7 +290,7 @@ export async function updateErrorGroupStatusCore(
 }
 
 export async function getMetricsOverviewCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   opts: { sinceHours?: number } = {},
 ): Promise<AdminEnvelope<MetricsOverviewPoint[]>> {
@@ -306,12 +321,12 @@ export async function getMetricsOverviewCore(
       errCount: Number(r.err_count),
       p50Ms: r.p50_ms,
       p95Ms: r.p95_ms,
-    })),
+    })) as unknown as MetricsOverviewPoint[],
   };
 }
 
 export async function listIncidentsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<Incident[]>> {
   try {
@@ -330,6 +345,9 @@ export async function listIncidentsCore(
   }
   return {
     status: 200,
+    // status/severity are DB CHECK-constrained (see the incident table's
+    // migration) to exactly Incident's literal unions -- a translation
+    // cast, not a real risk.
     data: (data ?? []).map((i) => ({
       id: i.id,
       title: i.title,
@@ -341,12 +359,12 @@ export async function listIncidentsCore(
       resolvedAt: i.resolved_at,
       createdBy: i.created_by,
       updatedAt: i.updated_at,
-    })),
+    })) as unknown as Incident[],
   };
 }
 
 export async function upsertIncidentCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     id?: string;

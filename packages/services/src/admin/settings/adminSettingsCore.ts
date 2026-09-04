@@ -8,6 +8,7 @@ import type {
   AdminRoleKey,
   RoleMatrix,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type AdminEnvelope,
@@ -30,7 +31,7 @@ export type AdminStaffRow = {
 };
 
 export async function listAdminStaffCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<AdminStaffRow[]>> {
   try {
@@ -80,7 +81,9 @@ export async function listAdminStaffCore(
         username: p?.username ?? null,
         fullName: p?.full_name ?? null,
         email,
-        status: a.status,
+        // status is DB CHECK-constrained to exactly "active" | "disabled"
+        // though the column itself is text.
+        status: a.status as AdminStaffRow["status"],
         roles: rolesByUser.get(a.user_id) ?? [],
         createdAt: a.created_at,
       };
@@ -95,7 +98,7 @@ export async function listAdminStaffCore(
 const LOCKED_ROLES = ["super_admin"];
 
 export async function getRoleMatrixCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<RoleMatrix>> {
   try {
@@ -144,7 +147,7 @@ export async function getRoleMatrixCore(
 // (settings.manage) + step-up, enforced by the transport; the DB trigger
 // makes super_admin's own rows un-writable as a last line of defence.
 export async function setRolePermissionCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { roleKey: string; permissionKey: string; enabled: boolean },
   requestMeta?: Record<string, unknown>,
@@ -221,7 +224,7 @@ export async function setRolePermissionCore(
 }
 
 export async function grantAdminRoleCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { targetUserId: string; roleKey: AdminRoleKey },
   requestMeta?: Record<string, unknown>,
@@ -256,7 +259,7 @@ export async function grantAdminRoleCore(
 }
 
 export async function revokeAdminRoleCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { targetUserId: string; roleKey: AdminRoleKey },
   requestMeta?: Record<string, unknown>,
@@ -291,7 +294,7 @@ export async function revokeAdminRoleCore(
 }
 
 export async function setAdminUserStatusCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { targetUserId: string; status: "active" | "disabled" },
   requestMeta?: Record<string, unknown>,

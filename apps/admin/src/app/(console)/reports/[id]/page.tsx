@@ -1,4 +1,12 @@
-import { Badge, Card, EmptyState, PageHeader, priorityTone, reportStatusTone, timeAgo } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  PageHeader,
+  priorityTone,
+  reportStatusTone,
+  timeAgo,
+} from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadReportDetail } from "@/lib/data";
 import { REPORT_CATEGORY_LABEL } from "@abonten/types/adminTypes";
@@ -33,7 +41,9 @@ export default async function ReportDetailPage({
         actions={
           <div className="flex items-center gap-2">
             <Badge tone={priorityTone(r.priority)}>{r.priority}</Badge>
-            <Badge tone={reportStatusTone(r.status)}>{r.status.replace("_", " ")}</Badge>
+            <Badge tone={reportStatusTone(r.status)}>
+              {r.status.replace("_", " ")}
+            </Badge>
           </div>
         }
       />
@@ -53,7 +63,9 @@ export default async function ReportDetailPage({
               <dd>{r.priorReportsOnTarget}</dd>
             </dl>
             {r.details ? (
-              <p className="mt-3 whitespace-pre-wrap rounded bg-muted/50 p-2 text-sm">{r.details}</p>
+              <p className="mt-3 whitespace-pre-wrap rounded bg-muted/50 p-2 text-sm">
+                {r.details}
+              </p>
             ) : null}
           </Card>
 
@@ -73,13 +85,19 @@ export default async function ReportDetailPage({
           <Card className="p-4">
             <h3 className="mb-2 text-sm font-semibold">Reporter</h3>
             <p className="text-sm">
-              {r.reporter.fullName || r.reporter.username || (r.reporter.id ? `${r.reporter.id.slice(0, 8)}…` : "unknown")}
+              {r.reporter.fullName ||
+                r.reporter.username ||
+                (r.reporter.id ? `${r.reporter.id.slice(0, 8)}…` : "unknown")}
               {r.reporter.email ? (
-                <span className="text-muted-foreground"> · {r.reporter.email}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {r.reporter.email}
+                </span>
               ) : null}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {r.reporter.priorReportsByReporter} report(s) filed by this account overall
+              {r.reporter.priorReportsByReporter} report(s) filed by this
+              account overall
             </p>
           </Card>
 
@@ -99,16 +117,23 @@ export default async function ReportDetailPage({
                         {a.fileName ?? "attachment"}
                       </a>
                     ) : (
-                      <span className="text-muted-foreground">{a.fileName ?? "attachment"} (link expired)</span>
+                      <span className="text-muted-foreground">
+                        {a.fileName ?? "attachment"} (link expired)
+                      </span>
                     )}
                     <span className="text-muted-foreground">
                       {" "}
-                      · {a.mimeType ?? "?"} · {a.sizeBytes ? `${Math.round(a.sizeBytes / 1024)} KB` : "?"}
+                      · {a.mimeType ?? "?"} ·{" "}
+                      {a.sizeBytes
+                        ? `${Math.round(a.sizeBytes / 1024)} KB`
+                        : "?"}
                     </span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-1 text-xs text-muted-foreground">Links expire after 5 minutes.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Links expire after 5 minutes.
+              </p>
             </Card>
           )}
 
@@ -121,12 +146,20 @@ export default async function ReportDetailPage({
                     {timeAgo(t.createdAt)}
                   </span>
                   <span>
-                    <span className="font-medium">{t.kind.replace("_", " ")}</span>
+                    <span className="font-medium">
+                      {t.kind.replace("_", " ")}
+                    </span>
                     {t.actorName ? (
-                      <span className="text-muted-foreground"> by {t.actorName}</span>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        by {t.actorName}
+                      </span>
                     ) : null}
                     {t.data ? (
-                      <span className="text-muted-foreground"> — {JSON.stringify(t.data)}</span>
+                      <span className="text-muted-foreground">
+                        {" "}
+                        — {JSON.stringify(t.data)}
+                      </span>
                     ) : null}
                   </span>
                 </li>
@@ -154,7 +187,9 @@ export default async function ReportDetailPage({
             <Card className="p-4">
               <h3 className="mb-1 text-sm font-semibold">Resolution</h3>
               <p className="text-sm">
-                <Badge tone={reportStatusTone(r.status)}>{r.status.replace("_", " ")}</Badge>{" "}
+                <Badge tone={reportStatusTone(r.status)}>
+                  {r.status.replace("_", " ")}
+                </Badge>{" "}
                 {r.resolutionAction ? `(${r.resolutionAction})` : null}
               </p>
               <p className="mt-1 whitespace-pre-wrap text-sm">{r.resolution}</p>

@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 // Shared server-side logic for turning a set of selected pending checkout
 // sessions into an authoritative payment summary — reused by
 // prepareMultiCheckoutPayment.ts (read-only preview) and
@@ -48,7 +49,7 @@ export type PreparedCheckoutPayment = {
 export async function prepareCheckoutPayment(
   userId: string,
   checkoutSessionIds: string[],
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
 ): Promise<PreparedCheckoutPayment> {
   // `client` lets an already-authenticated caller (the mobile checkout
   // routes) reuse its own Supabase client; the "use server" actions omit it

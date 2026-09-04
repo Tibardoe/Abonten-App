@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
+import type { Database } from "@abonten/types/database.types";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -20,7 +21,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 export default async function createNotification(
   input: CreateNotificationInput,
-  supabaseOverride?: SupabaseClient,
+  supabaseOverride?: SupabaseClient<Database>,
 ) {
   const supabase = supabaseOverride ?? (await createClient());
   return createNotificationCore(supabase, input);

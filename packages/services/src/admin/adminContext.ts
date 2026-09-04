@@ -10,6 +10,7 @@ import type {
   AdminPermissionKey,
   AdminRoleKey,
 } from "@abonten/types/adminTypes";
+import type { Database, Json } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export { AdminForbiddenError, AdminUnauthenticatedError };
@@ -25,7 +26,7 @@ export { AdminForbiddenError, AdminUnauthenticatedError };
 // callers can `catch` and map to an envelope. Never trusts anything the
 // client sent about roles or permissions.
 export async function resolveAdminContext(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   userId: string | null | undefined,
   opts?: { email?: string | null; reauthenticatedAt?: number | null },
 ): Promise<AdminContext> {
@@ -79,7 +80,7 @@ export async function resolveAdminContext(
 const KNOWN_PERMISSIONS = new Set<string>(ADMIN_PERMISSION_KEYS);
 
 async function resolvePermissions(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   roles: AdminRoleKey[],
 ): Promise<AdminPermissionKey[]> {
   if (roles.length === 0) return [];
@@ -159,7 +160,7 @@ export type AuditInput = {
 // surface rather than hide. (The DB also forbids UPDATE/DELETE on this
 // table, so history can't be rewritten once written.)
 export async function recordAdminAudit(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   input: AuditInput,
 ): Promise<void> {
   const { error } = await serviceClient.from("admin_audit_log").insert({
@@ -170,9 +171,12 @@ export async function recordAdminAudit(
     target_id: input.targetId ?? null,
     summary: input.summary ?? null,
     reason: input.reason ?? null,
-    before: input.before ?? null,
-    after: input.after ?? null,
-    request_meta: input.requestMeta ?? null,
+    // Record<string, unknown> is wider than Json (its values aren't
+    // guaranteed JSON-safe) -- audit payloads are always plain
+    // JSON-serializable objects in practice.
+    before: (input.before ?? null) as unknown as Json,
+    after: (input.after ?? null) as unknown as Json,
+    request_meta: (input.requestMeta ?? null) as unknown as Json,
   });
   if (error) {
     logger.error(

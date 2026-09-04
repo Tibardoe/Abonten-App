@@ -1,5 +1,6 @@
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   generateQRCodeDataURL,
@@ -33,7 +34,7 @@ export type RegisterForFreeEventCoreResult = {
 };
 
 export async function registerForFreeEventCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   occurrenceId?: string | null,
@@ -158,14 +159,14 @@ export async function registerForFreeEventCore(
       user_id: userId,
       ticket_type_id: ticketType.id,
       qr_public_id: uploadResponse.public_id,
-      qr_version: uploadResponse.version,
-      expires_at: eventEndDate,
+      qr_version: String(uploadResponse.version),
+      expires_at: eventEndDate.toISOString(),
       used_at: null,
       transaction_id: null,
       seat_number: null,
       status: "active",
       ticket_code: ticketCode,
-      created_at: new Date(),
+      created_at: new Date().toISOString(),
       updated_at: null,
       occurrence_id: occurrenceId ?? null,
     })

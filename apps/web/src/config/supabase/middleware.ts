@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -14,7 +15,7 @@ export async function updateSession(request: NextRequest) {
     throw new Error("Missing Supabase environment variables");
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

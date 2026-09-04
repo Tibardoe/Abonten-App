@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 
@@ -19,7 +20,7 @@ import { NextResponse } from "next/server";
 
 type MobileAuth =
   | {
-      supabase: SupabaseClient;
+      supabase: SupabaseClient<Database>;
       user: { id: string; email?: string };
       response: null;
     }
@@ -50,7 +51,9 @@ const SERVER_AUTH_OPTIONS = {
   detectSessionInUrl: false,
 } as const;
 
-export function createBearerClient(accessToken: string): SupabaseClient {
+export function createBearerClient(
+  accessToken: string,
+): SupabaseClient<Database> {
   const { url, key } = anonKeys();
 
   return createClient(url, key, {
@@ -64,7 +67,7 @@ export function createBearerClient(accessToken: string): SupabaseClient {
  * one-time password with `signInWithPassword` to read back the resulting
  * session tokens). Never persists or refreshes anything.
  */
-export function createAnonClient(): SupabaseClient {
+export function createAnonClient(): SupabaseClient<Database> {
   const { url, key } = anonKeys();
 
   return createClient(url, key, { auth: SERVER_AUTH_OPTIONS });

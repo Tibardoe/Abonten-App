@@ -2,7 +2,10 @@
 
 import { Button, Card, cn } from "@/components/ui";
 import { setUserStatus } from "@/server/actions";
-import type { AdminPermissionKey, UserAccountStatus } from "@abonten/types/adminTypes";
+import type {
+  AdminPermissionKey,
+  UserAccountStatus,
+} from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -22,7 +25,9 @@ export function UserActions({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [reason, setReason] = useState("");
-  const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
+    null,
+  );
   const can = (p: AdminPermissionKey) => permissions.includes(p);
 
   function act(next: UserAccountStatus) {
@@ -30,7 +35,12 @@ export function UserActions({
       setMsg({ tone: "err", text: "A reason is required." });
       return;
     }
-    if (!confirm(`Set this account to "${next}"? This is recorded in the audit log.`)) return;
+    if (
+      !confirm(
+        `Set this account to "${next}"? This is recorded in the audit log.`,
+      )
+    )
+      return;
     setMsg(null);
     start(async () => {
       const res = await setUserStatus({
@@ -53,7 +63,8 @@ export function UserActions({
   if (isAdmin) {
     return (
       <Card className="p-4 text-sm text-muted-foreground">
-        This account has admin roles. Remove them in Admin Settings before changing account status.
+        This account has admin roles. Remove them in Admin Settings before
+        changing account status.
       </Card>
     );
   }
@@ -62,7 +73,12 @@ export function UserActions({
     <Card className="sticky top-2 space-y-3 p-4">
       <h3 className="text-sm font-semibold">Account actions</h3>
       {msg ? (
-        <p className={cn("text-sm", msg.tone === "ok" ? "text-success" : "text-destructive")}>
+        <p
+          className={cn(
+            "text-sm",
+            msg.tone === "ok" ? "text-success" : "text-destructive",
+          )}
+        >
           {msg.text}
         </p>
       ) : null}
@@ -75,12 +91,22 @@ export function UserActions({
       />
       <div className="grid gap-1.5">
         {status !== "Suspended" && can("users.suspend") && (
-          <Button variant="outline" size="sm" disabled={pending} onClick={() => act("Suspended")}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() => act("Suspended")}
+          >
             Suspend
           </Button>
         )}
         {status === "Suspended" && can("users.suspend") && (
-          <Button variant="outline" size="sm" disabled={pending} onClick={() => act("Active")}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() => act("Active")}
+          >
             Unsuspend
           </Button>
         )}
@@ -96,13 +122,19 @@ export function UserActions({
           </Button>
         )}
         {status !== "Active" && can("users.restore") && (
-          <Button variant="outline" size="sm" disabled={pending} onClick={() => act("Active")}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() => act("Active")}
+          >
             Restore to active
           </Button>
         )}
       </div>
       <p className="text-xs text-muted-foreground">
-        No account is ever hard-deleted — financial and ticket history stays intact.
+        No account is ever hard-deleted — financial and ticket history stays
+        intact.
       </p>
     </Card>
   );

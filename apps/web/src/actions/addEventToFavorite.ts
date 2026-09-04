@@ -17,7 +17,7 @@ export async function addEventToFavorite(eventId: string) {
   const { error: insertError } = await supabase.from("favorite").insert({
     user_id: user.id,
     event_id: eventId,
-    created_at: new Date(),
+    created_at: new Date().toISOString(),
   });
 
   if (insertError) {

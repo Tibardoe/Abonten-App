@@ -39,7 +39,7 @@ export default async function getUserHighlight(username: string) {
     (acc, highlight) => {
       const groupId = highlight.group_id;
       if (!acc[groupId]) acc[groupId] = [];
-      acc[groupId].push(highlight);
+      acc[groupId].push(highlight as unknown as HighlightRow);
       return acc;
     },
     {},

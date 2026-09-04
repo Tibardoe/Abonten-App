@@ -8,16 +8,26 @@ import { useQuery } from "@tanstack/react-query";
 // rather than showing those links to every signed-in user. UI gating only
 // — every organizer screen and Server Action re-checks ownership itself.
 
+// Branched (rather than a single .from(table)/.eq(column,...) call) so
+// each arm resolves a single, literal table and column -- the typed
+// client can't narrow a query built from table name and column name
+// varying together. See useFavorites.ts for the same reasoning.
 async function ownsAny(
   table: "event" | "place",
-  column: "organizer_id" | "owner_id",
   userId: string,
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from(table)
-    .select(column)
-    .eq(column, userId)
-    .limit(1);
+  const { data, error } =
+    table === "event"
+      ? await supabase
+          .from("event")
+          .select("organizer_id")
+          .eq("organizer_id", userId)
+          .limit(1)
+      : await supabase
+          .from("place")
+          .select("owner_id")
+          .eq("owner_id", userId)
+          .limit(1);
   if (error) throw error;
   return (data ?? []).length > 0;
 }
@@ -29,7 +39,7 @@ export function useIsOrganizer(): boolean {
     queryKey: ["role", "organizer", userId],
     enabled: !!userId,
     staleTime: 60_000,
-    queryFn: () => ownsAny("event", "organizer_id", userId as string),
+    queryFn: () => ownsAny("event", userId as string),
   });
   return data ?? false;
 }
@@ -41,7 +51,7 @@ export function useIsPlaceOwner(): boolean {
     queryKey: ["role", "place-owner", userId],
     enabled: !!userId,
     staleTime: 60_000,
-    queryFn: () => ownsAny("place", "owner_id", userId as string),
+    queryFn: () => ownsAny("place", userId as string),
   });
   return data ?? false;
 }

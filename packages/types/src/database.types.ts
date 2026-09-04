@@ -554,6 +554,7 @@ export type Database = {
       event: {
         Row: {
           address: Json;
+          archived_at: string | null;
           capacity: number | null;
           client_request_id: string | null;
           created_at: string;
@@ -582,6 +583,7 @@ export type Database = {
         };
         Insert: {
           address: Json;
+          archived_at?: string | null;
           capacity?: number | null;
           client_request_id?: string | null;
           created_at?: string;
@@ -610,6 +612,7 @@ export type Database = {
         };
         Update: {
           address?: Json;
+          archived_at?: string | null;
           capacity?: number | null;
           client_request_id?: string | null;
           created_at?: string;
@@ -732,6 +735,150 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      event_media_p0: {
+        Row: {
+          created_at: string;
+          duration: number | null;
+          event_id: string;
+          format: string | null;
+          height: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          duration?: number | null;
+          event_id: string;
+          format?: string | null;
+          height?: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          duration?: number | null;
+          event_id?: string;
+          format?: string | null;
+          height?: number | null;
+          media_type?: string;
+          public_id?: string;
+          version?: string;
+          width?: number | null;
+        };
+        Relationships: [];
+      };
+      event_media_p1: {
+        Row: {
+          created_at: string;
+          duration: number | null;
+          event_id: string;
+          format: string | null;
+          height: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          duration?: number | null;
+          event_id: string;
+          format?: string | null;
+          height?: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          duration?: number | null;
+          event_id?: string;
+          format?: string | null;
+          height?: number | null;
+          media_type?: string;
+          public_id?: string;
+          version?: string;
+          width?: number | null;
+        };
+        Relationships: [];
+      };
+      event_media_p2: {
+        Row: {
+          created_at: string;
+          duration: number | null;
+          event_id: string;
+          format: string | null;
+          height: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          duration?: number | null;
+          event_id: string;
+          format?: string | null;
+          height?: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          duration?: number | null;
+          event_id?: string;
+          format?: string | null;
+          height?: number | null;
+          media_type?: string;
+          public_id?: string;
+          version?: string;
+          width?: number | null;
+        };
+        Relationships: [];
+      };
+      event_media_p3: {
+        Row: {
+          created_at: string;
+          duration: number | null;
+          event_id: string;
+          format: string | null;
+          height: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width: number | null;
+        };
+        Insert: {
+          created_at?: string;
+          duration?: number | null;
+          event_id: string;
+          format?: string | null;
+          height?: number | null;
+          media_type: string;
+          public_id: string;
+          version: string;
+          width?: number | null;
+        };
+        Update: {
+          created_at?: string;
+          duration?: number | null;
+          event_id?: string;
+          format?: string | null;
+          height?: number | null;
+          media_type?: string;
+          public_id?: string;
+          version?: string;
+          width?: number | null;
+        };
+        Relationships: [];
       };
       event_occurrence: {
         Row: {
@@ -1098,6 +1245,27 @@ export type Database = {
           },
         ];
       };
+      event_share_default: {
+        Row: {
+          event_id: string;
+          id: string;
+          shared_at: string;
+          user_id: string;
+        };
+        Insert: {
+          event_id: string;
+          id?: string;
+          shared_at?: string;
+          user_id: string;
+        };
+        Update: {
+          event_id?: string;
+          id?: string;
+          shared_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       favorite: {
         Row: {
           created_at: string;
@@ -1436,6 +1604,27 @@ export type Database = {
           },
         ];
       };
+      media_audit_default: {
+        Row: {
+          action: string;
+          performed_at: string;
+          public_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          action: string;
+          performed_at?: string;
+          public_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          action?: string;
+          performed_at?: string;
+          public_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       moderation_action: {
         Row: {
           action: string;
@@ -1536,6 +1725,33 @@ export type Database = {
             referencedColumns: ["user_id"];
           },
         ];
+      };
+      observability_config: {
+        Row: {
+          health_url: string | null;
+          id: boolean;
+          ingest_secret: string | null;
+          last_dispatched_at: string | null;
+          last_request_id: number | null;
+          updated_at: string;
+        };
+        Insert: {
+          health_url?: string | null;
+          id?: boolean;
+          ingest_secret?: string | null;
+          last_dispatched_at?: string | null;
+          last_request_id?: number | null;
+          updated_at?: string;
+        };
+        Update: {
+          health_url?: string | null;
+          id?: boolean;
+          ingest_secret?: string | null;
+          last_dispatched_at?: string | null;
+          last_request_id?: number | null;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       organizer_ledger_entry: {
         Row: {
@@ -3018,6 +3234,24 @@ export type Database = {
           },
         ];
       };
+      rate_limit_bucket: {
+        Row: {
+          count: number;
+          key: string;
+          window_start: string;
+        };
+        Insert: {
+          count?: number;
+          key: string;
+          window_start: string;
+        };
+        Update: {
+          count?: number;
+          key?: string;
+          window_start?: string;
+        };
+        Relationships: [];
+      };
       receiving_account: {
         Row: {
           bank_account_number: string | null;
@@ -4285,6 +4519,30 @@ export type Database = {
           },
         ];
       };
+      story_default: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          media_url: string;
+          user_id: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          media_url: string;
+          user_id: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          media_url?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       subscription: {
         Row: {
           end_date: string;
@@ -5025,6 +5283,114 @@ export type Database = {
           },
         ];
       };
+      wallet_p0: {
+        Row: {
+          balance: number | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          balance?: number | null;
+          created_at?: string;
+          currency: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          balance?: number | null;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      wallet_p1: {
+        Row: {
+          balance: number | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          balance?: number | null;
+          created_at?: string;
+          currency: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          balance?: number | null;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      wallet_p2: {
+        Row: {
+          balance: number | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          balance?: number | null;
+          created_at?: string;
+          currency: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          balance?: number | null;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      wallet_p3: {
+        Row: {
+          balance: number | null;
+          created_at: string;
+          currency: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          balance?: number | null;
+          created_at?: string;
+          currency: string;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          balance?: number | null;
+          created_at?: string;
+          currency?: string;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       admin_report_group: {
@@ -5107,11 +5473,31 @@ export type Database = {
       };
     };
     Functions: {
+      admin_create_payout: {
+        Args: {
+          p_amount: number;
+          p_currency: string;
+          p_organizer_id: string;
+          p_payout_account_id: string;
+        };
+        Returns: {
+          payout_id: string;
+          reference: string;
+        }[];
+      };
       admin_dashboard_counts: { Args: never; Returns: Json };
       admin_effective_permissions: { Args: never; Returns: string[] };
       admin_has_permission: {
         Args: { p_permission: string };
         Returns: boolean;
+      };
+      admin_settle_payout: {
+        Args: {
+          p_failure_reason?: string;
+          p_payout_id: string;
+          p_status: string;
+        };
+        Returns: string;
       };
       apply_moderation_action: {
         Args: {
@@ -5129,6 +5515,10 @@ export type Database = {
         Args: { p_admin_id: string; p_request_id: string };
         Returns: undefined;
       };
+      archive_or_delete_expired_event: {
+        Args: { p_event_id: string };
+        Returns: Json;
+      };
       cancel_event_and_release_tickets: {
         Args: { p_event_id: string };
         Returns: {
@@ -5141,6 +5531,7 @@ export type Database = {
         }[];
       };
       cleanup_expired_drafts: { Args: never; Returns: undefined };
+      cleanup_rate_limit_buckets: { Args: never; Returns: undefined };
       compute_event_promotion_end_date: {
         Args: { p_from_date: string; p_tier_id: number };
         Returns: string;
@@ -5152,6 +5543,10 @@ export type Database = {
       compute_subscription_end_date: {
         Args: { from_date: string; plan_id: number };
         Returns: string;
+      };
+      consume_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: boolean;
       };
       create_event: {
         Args: {
@@ -5204,6 +5599,19 @@ export type Database = {
         };
         Returns: string;
       };
+      create_ticket_checkout: {
+        Args: {
+          p_event_id: string;
+          p_expires_at: string;
+          p_lines: Json;
+          p_occurrence_id: string;
+          p_promo_code_id: string;
+          p_promo_code_text: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
+      ensure_future_review_partitions: { Args: never; Returns: undefined };
       expire_stale_event_promotion_checkouts: {
         Args: never;
         Returns: {
@@ -5905,6 +6313,29 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean };
       is_event_settled: { Args: { p_event_id: string }; Returns: boolean };
       is_staff: { Args: never; Returns: boolean };
+      issue_tickets_for_checkout: {
+        Args: {
+          p_checkout_session_id: string;
+          p_metadata: Json;
+          p_ticket_expires_at: string;
+          p_tickets: Json;
+          p_transaction_id: string;
+          p_user_id: string;
+        };
+        Returns: {
+          already_issued: boolean;
+          ticket_id: string;
+        }[];
+      };
+      open_reconciliation_incident: {
+        Args: {
+          p_component: string;
+          p_severity: string;
+          p_summary: string;
+          p_title: string;
+        };
+        Returns: undefined;
+      };
       place_is_open_now: {
         Args: { p_now?: string; p_place_id: string };
         Returns: boolean;
@@ -5937,6 +6368,7 @@ export type Database = {
         Args: { p_transaction_id: string };
         Returns: undefined;
       };
+      recover_stale_payment_attempts: { Args: never; Returns: undefined };
       request_organizer_payout: {
         Args: {
           p_amount: number;
@@ -5962,6 +6394,8 @@ export type Database = {
         Args: { p_actor_id: string; p_role_key: string; p_target_user: string };
         Returns: undefined;
       };
+      run_financial_reconciliation: { Args: never; Returns: Json };
+      run_scheduled_health_check: { Args: never; Returns: undefined };
       set_admin_user_status: {
         Args: { p_actor_id: string; p_status: string; p_target_user: string };
         Returns: undefined;

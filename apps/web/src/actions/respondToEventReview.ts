@@ -46,7 +46,7 @@ export async function respondToEventReview(reviewId: string, response: string) {
     .from("event_review")
     .update({
       organizer_response: response,
-      organizer_response_at: new Date(),
+      organizer_response_at: new Date().toISOString(),
     })
     .eq("id", reviewId);
 

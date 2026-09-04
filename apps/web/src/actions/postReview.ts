@@ -98,7 +98,7 @@ export async function postReview(formData: FormDataType) {
     .join(" ");
 
   const { error: insertEror } = await supabase.from("review").insert({
-    created_at: new Date(),
+    created_at: new Date().toISOString(),
     title: formattedTitle,
     comment: review,
     rating: rating,

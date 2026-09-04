@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ReviewPhotoInput = { publicId: string; version: string };
@@ -16,7 +17,7 @@ export type ReviewPhotoInput = { publicId: string; version: string };
 // MAX_REVIEW_PHOTOS is dropped too, as defense-in-depth against a tampered
 // request (the picker UI already enforces this client-side).
 export async function insertReviewPhotos(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: "place_review_photo" | "event_review_photo",
   reviewIdColumn: "place_review_id" | "event_review_id",
   reviewId: string,
@@ -37,14 +38,28 @@ export async function insertReviewPhotos(
 
   if (!validPhotos.length) return;
 
-  const rows = validPhotos.map((photo, index) => ({
-    [reviewIdColumn]: reviewId,
+  const photoFields = validPhotos.map((photo, index) => ({
     public_id: photo.publicId,
     version: photo.version,
     position: startPosition + index,
   }));
 
-  const { error } = await supabase.from(table).insert(rows);
+  // Branched (rather than a single .from(table)/computed-key insert) so
+  // each arm resolves a single, literal table and a literal id-column key
+  // -- the typed client can't narrow an insert built from a *union* of
+  // table name and a computed (reviewIdColumn) property name varying
+  // together, even though each individual combination here is perfectly
+  // ordinary. See useFavorites.ts (mobile) for the same reasoning.
+  const { error } =
+    table === "event_review_photo"
+      ? await supabase
+          .from("event_review_photo")
+          .insert(photoFields.map((f) => ({ ...f, event_review_id: reviewId })))
+      : await supabase
+          .from("place_review_photo")
+          .insert(
+            photoFields.map((f) => ({ ...f, place_review_id: reviewId })),
+          );
 
   if (error) {
     logger.error(`Error attaching photos to ${table}: ${error.message}`);

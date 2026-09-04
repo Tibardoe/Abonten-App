@@ -180,7 +180,7 @@ export default function CheckoutModal({
 
     const { amount } = computeLineAmount(
       qty,
-      ticket.price,
+      ticket.price ?? 0,
       appliedPromo?.discountPercentage ?? 0,
       eligibleUnits,
     );
@@ -196,7 +196,9 @@ export default function CheckoutModal({
       (quantities[ticket.id] || 0) > ticket.quantity,
   );
 
-  const serviceFeeRate = useServiceFeeRate(ticketList[0]?.currency);
+  const serviceFeeRate = useServiceFeeRate(
+    ticketList[0]?.currency ?? undefined,
+  );
   const fee = computeCheckoutFee(subTotal, serviceFeeRate);
 
   const total = subTotal + fee;
@@ -303,10 +305,11 @@ export default function CheckoutModal({
                 const qty = quantities[ticket.id] ?? 0;
                 const eligibleUnits =
                   promoEligibility?.eligibleUnitsByTicket[ticket.id] ?? 0;
+                const ticketPrice = ticket.price ?? 0;
                 const discountedUnitPrice = appliedPromo
                   ? +(
-                      ticket.price -
-                      (appliedPromo.discountPercentage / 100) * ticket.price
+                      ticketPrice -
+                      (appliedPromo.discountPercentage / 100) * ticketPrice
                     ).toFixed(2)
                   : null;
 
@@ -337,7 +340,7 @@ export default function CheckoutModal({
           )}
 
           <CheckoutOrderTotals
-            currency={ticketList[0]?.currency}
+            currency={ticketList[0]?.currency ?? undefined}
             subTotal={subTotal}
             fee={fee}
             total={total}

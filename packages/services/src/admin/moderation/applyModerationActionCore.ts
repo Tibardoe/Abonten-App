@@ -4,6 +4,7 @@ import type {
   ModeratableTargetType,
   ModerationActionKind,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type AdminEnvelope,
@@ -31,7 +32,7 @@ const PERMISSION_FOR: Record<
 };
 
 export async function applyModerationActionCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     targetType: ModeratableTargetType;
@@ -62,7 +63,7 @@ export async function applyModerationActionCore(
     p_reason: input.reason,
     p_report_id: input.reportId ?? null,
     p_idempotency_key: idempotencyKey,
-  });
+  } as unknown as Database["public"]["Functions"]["apply_moderation_action"]["Args"]);
 
   if (error) {
     logger.error(`applyModerationActionCore RPC failed: ${error.message}`);

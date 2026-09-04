@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { v2 as cloudinary } from "cloudinary";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
@@ -18,6 +19,13 @@ import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedPar
 // see updateEventTicketTypesCore for the separate, lock-gated ticket editor.
 
 type DateInput = string | Date;
+
+function toIsoString(d: DateInput): string;
+function toIsoString(d: DateInput | null | undefined): string | null;
+function toIsoString(d: DateInput | null | undefined): string | null {
+  if (d == null) return null;
+  return d instanceof Date ? d.toISOString() : d;
+}
 
 export type UpdateEventCoreInput = {
   eventId: string;
@@ -43,7 +51,7 @@ export type UpdateEventCoreResult =
   | { status: 200; message: string; eventCode: string };
 
 export async function updateEventCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: UpdateEventCoreInput,
 ): Promise<UpdateEventCoreResult> {
@@ -156,10 +164,16 @@ export async function updateEventCore(
       capacity,
       website_url,
       event_category: category,
-      event_type: types,
+      // event.event_type is a plain text column, but create_event's RPC
+      // stores it as `array_to_json(p_event_type)::text` (a JSON-array-
+      // encoded string), not a raw scalar -- match that encoding here so
+      // an edited event's event_type stays parseable the same way a
+      // freshly-created one is (see getEventForEditCore's
+      // `string[] | string | null` type, which already anticipates this).
+      event_type: JSON.stringify(types),
       require_registration: checked,
-      starts_at: eventStartDate,
-      ends_at: eventEndDate,
+      starts_at: toIsoString(eventStartDate),
+      ends_at: toIsoString(eventEndDate),
       flyer_public_id: nextFlyerPublicId,
       flyer_version: nextFlyerVersion,
     })
@@ -191,8 +205,8 @@ export async function updateEventCore(
   if (isSpecificEvent && specific_dates) {
     const occurrencePayload = specific_dates.map((entry) => ({
       event_id: eventId,
-      starts_at: entry.start,
-      ends_at: entry.end,
+      starts_at: toIsoString(entry.start),
+      ends_at: toIsoString(entry.end),
     }));
 
     const { error: insertOccurrenceError } = await supabase

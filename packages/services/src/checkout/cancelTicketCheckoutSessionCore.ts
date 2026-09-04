@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { releasePromoUsage } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of cancelTicketCheckoutSession — shared with
@@ -23,7 +24,7 @@ export type CancelCheckoutResult = {
 };
 
 export async function cancelTicketCheckoutSessionCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   checkoutSessionId: string,
 ): Promise<CancelCheckoutResult> {

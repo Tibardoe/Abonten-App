@@ -5,6 +5,7 @@ import type {
   DashboardRange,
   PlatformAnalytics,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
@@ -50,12 +51,14 @@ function num(v: unknown): number {
 }
 
 async function headCount(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: string,
   // biome-ignore lint/suspicious/noExplicitAny: PostgREST builder chaining not worth typing
   build?: (q: any) => any,
 ): Promise<number> {
-  let q = supabase.from(table).select("id", { count: "exact", head: true });
+  let q = supabase
+    .from(table as keyof Database["public"]["Tables"])
+    .select("id", { count: "exact", head: true });
   if (build) q = build(q);
   const { count, error } = await q;
   if (error) {
@@ -66,7 +69,7 @@ async function headCount(
 }
 
 export async function getPlatformAnalyticsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   opts: { range: DashboardRange; from?: string; to?: string },
 ): Promise<AdminEnvelope<PlatformAnalytics>> {
@@ -222,7 +225,9 @@ export async function getPlatformAnalyticsCore(
       .from("ticket_type")
       .select("id, event_id")
       .in("id", inRangeTicketTypeIds);
-    for (const r of tt ?? []) ttToEvent.set(r.id, r.event_id);
+    for (const r of tt ?? []) {
+      if (r.event_id) ttToEvent.set(r.id, r.event_id);
+    }
   }
   const ticketsByEvent = new Map<string, number>();
   for (const t of tRows ?? []) {

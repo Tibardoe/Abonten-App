@@ -127,7 +127,7 @@ export default async function activatePlacePromotion(
 
   await supabase
     .from("place_promotion_checkout")
-    .update({ status: "paid", completed_at: new Date() })
+    .update({ status: "paid", completed_at: new Date().toISOString() })
     .eq("id", checkout.id);
 
   const { data: place } = await supabase

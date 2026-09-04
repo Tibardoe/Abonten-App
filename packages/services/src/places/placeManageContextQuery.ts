@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Everything the native per-place management screens need to prefill their
@@ -51,7 +52,7 @@ export type PlaceManageContextResult =
   | { status: 200; data: PlaceManageContext };
 
 export async function fetchPlaceManageContext(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
 ): Promise<PlaceManageContextResult> {
@@ -105,6 +106,10 @@ export async function fetchPlaceManageContext(
   return {
     status: 200,
     data: {
+      // social_links/address are narrower app-level shapes than the DB's
+      // generic Json column, and temporary_status is DB CHECK-constrained
+      // to exactly this literal union though the column itself is text --
+      // translation casts, not a real risk.
       place: {
         id: place.id,
         name: place.name,
@@ -113,11 +118,17 @@ export async function fetchPlaceManageContext(
         website_url: place.website_url,
         phone: place.phone,
         whatsapp: place.whatsapp,
-        social_links: place.social_links,
-        address: place.address,
+        social_links: place.social_links as unknown as Record<
+          string,
+          string
+        > | null,
+        address: place.address as unknown as { full_address?: string } | null,
         cover_public_id: place.cover_public_id,
         cover_version: place.cover_version,
-        temporary_status: place.temporary_status,
+        temporary_status: place.temporary_status as unknown as
+          | "temporarily_closed"
+          | "permanently_closed"
+          | null,
         temporary_status_note: place.temporary_status_note,
       },
       openingHours: openingHours ?? [],

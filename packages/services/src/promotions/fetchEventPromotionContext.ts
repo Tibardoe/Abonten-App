@@ -1,6 +1,7 @@
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { EventPromotionTier } from "@abonten/types/postsType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -26,7 +27,7 @@ export type EventPromotionContextResult =
   | { status: 200; data: EventPromotionContext };
 
 export async function fetchEventPromotionContext(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
 ): Promise<EventPromotionContextResult> {

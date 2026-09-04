@@ -38,7 +38,12 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     return { status: 500, message: "Something went wrong!" };
   }
 
-  if (!checkout) {
+  if (
+    !checkout ||
+    checkout.checkout_session_id === null ||
+    checkout.ticket_type_id === null ||
+    checkout.event_id === null
+  ) {
     return { status: 404, message: "Checkout not found" };
   }
 

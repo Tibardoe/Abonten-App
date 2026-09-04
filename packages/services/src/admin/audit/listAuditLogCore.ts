@@ -6,6 +6,7 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { AdminContext, AuditLogEntry } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { assertPermission } from "../adminContext";
@@ -24,7 +25,7 @@ export type AuditLogFilters = {
 };
 
 export async function listAuditLogCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: AuditLogFilters = {},
 ): Promise<PaginatedResult<AuditLogEntry>> {
@@ -88,7 +89,10 @@ export async function listAuditLogCore(
       names.set(u.id, u.full_name || u.username || u.id.slice(0, 8));
   }
 
-  const mapped: AuditLogEntry[] = rows.map((r) => ({
+  // before/after/requestMeta are the DB's generic Json column, wider than
+  // AuditLogEntry's app-level Record<string, unknown> | null -- a
+  // translation cast, not a real risk.
+  const mapped = rows.map((r) => ({
     id: r.id,
     actorId: r.actor_id,
     actorName: r.actor_id ? (names.get(r.actor_id) ?? null) : null,
@@ -102,7 +106,7 @@ export async function listAuditLogCore(
     after: r.after,
     requestMeta: r.request_meta,
     createdAt: r.created_at,
-  }));
+  })) as unknown as AuditLogEntry[];
 
   const { page, hasNextPage } = splitPage(mapped, pageSize);
   const last = page[page.length - 1];

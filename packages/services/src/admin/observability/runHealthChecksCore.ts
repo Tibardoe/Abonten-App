@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { HealthCheckKey } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   type HealthCheckOutcome,
@@ -58,7 +59,7 @@ async function httpProbe(
 }
 
 export async function runHealthChecksCore(
-  serviceClient: SupabaseClient,
+  serviceClient: SupabaseClient<Database>,
   config: HealthCheckConfig,
 ): Promise<{ status: number; results: HealthCheckOutcome[] }> {
   const startedAt = Date.now();

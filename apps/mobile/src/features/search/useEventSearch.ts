@@ -5,9 +5,17 @@ import {
   countActiveEventFilters,
 } from "@/features/discovery/exploreFilters";
 import { supabase } from "@/lib/supabase";
+import type { Database } from "@abonten/types/database.types";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+
+// See useFilteredEvents.ts for why this cast exists: get_filtered_events'
+// generated Args type marks several filter params as required even though
+// its live SQL signature accepts (and this app has always passed) explicit
+// nulls for "no filter" -- a generated-type gap, not a real constraint.
+type GetFilteredEventsArgs =
+  Database["public"]["Functions"]["get_filtered_events"]["Args"];
 
 const PAGE_SIZE = 20;
 const MIN_QUERY_LEN = 2;
@@ -57,11 +65,11 @@ async function fetchPage(
     p_cursor_distance_km: cursor?.distanceKm ?? null,
     p_cursor_id: cursor?.id ?? null,
     p_page_size: PAGE_SIZE + 1,
-  });
+  } as unknown as GetFilteredEventsArgs);
 
   if (error) throw error;
 
-  const all = (data ?? []) as UserPostType[];
+  const all = (data ?? []) as unknown as UserPostType[];
   const hasNext = all.length > PAGE_SIZE;
   const rows = hasNext ? all.slice(0, PAGE_SIZE) : all;
   const last = rows[rows.length - 1];

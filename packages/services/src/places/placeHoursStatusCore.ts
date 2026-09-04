@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -16,7 +17,7 @@ export type PlaceHoursStatusCoreResult = {
 };
 
 async function assertOwnsPlace(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
 ): Promise<PlaceHoursStatusCoreResult | null> {
@@ -36,7 +37,7 @@ async function assertOwnsPlace(
 // Replaces the whole weekly schedule wholesale (no FK to
 // place_opening_hours.id, so delete + reinsert is safe).
 export async function updatePlaceOpeningHoursCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   openingHours: PlaceOpeningHoursInput[],
@@ -81,7 +82,7 @@ export async function updatePlaceOpeningHoursCore(
 }
 
 export async function setPlaceTemporaryStatusCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
   temporaryStatus: PlaceTemporaryStatus,
@@ -99,7 +100,7 @@ export async function setPlaceTemporaryStatusCore(
       temporary_status_note: temporaryStatus
         ? (temporaryStatusNote ?? null)
         : null,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", placeId)
     .eq("owner_id", userId);

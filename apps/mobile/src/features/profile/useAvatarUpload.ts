@@ -38,7 +38,7 @@ export function useAvatarUpload() {
       if (!userId) throw new Error("Not signed in.");
       const { error } = await supabase
         .from("user_info")
-        .update({ avatar_public_id: publicId, avatar_version: version })
+        .update({ avatar_public_id: publicId, avatar_version: String(version) })
         .eq("id", userId);
       if (error) throw error;
 

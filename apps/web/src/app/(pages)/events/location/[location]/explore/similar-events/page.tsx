@@ -43,7 +43,8 @@ export default async function page({
     logger.error(errorMessage);
   }
 
-  const events: UserPostType[] = response.similarEvents;
+  const events: UserPostType[] =
+    (response.similarEvents as unknown as UserPostType[] | undefined) ?? [];
 
   return (
     <div className="space-y-3">

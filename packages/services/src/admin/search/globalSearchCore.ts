@@ -4,6 +4,7 @@ import type {
   GlobalSearchHit,
   GlobalSearchResults,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
@@ -23,7 +24,7 @@ function sanitize(q: string): string {
 }
 
 export async function globalSearchCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { q: string },
 ): Promise<AdminEnvelope<GlobalSearchResults>> {

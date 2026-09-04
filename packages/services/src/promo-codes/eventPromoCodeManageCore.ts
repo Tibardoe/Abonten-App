@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth bodies of getEventPromoCodes / updatePromoCode / deletePromoCode,
@@ -22,7 +23,7 @@ export type EventPromoCodesCoreResult =
   | { status: 200; message: string; data: EventPromoCode[] };
 
 export async function fetchEventPromoCodes(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
 ): Promise<EventPromoCodesCoreResult> {
@@ -66,7 +67,7 @@ export async function fetchEventPromoCodes(
     expiresAt: p.expires_at,
     isActive: p.is_active,
     createdAt: p.created_at,
-  }));
+  })) as unknown as EventPromoCode[];
 
   return { status: 200, message: "OK", data };
 }
@@ -88,7 +89,7 @@ export type UpdatePromoCodeCoreResult = {
 // this scoped to the terms of an existing code (discount, cap, expiry,
 // active flag), not renaming/re-scoping it.
 export async function updatePromoCodeCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: UpdatePromoCodeCoreInput,
 ): Promise<UpdatePromoCodeCoreResult> {
@@ -102,7 +103,7 @@ export async function updatePromoCodeCore(
     return { status: 500, message: fetchError.message };
   }
 
-  if (!promoCode) {
+  if (!promoCode || promoCode.event_id === null) {
     return { status: 404, message: "Promo code not found" };
   }
 
@@ -126,7 +127,10 @@ export async function updatePromoCodeCore(
     .update({
       discount_percentage: input.discountPercentage,
       max_uses: input.maxUses,
-      expires_at: input.expiresAt,
+      expires_at:
+        input.expiresAt instanceof Date
+          ? input.expiresAt.toISOString()
+          : input.expiresAt,
       is_active: input.isActive,
     })
     .eq("id", input.promoCodeId);
@@ -148,7 +152,7 @@ export type DeletePromoCodeCoreResult = {
 };
 
 export async function deletePromoCodeCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   promoCodeId: string,
 ): Promise<DeletePromoCodeCoreResult> {
@@ -162,7 +166,7 @@ export async function deletePromoCodeCore(
     return { status: 500, message: fetchError.message };
   }
 
-  if (!promoCode) {
+  if (!promoCode || promoCode.event_id === null) {
     return { status: 404, message: "Promo code not found" };
   }
 
@@ -187,7 +191,7 @@ export async function deletePromoCodeCore(
   // least once — the code stops working at checkout (getPromoCode.ts checks
   // is_active) but the redemption history that already happened stays
   // intact. Only a never-used code is actually removed.
-  if (promoCode.times_used > 0) {
+  if ((promoCode.times_used ?? 0) > 0) {
     const { error: deactivateError } = await supabase
       .from("promo_code")
       .update({ is_active: false })

@@ -18,6 +18,7 @@ import type {
   TransactionDetail,
   TransactionListItem,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
@@ -59,7 +60,7 @@ function resolveRange(
 }
 
 async function orgNames(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
@@ -84,7 +85,7 @@ function num(v: unknown): number {
 // ─────────────────────────────────────────────────────────────
 
 export async function getFinanceOverviewCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   opts: { range: DashboardRange; from?: string; to?: string },
 ): Promise<AdminEnvelope<FinanceOverview>> {
@@ -232,7 +233,7 @@ export type ListTransactionsFilters = {
 };
 
 export async function listTransactionsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListTransactionsFilters = {},
 ): Promise<PaginatedResult<TransactionListItem>> {
@@ -315,7 +316,7 @@ export async function listTransactionsCore(
 }
 
 export async function getTransactionDetailCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   txId: string,
 ): Promise<AdminEnvelope<TransactionDetail>> {
@@ -404,7 +405,7 @@ export async function getTransactionDetailCore(
       discount: num(c.discount),
       promoCode: c.promo_code ?? null,
       status: c.status ?? null,
-      createdAt: c.created_at,
+      createdAt: c.created_at ?? new Date(0).toISOString(),
     }));
   }
 
@@ -486,7 +487,7 @@ export async function getTransactionDetailCore(
 // ─────────────────────────────────────────────────────────────
 
 export async function listRefundsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: {
     status?: "refund_pending" | "refunded" | "all";
@@ -591,7 +592,7 @@ function accountLabel(a: {
 }
 
 export async function listPayoutsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: { status?: string; cursor?: string | null } = {},
 ): Promise<PaginatedResult<PayoutListItem>> {
@@ -683,7 +684,7 @@ export async function listPayoutsCore(
 // ─────────────────────────────────────────────────────────────
 
 export async function getOrganizerFinanceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   organizerId: string,
 ): Promise<AdminEnvelope<OrganizerFinanceSummary>> {

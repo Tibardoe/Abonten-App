@@ -7,6 +7,7 @@ import {
   type SelectedPaymentMethod,
   initiatePaystackChargeForAttempt,
 } from "@abonten/services/payments/paystackInit";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of the event/place-promotion branches of createPaymentAttempt,
@@ -67,7 +68,7 @@ const CONFIG: Record<
 };
 
 export async function createPromotionPaymentAttemptCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   userEmail: string | undefined,
   input: {

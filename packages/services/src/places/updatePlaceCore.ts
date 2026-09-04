@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -41,7 +42,7 @@ export type UpdatePlaceCoreResult = {
 };
 
 export async function updatePlaceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: UpdatePlaceCoreInput,
 ): Promise<UpdatePlaceCoreResult> {
@@ -101,7 +102,7 @@ export async function updatePlaceCore(
         cover_public_id: coverPublicId,
         cover_version: coverVersion,
       }),
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", placeId)
     .eq("owner_id", userId);

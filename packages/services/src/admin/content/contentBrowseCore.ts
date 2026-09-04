@@ -12,6 +12,7 @@ import type {
   ModeratableTargetType,
   ModerationState,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
@@ -99,7 +100,7 @@ export type ListContentFilters = {
 };
 
 export async function listModeratableContentCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListContentFilters,
 ): Promise<PaginatedResult<ModeratableContentItem>> {
@@ -131,14 +132,16 @@ export async function listModeratableContentCore(
   ].join(", ");
 
   let query = supabase
-    .from(cfg.table)
+    .from(cfg.table as keyof Database["public"]["Tables"])
     .select(cols)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);
 
-  if (state === "actioned") query = query.not("moderation_state", "is", null);
-  else if (state !== "any") query = query.eq("moderation_state", state);
+  if (state === "actioned")
+    query = query.not("moderation_state" as never, "is", null);
+  else if (state !== "any")
+    query = query.eq("moderation_state" as never, state);
 
   if (filters.search?.trim()) {
     const s = filters.search.trim().replace(/[%,()]/g, "");
@@ -235,7 +238,7 @@ export async function listModeratableContentCore(
 
 /** Counts per moderation_state for the queue header chips. */
 export async function contentModerationCountsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   targetType: ModeratableTargetType,
 ): Promise<AdminEnvelope<Record<string, number>>> {
@@ -252,9 +255,9 @@ export async function contentModerationCountsCore(
   };
   for (const s of ["hidden", "removed", "restricted"] as const) {
     const { count } = await supabase
-      .from(cfg.table)
+      .from(cfg.table as keyof Database["public"]["Tables"])
       .select("id", { count: "exact", head: true })
-      .eq("moderation_state", s);
+      .eq("moderation_state" as never, s);
     out[s] = count ?? 0;
   }
   return { status: 200, data: out };

@@ -1,5 +1,6 @@
 import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of insertEventPromotionCheckout, lifted so the mobile
@@ -19,7 +20,7 @@ export type InsertEventPromotionCheckoutResult =
     };
 
 export async function insertEventPromotionCheckoutCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   tierId: number,
@@ -59,7 +60,7 @@ export async function insertEventPromotionCheckoutCore(
       total_price: tier.price,
       currency: tier.currency,
       status: "pending",
-      expires_at: getCheckoutExpiryTimestamp(),
+      expires_at: getCheckoutExpiryTimestamp().toISOString(),
     })
     .select("id")
     .single();

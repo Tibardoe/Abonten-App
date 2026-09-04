@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import {
   type AddPaymentMethodInput,
   addPaymentMethodSchema,
@@ -40,7 +41,7 @@ export type ListPaymentMethodsResult =
   | { status: 200; data: PaymentMethodRow[] };
 
 export async function listPaymentMethodsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<ListPaymentMethodsResult> {
   const { data, error } = await supabase
@@ -64,7 +65,7 @@ export type AddPaymentMethodResult =
   | { status: 200; data: PaymentMethodRow };
 
 export async function addPaymentMethodCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: AddPaymentMethodInput,
 ): Promise<AddPaymentMethodResult> {
@@ -116,7 +117,7 @@ export type MutatePaymentMethodResult = {
 };
 
 export async function removePaymentMethodCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   paymentMethodId: string,
 ): Promise<MutatePaymentMethodResult> {
@@ -139,7 +140,11 @@ export async function removePaymentMethodCore(
 
   const { error: removeError } = await supabase
     .from("payment_method")
-    .update({ status: "removed", is_default: false, updated_at: new Date() })
+    .update({
+      status: "removed",
+      is_default: false,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", paymentMethodId)
     .eq("user_id", userId);
 
@@ -161,7 +166,7 @@ export async function removePaymentMethodCore(
     if (nextDefault) {
       await supabase
         .from("payment_method")
-        .update({ is_default: true, updated_at: new Date() })
+        .update({ is_default: true, updated_at: new Date().toISOString() })
         .eq("id", nextDefault.id)
         .eq("user_id", userId);
     }
@@ -171,7 +176,7 @@ export async function removePaymentMethodCore(
 }
 
 export async function setDefaultPaymentMethodCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   paymentMethodId: string,
 ): Promise<MutatePaymentMethodResult> {
@@ -194,7 +199,7 @@ export async function setDefaultPaymentMethodCore(
 
   const { error: unsetError } = await supabase
     .from("payment_method")
-    .update({ is_default: false, updated_at: new Date() })
+    .update({ is_default: false, updated_at: new Date().toISOString() })
     .eq("user_id", userId)
     .eq("is_default", true)
     .neq("id", paymentMethodId);
@@ -206,7 +211,7 @@ export async function setDefaultPaymentMethodCore(
 
   const { error: setError } = await supabase
     .from("payment_method")
-    .update({ is_default: true, updated_at: new Date() })
+    .update({ is_default: true, updated_at: new Date().toISOString() })
     .eq("id", paymentMethodId)
     .eq("user_id", userId)
     .eq("status", "active");

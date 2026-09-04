@@ -12,8 +12,7 @@ export default function SignInPage() {
       process.env.NEXT_PUBLIC_SUPABASE_URL as string,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
     );
-    const origin =
-      process.env.NEXT_PUBLIC_ADMIN_URL ?? window.location.origin;
+    const origin = process.env.NEXT_PUBLIC_ADMIN_URL ?? window.location.origin;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${origin}/auth/callback` },

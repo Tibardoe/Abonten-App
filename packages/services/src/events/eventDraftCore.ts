@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database, Json } from "@abonten/types/database.types";
 import {
   type EventDraftPayload,
   eventDraftPayloadSchema,
@@ -48,7 +49,7 @@ export type SaveEventDraftCoreResult =
   | { status: 400 | 404 | 409 | 500; message: string };
 
 export async function saveEventDraftCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: {
     draftId?: string;
@@ -132,7 +133,9 @@ export async function saveEventDraftCore(
 
     const { error: updateEventDraftError } = await supabase
       .from("event_drafts")
-      .update(eventDraftUpdate)
+      .update(
+        eventDraftUpdate as unknown as Database["public"]["Tables"]["event_drafts"]["Update"],
+      )
       .eq("draft_id", draftId);
 
     if (updateEventDraftError) {
@@ -188,7 +191,7 @@ export async function saveEventDraftCore(
     .from("event_drafts")
     .insert({
       draft_id: newDraft.id,
-      payload: parsed.data,
+      payload: parsed.data as unknown as Json,
       flyer_public_id: flyerPublicId ?? null,
       flyer_version: flyerVersion ?? null,
     });
@@ -215,7 +218,7 @@ export type EventDraftsListResult =
   | { status: 500; message: string; data: EventDraftListItem[] };
 
 export async function fetchEventDraftsList(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<EventDraftsListResult> {
   const { data: drafts, error: draftsError } = await supabase
@@ -265,7 +268,7 @@ export type EventDraftDetailResult =
   | { status: 404 | 410 | 500; message: string };
 
 export async function fetchEventDraftDetail(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   draftId: string,
 ): Promise<EventDraftDetailResult> {
@@ -322,7 +325,7 @@ export type DeleteEventDraftCoreResult = {
 };
 
 export async function deleteEventDraftCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   draftId: string,
 ): Promise<DeleteEventDraftCoreResult> {

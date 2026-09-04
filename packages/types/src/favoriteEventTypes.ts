@@ -3,8 +3,10 @@ import type { Occurrence } from "./occurrenceType";
 export type FavoriteEvents = {
   user_id: string;
   event_id: string;
-  created_at: Date;
-  deleted_at: Date;
+  // Postgres returns these as ISO timestamp strings over PostgREST -- they
+  // were never actually Date objects at runtime.
+  created_at: string;
+  deleted_at: string;
   event: {
     id: string;
     slug: string;
@@ -17,7 +19,7 @@ export type FavoriteEvents = {
     location: string;
     address: { full_address: string };
     capacity: number;
-    created_at: Date;
+    created_at: string;
     organizer_id: string;
     event_type_id: number;
     website_url: string;

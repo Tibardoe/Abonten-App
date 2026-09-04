@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import type { Database } from "@abonten/types/database.types";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendPushToUser } from "./sendPushNotification";
@@ -20,10 +21,10 @@ import { sendPushToUser } from "./sendPushNotification";
  * service-role env vars are somehow unset (e.g. an unusual test harness).
  */
 export async function createNotificationCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   input: CreateNotificationInput,
 ): Promise<{ status: number; message?: string }> {
-  let db: SupabaseClient;
+  let db: SupabaseClient<Database>;
   try {
     db = getSupabaseServiceClient();
   } catch (e) {

@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of getEventForEdit, lifted so the mobile
@@ -39,7 +40,7 @@ export type EventForEditResult =
   | { status: 200; data: EventForEditData };
 
 export async function getEventForEditCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
 ): Promise<EventForEditResult> {

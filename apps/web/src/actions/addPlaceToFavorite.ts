@@ -17,7 +17,7 @@ export async function addPlaceToFavorite(placeId: string) {
   const { error: insertError } = await supabase.from("favorite_place").insert({
     user_id: user.id,
     place_id: placeId,
-    created_at: new Date(),
+    created_at: new Date().toISOString(),
   });
 
   if (insertError) {

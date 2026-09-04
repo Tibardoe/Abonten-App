@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import type { Database } from "@abonten/types/database.types";
 import type {
   PlaceOpeningHoursInput,
   PlaceServiceInput,
@@ -50,7 +51,7 @@ export type PostPlaceCoreResult =
   | { status: 200; message: string; placeId: string; slug: string };
 
 export async function postPlaceCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: PostPlaceCoreInput,
 ): Promise<PostPlaceCoreResult> {
@@ -108,7 +109,7 @@ export async function postPlaceCore(
       p_cover_version: String(input.coverVersion),
       p_opening_hours: openingHoursPayload,
       p_services: servicesPayload,
-    },
+    } as unknown as Database["public"]["Functions"]["create_place"]["Args"],
   );
 
   if (createPlaceError) {

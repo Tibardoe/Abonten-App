@@ -9,6 +9,7 @@ import {
   type SelectedPaymentMethod,
   initiatePaystackChargeForAttempt,
 } from "@abonten/services/payments/paystackInit";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of createMultiCheckoutPaymentAttempt, lifted so the mobile
@@ -48,7 +49,7 @@ export type CreateMultiCheckoutPaymentAttemptCoreResult =
     };
 
 export async function createMultiCheckoutPaymentAttemptCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   userEmail: string | undefined,
   input: { checkoutSessionIds: string[]; paymentMethodId: string },
@@ -124,7 +125,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
       if (insertedAttempts.length > 0) {
         await supabase
           .from("payment_attempt")
-          .update({ status: "cancelled", updated_at: new Date() })
+          .update({ status: "cancelled", updated_at: new Date().toISOString() })
           .in(
             "id",
             insertedAttempts.map((a) => a.id),
@@ -155,7 +156,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
   if (paystackResult.status !== 200) {
     await supabase
       .from("payment_attempt")
-      .update({ status: "cancelled", updated_at: new Date() })
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .in(
         "id",
         insertedAttempts.map((a) => a.id),

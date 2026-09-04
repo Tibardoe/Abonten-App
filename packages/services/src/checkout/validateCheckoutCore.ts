@@ -8,6 +8,7 @@ import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // A checkout retried right as its reservation expires re-runs this whole
@@ -58,7 +59,7 @@ export type ValidateCheckoutResult = {
 };
 
 export async function validateCheckoutCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   { eventId, quantities, promoCode, occurrenceId }: CheckoutDetailsProp,
 ): Promise<ValidateCheckoutResult> {
@@ -325,6 +326,9 @@ export async function validateCheckoutCore(
   // race this function already checked for above.
   const { data: checkoutSessionId, error: createError } = await supabase.rpc(
     "create_ticket_checkout",
+    // Same generated-type gap as get_filtered_events/create_event: the SQL
+    // signature has no DEFAULT on these params even though it genuinely
+    // accepts null for "no occurrence"/"no promo".
     {
       p_user_id: userId,
       p_event_id: eventId,
@@ -340,7 +344,7 @@ export async function validateCheckoutCore(
         discounted_units: row.discountedUnits,
         amount: row.amount,
       })),
-    },
+    } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
   );
 
   if (createError || !checkoutSessionId) {

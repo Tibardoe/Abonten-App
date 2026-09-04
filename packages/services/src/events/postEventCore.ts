@@ -2,6 +2,7 @@ import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth, post-flyer-upload body of postEvent, lifted so the
@@ -71,7 +72,7 @@ export type PostEventCoreResult =
   | { status: 200; message: string; eventId: string };
 
 export async function postEventCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: PostEventCoreInput,
 ): Promise<PostEventCoreResult> {
@@ -156,6 +157,11 @@ export async function postEventCore(
 
   const { data: eventId, error: createEventError } = await supabase.rpc(
     "create_event",
+    // create_event's SQL signature has no DEFAULT on several of these
+    // params even though the function genuinely accepts (and this app has
+    // always passed) null for "not set" -- a generated-type gap, not a
+    // real constraint. Same class of cast as get_filtered_events, see
+    // useFilteredEvents.ts on mobile for the fuller explanation.
     {
       p_client_request_id: input.clientRequestId,
       p_organizer_id: userId,
@@ -182,7 +188,7 @@ export async function postEventCore(
       p_promo_codes: promoCodesPayload,
       p_receiving_account: null,
       p_place_id: input.placeId ?? null,
-    },
+    } as unknown as Database["public"]["Functions"]["create_event"]["Args"],
   );
 
   if (createEventError) {

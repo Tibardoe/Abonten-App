@@ -28,7 +28,10 @@ async function fetchPage(
 
   if (error) throw error;
 
-  const all = (data ?? []) as Row[];
+  // Same RPC-to-app-model translation boundary as the other discovery
+  // hooks -- get_nearby_events' real return columns don't exactly match
+  // UserPostType's shape.
+  const all = (data ?? []) as unknown as Row[];
   const hasNext = all.length > PAGE_SIZE;
   const page = hasNext ? all.slice(0, PAGE_SIZE) : all;
   const last = page[page.length - 1];

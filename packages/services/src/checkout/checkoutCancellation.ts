@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 // Shared cancel-a-pending-checkout logic for the single-item checkout types
 // (event/place promotion) — same category as ticketInventory.ts/
 // paymentAttempt.ts: not a "use server" Server Action, accepts an
@@ -26,7 +27,7 @@ type CancelPromotionCheckoutResult =
   | { status: 404 | 409 | 500; message: string };
 
 export async function cancelPromotionCheckout(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: PromotionCheckoutTable,
   paymentAttemptColumn: PromotionPaymentAttemptColumn,
   checkoutId: string,

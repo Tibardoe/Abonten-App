@@ -10,6 +10,7 @@ import {
   type AddPaymentMethodResult,
   addPaymentMethodCore,
 } from "@abonten/services/payments/paymentMethodCore";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth bodies of initCardVerification / confirmCardVerification, lifted
@@ -69,7 +70,7 @@ export type ConfirmCardVerificationCoreResult =
   | AddPaymentMethodResult;
 
 export async function confirmCardVerificationCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   userEmail: string,
   reference: string,

@@ -30,7 +30,11 @@ async function fetchNearby(lat: number, lng: number): Promise<UserPostType[]> {
     p_page_size: NEARBY_LIMIT,
   });
   if (error) throw error;
-  return (data ?? []) as UserPostType[];
+  // get_nearby_events' real return columns (address: Json, etc.) don't
+  // exactly match UserPostType's app-level shape (address: { full_address })
+  // -- same intentional RPC-to-app-model translation boundary as the other
+  // discovery hooks, not a compiler oversight.
+  return (data ?? []) as unknown as UserPostType[];
 }
 
 async function fetchPromotedIds(): Promise<Set<string>> {

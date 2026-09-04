@@ -22,8 +22,11 @@ async function fetchPage(
     user_lat: lat,
     user_lng: lng,
     search_radius: radiusMeters,
-    p_cursor_distance: cursor?.distanceKm ?? null,
-    p_cursor_id: cursor?.id ?? null,
+    // `DEFAULT NULL` in SQL -- `undefined` reaches the function the same
+    // way an explicit `null` would, but satisfies the generated optional
+    // (`?:`) arg type.
+    p_cursor_distance: cursor?.distanceKm,
+    p_cursor_id: cursor?.id,
     p_page_size: PAGE_SIZE + 1,
   });
 

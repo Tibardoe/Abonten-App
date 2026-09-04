@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { finalizePaystackPayment } from "./finalizePaystackPayment";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
@@ -25,7 +26,7 @@ export type VerifyPaystackPaymentCoreResult =
     };
 
 export async function verifyPaystackPaymentCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   paymentAttemptId: string,
   deps: PaymentFulfillmentDeps,

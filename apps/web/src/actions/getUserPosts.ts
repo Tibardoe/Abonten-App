@@ -65,7 +65,10 @@ export async function getUserPosts(
     };
   }
 
-  const { page, hasNextPage } = splitPage<UserPostType>(data, pageSize);
+  const { page, hasNextPage } = splitPage<UserPostType>(
+    data as unknown as UserPostType[],
+    pageSize,
+  );
 
   const attendanceCounts = await getEventAttendanceCounts(
     page.map((event) => event.id),

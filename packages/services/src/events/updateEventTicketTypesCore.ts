@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getEventHasConfirmedParticipationCore } from "./getEventHasConfirmedParticipationCore";
 
@@ -38,7 +39,7 @@ export type UpdateEventTicketTypesCoreResult = {
 };
 
 export async function updateEventTicketTypesCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: UpdateEventTicketTypesCoreInput,
 ): Promise<UpdateEventTicketTypesCoreResult> {

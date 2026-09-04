@@ -1,7 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { grantAdminRole, revokeAdminRole, setAdminUserStatus } from "@/server/actions";
+import {
+  grantAdminRole,
+  revokeAdminRole,
+  setAdminUserStatus,
+} from "@/server/actions";
 import { ADMIN_ROLE_KEYS } from "@abonten/core/adminPermissions";
 import type { AdminRoleKey } from "@abonten/types/adminTypes";
 import { useRouter } from "next/navigation";
@@ -53,7 +57,9 @@ export function RoleEditor({
           size="sm"
           variant="ghost"
           disabled={pending || disabled}
-          onClick={() => run(() => grantAdminRole({ targetUserId: userId, roleKey: role }))}
+          onClick={() =>
+            run(() => grantAdminRole({ targetUserId: userId, roleKey: role }))
+          }
         >
           Grant
         </Button>
@@ -64,7 +70,9 @@ export function RoleEditor({
             key={r}
             type="button"
             disabled={pending || disabled}
-            onClick={() => run(() => revokeAdminRole({ targetUserId: userId, roleKey: r }))}
+            onClick={() =>
+              run(() => revokeAdminRole({ targetUserId: userId, roleKey: r }))
+            }
             className="rounded bg-muted px-1.5 py-0.5 hover:bg-destructive/15 hover:text-destructive"
           >
             {r} ✕

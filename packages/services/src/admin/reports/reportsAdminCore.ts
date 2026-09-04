@@ -19,6 +19,7 @@ import type {
   ReportTargetType,
   ReportTimelineEntry,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -52,7 +53,7 @@ const PRIORITY_ORDER: Record<ReportPriority, number> = {
 // ─────────────────────────────────────────────────────────────
 
 async function resolveActorNames(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
@@ -111,15 +112,19 @@ const TARGET_SNAPSHOT: Record<
 };
 
 async function fetchTargetSnapshot(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   targetType: ReportTargetType,
   targetId: string,
 ): Promise<Record<string, unknown> | null> {
   const map = TARGET_SNAPSHOT[targetType];
+  // map.table/map.columns are resolved dynamically by targetType -- the
+  // typed client can't narrow a query built from a table name that varies
+  // at runtime; the function's own return type (a generic snapshot bag)
+  // already reflects that this is intentionally untyped past this point.
   const { data, error } = await supabase
-    .from(map.table)
+    .from(map.table as keyof Database["public"]["Tables"])
     .select(map.columns)
-    .eq("id", targetId)
+    .eq("id" as never, targetId)
     .maybeSingle();
   if (error) {
     logger.error(`fetchTargetSnapshot(${targetType}) failed: ${error.message}`);
@@ -143,7 +148,7 @@ export type ListReportsFilters = {
 };
 
 export async function listReportsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListReportsFilters = {},
 ): Promise<PaginatedResult<ReportListItem>> {
@@ -210,27 +215,32 @@ export async function listReportsCore(
       .from("admin_report_group")
       .select("dedupe_key, report_count")
       .in("dedupe_key", dedupeKeys);
-    for (const g of groups ?? [])
-      countByKey.set(g.dedupe_key, Number(g.report_count));
+    for (const g of groups ?? []) {
+      if (g.dedupe_key) countByKey.set(g.dedupe_key, Number(g.report_count));
+    }
   }
   const names = await resolveActorNames(
     supabase,
     rows.map((r) => r.assigned_to),
   );
 
+  // target_type/category/status/priority/source are DB CHECK-constrained
+  // (see the report table's migration) to exactly these literal unions
+  // though the columns themselves are text -- translation casts, not a
+  // real risk.
   const mapped: ReportListItem[] = rows.map((r) => ({
     id: r.id,
-    targetType: r.target_type,
+    targetType: r.target_type as ReportTargetType,
     targetId: r.target_id,
-    category: r.category,
-    status: r.status,
-    priority: r.priority,
-    source: r.source,
+    category: r.category as ReportCategory,
+    status: r.status as ReportStatus,
+    priority: r.priority as ReportPriority,
+    source: r.source as ReportListItem["source"],
     assignedTo: r.assigned_to,
     assignedToName: r.assigned_to ? (names.get(r.assigned_to) ?? null) : null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
-    targetReportCount: countByKey.get(r.dedupe_key) ?? 1,
+    targetReportCount: r.dedupe_key ? (countByKey.get(r.dedupe_key) ?? 1) : 1,
   }));
 
   const { page, hasNextPage } = splitPage(mapped, pageSize);
@@ -247,7 +257,7 @@ export async function listReportsCore(
 }
 
 export async function listReportGroupsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   opts: { onlyOpen?: boolean; limit?: number } = {},
 ): Promise<AdminEnvelope<ReportGroupItem[]>> {
@@ -285,7 +295,7 @@ export async function listReportGroupsCore(
       highestPriority: priorityFromRank(Number(g.priority_rank)),
       latestCreatedAt: g.latest_created_at,
       categories: g.categories ?? [],
-    })),
+    })) as unknown as ReportGroupItem[],
   };
 }
 
@@ -294,7 +304,7 @@ export async function listReportGroupsCore(
 // ─────────────────────────────────────────────────────────────
 
 export async function getReportDetailCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   reportId: string,
   opts: { signAttachment?: (path: string) => Promise<string | null> } = {},
@@ -385,7 +395,11 @@ export async function getReportDetailCore(
     r.assigned_to,
   ]);
 
-  const timeline: ReportTimelineEntry[] = [
+  // kind is DB CHECK-constrained to exactly ReportTimelineEntry's literal
+  // union though the column itself is text, and `data`/report_event's Json
+  // column is wider than the app-level Record<string, unknown> -- a
+  // translation cast, not a real risk.
+  const timeline = [
     {
       id: `${reportId}-created`,
       kind: "created" as const,
@@ -402,7 +416,7 @@ export async function getReportDetailCore(
       data: t.data,
       createdAt: t.created_at,
     })),
-  ];
+  ] as unknown as ReportTimelineEntry[];
 
   const notes: AdminNoteEntry[] = (noteRows ?? []).map((n) => ({
     id: n.id,
@@ -426,7 +440,7 @@ export async function getReportDetailCore(
 
   const snapshot = await fetchTargetSnapshot(
     supabase,
-    r.target_type,
+    r.target_type as ReportTargetType,
     r.target_id,
   );
 
@@ -434,13 +448,15 @@ export async function getReportDetailCore(
     status: 200,
     data: {
       id: r.id,
-      targetType: r.target_type,
+      // Same DB-CHECK-constrained-text-vs-literal-union translation as
+      // listReportsCore above.
+      targetType: r.target_type as ReportTargetType,
       targetId: r.target_id,
-      category: r.category,
+      category: r.category as ReportCategory,
       details: r.details,
-      status: r.status,
-      priority: r.priority,
-      source: r.source,
+      status: r.status as ReportStatus,
+      priority: r.priority as ReportPriority,
+      source: r.source as ReportDetail["source"],
       assignedTo: r.assigned_to,
       assignedToName: r.assigned_to
         ? (actorNames.get(r.assigned_to) ?? null)
@@ -468,7 +484,7 @@ export async function getReportDetailCore(
 type ConcurrencyOpts = { expectedUpdatedAt?: string };
 
 async function guardConcurrency(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   reportId: string,
   expectedUpdatedAt: string | undefined,
 ): Promise<
@@ -506,7 +522,7 @@ function meta(ctx: AdminContext, requestMeta?: Record<string, unknown>) {
 }
 
 export async function assignReportCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { reportId: string; assigneeId: string | null } & ConcurrencyOpts,
   requestMeta?: Record<string, unknown>,
@@ -569,7 +585,7 @@ export async function assignReportCore(
 }
 
 export async function updateReportStatusCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     reportId: string;
@@ -616,7 +632,10 @@ export async function updateReportStatusCore(
     report_id: input.reportId,
     actor_id: ctx.userId,
     kind: input.status === "escalated" ? "escalated" : "status_changed",
-    data: { from: guard.current.status, to: input.status },
+    data: {
+      from: guard.current.status,
+      to: input.status,
+    } as unknown as Database["public"]["Tables"]["report_event"]["Insert"]["data"],
   });
   await recordAdminAudit(supabase, {
     actorId: ctx.userId,
@@ -634,7 +653,7 @@ export async function updateReportStatusCore(
 }
 
 export async function requestReportInfoCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { reportId: string; message: string } & ConcurrencyOpts,
   requestMeta?: Record<string, unknown>,
@@ -679,7 +698,7 @@ export async function requestReportInfoCore(
 }
 
 export async function addAdminNoteCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { targetType: string; targetId: string; body: string },
   requestMeta?: Record<string, unknown>,
@@ -720,7 +739,7 @@ export async function addAdminNoteCore(
 }
 
 export async function resolveReportCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     reportId: string;
@@ -753,7 +772,7 @@ export async function resolveReportCore(
     p_status: input.status,
     p_resolution: input.resolution,
     p_action: input.resolutionAction ?? null,
-  });
+  } as unknown as Database["public"]["Functions"]["resolve_report"]["Args"]);
   if (error) {
     logger.error(`resolveReportCore RPC failed: ${error.message}`);
     return { status: 500, message: "Something went wrong" };
@@ -795,7 +814,7 @@ const MODERATABLE_SET = new Set<string>([
 ]);
 
 export async function resolveReportGroupCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     dedupeKey: string;
@@ -893,7 +912,7 @@ export async function resolveReportGroupCore(
         p_status: input.status,
         p_resolution: input.resolution,
         p_action: input.resolutionAction ?? null,
-      },
+      } as unknown as Database["public"]["Functions"]["resolve_report"]["Args"],
     );
     if (rErr) {
       logger.error(

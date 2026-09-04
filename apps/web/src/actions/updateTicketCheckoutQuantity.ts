@@ -106,7 +106,12 @@ export default async function updateTicketCheckoutQuantity(
       .eq("promo_code", checkout.promo_code)
       .maybeSingle();
 
-    if (promoCodeError || !promoCode) {
+    if (
+      promoCodeError ||
+      !promoCode ||
+      promoCode.times_used === null ||
+      promoCode.discount_percentage === null
+    ) {
       return { status: 500, message: "Something went wrong!" };
     }
 
@@ -185,7 +190,7 @@ export default async function updateTicketCheckoutQuantity(
       discount,
       discounted_units: newDiscountedUnits,
       total_price: amount,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", ticketCheckoutId)
     .eq("user_id", user.id)

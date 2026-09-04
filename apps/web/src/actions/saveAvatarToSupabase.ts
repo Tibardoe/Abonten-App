@@ -35,7 +35,7 @@ export async function saveToSupabase(
 
   const { error: updateError } = await supabase
     .from("user_info")
-    .update({ avatar_public_id: publicId, avatar_version: version })
+    .update({ avatar_public_id: publicId, avatar_version: String(version) })
     .eq("id", user.user.id);
 
   if (updateError) {
@@ -54,10 +54,9 @@ export async function saveToSupabase(
     .insert({
       user_id: user.user.id,
       public_id: publicId,
-      version: version,
+      version: String(version),
       transformation: transformation,
-    })
-    .eq("user_id", user.user.id);
+    });
 
   if (insertEror) {
     logger.error(

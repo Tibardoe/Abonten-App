@@ -6,6 +6,7 @@ import type {
   HealthCheckSnapshot,
   NeedsAttention,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
@@ -64,11 +65,16 @@ function resolveRange(
 type CountQuery = any;
 
 async function count(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: string,
   build?: (q: CountQuery) => CountQuery,
 ): Promise<number> {
-  let q: CountQuery = supabase
+  // Cast the client itself (not just the table name) to sidestep resolving
+  // "*" against the full ~120-table union, which blows up TS's type
+  // instantiation depth for a helper that's explicitly meant to be
+  // table-agnostic (see the CountQuery = any above).
+  // biome-ignore lint/suspicious/noExplicitAny: see CountQuery above
+  let q: CountQuery = (supabase as any)
     .from(table)
     .select("*", { count: "exact", head: true });
   if (build) q = build(q);
@@ -81,7 +87,7 @@ async function count(
 }
 
 export async function getDashboardCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { range: DashboardRange; from?: string; to?: string } = {
     range: "30d",
@@ -162,7 +168,7 @@ export async function getDashboardCore(
       latencyMs: row.latency_ms,
       detail: row.detail,
       checkedAt: row.checked_at,
-    });
+    } as unknown as HealthCheckSnapshot);
   }
 
   const c = (counts ?? {}) as Record<string, number>;

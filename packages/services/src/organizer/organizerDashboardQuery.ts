@@ -4,6 +4,7 @@ import {
   type DashboardPeriod,
   getDashboardPeriodRange,
 } from "@abonten/core/organizerDashboardDateRange";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth query bodies for the organizer Dashboard's widget sections
@@ -32,7 +33,7 @@ export type SalesTimelineResult =
 export type DashboardListResult = Failed | { status: 200; data: Row[] };
 
 export async function fetchOrganizerSalesTimeline(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
 ): Promise<SalesTimelineResult> {
   const { start, end, bucket } = getDashboardPeriodRange(period);
@@ -41,7 +42,9 @@ export async function fetchOrganizerSalesTimeline(
     p_start: start ? start.toISOString() : null,
     p_end: end ? end.toISOString() : null,
     p_bucket: bucket,
-  });
+    // Same generated-type gap as the other RPCs in this file: no DEFAULT
+    // NULL declared even though the function accepts an open-ended range.
+  } as unknown as Database["public"]["Functions"]["get_organizer_sales_timeline"]["Args"]);
 
   if (error) {
     logger.error(`get_organizer_sales_timeline: ${error.message}`);
@@ -52,7 +55,7 @@ export async function fetchOrganizerSalesTimeline(
 }
 
 export async function fetchOrganizerEventPerformance(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
   sort: "revenue" | "tickets" = "revenue",
   limit = 10,
@@ -66,7 +69,7 @@ export async function fetchOrganizerEventPerformance(
       p_end: end ? end.toISOString() : null,
       p_sort: sort,
       p_limit: limit,
-    },
+    } as unknown as Database["public"]["Functions"]["get_organizer_event_performance"]["Args"],
   );
 
   if (error) {
@@ -78,7 +81,7 @@ export async function fetchOrganizerEventPerformance(
 }
 
 export async function fetchOrganizerUpcomingEvents(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   limit = 5,
 ): Promise<DashboardListResult> {
   const { data, error } = await supabase.rpc("get_organizer_upcoming_events", {
@@ -94,7 +97,7 @@ export async function fetchOrganizerUpcomingEvents(
 }
 
 export async function fetchOrganizerNeedsAttention(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   daysSoon = 7,
 ): Promise<DashboardListResult> {
   const { data, error } = await supabase.rpc("get_organizer_needs_attention", {
@@ -110,7 +113,7 @@ export async function fetchOrganizerNeedsAttention(
 }
 
 export async function fetchOrganizerRecentActivity(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   limit = 8,
 ): Promise<DashboardListResult> {
   const { data, error } = await supabase.rpc("get_organizer_recent_activity", {
@@ -146,7 +149,7 @@ export type OrganizerDashboardWidgetsResult =
  * interactive sort.
  */
 export async function fetchOrganizerDashboardWidgets(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
 ): Promise<OrganizerDashboardWidgetsResult> {
   const [timeline, performance, upcoming, attention, activity] =

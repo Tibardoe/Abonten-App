@@ -1,5 +1,6 @@
 import { getFormattedEventDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of getUserPendingTicketCheckouts, lifted verbatim so the
@@ -70,7 +71,7 @@ export type GetUserPendingTicketCheckoutsCoreResult =
  * already gone from this list rather than needing a separate filter.
  */
 export async function getUserPendingTicketCheckoutsCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<GetUserPendingTicketCheckoutsCoreResult> {
   await supabase.rpc("expire_stale_ticket_checkouts");

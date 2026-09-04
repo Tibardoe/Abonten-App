@@ -1,3 +1,4 @@
+import type { Database, Json } from "@abonten/types/database.types";
 // The single authoritative path that turns a Paystack payment into a
 // finished Abonten purchase. Both the client-triggered verify action
 // (src/actions/verifyPaystackPayment.ts, optimistic fast path right after
@@ -63,7 +64,7 @@ const PAYMENT_ATTEMPT_FULL_SELECT =
   "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id, updated_at";
 
 export async function finalizePaystackPayment(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   primaryAttemptId: string,
   deps: PaymentFulfillmentDeps,
 ): Promise<FinalizeResult> {
@@ -98,7 +99,7 @@ export async function finalizePaystackPayment(
       : "pending";
     await supabase
       .from("payment_attempt")
-      .update({ status: recoveredStatus, updated_at: new Date() })
+      .update({ status: recoveredStatus, updated_at: new Date().toISOString() })
       .eq("id", primary.id)
       .eq("status", "processing");
     primary.status = recoveredStatus;
@@ -156,7 +157,7 @@ export async function finalizePaystackPayment(
   // unlike 'failed', which stays permanently terminal (a real decline).
   const { data: locked, error: lockError } = await supabase
     .from("payment_attempt")
-    .update({ status: "processing", updated_at: new Date() })
+    .update({ status: "processing", updated_at: new Date().toISOString() })
     .eq("id", primary.id)
     .in("status", ["initiated", "pending", "fulfillment_failed"])
     .select("id")
@@ -178,7 +179,7 @@ export async function finalizePaystackPayment(
   if (siblingIds.length > 0) {
     await supabase
       .from("payment_attempt")
-      .update({ status: "processing", updated_at: new Date() })
+      .update({ status: "processing", updated_at: new Date().toISOString() })
       .in("id", siblingIds)
       .in("status", ["initiated", "pending", "fulfillment_failed"]);
   }
@@ -189,7 +190,7 @@ export async function finalizePaystackPayment(
   ) => {
     await supabase
       .from("payment_attempt")
-      .update({ status, updated_at: new Date(), ...extra })
+      .update({ status, updated_at: new Date().toISOString(), ...extra })
       .in(
         "id",
         groupMembers.map((m) => m.id),
@@ -211,7 +212,7 @@ export async function finalizePaystackPayment(
     // Paystack itself, handled below.
     await supabase
       .from("payment_attempt")
-      .update({ status: "pending", updated_at: new Date() })
+      .update({ status: "pending", updated_at: new Date().toISOString() })
       .in(
         "id",
         groupMembers.map((m) => m.id),
@@ -241,7 +242,7 @@ export async function finalizePaystackPayment(
     // window. Revert the lock so a later webhook delivery can retry.
     await supabase
       .from("payment_attempt")
-      .update({ status: "pending", updated_at: new Date() })
+      .update({ status: "pending", updated_at: new Date().toISOString() })
       .in(
         "id",
         groupMembers.map((m) => m.id),
@@ -330,7 +331,7 @@ export async function finalizePaystackPayment(
           currency: primary.currency,
           status: "successful",
           payment_method: "paystack",
-          payment_gateway_response: verification,
+          payment_gateway_response: verification as unknown as Json,
           paystack_reference: primary.provider_reference,
         })
         .select("id")
@@ -355,7 +356,10 @@ export async function finalizePaystackPayment(
 
   await supabase
     .from("payment_attempt")
-    .update({ transaction_id: transactionRow.id, updated_at: new Date() })
+    .update({
+      transaction_id: transactionRow.id,
+      updated_at: new Date().toISOString(),
+    })
     .in(
       "id",
       groupMembers.map((m) => m.id),
@@ -406,9 +410,9 @@ export async function finalizePaystackPayment(
           .from("payment_attempt")
           .update({
             status: "succeeded",
-            paid_at: new Date(),
-            verified_at: new Date(),
-            updated_at: new Date(),
+            paid_at: new Date().toISOString(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", member.id);
       } else {
@@ -421,8 +425,8 @@ export async function finalizePaystackPayment(
           .update({
             status: "fulfillment_failed",
             failure_reason: result.message ?? "Ticket generation failed",
-            verified_at: new Date(),
-            updated_at: new Date(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", member.id);
       }
@@ -437,9 +441,9 @@ export async function finalizePaystackPayment(
           .from("payment_attempt")
           .update({
             status: "succeeded",
-            paid_at: new Date(),
-            verified_at: new Date(),
-            updated_at: new Date(),
+            paid_at: new Date().toISOString(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", member.id);
       } else {
@@ -452,8 +456,8 @@ export async function finalizePaystackPayment(
           .update({
             status: "fulfillment_failed",
             failure_reason: result.message ?? "Promotion activation failed",
-            verified_at: new Date(),
-            updated_at: new Date(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", member.id);
       }
@@ -468,9 +472,9 @@ export async function finalizePaystackPayment(
           .from("payment_attempt")
           .update({
             status: "succeeded",
-            paid_at: new Date(),
-            verified_at: new Date(),
-            updated_at: new Date(),
+            paid_at: new Date().toISOString(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", member.id);
       } else {
@@ -483,8 +487,8 @@ export async function finalizePaystackPayment(
           .update({
             status: "fulfillment_failed",
             failure_reason: result.message ?? "Promotion activation failed",
-            verified_at: new Date(),
-            updated_at: new Date(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq("id", member.id);
       }
@@ -520,7 +524,7 @@ export async function finalizePaystackPayment(
       "record_platform_fee",
       {
         p_transaction_id: transactionRow.id,
-        p_processing_cost: processingCost,
+        p_processing_cost: processingCost ?? undefined,
       },
     );
 

@@ -6,6 +6,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import type { Database } from "@abonten/types/database.types";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -18,7 +19,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // identical on either transport — no logic fork.
 
 export async function fetchNotificationsPage(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<NotificationType>> {
@@ -52,7 +53,7 @@ export async function fetchNotificationsPage(
   }
 
   const { page, hasNextPage } = splitPage<NotificationType>(
-    data ?? [],
+    (data ?? []) as unknown as NotificationType[],
     pageSize,
   );
 
@@ -69,7 +70,7 @@ export async function fetchNotificationsPage(
 }
 
 export async function markNotificationReadFor(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   notificationId: string,
 ): Promise<{ status: number; message?: string }> {
@@ -88,7 +89,7 @@ export async function markNotificationReadFor(
 }
 
 export async function markAllNotificationsReadFor(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<{ status: number; message?: string }> {
   const { error } = await supabase

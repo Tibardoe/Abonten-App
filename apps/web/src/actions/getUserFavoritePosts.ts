@@ -71,7 +71,10 @@ export async function getUserFavoritePosts(options?: {
     };
   }
 
-  const { page, hasNextPage } = splitPage<FavoriteEvents>(data, pageSize);
+  const { page, hasNextPage } = splitPage<FavoriteEvents>(
+    data as unknown as FavoriteEvents[],
+    pageSize,
+  );
 
   const attendanceCounts = await getEventAttendanceCounts(
     page.map((favorite) => favorite.event.id),

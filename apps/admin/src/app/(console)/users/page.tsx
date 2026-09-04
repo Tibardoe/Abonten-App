@@ -1,13 +1,22 @@
-import { Badge, EmptyState, PageHeader, Table, Td, Th, timeAgo } from "@/components/ui";
+import {
+  Badge,
+  EmptyState,
+  PageHeader,
+  Table,
+  Td,
+  Th,
+  timeAgo,
+} from "@/components/ui";
 import { loadUsers } from "@/lib/data";
 import type { UserAccountStatus } from "@abonten/types/adminTypes";
 import Link from "next/link";
 
-const STATUS_TONE: Record<UserAccountStatus, "success" | "warning" | "danger"> = {
-  Active: "success",
-  Suspended: "warning",
-  Banned: "danger",
-};
+const STATUS_TONE: Record<UserAccountStatus, "success" | "warning" | "danger"> =
+  {
+    Active: "success",
+    Suspended: "warning",
+    Banned: "danger",
+  };
 
 export default async function UsersPage({
   searchParams,
@@ -23,7 +32,10 @@ export default async function UsersPage({
 
   return (
     <div>
-      <PageHeader title="Users" description="Search accounts and take account actions." />
+      <PageHeader
+        title="Users"
+        description="Search accounts and take account actions."
+      />
 
       <form className="mb-3 flex gap-2" action="/users">
         <input
@@ -69,12 +81,21 @@ export default async function UsersPage({
             {res.data.map((u) => (
               <tr key={u.id} className="hover:bg-muted/40">
                 <Td>
-                  <Link href={`/users/${u.id}`} className="font-medium text-primary hover:underline">
+                  <Link
+                    href={`/users/${u.id}`}
+                    className="font-medium text-primary hover:underline"
+                  >
                     {u.username ?? u.fullName ?? `${u.id.slice(0, 8)}…`}
                   </Link>
-                  {u.isAdmin ? <Badge tone="info" className="ml-1.5">staff</Badge> : null}
+                  {u.isAdmin ? (
+                    <Badge tone="info" className="ml-1.5">
+                      staff
+                    </Badge>
+                  ) : null}
                   {u.email ? (
-                    <div className="text-xs text-muted-foreground">{u.email}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {u.email}
+                    </div>
                   ) : null}
                 </Td>
                 <Td>
@@ -82,7 +103,9 @@ export default async function UsersPage({
                 </Td>
                 <Td className="tabular-nums">{u.eventCount}</Td>
                 <Td className="tabular-nums">{u.reportsAgainstCount}</Td>
-                <Td className="whitespace-nowrap text-muted-foreground">{timeAgo(u.createdAt)}</Td>
+                <Td className="whitespace-nowrap text-muted-foreground">
+                  {timeAgo(u.createdAt)}
+                </Td>
               </tr>
             ))}
           </tbody>

@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth query bodies for a single event's Insights surface (the
@@ -86,7 +87,7 @@ const NOT_AUTHORIZED: Unauthorized = {
 const FAILED: Failed = { status: 500, message: "Something went wrong!" };
 
 async function ownsEvent(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
 ): Promise<boolean> {
@@ -102,7 +103,7 @@ async function ownsEvent(
 // --- internal RPC bodies (ownership already verified by the caller) ---
 
 async function runOverview(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
@@ -121,7 +122,7 @@ async function runOverview(
 }
 
 async function runTicketTypes(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
@@ -142,7 +143,7 @@ async function runTicketTypes(
 }
 
 async function runPromos(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
@@ -160,7 +161,7 @@ async function runPromos(
 }
 
 async function runDates(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
@@ -192,7 +193,7 @@ async function runDates(
 }
 
 async function runReturning(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
@@ -217,7 +218,7 @@ async function runReturning(
 }
 
 async function runFinance(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   startDate: DateBound,
   endDate: DateBound,
@@ -322,7 +323,7 @@ async function runFinance(
 // --- public per-section fetchers (used by the Server Actions) ---
 
 export async function fetchEventOverviewAnalytics(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,
@@ -333,7 +334,7 @@ export async function fetchEventOverviewAnalytics(
 }
 
 export async function fetchEventFinanceSummary(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,
@@ -344,7 +345,7 @@ export async function fetchEventFinanceSummary(
 }
 
 export async function fetchEventTicketTypeAnalytics(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,
@@ -355,7 +356,7 @@ export async function fetchEventTicketTypeAnalytics(
 }
 
 export async function fetchEventPromoAnalytics(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,
@@ -366,7 +367,7 @@ export async function fetchEventPromoAnalytics(
 }
 
 export async function fetchEventDateAnalytics(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,
@@ -377,7 +378,7 @@ export async function fetchEventDateAnalytics(
 }
 
 export async function fetchEventReturningAttendeeStats(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,
@@ -393,7 +394,7 @@ export async function fetchEventReturningAttendeeStats(
 // aggregate call rather than the six lazy per-section queries the web page
 // makes. Ownership is checked once, then all six bodies run in parallel.
 export async function fetchEventInsights(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   startDate?: DateBound,

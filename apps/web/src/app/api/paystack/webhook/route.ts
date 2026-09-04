@@ -100,7 +100,7 @@ export async function POST(req: Request) {
       // clobbering a later state.
       const { data: updated, error: updateError } = await supabase
         .from("transaction")
-        .update({ status: newStatus, updated_at: new Date() })
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq("paystack_reference", reference)
         .eq("status", "refund_pending")
         .select("id")

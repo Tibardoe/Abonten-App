@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { submitChargeOtp } from "@abonten/services/payments/gateway/paystackService";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of submitPaystackChargeOtp — shared with
@@ -11,7 +12,7 @@ export type SubmitChargeOtpCoreResult =
   | { status: 200; data: { chargeStatus: string } };
 
 export async function submitPaystackChargeOtpCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   paymentAttemptId: string,
   otp: string,

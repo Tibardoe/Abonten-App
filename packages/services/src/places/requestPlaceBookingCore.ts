@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createNotificationCore } from "../notifications/createNotification";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -6,7 +7,7 @@ import { getSupabaseServiceClient } from "../supabase/serviceClient";
 // Post-auth bodies of requestPlaceBooking.ts / cancelPlaceBooking.ts, lifted
 // so the mobile place-detail "Book" flow + the "My bookings" cancel run the
 // exact same rules as the web Server Actions. NOT a "use server" file: each
-// function takes an already-resolved SupabaseClient (the caller's Bearer /
+// function takes an already-resolved SupabaseClient<Database> (the caller's Bearer /
 // cookie session) + userId.
 //
 // The `place_booking` insert / update itself is done with the CALLER's
@@ -40,7 +41,7 @@ export type RequestPlaceBookingCoreResult = {
  * respondToPlaceBookingCore.
  */
 export async function requestPlaceBookingCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: RequestPlaceBookingInput,
 ): Promise<RequestPlaceBookingCoreResult> {
@@ -118,7 +119,7 @@ export type CancelPlaceBookingCoreResult = {
  * got cancelled).
  */
 export async function cancelPlaceBookingCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   bookingId: string,
 ): Promise<CancelPlaceBookingCoreResult> {

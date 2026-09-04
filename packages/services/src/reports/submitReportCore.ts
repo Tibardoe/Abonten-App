@@ -7,6 +7,7 @@ import {
   type ReportSource,
   type ReportTargetType,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of the user-facing "Report this content" action. Shared
@@ -49,9 +50,18 @@ export type SubmitReportResult = {
 
 const MAX_REPORTS_PER_HOUR = 10;
 
+type TargetTableName =
+  | "event"
+  | "place"
+  | "event_review"
+  | "place_review"
+  | "review"
+  | "user_info"
+  | "highlight";
+
 const TARGET_TABLE: Record<
   ReportTargetType,
-  { table: string; idColumn: string }
+  { table: TargetTableName; idColumn: string }
 > = {
   event: { table: "event", idColumn: "id" },
   place: { table: "place", idColumn: "id" },
@@ -68,7 +78,7 @@ function seedPriority(category: ReportCategory): ReportPriority {
 }
 
 export async function submitReportCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   input: SubmitReportCoreInput,
 ): Promise<SubmitReportResult> {

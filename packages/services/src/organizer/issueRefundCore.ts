@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 // The refund pipeline, factored out of the issueRefund.ts Server Action so
 // it can run from two trust contexts without duplicating logic — same
 // pattern as finalizePaystackPayment.ts:
@@ -29,7 +30,7 @@ export type IssueRefundResult = {
  * before doing anything, so a retry never double-refunds.
  */
 export async function issueRefundCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   transactionId: string,
   opts?: { expectedUserId?: string },
 ): Promise<IssueRefundResult> {
@@ -132,7 +133,10 @@ export async function issueRefundCore(
     // requested yet" for a transaction stuck at status=successful.
     await supabase
       .from("transaction")
-      .update({ refund_requested_at: new Date(), updated_at: new Date() })
+      .update({
+        refund_requested_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", transaction.id)
       .is("refund_requested_at", null);
 

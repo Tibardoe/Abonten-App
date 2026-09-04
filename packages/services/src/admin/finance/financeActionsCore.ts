@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { AdminContext } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { issueRefundCore } from "../../organizer/issueRefundCore";
 import {
@@ -16,7 +17,7 @@ import {
 // ── Refund ──────────────────────────────────────────────────
 
 export async function refundTransactionAdminCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: { transactionId: string; reason: string },
   requestMeta?: Record<string, unknown>,
@@ -53,7 +54,7 @@ export async function refundTransactionAdminCore(
 // ── Payout settlement ───────────────────────────────────────
 
 export async function settlePayoutAdminCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     payoutId: string;
@@ -72,7 +73,7 @@ export async function settlePayoutAdminCore(
   const { data, error } = await supabase.rpc("admin_settle_payout", {
     p_payout_id: input.payoutId,
     p_status: input.status,
-    p_failure_reason: input.failureReason ?? null,
+    p_failure_reason: input.failureReason ?? undefined,
   });
 
   if (error) {
@@ -110,7 +111,7 @@ export async function settlePayoutAdminCore(
 }
 
 export async function createPayoutAdminCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     organizerId: string;

@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 
 // Cookie-free, service-role Supabase client. Originally added for the
@@ -23,9 +24,9 @@ import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 // `next build`'s route data collection doesn't fail before
 // SUPABASE_SERVICE_ROLE_KEY has been configured — the webhook route itself
 // is what needs this value, not the build.
-let cachedClient: SupabaseClient | null = null;
+let cachedClient: SupabaseClient<Database> | null = null;
 
-export function getSupabaseServiceClient(): SupabaseClient {
+export function getSupabaseServiceClient(): SupabaseClient<Database> {
   if (cachedClient) return cachedClient;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

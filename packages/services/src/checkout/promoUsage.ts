@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
@@ -27,7 +28,7 @@ export async function claimPromoUsage(
   userId: string,
   eventId: string,
   unitsToClaim: number,
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
 ) {
   const supabase = client;
 
@@ -37,7 +38,11 @@ export async function claimPromoUsage(
     .eq("id", promoCodeId)
     .maybeSingle();
 
-  if (promoCodeError || !promoCode) {
+  // times_used is nullable in the DB (DEFAULT 0, no NOT NULL constraint)
+  // but nothing in this codebase ever writes it as null -- treat a null
+  // read as corrupted state rather than silently coalescing to 0, which
+  // could desync the compare-and-swap check below.
+  if (promoCodeError || !promoCode || promoCode.times_used === null) {
     return { status: 404, message: "Promo code no longer exists" };
   }
 
@@ -101,7 +106,7 @@ const MAX_CAS_ATTEMPTS = 5;
  * retry pattern as both.
  */
 export async function adjustPromoUsageUnits(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   promoCodeId: string,
   unitsDelta: number,
 ) {
@@ -114,7 +119,7 @@ export async function adjustPromoUsageUnits(
       .eq("id", promoCodeId)
       .maybeSingle();
 
-    if (promoCodeError || !promoCode) {
+    if (promoCodeError || !promoCode || promoCode.times_used === null) {
       return { status: 404, message: "Promo code no longer exists" };
     }
 
@@ -170,7 +175,7 @@ export async function releasePromoUsage(
   userId: string,
   eventId: string,
   unitsToRelease: number,
-  client: SupabaseClient,
+  client: SupabaseClient<Database>,
 ) {
   if (unitsToRelease <= 0) return;
 
@@ -190,7 +195,7 @@ export async function releasePromoUsage(
       .eq("id", promoCodeId)
       .maybeSingle();
 
-    if (promoCodeError || !promoCode) return;
+    if (promoCodeError || !promoCode || promoCode.times_used === null) return;
 
     const newTimesUsed = Math.max(0, promoCode.times_used - unitsToRelease);
 

@@ -1,5 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of getPromoCode — shared with validateCheckoutCore (and,
@@ -19,7 +20,7 @@ export type GetPromoCodeCoreResult =
     };
 
 export async function getPromoCodeCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   code: string,
   eventId: string,
@@ -62,6 +63,17 @@ export async function getPromoCodeCore(
 
   if (!promoCode) {
     return { status: 404, message: "Promo code is invalid!" };
+  }
+
+  // Both nullable in the DB (times_used has DEFAULT 0 but no NOT NULL;
+  // discount_percentage has neither) though nothing in this codebase ever
+  // writes either as null -- treat it as corrupted data rather than
+  // silently guessing a value for a real discount.
+  if (promoCode.times_used === null || promoCode.discount_percentage === null) {
+    logger.error(
+      `Promo code ${promoCode.id} has a null times_used/discount_percentage`,
+    );
+    return { status: 500, message: "This promo code is misconfigured." };
   }
 
   if (promoCode.is_active === false) {

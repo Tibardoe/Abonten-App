@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of getEventHasConfirmedParticipation, lifted so the mobile
@@ -16,7 +17,7 @@ export type EventConfirmedParticipationResult =
   | { status: 200; data: boolean };
 
 export async function getEventHasConfirmedParticipationCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
 ): Promise<EventConfirmedParticipationResult> {

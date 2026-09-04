@@ -1,4 +1,11 @@
-import { Badge, Card, EmptyState, PageHeader, Stat, timeAgo } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  PageHeader,
+  Stat,
+  timeAgo,
+} from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadUserDetail } from "@/lib/data";
 import Link from "next/link";
@@ -17,7 +24,12 @@ export default async function UserDetailPage({
     return <EmptyState>{res.message ?? "User not found."}</EmptyState>;
   }
   const u = res.data;
-  const tone = u.status === "Active" ? "success" : u.status === "Suspended" ? "warning" : "danger";
+  const tone =
+    u.status === "Active"
+      ? "success"
+      : u.status === "Suspended"
+        ? "warning"
+        : "danger";
 
   return (
     <div>
@@ -43,7 +55,9 @@ export default async function UserDetailPage({
               <dt className="text-muted-foreground">Staff</dt>
               <dd>{u.isAdmin ? "yes" : "no"}</dd>
               <dt className="text-muted-foreground">Joined</dt>
-              <dd>{u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}</dd>
+              <dd>
+                {u.createdAt ? new Date(u.createdAt).toLocaleString() : "—"}
+              </dd>
               {u.email !== null && (
                 <>
                   <dt className="text-muted-foreground">Email</dt>
@@ -63,10 +77,13 @@ export default async function UserDetailPage({
                 </>
               )}
             </dl>
-            {u.bio ? <p className="mt-2 text-sm text-muted-foreground">{u.bio}</p> : null}
+            {u.bio ? (
+              <p className="mt-2 text-sm text-muted-foreground">{u.bio}</p>
+            ) : null}
             {u.email === null && (
               <p className="mt-2 text-xs text-muted-foreground">
-                Contact details require the <code>users.view_pii</code> permission.
+                Contact details require the <code>users.view_pii</code>{" "}
+                permission.
               </p>
             )}
           </Card>
@@ -76,17 +93,26 @@ export default async function UserDetailPage({
             <Stat label="Tickets purchased" value={u.stats.ticketsPurchased} />
             <Stat label="Reviews written" value={u.stats.reviewsWritten} />
             <Stat label="Reports filed" value={u.stats.reportsFiled} />
-            <Stat label="Reports against" value={u.stats.reportsAgainst} tone={u.stats.reportsAgainst > 0 ? "warning" : undefined} />
+            <Stat
+              label="Reports against"
+              value={u.stats.reportsAgainst}
+              tone={u.stats.reportsAgainst > 0 ? "warning" : undefined}
+            />
             <Stat label="Claims filed" value={u.stats.claimsFiled} />
           </div>
 
           {u.recentReportsAgainst.length > 0 && (
             <Card className="p-4">
-              <h3 className="mb-2 text-sm font-semibold">Recent reports against this account</h3>
+              <h3 className="mb-2 text-sm font-semibold">
+                Recent reports against this account
+              </h3>
               <ul className="space-y-1 text-sm">
                 {u.recentReportsAgainst.map((r) => (
                   <li key={r.id}>
-                    <Link href={`/reports/${r.id}`} className="text-primary hover:underline">
+                    <Link
+                      href={`/reports/${r.id}`}
+                      className="text-primary hover:underline"
+                    >
                       {r.category}
                     </Link>{" "}
                     <span className="text-muted-foreground">
@@ -106,7 +132,8 @@ export default async function UserDetailPage({
             isAdmin={u.isAdmin}
             permissions={ctx.permissions}
             stepUpFresh={
-              !!ctx.reauthenticatedAt && Date.now() - ctx.reauthenticatedAt < 10 * 60 * 1000
+              !!ctx.reauthenticatedAt &&
+              Date.now() - ctx.reauthenticatedAt < 10 * 60 * 1000
             }
           />
         </div>

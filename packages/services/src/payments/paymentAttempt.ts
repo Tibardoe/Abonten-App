@@ -1,3 +1,4 @@
+import type { Database } from "@abonten/types/database.types";
 // Shared "reuse an open attempt for the same method, else cancel the old one
 // and insert a fresh row" logic for payment_attempt, extracted out of
 // createPaymentAttempt.ts so createMultiCheckoutPaymentAttempt.ts (paying for
@@ -55,7 +56,7 @@ export async function upsertPaymentAttemptForSession(
   currency: string,
   paymentMethodId: string,
   paymentGroupId: string | undefined,
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
 ): Promise<UpsertPaymentAttemptResult> {
   const { data: existingAttempt, error: existingError } = await supabase
     .from("payment_attempt")
@@ -80,7 +81,10 @@ export async function upsertPaymentAttemptForSession(
 
       const { data: updated, error: updateError } = await supabase
         .from("payment_attempt")
-        .update({ payment_group_id: paymentGroupId, updated_at: new Date() })
+        .update({
+          payment_group_id: paymentGroupId,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", existingAttempt.id)
         .select(PAYMENT_ATTEMPT_ROW_SELECT)
         .single();
@@ -97,7 +101,7 @@ export async function upsertPaymentAttemptForSession(
 
     await supabase
       .from("payment_attempt")
-      .update({ status: "cancelled", updated_at: new Date() })
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", existingAttempt.id);
   }
 
@@ -111,7 +115,10 @@ export async function upsertPaymentAttemptForSession(
       currency,
       status: "initiated",
       payment_group_id: paymentGroupId ?? null,
-    })
+      // matchColumn is a dynamic (CheckoutMatchColumn) key -- the typed
+      // insert's excess-property check can't be validated against a
+      // computed property name.
+    } as unknown as Database["public"]["Tables"]["payment_attempt"]["Insert"])
     .select(PAYMENT_ATTEMPT_ROW_SELECT)
     .single();
 
@@ -136,7 +143,7 @@ type CheckoutMatchColumn =
  * must check this before flipping a checkout to 'cancelled'.
  */
 export async function hasOpenPaymentAttempt(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   matchColumn: CheckoutMatchColumn,
   matchValue: string,
 ): Promise<boolean> {
@@ -171,7 +178,7 @@ export type LatestPaymentAttemptStatus = {
  * instead of relying only on the live component's in-memory state).
  */
 export async function getLatestPaymentAttemptStatus(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   matchColumn: CheckoutMatchColumn,
   matchValue: string,
 ): Promise<LatestPaymentAttemptStatus | null> {
@@ -192,7 +199,7 @@ export async function getLatestPaymentAttemptStatus(
 
   return {
     id: data.id,
-    status: data.status,
+    status: data.status as LatestPaymentAttemptStatus["status"],
     failureReason: data.failure_reason ?? null,
   };
 }

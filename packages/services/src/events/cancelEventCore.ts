@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { issueRefundCore } from "../organizer/issueRefundCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -57,7 +58,7 @@ type RefundableTransactionRow = {
 };
 
 export async function getEventCancellationImpactCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
 ): Promise<EventCancellationImpactResult> {
   const { data, error } = await supabase
@@ -92,7 +93,7 @@ export async function getEventCancellationImpactCore(
 }
 
 export async function cancelEventCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   eventId: string,
   onRefundsInitiated?: (
     eventTitle: string,

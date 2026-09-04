@@ -50,7 +50,9 @@ export function ActionPanel({
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
+  const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
+    null,
+  );
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [resolution, setResolution] = useState("");
@@ -72,7 +74,10 @@ export function ActionPanel({
           if (res.status === 409) router.refresh();
         }
       } catch (e) {
-        setMsg({ tone: "err", text: e instanceof Error ? e.message : "Action failed." });
+        setMsg({
+          tone: "err",
+          text: e instanceof Error ? e.message : "Action failed.",
+        });
       }
     });
   }
@@ -82,7 +87,12 @@ export function ActionPanel({
       <h3 className="text-sm font-semibold">Actions</h3>
 
       {msg ? (
-        <p className={cn("text-sm", msg.tone === "ok" ? "text-success" : "text-destructive")}>
+        <p
+          className={cn(
+            "text-sm",
+            msg.tone === "ok" ? "text-success" : "text-destructive",
+          )}
+        >
           {msg.text}
         </p>
       ) : null}
@@ -212,9 +222,13 @@ export function ActionPanel({
       )}
 
       {MODERATABLE.includes(targetType) &&
-        (can("moderation.hide") || can("moderation.remove") || can("moderation.restrict")) && (
+        (can("moderation.hide") ||
+          can("moderation.remove") ||
+          can("moderation.restrict")) && (
           <div className="space-y-2 border-t border-border pt-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Content action</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Content action
+            </p>
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -309,7 +323,10 @@ export function ActionPanel({
       {targetType === "user" || targetType === "organizer" ? (
         <p className="border-t border-border pt-3 text-xs text-muted-foreground">
           To act on this account, open{" "}
-          <a href={`/users/${targetId}`} className="text-primary hover:underline">
+          <a
+            href={`/users/${targetId}`}
+            className="text-primary hover:underline"
+          >
             the user record
           </a>
           .
@@ -318,7 +335,9 @@ export function ActionPanel({
 
       {!terminal && (can("reports.resolve") || can("reports.mark_false")) && (
         <div className="space-y-2 border-t border-border pt-3">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">Close report</p>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">
+            Close report
+          </p>
           <textarea
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}

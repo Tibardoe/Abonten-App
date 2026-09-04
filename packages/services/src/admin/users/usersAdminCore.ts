@@ -12,6 +12,7 @@ import type {
   ReportListItem,
   UserAccountStatus,
 } from "@abonten/types/adminTypes";
+import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -46,7 +47,7 @@ export type ListUsersFilters = {
 };
 
 export async function listUsersCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   filters: ListUsersFilters = {},
 ): Promise<PaginatedResult<AdminUserListItem>> {
@@ -139,7 +140,7 @@ export async function listUsersCore(
 }
 
 async function countGroup(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: string,
   column: string,
   ids: string[],
@@ -148,7 +149,10 @@ async function countGroup(
   if (ids.length === 0) return map;
   // one count query per id would be N round-trips; instead pull the id column
   // for the small page set and tally in memory (page is <= pageSize rows of ids).
-  const { data } = await supabase.from(table).select(column).in(column, ids);
+  const { data } = await supabase
+    .from(table as keyof Database["public"]["Tables"])
+    .select(column)
+    .in(column as never, ids);
   for (const row of (data ?? []) as unknown as Record<string, string>[]) {
     const key = row[column];
     if (key) map.set(key, (map.get(key) ?? 0) + 1);
@@ -157,7 +161,7 @@ async function countGroup(
 }
 
 async function countReportsAgainst(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ids: string[],
 ): Promise<Map<string, number>> {
   const map = new Map<string, number>();
@@ -174,7 +178,7 @@ async function countReportsAgainst(
 }
 
 async function emailsFor(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ids: string[],
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
@@ -188,7 +192,7 @@ async function emailsFor(
 }
 
 export async function getUserDetailCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   userId: string,
 ): Promise<AdminEnvelope<AdminUserDetail>> {
@@ -269,7 +273,7 @@ export async function getUserDetailCore(
       .limit(10),
   ]);
 
-  const recentReportsAgainst: ReportListItem[] = (recent ?? []).map((r) => ({
+  const recentReportsAgainst = (recent ?? []).map((r) => ({
     id: r.id,
     targetType: r.target_type,
     targetId: r.target_id,
@@ -282,7 +286,7 @@ export async function getUserDetailCore(
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     targetReportCount: reportsAgainst ?? 0,
-  }));
+  })) as unknown as ReportListItem[];
 
   return {
     status: 200,
@@ -313,7 +317,7 @@ export async function getUserDetailCore(
 }
 
 export async function setUserStatusCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ctx: AdminContext,
   input: {
     userId: string;

@@ -1,4 +1,4 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import type { ReactNode } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -22,10 +22,12 @@ export function Button({
       className={cn(
         "inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         size === "sm" ? "h-8 px-2.5 text-xs" : "h-9 px-3.5 text-sm",
-        variant === "primary" && "bg-primary text-primary-foreground hover:bg-primary/90",
+        variant === "primary" &&
+          "bg-primary text-primary-foreground hover:bg-primary/90",
         variant === "outline" && "border border-border bg-card hover:bg-muted",
         variant === "ghost" && "hover:bg-muted",
-        variant === "danger" && "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        variant === "danger" &&
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         className,
       )}
       {...props}
@@ -34,9 +36,14 @@ export function Button({
 }
 
 // ── Card ────────────────────────────────────────────────────
-export function Card({ className, children }: { className?: string; children: ReactNode }) {
+export function Card({
+  className,
+  children,
+}: { className?: string; children: ReactNode }) {
   return (
-    <div className={cn("rounded-lg border border-border bg-card", className)}>{children}</div>
+    <div className={cn("rounded-lg border border-border bg-card", className)}>
+      {children}
+    </div>
   );
 }
 
@@ -107,11 +114,21 @@ export function Stat({
 }) {
   const inner = (
     <Card className={cn("p-4", href && "transition-colors hover:bg-muted")}>
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={cn("mt-1 text-2xl font-semibold tabular-nums", tone === "danger" && "text-destructive", tone === "warning" && "text-warning")}>
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-1 text-2xl font-semibold tabular-nums",
+          tone === "danger" && "text-destructive",
+          tone === "warning" && "text-warning",
+        )}
+      >
         {value}
       </p>
-      {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? (
+        <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+      ) : null}
     </Card>
   );
   return href ? (
@@ -131,7 +148,10 @@ export function Table({ children }: { children: ReactNode }) {
     </div>
   );
 }
-export function Th({ children, className }: { children?: ReactNode; className?: string }) {
+export function Th({
+  children,
+  className,
+}: { children?: ReactNode; className?: string }) {
   return (
     <th
       className={cn(
@@ -143,8 +163,15 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
     </th>
   );
 }
-export function Td({ children, className }: { children?: ReactNode; className?: string }) {
-  return <td className={cn("border-b border-border px-3 py-2 align-top", className)}>{children}</td>;
+export function Td({
+  children,
+  className,
+}: { children?: ReactNode; className?: string }) {
+  return (
+    <td className={cn("border-b border-border px-3 py-2 align-top", className)}>
+      {children}
+    </td>
+  );
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
@@ -172,7 +199,9 @@ export function PageHeader({
           <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex items-center gap-2">{actions}</div>
+      ) : null}
     </div>
   );
 }

@@ -1,4 +1,11 @@
-import { EmptyState, PageHeader, Table, Td, Th, timeAgo } from "@/components/ui";
+import {
+  EmptyState,
+  PageHeader,
+  Table,
+  Td,
+  Th,
+  timeAgo,
+} from "@/components/ui";
 import { loadAudit } from "@/lib/data";
 import Link from "next/link";
 
@@ -54,11 +61,16 @@ export default async function AuditPage({
           <tbody>
             {res.data.map((e) => (
               <tr key={e.id} className="hover:bg-muted/40">
-                <Td className="whitespace-nowrap text-muted-foreground">{timeAgo(e.createdAt)}</Td>
+                <Td className="whitespace-nowrap text-muted-foreground">
+                  {timeAgo(e.createdAt)}
+                </Td>
                 <Td>
-                  {e.actorName ?? (e.actorId ? `${e.actorId.slice(0, 8)}…` : "system")}
+                  {e.actorName ??
+                    (e.actorId ? `${e.actorId.slice(0, 8)}…` : "system")}
                   {e.actorRoles.length ? (
-                    <div className="text-xs text-muted-foreground">{e.actorRoles.join(", ")}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {e.actorRoles.join(", ")}
+                    </div>
                   ) : null}
                 </Td>
                 <Td className="font-mono text-xs">{e.action}</Td>
@@ -68,15 +80,23 @@ export default async function AuditPage({
                     <>
                       {" "}
                       {e.targetType === "report" ? (
-                        <Link href={`/reports/${e.targetId}`} className="text-primary hover:underline">
+                        <Link
+                          href={`/reports/${e.targetId}`}
+                          className="text-primary hover:underline"
+                        >
                           {e.targetId.slice(0, 8)}…
                         </Link>
                       ) : e.targetType === "user" ? (
-                        <Link href={`/users/${e.targetId}`} className="text-primary hover:underline">
+                        <Link
+                          href={`/users/${e.targetId}`}
+                          className="text-primary hover:underline"
+                        >
                           {e.targetId.slice(0, 8)}…
                         </Link>
                       ) : (
-                        <span className="text-muted-foreground">{e.targetId.slice(0, 8)}…</span>
+                        <span className="text-muted-foreground">
+                          {e.targetId.slice(0, 8)}…
+                        </span>
                       )}
                     </>
                   ) : null}
@@ -84,7 +104,9 @@ export default async function AuditPage({
                 <Td>
                   {e.summary}
                   {e.reason ? (
-                    <div className="text-xs text-muted-foreground">reason: {e.reason}</div>
+                    <div className="text-xs text-muted-foreground">
+                      reason: {e.reason}
+                    </div>
                   ) : null}
                 </Td>
               </tr>

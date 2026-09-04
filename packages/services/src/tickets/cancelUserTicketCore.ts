@@ -2,6 +2,7 @@ import { logger } from "@abonten/core/logger";
 import { releasePromoUsage } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
+import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Post-auth body of cancelUserTicket, lifted so the mobile API route
@@ -29,7 +30,7 @@ export type CancelUserTicketCoreResult = {
 };
 
 export async function cancelUserTicketCore(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   ticketId: string,
   transactionId: string | null,
@@ -71,7 +72,7 @@ export async function cancelUserTicketCore(
 
   const { error: updateStatusError } = await supabase
     .from("ticket")
-    .update({ status: "cancelled", updated_at: new Date() })
+    .update({ status: "cancelled", updated_at: new Date().toISOString() })
     .eq("id", ticketId)
     .eq("user_id", userId);
 
@@ -173,7 +174,7 @@ export async function cancelUserTicketCore(
 // checkout line and, for a multi-event checkout, every event it covers) is
 // now cancelled — the gate for actually requesting a refund.
 async function areAllTicketsForTransactionCancelled(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   transactionId: string,
 ) {
   const { data: siblingTickets, error: siblingTicketsError } = await supabase
@@ -198,7 +199,7 @@ async function areAllTicketsForTransactionCancelled(
 // cancelled, so /transactions doesn't show a whole purchase as cancelled
 // when only some of its tickets actually are.
 async function markCheckoutCancelledIfAllTicketsCancelled(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ticketCheckoutId: string,
 ) {
   const { data: siblingTickets, error: siblingTicketsError } = await supabase
@@ -233,7 +234,7 @@ async function markCheckoutCancelledIfAllTicketsCancelled(
 }
 
 async function releasePromoUsageIfEventFullyCancelled(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
 ) {

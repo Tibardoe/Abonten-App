@@ -10,6 +10,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import type { Database } from "@abonten/types/database.types";
 import type {
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
@@ -40,7 +41,7 @@ export type OrganizerDashboardOverviewResult =
     };
 
 export async function fetchOrganizerDashboardOverview(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   period: DashboardPeriod,
 ): Promise<OrganizerDashboardOverviewResult> {
   const { start, end, prevStart, prevEnd } = getDashboardPeriodRange(period);
@@ -49,7 +50,7 @@ export async function fetchOrganizerDashboardOverview(
     supabase.rpc("get_organizer_dashboard_overview", {
       p_start: start ? start.toISOString() : null,
       p_end: end ? end.toISOString() : null,
-    }),
+    } as unknown as Database["public"]["Functions"]["get_organizer_dashboard_overview"]["Args"]),
     prevStart && prevEnd
       ? supabase.rpc("get_organizer_dashboard_overview", {
           p_start: prevStart.toISOString(),
@@ -81,7 +82,7 @@ export type OrganizerFinanceOverviewResult =
   | { status: 200; data: OrganizerFinanceOverviewRow[] };
 
 export async function fetchOrganizerFinanceOverview(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
 ): Promise<OrganizerFinanceOverviewResult> {
   const { data, error } = await supabase.rpc("get_organizer_finance_overview");
 
@@ -96,7 +97,7 @@ export async function fetchOrganizerFinanceOverview(
 }
 
 export async function fetchOrganizerEventsPage(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<UserPostType>> {
@@ -128,7 +129,10 @@ export async function fetchOrganizerEventsPage(
     };
   }
 
-  const { page, hasNextPage } = splitPage<UserPostType>(events ?? [], pageSize);
+  const { page, hasNextPage } = splitPage<UserPostType>(
+    (events ?? []) as unknown as UserPostType[],
+    pageSize,
+  );
 
   const last = page[page.length - 1];
   const nextCursor =
@@ -150,7 +154,7 @@ type AttendanceRow = any;
 // `auth.uid()`, but the explicit organizer_id filter keeps the 403 path
 // (someone else's event id) identical to the web action.
 export async function fetchEventAttendanceListPage(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   eventId: string,
   options?: { cursor?: string | null; pageSize?: number },
@@ -246,7 +250,7 @@ export async function fetchEventAttendanceListPage(
 }
 
 export async function fetchOrganizerLedgerPage(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<OrganizerLedgerTransactionRow>> {
   const pageSize = options?.pageSize ?? DEFAULT_EVENTS_PAGE_SIZE;
@@ -258,7 +262,7 @@ export async function fetchOrganizerLedgerPage(
       p_cursor_created_at: cursor?.sortValue ?? null,
       p_cursor_id: cursor?.id ?? null,
       p_limit: pageSize + 1,
-    },
+    } as unknown as Database["public"]["Functions"]["get_organizer_ledger_transactions"]["Args"],
   );
 
   if (error) {
@@ -297,7 +301,7 @@ type OrganizerPlaceRow = any;
 // stays in the action). RLS `place_owner_select` also keys on auth.uid();
 // the explicit owner_id filter keeps the shape identical either way.
 export async function fetchOrganizerPlacesPage(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   ownerId: string,
   options?: { cursor?: string | null; pageSize?: number },
 ): Promise<PaginatedResult<OrganizerPlaceRow>> {
@@ -355,7 +359,7 @@ export type PlaceInsightsCoreResult =
 // place_analytics_event, plus favorites and approved-review counts. A
 // select + JS reduce is fine (low-traffic owner dashboard, not a hot path).
 export async function fetchPlaceInsights(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   userId: string,
   placeId: string,
 ): Promise<PlaceInsightsCoreResult> {

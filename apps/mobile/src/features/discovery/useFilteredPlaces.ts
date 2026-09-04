@@ -21,15 +21,18 @@ async function fetchPage(
   cursor: Cursor | null,
 ): Promise<{ rows: Row[]; nextCursor: Cursor | null }> {
   const { data, error } = await supabase.rpc("get_filtered_places", {
-    p_search_text: null,
-    p_category_id: f.categoryId,
-    p_min_rating: f.minRating,
-    p_open_now: f.openNow ? true : null,
-    p_user_lat: coords?.lat ?? null,
-    p_user_lng: coords?.lng ?? null,
+    // All `DEFAULT NULL`/optional in SQL -- `undefined` (dropped from the
+    // JSON body) reaches the function exactly like an explicit `null`
+    // would, but satisfies the generated optional (`?:`) arg type.
+    p_search_text: undefined,
+    p_category_id: f.categoryId ?? undefined,
+    p_min_rating: f.minRating ?? undefined,
+    p_open_now: f.openNow ? true : undefined,
+    p_user_lat: coords?.lat,
+    p_user_lng: coords?.lng,
     p_max_distance_km: f.maxDistanceKm ?? DEFAULT_RADIUS_KM,
-    p_cursor_distance: cursor?.distanceKm ?? null,
-    p_cursor_id: cursor?.id ?? null,
+    p_cursor_distance: cursor?.distanceKm,
+    p_cursor_id: cursor?.id,
     p_page_size: PAGE_SIZE + 1,
   });
 

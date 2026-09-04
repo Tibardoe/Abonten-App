@@ -81,7 +81,18 @@ export default async function page() {
 
         <ProfileCompletionChecklist />
 
-        <EditProfileInputFields initialData={userDetails} />
+        <EditProfileInputFields
+          initialData={{
+            id: userDetails.id,
+            status: userDetails.status_id,
+            username: userDetails.username ?? "",
+            full_name: userDetails.full_name ?? "",
+            avatar_public_id: userDetails.avatar_public_id ?? "",
+            avatar_version: userDetails.avatar_version ?? "",
+            bio: userDetails.bio ?? "",
+            website: userDetails.website ?? "",
+          }}
+        />
       </div>
     </div>
   );
