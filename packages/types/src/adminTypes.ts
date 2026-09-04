@@ -873,3 +873,60 @@ export type OrganizerFinanceSummary = {
   recentLedger: LedgerEntryView[];
   recentPayouts: PayoutListItem[];
 };
+
+// ─────────────────────────────────────────────────────────────
+// Phase 4 — Platform Analytics (read-only aggregates)
+// ─────────────────────────────────────────────────────────────
+
+export type AnalyticsSeriesPoint = {
+  /** ISO date (UTC day) */
+  date: string;
+  newUsers: number;
+  newEvents: number;
+  newPlaces: number;
+  ticketsIssued: number;
+  grossRevenue: number;
+};
+
+export type AnalyticsTopEvent = {
+  id: string;
+  title: string;
+  organizerName: string | null;
+  ticketsIssued: number;
+};
+
+export type AnalyticsTopOrganizer = {
+  id: string;
+  name: string | null;
+  grossRevenue: number;
+  currency: string;
+};
+
+export type PlatformAnalytics = {
+  range: DashboardRange;
+  from: string;
+  to: string;
+  currency: string;
+  totals: {
+    users: number;
+    organizers: number;
+    eventsPublished: number;
+    eventsTotal: number;
+    places: number;
+    ticketsIssuedAllTime: number;
+    grossCustomerPaymentsAllTime: number;
+    netPlatformRevenueAllTime: number;
+  };
+  inRange: {
+    newUsers: number;
+    newEvents: number;
+    newPlaces: number;
+    ticketsIssued: number;
+    grossRevenue: number;
+    netPlatformRevenue: number;
+    activeOrganizers: number;
+  };
+  series: AnalyticsSeriesPoint[];
+  topEvents: AnalyticsTopEvent[];
+  topOrganizers: AnalyticsTopOrganizer[];
+};

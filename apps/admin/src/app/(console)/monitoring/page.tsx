@@ -1,11 +1,22 @@
-import { Badge, Card, EmptyState, PageHeader, Table, Td, Th, timeAgo } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  PageHeader,
+  Table,
+  Td,
+  Th,
+  timeAgo,
+} from "@/components/ui";
 import { loadMonitoring } from "@/lib/data";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { ErrorGroupRow } from "./ErrorGroupRow";
+import { IncidentPanel } from "./IncidentPanel";
 
 export default async function MonitoringPage() {
   const { ctx, health, errors, metrics, incidents } = await loadMonitoring();
   const canManage = ctx.permissions.includes("monitoring.manage");
+  const canIncidents = ctx.permissions.includes("incidents.manage");
 
   // aggregate the last-24h request metrics
   const totals = (metrics.data ?? []).reduce(
@@ -27,24 +38,32 @@ export default async function MonitoringPage() {
       <p className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 p-2 text-xs text-muted-foreground">
         <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
         <span>
-          <strong>Actual telemetry</strong> (errors, request metrics) comes from the in-app
-          <code> reportError</code> hooks and sampled request timing. <strong>Health</strong> rows
-          are live dependency probes run by the observability cron. There is no third-party APM
-          wired yet — panels that would need one say so.
+          <strong>Actual telemetry</strong> (errors, request metrics) comes from
+          the in-app
+          <code> reportError</code> hooks and sampled request timing.{" "}
+          <strong>Health</strong> rows are live dependency probes run by the
+          observability cron. There is no third-party APM wired yet — panels
+          that would need one say so.
         </span>
       </p>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Application health</h2>
+        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+          Application health
+        </h2>
         {health.status !== 200 || (health.data ?? []).length === 0 ? (
           <EmptyState>
-            No health results yet. Configure the <code>/api/observability/health</code> cron
-            (see the monitoring setup notes) — until it runs this is genuinely empty, not hidden.
+            No health results yet. Configure the{" "}
+            <code>/api/observability/health</code> cron (see the monitoring
+            setup notes) — until it runs this is genuinely empty, not hidden.
           </EmptyState>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {health.data!.map((h) => (
-              <Card key={h.key} className="flex items-center justify-between p-3">
+            {(health.data ?? []).map((h) => (
+              <Card
+                key={h.key}
+                className="flex items-center justify-between p-3"
+              >
                 <div>
                   <p className="font-medium capitalize">{h.key}</p>
                   <p className="text-xs text-muted-foreground">
@@ -73,23 +92,36 @@ export default async function MonitoringPage() {
         </h2>
         {(metrics.data ?? []).length === 0 ? (
           <EmptyState>
-            No sampled request metrics yet. The web app / API sample ~10% of requests into
+            No sampled request metrics yet. The web app / API sample ~10% of
+            requests into
             <code> app_request_metric</code>.
           </EmptyState>
         ) : (
           <div className="grid grid-cols-3 gap-3">
             <Card className="p-4">
-              <p className="text-xs uppercase text-muted-foreground">Sampled requests</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{totals.total.toLocaleString()}</p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase text-muted-foreground">Error responses</p>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{totals.err.toLocaleString()}</p>
-            </Card>
-            <Card className="p-4">
-              <p className="text-xs uppercase text-muted-foreground">Error rate</p>
+              <p className="text-xs uppercase text-muted-foreground">
+                Sampled requests
+              </p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">
-                {totals.total ? `${((totals.err / totals.total) * 100).toFixed(2)}%` : "—"}
+                {totals.total.toLocaleString()}
+              </p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs uppercase text-muted-foreground">
+                Error responses
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {totals.err.toLocaleString()}
+              </p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs uppercase text-muted-foreground">
+                Error rate
+              </p>
+              <p className="mt-1 text-2xl font-semibold tabular-nums">
+                {totals.total
+                  ? `${((totals.err / totals.total) * 100).toFixed(2)}%`
+                  : "—"}
               </p>
             </Card>
           </div>
@@ -97,9 +129,14 @@ export default async function MonitoringPage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Error groups</h2>
+        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+          Error groups
+        </h2>
         {errors.status !== 200 || (errors.data ?? []).length === 0 ? (
-          <EmptyState>No errors captured. That&apos;s good — or telemetry hasn&apos;t started flowing yet.</EmptyState>
+          <EmptyState>
+            No errors captured. That&apos;s good — or telemetry hasn&apos;t
+            started flowing yet.
+          </EmptyState>
         ) : (
           <Table>
             <thead>
@@ -113,8 +150,12 @@ export default async function MonitoringPage() {
               </tr>
             </thead>
             <tbody>
-              {errors.data!.map((g) => (
-                <ErrorGroupRow key={g.fingerprint} group={g} canManage={canManage} />
+              {(errors.data ?? []).map((g) => (
+                <ErrorGroupRow
+                  key={g.fingerprint}
+                  group={g}
+                  canManage={canManage}
+                />
               ))}
             </tbody>
           </Table>
@@ -122,22 +163,13 @@ export default async function MonitoringPage() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">Incidents</h2>
-        {(incidents.data ?? []).length === 0 ? (
-          <EmptyState>No incidents recorded.</EmptyState>
-        ) : (
-          <ul className="space-y-1 text-sm">
-            {incidents.data!.map((i) => (
-              <li key={i.id} className="rounded border border-border p-2">
-                <span className="font-medium">{i.title}</span>{" "}
-                <Badge tone={i.status === "resolved" ? "success" : "warning"}>{i.status}</Badge>{" "}
-                <span className="text-xs text-muted-foreground">
-                  {i.severity} · started {timeAgo(i.startedAt)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
+          Incidents
+        </h2>
+        <IncidentPanel
+          incidents={incidents.data ?? []}
+          canManage={canIncidents}
+        />
       </section>
     </div>
   );

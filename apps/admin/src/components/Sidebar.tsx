@@ -3,6 +3,7 @@
 import type { AdminPermissionKey } from "@abonten/types/adminTypes";
 import {
   Activity,
+  BarChart3,
   Building2,
   CalendarDays,
   ClipboardCheck,
@@ -79,6 +80,12 @@ const ITEMS: Item[] = [
     permission: "monitoring.view",
   },
   {
+    href: "/analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    permission: "analytics.view",
+  },
+  {
     href: "/audit",
     label: "Audit Logs",
     icon: ScrollText,
@@ -92,7 +99,7 @@ const ITEMS: Item[] = [
   },
 ];
 
-const SOON = ["Analytics"];
+const SOON: string[] = [];
 
 export function Sidebar({
   permissions,
@@ -127,20 +134,22 @@ export function Sidebar({
         );
       })}
 
-      <div className="mt-4 border-t border-border pt-3">
-        <p className="px-2.5 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-          Later phases
-        </p>
-        {SOON.map((s) => (
-          <div
-            key={s}
-            className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground/50"
-          >
-            {s}
-            <span className="text-[9px]">soon</span>
-          </div>
-        ))}
-      </div>
+      {SOON.length > 0 && (
+        <div className="mt-4 border-t border-border pt-3">
+          <p className="px-2.5 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+            Later phases
+          </p>
+          {SOON.map((s) => (
+            <div
+              key={s}
+              className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground/50"
+            >
+              {s}
+              <span className="text-[9px]">soon</span>
+            </div>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
