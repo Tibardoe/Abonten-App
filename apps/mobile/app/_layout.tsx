@@ -14,17 +14,28 @@ import { installGlobalErrorHandler } from "@/lib/errorTracking";
 import { euclidFonts } from "@/lib/fonts";
 import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
+import { Sentry, initSentry, navigationIntegration } from "@/lib/sentry";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { I18nProvider } from "@abonten/ui-native/i18n";
 import { ThemeProvider } from "@abonten/ui-native/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
-import { Slot, usePathname, useRouter, useSegments } from "expo-router";
+import {
+  Slot,
+  useNavigationContainerRef,
+  usePathname,
+  useRouter,
+  useSegments,
+} from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+// Initialise Sentry before the first render so its global JS error handler
+// is installed ahead of installGlobalErrorHandler()'s chained one.
+initSentry();
 
 // Root render/effect crashes anywhere in the navigation tree land here
 // (Expo Router picks up the `ErrorBoundary` export on this route module).
@@ -86,14 +97,23 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(euclidFonts);
+  const navigationRef = useNavigationContainerRef();
 
   useEffect(() => {
     installGlobalErrorHandler();
     startSupabaseAutoRefresh();
     startNetworkSync();
   }, []);
+
+  // Feed Expo Router's navigation container to Sentry for screen
+  // breadcrumbs + route transactions.
+  useEffect(() => {
+    if (navigationRef?.current) {
+      navigationIntegration.registerNavigationContainer(navigationRef);
+    }
+  }, [navigationRef]);
 
   // Never let the splash outlive a slow cold start.
   useEffect(() => {
@@ -125,3 +145,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap adds the touch-event breadcrumbs + a render error boundary
+// that backstops the Expo Router `ErrorBoundary` above.
+export default Sentry.wrap(RootLayout);

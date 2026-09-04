@@ -83,7 +83,15 @@
           "photosPermission": "Abonten needs access to your photos so you can set a profile picture."
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "abonten-hub",
+          "project": "abonten-mobile"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false
