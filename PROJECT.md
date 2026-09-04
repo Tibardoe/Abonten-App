@@ -871,14 +871,38 @@ Sidebar: **no more "soon" items** — every planned nav entry is live. Verified:
 11/11 · next build web + admin exit 0 · biome · live aggregate cross-check against prod (users 10,
 events 14/11 pub, tickets 18, fee gross 430 / net 17.7) + incident insert/update smoke.
 
+### 23.8e Phase 5 modules — Global search · bulk report-group resolution
+
+Code-only — no migration, no new schema.
+
+- **Global search** (`packages/services/src/admin/search/globalSearchCore.ts`) — one search box in
+  the console top bar → `/search?q=`. Searches users, events, places, transactions and reports by
+  name / title / event-code / Paystack-ref / email, or by exact UUID (id or a report's target id).
+  Each result group is only populated if the caller holds the matching view permission — you can
+  only find what you can open. Read-only, per-group cap 8.
+- **Bulk "resolve all N"** (`resolveReportGroupCore` in `reportsAdminCore.ts`) — the grouped
+  reports view (`/reports?view=grouped`) gets a per-row control: resolve or dismiss **every open
+  report sharing that `dedupe_key`** with one resolution note, optionally applying a single
+  moderation action (restrict / hide / remove) to the shared target first via
+  `apply_moderation_action`. Permission-gated (`reports.resolve` + the moderation perm for the
+  chosen action), idempotent per report (replaying `resolve_report` on a terminal report is a
+  no-op), one audit row summarising the count. Live rolled-back smoke: 3 reports on one target →
+  all 3 resolved, 0 left open, replay no-op.
+
+Verified: turbo typecheck 11/11 · next build web + admin exit 0 · biome · the group-resolve SQL
+path smoke above.
+
 ### 23.9 Phase 1 — deferred / open
 
 - Admin-initiated refunds/payouts (Finance module is read-only); a sampled request-timing
   middleware feeding `app_request_metric` (the ingest route + rollup view exist; nothing samples
-  into them yet); mobile request metrics; global cross-entity search; bulk actions;
-  runtime-editable role matrix; Sentry `also-send` adapter; Notification ops.
+  into them yet); mobile request metrics; runtime-editable role matrix (the matrix is code-defined
+  in `@abonten/core/adminPermissions` + the DB seed — making `admin_role_permission` the live
+  source of truth is a deliberate, security-sensitive change left for its own plan); Sentry
+  `also-send` adapter; Notification operations.
   _(Claims + content-browse + Events/Places/Organizers = Phase 2 §23.8b; read-only Finance = Phase 3
-  §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d.)_
+  §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d; global
+  search + bulk report-group resolution = Phase 5 §23.8e.)_
 - ~~Moderation filter reach~~ **DONE** (migration `20260907091500`): the public `SELECT` policies
   on all six moderatable tables now exclude `hidden`/`removed` on their public branch, so every
   non-RPC read path (detail pages, review lists, profile tabs, ratings, `/api/mobile` plain-table

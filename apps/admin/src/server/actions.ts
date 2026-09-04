@@ -19,6 +19,7 @@ import {
   assignReportCore,
   requestReportInfoCore,
   resolveReportCore,
+  resolveReportGroupCore,
   updateReportStatusCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
 import {
@@ -37,6 +38,7 @@ import {
   reportRequestInfoSchema,
   reportResolveSchema,
   reportStatusSchema,
+  resolveReportGroupSchema,
   reviewClaimSchema,
   revokeAdminRoleSchema,
   setAdminUserStatusSchema,
@@ -149,6 +151,29 @@ export async function resolveReport(input: unknown) {
       revalidatePath(`/reports/${parsed.data.reportId}`);
       revalidatePath("/reports");
     }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+export async function resolveReportGroup(input: unknown) {
+  const parsed = resolveReportGroupSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await resolveReportGroupCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/reports");
     return res;
   } catch (e) {
     return adminError(e);

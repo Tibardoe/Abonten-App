@@ -30,6 +30,30 @@ export const reportResolveSchema = z.object({
   expectedUpdatedAt: z.string().datetime().optional(),
 });
 
+export const resolveReportGroupSchema = z.object({
+  dedupeKey: z.string().min(3).max(120),
+  status: z.enum(["resolved", "dismissed", "false_report"]),
+  resolution: z
+    .string()
+    .trim()
+    .min(1, "A resolution note is required")
+    .max(2000),
+  resolutionAction: z.string().trim().max(120).optional(),
+  moderation: z
+    .object({
+      action: z.enum([
+        "hide",
+        "unhide",
+        "remove",
+        "restore",
+        "restrict",
+        "unrestrict",
+      ]),
+      reason: z.string().trim().min(1).max(2000),
+    })
+    .optional(),
+});
+
 export const reportRequestInfoSchema = z.object({
   reportId: z.string().uuid(),
   message: z.string().trim().min(1).max(1000),
