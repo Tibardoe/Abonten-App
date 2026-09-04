@@ -8,6 +8,8 @@ import {
 import type {
   AdminContext,
   AdminNoteEntry,
+  ModeratableTargetType,
+  ModerationActionKind,
   ReportCategory,
   ReportDetail,
   ReportGroupItem,
@@ -777,4 +779,152 @@ export async function resolveReportCore(
     requestMeta: meta(ctx, requestMeta),
   });
   return { status: 200, message: "Report resolved." };
+}
+
+// ─────────────────────────────────────────────────────────────
+// Bulk: resolve every open report on one target ("resolve all N")
+// ─────────────────────────────────────────────────────────────
+
+const MODERATABLE_SET = new Set<string>([
+  "event",
+  "place",
+  "event_review",
+  "place_review",
+  "user_review",
+  "highlight",
+]);
+
+export async function resolveReportGroupCore(
+  supabase: SupabaseClient,
+  ctx: AdminContext,
+  input: {
+    dedupeKey: string;
+    status: Extract<ReportStatus, "resolved" | "dismissed" | "false_report">;
+    resolution: string;
+    resolutionAction?: string;
+    /** optionally apply ONE moderation action to the shared target first */
+    moderation?: { action: ModerationActionKind; reason: string };
+  },
+  requestMeta?: Record<string, unknown>,
+): Promise<AdminEnvelope<{ resolved: number; moderated: boolean }>> {
+  try {
+    assertPermission(
+      ctx,
+      input.status === "false_report"
+        ? "reports.mark_false"
+        : "reports.resolve",
+    );
+  } catch (e) {
+    return { status: 403, message: (e as Error).message };
+  }
+
+  const OPEN: ReportStatus[] = [
+    "new",
+    "under_review",
+    "awaiting_info",
+    "escalated",
+  ];
+  const { data: open, error } = await supabase
+    .from("report")
+    .select("id, target_type, target_id, status")
+    .eq("dedupe_key", input.dedupeKey)
+    .in("status", OPEN);
+  if (error) {
+    logger.error(`resolveReportGroupCore fetch failed: ${error.message}`);
+    return { status: 500, message: "Something went wrong" };
+  }
+  if (!open || open.length === 0) {
+    return { status: 409, message: "No open reports on this target." };
+  }
+
+  const first = open[0];
+  let moderated = false;
+
+  if (input.moderation) {
+    if (!MODERATABLE_SET.has(first.target_type)) {
+      return {
+        status: 400,
+        message: "That target type can't be moderated from here.",
+      };
+    }
+    const permForAction: Record<ModerationActionKind, string> = {
+      hide: "moderation.hide",
+      unhide: "moderation.restore",
+      remove: "moderation.remove",
+      restore: "moderation.restore",
+      restrict: "moderation.restrict",
+      unrestrict: "moderation.restrict",
+    };
+    try {
+      assertPermission(
+        ctx,
+        permForAction[input.moderation.action] as Parameters<
+          typeof assertPermission
+        >[1],
+      );
+    } catch (e) {
+      return { status: 403, message: (e as Error).message };
+    }
+    const { error: modErr } = await supabase.rpc("apply_moderation_action", {
+      p_actor_id: ctx.userId,
+      p_target_type: first.target_type as ModeratableTargetType,
+      p_target_id: first.target_id,
+      p_action: input.moderation.action,
+      p_reason: input.moderation.reason,
+      p_report_id: first.id,
+      p_idempotency_key: `${first.target_type}:${first.target_id}:${input.moderation.action}:group:${input.dedupeKey}`,
+    });
+    if (modErr) {
+      logger.error(
+        `resolveReportGroupCore moderation failed: ${modErr.message}`,
+      );
+      return { status: 500, message: "Moderation action failed" };
+    }
+    moderated = true;
+  }
+
+  let resolved = 0;
+  for (const r of open) {
+    const { data: rpcResult, error: rErr } = await supabase.rpc(
+      "resolve_report",
+      {
+        p_report_id: r.id,
+        p_actor_id: ctx.userId,
+        p_status: input.status,
+        p_resolution: input.resolution,
+        p_action: input.resolutionAction ?? null,
+      },
+    );
+    if (rErr) {
+      logger.error(
+        `resolveReportGroupCore resolve ${r.id} failed: ${rErr.message}`,
+      );
+      continue;
+    }
+    const res = rpcResult as { noop: boolean };
+    if (!res.noop) resolved += 1;
+  }
+
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: "report.resolve_group",
+    targetType: first.target_type,
+    targetId: first.target_id,
+    summary: `Bulk-resolved ${resolved} report(s) on ${input.dedupeKey} -> ${input.status}`,
+    reason: input.resolution,
+    after: {
+      dedupe_key: input.dedupeKey,
+      status: input.status,
+      moderated,
+      moderation_action: input.moderation?.action ?? null,
+    },
+    requestMeta: meta(ctx, requestMeta),
+  });
+
+  return {
+    status: 200,
+    message: `Resolved ${resolved} report(s)${moderated ? " and moderated the content" : ""}.`,
+    data: { resolved, moderated },
+  };
 }

@@ -46,6 +46,7 @@ import {
   listReportGroupsCore,
   listReportsCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
+import { globalSearchCore } from "@abonten/services/admin/search/globalSearchCore";
 import {
   getRoleMatrixCore,
   listAdminStaffCore,
@@ -240,4 +241,11 @@ export async function loadAnalytics(
 ) {
   const ctx = await requireAdmin();
   return getPlatformAnalyticsCore(getServiceClient(), ctx, { range, from, to });
+}
+
+// ── Phase 5: global search ─────────────────────────────────
+
+export async function loadSearch(q: string) {
+  const ctx = await requireAdmin();
+  return globalSearchCore(getServiceClient(), ctx, { q });
 }

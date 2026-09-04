@@ -10,6 +10,7 @@ import {
   reportStatusTone,
   timeAgo,
 } from "@/components/ui";
+import { requireAdmin } from "@/lib/adminGuard";
 import { loadReportGroups, loadReports } from "@/lib/data";
 import {
   REPORT_CATEGORY_LABEL,
@@ -18,6 +19,7 @@ import {
 } from "@abonten/types/adminTypes";
 import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { GroupResolve } from "./GroupResolve";
 
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: "open", label: "Open" },
@@ -40,10 +42,16 @@ export default async function ReportsPage({
   const priority = sp.priority as ReportPriority | undefined;
   const assigned = sp.assigned === "unassigned" ? "unassigned" : undefined;
 
+  const ctx = view === "grouped" ? await requireAdmin() : null;
   const groups = view === "grouped" ? await loadReportGroups() : null;
   const list =
     view === "list"
-      ? await loadReports({ status, priority, assignedTo: assigned, cursor: sp.cursor ?? null })
+      ? await loadReports({
+          status,
+          priority,
+          assignedTo: assigned,
+          cursor: sp.cursor ?? null,
+        })
       : null;
 
   return (
@@ -57,7 +65,9 @@ export default async function ReportsPage({
               href="/reports?view=list"
               className={cn(
                 "rounded px-2 py-1 text-xs",
-                view === "list" ? "bg-primary text-primary-foreground" : "border border-border hover:bg-muted",
+                view === "list"
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border hover:bg-muted",
               )}
             >
               List
@@ -66,7 +76,9 @@ export default async function ReportsPage({
               href="/reports?view=grouped"
               className={cn(
                 "rounded px-2 py-1 text-xs",
-                view === "grouped" ? "bg-primary text-primary-foreground" : "border border-border hover:bg-muted",
+                view === "grouped"
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-border hover:bg-muted",
               )}
             >
               By target
@@ -93,10 +105,14 @@ export default async function ReportsPage({
               </Link>
             ))}
             {priority ? (
-              <span className="rounded bg-muted px-2.5 py-1 text-xs">priority: {priority}</span>
+              <span className="rounded bg-muted px-2.5 py-1 text-xs">
+                priority: {priority}
+              </span>
             ) : null}
             {assigned ? (
-              <span className="rounded bg-muted px-2.5 py-1 text-xs">unassigned</span>
+              <span className="rounded bg-muted px-2.5 py-1 text-xs">
+                unassigned
+              </span>
             ) : null}
           </div>
 
@@ -120,10 +136,15 @@ export default async function ReportsPage({
                 {list.data.map((r) => (
                   <tr key={r.id} className="hover:bg-muted/40">
                     <Td>
-                      <Link href={`/reports/${r.id}`} className="font-medium text-primary hover:underline">
+                      <Link
+                        href={`/reports/${r.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
                         {r.targetType}
                       </Link>
-                      <div className="text-xs text-muted-foreground">{r.targetId.slice(0, 8)}…</div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.targetId.slice(0, 8)}…
+                      </div>
                     </Td>
                     <Td>
                       <span className="inline-flex items-center gap-1">
@@ -134,13 +155,19 @@ export default async function ReportsPage({
                       </span>
                     </Td>
                     <Td>
-                      <Badge tone={priorityTone(r.priority)}>{r.priority}</Badge>
+                      <Badge tone={priorityTone(r.priority)}>
+                        {r.priority}
+                      </Badge>
                     </Td>
                     <Td>
-                      <Badge tone={reportStatusTone(r.status)}>{r.status.replace("_", " ")}</Badge>
+                      <Badge tone={reportStatusTone(r.status)}>
+                        {r.status.replace("_", " ")}
+                      </Badge>
                     </Td>
                     <Td className="tabular-nums">{r.targetReportCount}</Td>
-                    <Td className="whitespace-nowrap text-muted-foreground">{timeAgo(r.createdAt)}</Td>
+                    <Td className="whitespace-nowrap text-muted-foreground">
+                      {timeAgo(r.createdAt)}
+                    </Td>
                   </tr>
                 ))}
               </tbody>
@@ -159,54 +186,70 @@ export default async function ReportsPage({
         </>
       )}
 
-      {view === "grouped" && (
-        <>
-          {!groups || groups.status !== 200 || !groups.data ? (
-            <EmptyState>{groups?.message ?? "Couldn't load grouped reports."}</EmptyState>
-          ) : groups.data.length === 0 ? (
-            <EmptyState>No targets with open reports.</EmptyState>
-          ) : (
-            <Table>
-              <thead>
-                <tr>
-                  <Th>Target</Th>
-                  <Th>Open</Th>
-                  <Th>Total reports</Th>
-                  <Th>Highest priority</Th>
-                  <Th>Reasons</Th>
-                  <Th>Latest</Th>
+      {view === "grouped" &&
+        (!groups || groups.status !== 200 || !groups.data ? (
+          <EmptyState>
+            {groups?.message ?? "Couldn't load grouped reports."}
+          </EmptyState>
+        ) : groups.data.length === 0 ? (
+          <EmptyState>No targets with open reports.</EmptyState>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <Th>Target</Th>
+                <Th>Open</Th>
+                <Th>Total reports</Th>
+                <Th>Highest priority</Th>
+                <Th>Reasons</Th>
+                <Th>Latest</Th>
+                <Th />
+              </tr>
+            </thead>
+            <tbody>
+              {groups.data.map((g) => (
+                <tr key={g.dedupeKey} className="hover:bg-muted/40">
+                  <Td>
+                    <Link
+                      href={`/reports?view=list&status=all&target=${g.dedupeKey}`}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      {g.targetType}
+                    </Link>
+                    <div className="text-xs text-muted-foreground">
+                      {g.targetId.slice(0, 8)}…
+                    </div>
+                  </Td>
+                  <Td className="tabular-nums">{g.openCount}</Td>
+                  <Td className="tabular-nums">{g.reportCount}</Td>
+                  <Td>
+                    <Badge tone={priorityTone(g.highestPriority)}>
+                      {g.highestPriority}
+                    </Badge>
+                  </Td>
+                  <Td className="text-xs text-muted-foreground">
+                    {g.categories
+                      .map((c) => REPORT_CATEGORY_LABEL[c])
+                      .join(", ")}
+                  </Td>
+                  <Td className="whitespace-nowrap text-muted-foreground">
+                    {timeAgo(g.latestCreatedAt)}
+                  </Td>
+                  <Td>
+                    {ctx ? (
+                      <GroupResolve
+                        dedupeKey={g.dedupeKey}
+                        targetType={g.targetType}
+                        openCount={g.openCount}
+                        permissions={ctx.permissions}
+                      />
+                    ) : null}
+                  </Td>
                 </tr>
-              </thead>
-              <tbody>
-                {groups.data.map((g) => (
-                  <tr key={g.dedupeKey} className="hover:bg-muted/40">
-                    <Td>
-                      <Link
-                        href={`/reports?view=list&status=all&target=${g.dedupeKey}`}
-                        className="font-medium text-primary hover:underline"
-                      >
-                        {g.targetType}
-                      </Link>
-                      <div className="text-xs text-muted-foreground">{g.targetId.slice(0, 8)}…</div>
-                    </Td>
-                    <Td className="tabular-nums">{g.openCount}</Td>
-                    <Td className="tabular-nums">{g.reportCount}</Td>
-                    <Td>
-                      <Badge tone={priorityTone(g.highestPriority)}>{g.highestPriority}</Badge>
-                    </Td>
-                    <Td className="text-xs text-muted-foreground">
-                      {g.categories.map((c) => REPORT_CATEGORY_LABEL[c]).join(", ")}
-                    </Td>
-                    <Td className="whitespace-nowrap text-muted-foreground">
-                      {timeAgo(g.latestCreatedAt)}
-                    </Td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </>
-      )}
+              ))}
+            </tbody>
+          </Table>
+        ))}
     </div>
   );
 }

@@ -930,3 +930,23 @@ export type PlatformAnalytics = {
   topEvents: AnalyticsTopEvent[];
   topOrganizers: AnalyticsTopOrganizer[];
 };
+
+// ─────────────────────────────────────────────────────────────
+// Phase 5 — Global search + bulk report-group resolution
+// ─────────────────────────────────────────────────────────────
+
+export type GlobalSearchHit = {
+  id: string;
+  label: string;
+  sublabel: string | null;
+  href: string;
+};
+
+export type GlobalSearchResults = {
+  query: string;
+  users: GlobalSearchHit[];
+  events: GlobalSearchHit[];
+  places: GlobalSearchHit[];
+  transactions: GlobalSearchHit[];
+  reports: GlobalSearchHit[];
+};
