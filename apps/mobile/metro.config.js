@@ -18,5 +18,13 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(monorepoRoot, "node_modules"),
 ];
+// Without this, Metro's hierarchical module lookup can walk past this app's
+// own resolution root in a way that's made explicit nodeModulesPaths above --
+// this is Expo's own documented fix for monorepos where EAS Build's one-shot
+// `expo export:embed` bundles the wrong entry (falls back to the default
+// non-router node_modules/expo/AppEntry.js instead of "main": "expo-router/entry",
+// even though the same package.json works fine under the long-running dev
+// server). See https://docs.expo.dev/guides/monorepos/.
+config.resolver.disableHierarchicalLookup = true;
 
 module.exports = withNativeWind(config, { input: "./global.css" });
