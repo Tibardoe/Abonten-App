@@ -122,6 +122,19 @@ export const setAdminUserStatusSchema = z.object({
   status: z.enum(["active", "disabled"]),
 });
 
+export const setRolePermissionSchema = z.object({
+  roleKey: z.enum([
+    "super_admin",
+    "operations",
+    "moderator",
+    "finance_admin",
+    "support_admin",
+    "analyst",
+  ]),
+  permissionKey: z.string().trim().min(1).max(64),
+  enabled: z.boolean(),
+});
+
 export const reviewClaimSchema = z.object({
   claimId: z.string().uuid(),
   decision: z.enum(["approve", "reject"]),

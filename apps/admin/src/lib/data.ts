@@ -135,8 +135,11 @@ export async function loadMonitoring() {
 export async function loadSettings() {
   const ctx = await requireAdmin();
   const svc = getServiceClient();
-  const [staff] = await Promise.all([listAdminStaffCore(svc, ctx)]);
-  return { ctx, staff, matrix: getRoleMatrixCore(ctx) };
+  const [staff, matrix] = await Promise.all([
+    listAdminStaffCore(svc, ctx),
+    getRoleMatrixCore(svc, ctx),
+  ]);
+  return { ctx, staff, matrix };
 }
 
 // ── Phase 2: Claims ─────────────────────────────────────────

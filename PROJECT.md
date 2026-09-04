@@ -894,14 +894,12 @@ path smoke above.
 
 ### 23.9 Phase 1 — deferred / open
 
-- Admin-initiated refunds/payouts (Finance module is read-only); runtime-editable role matrix
-  (the matrix is code-defined in `@abonten/core/adminPermissions` + the DB seed — making
-  `admin_role_permission` the live source of truth is a deliberate, security-sensitive change
-  left for its own plan); Notification operations.
+- Admin-initiated refunds/payouts (Finance module is read-only); Notification operations.
 - ~~Sentry `also-send` adapter~~ **DONE** — see §23.10.
 - ~~Sampled request-timing metrics / mobile request metrics~~ **DONE (mobile)** — see §23.11.
   Web + API request performance is now Sentry's job (`tracesSampleRate`); `app_request_metric`
   is fed by the mobile HTTP client only.
+- ~~Runtime-editable role matrix~~ **DONE** — see §23.12.
   _(Claims + content-browse + Events/Places/Organizers = Phase 2 §23.8b; read-only Finance = Phase 3
   §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d; global
   search + bulk report-group resolution = Phase 5 §23.8e.)_
@@ -980,6 +978,37 @@ HTTP client feeds them**; web/API request performance is covered by Sentry Perfo
 - Verified: `turbo typecheck` (web + mobile + api-client + admin) green; `next build` apps/web +
   apps/admin green; api-parity guard green; a rolled-back live `INSERT` into `app_request_metric`
   confirms `ingestMetricCore`'s column mapping and the hourly rollup. Not device-verified.
+
+### 23.12 Runtime-editable role → permission matrix — 2026-09-04
+
+`admin_role_permission` is now the **live source of truth** for what each role grants.
+`@abonten/core/adminPermissions` keeps `ROLE_PERMISSIONS` only as the **seed** + the typed
+`ADMIN_ROLE_KEYS` / `ADMIN_PERMISSION_KEYS` lists + a **safety fallback**.
+
+- `resolveAdminContext()` (`packages/services/src/admin/adminContext.ts`) now reads
+  `admin_role_permission` for the caller's roles and unions the grants (filtered to
+  `ADMIN_PERMISSION_KEYS`). Fallbacks that make a bad edit non-fatal: on a read error → the
+  compiled `effectivePermissions(roles)`; a role with **zero** rows → that role's compiled
+  defaults; `super_admin` → **always** every known permission.
+- Migration `20260907091600_admin_role_matrix_guard.sql` (live version `20260904031948`) adds
+  `guard_super_admin_role_permissions()` — a `BEFORE INSERT/UPDATE/DELETE` trigger on
+  `admin_role_permission` that raises `check_violation` for any `role_key = 'super_admin'` row.
+  super_admin's grant set is immutable at the DB level; nothing can lock every admin out.
+- `adminSettingsCore`: `getRoleMatrixCore(supabase, ctx)` is now async and returns the DB
+  `{ roles, permissions, grants, lockedRoles }`; new `setRolePermissionCore(supabase, ctx,
+  { roleKey, permissionKey, enabled })` — `settings.manage` + validates keys against the code
+  lists + rejects `super_admin` + upsert/delete one cell + `admin_audit_log` (`action:
+  "admin.role_matrix.set"`).
+- Web action `setRolePermission` (`assertStepUpFresh` → core → `revalidatePath("/settings")`);
+  schema `setRolePermissionSchema` in `@abonten/validation/adminSchemas`.
+- Admin › Settings: the read-only matrix cards are replaced by `RoleMatrixEditor` — a
+  permissions × roles checkbox grid; the `super_admin` column is 🔒 all-on/read-only; editing
+  is gated on `settings.manage` + a fresh step-up. Each toggle is optimistic + `router.refresh()`.
+- Verified: `turbo typecheck` 11/11 green; `next build` apps/web + apps/admin green; biome
+  clean; `get_advisors` — no new lints (the new trigger fn sets `search_path`, isn't
+  SECURITY DEFINER). Rolled-back live SQL smoke: a non-super cell toggles both ways +
+  idempotently; a `super_admin` INSERT/DELETE (incl. `ON CONFLICT DO NOTHING`) is blocked by
+  the trigger and `super_admin` still holds all 39 permissions.
 
 ---
 

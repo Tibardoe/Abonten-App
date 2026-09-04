@@ -1,4 +1,5 @@
 import {
+  ADMIN_PERMISSION_KEYS,
   AdminForbiddenError,
   AdminUnauthenticatedError,
   effectivePermissions,
@@ -57,7 +58,7 @@ export async function resolveAdminContext(
   }
 
   const roles = (roleRows ?? []).map((r) => r.role_key as AdminRoleKey);
-  const permissions = effectivePermissions(roles);
+  const permissions = await resolvePermissions(serviceClient, roles);
 
   return {
     userId,
@@ -66,6 +67,56 @@ export async function resolveAdminContext(
     permissions,
     reauthenticatedAt: opts?.reauthenticatedAt ?? null,
   };
+}
+
+// Effective permissions come from the admin_role_permission TABLE (the
+// runtime-editable matrix — see Admin › Settings), not the code constant.
+// Safety net: if the table read fails, or a role somehow has zero rows,
+// fall back to the compiled ROLE_PERMISSIONS so a bad matrix edit can't
+// lock a valid admin out. super_admin is always granted every known
+// permission regardless of table state (the DB also makes its rows
+// immutable — migration 20260907091600).
+const KNOWN_PERMISSIONS = new Set<string>(ADMIN_PERMISSION_KEYS);
+
+async function resolvePermissions(
+  serviceClient: SupabaseClient,
+  roles: AdminRoleKey[],
+): Promise<AdminPermissionKey[]> {
+  if (roles.length === 0) return [];
+  const isSuper = roles.includes("super_admin");
+  const perms = new Set<AdminPermissionKey>();
+
+  const { data, error } = await serviceClient
+    .from("admin_role_permission")
+    .select("role_key, permission_key")
+    .in("role_key", roles);
+
+  if (error) {
+    logger.error(
+      `resolveAdminContext: role-permission read failed, using code fallback: ${error.message}`,
+    );
+    for (const p of effectivePermissions(roles)) perms.add(p);
+  } else {
+    const byRole = new Map<string, AdminPermissionKey[]>();
+    for (const r of data ?? []) {
+      const k = r.permission_key as AdminPermissionKey;
+      if (!KNOWN_PERMISSIONS.has(k)) continue;
+      const arr = byRole.get(r.role_key) ?? [];
+      arr.push(k);
+      byRole.set(r.role_key, arr);
+    }
+    for (const role of roles) {
+      const rows = byRole.get(role);
+      // A role with zero rows is almost certainly a bad edit — fall back to
+      // its compiled defaults rather than silently stripping the admin.
+      const list =
+        rows && rows.length > 0 ? rows : effectivePermissions([role]);
+      for (const p of list) perms.add(p);
+    }
+  }
+
+  if (isSuper) for (const p of ADMIN_PERMISSION_KEYS) perms.add(p);
+  return [...perms];
 }
 
 export function assertPermission(

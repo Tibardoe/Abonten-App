@@ -1,9 +1,12 @@
-import { ROLE_PERMISSIONS } from "@abonten/core/adminPermissions";
+import {
+  ADMIN_PERMISSION_KEYS,
+  ADMIN_ROLE_KEYS,
+} from "@abonten/core/adminPermissions";
 import { logger } from "@abonten/core/logger";
 import type {
   AdminContext,
-  AdminPermissionKey,
   AdminRoleKey,
+  RoleMatrix,
 } from "@abonten/types/adminTypes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
@@ -87,15 +90,134 @@ export async function listAdminStaffCore(
   return { status: 200, data: rows };
 }
 
-export function getRoleMatrixCore(
+// super_admin's grant set is immutable (DB trigger + resolveAdminContext
+// hard-guarantee). The editor renders its column read-only.
+const LOCKED_ROLES = ["super_admin"];
+
+export async function getRoleMatrixCore(
+  supabase: SupabaseClient,
   ctx: AdminContext,
-): AdminEnvelope<Record<AdminRoleKey, AdminPermissionKey[]>> {
+): Promise<AdminEnvelope<RoleMatrix>> {
   try {
     assertPermission(ctx, "settings.view");
   } catch (e) {
     return { status: 403, message: (e as Error).message };
   }
-  return { status: 200, data: ROLE_PERMISSIONS };
+
+  const [{ data: roles }, { data: perms }, { data: grantRows, error }] =
+    await Promise.all([
+      supabase
+        .from("admin_role")
+        .select("key, label, description")
+        .order("key"),
+      supabase
+        .from("admin_permission")
+        .select("key, label, description")
+        .order("key"),
+      supabase.from("admin_role_permission").select("role_key, permission_key"),
+    ]);
+
+  if (error) {
+    logger.error(`getRoleMatrixCore failed: ${error.message}`);
+    return { status: 500, message: "Something went wrong" };
+  }
+
+  const grants: Record<string, string[]> = {};
+  for (const r of grantRows ?? []) {
+    const list = grants[r.role_key] ?? [];
+    list.push(r.permission_key);
+    grants[r.role_key] = list;
+  }
+
+  return {
+    status: 200,
+    data: {
+      roles: roles ?? [],
+      permissions: perms ?? [],
+      grants,
+      lockedRoles: LOCKED_ROLES,
+    },
+  };
+}
+
+// Toggle one cell of the role → permission matrix. super_admin only
+// (settings.manage) + step-up, enforced by the transport; the DB trigger
+// makes super_admin's own rows un-writable as a last line of defence.
+export async function setRolePermissionCore(
+  supabase: SupabaseClient,
+  ctx: AdminContext,
+  input: { roleKey: string; permissionKey: string; enabled: boolean },
+  requestMeta?: Record<string, unknown>,
+): Promise<AdminEnvelope<{ grants: string[] }>> {
+  try {
+    assertPermission(ctx, "settings.manage");
+  } catch (e) {
+    return { status: 403, message: (e as Error).message };
+  }
+
+  if (!(ADMIN_ROLE_KEYS as string[]).includes(input.roleKey)) {
+    return { status: 400, message: "Unknown role." };
+  }
+  if (!(ADMIN_PERMISSION_KEYS as string[]).includes(input.permissionKey)) {
+    return { status: 400, message: "Unknown permission." };
+  }
+  if (LOCKED_ROLES.includes(input.roleKey)) {
+    return {
+      status: 400,
+      message: "super_admin permissions can't be changed.",
+    };
+  }
+
+  if (input.enabled) {
+    const { error } = await supabase
+      .from("admin_role_permission")
+      .upsert(
+        { role_key: input.roleKey, permission_key: input.permissionKey },
+        { onConflict: "role_key,permission_key", ignoreDuplicates: true },
+      );
+    if (error) {
+      logger.error(`setRolePermissionCore add failed: ${error.message}`);
+      return { status: 500, message: "Something went wrong" };
+    }
+  } else {
+    const { error } = await supabase
+      .from("admin_role_permission")
+      .delete()
+      .eq("role_key", input.roleKey)
+      .eq("permission_key", input.permissionKey);
+    if (error) {
+      logger.error(`setRolePermissionCore remove failed: ${error.message}`);
+      return { status: 500, message: "Something went wrong" };
+    }
+  }
+
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: "admin.role_matrix.set",
+    targetType: "admin_role",
+    targetId: input.roleKey,
+    summary: `${input.enabled ? "Granted" : "Revoked"} ${input.permissionKey} ${
+      input.enabled ? "to" : "from"
+    } ${input.roleKey}`,
+    after: {
+      roleKey: input.roleKey,
+      permissionKey: input.permissionKey,
+      enabled: input.enabled,
+    },
+    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+  });
+
+  const { data: fresh } = await supabase
+    .from("admin_role_permission")
+    .select("permission_key")
+    .eq("role_key", input.roleKey);
+
+  return {
+    status: 200,
+    message: `${input.roleKey} updated.`,
+    data: { grants: (fresh ?? []).map((r) => r.permission_key) },
+  };
 }
 
 export async function grantAdminRoleCore(
