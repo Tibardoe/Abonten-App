@@ -1,0 +1,266 @@
+# Abonten — Limitations Register (2026-09-04)
+
+Scope: system-wide limitation audit across web, mobile, admin, shared packages,
+DB, integrations, observability, tooling. A *limitation* here includes anything
+that weakens security, financial/data integrity, reliability, scalability,
+maintainability, or cross-platform consistency — **not only bugs**. Items are
+verified against current source / the live DB (project `sderrexhawjbmsugndcq`)
+unless marked *(flagged — needs deeper review)*.
+
+Severity: Critical / High / Medium / Low / Info. Likelihood: High / Med / Low.
+Status: Not started / Planned / In progress / Fixed / Deferred.
+
+Priority order applied (brief §4): security → financial integrity → data
+integrity → authz → ticket/payment correctness → reliability → scalability →
+architecture → performance → observability → maintainability → DX → UX.
+
+---
+
+## CRITICAL
+
+### FIN-001 — Paid ticket issuance is non-atomic; retry path has a reconciliation black hole
+- **Area**: Payments / Ticketing / Data integrity
+- **Problem**: `apps/web/src/utils/generateTicket.ts` issues tickets as a sequence of independent PostgREST calls (QR upload → `ticket` insert → `attendance` insert → `ticket_checkout` → `paid` → `record_organizer_earning`). No DB transaction. Failure modes:
+  1. Crash/error after `ticket` insert but before `ticket_checkout` → `paid`: tickets exist and consume stock, but the checkout stays `pending`; the next `expire_stale_ticket_checkouts` run **restocks inventory that was actually sold** (oversell) and the organizer earning is never recorded.
+  2. Multi-row checkout, row 2 of 3 fails: rows-1 tickets are already committed; the function returns 500 and `releaseTicketQuantity` only gives back row 2's units. Rows-1 tickets are orphaned against a still-`pending` checkout → later restock → oversell.
+  3. Retry via `finalizePaystackPayment` `fulfillment_failed` path re-enters `generateTicket`; the `alreadyBought` guard returns `status: 300`, which the finalizer treats as a failure (`!== 200`) → the attempt is stuck `fulfillment_failed` forever, checkout never marked `paid`, earning never recorded. Buyer charged, has no ticket, no automated recovery.
+- **Root cause**: business logic that mutates 4 tables + calls an RPC was implemented as imperative client calls because it also needs `revalidatePath`/`after` (Next primitives), which kept it out of `@abonten/services` and out of a single DB function.
+- **Impact**: silent oversell, silent organizer under-payment, unrecoverable "paid but no ticket" support tickets. Money + trust.
+- **Severity**: Critical · **Likelihood**: Med (needs a mid-sequence failure — transient Cloudinary/DB error, cold-start timeout, webhook suspend) · rising with volume.
+- **Current workaround**: manual support reconciliation; `record_platform_fee`/`record_organizer_earning` are individually idempotent so a *manual* re-run is safe.
+- **Recommended solution**: move the DB mutation into one `SECURITY DEFINER` RPC `issue_tickets_for_checkout(p_checkout_session_id, p_user_id, p_transaction_id, p_qr jsonb[])` that, in a single transaction: locks the checkout rows, verifies ownership + `pending` + not-expired, inserts tickets + attendance, flips checkout → `paid`, calls `record_organizer_earning`. Make it **idempotent**: if the checkout is already `paid`, return the existing ticket ids with status 200. QR generation + Cloudinary upload stay in `generateTicket` (the only non-DB step); everything else becomes atomic. `finalizePaystackPayment` then treats "already issued" as success.
+- **Dependencies**: touches `generateTicket`, `finalizePaystackPayment`, `registerForFreeEventCore` (free path shares issuance), `retryPaymentFulfillmentCore`. New migration.
+- **Status**: Planned (Phase 2).
+
+### FIN-002 — `record_organizer_earning` failure is swallowed
+- **Area**: Payments / Financial integrity / Observability
+- **Problem**: `generateTicket.ts` fires `record_organizer_earning` for every checkout row via `await Promise.all(rows.map(r => ledgerClient.rpc(...)))` with **no error inspection**. A transient failure means the organizer is never credited for a completed paid sale, nothing retries it, and nothing alerts.
+- **Root cause**: treated as fire-and-forget "ledger side-effect" rather than part of the financial transaction.
+- **Impact**: organizer balance under-states real earnings; discovered only if an organizer disputes a payout. No detection.
+- **Severity**: Critical (money) · **Likelihood**: Low per-call, but unbounded cumulative once volume is real.
+- **Current workaround**: none. RPC is idempotent so a manual re-run fixes a known case.
+- **Recommended solution**: fold the earning insert into the atomic `issue_tickets_for_checkout` RPC (FIN-001) so it cannot partially succeed. Until then: check each RPC result, and on failure `reportError` + emit an `app_error_event` tagged `ledger.earning_failed` with the checkout id so Monitoring surfaces it. A daily reconciliation query (`paid ticket_checkout with no matching earning entry`) as a safety net.
+- **Dependencies**: FIN-001.
+- **Status**: Planned (Phase 2). Interim detection query → Phase 5.
+
+### FIN-003 — Transient Paystack verify error permanently fails a possibly-succeeded charge
+- **Area**: Payments / Reliability / Financial integrity
+- **Problem**: In `finalizePaystackPayment.ts`, a thrown error from `verifyTransaction` (network blip, Paystack 5xx, timeout) runs `markGroup("failed", …)`. The type contract says `failed` is "permanently terminal (a real decline)" and the CAS re-entry filter is `.in("status", ["initiated","pending","fulfillment_failed"])` — **`failed` is excluded**, so a later webhook delivery cannot recover. If the charge actually succeeded on Paystack, the buyer is charged with no ticket and no path back except manual support.
+- **Root cause**: conflating "we couldn't reach Paystack" with "Paystack declined the card".
+- **Impact**: money taken, nothing delivered, no auto-recovery. Worse on mobile-money (Ghana) where verify latency/timeouts are common.
+- **Severity**: Critical · **Likelihood**: Med (Paystack transient errors are routine at scale).
+- **Current workaround**: none automated.
+- **Recommended solution**: on a thrown/transient verify error, revert the group to `pending` (retryable) instead of `failed`; only write `failed` when Paystack explicitly returns a terminal non-success status (`failed`/`abandoned`/`reversed`). Add `processing` older than N minutes to the re-entry set (see REL-001) so a stuck lock also recovers.
+- **Dependencies**: REL-001 (stuck-`processing` reaper).
+- **Status**: Planned (Phase 2).
+
+---
+
+## HIGH
+
+### REL-001 — No reaper for `payment_attempt` stuck in `processing`
+- **Area**: Payments / Reliability
+- **Problem**: `finalizePaystackPayment` CAS-locks an attempt to `processing`, then does ~6 more sequential calls. A crash/timeout after the lock leaves the row `processing` forever. The re-entry filter excludes `processing`, so neither the webhook nor the user's manual retry can pick it up. The checkout inventory is eventually freed by the 30-min expiry sweep, but the *payment* is orphaned.
+- **Root cause**: the lock has no lease/expiry; no job sweeps stale locks.
+- **Impact**: "payment stuck / can't retry" support load; orphaned money if the charge succeeded.
+- **Severity**: High · **Likelihood**: Med at scale (serverless cold-start timeouts, webhook 10s limits).
+- **Recommended solution**: pg_cron `*/5` job `recover_stale_payment_attempts()` that moves `processing` rows older than 15 min back to `fulfillment_failed` (if a `transaction` row exists) or `pending` (if not), so the existing retry paths take over. Alternatively add `updated_at < now() - interval '15 min'` to the re-entry filter.
+- **Dependencies**: none.
+- **Status**: Planned (Phase 2).
+
+### DATA-001 — Checkout expiry ignores in-flight payments → oversell / charged-no-ticket
+- **Area**: Ticketing / Data integrity / Concurrency
+- **Problem**: `expire_stale_ticket_checkouts()` flips any `pending` checkout with `expires_at < now() - 1 min` to `expired` and **restocks its inventory**, with no regard for whether a `payment_attempt` (`initiated`/`pending`/`processing`) is attached to that `checkout_session_id`. Mobile-money OTP authorisation can legitimately outrun the 30-minute window; `finalizePaystackPayment` explicitly parks `pending`/`queued` charges "via the existing 30-minute expiry window" — but that window then *restocks* the seats. The subsequent successful webhook either issues tickets against an `expired` checkout (→ `generateTicket` returns 410, buyer charged, no ticket) or, if stock was resold in between, drives `ticket_type.quantity` negative.
+- **Root cause**: the expiry sweep predates grouped payment attempts and was never made payment-aware.
+- **Impact**: oversell; charged-with-no-ticket; negative inventory.
+- **Severity**: High · **Likelihood**: Med (specifically Ghana mobile money).
+- **Recommended solution**: exclude from the sweep any checkout whose `checkout_session_id` has a `payment_attempt` in a non-terminal state; **and** when a payment attempt is created, extend the checkout's `expires_at` (e.g. +30 min) so a genuine slow authorisation keeps its seats. Belt-and-braces: `reserveTicketQuantity`/restock should `GREATEST(0, …)` and the `ticket_type.quantity` column should get a `CHECK (quantity IS NULL OR quantity >= 0)` (DATA-002) so an oversell fails loudly instead of silently.
+- **Dependencies**: DATA-002 (CHECK), overlaps FIN-001.
+- **Status**: Planned (Phase 2).
+
+### INV-001 — Inventory leak on crash between reservation and checkout-row insert
+- **Area**: Ticketing / Data integrity
+- **Problem**: `validateCheckoutCore` calls `reserveTicketQuantity` (real CAS decrement) for each ticket type, then claims promo usage, then inserts the `ticket_checkout` rows. If the process dies before the insert, the decrements are live but there is **no checkout row for the expiry sweep to reclaim** — the units are lost until an organizer manually edits the ticket type. Manual `rollbackReservations()` only covers in-request errors, not process death.
+- **Root cause**: multi-resource reservation without a transaction or a durable "reservation intent" record.
+- **Impact**: slow inventory bleed; tickets show sold-out while seats are really free.
+- **Severity**: High · **Likelihood**: Low-Med.
+- **Recommended solution**: fold reservation + checkout-row insert into one `create_ticket_checkout(...)` RPC (single transaction — the CAS becomes a `FOR UPDATE` decrement). Then a partial state is impossible. Interim: a low-frequency reconciliation job comparing `Σ ticket_type.quantity + Σ open reservations` against a known-good baseline is hard without an intent table — prefer the RPC.
+- **Dependencies**: shares the "make checkout creation atomic" work with DATA-001.
+- **Status**: Planned (Phase 2).
+
+### DOS-001 — No upper bound on ticket quantity per checkout
+- **Area**: Security / Cost / Reliability / Scalability
+- **Problem**: neither the web action, the mobile route, nor `validateCheckoutCore` caps `quantities[ticketTypeId]`. The mobile route checks only `Number.isInteger(value) && value >= 0`. Against an unlimited (`quantity = null`) ticket type, one authenticated request can create a checkout for millions of units; `generateTicket` then loops generating that many QR codes and Cloudinary uploads.
+- **Root cause**: quantity treated purely as a UI concern.
+- **Impact**: Cloudinary/compute cost blow-up, function timeouts, effective DoS of the checkout path, giant `ticket`/`attendance` writes.
+- **Severity**: High · **Likelihood**: Med (trivial to trigger; also happens by accident via a client bug).
+- **Recommended solution**: enforce `MAX_TICKETS_PER_TICKET_TYPE` and `MAX_TICKETS_PER_ORDER` in `validateCheckoutCore` (the shared choke point → web + mobile both covered) with a named constant in `@abonten/core`; reject with a clear 400. **Implemented in Phase 1.**
+- **Dependencies**: none.
+- **Status**: Fixed (Phase 1) — `@abonten/core/checkoutLimits`, enforced in `validateCheckoutCore`.
+
+### SEC-001 — `SECURITY DEFINER` functions broadly executable by `authenticated`; one has no authz check
+- **Area**: Security / Database
+- **Problem**: 13 `SECURITY DEFINER` functions are `EXECUTE`-able by `authenticated` via `/rest/v1/rpc/*` (Supabase advisor `0029`). Most self-authorize (`cancel_event_and_release_tickets`, `get_event_attendee_contacts`, `request_organizer_payout`, `get_organizer_ledger_transactions` all check `auth.uid()` internally — **verified**). But:
+  - `get_transaction_refundable_amount(p_transaction_id uuid)` — **no authorization check at all**; any signed-in user can read the refundable amount for any transaction id. Only ever called from service-role service code (`issueRefundCore`, `financeAdminCore`) — **verified**, so it can simply be revoked.
+  - The self-authorization in the other 12 is load-bearing and has **zero automated tests**.
+- **Root cause**: functions exposed through PostgREST by default; authz lives in prose + function bodies.
+- **Impact**: `get_transaction_refundable_amount` — minor info disclosure. The class — one missed internal check = privilege escalation / PII leak (`get_event_attendee_contacts` returns attendee emails + phones).
+- **Severity**: High · **Likelihood**: Low (no known missing check beyond the one) but high blast radius.
+- **Recommended solution**: `REVOKE EXECUTE … FROM anon, authenticated` on `get_transaction_refundable_amount` (**Phase 1**). Audit the remaining 12 line-by-line and add a regression test suite that calls each as an unauthorized `authenticated` user and asserts it raises (Phase 6). Consider moving purely-internal ones behind `service_role`.
+- **Dependencies**: test harness (TEST-001).
+- **Status**: In progress — revoke in Phase 1; full audit + tests Phase 6.
+
+### API-001 — No general rate limiting on the mobile API or Server Actions
+- **Area**: Security / Scalability / Cost
+- **Problem**: rate limiting exists only for OTP (`phone_otp_send_log`, per-phone 60s + per-IP cap) and `/api/geocode` (in-memory, ineffective — OBS-001). The other ~88 `/api/mobile/**` routes and ~200 Server Actions have none: report submission, review posting, place-claim requests, checkout validation (creates inventory-reservation churn), promo-code validation (brute-forceable), notification broadcast preview, etc.
+- **Root cause**: no shared limiter primitive; each concern handled ad hoc or not at all.
+- **Impact**: report/review spam, promo-code enumeration, checkout-reservation griefing, Cloudinary-signature request floods, cost amplification. Gets worse with every new user.
+- **Severity**: High (as a growth blocker) · **Likelihood**: High once the platform is public and known.
+- **Recommended solution**: one durable limiter (Postgres table `rate_limit_bucket(key, window_start, count)` with a `SECURITY DEFINER` `consume_rate_limit(key, limit, window)` RPC, or Upstash Redis if a dependency is acceptable) wrapped in a small `@abonten/services` helper; apply to the abuse-prone write endpoints (reports, reviews, claims, checkout validate, promo validate, cloudinary signature, broadcast). Keep reads unthrottled. Also enable Vercel's platform-level protection.
+- **Dependencies**: pick storage (DB vs Redis) — DB keeps the zero-infra principle (brief §48).
+- **Status**: Planned (Phase 3).
+
+### SEC-004 — Service-role JWT embedded inline in a pg_cron command
+- **Area**: Security / Secrets
+- **Problem**: the `cleanupExpiredEvents` cron job's SQL literally contains `'Authorization', 'Bearer eyJ…service_role…'` — a long-lived service-role JWT (exp 2056) sitting in `cron.job.command`, readable by anyone with DB metadata access and captured in any `pg_dump`/schema pull.
+- **Root cause**: quick wiring of an edge-function call from the dashboard.
+- **Impact**: if the DB schema or a backup leaks, so does a full service-role key.
+- **Severity**: High · **Likelihood**: Low.
+- **Recommended solution**: store the token in Supabase Vault (`vault.decrypted_secrets`) and reference it in the cron command, or convert the job to call a `SECURITY DEFINER` SQL function directly instead of an HTTP round-trip. Rotate the exposed key afterward.
+- **Dependencies**: needs a deliberate secret-rotation window.
+- **Status**: Deferred — flagged for owner (needs key rotation coordination).
+
+---
+
+## MEDIUM
+
+### DATA-002 — Missing DB CHECK / UNIQUE constraints on money & inventory columns
+- **Area**: Database / Data integrity
+- **Problem**: no `CHECK` on `ticket_type.price >= 0`, `ticket_type.quantity >= 0`, `promo_code.discount_percentage BETWEEN 0 AND 100`; `ticket.ticket_code` has no `UNIQUE`. All enforced only in Zod/app code. An oversell or a bad admin/RPC write corrupts silently instead of erroring.
+- **Severity**: Medium · **Likelihood**: Med (interacts with DATA-001).
+- **Recommended solution**: add the constraints as `NOT VALID` first, backfill/validate, then `VALIDATE`. `ticket_code` UNIQUE needs a dup scan first. Additive, safe once pre-checked.
+- **Status**: Planned (Phase 2).
+
+### INV-002 — Inventory CAS is a read-then-write over PostgREST, not a single-statement decrement
+- **Area**: Ticketing / Performance / Scalability
+- **Problem**: `reserveTicketQuantity` does `SELECT quantity` then `UPDATE … WHERE quantity = <read value>`; under contention for a hot ticket type this thrashes (many 409 retries client-side) and doubles round-trips.
+- **Severity**: Medium · **Likelihood**: Med for popular on-sale events.
+- **Recommended solution**: single statement `UPDATE ticket_type SET quantity = quantity - $n WHERE id = $id AND (quantity IS NULL OR quantity >= $n) RETURNING quantity` inside the checkout-creation RPC (INV-001). Atomic, one round-trip, no CAS loop.
+- **Status**: Planned (Phase 2, with INV-001).
+
+### DATA-003 — Declared-partitioned tables with zero partitions
+- **Area**: Database
+- **Problem**: `event_media`, `wallet`, `story`, `event_share`, `media_audit` are partitioned parents with no partitions → any insert fails with "no partition of relation found". `story`/`event_media`/`media_audit`/`wallet` are currently unreferenced by app code, `event_share` is used by share tracking.
+- **Severity**: Medium (latent) · **Likelihood**: Low now, High the day someone wires one up.
+- **Recommended solution**: for the genuinely-unused ones, either drop the table or convert to non-partitioned; for `event_share`, add a default partition or a rolling monthly partition + a pg_cron partition-maintenance job (also needed for `review`, whose newest partition is `december_2026`).
+- **Status**: Planned (Phase 2/3).
+
+### DATA-004 — `review` partition maintenance is manual
+- **Area**: Database / Scalability
+- **Problem**: `review` is range-partitioned monthly; partitions currently exist through `december_2026` but there is no job creating future ones. When the last partition's window passes, review inserts fail.
+- **Severity**: Medium · **Likelihood**: High (time-bomb, ~15 months out).
+- **Recommended solution**: pg_cron monthly job that ensures the next 3 months of `review` (and any other rolling-range table) partitions exist; add a `review_default` catch-all as a safety net.
+- **Status**: Planned (Phase 3).
+
+### ARCH-001 — Business logic still leaks into `apps/web` for the two paths that matter most
+- **Area**: Architecture / Maintainability / Cross-platform
+- **Problem**: `generateTicket.ts` and `issueRefund.ts` hold real multi-table logic in `apps/web/src/utils` / `src/actions` because they use `revalidatePath`/`after`/React-email. Mobile fulfilment reaches them only indirectly through `paymentFulfillmentDeps` injected into `finalizePaystackPayment`. The "no logic fork" rule holds *in effect*, but the DB-mutation core of issuance/refund isn't in `@abonten/services` and isn't independently testable.
+- **Severity**: Medium · **Likelihood**: n/a (structural).
+- **Recommended solution**: extract the DB mutations into `@abonten/services` (as the atomic RPCs of FIN-001) + keep only the Next primitives (`revalidatePath`, `after`, email) in the `apps/web` wrapper. This is the holistic fix that also resolves FIN-001/002.
+- **Status**: Planned (Phase 4, delivered alongside Phase 2).
+
+### ARCH-002 — PROJECT.md has decayed as a source of truth
+- **Area**: Maintainability / DX
+- **Problem**: 170 KB, edited in-place with "Resolved 2026-08-xx" notes layered over stale prose; many sections still cite `src/actions/*` / `src/utils/*` paths that moved to `packages/services` in the shared-backend refactor. New contributors (and audits) must cross-check every claim against source.
+- **Severity**: Medium · **Likelihood**: n/a.
+- **Recommended solution**: split into a short evergreen `ARCHITECTURE.md` (regenerated/verified each release) + an append-only `CHANGELOG`-style history; delete superseded prose rather than annotating it. Point CLAUDE.md at the new file.
+- **Status**: Planned (Phase 6).
+
+### OBS-001 — `/api/geocode` rate limit is in-memory (per serverless instance)
+- **Area**: Observability / Cost / Security
+- **Problem**: `RATE_LIMIT_*` counters live in a module-level `Map`; on Vercel each instance has its own, and instances recycle — the limiter is close to a no-op under real traffic on a billed Google proxy.
+- **Severity**: Medium · **Likelihood**: Med.
+- **Recommended solution**: fold into the durable limiter from API-001.
+- **Status**: Planned (Phase 3, with API-001).
+
+### TYPE-001 — Generated DB types exist but aren't used in the hot paths
+- **Area**: Type safety / Maintainability
+- **Problem**: `packages/types/src/database.types.ts` is generated and present, yet `generateTicket.ts`, `validateCheckoutCore.ts`, `finalizePaystackPayment.ts` still use `as unknown as X` and hand-rolled row types. Schema drift in exactly the riskiest code is invisible to `tsc`.
+- **Severity**: Medium · **Likelihood**: Med.
+- **Recommended solution**: type the Supabase clients with `SupabaseClient<Database>` in `@abonten/services` and remove the casts in the payment/checkout/ticket modules; add `supabase gen types` to a CI check so drift fails the build.
+- **Status**: Planned (Phase 6).
+
+### TEST-001 — Zero automated tests in the entire monorepo
+- **Area**: Testing / Reliability
+- **Problem**: no Jest/Vitest/Playwright config anywhere. Payments, inventory concurrency, RLS, refunds, promo allocation, `SECURITY DEFINER` authz — none have executable coverage. Every change is verified only by `tsc` + `next build` + manual smoke.
+- **Severity**: Medium (High for the money path) · **Likelihood**: n/a.
+- **Recommended solution**: add Vitest to `packages/services` and `@abonten/core`; seed with the highest-value cases — `computeLineAmount`/`allocatePromoEligibility` (pure, easy), then integration tests against a local Supabase for `reserveTicketQuantity` concurrency, `finalizePaystackPayment` idempotency/retry, and an RLS/`SECURITY DEFINER` authz matrix. Not coverage-chasing — these specific scenarios.
+- **Status**: Planned (Phase 6).
+
+### MOB-001 — Event reminders are device-local best-effort
+- **Area**: Mobile / Notifications
+- **Problem**: reminder firing is a local `expo-notifications` schedule per device; `event_reminder` stores only the chosen offsets so another device can re-arm. If the OS drops the schedule, the app is uninstalled/reinstalled, or notification permission is revoked, the reminder is silently lost. No server-side send.
+- **Severity**: Medium · **Likelihood**: Med.
+- **Recommended solution**: add a server-side reminder sender (pg_cron scanning `event_reminder` + `event.starts_at`, pushing via the existing `device_token` + Expo push path) as the source of truth; keep the local schedule as an offline fallback.
+- **Status**: Deferred — product call on push volume/UX.
+
+### BIZ-001 — "One ticket per event per user" rule is inconsistent and undocumented
+- **Area**: Business logic / UX
+- **Problem**: `validateCheckoutCore` and `generateTicket` both hard-block a purchase if the user already has an `active`/`used` ticket for the event (`status: 300 already_purchased`) — but a single checkout may contain `quantity > 1`. So "one per person" is enforced across sessions but not within one. It also permanently blocks legitimate re-purchase (different date of a multi-date event, buying for a friend later). Not stated in any product doc.
+- **Severity**: Medium · **Likelihood**: High (real users will hit it).
+- **Recommended solution**: **product decision required.** Safest current interpretation = keep the guard but scope it to `(event_id, occurrence_id)` and allow re-purchase after a cancellation; make the copy explain it. Flag for confirmation (brief §40).
+- **Status**: Deferred — needs product sign-off.
+
+### SEC-002 — `enforce_avatar_public_id_owner` has a mutable `search_path`
+- **Area**: Security / Database
+- **Problem**: advisor `0011`; the trigger function doesn't pin `search_path`, so a crafted `search_path` at call time could resolve unqualified names unexpectedly.
+- **Severity**: Medium · **Likelihood**: Low.
+- **Recommended solution**: `ALTER FUNCTION … SET search_path = ''` + schema-qualify its body. **Implemented in Phase 1.**
+- **Status**: Fixed (Phase 1).
+
+### SEC-003 — Auth hardening toggles off; Postgres has pending security patches
+- **Area**: Security
+- **Problem**: Supabase "leaked password protection" (HaveIBeenPwned) is disabled; `supabase-postgres-15.8.1.044` has outstanding security patches (advisor).
+- **Severity**: Medium · **Likelihood**: Low (Google OAuth is the main sign-in; passwords are only the internal one-time phone-auth rotation).
+- **Recommended solution**: enable leaked-password protection in Auth settings; schedule the Postgres minor upgrade in a maintenance window.
+- **Status**: Deferred — flagged for owner (dashboard toggle + upgrade window).
+
+### DB-PERF-001 — Unindexed FKs and a large "unused index" set
+- **Area**: Database / Performance
+- **Problem**: 33 unindexed FKs — mostly `*_moderated_by_fkey` across `event`/`place`/`review*`/`highlight` (from the moderation-state migration), plus long-standing ones on `subscription.plan_id`, `subscription.transaction_id`, `subscription_checkout.subscription_plan_name`, `user_info.status_id`, `wallet.user_id`, `story.user_id`, `media_audit.user_id`. Separately, 65 indexes report zero scans — but most are freshly created (admin tables, the `20260907091000` FK covering set, promo/`payment_attempt`) so "unused" is expected for now.
+- **Severity**: Medium (FKs) / Low (unused) · **Likelihood**: Med.
+- **Recommended solution**: add covering indexes for the moderation FKs as **partial** `WHERE moderated_by IS NOT NULL` (they're almost all NULL) and plain btree for the subscription/user_info/wallet ones. **Implemented in Phase 1.** Do **not** drop any "unused" index this pass — re-run the advisor after ~30 days of production traffic and drop only then.
+- **Status**: Fixed (FK indexes, Phase 1). Unused-index review → Deferred (needs traffic).
+
+### DATA-005 — Orphaned `log_user_changes()` / `audit_log`
+- **Area**: Database / Maintainability
+- **Problem**: `log_user_changes()` inserts into `audit_log`, which is not created anywhere and is attached to no trigger. Dead code that would error if ever wired.
+- **Severity**: Low-Medium · **Likelihood**: Low.
+- **Recommended solution**: drop the function, or (if user-change history is wanted) create `audit_log` + the trigger deliberately. Given `admin_audit_log` + moderation tables already exist, most likely: drop it.
+- **Status**: Planned (Phase 6).
+
+---
+
+## LOW / INFORMATIONAL
+
+| ID | Area | Problem | Rec. | Status |
+|---|---|---|---|---|
+| LOW-001 | Web | `apps/web/src/app/api/user-profile/route.tsx` queries the non-existent view `user_profile_detail` (singular) → 500 whenever hit. | Point at `user_profile_details` or delete the route if unused. | Planned (Phase 7) |
+| LOW-002 | Web | `useUserProfile.ts` reads `displayName/email/phone/createdAt/lastSignInAt` off `user_info` — columns don't exist, always `undefined`. | Source from the Auth user object or drop the fields. | Planned (Phase 7) |
+| LOW-003 | DB | `pg_trgm` installed in `public` schema (advisor `0014`). | Move to `extensions` schema in a migration. | Deferred |
+| LOW-004 | DX | `apps/web/src/landing Page/` has a literal space in the directory name. | Rename when a refactor next touches it. | Deferred |
+| LOW-005 | DX | `README.md` is the `create-next-app` default. | Replace with a real overview + link to `docs/`. | Planned (Phase 6) |
+| LOW-006 | Web | Next 16 "Cache Components" migration left half-done (`// TODO` across ~30 route files, one `instant=false` active). | Finish or formally defer with a tracking issue; don't leave TODOs indefinitely. | Deferred |
+| LOW-007 | DB | Inconsistent UUID default (`uuid_generate_v4()` vs `gen_random_uuid()`) across tables. | Standardise on `gen_random_uuid()` opportunistically. | Deferred |
+| LOW-008 | Config | Vestigial `NEXTAUTH_*` / `GOOGLE_CLIENT_*` env vars with no `next-auth` dependency. | Remove from env templates. | Deferred |
+| LOW-009 | Admin | `admin_audit_log`, `admin_*`, `app_error_*`, observability tables show "RLS enabled, no policy" (advisor `0008`). Intentional (service-role only) but the advisor will keep flagging it. | Add an explicit `USING (false)` policy + a comment, so intent is legible and the advisor is quiet. | Planned (Phase 5) |
+| LOW-010 | Mobile | `apps/mobile/src/features/discovery/useGeocode.ts` calls the web geocode proxy — subject to OBS-001's broken limiter. | Covered by API-001 fix. | Planned (Phase 3) |
+
+---
+
+## Cross-cutting observations
+
+- **Idempotency is good where it was designed in** (`record_organizer_earning`, `record_platform_fee`, `transaction.paystack_reference` UNIQUE, the `payment_attempt` CAS lock) and **absent where it wasn't** (`generateTicket` as a whole, the `fulfillment_failed`↔`already_bought` interaction).
+- **Atomicity is the recurring root cause.** FIN-001, FIN-002, DATA-001, INV-001, INV-002 all dissolve if checkout-creation and ticket-issuance each become one `SECURITY DEFINER` RPC. That single architectural move is the highest-leverage fix in this register.
+- **The service-role-after-identity-check pattern is sound** and consistently applied. The gap is that the *identity checks inside `SECURITY DEFINER` functions* have no test coverage (SEC-001, TEST-001).
+- **No overengineering needed.** Every recommendation stays within "modular monolith + Postgres RPCs + pg_cron + one durable rate-limit table". No queue, no Redis (unless chosen for API-001), no new service.

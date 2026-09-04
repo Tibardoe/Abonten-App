@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
+import { validateCheckoutQuantities } from "@abonten/core/checkoutLimits";
 import {
   allocatePromoEligibility,
   computeLineAmount,
@@ -70,6 +71,16 @@ export async function validateCheckoutCore(
   userId: string,
   { eventId, quantities, promoCode, occurrenceId }: CheckoutDetailsProp,
 ): Promise<ValidateCheckoutResult> {
+  // Upper-bound the requested quantities before touching inventory. Both
+  // transports (web action + /api/mobile/checkout/validate) reach this
+  // shared core, so this one guard covers them both — see
+  // @abonten/core/checkoutLimits (limitation DOS-001).
+  const quantityCheck = validateCheckoutQuantities(quantities);
+
+  if (!quantityCheck.ok) {
+    return { status: 400, message: quantityCheck.message };
+  }
+
   // Reclaim anything that's timed out — for this user or anyone else —
   // before deciding whether a pending checkout is blocking this request.
   // This calls the same atomic sweep the scheduled cron job runs (see
