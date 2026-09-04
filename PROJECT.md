@@ -898,8 +898,9 @@ path smoke above.
   middleware feeding `app_request_metric` (the ingest route + rollup view exist; nothing samples
   into them yet); mobile request metrics; runtime-editable role matrix (the matrix is code-defined
   in `@abonten/core/adminPermissions` + the DB seed — making `admin_role_permission` the live
-  source of truth is a deliberate, security-sensitive change left for its own plan); Sentry
-  `also-send` adapter; Notification operations.
+  source of truth is a deliberate, security-sensitive change left for its own plan);
+  Notification operations.
+- ~~Sentry `also-send` adapter~~ **DONE** — see §23.10.
   _(Claims + content-browse + Events/Places/Organizers = Phase 2 §23.8b; read-only Finance = Phase 3
   §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d; global
   search + bulk report-group resolution = Phase 5 §23.8e.)_
@@ -922,6 +923,37 @@ path smoke above.
   first `super_admin` (`insert into admin_user … ; insert into admin_user_role …`).
 - Not device/live verified: the reporting round-trip on a real device, the money-path admin
   actions (none in Phase 1), push, the health cron against a live deploy.
+
+### 23.10 Sentry (apps/web) — 2026-09-04
+
+`@sentry/nextjs` v10 wired into **`apps/web` only** (the mobile app and `apps/admin` each get
+their own Sentry project later). Manual App-Router setup, no wizard-generated cruft:
+
+- **Config files** (`apps/web/src/`): `instrumentation.ts` (`register()` + `onRequestError =
+  Sentry.captureRequestError` — covers Server Components, Route Handlers, Server Actions),
+  `instrumentation-client.ts` (browser init + `onRouterTransitionStart`), `sentry.server.config.ts`,
+  `sentry.edge.config.ts` (edge = `proxy.ts` / middleware).
+- **Gating**: every `Sentry.init` sets `enabled: Boolean(dsn) && NODE_ENV === "production"`, so
+  local `next dev` never reports. Vercel **preview and production both send**, separated by the
+  `environment` tag (`VERCEL_ENV` → `NEXT_PUBLIC_VERCEL_ENV` on the client, then `NODE_ENV`).
+  `sendDefaultPii: false`. `tracesSampleRate: 0.1`. No session-replay / feedback widget.
+- **Build plugin** (`withSentryConfig` in `next.config.ts`, wraps `withNextIntl(nextConfig)`):
+  `org: "abonten-hub"`, `project: "abonten-web"`, `authToken: process.env.SENTRY_AUTH_TOKEN`
+  (server/CI only — never `NEXT_PUBLIC_`, never committed; local builds skip upload when unset),
+  `widenClientFileUpload: true`, `disableLogger: true`, `sourcemaps.deleteSourcemapsAfterUpload:
+  true` (maps uploaded to Sentry, not served publicly), `telemetry: false`, `silent: !CI`.
+  Release name is auto-derived by the plugin from the git SHA / `VERCEL_GIT_COMMIT_SHA`.
+- **also-send adapter**: `POST /api/observability/error` mirrors every ingested error into Sentry
+  via `forwardToSentry()` — **only `platform === "web" | "api"`**, a no-op when the SDK is
+  disabled. The self-hosted `app_error_event` / `app_error_group` pipeline is unchanged and still
+  the primary store; Sentry is the secondary sink. `global-error.tsx` also calls
+  `Sentry.captureException` alongside the existing `reportClientError`.
+- **Env** (documented in the new `apps/web/.env.example`): `NEXT_PUBLIC_SENTRY_DSN` + `SENTRY_DSN`
+  (same value; server fallback), `SENTRY_AUTH_TOKEN` (CI/Vercel only), optional
+  `NEXT_PUBLIC_SENTRY_ENVIRONMENT`. `.gitignore` now excludes `.env.sentry-build-plugin`.
+- Verified: `turbo typecheck --filter=@abonten/web` + `next build` (apps/web) both green with the
+  wrapper active; biome clean on touched files. Not verified live — needs a deploy with the DSN
+  set and a triggered test error.
 
 ---
 

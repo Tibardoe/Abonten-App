@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
@@ -81,4 +82,29 @@ const nextConfig: NextConfig = {
 
 const withNextIntl = createNextIntlPlugin();
 
-export default withNextIntl(nextConfig);
+// Sentry wraps the fully-composed config. The bundler plugin only uploads
+// source maps when SENTRY_AUTH_TOKEN is present (set in CI / Vercel, never
+// committed) — local `next build` succeeds without it, just skipping upload.
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: "abonten-hub",
+  project: "abonten-web",
+
+  // Only chatter about source-map upload when running in CI.
+  silent: !process.env.CI,
+
+  // Server-only token for uploading source maps + creating the release.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Upload a wider set of client maps so minified stack traces resolve.
+  widenClientFileUpload: true,
+
+  // Tree-shake Sentry's own debug logging out of the production bundle.
+  disableLogger: true,
+
+  // Upload maps to Sentry for prod debugging, then delete them from the
+  // deployed output so they're never served publicly.
+  sourcemaps: { deleteSourcemapsAfterUpload: true },
+
+  // Don't send anonymous usage data to Sentry from the build.
+  telemetry: false,
+});

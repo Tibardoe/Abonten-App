@@ -4,7 +4,45 @@ import { logger } from "@abonten/core/logger";
 import type { ErrorEventPayload } from "@abonten/core/reportError";
 import { ingestErrorCore } from "@abonten/services/admin/observability/observabilityCore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
+
+// Also-send adapter: every error that lands in the self-hosted pipeline is
+// mirrored into Sentry so both surfaces stay in sync. Only web + api events
+// go to the `abonten-web` project — the mobile app reports into its own
+// Sentry project. A no-op when the SDK is disabled (dev / no DSN).
+function forwardToSentry(p: ErrorEventPayload): void {
+  if (p.platform !== "web" && p.platform !== "api") return;
+  if (!Sentry.getClient()) return;
+
+  const err = new Error(p.message || p.errorType);
+  err.name = p.errorType || "Error";
+  if (p.stack) err.stack = p.stack;
+
+  Sentry.captureException(err, {
+    level:
+      p.severity === "fatal"
+        ? "fatal"
+        : p.severity === "warning"
+          ? "warning"
+          : p.severity === "info"
+            ? "info"
+            : "error",
+    fingerprint: [p.fingerprint],
+    tags: {
+      "observed.platform": p.platform,
+      "observed.source": "observability-ingest",
+      ...(p.route ? { "observed.route": p.route } : {}),
+    },
+    extra: {
+      appVersion: p.appVersion,
+      release: p.release,
+      occurredAt: p.occurredAt,
+      ...(p.context ?? {}),
+    },
+    ...(p.userId ? { user: { id: p.userId } } : {}),
+  });
+}
 
 // POST /api/observability/error
 //
@@ -79,6 +117,7 @@ export async function POST(req: Request) {
 
   try {
     const res = await ingestErrorCore(getSupabaseServiceClient(), payload);
+    forwardToSentry(payload);
     return NextResponse.json({ status: res.status }, { status: res.status });
   } catch (e) {
     logger.error("observability/error ingest failed", e);
