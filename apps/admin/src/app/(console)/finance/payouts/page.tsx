@@ -8,9 +8,12 @@ import {
   money,
   timeAgo,
 } from "@/components/ui";
+import { requireAdmin } from "@/lib/adminGuard";
 import { loadPayouts } from "@/lib/data";
+import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
 import { FinanceTabs } from "../FinanceTabs";
+import { PayoutRowActions } from "../PayoutRowActions";
 
 function payoutTone(s: string) {
   return s === "paid" || s === "completed" || s === "succeeded"
@@ -26,10 +29,17 @@ export default async function PayoutsPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const res = await loadPayouts({
-    status: sp.status || undefined,
-    cursor: sp.cursor ?? null,
-  });
+  const [ctx, res] = await Promise.all([
+    requireAdmin(),
+    loadPayouts({
+      status: sp.status || undefined,
+      cursor: sp.cursor ?? null,
+    }),
+  ]);
+  const canManage = ctx.permissions.includes("finance.payout");
+  const stepUpFresh =
+    !!ctx.reauthenticatedAt &&
+    Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
 
   return (
     <div>
@@ -53,6 +63,7 @@ export default async function PayoutsPage({
               <Th>Status</Th>
               <Th>Requested</Th>
               <Th>Processed</Th>
+              {canManage && <Th />}
             </tr>
           </thead>
           <tbody>
@@ -84,6 +95,17 @@ export default async function PayoutsPage({
                 <Td className="whitespace-nowrap text-muted-foreground">
                   {p.processedAt ? timeAgo(p.processedAt) : "—"}
                 </Td>
+                {canManage && (
+                  <Td>
+                    {p.status === "processing" ? (
+                      <PayoutRowActions
+                        payoutId={p.id}
+                        canManage={canManage}
+                        stepUpFresh={stepUpFresh}
+                      />
+                    ) : null}
+                  </Td>
+                )}
               </tr>
             ))}
           </tbody>

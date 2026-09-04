@@ -894,7 +894,7 @@ path smoke above.
 
 ### 23.9 Phase 1 — deferred / open
 
-- Admin-initiated refunds/payouts (Finance module is read-only).
+- ~~Admin-initiated refunds/payouts~~ **DONE** — see §23.14.
 - ~~Sentry `also-send` adapter~~ **DONE** — see §23.10.
 - ~~Sampled request-timing metrics / mobile request metrics~~ **DONE (mobile)** — see §23.11.
   Web + API request performance is now Sentry's job (`tracesSampleRate`); `app_request_metric`
@@ -1040,6 +1040,42 @@ one to a segment.
   + `/notifications/[id]` present); biome clean; rolled-back live SQL smoke — the resend row
   copy, an all-users broadcast insert, and the `event_attendees` resolve query all run clean.
   Not exercised end-to-end through the console UI.
+
+### 23.14 Admin-initiated refunds & payouts — 2026-09-04
+
+The Finance ops centre gains its first **money-path writes**. All three are `finance.refund` /
+`finance.payout` (both in `STEP_UP_PERMISSIONS`), re-checked server-side, `assertStepUpFresh` in
+the transport, and `admin_audit_log`ged with a required free-text reason.
+
+- **Refund** — `refundTransactionAdminCore` is a thin wrapper over the existing `issueRefundCore`
+  (the same second trust context `cancelEvent` uses: service-role client, no `expectedUserId`).
+  No new money logic — `issueRefundCore` is idempotent, does the partial Paystack refund of the
+  ticket revenue only (fee retained), and records the `refund_hold` + fee-adjustment via the
+  tested `record_*` RPCs. UI: a `RefundPanel` on `/finance/transactions/[id]` (confirm step,
+  hidden once `refunded` / `refund_pending`).
+- **Payout settlement** — migration `20260907091800` adds `admin_settle_payout(p_payout_id,
+  p_status, p_failure_reason)` (SECURITY DEFINER, `search_path=''`, `service_role`-only):
+  `processing → completed` keeps the `payout_hold` (money is gone); `→ failed` / `→ cancelled`
+  insert one `payout_release` ledger entry (`+abs(amount)`) so the reserved balance returns.
+  Idempotent — only a `processing` payout moves, release written at most once. UI: `Settle…`
+  row action on `/finance/payouts` (processing rows only).
+- **Payout origination** — same migration adds `admin_create_payout(p_organizer_id,
+  p_payout_account_id, p_amount, p_currency)` — a verbatim copy of `request_organizer_payout`'s
+  body with the organizer id as a parameter instead of `auth.uid()` (re-verifies account
+  ownership + recomputes available balance from the ledger with the same `is_event_settled` /
+  `payout_hold` / `payout_release` filter). Support uses it when an organizer can't withdraw
+  themselves. UI: `CreatePayoutPanel` on `/finance/organizers/[id]`. There is still no Paystack
+  transfer integration anywhere — disbursement stays a manual bank transfer, then mark the
+  payout completed.
+- Schemas `adminRefundSchema` / `settlePayoutSchema` / `createPayoutSchema`; actions
+  `refundTransaction` / `settlePayout` / `createPayout` in `apps/admin/src/server/actions.ts`.
+- Verified: `turbo typecheck` 11/11; `next build` apps/web + apps/admin green; biome clean;
+  `get_advisors` — both new RPCs are `service_role`-only, `search_path`-pinned, not flagged.
+  Rolled-back live SQL smokes: `admin_settle_payout` completed (status flips, hold retained) /
+  failed (one `payout_release` of `+amount`) / re-settle raises; `admin_create_payout` rejects a
+  foreign account, a non-positive amount, and an over-balance draw. **The refund path itself was
+  NOT re-exercised live** (it calls Paystack) — the wrapper adds only the permission check +
+  audit over the already-verified `issueRefundCore`.
 
 ---
 

@@ -143,6 +143,26 @@ export const reviewClaimSchema = z.object({
   expectedStatus: z.enum(["pending", "approved", "rejected"]).optional(),
 });
 
+export const adminRefundSchema = z.object({
+  transactionId: z.string().uuid(),
+  reason: z.string().trim().min(1, "A reason is required").max(2000),
+});
+
+export const settlePayoutSchema = z.object({
+  payoutId: z.string().uuid(),
+  status: z.enum(["completed", "failed", "cancelled"]),
+  failureReason: z.string().trim().max(500).optional(),
+  reason: z.string().trim().min(1, "A reason is required").max(2000),
+});
+
+export const createPayoutSchema = z.object({
+  organizerId: z.string().uuid(),
+  payoutAccountId: z.string().uuid(),
+  amount: z.number().positive("Enter an amount greater than zero"),
+  currency: z.string().trim().length(3),
+  reason: z.string().trim().min(1, "A reason is required").max(2000),
+});
+
 export const resendNotificationSchema = z.object({
   id: z.string().uuid(),
 });

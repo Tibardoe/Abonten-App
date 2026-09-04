@@ -7,8 +7,11 @@ import {
   money,
   timeAgo,
 } from "@/components/ui";
+import { requireAdmin } from "@/lib/adminGuard";
 import { loadOrganizerFinance } from "@/lib/data";
+import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
+import { CreatePayoutPanel } from "../../CreatePayoutPanel";
 
 function payoutTone(s: string) {
   return s === "paid" || s === "completed" || s === "succeeded"
@@ -24,11 +27,18 @@ export default async function OrganizerFinancePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const res = await loadOrganizerFinance(id);
+  const [ctx, res] = await Promise.all([
+    requireAdmin(),
+    loadOrganizerFinance(id),
+  ]);
   if (res.status !== 200 || !res.data) {
     return <EmptyState>{res.message ?? "Not found."}</EmptyState>;
   }
   const f = res.data;
+  const canCreatePayout = ctx.permissions.includes("finance.payout");
+  const stepUpFresh =
+    !!ctx.reauthenticatedAt &&
+    Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
 
   return (
     <div>
@@ -96,6 +106,16 @@ export default async function OrganizerFinancePage({
               ))}
             </ul>
           )}
+          <div className="mt-3">
+            <CreatePayoutPanel
+              organizerId={f.organizerId}
+              currency={f.currency}
+              outstandingLabel={money(f.outstanding, f.currency)}
+              accounts={f.payoutAccounts}
+              canCreate={canCreatePayout}
+              stepUpFresh={stepUpFresh}
+            />
+          </div>
         </Card>
 
         <Card className="p-4">
