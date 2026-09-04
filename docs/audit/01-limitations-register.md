@@ -30,7 +30,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Current workaround**: manual support reconciliation; `record_platform_fee`/`record_organizer_earning` are individually idempotent so a *manual* re-run is safe.
 - **Recommended solution**: move the DB mutation into one `SECURITY DEFINER` RPC `issue_tickets_for_checkout(p_checkout_session_id, p_user_id, p_transaction_id, p_qr jsonb[])` that, in a single transaction: locks the checkout rows, verifies ownership + `pending` + not-expired, inserts tickets + attendance, flips checkout → `paid`, calls `record_organizer_earning`. Make it **idempotent**: if the checkout is already `paid`, return the existing ticket ids with status 200. QR generation + Cloudinary upload stay in `generateTicket` (the only non-DB step); everything else becomes atomic. `finalizePaystackPayment` then treats "already issued" as success.
 - **Dependencies**: touches `generateTicket`, `finalizePaystackPayment`, `registerForFreeEventCore` (free path shares issuance), `retryPaymentFulfillmentCore`. New migration.
-- **Status**: Planned (Phase 2).
+- **Status**: **Fixed (Phase 2)** — migration `20260907093200_issue_tickets_for_checkout_rpc.sql`: `issue_tickets_for_checkout(checkout_session_id, user_id, transaction_id, metadata, ticket_expires_at, tickets)` does the lock + idempotency check + ticket/attendance insert + checkout→paid + `record_organizer_earning` in one transaction; returns existing tickets (`already_issued=true`) if the checkout is already paid. Authorization for a paid issuance requires a matching `payment_attempt` (`processing`/`succeeded`) **and** a `transaction.status='successful'` row owned by the caller — a free issuance requires every row priced at exactly 0 — so it's safe to grant `authenticated` (the client-verify fulfilment path runs as the buyer). `generateTicket.ts` now only does QR generation/Cloudinary upload, then calls the RPC; it also checks "all rows already paid" **before** the `alreadyBought` guard, closing the retry black hole. Live-verified: idempotent-replay smoke against a real paid checkout returned the existing ticket with `already_issued=true` and made zero writes. `registerForFreeEventCore` (the one-click RSVP path, no checkout row) was not touched — it was already a single ticket + attendance insert with a much smaller blast radius; revisit only if it shows the same failure class in practice.
 
 ### FIN-002 — `record_organizer_earning` failure is swallowed
 - **Area**: Payments / Financial integrity / Observability
@@ -41,7 +41,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Current workaround**: none. RPC is idempotent so a manual re-run fixes a known case.
 - **Recommended solution**: fold the earning insert into the atomic `issue_tickets_for_checkout` RPC (FIN-001) so it cannot partially succeed. Until then: check each RPC result, and on failure `reportError` + emit an `app_error_event` tagged `ledger.earning_failed` with the checkout id so Monitoring surfaces it. A daily reconciliation query (`paid ticket_checkout with no matching earning entry`) as a safety net.
 - **Dependencies**: FIN-001.
-- **Status**: Planned (Phase 2). Interim detection query → Phase 5.
+- **Status**: **Fixed (Phase 2)**, folded into `issue_tickets_for_checkout` — `record_organizer_earning` now runs inside the same transaction as the ticket insert and checkout state change, so it cannot silently fail independently of the purchase. A daily reconciliation query as an extra safety net is still Planned (Phase 5).
 
 ### FIN-003 — Transient Paystack verify error permanently fails a possibly-succeeded charge
 - **Area**: Payments / Reliability / Financial integrity
@@ -52,7 +52,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Current workaround**: none automated.
 - **Recommended solution**: on a thrown/transient verify error, revert the group to `pending` (retryable) instead of `failed`; only write `failed` when Paystack explicitly returns a terminal non-success status (`failed`/`abandoned`/`reversed`). Add `processing` older than N minutes to the re-entry set (see REL-001) so a stuck lock also recovers.
 - **Dependencies**: REL-001 (stuck-`processing` reaper).
-- **Status**: Planned (Phase 2).
+- **Status**: **Fixed (Phase 2)** — a thrown/network error from `verifyTransaction` now reverts the group to `pending` (retryable via the CAS lock and `retryPaymentFulfillmentCore`) instead of `failed`. `failed` is reserved for Paystack's own terminal `failed`/`abandoned`/`reversed` statuses or a real amount/currency mismatch — unchanged.
 
 ---
 
@@ -66,7 +66,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: High · **Likelihood**: Med at scale (serverless cold-start timeouts, webhook 10s limits).
 - **Recommended solution**: pg_cron `*/5` job `recover_stale_payment_attempts()` that moves `processing` rows older than 15 min back to `fulfillment_failed` (if a `transaction` row exists) or `pending` (if not), so the existing retry paths take over. Alternatively add `updated_at < now() - interval '15 min'` to the re-entry filter.
 - **Dependencies**: none.
-- **Status**: Planned (Phase 2).
+- **Status**: **Fixed (Phase 2)** — both halves shipped: `recover_stale_payment_attempts()` runs every 5 min via pg_cron (`service_role`-only) and does exactly this; `finalizePaystackPayment` also self-heals a stuck `processing` primary attempt (>15 min old) at the top of its own next invocation, so a caller doesn't have to wait for the next cron tick. Live-verified: job present in `cron.job`, active, `*/5 * * * *`.
 
 ### DATA-001 — Checkout expiry ignores in-flight payments → oversell / charged-no-ticket
 - **Area**: Ticketing / Data integrity / Concurrency
@@ -76,7 +76,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: High · **Likelihood**: Med (specifically Ghana mobile money).
 - **Recommended solution**: exclude from the sweep any checkout whose `checkout_session_id` has a `payment_attempt` in a non-terminal state; **and** when a payment attempt is created, extend the checkout's `expires_at` (e.g. +30 min) so a genuine slow authorisation keeps its seats. Belt-and-braces: `reserveTicketQuantity`/restock should `GREATEST(0, …)` and the `ticket_type.quantity` column should get a `CHECK (quantity IS NULL OR quantity >= 0)` (DATA-002) so an oversell fails loudly instead of silently.
 - **Dependencies**: DATA-002 (CHECK), overlaps FIN-001.
-- **Status**: Planned (Phase 2).
+- **Status**: **Fixed (Phase 2)** — `expire_stale_ticket_checkouts()` now excludes any checkout whose `checkout_session_id` has a `payment_attempt` in `initiated`/`pending`/`processing`, so a slow mobile-money authorisation keeps its seats through the sweep. The "bump `expires_at` when a payment attempt starts" half of the original recommendation was **not** implemented — the exclusion alone removes the oversell/charged-no-ticket failure mode; a live-abandoned attempt still eventually times out and releases normally once it's no longer in a live status. DATA-002's CHECK constraints (`quantity >= 0`, etc.) also shipped as the belt-and-braces backstop.
 
 ### INV-001 — Inventory leak on crash between reservation and checkout-row insert
 - **Area**: Ticketing / Data integrity
@@ -139,7 +139,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Problem**: no `CHECK` on `ticket_type.price >= 0`, `ticket_type.quantity >= 0`, `promo_code.discount_percentage BETWEEN 0 AND 100`; `ticket.ticket_code` has no `UNIQUE`. All enforced only in Zod/app code. An oversell or a bad admin/RPC write corrupts silently instead of erroring.
 - **Severity**: Medium · **Likelihood**: Med (interacts with DATA-001).
 - **Recommended solution**: add the constraints as `NOT VALID` first, backfill/validate, then `VALIDATE`. `ticket_code` UNIQUE needs a dup scan first. Additive, safe once pre-checked.
-- **Status**: Planned (Phase 2).
+- **Status**: **Fixed (Phase 2)** — migration `20260907093100_phase2_ticketing_constraints.sql`. Pre-migration scan confirmed zero existing violations for all four (verified via `execute_sql` before applying), so each `CHECK` was added `NOT VALID` then `VALIDATE`d in the same migration, and `ticket_code` got a partial `UNIQUE` index (`ticket` isn't partitioned).
 
 ### INV-002 — Inventory CAS is a read-then-write over PostgREST, not a single-statement decrement
 - **Area**: Ticketing / Performance / Scalability

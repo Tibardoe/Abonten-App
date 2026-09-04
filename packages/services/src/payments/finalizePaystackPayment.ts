@@ -33,7 +33,17 @@ type PaymentAttemptFullRow = {
   place_promotion_checkout_id: string | null;
   event_promotion_checkout_id: string | null;
   transaction_id: string | null;
+  updated_at: string;
 };
+
+// REL-001: a crash/timeout between the CAS lock below (initiated/pending/
+// fulfillment_failed -> processing) and this function returning leaves the
+// row stuck in 'processing' forever — 'processing' was never in the CAS
+// re-entry list, so neither a webhook redelivery nor a user-triggered retry
+// could ever pick it back up. The pg_cron job `recover-stale-payment-
+// attempts` (every 5 min) is the systemic fix; this is a same-request
+// self-heal so a caller doesn't have to wait for the next cron tick.
+const STUCK_PROCESSING_MINUTES = 15;
 
 export type FinalizeResult =
   | { status: "succeeded" }
@@ -50,7 +60,7 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id";
+  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id, updated_at";
 
 export async function finalizePaystackPayment(
   supabase: SupabaseClient,
@@ -73,6 +83,25 @@ export async function finalizePaystackPayment(
 
   if (primary.status === "succeeded") {
     return { status: "succeeded" };
+  }
+
+  // Self-heal a stuck lock (see STUCK_PROCESSING_MINUTES above) before the
+  // CAS below, so this same call can recover it instead of returning
+  // 'already_processing' for an attempt nothing is actually working on.
+  if (
+    primary.status === "processing" &&
+    Date.now() - new Date(primary.updated_at).getTime() >
+      STUCK_PROCESSING_MINUTES * 60 * 1000
+  ) {
+    const recoveredStatus = primary.transaction_id
+      ? "fulfillment_failed"
+      : "pending";
+    await supabase
+      .from("payment_attempt")
+      .update({ status: recoveredStatus, updated_at: new Date() })
+      .eq("id", primary.id)
+      .eq("status", "processing");
+    primary.status = recoveredStatus;
   }
 
   if (!primary.provider_reference) {
@@ -172,14 +201,23 @@ export async function finalizePaystackPayment(
     verification = await verifyTransaction(primary.provider_reference);
   } catch (error) {
     logger.error(`finalizePaystackPayment: verify call failed (${error})`);
-    // A transient Paystack/network failure shouldn't permanently fail the
-    // payment — leave it retryable so a later webhook delivery (or another
-    // manual verify) can try again instead of stranding a real payment.
-    await markGroup("failed", {
-      failure_reason: "Could not reach Paystack to verify this payment",
-    });
+    // FIN-003: a transient Paystack/network failure (or a response Paystack
+    // sent that doesn't match the expected shape) is not a decline — it
+    // must not permanently fail a charge that may well have succeeded.
+    // Revert to 'pending' (not 'failed'): 'pending' stays in every re-entry
+    // set (this function's CAS lock above, and retryPaymentFulfillmentCore),
+    // so a later webhook delivery or manual retry can actually recover the
+    // payment. 'failed' is reserved for a genuine terminal decline from
+    // Paystack itself, handled below.
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "pending", updated_at: new Date() })
+      .in(
+        "id",
+        groupMembers.map((m) => m.id),
+      );
     return {
-      status: "failed",
+      status: "pending",
       message: "Could not verify payment right now. Please try again.",
     };
   }

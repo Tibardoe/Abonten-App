@@ -30,47 +30,63 @@ this file — committed on the audit branch.
 
 ---
 
-## Phase 2 — Financial & data integrity, reliability (NEXT — needs owner OK before starting)
+## Phase 2 — Financial & data integrity, reliability
 
-The core move: **two atomic RPCs** replacing imperative multi-step sequences.
+**Shipped** (this pass, on `audit/limitations-2026-09`):
 
-1. **`create_ticket_checkout(...)` RPC** — one transaction: single-statement
-   inventory decrement (`… WHERE quantity IS NULL OR quantity >= n RETURNING`),
-   promo claim, `ticket_checkout` insert. Kills INV-001, INV-002, and the
-   partial-state half of DATA-001. `validateCheckoutCore` keeps the pre-checks
-   (sales window, already-bought, promo lookup, price math) and calls the RPC
-   for the mutation.
-2. **`issue_tickets_for_checkout(...)` RPC** — one transaction: lock checkout
-   rows, verify ownership + `pending` + not-expired, insert `ticket` +
-   `attendance`, flip checkout → `paid`, call `record_organizer_earning`.
-   **Idempotent**: checkout already `paid` → return existing ticket ids, status
-   ok. Kills FIN-001, FIN-002, and the retry black hole. `generateTicket`
-   shrinks to: resolve identity → generate QR + upload to Cloudinary → call the
-   RPC → `revalidatePath`/`after`/notification.
-3. **`finalizePaystackPayment` fixes** (FIN-003, REL-001): transient/thrown
-   verify error → revert group to `pending`, not `failed`; only `failed` on an
-   explicit Paystack terminal status. Add `processing` + `updated_at < now() -
-   15 min` to the CAS re-entry set. Treat "already issued" from the idempotent
-   RPC as success.
-4. **`recover_stale_payment_attempts()` pg_cron** (`*/5`) — `processing` older
-   than 15 min → `fulfillment_failed` (transaction exists) or `pending` (not),
-   so existing retry paths resume.
-5. **Payment-aware checkout expiry** (DATA-001): `expire_stale_ticket_checkouts`
-   excludes checkouts with a non-terminal `payment_attempt`; creating a payment
-   attempt bumps the checkout `expires_at`.
-6. **Constraints** (DATA-002): `ticket_type.price >= 0`, `ticket_type.quantity
-   >= 0` (NULL ok), `promo_code.discount_percentage BETWEEN 0 AND 100`,
-   `ticket.ticket_code` UNIQUE — each `NOT VALID` → dup/violation scan →
-   `VALIDATE`.
-7. **DATA-003/DATA-004**: drop or de-partition the unused empty-partition
-   tables; add a `review`/`event_share` partition-maintenance pg_cron job +
-   default partitions.
+1. **`issue_tickets_for_checkout(...)` RPC** (migration `20260907093200`) —
+   one transaction: lock checkout rows, idempotency check (already `paid` →
+   return existing ticket ids, `already_issued=true`, no mutation — **live
+   smoke-tested against a real paid checkout**), authorize (paid: matching
+   `payment_attempt` + successful `transaction` owned by the caller; free:
+   every row priced at 0), insert `ticket` + `attendance`, flip checkout →
+   `paid`, call `record_organizer_earning` — all atomic. Kills FIN-001,
+   FIN-002, and the retry black hole. `generateTicket.ts` now only generates
+   QR codes/uploads to Cloudinary and calls the RPC; it checks "already fully
+   paid" **before** the `alreadyBought` guard so a redelivered webhook or a
+   post-crash retry converges instead of stranding.
+2. **`finalizePaystackPayment` fixes** (FIN-003, REL-001) — a thrown/network
+   verify error now reverts the group to `pending` (retryable) instead of the
+   previously-permanent `failed`; a stuck `processing` primary attempt older
+   than 15 minutes self-heals on the function's own next invocation.
+3. **`recover_stale_payment_attempts()` pg_cron** (`*/5`, migration
+   `20260907093300`) — the systemic backstop: `processing` older than 15 min
+   → `fulfillment_failed` (transaction exists) or `pending` (not). Verified
+   present, active, in `cron.job`.
+4. **Payment-aware checkout expiry** (DATA-001, same migration) —
+   `expire_stale_ticket_checkouts` now excludes any checkout with a live
+   `payment_attempt` (`initiated`/`pending`/`processing`). The "bump
+   `expires_at` on payment-attempt creation" half was **not** added — the
+   exclusion alone closes the oversell/charged-no-ticket failure mode.
+5. **Constraints** (DATA-002, migration `20260907093100`) —
+   `ticket_type.price >= 0`, `ticket_type.quantity >= 0` (NULL ok),
+   `promo_code.discount_percentage BETWEEN 0 AND 100`, `ticket.ticket_code`
+   UNIQUE (partial index). Pre-checked for zero existing violations, then
+   `NOT VALID` → `VALIDATE`.
 
-Verification: full `turbo typecheck` + web/admin `next build` + `expo export`;
-**concurrency smoke** (parallel `create_ticket_checkout` for the last unit →
-exactly one succeeds); **idempotency smoke** (`issue_tickets_for_checkout` twice
-→ one set of tickets, one earning row); **retry smoke** (`fulfillment_failed`
-re-enter → success); advisors clean.
+**Still open from the original Phase 2 scope** (deferred, not attempted this
+pass — flagged rather than rushed):
+
+- **`create_ticket_checkout(...)` RPC** (INV-001, INV-002) — checkout
+  *creation* (inventory reservation + promo claim + row insert) is still the
+  imperative multi-call sequence in `validateCheckoutCore`, with the same
+  "crash before the checkout row exists" inventory-leak risk it always had.
+  Lower likelihood than the issuance path this phase fixed (a leak here needs
+  a mid-request crash, not just a slow payment), but the same atomic-RPC
+  pattern applies directly. Next candidate for a Phase-2 follow-up.
+- **DATA-003/DATA-004** — the empty-partition tables and `review`'s
+  partition-maintenance job are untouched.
+
+Verification performed: full `turbo typecheck` (all 11 packages), `next build`
+(web), `biome check --write` on every touched file, live SQL smokes (RPC
+idempotent-replay against a real paid checkout — zero mutation; `expire_stale_
+ticket_checkouts()` still runs clean; cron job + grants confirmed via
+`pg_indexes`/`pg_proc`/`cron.job`), security advisor re-run (only the expected
+new `authenticated`-executable `SECURITY DEFINER` entry for
+`issue_tickets_for_checkout`, same accepted class as the pre-existing ones).
+**Not exercised**: a live end-to-end Paystack test-mode charge through the new
+path (needs a human in the loop per the existing project convention), and a
+genuine concurrent-request race test.
 
 ---
 
