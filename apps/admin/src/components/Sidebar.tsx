@@ -4,6 +4,7 @@ import type { AdminPermissionKey } from "@abonten/types/adminTypes";
 import {
   Activity,
   BarChart3,
+  Bell,
   Building2,
   CalendarDays,
   ClipboardCheck,
@@ -72,6 +73,12 @@ const ITEMS: Item[] = [
     label: "Finance",
     icon: Wallet,
     permission: "finance.view",
+  },
+  {
+    href: "/notifications",
+    label: "Notifications",
+    icon: Bell,
+    permission: "notifications.view",
   },
   {
     href: "/monitoring",

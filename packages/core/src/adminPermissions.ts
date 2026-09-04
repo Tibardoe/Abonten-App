@@ -55,6 +55,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "claims.review",
   "reviews.view",
   "notifications.view",
+  "notifications.send",
+  "notifications.broadcast",
   "monitoring.view",
   "monitoring.manage",
   "incidents.manage",
@@ -146,6 +148,7 @@ const OPERATIONS_EXCLUDED = new Set<AdminPermissionKey>([
   "finance.refund",
   "finance.payout",
   "finance.adjust",
+  "notifications.broadcast",
   "admins.manage",
   "settings.manage",
 ]);
@@ -220,6 +223,7 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "finance.refund",
   "finance.payout",
   "finance.adjust",
+  "notifications.broadcast",
   "admins.manage",
   "settings.manage",
 ];

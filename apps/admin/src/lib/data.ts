@@ -34,6 +34,11 @@ import {
   listTransactionsCore,
 } from "@abonten/services/admin/finance/financeAdminCore";
 import {
+  type ListNotificationsFilters,
+  getNotificationAdminCore,
+  listNotificationsAdminCore,
+} from "@abonten/services/admin/notifications/notificationsAdminCore";
+import {
   getErrorGroupCore,
   getHealthSnapshotCore,
   getMetricsOverviewCore,
@@ -140,6 +145,24 @@ export async function loadSettings() {
     getRoleMatrixCore(svc, ctx),
   ]);
   return { ctx, staff, matrix };
+}
+
+// ── Notification operations ─────────────────────────────────
+
+export async function loadNotifications(filters: ListNotificationsFilters) {
+  const ctx = await requireAdmin();
+  const list = await listNotificationsAdminCore(
+    getServiceClient(),
+    ctx,
+    filters,
+  );
+  return { ctx, list };
+}
+
+export async function loadNotificationDetail(id: string) {
+  const ctx = await requireAdmin();
+  const detail = await getNotificationAdminCore(getServiceClient(), ctx, id);
+  return { ctx, detail };
 }
 
 // ── Phase 2: Claims ─────────────────────────────────────────

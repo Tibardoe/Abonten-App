@@ -894,12 +894,13 @@ path smoke above.
 
 ### 23.9 Phase 1 — deferred / open
 
-- Admin-initiated refunds/payouts (Finance module is read-only); Notification operations.
+- Admin-initiated refunds/payouts (Finance module is read-only).
 - ~~Sentry `also-send` adapter~~ **DONE** — see §23.10.
 - ~~Sampled request-timing metrics / mobile request metrics~~ **DONE (mobile)** — see §23.11.
   Web + API request performance is now Sentry's job (`tracesSampleRate`); `app_request_metric`
   is fed by the mobile HTTP client only.
 - ~~Runtime-editable role matrix~~ **DONE** — see §23.12.
+- ~~Notification operations~~ **DONE** — see §23.13.
   _(Claims + content-browse + Events/Places/Organizers = Phase 2 §23.8b; read-only Finance = Phase 3
   §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d; global
   search + bulk report-group resolution = Phase 5 §23.8e.)_
@@ -1009,6 +1010,36 @@ HTTP client feeds them**; web/API request performance is covered by Sentry Perfo
   SECURITY DEFINER). Rolled-back live SQL smoke: a non-super cell toggles both ways +
   idempotently; a `super_admin` INSERT/DELETE (incl. `ON CONFLICT DO NOTHING`) is blocked by
   the trigger and `super_admin` still holds all 39 permissions.
+
+### 23.13 Notification operations — 2026-09-04
+
+Admin › Notifications: browse every user's in-app `notification` rows, re-send one, or broadcast
+one to a segment.
+
+- Migration `20260907091700_admin_notification_ops_permissions.sql` adds two permission keys:
+  `notifications.send` (seeded to `operations`) and `notifications.broadcast` (super_admin-only —
+  grantable later via the matrix editor). super_admin gets both from the `resolveAdminContext`
+  hard-guarantee (its rows are immutable). Both are also added to `ADMIN_PERMISSION_KEYS` +
+  `AdminPermissionKey`; `notifications.broadcast` joins `OPERATIONS_EXCLUDED` +
+  `STEP_UP_PERMISSIONS`.
+- `packages/services/src/admin/notifications/notificationsAdminCore.ts`:
+  `listNotificationsAdminCore` (`notifications.view`, keyset paginated, filter type / recipient /
+  unread / title-body search), `getNotificationAdminCore` (row + recipient name; email gated by
+  `users.view_pii`), `resendNotificationCore` (`notifications.send` → re-runs
+  `createNotificationCore` = fresh row + best-effort push; audited `notification.resend`),
+  `broadcastNotificationCore` (`notifications.broadcast`; segments `all_users` /
+  `event_attendees` (tickets `status in ('active','used')`) / `single_user`; chunked inserts of
+  500; **in-app only, no push fan-out**; `BROADCAST_MAX_RECIPIENTS = 50_000`; audited
+  `notification.broadcast` with the recipient count).
+- Web actions `resendNotification` / `broadcastNotification` (the latter `assertStepUpFresh`);
+  schemas `resendNotificationSchema` / `broadcastNotificationSchema` (discriminated union on
+  segment `kind`).
+- Admin app: sidebar entry (`notifications.view`), `/notifications` list + filter form +
+  `BroadcastPanel` (client, step-up-gated), `/notifications/[id]` detail + `ResendButton`.
+- Verified: `turbo typecheck` 11/11; `next build` apps/web + apps/admin green (`/notifications`
+  + `/notifications/[id]` present); biome clean; rolled-back live SQL smoke — the resend row
+  copy, an all-users broadcast insert, and the `event_attendees` resolve query all run clean.
+  Not exercised end-to-end through the console UI.
 
 ---
 

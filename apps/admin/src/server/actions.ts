@@ -11,6 +11,10 @@ import { adminError } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
 import { applyModerationActionCore } from "@abonten/services/admin/moderation/applyModerationActionCore";
 import {
+  broadcastNotificationCore,
+  resendNotificationCore,
+} from "@abonten/services/admin/notifications/notificationsAdminCore";
+import {
   updateErrorGroupStatusCore,
   upsertIncidentCore,
 } from "@abonten/services/admin/observability/observabilityCore";
@@ -31,6 +35,7 @@ import {
 import { setUserStatusCore } from "@abonten/services/admin/users/usersAdminCore";
 import {
   adminNoteSchema,
+  broadcastNotificationSchema,
   errorGroupStatusSchema,
   grantAdminRoleSchema,
   incidentUpsertSchema,
@@ -39,6 +44,7 @@ import {
   reportRequestInfoSchema,
   reportResolveSchema,
   reportStatusSchema,
+  resendNotificationSchema,
   resolveReportGroupSchema,
   reviewClaimSchema,
   revokeAdminRoleSchema,
@@ -237,6 +243,53 @@ export async function reviewClaim(input: unknown) {
       revalidatePath(`/claims/${parsed.data.claimId}`);
       revalidatePath("/claims");
     }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+// ── Notifications ───────────────────────────────────────────
+
+export async function resendNotification(input: unknown) {
+  const parsed = resendNotificationSchema.safeParse(input);
+  if (!parsed.success) return { status: 400, message: "Invalid input" };
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await resendNotificationCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/notifications/${parsed.data.id}`);
+      revalidatePath("/notifications");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+export async function broadcastNotification(input: unknown) {
+  const parsed = broadcastNotificationSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await broadcastNotificationCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/notifications");
     return res;
   } catch (e) {
     return adminError(e);
