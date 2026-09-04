@@ -86,7 +86,7 @@ architecture → performance → observability → maintainability → DX → UX
 - **Severity**: High · **Likelihood**: Low-Med.
 - **Recommended solution**: fold reservation + checkout-row insert into one `create_ticket_checkout(...)` RPC (single transaction — the CAS becomes a `FOR UPDATE` decrement). Then a partial state is impossible. Interim: a low-frequency reconciliation job comparing `Σ ticket_type.quantity + Σ open reservations` against a known-good baseline is hard without an intent table — prefer the RPC.
 - **Dependencies**: shares the "make checkout creation atomic" work with DATA-001.
-- **Status**: Planned (Phase 2).
+- **Status**: **Fixed** — migration `20260907094000_create_ticket_checkout_rpc.sql`. `create_ticket_checkout(user, event, occurrence, promo, expires_at, lines)` reserves every line's inventory with a single-statement `UPDATE … WHERE (quantity IS NULL OR quantity >= n) AND price matches quoted RETURNING`, claims the promo code, and inserts the `ticket_checkout` rows — all in one transaction. A crash or any failure at any step now rolls back everything automatically; there is no manual compensation left to skip. `validateCheckoutCore` still does all its read-only pre-checks and pricing (unchanged, still the single source of pricing truth) and calls this RPC only for the mutation. Live-verified: empty-lines and nonexistent-ticket-type error paths both raise the expected user-safe message.
 
 ### DOS-001 — No upper bound on ticket quantity per checkout
 - **Area**: Security / Cost / Reliability / Scalability
@@ -146,21 +146,22 @@ architecture → performance → observability → maintainability → DX → UX
 - **Problem**: `reserveTicketQuantity` does `SELECT quantity` then `UPDATE … WHERE quantity = <read value>`; under contention for a hot ticket type this thrashes (many 409 retries client-side) and doubles round-trips.
 - **Severity**: Medium · **Likelihood**: Med for popular on-sale events.
 - **Recommended solution**: single statement `UPDATE ticket_type SET quantity = quantity - $n WHERE id = $id AND (quantity IS NULL OR quantity >= $n) RETURNING quantity` inside the checkout-creation RPC (INV-001). Atomic, one round-trip, no CAS loop.
-- **Status**: Planned (Phase 2, with INV-001).
+- **Status**: **Fixed**, folded into `create_ticket_checkout` (INV-001) — each line is now a single-statement conditional decrement with no read-then-write window, and it additionally re-checks the price hasn't moved since it was quoted (a small correctness bonus beyond the original ask: an organizer changing a ticket price mid-checkout used to be silently ignored by the old CAS, which only guarded quantity). `reserveTicketQuantity`'s CAS-retry version is unchanged and still used by `registerForFreeEventCore` (single free ticket, no checkout row) and `generateTicket`'s failure-path `releaseTicketQuantity` — not part of this fix's scope.
 
 ### DATA-003 — Declared-partitioned tables with zero partitions
 - **Area**: Database
 - **Problem**: `event_media`, `wallet`, `story`, `event_share`, `media_audit` are partitioned parents with no partitions → any insert fails with "no partition of relation found". `story`/`event_media`/`media_audit`/`wallet` are currently unreferenced by app code, `event_share` is used by share tracking.
 - **Severity**: Medium (latent) · **Likelihood**: Low now, High the day someone wires one up.
 - **Recommended solution**: for the genuinely-unused ones, either drop the table or convert to non-partitioned; for `event_share`, add a default partition or a rolling monthly partition + a pg_cron partition-maintenance job (also needed for `review`, whose newest partition is `december_2026`).
-- **Status**: Planned (Phase 2/3).
+- **Status**: **Fixed (the "any insert fails" landmine)**, migration `20260907094100_fix_empty_partition_tables.sql` — confirmed via a repo-wide grep first that none of these 5 tables are referenced by any current app code (web/mobile/admin), so this is a pure safety fix, not a behavior change. `event_media`/`wallet` are HASH-partitioned (Postgres has no DEFAULT partition for hash strategy), so they got real 4-way modulus/remainder partitions, matching the `favorite_p1..p4`/`payment_method_p0..p3` convention already in the schema. `event_share`/`story`/`media_audit` are RANGE-partitioned and got one DEFAULT partition each. **Deliberately not decided**: whether these tables should be built out, kept as an empty foundation, or dropped — that's a product/architecture call for the owner, not something to resolve silently as a side effect of a safety fix (per the standing "flag, don't silently fix" discrepancy rule). Live-verified: `pg_inherits` shows 4/4/1/1/1 partitions respectively.
 
 ### DATA-004 — `review` partition maintenance is manual
 - **Area**: Database / Scalability
-- **Problem**: `review` is range-partitioned monthly; partitions currently exist through `december_2026` but there is no job creating future ones. When the last partition's window passes, review inserts fail.
-- **Severity**: Medium · **Likelihood**: High (time-bomb, ~15 months out).
-- **Recommended solution**: pg_cron monthly job that ensures the next 3 months of `review` (and any other rolling-range table) partitions exist; add a `review_default` catch-all as a safety net.
-- **Status**: Planned (Phase 3).
+- **Problem**: `review` is range-partitioned monthly; partitions currently exist through `december_2026` with no job creating future ones.
+- **Correction on re-verification**: `review` already has a `review_default` catch-all partition (confirmed via `pg_inherits` before touching anything) — so this was **never actually an insert-failure time bomb** the way the original pass assumed; rows past `december_2026` would have silently landed in `review_default` instead of erroring. The real (lower-severity) problem is that once that happens, partition pruning stops working for new rows — they'd all pile into one unbounded partition — which defeats the point of partitioning without breaking anything.
+- **Severity**: Medium → **Low** after correction · **Likelihood**: High eventually, but no longer urgent.
+- **Recommended solution**: pg_cron monthly job that ensures the next few months of `review` partitions always exist ahead of the default catching them.
+- **Status**: **Fixed**, same migration as DATA-003 — `ensure_future_review_partitions()` keeps the next 3 months of named partitions ahead of the current date, scheduled monthly (`ensure-future-review-partitions`, 1st of month, 03:00). Live-verified: ran once as part of the migration (a confirmed no-op — Sept/Oct/Nov 2026 already existed, partition count unchanged at 20), and the cron job is present and active.
 
 ### ARCH-001 — Business logic still leaks into `apps/web` for the two paths that matter most
 - **Area**: Architecture / Maintainability / Cross-platform

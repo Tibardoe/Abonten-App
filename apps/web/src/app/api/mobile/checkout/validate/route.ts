@@ -9,9 +9,10 @@ import { validateCheckoutCore } from "@abonten/services/checkout/validateCheckou
 //
 // Reserves inventory and creates a pending checkout session — the same
 // validateCheckoutCore the web action runs. Promo codes are honoured: the
-// core threads this route's Bearer client through getPromoCodeCore /
-// claimPromoUsage so the promo_code / promo_code_usage writes run as the
-// caller's own `authenticated` role + `auth.uid()`.
+// core reads via getPromoCodeCore on this route's Bearer client, then
+// prices the request and calls the create_ticket_checkout RPC, which
+// re-verifies + claims the promo code and reserves inventory atomically as
+// this route's own `authenticated` role + `auth.uid()`.
 export async function POST(req: Request) {
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;

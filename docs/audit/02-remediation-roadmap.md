@@ -64,29 +64,48 @@ this file — committed on the audit branch.
    UNIQUE (partial index). Pre-checked for zero existing violations, then
    `NOT VALID` → `VALIDATE`.
 
-**Still open from the original Phase 2 scope** (deferred, not attempted this
-pass — flagged rather than rushed):
+**Follow-up (same pass, user asked to close out the deferrals)**:
 
-- **`create_ticket_checkout(...)` RPC** (INV-001, INV-002) — checkout
-  *creation* (inventory reservation + promo claim + row insert) is still the
-  imperative multi-call sequence in `validateCheckoutCore`, with the same
-  "crash before the checkout row exists" inventory-leak risk it always had.
-  Lower likelihood than the issuance path this phase fixed (a leak here needs
-  a mid-request crash, not just a slow payment), but the same atomic-RPC
-  pattern applies directly. Next candidate for a Phase-2 follow-up.
-- **DATA-003/DATA-004** — the empty-partition tables and `review`'s
-  partition-maintenance job are untouched.
+- **`create_ticket_checkout(...)` RPC** (INV-001, INV-002) — **done**,
+  migration `20260907094000`. Checkout creation is now one transaction:
+  single-statement inventory decrement per line (also re-verifies the price
+  hasn't moved since it was quoted — a correctness bonus over the old CAS,
+  which only guarded quantity), promo claim, checkout-row insert. A new
+  partial-unique index (`ticket_checkout_one_pending_per_user_event`, zero
+  pre-existing violations confirmed) turns a concurrent duplicate-checkout
+  race into a clean rollback instead of two checkouts contending for the
+  same seats. `validateCheckoutCore` keeps all its pre-checks and pricing
+  (unchanged) and calls the RPC only for the mutation — the manual
+  `rollbackReservations()` compensation code is gone entirely, not just
+  replaced.
+- **DATA-003** — **done**, migration `20260907094100`. Confirmed via a
+  repo-wide grep first that `event_media`/`wallet`/`story`/`event_share`/
+  `media_audit` are referenced by no current app code. `event_media`/`wallet`
+  are HASH-partitioned (no DEFAULT partition possible for hash strategy) →
+  got real 4-way modulus/remainder partitions matching the existing
+  `favorite_p1..p4` convention. The other three are RANGE-partitioned → each
+  got one DEFAULT partition. **Deliberately not decided**: whether these
+  unused tables should be built out or dropped — flagged for the owner, not
+  resolved silently.
+- **DATA-004** — **done**, same migration. Correction on re-verification:
+  `review` already had a `review_default` catch-all, so this was never an
+  outright insert-failure risk — only a "partition pruning silently stops
+  working past december_2026" risk. `ensure_future_review_partitions()` now
+  keeps 3 months of real partitions ahead of the current date, scheduled
+  monthly via pg_cron (confirmed via `pg_inherits`: ran once as part of the
+  migration and it was a true no-op, since Sep/Oct/Nov 2026 already existed).
 
 Verification performed: full `turbo typecheck` (all 11 packages), `next build`
 (web), `biome check --write` on every touched file, live SQL smokes (RPC
-idempotent-replay against a real paid checkout — zero mutation; `expire_stale_
-ticket_checkouts()` still runs clean; cron job + grants confirmed via
-`pg_indexes`/`pg_proc`/`cron.job`), security advisor re-run (only the expected
-new `authenticated`-executable `SECURITY DEFINER` entry for
-`issue_tickets_for_checkout`, same accepted class as the pre-existing ones).
+idempotent-replay against a real paid checkout — zero mutation;
+`create_ticket_checkout`'s empty-lines and ticket-type-not-found error paths
+raise the expected messages; `expire_stale_ticket_checkouts()` still runs
+clean; partition counts and cron jobs confirmed via `pg_inherits`/`cron.job`),
+security advisor re-run (only the expected new `authenticated`-executable
+`SECURITY DEFINER` entries, same accepted class as the pre-existing ones).
 **Not exercised**: a live end-to-end Paystack test-mode charge through the new
-path (needs a human in the loop per the existing project convention), and a
-genuine concurrent-request race test.
+path, and a genuine concurrent-request race test — both need a human in the
+loop per the existing project convention.
 
 ---
 
@@ -97,8 +116,6 @@ genuine concurrent-request race test.
   `@abonten/services/security/rateLimit` helper. Apply to reports, reviews,
   claims, checkout-validate, promo-validate, cloudinary-signature, broadcast,
   geocode. Enable Vercel platform protection.
-- **DATA-004**: `review` (and any rolling-range table) monthly partition
-  pre-creation job + `*_default` partitions.
 - **Pagination audit**: confirm every list RPC / `.select()` in admin tables,
   organizer dashboards, Explore, Search, notifications has a bounded page size
   and keyset cursor (spot-checks show `pagination.ts` keyset is used widely —
