@@ -1,10 +1,12 @@
 "use client";
 
 import { reportClientError } from "@/lib/reportClientError";
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
-// Catches errors thrown in the root layout itself. Reports to the
-// observability pipeline, then shows a minimal recovery screen.
+// Catches errors thrown in the root layout itself. Reports to both the
+// self-hosted observability pipeline and Sentry, then shows a minimal
+// recovery screen.
 export default function GlobalError({
   error,
   reset,
@@ -16,6 +18,7 @@ export default function GlobalError({
     reportClientError(error, {
       extra: { digest: error.digest, boundary: "global" },
     });
+    Sentry.captureException(error);
   }, [error]);
 
   return (
