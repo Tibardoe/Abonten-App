@@ -42,8 +42,10 @@ export default async function MonitoringPage() {
           the in-app
           <code> reportError</code> hooks and sampled request timing.{" "}
           <strong>Health</strong> rows are live dependency probes run by the
-          observability cron. There is no third-party APM wired yet — panels
-          that would need one say so.
+          observability cron. Request telemetry below is the{" "}
+          <strong>mobile</strong> app&apos;s sampled HTTP timings; web + API
+          request performance lives in the <code>abonten-web</code> Sentry
+          project.
         </span>
       </p>
 
@@ -88,13 +90,13 @@ export default async function MonitoringPage() {
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-          Request telemetry (last 24h)
+          Request telemetry — mobile (last 24h)
         </h2>
         {(metrics.data ?? []).length === 0 ? (
           <EmptyState>
-            No sampled request metrics yet. The web app / API sample ~10% of
-            requests into
-            <code> app_request_metric</code>.
+            No sampled request metrics yet. The mobile app beacons ~10% of its
+            API calls into <code>app_request_metric</code>; web + API timing is
+            in Sentry.
           </EmptyState>
         ) : (
           <div className="grid grid-cols-3 gap-3">

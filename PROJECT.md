@@ -894,13 +894,14 @@ path smoke above.
 
 ### 23.9 Phase 1 — deferred / open
 
-- Admin-initiated refunds/payouts (Finance module is read-only); a sampled request-timing
-  middleware feeding `app_request_metric` (the ingest route + rollup view exist; nothing samples
-  into them yet); mobile request metrics; runtime-editable role matrix (the matrix is code-defined
-  in `@abonten/core/adminPermissions` + the DB seed — making `admin_role_permission` the live
-  source of truth is a deliberate, security-sensitive change left for its own plan);
-  Notification operations.
+- Admin-initiated refunds/payouts (Finance module is read-only); runtime-editable role matrix
+  (the matrix is code-defined in `@abonten/core/adminPermissions` + the DB seed — making
+  `admin_role_permission` the live source of truth is a deliberate, security-sensitive change
+  left for its own plan); Notification operations.
 - ~~Sentry `also-send` adapter~~ **DONE** — see §23.10.
+- ~~Sampled request-timing metrics / mobile request metrics~~ **DONE (mobile)** — see §23.11.
+  Web + API request performance is now Sentry's job (`tracesSampleRate`); `app_request_metric`
+  is fed by the mobile HTTP client only.
   _(Claims + content-browse + Events/Places/Organizers = Phase 2 §23.8b; read-only Finance = Phase 3
   §23.8c; error-group detail + incident workflow + Platform Analytics = Phase 4 §23.8d; global
   search + bulk report-group resolution = Phase 5 §23.8e.)_
@@ -954,6 +955,31 @@ their own Sentry project later). Manual App-Router setup, no wizard-generated cr
 - Verified: `turbo typecheck --filter=@abonten/web` + `next build` (apps/web) both green with the
   wrapper active; biome clean on touched files. Not verified live — needs a deploy with the DSN
   set and a triggered test error.
+
+### 23.11 Mobile request-timing metrics — 2026-09-04
+
+The `app_request_metric` table + `app_request_metric_hourly` rollup + the Admin › Monitoring ›
+"Request telemetry" panel have existed since Phase 1 but nothing wrote to them. Now the **mobile
+HTTP client feeds them**; web/API request performance is covered by Sentry Performance instead
+(no 90-route retrofit, no duplicate signal).
+
+- `@abonten/api-client` (`createApiClient`) gained a `metricSampleRate` option. Its internal
+  `request()` times every call and, at that sample rate, fires a **fire-and-forget** beacon to
+  `POST /api/mobile/observability/metric` with `{ route, method, statusCode, durationMs, ok }`.
+  The route key has ids collapsed (`/events/:id/attendees`, `/x/:n`). The beacon never throws,
+  is never awaited, and skips itself.
+- New route `apps/web/src/app/api/mobile/observability/metric/route.ts` — Bearer-authed via
+  `getMobileAuth` (the shared `OBSERVABILITY_INGEST_SECRET` can't ship in a mobile bundle), the
+  identity is not stored, always answers `202`. Calls `ingestMetricCore(..., { platform:
+  "mobile", ... })`. Added to the api-parity map (matched by the `METRIC_PATH` literal in
+  `client.ts`).
+- `apps/mobile/src/lib/api.ts` sets `metricSampleRate: __DEV__ ? 0 : 0.1` — off in dev so local
+  traffic doesn't skew the panel.
+- Admin Monitoring page copy updated: the panel is now titled "Request telemetry — mobile" and
+  the banner points at the `abonten-web` Sentry project for web/API timing.
+- Verified: `turbo typecheck` (web + mobile + api-client + admin) green; `next build` apps/web +
+  apps/admin green; api-parity guard green; a rolled-back live `INSERT` into `app_request_metric`
+  confirms `ingestMetricCore`'s column mapping and the hourly rollup. Not device-verified.
 
 ---
 

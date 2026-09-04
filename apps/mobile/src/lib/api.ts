@@ -18,4 +18,7 @@ export const api = createApiClient({
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
   },
+  // Sample ~10% of calls into app_request_metric (Admin › Monitoring ›
+  // Request telemetry). Off in dev so local traffic doesn't skew it.
+  metricSampleRate: __DEV__ ? 0 : 0.1,
 });

@@ -115,7 +115,28 @@ export type ApiClientOptions = {
   getAccessToken?: () => string | null | Promise<string | null>;
   /** Defaults to the global `fetch`. */
   fetch?: typeof fetch;
+  /**
+   * Fraction [0..1] of requests to beacon into `app_request_metric` via
+   * POST /api/mobile/observability/metric (fire-and-forget, best effort).
+   * 0 / undefined disables it. Set ~0.1 in release builds, 0 in dev.
+   */
+  metricSampleRate?: number;
 };
+
+// The internal telemetry sink. Referenced here as a literal so the
+// api-parity guard (scripts/check-mobile-api-parity.mjs) sees the route.
+const METRIC_PATH = "/api/mobile/observability/metric";
+
+// Collapse ids so timings group by shape: /events/ab12…/attendees -> /events/:id/attendees
+function metricRouteKey(path: string): string {
+  return path
+    .split("?")[0]
+    .replace(
+      /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=\/|$)/gi,
+      "/:id",
+    )
+    .replace(/\/\d+(?=\/|$)/g, "/:n");
+}
 
 /** Thrown only for transport/parse failures — HTTP error *statuses* come
  *  back in the body for the caller to branch on, same as a Server Action
@@ -136,6 +157,36 @@ function joinUrl(base: string, path: string): string {
 
 export function createApiClient(options: ApiClientOptions) {
   const doFetch = options.fetch ?? globalThis.fetch;
+  const metricRate = options.metricSampleRate ?? 0;
+
+  // Fire-and-forget request-timing beacon. Never throws, never awaited by
+  // the caller. Skips itself so the beacon can't beacon.
+  function beaconMetric(m: {
+    route: string;
+    method: string;
+    statusCode: number | null;
+    durationMs: number;
+    ok: boolean;
+  }): void {
+    if (metricRate <= 0 || Math.random() >= metricRate) return;
+    if (m.route === METRIC_PATH) return;
+    void (async () => {
+      try {
+        const headers: Record<string, string> = {
+          "content-type": "application/json",
+        };
+        const token = (await options.getAccessToken?.()) ?? null;
+        if (token) headers.Authorization = `Bearer ${token}`;
+        await doFetch(joinUrl(options.baseUrl, METRIC_PATH), {
+          method: "POST",
+          headers,
+          body: JSON.stringify(m),
+        });
+      } catch {
+        // best effort — a dropped metric must never surface to the user
+      }
+    })();
+  }
 
   async function request<TResponse extends { status: number }>(
     path: string,
@@ -156,6 +207,7 @@ export function createApiClient(options: ApiClientOptions) {
       if (token) headers.Authorization = `Bearer ${token}`;
     }
 
+    const startedAt = Date.now();
     let response: Response;
     try {
       response = await doFetch(joinUrl(options.baseUrl, path), {
@@ -164,6 +216,13 @@ export function createApiClient(options: ApiClientOptions) {
         body: init.body === undefined ? undefined : JSON.stringify(init.body),
       });
     } catch (error) {
+      beaconMetric({
+        route: metricRouteKey(path),
+        method: init.method,
+        statusCode: null,
+        durationMs: Date.now() - startedAt,
+        ok: false,
+      });
       throw new ApiTransportError(`Request to ${path} failed`, error);
     }
 
@@ -183,6 +242,14 @@ export function createApiClient(options: ApiClientOptions) {
     if (typeof body.status !== "number") {
       (body as { status: number }).status = response.status;
     }
+
+    beaconMetric({
+      route: metricRouteKey(path),
+      method: init.method,
+      statusCode: body.status,
+      durationMs: Date.now() - startedAt,
+      ok: body.status < 400,
+    });
 
     return body;
   }
