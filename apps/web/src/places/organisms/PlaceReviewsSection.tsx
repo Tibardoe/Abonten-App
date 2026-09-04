@@ -73,6 +73,9 @@ export default function PlaceReviewsSection({
             photos={review.place_review_photo}
             responseLabel="Response from owner"
             responseText={review.owner_response}
+            reportTargetType="place_review"
+            reportTargetId={review.id}
+            reportReviewerId={review.reviewer_id}
           />
         )}
       />

@@ -187,6 +187,9 @@ export default function EventReviewsSection({
             photos={review.event_review_photo}
             responseLabel="Organizer reply"
             responseText={review.organizer_response}
+            reportTargetType="event_review"
+            reportTargetId={review.id}
+            reportReviewerId={review.reviewer_id}
           >
             {!review.organizer_response &&
               isOrganizer &&

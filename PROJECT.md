@@ -725,9 +725,18 @@ Audit Logs module (`audit.view`).
   `get_filtered_places`, `get_nearby_places`) each got
   `AND <alias>.moderation_state IS DISTINCT FROM 'hidden' AND … <> 'removed'` next to their
   `status = 'published'` filter (migration `20260907090800`, a deliberate reviewed change).
-  `restricted` stays publicly visible (flagged, e.g. not featurable). ⚠️ Non-RPC
-  `@abonten/services` read modules for event/place/review detail + `/api/mobile` plain-table reads
-  still need the same filter — tracked as a follow-up (see §23.9).
+  `restricted` stays publicly visible (flagged, e.g. not featurable).
+- **Every non-RPC public read is covered too** (migration `20260907091500`): the single public
+  `SELECT` policy on `event`, `place`, `event_review`, `place_review`, `review`, `highlight` was
+  tightened so its *public* branch (`status = 'published'/'approved'`, `USING (true)` for
+  highlights) also requires `moderation_state IS DISTINCT FROM 'hidden'/'removed'`. The
+  owner/organizer/reviewer branch is untouched — an organizer still sees their own hidden event on
+  management pages, a place owner still sees a hidden review, the review's author still sees their
+  own; the Admin Console (service-role) bypasses RLS. This is the single authoritative filter for
+  detail pages, review lists, profile tabs, ratings and `/api/mobile` plain-table reads — no
+  per-callsite `.or()` to forget. Verified: a real published event flipped to
+  `moderation_state='hidden'` (in a rolled-back tx) became invisible to `anon` while the owner
+  branch still returned it; `get_advisors` clean.
 
 ### 23.6 Observability — hybrid, self-hosted (migration `20260907090400` + `20260907091300`)
 
@@ -736,7 +745,10 @@ No third-party APM. Real pipeline:
   rollup by `fingerprint`; reopens on new occurrence). Fed by `packages/core/reportError.ts`
   (`buildErrorEventPayload` + `sendErrorReport`) → `POST /api/observability/error` →
   `ingestErrorCore` (service role). Wired into `apps/web/src/app/global-error.tsx` +
-  `src/lib/reportClientError.ts`. Mobile root boundary wiring is a follow-up.
+  `src/lib/reportClientError.ts`, and on mobile into the root Expo Router `ErrorBoundary`
+  (`apps/mobile/src/components/RootErrorBoundary.tsx`, re-exported from `app/_layout.tsx`) plus
+  `ErrorUtils.setGlobalHandler` for uncaught JS errors (`src/lib/errorTracking.ts` +
+  `src/lib/reportClientError.ts` — sends the Supabase bearer token when signed in).
 - **`app_request_metric`** (sampled timings) + `app_request_metric_hourly` view → dashboard.
 - **`health_check_result`** — `runHealthChecksCore` does **real probes** (DB, auth, storage,
   Paystack `/bank`, Resend, Hubtel, Cloudinary ping, Expo push) at `GET /api/observability/health`,
@@ -779,13 +791,20 @@ Claims, Events, Places, Analytics) render disabled "soon" in the nav.
   management modules; a dedicated content-browse moderation queue; Notification ops; deep
   Web/Mobile/API monitoring dashboards + incident workflow + app-version analytics; Platform
   Analytics; global cross-entity search; bulk actions; runtime-editable role matrix; Sentry adapter.
-- **Moderation filter reach**: non-RPC `@abonten/services` read modules + `/api/mobile`
-  plain-table reads for event/place/review detail must add the `moderation_state` exclusion, or
-  hidden/removed content leaks on those surfaces. RPC paths + discovery are done.
-- Mobile: root `ErrorBoundary`/`ErrorUtils` → `reportError`; report attachment picker in the
-  mobile `ReportSheet` (schema/core support it; UI is text-only for now).
-- Web report entry points wired: event detail, place detail, user profile. Event-review /
-  place-review / highlight report affordances on web are a follow-up (mobile place-review has one).
+- ~~Moderation filter reach~~ **DONE** (migration `20260907091500`): the public `SELECT` policies
+  on all six moderatable tables now exclude `hidden`/`removed` on their public branch, so every
+  non-RPC read path (detail pages, review lists, profile tabs, ratings, `/api/mobile` plain-table
+  reads) is covered by one authoritative filter. See §23.5.
+- ~~Mobile root `ErrorBoundary`/`ErrorUtils` → `reportError`~~ **DONE** (see §23.6).
+- ~~Mobile report attachment picker~~ **DONE**: `apps/mobile/src/components/ReportSheet.tsx` now
+  takes one optional screenshot/PDF, uploaded to the private `report-attachments` bucket at
+  `<uid>/<uuid>.<ext>` (same pattern as the place-claim doc flow) before the report is submitted.
+- ~~Web event-review / place-review / highlight report affordances~~ **DONE**: `ReviewListItem`
+  renders a `ReportButton` (icon variant, hidden for the review's author) for both the event and
+  place review sections; `HighlightViewer`'s `⋯` menu offers "Report this photo/video" to
+  signed-in non-owners. Event detail, place detail and user profile were already wired.
+- Still deferred: runtime-editable role matrix; Sentry adapter; the deep Web/Mobile/API monitoring
+  dashboards + incident workflow.
 - Ops: create the `apps/admin` Vercel project + `admin.abonten.*` DNS; set
   `OBSERVABILITY_INGEST_SECRET` in `apps/web` + insert the `observability_config` row; seed the
   first `super_admin` (`insert into admin_user … ; insert into admin_user_role …`).
