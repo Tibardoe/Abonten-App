@@ -702,3 +702,174 @@ export type OrganizerDetail = {
   recentReportsAgainst: ReportListItem[];
   notes: AdminNoteEntry[];
 };
+
+// ─────────────────────────────────────────────────────────────
+// Phase 3 — Finance ops centre (READ-ONLY). Admin-initiated
+// refunds / payouts are a later phase; these views only report.
+// ─────────────────────────────────────────────────────────────
+
+export type TransactionStatus = string; // successful | refund_pending | refunded | …
+
+export type FinanceOverview = {
+  range: DashboardRange;
+  from: string;
+  to: string;
+  currency: string;
+  activeFeeRate: number | null;
+  // customer side
+  totalCustomerPayments: number;
+  ticketRevenue: number;
+  serviceFeeRevenue: number;
+  processingCost: number;
+  netPlatformRevenue: number;
+  transactionsSuccessful: number;
+  // refunds
+  refundsPending: number;
+  refundsPendingAmount: number;
+  refundsCompleted: number;
+  refundsCompletedAmount: number;
+  // organizer side
+  organizerEarningsBooked: number;
+  organizerEarningsHeld: number;
+  organizerEarningsOutstanding: number;
+  payoutsPending: number;
+  payoutsPendingAmount: number;
+};
+
+export type TransactionListItem = {
+  id: string;
+  status: TransactionStatus;
+  amount: number;
+  currency: string;
+  reason: string | null;
+  payerName: string | null;
+  payerEmail: string | null; // null unless users.view_pii
+  paystackReference: string | null;
+  paymentMethod: string | null;
+  createdAt: string;
+  refundRequestedAt: string | null;
+};
+
+export type PaymentAttemptView = {
+  id: string;
+  status: string;
+  provider: string | null;
+  providerReference: string | null;
+  amount: number;
+  currency: string;
+  failureReason: string | null;
+  paidAt: string | null;
+  verifiedAt: string | null;
+  createdAt: string;
+};
+
+export type LedgerEntryView = {
+  id: string;
+  entryType: string;
+  amount: number;
+  grossAmount: number | null;
+  feeAmount: number | null;
+  currency: string;
+  organizerId: string | null;
+  organizerName: string | null;
+  eventId: string | null;
+  payoutId: string | null;
+  createdAt: string;
+};
+
+export type FeeEntryView = {
+  id: string;
+  entryType: string;
+  ticketRevenue: number | null;
+  serviceFee: number | null;
+  totalCustomerPayment: number | null;
+  processingCost: number | null;
+  netRevenue: number | null;
+  feeRate: number | null;
+  currency: string;
+  createdAt: string;
+};
+
+export type TransactionDetail = {
+  id: string;
+  status: TransactionStatus;
+  amount: number;
+  currency: string;
+  reason: string | null;
+  payerName: string | null;
+  payerEmail: string | null; // null unless users.view_pii
+  payerPhone: string | null; // null unless users.view_pii
+  userId: string | null;
+  paystackReference: string | null;
+  paymentMethod: string | null;
+  gatewayResponse: string | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+  refundRequestedAt: string | null;
+  refundableAmount: number;
+  attempts: PaymentAttemptView[];
+  ledgerEntries: LedgerEntryView[];
+  feeEntries: FeeEntryView[];
+  ticketsIssued: number;
+  checkouts: {
+    id: string;
+    kind: "ticket" | "other";
+    eventId: string | null;
+    quantity: number | null;
+    totalPrice: number | null;
+    discount: number | null;
+    promoCode: string | null;
+    status: string | null;
+    createdAt: string;
+  }[];
+};
+
+export type RefundListItem = {
+  transactionId: string;
+  status: TransactionStatus;
+  amount: number;
+  currency: string;
+  payerName: string | null;
+  paystackReference: string | null;
+  refundRequestedAt: string | null;
+  refundableAmount: number;
+  createdAt: string;
+};
+
+export type PayoutStatus = string;
+
+export type PayoutListItem = {
+  id: string;
+  organizerId: string;
+  organizerName: string | null;
+  amount: number;
+  currency: string;
+  status: PayoutStatus;
+  reference: string | null;
+  failureReason: string | null;
+  accountLabel: string | null;
+  requestedAt: string | null;
+  processedAt: string | null;
+  createdAt: string;
+};
+
+export type OrganizerFinanceSummary = {
+  organizerId: string;
+  organizerName: string | null;
+  currency: string;
+  earned: number;
+  held: number;
+  paidOut: number;
+  outstanding: number;
+  payoutAccounts: {
+    id: string;
+    accountType: string | null;
+    provider: string | null;
+    accountHolderName: string | null;
+    maskedNumber: string | null;
+    isDefault: boolean;
+    status: string | null;
+  }[];
+  recentLedger: LedgerEntryView[];
+  recentPayouts: PayoutListItem[];
+};

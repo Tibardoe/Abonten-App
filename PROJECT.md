@@ -815,13 +815,41 @@ Code-only — **no migration**. All new service modules take a service-role clie
   reports-against, moderation state, internal notes, and deep-link to the report workspace / the
   Content tab / the Users record for any action. No mutations in these modules.
 
+### 23.8c Phase 3 modules — Finance ops centre (READ-ONLY)
+
+Code-only — **no migration, no mutations**. Admin-initiated refunds/payouts stay deferred (the
+`finance.refund` / `finance.payout` step-up permissions exist for when that's built). New
+`packages/services/src/admin/finance/financeAdminCore.ts` (`finance.view` / `transactions.view`,
+service-role client, per-fn permission check):
+
+- **Overview** (`getFinanceOverviewCore`, time-range aware, UTC=Africa/Accra): customer-payment
+  totals from `platform_fee_entry` (total charged / ticket revenue / service-fee revenue /
+  processing cost / net platform revenue), refund counts+amounts from `transaction.status`,
+  organizer money from `organizer_ledger_entry` (earnings booked / **held** — `refund_hold` rows
+  are stored NEGATIVE, magnitude withheld / outstanding = booked − paid-out − held), pending
+  payouts from `payout`, plus the active `platform_fee_config` rate.
+- **Transactions** — list (status / Paystack-ref-or-email search / date) + detail = full trace:
+  the `transaction`, all its `payment_attempt` rows, `platform_fee_entry`, `organizer_ledger_entry`,
+  tickets issued, linked `ticket_checkout`s, and the refundable-now amount via the existing
+  `get_transaction_refundable_amount` RPC (fee retained). Payer email/phone gated by
+  `users.view_pii`.
+- **Refunds** — `transaction` rows with `status in ('refund_pending','refunded')`, showing charged
+  vs refundable.
+- **Payouts** — `payout` rows + organizer + masked destination (`@abonten/core/maskAccountNumber`).
+- **Per-organizer finance** (`/finance/organizers/[id]`, linked from the Organizers module):
+  earned / held / paid-out / outstanding, payout accounts (masked), recent ledger + payouts.
+
+Sidebar: only **Analytics** now renders "soon". Verified: turbo typecheck 11/11 · next build
+web + admin exit 0 · biome · live aggregate cross-check against prod (fee totals, tx-by-status,
+ledger totals incl. the negative `refund_hold`, active rate 5%).
+
 ### 23.9 Phase 1 — deferred / open
 
-- Finance/Transactions/Refunds/Withdrawals ops centre + payment-trace; Notification ops; deep
+- Admin-initiated refunds/payouts (Finance module is read-only for now); Notification ops; deep
   Web/Mobile/API monitoring dashboards + incident workflow + app-version analytics; Platform
   Analytics; global cross-entity search; bulk actions; runtime-editable role matrix; Sentry adapter.
-  _(Events/Places/Organizers management + the content-browse queue + Claims shipped in Phase 2 —
-  see §23.8b.)_
+  _(Claims + content-browse queue + Events/Places/Organizers views shipped in Phase 2 §23.8b;
+  read-only Finance in Phase 3 §23.8c.)_
 - ~~Moderation filter reach~~ **DONE** (migration `20260907091500`): the public `SELECT` policies
   on all six moderatable tables now exclude `hidden`/`removed` on their public branch, so every
   non-RPC read path (detail pages, review lists, profile tabs, ratings, `/api/mobile` plain-table

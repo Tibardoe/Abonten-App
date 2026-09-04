@@ -24,6 +24,15 @@ import {
 } from "@abonten/services/admin/content/contentBrowseCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
 import {
+  type ListTransactionsFilters,
+  getFinanceOverviewCore,
+  getOrganizerFinanceCore,
+  getTransactionDetailCore,
+  listPayoutsCore,
+  listRefundsCore,
+  listTransactionsCore,
+} from "@abonten/services/admin/finance/financeAdminCore";
+import {
   getHealthSnapshotCore,
   getMetricsOverviewCore,
   listErrorGroupsCore,
@@ -178,4 +187,39 @@ export async function loadOrganizers(filters: ListOrganizersFilters) {
 export async function loadOrganizerDetail(id: string) {
   const ctx = await requireAdmin();
   return getOrganizerDetailCore(getServiceClient(), ctx, id);
+}
+
+// ── Phase 3: Finance (read-only) ───────────────────────────
+
+export async function loadFinanceOverview(
+  range: DashboardRange,
+  from?: string,
+  to?: string,
+) {
+  const ctx = await requireAdmin();
+  return getFinanceOverviewCore(getServiceClient(), ctx, { range, from, to });
+}
+export async function loadTransactions(filters: ListTransactionsFilters) {
+  const ctx = await requireAdmin();
+  return listTransactionsCore(getServiceClient(), ctx, filters);
+}
+export async function loadTransactionDetail(id: string) {
+  const ctx = await requireAdmin();
+  return getTransactionDetailCore(getServiceClient(), ctx, id);
+}
+export async function loadRefunds(
+  filters: Parameters<typeof listRefundsCore>[2],
+) {
+  const ctx = await requireAdmin();
+  return listRefundsCore(getServiceClient(), ctx, filters);
+}
+export async function loadPayouts(
+  filters: Parameters<typeof listPayoutsCore>[2],
+) {
+  const ctx = await requireAdmin();
+  return listPayoutsCore(getServiceClient(), ctx, filters);
+}
+export async function loadOrganizerFinance(id: string) {
+  const ctx = await requireAdmin();
+  return getOrganizerFinanceCore(getServiceClient(), ctx, id);
 }
