@@ -143,6 +143,25 @@ export const reviewClaimSchema = z.object({
   expectedStatus: z.enum(["pending", "approved", "rejected"]).optional(),
 });
 
+export const resendNotificationSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const broadcastNotificationSchema = z.object({
+  segment: z.discriminatedUnion("kind", [
+    z.object({ kind: z.literal("all_users") }),
+    z.object({
+      kind: z.literal("event_attendees"),
+      eventId: z.string().uuid(),
+    }),
+    z.object({ kind: z.literal("single_user"), userId: z.string().uuid() }),
+  ]),
+  type: z.string().trim().min(1).max(60),
+  title: z.string().trim().min(1, "A title is required").max(160),
+  body: z.string().trim().max(1000).optional(),
+  link: z.string().trim().max(400).optional(),
+});
+
 export const errorGroupStatusSchema = z.object({
   fingerprint: z.string().min(1).max(200),
   status: z.enum(["open", "acknowledged", "resolved", "ignored"]),

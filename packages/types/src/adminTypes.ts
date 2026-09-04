@@ -50,6 +50,8 @@ export type AdminPermissionKey =
   | "claims.review"
   | "reviews.view"
   | "notifications.view"
+  | "notifications.send"
+  | "notifications.broadcast"
   | "monitoring.view"
   | "monitoring.manage"
   | "incidents.manage"
@@ -949,6 +951,35 @@ export type GlobalSearchResults = {
   places: GlobalSearchHit[];
   transactions: GlobalSearchHit[];
   reports: GlobalSearchHit[];
+};
+
+// ─────────────────────────────────────────────────────────────
+// Notification operations (Admin › Notifications)
+// ─────────────────────────────────────────────────────────────
+
+export type NotificationAdminListItem = {
+  id: string;
+  userId: string;
+  recipientName: string | null;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  hasImage: boolean;
+  readAt: string | null;
+  createdAt: string;
+};
+
+export type NotificationAdminDetail = NotificationAdminListItem & {
+  data: Record<string, unknown>;
+  recipientEmail: string | null;
+  imagePublicId: string | null;
+  imageVersion: string | null;
+};
+
+export type NotificationBroadcastResult = {
+  recipients: number;
+  segmentLabel: string;
 };
 
 // ─────────────────────────────────────────────────────────────
