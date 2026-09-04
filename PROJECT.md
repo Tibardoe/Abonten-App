@@ -782,15 +782,46 @@ filter; detail with PII gated by `users.view_pii`; suspend/unsuspend/ban/restore
 reason + confirm + step-up for ban), **Audit Logs** (read-only), **Monitoring** (health / error
 groups with ack-resolve-ignore / request-telemetry / incidents; a banner distinguishes real
 telemetry from derived operational metrics), **Admin Settings** (staff list + role grant/revoke +
-enable/disable, all step-up-gated; the role matrix is code-defined). Later-phase modules (Finance,
-Claims, Events, Places, Analytics) render disabled "soon" in the nav.
+enable/disable, all step-up-gated; the role matrix is code-defined). Only **Finance** and
+**Analytics** render disabled "soon" in the nav.
+
+### 23.8b Phase 2 modules (Claims · Content moderation · Catalog)
+
+Code-only — **no migration**. All new service modules take a service-role client + a resolved
+`AdminContext` and re-check the specific permission, same as Phase 1.
+
+- **Claims** (`packages/services/src/admin/claims/claimsAdminCore.ts` + `apps/admin/.../claims`).
+  Folds the standalone `/admin/place-claims` web page into the console. `listClaimsCore` /
+  `getClaimDetailCore` (signed doc URLs from `place-claim-documents`, PII gated by
+  `users.view_pii`) / `reviewClaimCore`. Approve reuses the **existing `approve_place_claim` RPC
+  verbatim** — the only path that reassigns `place.owner_id` — passing the resolved admin's id as
+  `p_admin_id` (their `user_info.is_admin` is kept true by the `admin_user` sync trigger, so the
+  RPC's own check passes on the service-role client). Reject is a `status='pending'`-guarded
+  update. Both audited + notify the claimant (`createNotificationCore`). `claims.view` /
+  `claims.review`; step-up not required. Live smoke (rolled back): non-admin `p_admin_id` →
+  "not an admin"; admin → status `approved`, `owner_id` moved to claimant, `claimed`+`verified`
+  set.
+- **Content moderation** (`.../content/contentBrowseCore.ts` + `apps/admin/.../content`). One
+  read-only browse per moderatable entity (event / place / event_review / place_review /
+  user_review / highlight) showing each row's `moderation_state`, owner and report count, filtered
+  by state (all-moderated / hidden / removed / restricted / everything) + a title/name/comment
+  search. The **actions are unchanged** — the row's inline Hide/Restrict/Remove/Restore call the
+  same `applyModeration` server action → `apply_moderation_action` RPC. Per-type permission
+  (`events.view` / `places.view` / `reviews.view`).
+- **Catalog** (`.../catalog/catalogAdminCore.ts` + `apps/admin/.../{events,places,organizers}`).
+  Read-only list + detail for Events (`events.view`), Places (`places.view`), Organizers
+  (`organizers.view` — anyone with ≥1 event or owned place). Detail pages show issued-ticket ×
+  list-price sales (approximate; the authoritative money view is the Finance module), rating,
+  reports-against, moderation state, internal notes, and deep-link to the report workspace / the
+  Content tab / the Users record for any action. No mutations in these modules.
 
 ### 23.9 Phase 1 — deferred / open
 
-- Finance/Transactions/Refunds/Withdrawals ops centre + payment-trace; Events/Places/Organizers
-  management modules; a dedicated content-browse moderation queue; Notification ops; deep
+- Finance/Transactions/Refunds/Withdrawals ops centre + payment-trace; Notification ops; deep
   Web/Mobile/API monitoring dashboards + incident workflow + app-version analytics; Platform
   Analytics; global cross-entity search; bulk actions; runtime-editable role matrix; Sentry adapter.
+  _(Events/Places/Organizers management + the content-browse queue + Claims shipped in Phase 2 —
+  see §23.8b.)_
 - ~~Moderation filter reach~~ **DONE** (migration `20260907091500`): the public `SELECT` policies
   on all six moderatable tables now exclude `hidden`/`removed` on their public branch, so every
   non-RPC read path (detail pages, review lists, profile tabs, ratings, `/api/mobile` plain-table

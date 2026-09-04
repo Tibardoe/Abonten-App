@@ -1,13 +1,16 @@
 "use server";
 
-import { createSsrClient } from "@/lib/supabaseServer";
 import {
   assertStepUpFresh,
   currentRequestMeta,
   requireAdmin,
 } from "@/lib/adminGuard";
 import { getServiceClient } from "@/lib/serviceClient";
+import { createSsrClient } from "@/lib/supabaseServer";
 import { adminError } from "@abonten/services/admin/adminContext";
+import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
+import { applyModerationActionCore } from "@abonten/services/admin/moderation/applyModerationActionCore";
+import { updateErrorGroupStatusCore } from "@abonten/services/admin/observability/observabilityCore";
 import {
   addAdminNoteCore,
   assignReportCore,
@@ -15,14 +18,12 @@ import {
   resolveReportCore,
   updateReportStatusCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
-import { applyModerationActionCore } from "@abonten/services/admin/moderation/applyModerationActionCore";
-import { setUserStatusCore } from "@abonten/services/admin/users/usersAdminCore";
 import {
   grantAdminRoleCore,
   revokeAdminRoleCore,
   setAdminUserStatusCore,
 } from "@abonten/services/admin/settings/adminSettingsCore";
-import { updateErrorGroupStatusCore } from "@abonten/services/admin/observability/observabilityCore";
+import { setUserStatusCore } from "@abonten/services/admin/users/usersAdminCore";
 import {
   adminNoteSchema,
   errorGroupStatusSchema,
@@ -32,12 +33,13 @@ import {
   reportRequestInfoSchema,
   reportResolveSchema,
   reportStatusSchema,
+  reviewClaimSchema,
   revokeAdminRoleSchema,
   setAdminUserStatusSchema,
   setUserStatusSchema,
 } from "@abonten/validation/adminSchemas";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 const svc = () => getServiceClient();
 
@@ -54,7 +56,12 @@ export async function assignReport(input: unknown) {
   if (!parsed.success) return { status: 400, message: "Invalid input" };
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
-    const res = await assignReportCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await assignReportCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath(`/reports/${parsed.data.reportId}`);
     return res;
   } catch (e) {
@@ -67,7 +74,12 @@ export async function updateReportStatus(input: unknown) {
   if (!parsed.success) return { status: 400, message: "Invalid input" };
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
-    const res = await updateReportStatusCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await updateReportStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath(`/reports/${parsed.data.reportId}`);
     return res;
   } catch (e) {
@@ -80,7 +92,12 @@ export async function requestReportInfo(input: unknown) {
   if (!parsed.success) return { status: 400, message: "Invalid input" };
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
-    const res = await requestReportInfoCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await requestReportInfoCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath(`/reports/${parsed.data.reportId}`);
     return res;
   } catch (e) {
@@ -93,7 +110,12 @@ export async function addAdminNote(input: unknown) {
   if (!parsed.success) return { status: 400, message: "Invalid input" };
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
-    const res = await addAdminNoteCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await addAdminNoteCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200 && parsed.data.targetType === "report") {
       revalidatePath(`/reports/${parsed.data.targetId}`);
     }
@@ -106,11 +128,19 @@ export async function addAdminNote(input: unknown) {
 export async function resolveReport(input: unknown) {
   const parsed = reportResolveSchema.safeParse(input);
   if (!parsed.success) {
-    return { status: 400, message: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
-    const res = await resolveReportCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await resolveReportCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) {
       revalidatePath(`/reports/${parsed.data.reportId}`);
       revalidatePath("/reports");
@@ -126,7 +156,10 @@ export async function resolveReport(input: unknown) {
 export async function applyModeration(input: unknown) {
   const parsed = moderationActionSchema.safeParse(input);
   if (!parsed.success) {
-    return { status: 400, message: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
@@ -151,17 +184,53 @@ export async function applyModeration(input: unknown) {
   }
 }
 
+// ── Claims ──────────────────────────────────────────────────
+
+export async function reviewClaim(input: unknown) {
+  const parsed = reviewClaimSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await reviewClaimCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/claims/${parsed.data.claimId}`);
+      revalidatePath("/claims");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
 // ── Users ───────────────────────────────────────────────────
 
 export async function setUserStatus(input: unknown) {
   const parsed = setUserStatusSchema.safeParse(input);
   if (!parsed.success) {
-    return { status: 400, message: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
     if (parsed.data.status === "Banned") assertStepUpFresh(ctx);
-    const res = await setUserStatusCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await setUserStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) {
       revalidatePath(`/users/${parsed.data.userId}`);
       revalidatePath("/users");
@@ -179,7 +248,12 @@ export async function setErrorGroupStatus(input: unknown) {
   if (!parsed.success) return { status: 400, message: "Invalid input" };
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
-    const res = await updateErrorGroupStatusCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await updateErrorGroupStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath("/monitoring");
     return res;
   } catch (e) {
@@ -195,7 +269,12 @@ export async function grantAdminRole(input: unknown) {
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
     assertStepUpFresh(ctx);
-    const res = await grantAdminRoleCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await grantAdminRoleCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath("/settings");
     return res;
   } catch (e) {
@@ -209,7 +288,12 @@ export async function revokeAdminRole(input: unknown) {
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
     assertStepUpFresh(ctx);
-    const res = await revokeAdminRoleCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await revokeAdminRoleCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath("/settings");
     return res;
   } catch (e) {
@@ -223,7 +307,12 @@ export async function setAdminUserStatus(input: unknown) {
   try {
     const ctx = await requireAdmin({ redirectOnFail: false });
     assertStepUpFresh(ctx);
-    const res = await setAdminUserStatusCore(svc(), ctx, parsed.data, await currentRequestMeta());
+    const res = await setAdminUserStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
     if (res.status === 200) revalidatePath("/settings");
     return res;
   } catch (e) {

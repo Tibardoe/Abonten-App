@@ -3,11 +3,16 @@
 import type { AdminPermissionKey } from "@abonten/types/adminTypes";
 import {
   Activity,
+  Building2,
+  CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   Flag,
   LayoutDashboard,
   ScrollText,
   Settings,
+  ShieldAlert,
+  Store,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -22,17 +27,69 @@ type Item = {
 };
 
 const ITEMS: Item[] = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard.view" },
-  { href: "/reports", label: "Reports & Moderation", icon: Flag, permission: "reports.view" },
+  {
+    href: "/",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    permission: "dashboard.view",
+  },
+  {
+    href: "/reports",
+    label: "Reports & Moderation",
+    icon: Flag,
+    permission: "reports.view",
+  },
+  {
+    href: "/content",
+    label: "Content",
+    icon: ShieldAlert,
+    permission: "reviews.view",
+  },
+  {
+    href: "/claims",
+    label: "Claims",
+    icon: ClipboardCheck,
+    permission: "claims.view",
+  },
   { href: "/users", label: "Users", icon: Users, permission: "users.view" },
-  { href: "/monitoring", label: "Monitoring", icon: Activity, permission: "monitoring.view" },
-  { href: "/audit", label: "Audit Logs", icon: ScrollText, permission: "audit.view" },
-  { href: "/settings", label: "Admin Settings", icon: Settings, permission: "settings.view" },
+  {
+    href: "/organizers",
+    label: "Organizers",
+    icon: Building2,
+    permission: "organizers.view",
+  },
+  {
+    href: "/events",
+    label: "Events",
+    icon: CalendarDays,
+    permission: "events.view",
+  },
+  { href: "/places", label: "Places", icon: Store, permission: "places.view" },
+  {
+    href: "/monitoring",
+    label: "Monitoring",
+    icon: Activity,
+    permission: "monitoring.view",
+  },
+  {
+    href: "/audit",
+    label: "Audit Logs",
+    icon: ScrollText,
+    permission: "audit.view",
+  },
+  {
+    href: "/settings",
+    label: "Admin Settings",
+    icon: Settings,
+    permission: "settings.view",
+  },
 ];
 
-const SOON = ["Finance", "Claims", "Events", "Places", "Analytics"];
+const SOON = ["Finance", "Analytics"];
 
-export function Sidebar({ permissions }: { permissions: AdminPermissionKey[] }) {
+export function Sidebar({
+  permissions,
+}: { permissions: AdminPermissionKey[] }) {
   const pathname = usePathname();
   const visible = ITEMS.filter((i) => permissions.includes(i.permission));
 

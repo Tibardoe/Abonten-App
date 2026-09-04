@@ -533,3 +533,172 @@ export type DashboardSnapshot = {
   health: HealthCheckSnapshot[];
   needsAttention: NeedsAttention;
 };
+
+// ─────────────────────────────────────────────────────────────
+// Phase 2 — Claims, Content moderation browse, Catalog (events /
+// places / organizers) read modules
+// ─────────────────────────────────────────────────────────────
+
+export type ClaimStatus = "pending" | "approved" | "rejected";
+
+export type ClaimListItem = {
+  id: string;
+  status: ClaimStatus;
+  placeId: string;
+  placeName: string | null;
+  placeSlug: string | null;
+  claimantId: string;
+  claimantName: string | null;
+  documentCount: number;
+  contactEmail: string | null; // only for users.view_pii
+  contactPhone: string | null; // only for users.view_pii
+  createdAt: string;
+  reviewedAt: string | null;
+};
+
+export type ClaimDocumentView = {
+  id: string;
+  fileName: string | null;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  /** short-lived signed URL, minted server-side */
+  url: string | null;
+};
+
+export type ClaimDetail = {
+  id: string;
+  status: ClaimStatus;
+  note: string | null;
+  contactEmail: string | null; // only for users.view_pii
+  contactPhone: string | null; // only for users.view_pii
+  createdAt: string;
+  reviewedBy: string | null;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  place: {
+    id: string;
+    name: string | null;
+    slug: string | null;
+    status: string | null;
+    currentOwnerId: string | null;
+    claimed: boolean;
+    verified: boolean;
+  };
+  claimant: {
+    id: string;
+    username: string | null;
+    fullName: string | null;
+    email: string | null; // only for users.view_pii
+  };
+  documents: ClaimDocumentView[];
+  notes: AdminNoteEntry[];
+};
+
+export type ModeratableContentItem = {
+  targetType: ModeratableTargetType;
+  id: string;
+  /** best-effort human label (title / name / comment snippet) */
+  label: string;
+  ownerId: string | null;
+  ownerName: string | null;
+  moderationState: ModerationState | null;
+  moderatedAt: string | null;
+  status: string | null;
+  reportCount: number;
+  createdAt: string;
+};
+
+export type EventAdminListItem = {
+  id: string;
+  title: string;
+  eventCode: string | null;
+  status: string;
+  moderationState: ModerationState | null;
+  organizerId: string;
+  organizerName: string | null;
+  startsAt: string | null;
+  featured: boolean;
+  reportCount: number;
+  createdAt: string;
+};
+
+export type EventAdminDetail = EventAdminListItem & {
+  description: string | null;
+  category: string | null;
+  address: Record<string, unknown> | string | null;
+  capacity: number | null;
+  placeId: string | null;
+  ticketsSold: number;
+  grossSales: number;
+  currency: string;
+  avgRating: number;
+  reviewCount: number;
+  moderationReason: string | null;
+  recentReports: ReportListItem[];
+  notes: AdminNoteEntry[];
+};
+
+export type PlaceAdminListItem = {
+  id: string;
+  name: string;
+  slug: string | null;
+  status: string;
+  moderationState: ModerationState | null;
+  ownerId: string | null;
+  ownerName: string | null;
+  claimed: boolean;
+  verified: boolean;
+  reportCount: number;
+  createdAt: string;
+};
+
+export type PlaceAdminDetail = PlaceAdminListItem & {
+  description: string | null;
+  address: Record<string, unknown> | string | null;
+  categoryId: number | null;
+  avgRating: number;
+  reviewCount: number;
+  upcomingEventCount: number;
+  moderationReason: string | null;
+  pendingClaimCount: number;
+  recentReports: ReportListItem[];
+  notes: AdminNoteEntry[];
+};
+
+export type OrganizerListItem = {
+  id: string;
+  username: string | null;
+  fullName: string | null;
+  accountStatus: UserAccountStatus;
+  eventCount: number;
+  placeCount: number;
+  ticketsSold: number;
+  reportsAgainst: number;
+  createdAt: string | null;
+};
+
+export type OrganizerDetail = {
+  id: string;
+  username: string | null;
+  fullName: string | null;
+  bio: string | null;
+  accountStatus: UserAccountStatus;
+  isAdmin: boolean;
+  email: string | null; // only for users.view_pii
+  createdAt: string | null;
+  stats: {
+    events: number;
+    places: number;
+    ticketsSold: number;
+    grossSales: number;
+    currency: string;
+    avgOrganizerRating: number;
+    organizerRatingCount: number;
+    reportsAgainst: number;
+    hiddenOrRemovedContent: number;
+  };
+  recentEvents: EventAdminListItem[];
+  places: PlaceAdminListItem[];
+  recentReportsAgainst: ReportListItem[];
+  notes: AdminNoteEntry[];
+};
