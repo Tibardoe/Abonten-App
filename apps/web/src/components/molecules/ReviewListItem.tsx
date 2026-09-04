@@ -1,4 +1,5 @@
 import StarRatingDisplay from "@/components/atoms/Rating";
+import ReportButton from "@/components/atoms/ReportButton";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import Image from "next/image";
@@ -24,6 +25,12 @@ type ReviewListItemProps = {
   photos?: ReviewPhoto[] | null;
   responseLabel?: string;
   responseText?: string | null;
+  // "Report this review" affordance. Passed by the event/place review
+  // sections; the button hides itself for signed-out visitors and for the
+  // review's own author (reportReviewerId === viewer).
+  reportTargetType?: "event_review" | "place_review";
+  reportTargetId?: string;
+  reportReviewerId?: string | null;
   // Event-only inline reply affordance (organizer's "Reply" button/composer).
   // Places don't compose a response from this page, so this is simply
   // omitted there.
@@ -48,6 +55,9 @@ export default function ReviewListItem({
   photos,
   responseLabel,
   responseText,
+  reportTargetType,
+  reportTargetId,
+  reportReviewerId,
   children,
 }: ReviewListItemProps) {
   return (
@@ -83,6 +93,19 @@ export default function ReviewListItem({
             <span className="text-[11px] font-medium text-success whitespace-nowrap">
               ✓ Verified Attendee
             </span>
+          )}
+          {reportTargetType && reportTargetId && (
+            <ReportButton
+              targetType={reportTargetType}
+              targetId={reportTargetId}
+              targetLabel={
+                title
+                  ? `review "${title}"`
+                  : `review by ${username ?? "a user"}`
+              }
+              ownerId={reportReviewerId}
+              variant="icon"
+            />
           )}
         </div>
       </div>

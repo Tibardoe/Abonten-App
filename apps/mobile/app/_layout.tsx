@@ -10,6 +10,7 @@ import {
   isProtectedPath,
   setPendingRedirect,
 } from "@/lib/authRedirect";
+import { installGlobalErrorHandler } from "@/lib/errorTracking";
 import { euclidFonts } from "@/lib/fonts";
 import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
@@ -24,6 +25,10 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+// Root render/effect crashes anywhere in the navigation tree land here
+// (Expo Router picks up the `ErrorBoundary` export on this route module).
+export { ErrorBoundary } from "@/components/RootErrorBoundary";
 
 // Keep the native splash up until the brand font + persisted session have
 // loaded, then cross-fade to the first screen. A 4s safety timer hides it
@@ -85,6 +90,7 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(euclidFonts);
 
   useEffect(() => {
+    installGlobalErrorHandler();
     startSupabaseAutoRefresh();
     startNetworkSync();
   }, []);

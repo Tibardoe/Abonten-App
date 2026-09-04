@@ -6,6 +6,8 @@ import ModalShell from "@/components/atoms/ModalShell";
 import UserAvatar from "@/components/atoms/UserAvatar";
 import type { HighlightMenuAction } from "@/components/molecules/HighlightMenu";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
+import { ReportDialog } from "@/components/organisms/ReportDialog";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,9 +35,11 @@ export default function HighlightViewer({
   onClose,
 }: HighlightViewerProps) {
   const queryClient = useQueryClient();
+  const { data: currentUser } = useCurrentUser();
 
   const [showMenu, setShowMenu] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -112,7 +116,7 @@ export default function HighlightViewer({
   // the media directly) while the menu/dialog are closed.
   // biome-ignore lint/correctness/useExhaustiveDependencies: see comment above
   useLayoutEffect(() => {
-    const shouldHold = showMenu || showConfirmDelete;
+    const shouldHold = showMenu || showConfirmDelete || showReport;
 
     if (shouldHold && !isHeldRef.current) {
       wasPausedBeforeHoldRef.current = isPaused;
@@ -134,7 +138,7 @@ export default function HighlightViewer({
         resume();
       }
     }
-  }, [showMenu, showConfirmDelete]);
+  }, [showMenu, showConfirmDelete, showReport]);
 
   const consumeMediaSuppression = () => {
     if (!suppressNextMediaInteractionRef.current) return false;
@@ -202,23 +206,32 @@ export default function HighlightViewer({
   // (two separate elements, per this file's existing responsive-duplication
   // pattern — see the mobile/desktop avatar split) so the delete action
   // isn't duplicated.
-  const menuActions: HighlightMenuAction[] = [
-    {
-      label:
-        currentSlide.media_type === "video"
-          ? "Delete this video"
-          : "Delete this photo",
-      onSelect: () => setShowConfirmDelete(true),
-      destructive: true,
-    },
-  ];
+  const mediaNoun = currentSlide.media_type === "video" ? "video" : "photo";
+
+  const menuActions: HighlightMenuAction[] = isOwner
+    ? [
+        {
+          label: `Delete this ${mediaNoun}`,
+          onSelect: () => setShowConfirmDelete(true),
+          destructive: true,
+        },
+      ]
+    : currentUser
+      ? [
+          {
+            label: `Report this ${mediaNoun}`,
+            onSelect: () => setShowReport(true),
+            destructive: true,
+          },
+        ]
+      : [];
 
   // While the 3-dot menu or the confirm dialog is open, the underlying
   // media's own gestures must be inert — otherwise a tap meant to dismiss
   // the menu (which only covers a small area) can also land on the
   // full-height prev/next tap zones underneath and immediately navigate, or
   // on desktop toggle pause again right after the hold-effect resumed it.
-  const isMenuOrDialogOpen = showMenu || showConfirmDelete;
+  const isMenuOrDialogOpen = showMenu || showConfirmDelete || showReport;
 
   return (
     <ModalShell
@@ -332,7 +345,7 @@ export default function HighlightViewer({
               {username}
             </p>
 
-            {isOwner && (
+            {menuActions.length > 0 && (
               <HighlightMenuButton
                 isOpen={showMenu}
                 onOpenChange={setShowMenu}
@@ -363,7 +376,7 @@ export default function HighlightViewer({
                 )}
               </div>
 
-              {isOwner && (
+              {menuActions.length > 0 && (
                 <HighlightMenuButton
                   isOpen={showMenu}
                   onOpenChange={setShowMenu}
@@ -508,6 +521,14 @@ export default function HighlightViewer({
           {deleteError}
         </div>
       )}
+
+      <ReportDialog
+        open={showReport}
+        onOpenChange={setShowReport}
+        targetType="highlight"
+        targetId={currentSlide.id}
+        targetLabel={`highlight by ${username}`}
+      />
     </ModalShell>
   );
 }
