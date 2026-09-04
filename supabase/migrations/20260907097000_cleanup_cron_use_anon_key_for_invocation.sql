@@ -16,12 +16,23 @@
 -- directly as the function's SERVICE_ROLE_KEY secret via the Supabase
 -- Dashboard (2026-09-04), never through this repo or this file.
 --
--- The literal below is Supabase's public/publishable anon key -- already
+-- REDACTED 2026-09-04: this migration originally embedded the live anon
+-- key as a literal here. It's Supabase's public/publishable key -- already
 -- shipped in this project's client bundles as
--- NEXT_PUBLIC_SUPABASE_ANON_KEY. It is not a secret by Supabase's own
--- classification (anon keys are designed to be embedded in public,
--- client-side code), so storing it as a plain literal here introduces no
--- new exposure, unlike the service-role credential it replaces.
+-- NEXT_PUBLIC_SUPABASE_ANON_KEY -- so nothing was ever compromised, but a
+-- secret scanner (GitGuardian) correctly flags any Supabase-JWT-shaped
+-- literal regardless of which role it carries, and the project preference
+-- is that no credential-shaped literal sits in a migration file at all.
+-- The placeholder below was never a real value in the live database: by
+-- the time this file was edited, migration 20260907098000 had already
+-- extracted the real (still-unrotated) anon key out of the live cron job
+-- and moved it into a Vault secret (`cleanup_expired_events_anon_key`),
+-- which is what the job actually reads today. Replaying this migration
+-- from scratch (a fresh install) will fail loudly and safely at
+-- 20260907098000's length check ("Could not extract the anon key...")
+-- rather than silently installing a broken credential -- see that file
+-- for the real mechanism a fresh install needs to complete manually
+-- (populate the anon key into Vault, once, via the Dashboard).
 do $$
 declare
   v_job_id bigint;
@@ -40,7 +51,7 @@ begin
             url:='https://sderrexhawjbmsugndcq.supabase.co/functions/v1/delete-expired-events',
             headers:=jsonb_build_object(
               'Authorization',
-              'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkZXJyZXhoYXdqYm1zdWduZGNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA1Njg5MjUsImV4cCI6MjA1NjE0NDkyNX0.y90702uAZONNJk46uhln-SutG1pUeioC-hTP1Su3nuM'
+              'Bearer REDACTED'
             ),
             timeout_milliseconds:=1000
         );
