@@ -7,8 +7,11 @@ import {
   money,
   timeAgo,
 } from "@/components/ui";
+import { requireAdmin } from "@/lib/adminGuard";
 import { loadTransactionDetail } from "@/lib/data";
+import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
+import { RefundPanel } from "../../RefundPanel";
 
 function txTone(s: string) {
   return s === "refunded"
@@ -33,11 +36,21 @@ export default async function TransactionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const res = await loadTransactionDetail(id);
+  const [ctx, res] = await Promise.all([
+    requireAdmin(),
+    loadTransactionDetail(id),
+  ]);
   if (res.status !== 200 || !res.data) {
     return <EmptyState>{res.message ?? "Transaction not found."}</EmptyState>;
   }
   const t = res.data;
+  const stepUpFresh =
+    !!ctx.reauthenticatedAt &&
+    Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
+  const canRefund =
+    ctx.permissions.includes("finance.refund") &&
+    t.status !== "refunded" &&
+    t.status !== "refund_pending";
 
   return (
     <div>
@@ -105,6 +118,13 @@ export default async function TransactionDetailPage({
               </>
             ) : null}
           </dl>
+          <RefundPanel
+            transactionId={t.id}
+            refundableLabel={money(t.refundableAmount, t.currency)}
+            canRefund={canRefund}
+            stepUpFresh={stepUpFresh}
+          />
+
           {t.gatewayResponse ? (
             <details className="mt-3">
               <summary className="cursor-pointer text-xs text-muted-foreground">

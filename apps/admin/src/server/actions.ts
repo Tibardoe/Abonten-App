@@ -9,6 +9,11 @@ import { getServiceClient } from "@/lib/serviceClient";
 import { createSsrClient } from "@/lib/supabaseServer";
 import { adminError } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
+import {
+  createPayoutAdminCore,
+  refundTransactionAdminCore,
+  settlePayoutAdminCore,
+} from "@abonten/services/admin/finance/financeActionsCore";
 import { applyModerationActionCore } from "@abonten/services/admin/moderation/applyModerationActionCore";
 import {
   broadcastNotificationCore,
@@ -35,7 +40,9 @@ import {
 import { setUserStatusCore } from "@abonten/services/admin/users/usersAdminCore";
 import {
   adminNoteSchema,
+  adminRefundSchema,
   broadcastNotificationSchema,
+  createPayoutSchema,
   errorGroupStatusSchema,
   grantAdminRoleSchema,
   incidentUpsertSchema,
@@ -51,6 +58,7 @@ import {
   setAdminUserStatusSchema,
   setRolePermissionSchema,
   setUserStatusSchema,
+  settlePayoutSchema,
 } from "@abonten/validation/adminSchemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -242,6 +250,86 @@ export async function reviewClaim(input: unknown) {
     if (res.status === 200) {
       revalidatePath(`/claims/${parsed.data.claimId}`);
       revalidatePath("/claims");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+// ── Finance (money-path — step-up) ──────────────────────────
+
+export async function refundTransaction(input: unknown) {
+  const parsed = adminRefundSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await refundTransactionAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/finance/transactions/${parsed.data.transactionId}`);
+      revalidatePath("/finance/refunds");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+export async function settlePayout(input: unknown) {
+  const parsed = settlePayoutSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await settlePayoutAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/finance/payouts");
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+export async function createPayout(input: unknown) {
+  const parsed = createPayoutSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await createPayoutAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/finance/organizers/${parsed.data.organizerId}`);
+      revalidatePath("/finance/payouts");
     }
     return res;
   } catch (e) {
