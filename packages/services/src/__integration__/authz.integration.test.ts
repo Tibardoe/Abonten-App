@@ -117,4 +117,42 @@ describe("authz: create_ticket_checkout and RLS", () => {
       .eq("checkout_session_id", checkoutSessionId as string);
     expect(serviceRows).toHaveLength(1);
   });
+
+  it("rejects a signed-in user issuing tickets on another user's behalf (issue_tickets_for_checkout)", async () => {
+    const { data: checkoutSessionId, error: createError } =
+      await userA.client.rpc("create_ticket_checkout", {
+        p_user_id: userA.id,
+        p_event_id: eventId,
+        p_occurrence_id: null,
+        p_promo_code_id: null,
+        p_promo_code_text: null,
+        p_expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
+        p_lines: [
+          {
+            ticket_type_id: ticketTypeId,
+            quantity: 1,
+            unit_price: 50,
+            discount: 0,
+            discounted_units: 0,
+            amount: 50,
+          },
+        ],
+        // Same generated-type gap create_event's fixture helper documents.
+      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"]);
+    expect(createError).toBeNull();
+    expect(checkoutSessionId).toBeTruthy();
+
+    const { error } = await userB.client.rpc("issue_tickets_for_checkout", {
+      p_checkout_session_id: checkoutSessionId,
+      p_user_id: userA.id,
+      p_transaction_id: null,
+      p_metadata: null,
+      p_ticket_expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+      p_tickets: [],
+      // Same generated-type gap create_event's fixture helper documents.
+    } as unknown as Database["public"]["Functions"]["issue_tickets_for_checkout"]["Args"]);
+
+    expect(error).not.toBeNull();
+    expect(error?.message).toMatch(/not authorized/i);
+  });
 });
