@@ -32,11 +32,9 @@ export default async function ReportDetailPage({
       <PageHeader
         title={`Report · ${r.targetType}`}
         description={
-          <>
-            <Link href="/reports" className="text-primary hover:underline">
-              ← Back to queue
-            </Link>
-          </>
+          <Link href="/reports" className="text-primary hover:underline">
+            ← Back to queue
+          </Link>
         }
         actions={
           <div className="flex items-center gap-2">

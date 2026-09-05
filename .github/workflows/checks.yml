@@ -1,0 +1,47 @@
+name: Typecheck & lint
+
+# Static checks that need no secrets or external services: TypeScript across
+# every workspace package (turbo run typecheck) and Biome, scoped the same
+# way each app's own `lint` script already scopes it (but without --fix --
+# CI should fail on violations, not silently rewrite them). Deliberately
+# does NOT run `next build` here: apps/web and apps/admin throw at module
+# load if NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY are unset,
+# and a real build additionally touches Cloudinary/Paystack/Resend/Sentry
+# env vars turbo.json declares -- wiring that up needs real values added as
+# GitHub Actions secrets first, a decision for the repo owner, not something
+# to fake here.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run typecheck
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages
