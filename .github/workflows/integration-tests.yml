@@ -20,7 +20,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # @supabase/supabase-js's createClient() always constructs a
+          # Realtime client, which requires the native global WebSocket --
+          # only available from Node 22 onward. Node 20 throws
+          # "Node.js detected but native WebSocket not found" the instant
+          # setupClient.ts calls createClient(), before any test runs.
+          node-version: "22"
           cache: npm
 
       - run: npm ci
