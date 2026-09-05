@@ -1,15 +1,14 @@
-name: Typecheck & lint
+name: Typecheck, lint & build
 
-# Static checks that need no secrets or external services: TypeScript across
-# every workspace package (turbo run typecheck) and Biome, scoped the same
-# way each app's own `lint` script already scopes it (but without --fix --
-# CI should fail on violations, not silently rewrite them). Deliberately
-# does NOT run `next build` here: apps/web and apps/admin throw at module
-# load if NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY are unset,
-# and a real build additionally touches Cloudinary/Paystack/Resend/Sentry
-# env vars turbo.json declares -- wiring that up needs real values added as
-# GitHub Actions secrets first, a decision for the repo owner, not something
-# to fake here.
+# Typecheck and lint need no secrets. The two build jobs below do -- they
+# run `next build` for apps/web and apps/admin against real repo secrets
+# (added 2026-09-05). Split into separate jobs (rather than one `turbo run
+# build` job) because web and admin are different Sentry projects with
+# different DSNs, so NEXT_PUBLIC_SENTRY_DSN needs a different secret mapped
+# in per app -- one job's env block can't hold two values for that name.
+# apps/mobile and packages/* have no "build" script, so they're untouched
+# by any of this (confirmed: turbo/npm workspace `build` skips workspaces
+# without the script).
 on:
   push:
     branches: [main]
@@ -45,3 +44,63 @@ jobs:
       - run: npm ci
 
       - run: npx biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages
+
+  build-web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.WEB_SENTRY_DSN }}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
+      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+      NEXT_PUBLIC_BASE_URL: ${{ secrets.NEXT_PUBLIC_BASE_URL }}
+      NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      HUBTEL_API_CLIENT_ID: ${{ secrets.HUBTEL_API_CLIENT_ID }}
+      HUBTEL_API_CLIENT_SECRET: ${{ secrets.HUBTEL_API_CLIENT_SECRET }}
+      NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY }}
+      PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+      PAYSTACK_WEBHOOK_SECRET: ${{ secrets.PAYSTACK_WEBHOOK_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build -w @abonten/web
+
+  build-admin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OBSERVABILITY_INGEST_SECRET: ${{ secrets.OBSERVABILITY_INGEST_SECRET }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.ADMIN_SENTRY_DSN }}
+      ADMIN_EMAIL_ALLOWLIST: ${{ secrets.ADMIN_EMAIL_ALLOWLIST }}
+      NEXT_PUBLIC_ADMIN_URL: ${{ secrets.NEXT_PUBLIC_ADMIN_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build -w @abonten/admin
