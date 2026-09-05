@@ -1,0 +1,42 @@
+name: Integration tests
+
+# Runs the local-Supabase concurrency/idempotency/authz suite
+# (packages/services/src/__integration__/**) against a real, disposable
+# Postgres started via the Supabase CLI -- see scripts/test-db/
+# setup-local-test-db.mjs and docs/audit/01-limitations-register.md
+# ("Migration replay ordering bug" / TEST-001 / SEC-001) for why this
+# exists and what it does and does not cover.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      # Pinned to match the version this suite was authored and verified
+      # against locally -- bump deliberately, not silently, if the local
+      # dev version moves.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.116.0
+
+      - run: npm run test:db:up
+
+      - run: npm run test:integration
+
+      # Always tear down (stops the Docker containers, deletes the
+      # disposable workdir) even if the tests above failed.
+      - if: always()
+        run: npm run test:db:down
