@@ -252,6 +252,16 @@ CREATE POLICY place_analytics_event_owner_select ON public.place_analytics_event
 -- event_promotion in batch 2: promotion status/tier pricing are public
 -- (get_active_place_promotions is SECURITY INVOKER, called by anon
 -- visitors); the checkout/payment record is owner-only.
+--
+-- NOTE (2026-09-05, migration replay ordering audit): these tables aren't
+-- CREATEd until add_place_promotions.sql, true-applied version
+-- 20260826090000 -- LATER than this file's own 20260825105513 (see
+-- docs/audit/01-limitations-register.md, "Migration replay ordering bug").
+-- Same pattern as add_event_promotions.sql's payment_attempt note: this
+-- block was evidently appended to this file in a later edit-and-rerun,
+-- without a separate migration entry. A from-scratch
+-- `supabase db reset` fails here unless this file is temporarily moved
+-- after add_place_promotions.
 -- ---------------------------------------------------------------------
 ALTER TABLE public.place_promotion_tier ENABLE ROW LEVEL SECURITY;
 

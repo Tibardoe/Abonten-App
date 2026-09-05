@@ -45,6 +45,15 @@ ALTER POLICY review_drafts_owner_all ON public.review_drafts
   USING (EXISTS (SELECT 1 FROM public.drafts d WHERE d.id = review_drafts.draft_id AND d.user_id = (select auth.uid())))
   WITH CHECK (EXISTS (SELECT 1 FROM public.drafts d WHERE d.id = review_drafts.draft_id AND d.user_id = (select auth.uid())));
 
+-- NOTE (2026-09-05, migration replay ordering audit): public.place_drafts
+-- isn't CREATEd until 20260827090000_add_place_drafts.sql -- two days after
+-- this file's own true version (20260825105907). That file has no entry in
+-- production's migration history at all (`supabase migrations list`),
+-- unlike everything else this audit checked, so its own true applied
+-- version can't be confirmed the same way; kept at its current filename.
+-- Same "appended in a later edit-and-rerun" pattern as this file's other
+-- notes above. A from-scratch `supabase db reset` fails here unless this
+-- statement is neutralized or the file temporarily moved.
 ALTER POLICY place_drafts_owner_all ON public.place_drafts
   USING (EXISTS (SELECT 1 FROM public.drafts d WHERE d.id = place_drafts.draft_id AND d.user_id = (select auth.uid())))
   WITH CHECK (EXISTS (SELECT 1 FROM public.drafts d WHERE d.id = place_drafts.draft_id AND d.user_id = (select auth.uid())));
@@ -74,6 +83,32 @@ ALTER VIEW public.user_profile_details SET (security_invoker = true);
 ALTER VIEW public.wallet_public SET (security_invoker = true);
 
 -- 4. Pin search_path
+--
+-- NOTE (2026-09-05, migration replay ordering audit), three separate issues
+-- found reconstructing this file's true applied order (see docs/audit/
+-- 01-limitations-register.md, "Migration replay ordering bug"):
+--   1. Every `SET search_path = '...'` below is a bug: a single quoted
+--      string containing a comma sets search_path to one non-existent
+--      schema literally named "public, extensions", silently breaking
+--      unqualified name resolution in the function for as long as it's in
+--      effect (reproduced directly against local Postgres). The very next
+--      migration by true applied version, fix_search_path_syntax_
+--      regression.sql, redoes these same statements with the correct
+--      unquoted `SET search_path TO public, extensions` -- so on
+--      production this was corrected within roughly an hour, and today's
+--      live functions have the fixed search_path. Left as-is here (not
+--      corrected retroactively) since that's what actually ran.
+--   2. Line 90 (get_active_place_promotions) references a function not
+--      CREATEd until add_get_active_place_promotions_rpc.sql, true version
+--      20260826090300 -- a day later than this file's own 20260825105907.
+--   3. Line 81 (the 15-arg get_filtered_events overload with p_page_size)
+--      references a function not CREATEd until add_public_attendance_
+--      count_rpcs.sql, true version 20260902120000 -- over a week later.
+-- Both (2) and (3) mean this file's "4. Pin search_path" section was
+-- evidently appended to in later edit-and-rerun passes as new overloads
+-- were added, without separate migration entries each time. A from-scratch
+-- `supabase db reset` fails on this file unless it's temporarily moved
+-- after those two dependencies.
 ALTER FUNCTION public.create_user_info_if_not_exists() SET search_path = 'public, extensions';
 ALTER FUNCTION public.log_user_changes() SET search_path = 'public, extensions';
 ALTER FUNCTION public.get_nearby_events(double precision, double precision, double precision) SET search_path = 'public, extensions';
@@ -95,4 +130,20 @@ ALTER FUNCTION public.get_place_suggestions(text, integer) SET search_path = 'pu
 -- 5. Duplicate unique constraint cleanup (user_info_pkey stays; it's the
 -- real PK -- user_info_id_key is an identical, redundant UNIQUE constraint
 -- from before the PK existed).
+--
+-- NOTE (2026-09-05, migration replay ordering audit): unlike the two
+-- forward-reference issues noted above, this one isn't fixable by moving
+-- this file -- dozens of FK constraints across the schema (attendance,
+-- event, favorite, ticket_checkout, transaction, and ~30 more, all
+-- predating this migration regardless of where it runs) bind to
+-- user_info_id_key, so `DROP CONSTRAINT` fails with a hard dependency error
+-- whenever it's attempted against a schema built from scratch. The `IF
+-- EXISTS` guard only helps if the constraint is already gone; the likely
+-- explanation is that on production, user_info_id_key had already been
+-- dropped some other way (a manual/dashboard change, most plausibly) by
+-- the time this statement ran, making it a harmless no-op there -- a
+-- from-scratch replay has no such prior removal, so it hits the real
+-- dependency error instead. Left as-is (not fixed) since the actual
+-- production sequence that made this safe isn't recorded anywhere this
+-- audit can verify.
 ALTER TABLE public.user_info DROP CONSTRAINT IF EXISTS user_info_id_key;

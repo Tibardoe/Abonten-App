@@ -99,10 +99,24 @@ CREATE INDEX idx_event_promotion_event_id ON public.event_promotion (event_id);
 -- promotion) to a 4-way sum. finalizePaystackPayment.ts is the single
 -- authoritative verify+finalize path for every payable thing in this app --
 -- this is that path's fourth branch, not a parallel payment system.
+--
 ALTER TABLE public.payment_attempt ADD COLUMN event_promotion_checkout_id uuid;
 ALTER TABLE public.payment_attempt ADD CONSTRAINT payment_attempt_event_promotion_checkout_id_fkey
   FOREIGN KEY (event_promotion_checkout_id) REFERENCES public.event_promotion_checkout(id) ON DELETE RESTRICT;
 
+-- NOTE (2026-09-05, migration replay ordering audit): this specific
+-- constraint (only this one -- the column/FK just above are self-
+-- contained and fine) references place_promotion_checkout_id, added by
+-- add_place_promotions.sql -- which carries the LATER true-applied version
+-- 20260826090000 versus this file's own 20260825102741 (see docs/audit/
+-- 01-limitations-register.md, "Migration replay ordering bug"). This
+-- file's dominant content genuinely applied at its recorded version; this
+-- one constraint was evidently widened in a later edit-and-rerun, without
+-- a separate migration entry. A from-scratch `supabase db reset` fails
+-- here unless this statement is neutralized or the file temporarily moved
+-- after add_place_promotions -- known, narrow, not fixed at the source
+-- since doing so would mean guessing at and rewriting production history
+-- rather than accurately recording it.
 ALTER TABLE public.payment_attempt DROP CONSTRAINT payment_attempt_target_check;
 ALTER TABLE public.payment_attempt ADD CONSTRAINT payment_attempt_target_check CHECK (
   (

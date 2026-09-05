@@ -12,6 +12,20 @@
 -- Correct syntax: SET search_path TO schema1, schema2 (unquoted,
 -- comma-separated identifier list) -- confirmed against a fresh
 -- create_event() call after this fix, which now succeeds.
+--
+-- NOTE (2026-09-05, migration replay ordering audit): two of the lines
+-- below re-pin functions that, per this file's true applied version
+-- (20260825112821), don't exist yet on a from-scratch replay -- line 20
+-- (the 15-arg get_filtered_events overload) isn't CREATEd until
+-- add_public_attendance_count_rpcs.sql (true version 20260902120000, over
+-- a week later) and line 29 (get_active_place_promotions) isn't CREATEd
+-- until add_get_active_place_promotions_rpc.sql (20260826090300, the next
+-- day). Same pattern as security_cleanup_batch6.sql's equivalent note:
+-- this file was evidently re-run to re-cover newly-added overloads as they
+-- shipped, without a separate migration entry each time. A from-scratch
+-- `supabase db reset` fails on this file unless it's temporarily moved
+-- after those two dependencies. See docs/audit/01-limitations-register.md,
+-- "Migration replay ordering bug".
 
 ALTER FUNCTION public.create_user_info_if_not_exists() SET search_path TO public, extensions;
 ALTER FUNCTION public.log_user_changes() SET search_path TO public, extensions;
