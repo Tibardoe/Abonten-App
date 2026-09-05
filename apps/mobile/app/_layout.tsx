@@ -59,21 +59,36 @@ function useProtectedRoute() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const inAuthGroup = segments[0] === "(auth)";
+  const redirectingHome = !initializing && !!session && inAuthGroup;
+  const redirectingToSignIn =
+    !initializing && !session && !inAuthGroup && isProtectedPath(pathname);
+
   useEffect(() => {
-    if (initializing) return;
-    const inAuthGroup = segments[0] === "(auth)";
-
-    if (session && inAuthGroup) {
-      const next = consumePendingRedirect();
-      router.replace(next ?? "/(app)");
-      return;
-    }
-
-    if (!session && !inAuthGroup && isProtectedPath(pathname)) {
-      setPendingRedirect(pathname);
-      router.replace("/(auth)/sign-in");
-    }
-  }, [session, initializing, segments, pathname, router]);
+    if (!redirectingHome && !redirectingToSignIn) return;
+    // A tab press mounts the newly-focused tab's native screen container
+    // (react-native-screens) on the same commit cycle that this effect
+    // fires on. Replacing the Stack screen synchronously here unmounts that
+    // whole (tabs) subtree while Fabric may still be flushing the tab
+    // switch's own mount instructions to native, and the two mutation sets
+    // have been observed to land in one batch on Android — "the specified
+    // child already has a parent" for a view that's simultaneously being
+    // inserted (tab switch) and torn down (this replace). A real timer
+    // (not InteractionManager.runAfterInteractions — nothing registers an
+    // interaction handle for a tab press, so it fires with ~zero delay and
+    // doesn't actually wait for that commit to flush) pushes this past the
+    // native mounting batch.
+    const timer = setTimeout(() => {
+      if (redirectingHome) {
+        const next = consumePendingRedirect();
+        router.replace(next ?? "/(app)");
+      } else if (redirectingToSignIn) {
+        setPendingRedirect(pathname);
+        router.replace("/(auth)/sign-in");
+      }
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [redirectingHome, redirectingToSignIn, pathname, router]);
 
   return initializing;
 }
