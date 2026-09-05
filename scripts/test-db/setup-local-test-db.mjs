@@ -168,34 +168,6 @@ function skipProductionOnlyMigrations(migrationsDir) {
   );
 }
 
-// public.user_status is a small reference table (id, name) with no seeding
-// migration anywhere in the repo and no supabase/seed.sql -- on production
-// it holds {1: Active, 2: Suspended, 3: Banned} (confirmed via execute_sql
-// against the live project), inserted at some point outside of migration
-// history entirely. Without it, public.user_info's status_id FK can never
-// be satisfied, so `create_user_info_if_not_exists` (the trigger that fires
-// on every auth.users insert) fails for every single signup, including
-// this test suite's. Worth a real supabase/seed.sql for every local
-// developer's benefit, not just this script -- a separate, repo-wide
-// decision left to the owner -- so seeded here only for this copy.
-function writeSeedFile(supabaseDir) {
-  writeFileSync(
-    join(supabaseDir, "seed.sql"),
-    [
-      "-- Written by scripts/test-db/setup-local-test-db.mjs for this throwaway",
-      "-- local stack only -- see that script's writeSeedFile() for why.",
-      "INSERT INTO public.user_status (id, name) VALUES",
-      "  (1, 'Active'), (2, 'Suspended'), (3, 'Banned')",
-      "ON CONFLICT (id) DO NOTHING;",
-      "SELECT setval('public.user_status_id_seq', 3, true);",
-      "",
-    ].join("\n"),
-  );
-  console.log(
-    "[test-db] Wrote seed.sql (copy only): user_status reference rows.",
-  );
-}
-
 function patchBaselineForFreshLocalPostgres(migrationsDir) {
   // These three statements in the pulled baseline snapshot assume a
   // pre-existing project state (pg_graphql already installed,
@@ -250,7 +222,8 @@ function main() {
   neutralizeIrreducibleStatements(migrationsDir);
   skipProductionOnlyMigrations(migrationsDir);
   patchBaselineForFreshLocalPostgres(migrationsDir);
-  writeSeedFile(supabaseDest);
+  // supabase/seed.sql (user_status reference rows) is copied along with
+  // everything else above -- no separate step needed now that it's real.
 
   console.log(
     "[test-db] Starting local Supabase stack (this can take a few minutes on first run)...",
