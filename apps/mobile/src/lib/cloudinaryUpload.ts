@@ -24,6 +24,14 @@ type CloudinaryResponse = {
   duration?: number;
 };
 
+function safeJsonParse(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 // XHR (not fetch) so the caller can show a real upload progress bar —
 // `xhr.upload.onprogress` has no fetch equivalent in React Native. Resolves
 // with the same shape whether or not `onProgress` is passed.
@@ -44,15 +52,22 @@ function postForm(
     }
 
     xhr.onload = () => {
+      const body =
+        typeof xhr.response === "string"
+          ? safeJsonParse(xhr.response)
+          : xhr.response;
+
       if (xhr.status >= 200 && xhr.status < 300) {
-        const json =
-          typeof xhr.response === "string"
-            ? JSON.parse(xhr.response)
-            : xhr.response;
         onProgress?.(1);
-        resolve(json as CloudinaryResponse);
+        resolve(body as CloudinaryResponse);
       } else {
-        reject(new Error("The upload failed. Please try again."));
+        // Cloudinary's own rejection (bad format, its account-level size
+        // ceiling, etc.) always comes back as { error: { message } } --
+        // surface that verbatim instead of a generic status-code message.
+        const message =
+          (body as { error?: { message?: string } } | null)?.error?.message ??
+          "The upload failed. Please try again.";
+        reject(new Error(message));
       }
     };
     xhr.onerror = () =>
@@ -101,15 +116,8 @@ export async function uploadToCloudinary(
   if (sig.status !== 200 || !sig.data) {
     throw new Error(sig.message ?? "Could not authorize the upload.");
   }
-  const {
-    timestamp,
-    signature,
-    apiKey,
-    cloudName,
-    folder,
-    allowedFormats,
-    maxFileSizeBytes,
-  } = sig.data;
+  const { timestamp, signature, apiKey, cloudName, folder, allowedFormats } =
+    sig.data;
   const cloud = cloudName ?? CLOUD_NAME;
   if (!cloud) throw new Error("Cloudinary is not configured.");
 
@@ -126,10 +134,12 @@ export async function uploadToCloudinary(
   form.append("timestamp", String(timestamp));
   form.append("signature", signature);
   form.append("folder", folder);
-  // Signed params — Cloudinary rejects the upload (wrong format / too large)
-  // and fails the signature check unless these are echoed verbatim.
+  // Signed param — Cloudinary rejects the upload (wrong format) and fails
+  // the signature check unless this is echoed verbatim. (There is no
+  // `max_file_size` signed param — see cloudinaryUploadSignature.ts for why
+  // that was removed; Cloudinary's own account-level size limit is the
+  // real backstop, surfaced to the caller via the error message below.)
   form.append("allowed_formats", allowedFormats);
-  form.append("max_file_size", String(maxFileSizeBytes));
 
   const json = await postForm(
     `https://api.cloudinary.com/v1_1/${cloud}/${isVideo ? "video" : "image"}/upload`,

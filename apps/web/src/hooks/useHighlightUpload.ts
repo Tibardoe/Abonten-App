@@ -60,7 +60,6 @@ export function useHighlightUpload(username: string) {
         cloudName,
         folder,
         allowedFormats,
-        maxFileSizeBytes,
       } = signatureResponse.data;
 
       patch(setItems, id, { status: "uploading" });
@@ -78,7 +77,6 @@ export function useHighlightUpload(username: string) {
           signature,
           folder,
           allowedFormats,
-          maxFileSizeBytes,
           resourceType: mediaItem.type,
           onProgress: (percent) => patch(setItems, id, { progress: percent }),
         });

@@ -61,7 +61,6 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
         cloudName,
         folder,
         allowedFormats,
-        maxFileSizeBytes,
       } = signatureResponse.data;
 
       patch(setItems, id, { status: "uploading" });
@@ -79,7 +78,6 @@ export function usePlaceGalleryUpload(placeId: string, onUploaded: () => void) {
           signature,
           folder,
           allowedFormats,
-          maxFileSizeBytes,
           resourceType: "image",
           onProgress: (percent) => patch(setItems, id, { progress: percent }),
         });

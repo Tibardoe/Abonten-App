@@ -1,11 +1,6 @@
 import {
   ALLOWED_IMAGE_UPLOAD_FORMATS,
   ALLOWED_VIDEO_UPLOAD_FORMATS,
-  MAX_AVATAR_UPLOAD_SIZE_BYTES,
-  MAX_EVENT_FLYER_SIZE_BYTES,
-  MAX_HIGHLIGHT_UPLOAD_SIZE_BYTES,
-  MAX_PLACE_PHOTO_SIZE_BYTES,
-  MAX_REVIEW_PHOTO_SIZE_BYTES,
 } from "@abonten/core/uploadLimits";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import { v2 as cloudinary } from "cloudinary";
@@ -29,7 +24,7 @@ cloudinary.config({
 // /api/mobile/uploads/signature route. CLOUDINARY_API_SECRET never leaves
 // the server.
 //
-// The signature covers FOUR params, all of which Cloudinary re-derives and
+// The signature covers TWO params, both of which Cloudinary re-derives and
 // verifies against the request:
 //   • folder          — bound to the caller's own user id, so an upload
 //                        can't be redirected into another user's folder
@@ -37,12 +32,22 @@ cloudinary.config({
 //   • allowed_formats — Cloudinary rejects any other format server-side, so
 //                        a client can't smuggle in an executable / SVG /
 //                        arbitrary "raw" blob.
-//   • max_file_size   — Cloudinary rejects anything larger server-side, so
-//                        upload size no longer depends on a client-asserted
-//                        `bytes` field (see uploadHighlight.ts) or on trust.
-// The client MUST send these three plus `timestamp` verbatim or the
-// signature check fails — @abonten/api-client's uploadToCloudinary helpers
-// forward exactly what this returns.
+// The client MUST send these two plus `timestamp` verbatim or the signature
+// check fails — @abonten/api-client's uploadToCloudinary helpers forward
+// exactly what this returns.
+//
+// There is deliberately no `max_file_size` here: it looks like a real signed
+// upload parameter but isn't one Cloudinary's API recognizes — Cloudinary
+// silently drops it when reconstructing the string it verifies the signature
+// against, so a signature computed *with* it never matches and every upload
+// is rejected with "Invalid Signature" (found live 2026-09-05: this exact
+// bug had every mobile upload, and every web avatar/highlight/place-gallery/
+// review-photo upload, failing 100% of the time since it was added). Upload
+// size is enforced two ways instead: the app's own MAX_*_SIZE_BYTES checks
+// before a file is ever selected (unchanged, see e.g. useAvatarUpload.ts),
+// and Cloudinary's own account-level size ceiling as the real backstop —
+// its rejection is a normal error response the caller surfaces to the user,
+// not a client-invented signed constraint.
 
 export type UploadSignatureKind =
   | "avatar"
@@ -65,37 +70,21 @@ const FOLDER_PREFIX: Record<UploadSignatureKind, string> = {
   place_review_photo: "place_review_photos",
 };
 
-// Per-kind format + size ceiling baked into the signature. Everything but
+// Per-kind allowed format list baked into the signature. Everything but
 // `highlight` is images-only; `highlight` also accepts a short video, so it
-// takes the video format list and the video size cap.
+// takes the video format list too.
 const UPLOAD_CONSTRAINTS: Record<
   UploadSignatureKind,
-  { allowedFormats: string; maxFileSizeBytes: number }
+  { allowedFormats: string }
 > = {
-  avatar: {
-    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
-    maxFileSizeBytes: MAX_AVATAR_UPLOAD_SIZE_BYTES,
-  },
+  avatar: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
   highlight: {
     allowedFormats: `${ALLOWED_IMAGE_UPLOAD_FORMATS},${ALLOWED_VIDEO_UPLOAD_FORMATS}`,
-    maxFileSizeBytes: MAX_HIGHLIGHT_UPLOAD_SIZE_BYTES,
   },
-  place_photo: {
-    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
-    maxFileSizeBytes: MAX_PLACE_PHOTO_SIZE_BYTES,
-  },
-  event_flyer: {
-    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
-    maxFileSizeBytes: MAX_EVENT_FLYER_SIZE_BYTES,
-  },
-  event_review_photo: {
-    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
-    maxFileSizeBytes: MAX_REVIEW_PHOTO_SIZE_BYTES,
-  },
-  place_review_photo: {
-    allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS,
-    maxFileSizeBytes: MAX_REVIEW_PHOTO_SIZE_BYTES,
-  },
+  place_photo: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
+  event_flyer: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
+  event_review_photo: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
+  place_review_photo: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
 };
 
 export type CloudinarySignatureData = {
@@ -106,8 +95,6 @@ export type CloudinarySignatureData = {
   folder: string;
   /** Comma-separated allow-list; send verbatim as the `allowed_formats` param. */
   allowedFormats: string;
-  /** Send verbatim as the `max_file_size` param (bytes). */
-  maxFileSizeBytes: number;
 };
 
 // Same shape the get*UploadSignature Server Actions have always returned:
@@ -144,7 +131,7 @@ export async function buildCloudinaryUploadSignature(
 
   const timestamp = Math.round(Date.now() / 1000);
   const folder = `${FOLDER_PREFIX[kind]}/${userId}`;
-  const { allowedFormats, maxFileSizeBytes } = UPLOAD_CONSTRAINTS[kind];
+  const { allowedFormats } = UPLOAD_CONSTRAINTS[kind];
 
   // Every signed param must be echoed verbatim by the client or Cloudinary's
   // own signature check fails. Param names are Cloudinary's snake_case
@@ -154,7 +141,6 @@ export async function buildCloudinaryUploadSignature(
       timestamp,
       folder,
       allowed_formats: allowedFormats,
-      max_file_size: maxFileSizeBytes,
     },
     process.env.CLOUDINARY_API_SECRET as string,
   );
@@ -168,7 +154,6 @@ export async function buildCloudinaryUploadSignature(
       cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
       folder,
       allowedFormats,
-      maxFileSizeBytes,
     },
   };
 }
