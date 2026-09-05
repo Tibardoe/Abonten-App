@@ -8,7 +8,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useToast } from "@/hooks/useToast";
-import { invalidateTicketStatusQueries } from "@/utils/mutationQueryInvalidation";
+import {
+  invalidateOrganizerFinanceQueries,
+  invalidateTicketStatusQueries,
+} from "@/utils/mutationQueryInvalidation";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserTicketType } from "@abonten/types/ticketType";
 import {
@@ -100,6 +103,11 @@ export default function CancelUserTicketBtn({
 
     onSettled: () => {
       invalidateTicketStatusQueries(queryClient);
+      // A paid ticket's cancellation issues a partial refund
+      // (cancelUserTicketCore -> issueRefundCore), which changes the
+      // organizer's own ledger balance -- refresh their Finances screens
+      // too, not just the buyer's ticket list.
+      if (transactionId) invalidateOrganizerFinanceQueries(queryClient);
     },
   });
 

@@ -59,3 +59,25 @@ export function invalidatePlaceListQueries(queryClient: QueryClient) {
       matchesAnyPrefix(query.queryKey[0], PLACE_LIST_KEY_PREFIXES),
   });
 }
+
+// Query key first-segments for the organizer's own Finances screens
+// (Overview, Pending Earnings, Refund Summary, Ledger Transactions —
+// FinancesOverview.tsx's own local `invalidateAll` already covers these
+// four for the payout-request flow, but that function lives inside one
+// component and isn't reachable from the several OTHER places a refund can
+// change an organizer's balance: self-cancel (CancelUserTicketBtn.tsx),
+// a manual retry (RetryRefundBtn.tsx), or a bulk event-cancellation refund
+// (CancelButton.tsx) — none of which previously invalidated these at all.
+const ORGANIZER_FINANCE_KEY_PREFIXES = [
+  "organizer-finance-overview",
+  "organizer-pending-earnings",
+  "organizer-refund-summary",
+  "organizer-ledger-transactions",
+];
+
+export function invalidateOrganizerFinanceQueries(queryClient: QueryClient) {
+  queryClient.invalidateQueries({
+    predicate: (query) =>
+      matchesAnyPrefix(query.queryKey[0], ORGANIZER_FINANCE_KEY_PREFIXES),
+  });
+}

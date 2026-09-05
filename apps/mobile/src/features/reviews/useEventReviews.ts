@@ -358,6 +358,17 @@ export function usePostEventReview() {
         queryKey: ["reviews", "eligibility", input.eventId, userId],
       });
       qc.invalidateQueries({ queryKey: ["mobile", "event", input.eventId] });
+      // The event detail screen's own rating line + reviews list
+      // (useEventRating / useEventReviewsList) are separate query keys from
+      // ["mobile","event",...] -- without this a review posted from that
+      // exact screen leaves its own rating/list stale until it's
+      // unmounted and remounted.
+      qc.invalidateQueries({
+        queryKey: ["mobile", "event-rating", input.eventId],
+      });
+      qc.invalidateQueries({
+        queryKey: ["mobile", "event-reviews", input.eventId],
+      });
       // EventCard on the "All events" list (get_filtered_events) shows a live
       // avg_rating — a new review moves it.
       qc.invalidateQueries({ queryKey: ["explore"] });
@@ -383,6 +394,11 @@ export function useDeleteEventReview() {
       qc.invalidateQueries({ queryKey: ["reviews", "awaiting", userId] });
       qc.invalidateQueries({ queryKey: ["reviews", "mine", userId] });
       qc.invalidateQueries({ queryKey: ["reviews", "eligibility"] });
+      // Unscoped (no eventId) since this mutation only has the review id --
+      // matches every cached event-rating/event-reviews query, same
+      // reasoning as usePostEventReview above.
+      qc.invalidateQueries({ queryKey: ["mobile", "event-rating"] });
+      qc.invalidateQueries({ queryKey: ["mobile", "event-reviews"] });
       qc.invalidateQueries({ queryKey: ["explore"] });
       qc.invalidateQueries({ queryKey: ["discovery"] });
     },

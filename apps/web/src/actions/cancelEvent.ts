@@ -7,6 +7,7 @@ import {
   type CancelEventResult,
   cancelEventCore,
 } from "@abonten/services/events/cancelEventCore";
+import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 
 /**
@@ -32,11 +33,32 @@ export default async function cancelEvent(
     return { status: 401, message: "User not Logged in" };
   }
 
-  return cancelEventCore(supabase, eventId, (eventTitle, attendees) =>
-    after(() =>
-      eventCancellationNotification(eventTitle, attendees).catch((error) =>
-        logger.error(`Failed sending event cancellation emails: ${error}`),
+  const result = await cancelEventCore(
+    supabase,
+    eventId,
+    (eventTitle, attendees) =>
+      after(() =>
+        eventCancellationNotification(eventTitle, attendees).catch((error) =>
+          logger.error(`Failed sending event cancellation emails: ${error}`),
+        ),
       ),
-    ),
   );
+
+  // Cancellation atomically cancels every ticket/attendance/checkout row
+  // tied to this event AND issues refunds over the affected transactions
+  // (cancelEventCore -> issueRefundCore) -- this was previously the only
+  // ticket/checkout-mutating action in the codebase with no revalidatePath
+  // at all (contrast generateTicket.ts, cancelUserTicket.ts,
+  // registerForFreeEvent.ts, all of which follow this same pattern), and
+  // the resulting refunds change the organizer's own ledger balance, which
+  // nothing was invalidating either.
+  if (result.status === 200) {
+    revalidatePath("/manage/my-events");
+    revalidatePath(`/manage/events/${eventId}`);
+    revalidatePath("/manage/dashboard");
+    revalidatePath("/finances");
+    revalidatePath("/transactions");
+  }
+
+  return result;
 }

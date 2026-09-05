@@ -2,6 +2,7 @@
 
 import issueRefund from "@/actions/issueRefund";
 import { useToast } from "@/hooks/useToast";
+import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type RetryRefundBtnProps = {
@@ -33,6 +34,9 @@ export default function RetryRefundBtn({
       if (response.status === 200) {
         toast.success(response.message ?? "Refund requested again.");
         queryClient.invalidateQueries({ queryKey });
+        // Changes the organizer's own ledger balance -- refresh their
+        // Finances screens too.
+        invalidateOrganizerFinanceQueries(queryClient);
       } else {
         toast.error(
           response.message ?? "Couldn't retry the refund. Please try again.",

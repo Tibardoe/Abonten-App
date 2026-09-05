@@ -1,6 +1,10 @@
 "use client";
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import {
+  useInvalidatePlaceClaimState,
+  usePlaceClaimState,
+} from "@/hooks/usePlaceClaimState";
 import ClaimPlaceModal from "@/places/organisms/ClaimPlaceModal";
 import { useState } from "react";
 
@@ -18,6 +22,11 @@ type ClaimPlaceButtonProps = {
  * page rather than /manage/places/[placeId] -- claiming is for a DIFFERENT
  * user who wants to take over from the current owner, not something the
  * owner does to their own place.
+ *
+ * Tracks the caller's own pending/approved claim state (usePlaceClaimState,
+ * same RLS-scoped read pattern as the mobile app already used) so
+ * re-opening the modal, or reloading the page, doesn't keep inviting a
+ * duplicate submission that only the DB's unique constraint used to catch.
  */
 export default function ClaimPlaceButton({
   placeId,
@@ -25,9 +34,21 @@ export default function ClaimPlaceButton({
   ownerId,
 }: ClaimPlaceButtonProps) {
   const { data: user } = useCurrentUser();
+  const { data: claimState } = usePlaceClaimState(placeId, user?.id, ownerId);
+  const invalidateClaimState = useInvalidatePlaceClaimState();
   const [showModal, setShowModal] = useState(false);
 
   if (!user || user.id === ownerId) return null;
+
+  if (claimState?.status === "pending") {
+    return (
+      <span className="px-3 py-1.5 bg-black/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm shrink-0">
+        Claim pending review
+      </span>
+    );
+  }
+
+  if (claimState?.status === "approved") return null;
 
   return (
     <>
@@ -44,6 +65,7 @@ export default function ClaimPlaceButton({
           placeId={placeId}
           placeName={placeName}
           onClose={() => setShowModal(false)}
+          onSubmitted={() => invalidateClaimState(placeId, user.id)}
         />
       )}
     </>

@@ -3,6 +3,7 @@
 import getOrganizerFinanceOverview from "@/actions/getOrganizerFinanceOverview";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { invalidateOrganizerFinanceQueries } from "@/utils/mutationQueryInvalidation";
 import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinance";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -54,14 +55,7 @@ export default function FinancesOverview({
   };
   const otherCurrencies = rows.slice(1);
 
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({
-      queryKey: ORGANIZER_FINANCE_OVERVIEW_QUERY_KEY,
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["organizer-pending-earnings"],
-    });
-  };
+  const invalidateAll = () => invalidateOrganizerFinanceQueries(queryClient);
 
   if (isPending) {
     return (

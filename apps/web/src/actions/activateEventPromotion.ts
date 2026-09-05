@@ -4,6 +4,7 @@ import createNotification from "@/actions/createNotification";
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
+import { revalidatePath } from "next/cache";
 
 /**
  * Commit step for an Event Promotion purchase — mirrors
@@ -132,7 +133,7 @@ export default async function activateEventPromotion(
 
   const { data: event } = await supabase
     .from("event")
-    .select("title, flyer_public_id, flyer_version")
+    .select("title, flyer_public_id, flyer_version, event_code")
     .eq("id", checkout.event_id)
     .maybeSingle();
 
@@ -151,6 +152,17 @@ export default async function activateEventPromotion(
     },
     supabase,
   );
+
+  // Every other payment-completion action (generateTicket.ts,
+  // registerForFreeEvent.ts, updateEvent.ts) revalidates its own affected
+  // routes right after success -- this one didn't, so the organizer's own
+  // /manage/events/[eventId] promotion tab (server-rendered, not a client
+  // query) could still show "pick a tier" instead of "Currently featured"
+  // if they hit the browser Back button right after paying.
+  revalidatePath(`/manage/events/${checkout.event_id}`);
+  if (event?.event_code) {
+    revalidatePath(`/events/${event.event_code.toLowerCase()}`);
+  }
 
   return {
     status: 200,

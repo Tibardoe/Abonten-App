@@ -4,6 +4,7 @@ import createNotification from "@/actions/createNotification";
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
+import { revalidatePath } from "next/cache";
 
 /**
  * Commit step for a Featured Places purchase — the place equivalent of
@@ -155,6 +156,15 @@ export default async function activatePlacePromotion(
     },
     supabase,
   );
+
+  // Same reasoning as activateEventPromotion.ts: this was the one
+  // payment-completion action with no revalidatePath, leaving the
+  // organizer's own /manage/places/[placeId] promotion tab able to show
+  // stale "pick a tier" state after a Back-button navigation post-payment.
+  revalidatePath(`/manage/places/${checkout.place_id}`);
+  if (place?.slug) {
+    revalidatePath(`/places/${place.slug}`);
+  }
 
   return {
     status: 200,
