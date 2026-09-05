@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "731602802850",
+    "project_id": "abonten-452216",
+    "storage_bucket": "abonten-452216.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731602802850:android:8681da572fa6d0a1a7dffb",
+        "android_client_info": {
+          "package_name": "com.abonten.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "731602802850-6na9vbq01f9l1q7p04c7r0rh2c4f67hk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-CL61Gc-tuCFSt1h88PAVCYnZ8PprkMQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "731602802850-6na9vbq01f9l1q7p04c7r0rh2c4f67hk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
