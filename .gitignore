@@ -45,6 +45,9 @@ yarn-error.log*
 # Sentry bundler plugin — written by `npx @sentry/wizard`, holds SENTRY_AUTH_TOKEN
 .env.sentry-build-plugin
 
+# Firebase Admin SDK service account keys — real credentials, never committed
+apps/mobile/*firebase-adminsdk*.json
+
 # vercel
 .vercel
 
