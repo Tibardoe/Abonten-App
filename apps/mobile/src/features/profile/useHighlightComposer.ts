@@ -30,6 +30,10 @@ export type EditableMedia = {
 
 const MB = 1024 * 1024;
 
+// One highlight "story" holds at most this many slides — matches the
+// picker's selectionLimit and the web useMediaSelection cap.
+const MAX_COMPOSER_ITEMS = 10;
+
 export function useHighlightComposer() {
   const [items, setItems] = useState<EditableMedia[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -47,18 +51,33 @@ export function useHighlightComposer() {
       return false;
     }
 
+    // The gallery button (step 1) and the filmstrip "+" both land here, so a
+    // pick ALWAYS appends to whatever is already in the composer — it must
+    // never replace it. Only offer the slots that are still free.
+    const remaining = MAX_COMPOSER_ITEMS - items.length;
+    if (remaining <= 0) {
+      Alert.alert(
+        "Highlight is full",
+        `A highlight can hold up to ${MAX_COMPOSER_ITEMS} photos and videos.`,
+      );
+      return false;
+    }
+
     const picked = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images", "videos"],
       allowsMultipleSelection: true,
       quality: 1,
-      selectionLimit: 10,
+      selectionLimit: remaining,
     });
     if (picked.canceled || !picked.assets?.length) return false;
 
     const accepted: EditableMedia[] = [];
     const skipped: string[] = [];
+    // Skip anything already in the composer (re-picking the same asset).
+    const existingUris = new Set(items.map((m) => m.uri));
 
     for (const asset of picked.assets) {
+      if (existingUris.has(asset.uri)) continue;
       const isVideo = asset.type === "video";
       const maxBytes = isVideo
         ? MAX_HIGHLIGHT_VIDEO_BYTES
@@ -103,10 +122,11 @@ export function useHighlightComposer() {
     }
     if (accepted.length === 0) return false;
 
-    setItems(accepted);
+    setItems((prev) => [...prev, ...accepted].slice(0, MAX_COMPOSER_ITEMS));
+    // Jump to the first newly-added item so the pick visibly "took".
     setActiveId(accepted[0].id);
     return true;
-  }, []);
+  }, [items]);
 
   const select = useCallback((id: string) => setActiveId(id), []);
 
