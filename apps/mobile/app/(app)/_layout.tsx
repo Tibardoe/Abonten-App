@@ -41,7 +41,10 @@ function StackHost() {
       />
       <Stack.Screen
         name="highlight/new"
-        options={{ animation: "slide_from_bottom" }}
+        // gestureEnabled:false — the composer has a full-width video-trim
+        // bar with edge-adjacent drag handles; the iOS swipe-back gesture
+        // would fire mid-trim. Dismiss is the X button / hardware back.
+        options={{ animation: "slide_from_bottom", gestureEnabled: false }}
       />
       <Stack.Screen name="buy/[eventId]" />
       <Stack.Screen
