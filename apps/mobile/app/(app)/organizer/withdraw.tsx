@@ -8,6 +8,7 @@ import {
   Button,
   Chip,
   Icon,
+  KeyboardAwareScrollView,
   Overline,
   ScreenError,
   ScreenLoader,
@@ -15,13 +16,7 @@ import {
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 
 function fmt(currency: string, v: number): string {
   return `${currency} ${v.toLocaleString(undefined, {
@@ -158,7 +153,7 @@ export default function WithdrawScreen() {
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 p-4 pb-10"
       keyboardShouldPersistTaps="handled"
@@ -308,6 +303,6 @@ export default function WithdrawScreen() {
       <AppText variant="caption" className="text-center">
         Withdrawals are reviewed before the funds are sent.
       </AppText>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

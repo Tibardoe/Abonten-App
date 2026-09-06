@@ -9,15 +9,14 @@ import { EventWizardSchedule } from "@/components/events/EventWizardSchedule";
 import { EventWizardTickets } from "@/components/events/EventWizardTickets";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
-import { AppText, Hero, Overline } from "@abonten/ui-native";
-import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+  AppText,
+  Hero,
+  KeyboardAwareScrollView,
+  Overline,
+} from "@abonten/ui-native";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
 // Native echo of the web EventUploadModal / useEventUploadForm — a 7-step
 // wizard that publishes an event via useEventCreate. With `?draftId=`, it
@@ -134,10 +133,9 @@ export default function CreateEventScreen() {
   return (
     <View className="flex-1 bg-background">
       {header}
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1 bg-background"
-        contentContainerClassName="gap-5 p-4 pb-16"
-        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="gap-5 p-4"
       >
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
@@ -189,7 +187,7 @@ export default function CreateEventScreen() {
         {w.step === 4 ? <EventWizardTickets w={w} /> : null}
         {w.step === 5 ? <EventWizardPromos w={w} /> : null}
         {w.step === 6 ? <EventWizardReview w={w} /> : null}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }

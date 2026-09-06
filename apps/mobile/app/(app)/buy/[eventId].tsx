@@ -20,13 +20,14 @@ import {
   Chip,
   Icon,
   Input,
+  KeyboardAwareScrollView,
   ScreenError,
   Spinner,
   Stepper,
 } from "@abonten/ui-native";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 
 const MAX_PER_TYPE = 10;
 
@@ -274,7 +275,7 @@ export default function BuyTicketsScreen() {
   return (
     <View className="flex-1 bg-background">
       {header}
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1"
         contentContainerClassName="gap-6 p-4 pb-8"
         keyboardShouldPersistTaps="handled"
@@ -475,7 +476,7 @@ export default function BuyTicketsScreen() {
             The final total is confirmed on the next screen before you pay.
           </AppText>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <View className="border-t border-border p-4">
         <Button

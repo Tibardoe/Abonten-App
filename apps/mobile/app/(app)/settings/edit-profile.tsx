@@ -11,18 +11,13 @@ import {
   Button,
   Field,
   Input,
+  KeyboardAwareScrollView,
   ScreenError,
   ScreenLoader,
 } from "@abonten/ui-native";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { useEffect, useMemo, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { Pressable, View } from "react-native";
 
 // Native echo of the web EditProfileInputFields — the same
 // @abonten/validation editProfileSchema (username / full_name / website /
@@ -131,104 +126,99 @@ export default function EditProfile() {
         title="Edit Profile"
         backFallback="/(app)/settings"
       />
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         className="flex-1 bg-background"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        contentContainerClassName="gap-5 p-4"
       >
-        <ScrollView
-          contentContainerClassName="gap-5 p-4"
-          keyboardShouldPersistTaps="handled"
-        >
-          <ProfileCompletionCard />
+        <ProfileCompletionCard />
 
-          <View className="flex-row items-center gap-3">
-            <Pressable
-              onPress={() => setPhotoViewerOpen(true)}
-              disabled={!profile.avatar_public_id}
-              accessibilityRole="button"
-              accessibilityLabel="View profile photo"
-            >
-              <Avatar
-                publicId={profile.avatar_public_id ?? undefined}
-                version={profile.avatar_version ?? undefined}
-                size={64}
-              />
-            </Pressable>
-            <View className="flex-1 gap-1">
-              <AppText variant="bodyStrong">{profile.username}</AppText>
-              <Button
-                title={avatar.isPending ? "Uploading…" : "Change photo"}
-                variant="outline"
-                size="sm"
-                onPress={() => avatar.mutate()}
-                disabled={avatar.isPending}
-              />
-              {avatar.isError ? (
-                <AppText variant="small" tone="error">
-                  {avatar.error instanceof Error
-                    ? avatar.error.message
-                    : "Upload failed."}
-                </AppText>
-              ) : null}
-            </View>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => setPhotoViewerOpen(true)}
+            disabled={!profile.avatar_public_id}
+            accessibilityRole="button"
+            accessibilityLabel="View profile photo"
+          >
+            <Avatar
+              publicId={profile.avatar_public_id ?? undefined}
+              version={profile.avatar_version ?? undefined}
+              size={64}
+            />
+          </Pressable>
+          <View className="flex-1 gap-1">
+            <AppText variant="bodyStrong">{profile.username}</AppText>
+            <Button
+              title={avatar.isPending ? "Uploading…" : "Change photo"}
+              variant="outline"
+              size="sm"
+              onPress={() => avatar.mutate()}
+              disabled={avatar.isPending}
+            />
+            {avatar.isError ? (
+              <AppText variant="small" tone="error">
+                {avatar.error instanceof Error
+                  ? avatar.error.message
+                  : "Upload failed."}
+              </AppText>
+            ) : null}
           </View>
+        </View>
 
-          <Field label="Username" error={errors.username}>
-            <Input
-              value={form.username}
-              onChangeText={(v) => set("username", v)}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </Field>
-
-          <Field label="Full name" error={errors.full_name}>
-            <Input
-              value={form.full_name}
-              onChangeText={(v) => set("full_name", v)}
-            />
-          </Field>
-
-          <Field label="Website" error={errors.website} hint="Optional">
-            <Input
-              value={form.website}
-              onChangeText={(v) => set("website", v)}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              placeholder="https://example.com"
-            />
-          </Field>
-
-          <Field label="Bio" error={errors.bio} hint="Up to 160 characters">
-            <Input
-              value={form.bio}
-              onChangeText={(v) => set("bio", v)}
-              multiline
-              numberOfLines={4}
-              style={{ minHeight: 96, textAlignVertical: "top" }}
-            />
-          </Field>
-
-          {update.isError ? (
-            <AppText variant="small" tone="error">
-              We couldn't update your profile. Please try again.
-            </AppText>
-          ) : null}
-          {saved ? (
-            <AppText variant="small" tone="brand">
-              Profile updated.
-            </AppText>
-          ) : null}
-
-          <Button
-            title="Save changes"
-            onPress={onSave}
-            loading={update.isPending}
-            disabled={!dirty}
+        <Field label="Username" error={errors.username}>
+          <Input
+            value={form.username}
+            onChangeText={(v) => set("username", v)}
+            autoCapitalize="none"
+            autoCorrect={false}
           />
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </Field>
+
+        <Field label="Full name" error={errors.full_name}>
+          <Input
+            value={form.full_name}
+            onChangeText={(v) => set("full_name", v)}
+          />
+        </Field>
+
+        <Field label="Website" error={errors.website} hint="Optional">
+          <Input
+            value={form.website}
+            onChangeText={(v) => set("website", v)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            placeholder="https://example.com"
+          />
+        </Field>
+
+        <Field label="Bio" error={errors.bio} hint="Up to 160 characters">
+          <Input
+            value={form.bio}
+            onChangeText={(v) => set("bio", v)}
+            multiline
+            numberOfLines={4}
+            style={{ minHeight: 96, textAlignVertical: "top" }}
+          />
+        </Field>
+
+        {update.isError ? (
+          <AppText variant="small" tone="error">
+            We couldn't update your profile. Please try again.
+          </AppText>
+        ) : null}
+        {saved ? (
+          <AppText variant="small" tone="brand">
+            Profile updated.
+          </AppText>
+        ) : null}
+
+        <Button
+          title="Save changes"
+          onPress={onSave}
+          loading={update.isPending}
+          disabled={!dirty}
+        />
+      </KeyboardAwareScrollView>
 
       <ImageViewer
         uri={

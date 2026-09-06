@@ -7,9 +7,15 @@ import { PlaceWizardPhotos } from "@/components/places/PlaceWizardPhotos";
 import { PlaceWizardReview } from "@/components/places/PlaceWizardReview";
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import { usePlaceWizard } from "@/features/places/usePlaceWizard";
-import { AppText, Hero, Overline, ScreenLoader } from "@abonten/ui-native";
+import {
+  AppText,
+  Hero,
+  KeyboardAwareScrollView,
+  Overline,
+  ScreenLoader,
+} from "@abonten/ui-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
 
 // Native echo of the web PlaceUploadModal: a 4-step wizard that publishes a
 // place via useCreatePlace. With `?draftId=`, it resumes a saved draft; the
@@ -128,10 +134,9 @@ export default function CreatePlaceScreen() {
   return (
     <View className="flex-1 bg-background">
       {header}
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1 bg-background"
-        contentContainerClassName="gap-5 p-4 pb-16"
-        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="gap-5 p-4"
       >
         <View className="gap-3.5">
           <View className="flex-row items-center justify-between">
@@ -181,7 +186,7 @@ export default function CreatePlaceScreen() {
         {w.step === 2 ? <PlaceWizardBasicInfo w={w} /> : null}
         {w.step === 3 ? <PlaceWizardHours w={w} /> : null}
         {w.step === 4 ? <PlaceWizardReview w={w} /> : null}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </View>
   );
 }
