@@ -8,8 +8,7 @@ import type {
   AdminRoleKey,
   RoleMatrix,
 } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -31,7 +30,7 @@ export type AdminStaffRow = {
 };
 
 export async function listAdminStaffCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<AdminStaffRow[]>> {
   try {
@@ -98,7 +97,7 @@ export async function listAdminStaffCore(
 const LOCKED_ROLES = ["super_admin"];
 
 export async function getRoleMatrixCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<RoleMatrix>> {
   try {
@@ -147,7 +146,7 @@ export async function getRoleMatrixCore(
 // (settings.manage) + step-up, enforced by the transport; the DB trigger
 // makes super_admin's own rows un-writable as a last line of defence.
 export async function setRolePermissionCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { roleKey: string; permissionKey: string; enabled: boolean },
   requestMeta?: Record<string, unknown>,
@@ -224,7 +223,7 @@ export async function setRolePermissionCore(
 }
 
 export async function grantAdminRoleCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { targetUserId: string; roleKey: AdminRoleKey },
   requestMeta?: Record<string, unknown>,
@@ -259,7 +258,7 @@ export async function grantAdminRoleCore(
 }
 
 export async function revokeAdminRoleCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { targetUserId: string; roleKey: AdminRoleKey },
   requestMeta?: Record<string, unknown>,
@@ -294,7 +293,7 @@ export async function revokeAdminRoleCore(
 }
 
 export async function setAdminUserStatusCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { targetUserId: string; status: "active" | "disabled" },
   requestMeta?: Record<string, unknown>,

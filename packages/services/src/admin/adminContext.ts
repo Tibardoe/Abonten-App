@@ -11,7 +11,7 @@ import type {
   AdminRoleKey,
 } from "@abonten/types/adminTypes";
 import type { Database, Json } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 
 export { AdminForbiddenError, AdminUnauthenticatedError };
 
@@ -26,7 +26,7 @@ export { AdminForbiddenError, AdminUnauthenticatedError };
 // callers can `catch` and map to an envelope. Never trusts anything the
 // client sent about roles or permissions.
 export async function resolveAdminContext(
-  serviceClient: SupabaseClient<Database>,
+  serviceClient: ServiceRoleClient,
   userId: string | null | undefined,
   opts?: { email?: string | null; reauthenticatedAt?: number | null },
 ): Promise<AdminContext> {
@@ -80,7 +80,7 @@ export async function resolveAdminContext(
 const KNOWN_PERMISSIONS = new Set<string>(ADMIN_PERMISSION_KEYS);
 
 async function resolvePermissions(
-  serviceClient: SupabaseClient<Database>,
+  serviceClient: ServiceRoleClient,
   roles: AdminRoleKey[],
 ): Promise<AdminPermissionKey[]> {
   if (roles.length === 0) return [];
@@ -160,7 +160,7 @@ export type AuditInput = {
 // surface rather than hide. (The DB also forbids UPDATE/DELETE on this
 // table, so history can't be rewritten once written.)
 export async function recordAdminAudit(
-  serviceClient: SupabaseClient<Database>,
+  serviceClient: ServiceRoleClient,
   input: AuditInput,
 ): Promise<void> {
   const { error } = await serviceClient.from("admin_audit_log").insert({

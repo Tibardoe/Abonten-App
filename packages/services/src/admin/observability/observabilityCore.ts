@@ -11,8 +11,8 @@ import type {
   MetricsOverviewPoint,
   ObservedPlatform,
 } from "@abonten/types/adminTypes";
-import type { Database, Json } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Json } from "@abonten/types/database.types";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -24,7 +24,7 @@ import {
 // The app_error_group rollup is maintained by a DB trigger.
 
 export async function ingestErrorCore(
-  serviceClient: SupabaseClient<Database>,
+  serviceClient: ServiceRoleClient,
   payload: ErrorEventPayload,
 ): Promise<{ status: number }> {
   const { error } = await serviceClient.from("app_error_event").insert({
@@ -62,7 +62,7 @@ export type RequestMetricInput = {
 };
 
 export async function ingestMetricCore(
-  serviceClient: SupabaseClient<Database>,
+  serviceClient: ServiceRoleClient,
   input: RequestMetricInput,
 ): Promise<{ status: number }> {
   const { error } = await serviceClient.from("app_request_metric").insert({
@@ -88,7 +88,7 @@ export type HealthCheckOutcome = {
 };
 
 export async function recordHealthResultsCore(
-  serviceClient: SupabaseClient<Database>,
+  serviceClient: ServiceRoleClient,
   results: HealthCheckOutcome[],
 ): Promise<{ status: number }> {
   if (results.length === 0) return { status: 200 };
@@ -111,7 +111,7 @@ export async function recordHealthResultsCore(
 // ── READ side (Admin Monitoring module) ──────────────────────
 
 export async function getHealthSnapshotCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<HealthCheckSnapshot[]>> {
   try {
@@ -148,7 +148,7 @@ export async function getHealthSnapshotCore(
 }
 
 export async function listErrorGroupsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: { status?: ErrorGroupStatus | "all"; limit?: number } = {},
 ): Promise<AdminEnvelope<ErrorGroup[]>> {
@@ -193,7 +193,7 @@ export async function listErrorGroupsCore(
 }
 
 export async function getErrorGroupCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   fingerprint: string,
 ): Promise<AdminEnvelope<{ group: ErrorGroup; samples: ErrorEventSample[] }>> {
@@ -258,7 +258,7 @@ export async function getErrorGroupCore(
 }
 
 export async function updateErrorGroupStatusCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { fingerprint: string; status: ErrorGroupStatus },
   requestMeta?: Record<string, unknown>,
@@ -290,7 +290,7 @@ export async function updateErrorGroupStatusCore(
 }
 
 export async function getMetricsOverviewCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   opts: { sinceHours?: number } = {},
 ): Promise<AdminEnvelope<MetricsOverviewPoint[]>> {
@@ -326,7 +326,7 @@ export async function getMetricsOverviewCore(
 }
 
 export async function listIncidentsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
 ): Promise<AdminEnvelope<Incident[]>> {
   try {
@@ -364,7 +364,7 @@ export async function listIncidentsCore(
 }
 
 export async function upsertIncidentCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     id?: string;

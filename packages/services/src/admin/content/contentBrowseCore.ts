@@ -14,7 +14,7 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // The content-moderation browse queue (Phase 2). One list per moderatable
@@ -100,7 +100,7 @@ export type ListContentFilters = {
 };
 
 export async function listModeratableContentCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListContentFilters,
 ): Promise<PaginatedResult<ModeratableContentItem>> {
@@ -238,7 +238,7 @@ export async function listModeratableContentCore(
 
 /** Counts per moderation_state for the queue header chips. */
 export async function contentModerationCountsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   targetType: ModeratableTargetType,
 ): Promise<AdminEnvelope<Record<string, number>>> {

@@ -6,9 +6,8 @@ import {
   splitPage,
 } from "@abonten/core/pagination";
 import type { AdminContext, AuditLogEntry } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { assertPermission } from "../adminContext";
 
 // Read-only view over the append-only admin_audit_log. Needs audit.view.
@@ -25,7 +24,7 @@ export type AuditLogFilters = {
 };
 
 export async function listAuditLogCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: AuditLogFilters = {},
 ): Promise<PaginatedResult<AuditLogEntry>> {

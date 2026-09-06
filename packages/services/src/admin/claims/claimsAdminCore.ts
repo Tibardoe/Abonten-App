@@ -12,9 +12,8 @@ import type {
   ClaimListItem,
   ClaimStatus,
 } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { createNotificationCore } from "../../notifications/createNotification";
 import {
   type AdminEnvelope,
@@ -35,7 +34,7 @@ import {
 const NOTE_TARGET = "place_claim";
 
 async function resolveNames(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
@@ -57,7 +56,7 @@ export type ListClaimsFilters = {
 };
 
 export async function listClaimsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListClaimsFilters = {},
 ): Promise<PaginatedResult<ClaimListItem>> {
@@ -146,7 +145,7 @@ export async function listClaimsCore(
 }
 
 export async function getClaimDetailCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   claimId: string,
   opts: { signDoc?: (path: string) => Promise<string | null> } = {},
@@ -272,7 +271,7 @@ export async function getClaimDetailCore(
 }
 
 export async function reviewClaimCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     claimId: string;

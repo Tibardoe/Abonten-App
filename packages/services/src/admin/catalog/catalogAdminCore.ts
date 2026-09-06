@@ -18,9 +18,8 @@ import type {
   ReportListItem,
   UserAccountStatus,
 } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // Read-only catalog views for the Admin Console (Phase 2): Events, Places,
@@ -37,7 +36,7 @@ const STATUS_NAME: Record<number, UserAccountStatus> = {
 };
 
 async function names(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
@@ -53,7 +52,7 @@ async function names(
 }
 
 async function reportCounts(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   targetType: string,
   ids: string[],
 ): Promise<Map<string, number>> {
@@ -70,7 +69,7 @@ async function reportCounts(
 }
 
 async function recentReportsFor(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   targetType: string,
   targetId: string,
 ): Promise<ReportListItem[]> {
@@ -102,7 +101,7 @@ async function recentReportsFor(
 }
 
 async function adminNotes(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   targetType: string,
   targetId: string,
 ): Promise<AdminNoteEntry[]> {
@@ -126,7 +125,7 @@ async function adminNotes(
 }
 
 async function ratingFor(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   table: "event_review" | "place_review",
   fkCol: "event_id" | "place_id",
   id: string,
@@ -156,7 +155,7 @@ async function ratingFor(
 }
 
 async function eventSales(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   eventId: string,
 ): Promise<{ ticketsSold: number; grossSales: number; currency: string }> {
   const { data: tts } = await supabase
@@ -193,7 +192,7 @@ export type ListEventsFilters = {
 };
 
 export async function listEventsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListEventsFilters = {},
 ): Promise<PaginatedResult<EventAdminListItem>> {
@@ -290,7 +289,7 @@ export async function listEventsCore(
 }
 
 export async function getEventDetailCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   eventId: string,
 ): Promise<AdminEnvelope<EventAdminDetail>> {
@@ -368,7 +367,7 @@ export type ListPlacesFilters = {
 };
 
 export async function listPlacesCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListPlacesFilters = {},
 ): Promise<PaginatedResult<PlaceAdminListItem>> {
@@ -466,7 +465,7 @@ export async function listPlacesCore(
 }
 
 export async function getPlaceDetailCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   placeId: string,
 ): Promise<AdminEnvelope<PlaceAdminDetail>> {
@@ -547,7 +546,7 @@ export type ListOrganizersFilters = {
 };
 
 export async function listOrganizersCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListOrganizersFilters = {},
 ): Promise<PaginatedResult<OrganizerListItem>> {
@@ -660,7 +659,7 @@ export async function listOrganizersCore(
 }
 
 export async function getOrganizerDetailCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   organizerId: string,
 ): Promise<AdminEnvelope<OrganizerDetail>> {

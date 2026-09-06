@@ -5,7 +5,7 @@ import type {
   ModerationActionKind,
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -32,7 +32,7 @@ const PERMISSION_FOR: Record<
 };
 
 export async function applyModerationActionCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     targetType: ModeratableTargetType;

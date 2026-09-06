@@ -21,7 +21,7 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -53,7 +53,7 @@ const PRIORITY_ORDER: Record<ReportPriority, number> = {
 // ─────────────────────────────────────────────────────────────
 
 async function resolveActorNames(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids.filter((x): x is string => !!x))];
@@ -112,7 +112,7 @@ const TARGET_SNAPSHOT: Record<
 };
 
 async function fetchTargetSnapshot(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   targetType: ReportTargetType,
   targetId: string,
 ): Promise<Record<string, unknown> | null> {
@@ -148,7 +148,7 @@ export type ListReportsFilters = {
 };
 
 export async function listReportsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListReportsFilters = {},
 ): Promise<PaginatedResult<ReportListItem>> {
@@ -257,7 +257,7 @@ export async function listReportsCore(
 }
 
 export async function listReportGroupsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   opts: { onlyOpen?: boolean; limit?: number } = {},
 ): Promise<AdminEnvelope<ReportGroupItem[]>> {
@@ -304,7 +304,7 @@ export async function listReportGroupsCore(
 // ─────────────────────────────────────────────────────────────
 
 export async function getReportDetailCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   reportId: string,
   opts: { signAttachment?: (path: string) => Promise<string | null> } = {},
@@ -484,7 +484,7 @@ export async function getReportDetailCore(
 type ConcurrencyOpts = { expectedUpdatedAt?: string };
 
 async function guardConcurrency(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   reportId: string,
   expectedUpdatedAt: string | undefined,
 ): Promise<
@@ -522,7 +522,7 @@ function meta(ctx: AdminContext, requestMeta?: Record<string, unknown>) {
 }
 
 export async function assignReportCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { reportId: string; assigneeId: string | null } & ConcurrencyOpts,
   requestMeta?: Record<string, unknown>,
@@ -585,7 +585,7 @@ export async function assignReportCore(
 }
 
 export async function updateReportStatusCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     reportId: string;
@@ -653,7 +653,7 @@ export async function updateReportStatusCore(
 }
 
 export async function requestReportInfoCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { reportId: string; message: string } & ConcurrencyOpts,
   requestMeta?: Record<string, unknown>,
@@ -698,7 +698,7 @@ export async function requestReportInfoCore(
 }
 
 export async function addAdminNoteCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { targetType: string; targetId: string; body: string },
   requestMeta?: Record<string, unknown>,
@@ -739,7 +739,7 @@ export async function addAdminNoteCore(
 }
 
 export async function resolveReportCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     reportId: string;
@@ -814,7 +814,7 @@ const MODERATABLE_SET = new Set<string>([
 ]);
 
 export async function resolveReportGroupCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     dedupeKey: string;

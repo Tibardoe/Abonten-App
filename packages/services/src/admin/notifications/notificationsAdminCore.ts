@@ -12,10 +12,9 @@ import type {
   NotificationAdminListItem,
   NotificationBroadcastResult,
 } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
 import type { NotificationData } from "@abonten/types/notificationType";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { createNotificationCore } from "../../notifications/createNotification";
 import {
   type AdminEnvelope,
@@ -47,7 +46,7 @@ export type ListNotificationsFilters = {
 };
 
 export async function listNotificationsAdminCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListNotificationsFilters,
 ): Promise<PaginatedResult<NotificationAdminListItem>> {
@@ -136,7 +135,7 @@ export async function listNotificationsAdminCore(
 }
 
 export async function getNotificationAdminCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   id: string,
 ): Promise<AdminEnvelope<NotificationAdminDetail>> {
@@ -188,7 +187,7 @@ export async function getNotificationAdminCore(
 // Re-send an existing notification to the same recipient (a fresh row +
 // best-effort push, via the shared createNotificationCore).
 export async function resendNotificationCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { id: string },
   requestMeta?: Record<string, unknown>,
@@ -251,7 +250,7 @@ export type BroadcastSegment =
 // broadcasts do not fan out mobile pushes (that would hammer the Expo
 // endpoint); a single_user send that wants a push should use resend.
 export async function broadcastNotificationCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     segment: BroadcastSegment;
@@ -345,7 +344,7 @@ export async function broadcastNotificationCore(
 // ── helpers ─────────────────────────────────────────────────
 
 async function recipientNames(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ids: string[],
 ): Promise<Map<string, string>> {
   const unique = [...new Set(ids)].filter(Boolean);
@@ -366,7 +365,7 @@ type ResolveResult =
   | { ok: false; status: number; message: string };
 
 async function resolveRecipients(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   segment: BroadcastSegment,
 ): Promise<ResolveResult> {
   if (segment.kind === "single_user") {

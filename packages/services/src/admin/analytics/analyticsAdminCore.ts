@@ -6,7 +6,7 @@ import type {
   PlatformAnalytics,
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // Platform Analytics (Phase 4) — read-only aggregates. Abonten operates in
@@ -51,7 +51,7 @@ function num(v: unknown): number {
 }
 
 async function headCount(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   table: string,
   // biome-ignore lint/suspicious/noExplicitAny: PostgREST builder chaining not worth typing
   build?: (q: any) => any,
@@ -69,7 +69,7 @@ async function headCount(
 }
 
 export async function getPlatformAnalyticsCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   opts: { range: DashboardRange; from?: string; to?: string },
 ): Promise<AdminEnvelope<PlatformAnalytics>> {

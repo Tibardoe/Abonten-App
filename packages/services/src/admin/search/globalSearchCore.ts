@@ -4,8 +4,7 @@ import type {
   GlobalSearchHit,
   GlobalSearchResults,
 } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // One search box for the whole console (Phase 5). Each group is only
@@ -24,7 +23,7 @@ function sanitize(q: string): string {
 }
 
 export async function globalSearchCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { q: string },
 ): Promise<AdminEnvelope<GlobalSearchResults>> {

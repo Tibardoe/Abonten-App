@@ -6,8 +6,7 @@ import type {
   HealthCheckSnapshot,
   NeedsAttention,
 } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // The operations dashboard payload — real aggregates only (spec §32/§50).
@@ -65,7 +64,7 @@ function resolveRange(
 type CountQuery = any;
 
 async function count(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   table: string,
   build?: (q: CountQuery) => CountQuery,
 ): Promise<number> {
@@ -87,7 +86,7 @@ async function count(
 }
 
 export async function getDashboardCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { range: DashboardRange; from?: string; to?: string } = {
     range: "30d",

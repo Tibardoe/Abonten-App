@@ -14,7 +14,7 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -47,7 +47,7 @@ export type ListUsersFilters = {
 };
 
 export async function listUsersCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   filters: ListUsersFilters = {},
 ): Promise<PaginatedResult<AdminUserListItem>> {
@@ -140,7 +140,7 @@ export async function listUsersCore(
 }
 
 async function countGroup(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   table: string,
   column: string,
   ids: string[],
@@ -161,7 +161,7 @@ async function countGroup(
 }
 
 async function countReportsAgainst(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ids: string[],
 ): Promise<Map<string, number>> {
   const map = new Map<string, number>();
@@ -178,7 +178,7 @@ async function countReportsAgainst(
 }
 
 async function emailsFor(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ids: string[],
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
@@ -192,7 +192,7 @@ async function emailsFor(
 }
 
 export async function getUserDetailCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   userId: string,
 ): Promise<AdminEnvelope<AdminUserDetail>> {
@@ -317,7 +317,7 @@ export async function getUserDetailCore(
 }
 
 export async function setUserStatusCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     userId: string;

@@ -1,5 +1,5 @@
-import type { Database } from "@abonten/types/database.types";
-import { type SupabaseClient, createClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { createClient } from "@supabase/supabase-js";
 
 // Cookie-free, service-role Supabase client. Originally added for the
 // Paystack webhook route (src/app/api/paystack/webhook/route.ts), which has
@@ -24,9 +24,9 @@ import { type SupabaseClient, createClient } from "@supabase/supabase-js";
 // `next build`'s route data collection doesn't fail before
 // SUPABASE_SERVICE_ROLE_KEY has been configured — the webhook route itself
 // is what needs this value, not the build.
-let cachedClient: SupabaseClient<Database> | null = null;
+let cachedClient: ServiceRoleClient | null = null;
 
-export function getSupabaseServiceClient(): SupabaseClient<Database> {
+export function getSupabaseServiceClient(): ServiceRoleClient {
   if (cachedClient) return cachedClient;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,7 +40,7 @@ export function getSupabaseServiceClient(): SupabaseClient<Database> {
 
   cachedClient = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
-  });
+  }) as ServiceRoleClient;
 
   return cachedClient;
 }

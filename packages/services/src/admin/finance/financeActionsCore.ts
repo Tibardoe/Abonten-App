@@ -1,7 +1,6 @@
 import { logger } from "@abonten/core/logger";
 import type { AdminContext } from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { issueRefundCore } from "../../organizer/issueRefundCore";
 import {
   type AdminEnvelope,
@@ -17,7 +16,7 @@ import {
 // ── Refund ──────────────────────────────────────────────────
 
 export async function refundTransactionAdminCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: { transactionId: string; reason: string },
   requestMeta?: Record<string, unknown>,
@@ -54,7 +53,7 @@ export async function refundTransactionAdminCore(
 // ── Payout settlement ───────────────────────────────────────
 
 export async function settlePayoutAdminCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     payoutId: string;
@@ -111,7 +110,7 @@ export async function settlePayoutAdminCore(
 }
 
 export async function createPayoutAdminCore(
-  supabase: SupabaseClient<Database>,
+  supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
     organizerId: string;
