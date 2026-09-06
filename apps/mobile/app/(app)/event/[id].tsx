@@ -25,12 +25,14 @@ import {
   useEventReviewsList,
 } from "@/features/reviews/useEventReviewsList";
 import { eventShareUrl } from "@/lib/share";
+import { useNowTick } from "@/lib/useNowTick";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   formatFullDateTimeRange,
   getFormattedEventDate,
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
+import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { parseEventTypes } from "@abonten/core/parseEventTypes";
 import {
@@ -123,6 +125,14 @@ function ReviewItem({
       {review.event_review_photo?.length ? (
         <ReviewPhotoStrip photos={review.event_review_photo} />
       ) : null}
+      {review.organizer_response ? (
+        <View className="ml-3 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
+          <AppText variant="label" className="mb-1 text-primary">
+            Organizer reply
+          </AppText>
+          <AppText variant="small">{review.organizer_response}</AppText>
+        </View>
+      ) : null}
       <View className="flex-row items-center justify-between">
         <AppText variant="caption">
           {getRelativeTime(review.created_at)}
@@ -148,6 +158,10 @@ export default function EventDetailScreen() {
   const similarCardWidth = useCarouselCardWidth();
   const { data, isLoading, isError, refetch } = useEventDetail(id);
   const { session } = useSession();
+  // Advances every 30s and on foreground so the "ongoing / ended / next
+  // date" state below recomputes while the screen sits open across an
+  // occurrence boundary (issue §4).
+  const nowMs = useNowTick();
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
     targetType: "event" | "event_review";
@@ -256,12 +270,22 @@ export default function EventDetailScreen() {
             new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
         )
       : [];
-  const hasEnded =
-    (occ.length > 0
-      ? occ.every((o) => new Date(o.ends_at) < new Date())
-      : event.ends_at
-        ? new Date(event.ends_at) < new Date()
-        : false) && !canceled;
+  // Authoritative "can a ticket still be sold" state, recomputed on every
+  // tick. `ended` = every session is over; `inProgressNoFuture` = a session
+  // is happening now but nothing upcoming remains (a single-date event that
+  // has started counts here too — walk-up sales are closed). Either way no
+  // ticket can be bought; when a future occurrence still exists the event
+  // stays purchasable even while an earlier date is mid-run.
+  const occurrenceState = resolveOccurrenceState(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+    nowMs,
+  );
+  const hasEnded = !canceled && occurrenceState.blockReason === "ended";
+  const inProgressNoFuture =
+    !canceled && occurrenceState.blockReason === "ongoing_no_future";
+  const salesClosed = hasEnded || inProgressNoFuture;
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: attendanceCount,
@@ -336,7 +360,7 @@ export default function EventDetailScreen() {
           </View>
         </View>
 
-        {canceled || hasEnded ? (
+        {canceled || salesClosed ? (
           <View className="mx-4 mt-4 rounded-lg border border-destructive/40 bg-muted px-3 py-2">
             <AppText
               variant="small"
@@ -345,7 +369,9 @@ export default function EventDetailScreen() {
             >
               {canceled
                 ? "This event has been canceled."
-                : "This event has ended."}
+                : hasEnded
+                  ? "This event has ended."
+                  : "This event is currently in progress."}
             </AppText>
           </View>
         ) : null}
@@ -491,7 +517,7 @@ export default function EventDetailScreen() {
               times.find((s) => new Date(s).getTime() > Date.now()) ??
               times[0] ??
               null;
-            return !canceled && !hasEnded && remindStart ? (
+            return !canceled && !salesClosed && remindStart ? (
               <EventReminderButton
                 eventId={event.id}
                 eventTitle={event.title}
@@ -550,10 +576,12 @@ export default function EventDetailScreen() {
                   Tickets unavailable — this event was canceled.
                 </AppText>
               </View>
-            ) : hasEnded ? (
+            ) : salesClosed ? (
               <View className="items-center rounded-xl bg-muted px-4 py-3">
                 <AppText variant="muted" className="font-semibold">
-                  This event has ended.
+                  {hasEnded
+                    ? "This event has ended."
+                    : "This event is in progress — ticket sales are closed."}
                 </AppText>
               </View>
             ) : soldOut ? (

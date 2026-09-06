@@ -94,6 +94,15 @@ export const moderationActionSchema = z.object({
   reportId: z.string().uuid().nullable().optional(),
 });
 
+// Moderator-only removal of the organizer/owner *reply* on a review (the
+// review itself is untouched — use moderationActionSchema for that).
+export const clearReviewResponseSchema = z.object({
+  targetType: z.enum(["event_review", "place_review"]),
+  reviewId: z.string().uuid(),
+  reason: z.string().trim().max(2000).optional(),
+  reportId: z.string().uuid().nullable().optional(),
+});
+
 export const setUserStatusSchema = z.object({
   userId: z.string().uuid(),
   status: z.enum(["Active", "Suspended", "Banned"]),

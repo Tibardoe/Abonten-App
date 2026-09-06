@@ -111,6 +111,32 @@ export async function getMobileAuth(req: Request): Promise<MobileAuth> {
     };
   }
 
+  // Block a suspended (status_id 2) or banned (status_id 3) account from
+  // every mobile API route in one place — an admin ban also revokes their
+  // Supabase sessions (see setUserStatusCore), this covers the window
+  // before their JWT expires. Fails open on a lookup error so a transient
+  // read failure never locks the whole app out.
+  const { data: statusRow } = await supabase
+    .from("user_info")
+    .select("status_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (statusRow && (statusRow.status_id === 2 || statusRow.status_id === 3)) {
+    return {
+      supabase: null,
+      user: null,
+      response: NextResponse.json(
+        {
+          status: 403,
+          message:
+            "Your account has been restricted. Contact support if you think this is a mistake.",
+        },
+        { status: 403 },
+      ),
+    };
+  }
+
   return {
     supabase,
     user: { id: user.id, email: user.email },

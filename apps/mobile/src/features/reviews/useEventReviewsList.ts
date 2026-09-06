@@ -17,6 +17,7 @@ export type EventReviewListItem = {
   comment: string | null;
   created_at: string;
   is_verified_attendee: boolean;
+  organizer_response: string | null;
   reviewer: {
     username: string | null;
     avatar_public_id: string | null;
@@ -64,7 +65,7 @@ export function useEventReviewsList(eventId: string | undefined) {
       let q = supabase
         .from("event_review")
         .select(
-          "id, rating, title, comment, created_at, is_verified_attendee, reviewer:reviewer_id(username, avatar_public_id, avatar_version), event_review_photo(id, public_id, version, position)",
+          "id, rating, title, comment, created_at, is_verified_attendee, organizer_response, reviewer:reviewer_id(username, avatar_public_id, avatar_version), event_review_photo(id, public_id, version, position)",
         )
         .eq("event_id", eventId as string)
         .eq("status", "approved")

@@ -191,7 +191,7 @@ export function createApiClient(options: ApiClientOptions) {
   async function request<TResponse extends { status: number }>(
     path: string,
     init: {
-      method: "GET" | "POST" | "PATCH" | "PUT";
+      method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
       body?: unknown;
       auth: boolean;
     },
@@ -1144,8 +1144,8 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       /**
-       * Post (or overwrite) the owner's public reply to one review. 403
-       * unless the caller owns the review's place.
+       * Create or edit the owner's public reply to one review. 403 unless
+       * the caller owns the review's place.
        */
       respondToPlaceReview(placeId: string, body: RespondToPlaceReviewBody) {
         return request<PlaceReviewRespondResult>(
@@ -1153,6 +1153,18 @@ export function createApiClient(options: ApiClientOptions) {
             placeId,
           )}/reviews/respond`,
           { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * Remove the owner's public reply to one review. Idempotent. 403
+       * unless the caller owns the review's place.
+       */
+      deletePlaceReviewResponse(placeId: string, reviewId: string) {
+        return request<PlaceReviewRespondResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/reviews/respond?reviewId=${encodeURIComponent(reviewId)}`,
+          { method: "DELETE", auth: true },
         );
       },
       /**

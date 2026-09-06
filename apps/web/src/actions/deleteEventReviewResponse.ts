@@ -1,15 +1,15 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { respondToEventReviewCore } from "@abonten/services/reviews/reviewResponseCore";
+import { deleteEventReviewResponseCore } from "@abonten/services/reviews/reviewResponseCore";
 import { revalidatePath } from "next/cache";
 
 /**
- * Organizer reply to an event review — create OR edit. Thin wrapper: auth
- * here, the join-through-to-event ownership check + validation + update in
- * respondToEventReviewCore (shared with /api/mobile).
+ * Organizer-only removal of their reply to an event review. Thin wrapper:
+ * auth here, ownership check + null-out in deleteEventReviewResponseCore
+ * (shared with /api/mobile). Idempotent.
  */
-export async function respondToEventReview(reviewId: string, response: string) {
+export async function deleteEventReviewResponse(reviewId: string) {
   const supabase = await createClient();
 
   const {
@@ -21,11 +21,10 @@ export async function respondToEventReview(reviewId: string, response: string) {
     return { status: 401, message: "User not authenticated" };
   }
 
-  const result = await respondToEventReviewCore(
+  const result = await deleteEventReviewResponseCore(
     supabase,
     user.id,
     reviewId,
-    response,
   );
 
   if (result.status === 200 && result.data?.eventCode) {

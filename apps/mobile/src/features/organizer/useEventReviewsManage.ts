@@ -70,14 +70,39 @@ export function useEventReviewsManage(eventId: string | undefined) {
   });
 }
 
+const MAX_RESPONSE_LENGTH = 500;
+
+function invalidateEventReviewCaches(
+  qc: ReturnType<typeof useQueryClient>,
+  eventId: string | undefined,
+) {
+  qc.invalidateQueries({ queryKey: ["organizer", "event-reviews", eventId] });
+  qc.invalidateQueries({ queryKey: ["mobile", "event-reviews", eventId] });
+  qc.invalidateQueries({ queryKey: ["mobile", "event-rating", eventId] });
+  qc.invalidateQueries({ queryKey: ["mobile", "event", eventId] });
+}
+
+// Create OR edit the organizer's reply. event_review has
+// event_review_organizer_update (scoped through the owning event's
+// organizer_id) + a column-guard trigger, so this direct client write is
+// RLS-safe class-A CRUD (same as the reviewer's own edit path); no
+// /api/mobile hop. The empty/length guard mirrors
+// @abonten/services/reviews/reviewResponseCore.
 export function useRespondToEventReview(eventId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { reviewId: string; response: string }) => {
+      const trimmed = input.response.trim();
+      if (!trimmed) throw new Error("Write a reply before posting it.");
+      if (trimmed.length > MAX_RESPONSE_LENGTH)
+        throw new Error(
+          `Keep your reply under ${MAX_RESPONSE_LENGTH} characters.`,
+        );
+
       const { data: updated, error } = await supabase
         .from("event_review")
         .update({
-          organizer_response: input.response,
+          organizer_response: trimmed,
           organizer_response_at: new Date().toISOString(),
         })
         .eq("id", input.reviewId)
@@ -86,11 +111,28 @@ export function useRespondToEventReview(eventId: string | undefined) {
       if (!updated || updated.length === 0)
         throw new Error("Not authorized, or the review no longer exists.");
     },
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ["organizer", "event-reviews", eventId],
-      });
-      qc.invalidateQueries({ queryKey: ["mobile", "event-reviews", eventId] });
+    onSuccess: () => invalidateEventReviewCaches(qc, eventId),
+  });
+}
+
+// Remove the organizer's reply (null both columns). Idempotent-ish: a
+// no-rows result still means "not yours / gone".
+export function useDeleteEventReviewResponse(eventId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (reviewId: string) => {
+      const { data: updated, error } = await supabase
+        .from("event_review")
+        .update({
+          organizer_response: null,
+          organizer_response_at: null,
+        })
+        .eq("id", reviewId)
+        .select("id");
+      if (error) throw error;
+      if (!updated || updated.length === 0)
+        throw new Error("Not authorized, or the review no longer exists.");
     },
+    onSuccess: () => invalidateEventReviewCaches(qc, eventId),
   });
 }

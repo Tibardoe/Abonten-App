@@ -10,6 +10,7 @@ import {
   EventCapacityCard,
 } from "@/components/molecules/EventAttendanceStats";
 import EventDateSelector from "@/components/molecules/EventDateSelector";
+import EventStatusBanner from "@/components/molecules/EventStatusBanner";
 import LocationMapPreview from "@/components/molecules/LocationMapPreview";
 import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
@@ -216,10 +217,6 @@ export default async function page({
   // separate, page-level banner so a canceled/ended event is obvious above
   // the fold instead of only surfacing once a visitor scrolls all the way
   // down to the buy button.
-  const isEventCanceled = event.status === "canceled";
-  const hasEventEnded = event_dates.every(
-    (occ: { ends_at: string }) => new Date(occ.ends_at) < new Date(),
-  );
 
   async function fetchEventReviewsPage(cursor: string | null) {
     "use server";
@@ -276,15 +273,7 @@ export default async function page({
         </div>
       </div>
 
-      {(isEventCanceled || hasEventEnded) && (
-        <div className="max-w-7xl mx-auto px-2 lg:px-8 pt-6">
-          <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm md:text-base font-medium text-destructive text-center">
-            {isEventCanceled
-              ? "This event has been canceled."
-              : "This event has ended."}
-          </div>
-        </div>
-      )}
+      <EventStatusBanner eventDates={event_dates} eventStatus={event.status} />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-2 lg:px-8 py-8 md:py-12">

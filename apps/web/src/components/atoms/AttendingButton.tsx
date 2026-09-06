@@ -10,7 +10,7 @@ import {
   invalidateEventListQueries,
   invalidateTicketStatusQueries,
 } from "@/utils/mutationQueryInvalidation";
-import { getEventStatus } from "@abonten/core/eventStatus";
+import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FiCheck } from "react-icons/fi";
@@ -150,16 +150,22 @@ export default function AttendingButton({
     mutate();
   };
 
-  const eventLifecycleStatus = getEventStatus(null, null, eventDates);
+  // A free RSVP, like a paid ticket, can only be taken while a strictly
+  // future occurrence remains — so an event that has ended OR is currently
+  // in progress with nothing upcoming is ineligible (registerForFreeEvent
+  // enforces the same rule server-side).
+  const rsvpState = resolveOccurrenceState(null, null, eventDates);
 
   const ineligibleLabel =
     eventStatusRaw === "canceled"
       ? "Event Canceled"
-      : eventLifecycleStatus === "ended"
+      : rsvpState.blockReason === "ended"
         ? "Event Ended"
-        : soldOut && !isAttending
-          ? "Sold Out"
-          : null;
+        : rsvpState.blockReason === "ongoing_no_future"
+          ? "Event In Progress"
+          : soldOut && !isAttending
+            ? "Sold Out"
+            : null;
 
   if (ineligibleLabel) {
     return (

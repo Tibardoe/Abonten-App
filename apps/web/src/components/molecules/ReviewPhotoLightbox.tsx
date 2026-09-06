@@ -2,6 +2,7 @@
 
 import {
   Carousel,
+  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
@@ -10,7 +11,7 @@ import {
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 
 type ReviewPhoto = { id: string; public_id: string; version: string };
@@ -31,15 +32,18 @@ export default function ReviewPhotoLightbox({
   onClose,
 }: ReviewPhotoLightboxProps) {
   useBodyScrollLock(true);
+  const [api, setApi] = useState<CarouselApi>();
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
+      else if (event.key === "ArrowLeft") api?.scrollPrev();
+      else if (event.key === "ArrowRight") api?.scrollNext();
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, api]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
@@ -62,7 +66,10 @@ export default function ReviewPhotoLightbox({
       </button>
 
       <div className="relative w-full max-w-3xl px-4 md:px-12">
-        <Carousel opts={{ loop: photos.length > 1, startIndex }}>
+        <Carousel
+          opts={{ loop: photos.length > 1, startIndex }}
+          setApi={setApi}
+        >
           <CarouselContent>
             {photos.map((photo) => (
               <CarouselItem

@@ -1219,8 +1219,14 @@ export type RespondToPlaceReviewBody = {
 };
 
 export type PlaceReviewRespondResult = {
-  status: 200 | 400 | 401 | 403 | 404 | 500;
+  status: 200 | 400 | 401 | 403 | 404 | 409 | 500;
   message: string;
+  data?: {
+    response: string | null;
+    respondedAt: string | null;
+    placeSlug?: string | null;
+    eventCode?: string | null;
+  };
 };
 
 // ---- per-place promotion (paid "Feature this Place") ---------------
