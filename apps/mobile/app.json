@@ -98,7 +98,8 @@
           "organization": "abonten-hub",
           "project": "abonten-mobile"
         }
-      ]
+      ],
+      "./plugins/withAndroidNativeBuildFix"
     ],
     "experiments": {
       "typedRoutes": false
