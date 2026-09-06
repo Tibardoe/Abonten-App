@@ -290,10 +290,15 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
     left: endX.value,
     width: Math.max(0, trackW - endX.value),
   }));
-  const startHandleStyle = useAnimatedStyle(() => ({
-    left: startX.value - HANDLE_W,
+  // Handles are drawn INSIDE the track (start handle extends right from the
+  // trim-in point, end handle extends left from the trim-out point) rather
+  // than overhanging its outer edges — so even at full extent the grab
+  // targets never reach the screen edge, where the OS back-swipe / Android
+  // predictive-back gesture would steal the drag.
+  const startHandleStyle = useAnimatedStyle(() => ({ left: startX.value }));
+  const endHandleStyle = useAnimatedStyle(() => ({
+    left: endX.value - HANDLE_W,
   }));
-  const endHandleStyle = useAnimatedStyle(() => ({ left: endX.value }));
   const playheadStyle = useAnimatedStyle(() => ({ left: playX.value }));
 
   const onLayout = (ev: LayoutChangeEvent) =>
@@ -303,10 +308,9 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
   const endSec = item.endSeconds ?? duration;
 
   return (
-    // px-7 (not px-4) so the two handles — each HANDLE_W wide and drawn
-    // just outside the track — stay clear of the screen edges and don't
-    // collide with the OS back-swipe gesture.
-    <View className="gap-2 px-7">
+    // px-10 keeps the whole track (and the inset handles) ~40dp clear of
+    // both screen edges so a trim drag can't trigger the OS back gesture.
+    <View className="gap-2 px-10">
       <View className="flex-row justify-between">
         <AppText className="text-[12px] text-white/70">
           {formatDuration(startSec)}
