@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
+import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { finalizePaystackPayment } from "@abonten/services/payments/finalizePaystackPayment";
 import type {
   PaystackRefundWebhookData,
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq("paystack_reference", reference)
         .eq("status", "refund_pending")
-        .select("id")
+        .select("id, user_id")
         .maybeSingle();
 
       if (updateError) {
@@ -141,6 +142,27 @@ export async function POST(req: Request) {
             );
           }
         }
+
+        // Best-effort — the transaction/ledger state above is already
+        // final regardless of whether this notification succeeds.
+        await createNotificationCore(supabase, {
+          userId: updated.user_id,
+          type: newStatus === "refunded" ? "refund_completed" : "refund_failed",
+          title:
+            newStatus === "refunded"
+              ? "Refund completed"
+              : "Refund couldn't be completed",
+          body:
+            newStatus === "refunded"
+              ? "Your refund has been processed by Paystack."
+              : "We couldn't process your refund automatically. Our team will follow up.",
+          link: "/transactions",
+          data: { kind: "ticket" },
+        }).catch((error) => {
+          logger.error(
+            `Paystack webhook: failed sending refund notification for transaction ${updated.id}: ${error}`,
+          );
+        });
       }
 
       return NextResponse.json({ received: true }, { status: 200 });

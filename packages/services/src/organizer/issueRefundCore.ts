@@ -14,6 +14,7 @@ import type { Database } from "@abonten/types/database.types";
 
 import { logger } from "@abonten/core/logger";
 import { toPesewas } from "@abonten/core/paystackAmount";
+import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { refundTransaction } from "@abonten/services/payments/gateway/paystackService";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
@@ -36,7 +37,7 @@ export async function issueRefundCore(
 ): Promise<IssueRefundResult> {
   let query = supabase
     .from("transaction")
-    .select("id, status, paystack_reference")
+    .select("id, status, paystack_reference, user_id")
     .eq("id", transactionId);
 
   if (opts?.expectedUserId) {
@@ -48,6 +49,7 @@ export async function issueRefundCore(
       id: string;
       status: string;
       paystack_reference: string | null;
+      user_id: string;
     }>();
 
   if (transactionError || !transaction) {
@@ -190,6 +192,22 @@ export async function issueRefundCore(
       `Failed recording fee refund adjustment for transaction ${transaction.id}: ${feeAdjustmentError.message}`,
     );
   }
+
+  // Best-effort — the hold above is already the source of truth; a failed
+  // notification never undoes a real refund request. Completion/failure is
+  // notified separately by the webhook once Paystack actually confirms it.
+  await createNotificationCore(privileged, {
+    userId: transaction.user_id,
+    type: "refund_requested",
+    title: "Refund requested",
+    body: "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
+    link: "/transactions",
+    data: { kind: "ticket" },
+  }).catch((error) => {
+    logger.error(
+      `Failed sending refund-requested notification for transaction ${transaction.id}: ${error}`,
+    );
+  });
 
   return {
     status: 200,
