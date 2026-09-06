@@ -1,0 +1,16 @@
+-- pg_trgm was installed directly into `public` by
+-- 20260824232831_add_search_suggestions.sql, the only extension in this
+-- database not living in the dedicated `extensions` schema (every other
+-- one -- citext, pg_net, pg_prewarm, pg_stat_statements, pgcrypto, pgjwt,
+-- postgis, uuid-ossp -- already does). Flagged by the Supabase security
+-- advisor ("Extension in Public"). Safe to move: the database's default
+-- search_path is `"$user", public, extensions` (confirmed via SHOW
+-- search_path), so get_event_suggestions/get_place_suggestions -- the only
+-- callers, using the bare `%` trigram operator with no SET search_path of
+-- their own -- keep resolving it with no code change. The two existing GIN
+-- indexes (idx_event_title_trgm, idx_place_name_trgm) are unaffected: an
+-- operator class is bound to the index by OID, not by schema-qualified
+-- name, so moving the extension's schema doesn't touch already-built
+-- indexes. Verified live: the `%` operator and both suggestion functions
+-- still resolve correctly after this move.
+ALTER EXTENSION pg_trgm SET SCHEMA extensions;
