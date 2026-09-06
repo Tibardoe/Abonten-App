@@ -36,12 +36,19 @@ export default function RequestBookingModal({
 }: RequestBookingModalProps) {
   const toast = useToast();
 
+  const hasServices = services.length > 0;
+
   const [serviceId, setServiceId] = useState("");
   const [requestedTime, setRequestedTime] = useState("");
   const [partySize, setPartySize] = useState("");
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // When the place lists no services, don't drop the user straight into an
+  // empty picker — ask first whether they want to send a general request.
+  const [step, setStep] = useState<"confirm" | "form">(
+    hasServices ? "form" : "confirm",
+  );
 
   // <input type="datetime-local"> has no timezone info, so this is only an
   // approximate floor (a minute from "now" in whatever timezone the browser
@@ -116,6 +123,30 @@ export default function RequestBookingModal({
             >
               Close
             </button>
+          </div>
+        ) : step === "confirm" ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              This place currently has no services available for booking. You
+              can still send a general request and arrange the details with the
+              owner. Would you like to continue?
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setStep("form")}
+                className="flex-1 bg-primary text-primary-foreground py-2 rounded-md text-sm hover:bg-primary/90 transition-colors"
+              >
+                Continue
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 border border-border py-2 rounded-md text-sm hover:bg-accent transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

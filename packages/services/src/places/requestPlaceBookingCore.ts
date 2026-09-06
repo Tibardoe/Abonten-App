@@ -63,7 +63,7 @@ export async function requestPlaceBookingCore(
 
   const { data: place, error: placeError } = await supabase
     .from("place")
-    .select("owner_id, name")
+    .select("owner_id, name, status, temporary_status, moderation_state")
     .eq("id", placeId)
     .maybeSingle();
 
@@ -74,12 +74,35 @@ export async function requestPlaceBookingCore(
     };
   }
 
-  if (!place) {
+  // A place hidden/removed by moderation is treated as non-existent so a
+  // request can't reveal it or land on it.
+  if (
+    !place ||
+    place.moderation_state === "hidden" ||
+    place.moderation_state === "removed"
+  ) {
     return { status: 404, message: "Place not found" };
   }
 
   if (place.owner_id === userId) {
     return { status: 400, message: "You cannot book your own place" };
+  }
+
+  // Only a live, published place accepts booking requests — a draft,
+  // archived or permanently-closed place must not (a stale detail page held
+  // open, or a tampered request, could otherwise still submit).
+  if (place.status !== "published") {
+    return {
+      status: 400,
+      message: "This place isn't accepting bookings right now.",
+    };
+  }
+
+  if (place.temporary_status === "permanently_closed") {
+    return {
+      status: 400,
+      message: "This place is permanently closed.",
+    };
   }
 
   // A client can send any service id — make sure it's actually one of THIS

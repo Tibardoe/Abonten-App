@@ -32,6 +32,8 @@ export function BookPlaceSheet({
   placeName: string;
   services: BookingService[];
 }) {
+  const hasServices = services.length > 0;
+
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -39,6 +41,10 @@ export function BookPlaceSheet({
   const [note, setNote] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // With no services listed, ask before dropping the user into the form.
+  const [step, setStep] = useState<"confirm" | "form">(
+    hasServices ? "form" : "confirm",
+  );
   const request = useRequestBooking(placeId);
 
   useEffect(() => {
@@ -50,7 +56,8 @@ export function BookPlaceSheet({
     setNote("");
     setSubmitted(false);
     setError(null);
-  }, [open]);
+    setStep(hasServices ? "form" : "confirm");
+  }, [open, hasServices]);
 
   const requestedTime = useMemo(() => {
     if (!date || !time) return null;
@@ -99,6 +106,15 @@ export function BookPlaceSheet({
       footer={
         submitted ? (
           <Button title="Done" onPress={onClose} />
+        ) : step === "confirm" ? (
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <Button title="Cancel" variant="outline" onPress={onClose} />
+            </View>
+            <View className="flex-1">
+              <Button title="Continue" onPress={() => setStep("form")} />
+            </View>
+          </View>
         ) : (
           <Button
             title={request.isPending ? "Sending…" : "Request booking"}
@@ -108,7 +124,18 @@ export function BookPlaceSheet({
         )
       }
     >
-      {submitted ? (
+      {step === "confirm" && !submitted ? (
+        <View className="gap-3 py-2">
+          <AppText variant="bodyStrong">
+            No services available for booking
+          </AppText>
+          <AppText variant="muted">
+            This place currently has no services available for booking. You can
+            still send a general request and arrange the details with the owner.
+            Would you like to continue?
+          </AppText>
+        </View>
+      ) : submitted ? (
         <View className="items-center gap-3 py-4">
           <Icon name="checkmark-circle" size={44} tone="success" />
           <AppText variant="bodyStrong" className="text-center">
