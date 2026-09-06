@@ -1,0 +1,20 @@
+-- get_transaction_refundable_amount lost its EXECUTE grant for `authenticated`
+-- at some point after 20260830200759_refundable_amount_uses_gross.sql
+-- originally granted it (most likely swept up by one of 2026-09-05's broad
+-- security-hardening migrations, which restored explicit grants only for the
+-- six record_* RPCs, not this one). Confirmed live via Vercel logs
+-- (2026-09-06, three separate occurrences: transactions
+-- 998e8379-b5c9-4e4e-a9bb-5130e7f1e860, b0028752-f64a-4345-8882-56eb4c4bbaa1,
+-- 5957c853-bfea-4922-bc1d-4f6c36a3bb70) that a buyer cancelling their own
+-- ticket -- which calls this function using their own `authenticated`
+-- session, per cancelUserTicketCore.ts / issueRefundCore.ts -- hit
+-- "permission denied for function get_transaction_refundable_amount", which
+-- issueRefundCore.ts's error handling silently treated as "resolved to
+-- null" and fell back to a full refund (service fee included) instead of
+-- ticket-revenue-only. This was misdiagnosed on 2026-09-06 as a race
+-- condition (migration 20260906020311) because re-running the same query
+-- against the same data via a privileged connection always succeeded --
+-- consistent with a permission error, not a timing one. That migration's
+-- query change is still a valid robustness improvement and is left in
+-- place; this migration restores the actually-missing grant.
+GRANT EXECUTE ON FUNCTION public.get_transaction_refundable_amount(uuid) TO authenticated;
