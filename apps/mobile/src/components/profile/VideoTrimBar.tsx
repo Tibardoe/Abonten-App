@@ -25,7 +25,15 @@ import Animated, {
 
 const HANDLE_W = 22;
 const TRACK_H = 56;
-const THUMB_COUNT = 8;
+const THUMB_COUNT = 6;
+const THUMB_MAX_HEIGHT = 80;
+// Below this the strip is skipped entirely — sampling frames from a very
+// short / zero-duration source is a native crash path, not just an ugly UI.
+const MIN_THUMBNAIL_DURATION = 1;
+const READY_TIMEOUT_MS = 4000;
+// Cap how often the drag handlers poke player.currentTime — a seek on every
+// gesture frame can wedge the native player on some Android devices.
+const SEEK_THROTTLE_MS = 60;
 
 type Props = {
   player: VideoPlayer;
@@ -33,6 +41,34 @@ type Props = {
   /** Fires continuously as the user drags. */
   onTrimChange: (startSeconds: number, endSeconds: number) => void;
 };
+
+/** Resolve once the player has a genuinely playable source (or times out /
+ * errors) — asking a not-yet-decoded video for thumbnails is what crashes
+ * the native retriever. */
+function waitForReady(
+  player: VideoPlayer,
+  timeoutMs: number,
+): Promise<boolean> {
+  if (player.status === "readyToPlay") return Promise.resolve(true);
+  return new Promise<boolean>((resolve) => {
+    let done = false;
+    const finish = (value: boolean) => {
+      if (done) return;
+      done = true;
+      sub.remove();
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const sub = player.addListener("statusChange", ({ status }) => {
+      if (status === "readyToPlay") finish(true);
+      else if (status === "error") finish(false);
+    });
+    const timer = setTimeout(
+      () => finish(player.status === "readyToPlay"),
+      timeoutMs,
+    );
+  });
+}
 
 export function VideoTrimBar({ player, item, onTrimChange }: Props) {
   const duration = Math.max(
@@ -80,40 +116,77 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
     windowRef.current = { start: s, end: e };
   }, [trackW, item.startSeconds, item.endSeconds, duration, xForSec]);
 
-  // Thumbnail strip — generated once the player has a loaded source.
+  // Thumbnail strip. Only sampled once the player reports a real playable
+  // source, and only for clips long enough to sample safely — a batched
+  // generateThumbnailsAsync call that lands on an undecodable frame can take
+  // the native media retriever (and the whole app) down, so frames are
+  // requested ONE AT A TIME, each guarded, and the strip degrades to plain
+  // placeholder cells on the first hard failure. None of this is catchable
+  // once it reaches native, hence the up-front gating.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the clip identity
   useEffect(() => {
     let cancelled = false;
     setThumbs([]);
     setThumbsFailed(false);
+
+    const usable =
+      Number.isFinite(duration) && duration >= MIN_THUMBNAIL_DURATION
+        ? duration
+        : 0;
+    if (usable === 0) {
+      setThumbsFailed(true);
+      return;
+    }
+
     const times = Array.from(
       { length: THUMB_COUNT },
-      (_, i) => (duration * (i + 0.5)) / THUMB_COUNT,
+      (_, i) => (usable * (i + 0.5)) / THUMB_COUNT,
     );
+
     (async () => {
-      try {
-        // A short delay lets replaceAsync settle so the first frames decode.
-        await new Promise((r) => setTimeout(r, 250));
-        const out = await player.generateThumbnailsAsync(times, {
-          maxHeight: 120,
-        });
-        if (!cancelled) setThumbs(out);
-      } catch {
-        if (!cancelled) setThumbsFailed(true);
+      const ready = await waitForReady(player, READY_TIMEOUT_MS);
+      if (cancelled) return;
+      if (!ready) {
+        setThumbsFailed(true);
+        return;
+      }
+      const out: VideoThumbnail[] = [];
+      for (const t of times) {
+        if (cancelled) return;
+        try {
+          const frames = await player.generateThumbnailsAsync([t], {
+            maxHeight: THUMB_MAX_HEIGHT,
+          });
+          const frame = frames?.[0];
+          if (frame) {
+            out.push(frame);
+            if (!cancelled) setThumbs([...out]);
+          }
+        } catch {
+          // One bad frame shouldn't blank the whole strip; keep what we
+          // have. If we have nothing yet, drop to the placeholder cells.
+          if (out.length === 0 && !cancelled) setThumbsFailed(true);
+          return;
+        }
       }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [item.uri, duration]);
 
-  // Playhead + loop-within-range.
+  // Playhead + loop-within-range. The seek back to `start` is wrapped —
+  // a currentTime write can throw if the player was torn down between the
+  // event firing and this handler running.
   useEffect(() => {
     const sub = player.addListener("timeUpdate", (e) => {
       const { start, end } = windowRef.current;
       playX.value = xForSec(e.currentTime);
       if (e.currentTime >= end || e.currentTime < start - 0.15) {
-        player.currentTime = start;
+        try {
+          player.currentTime = start;
+        } catch {}
       }
     });
     return () => sub.remove();
@@ -126,9 +199,16 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
     onTrimChange(s, e);
   }, [secForX, startX, endX, onTrimChange]);
 
+  // Throttled + guarded seek used by the drag handlers.
+  const lastSeekRef = useRef(0);
   const seekTo = useCallback(
     (seconds: number) => {
-      player.currentTime = seconds;
+      const now = Date.now();
+      if (now - lastSeekRef.current < SEEK_THROTTLE_MS) return;
+      lastSeekRef.current = now;
+      try {
+        player.currentTime = Math.max(0, seconds);
+      } catch {}
     },
     [player],
   );

@@ -61,6 +61,10 @@ type Props = {
   userId?: string;
   avatarPublicId?: string | null;
   avatarVersion?: number | string | null;
+  /** Non-owner "Report this highlight" — receives the visible slide's id.
+      The parent owns the report sheet (it closes the viewer first) to avoid
+      a sheet nested inside this full-screen Modal. */
+  onReport?: (slideId: string) => void;
 };
 
 export function HighlightViewer({
@@ -72,6 +76,7 @@ export function HighlightViewer({
   userId,
   avatarPublicId,
   avatarVersion,
+  onReport,
 }: Props) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -494,7 +499,7 @@ export function HighlightViewer({
                 size={18}
                 color="rgba(255,255,255,0.9)"
               />
-              {canManage ? (
+              {canManage || onReport ? (
                 <Pressable
                   onPress={() => setMenuOpen((v) => !v)}
                   hitSlop={10}
@@ -509,7 +514,7 @@ export function HighlightViewer({
 
           {/* ⋯ menu — an in-Modal popover, not a nested Modal. Its scrim
               keeps playback paused (menuOpen ⇒ paused) but leaves chrome up. */}
-          {menuOpen && canManage ? (
+          {menuOpen && (canManage || onReport) ? (
             <>
               <Pressable
                 style={StyleSheet.absoluteFill}
@@ -523,16 +528,35 @@ export function HighlightViewer({
                 }}
                 className="overflow-hidden rounded-xl border border-border bg-popover"
               >
-                <Pressable
-                  onPress={onDelete}
-                  disabled={deleteSlide.isPending}
-                  className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
-                >
-                  <Icon name="trash-outline" size={18} tone="destructive" />
-                  <AppText variant="small" tone="error" className="font-medium">
-                    Delete {isVideo ? "video" : "photo"}
-                  </AppText>
-                </Pressable>
+                {canManage ? (
+                  <Pressable
+                    onPress={onDelete}
+                    disabled={deleteSlide.isPending}
+                    className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
+                  >
+                    <Icon name="trash-outline" size={18} tone="destructive" />
+                    <AppText
+                      variant="small"
+                      tone="error"
+                      className="font-medium"
+                    >
+                      Delete {isVideo ? "video" : "photo"}
+                    </AppText>
+                  </Pressable>
+                ) : onReport && slide ? (
+                  <Pressable
+                    onPress={() => {
+                      setMenuOpen(false);
+                      onReport(slide.id);
+                    }}
+                    className="min-h-[44px] flex-row items-center gap-2 px-4 py-3 active:opacity-70"
+                  >
+                    <Icon name="flag-outline" size={18} tone="foreground" />
+                    <AppText variant="small" className="font-medium">
+                      Report {isVideo ? "video" : "photo"}
+                    </AppText>
+                  </Pressable>
+                ) : null}
               </View>
             </>
           ) : null}

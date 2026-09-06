@@ -267,12 +267,10 @@ export default function PlaceDetailScreen() {
     ).catch(() => {});
   };
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
-  // Confirmed platform choice: mobile only offers "Book" when the place has
-  // at least one service (web shows it on any place).
-  const canBook =
-    !!session &&
-    place.owner_id !== session.user.id &&
-    place.services.length > 0;
+  // "Book" is offered on any place to a signed-in user who isn't the owner
+  // — same gating as web's RequestBookingButton. The service picker inside
+  // the sheet is optional and only appears when the place lists services.
+  const canBook = !!session && place.owner_id !== session.user.id;
 
   return (
     <View className="flex-1 bg-background">

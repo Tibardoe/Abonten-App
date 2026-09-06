@@ -8,7 +8,7 @@ import { AppText, Button, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -55,6 +55,9 @@ export default function NewHighlight() {
 
   const { width } = useWindowDimensions();
   const previewX = useSharedValue(0);
+  // Guards against overlapping video loads clobbering each other (see the
+  // load effect below).
+  const loadSeqRef = useRef(0);
 
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
@@ -107,26 +110,38 @@ export default function NewHighlight() {
   }, [step, composer.items.length]);
 
   // Load the active video into the player; reset the preview-ready gate on
-  // any item change.
+  // any item change. A monotonic sequence number makes overlapping loads
+  // (fast filmstrip taps / swipes) safe: a stale replaceAsync that resolves
+  // after a newer one started is ignored instead of clobbering the player,
+  // which is one of the ways the trim editor was crashing.
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the active item identity
   useEffect(() => {
     setPreviewReady(false);
     setPlaying(false);
     if (!active || active.type !== "video") return;
+    const seq = ++loadSeqRef.current;
     let cancelled = false;
     (async () => {
       try {
+        try {
+          player.pause();
+        } catch {}
         await player.replaceAsync({ uri: active.uri });
-        if (cancelled) return;
+        if (cancelled || seq !== loadSeqRef.current) return;
         player.muted = muted;
-        player.currentTime = active.startSeconds ?? 0;
+        try {
+          player.currentTime = active.startSeconds ?? 0;
+        } catch {}
       } catch {
-        setPreviewReady(true); // don't strand Post on a load failure
+        // don't strand Post on a load failure
+        if (seq === loadSeqRef.current) setPreviewReady(true);
       }
     })();
     return () => {
       cancelled = true;
-      player.pause();
+      try {
+        player.pause();
+      } catch {}
     };
   }, [active?.id, active?.uri]);
 
@@ -330,14 +345,19 @@ export default function NewHighlight() {
           </Animated.View>
         </GestureDetector>
 
-        {/* trim bar (video only) */}
+        {/* trim bar (video only). Held back until the player has actually
+            loaded this clip — mounting it earlier meant it asked a
+            not-yet-ready native player for thumbnails, a crash path. */}
         {active && active.type === "video" ? (
-          <View className="py-3">
-            <VideoTrimBar
-              player={player}
-              item={active}
-              onTrimChange={(s, e) => composer.updateTrim(active.id, s, e)}
-            />
+          <View className="py-3" style={{ minHeight: 84 }}>
+            {previewReady ? (
+              <VideoTrimBar
+                key={active.id}
+                player={player}
+                item={active}
+                onTrimChange={(s, e) => composer.updateTrim(active.id, s, e)}
+              />
+            ) : null}
           </View>
         ) : null}
 

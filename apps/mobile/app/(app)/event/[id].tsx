@@ -1,6 +1,8 @@
+import { useSession } from "@/auth/SessionProvider";
 import { DetailHeaderActions } from "@/components/DetailHeaderActions";
 import { EventCard } from "@/components/EventCard";
 import { EventReminderButton } from "@/components/EventReminderButton";
+import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
 import {
@@ -26,6 +28,7 @@ import { eventShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   formatFullDateTimeRange,
+  getFormattedEventDate,
   getRelativeTime,
 } from "@abonten/core/dateFormatter";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
@@ -75,7 +78,13 @@ function InfoRow({
   );
 }
 
-function ReviewItem({ review }: { review: EventReviewListItem }) {
+function ReviewItem({
+  review,
+  onReport,
+}: {
+  review: EventReviewListItem;
+  onReport?: () => void;
+}) {
   return (
     <View className="gap-1.5 rounded-xl border border-border bg-card p-3">
       <View className="flex-row items-center justify-between gap-2">
@@ -114,7 +123,21 @@ function ReviewItem({ review }: { review: EventReviewListItem }) {
       {review.event_review_photo?.length ? (
         <ReviewPhotoStrip photos={review.event_review_photo} />
       ) : null}
-      <AppText variant="caption">{getRelativeTime(review.created_at)}</AppText>
+      <View className="flex-row items-center justify-between">
+        <AppText variant="caption">
+          {getRelativeTime(review.created_at)}
+        </AppText>
+        {onReport ? (
+          <AppText
+            variant="caption"
+            tone="muted"
+            className="font-medium"
+            onPress={onReport}
+          >
+            Report
+          </AppText>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -124,7 +147,13 @@ export default function EventDetailScreen() {
   const router = useRouter();
   const similarCardWidth = useCarouselCardWidth();
   const { data, isLoading, isError, refetch } = useEventDetail(id);
+  const { session } = useSession();
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    targetType: "event" | "event_review";
+    targetId: string;
+    label: string;
+  } | null>(null);
 
   const reviewEvent = data
     ? {
@@ -195,10 +224,26 @@ export default function EventDetailScreen() {
           height: 540,
         })
       : null;
-  const when = formatFullDateTimeRange(event.starts_at, event.ends_at);
+  // Multi-date events carry their real dates in `event_occurrence` and can
+  // have a null top-level starts_at/ends_at — feeding those straight into
+  // formatFullDateTimeRange rendered "N/A" / "N/A - N/A". getFormattedEventDate
+  // resolves the representative occurrence (same as the web detail page);
+  // the full list is rendered below when there's more than one.
+  const when = getFormattedEventDate(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+  );
   const tags = parseEventTypes(event.event_type);
   const canceled = event.status === "canceled";
   const occ = event.event_occurrence ?? [];
+  const sortedOccurrences =
+    occ.length > 1
+      ? [...occ].sort(
+          (a, b) =>
+            new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime(),
+        )
+      : [];
   const hasEnded =
     (occ.length > 0
       ? occ.every((o) => new Date(o.ends_at) < new Date())
@@ -331,11 +376,35 @@ export default function EventDetailScreen() {
 
           {/* Date / location / attendance */}
           <View className="gap-3 rounded-xl border border-border bg-card p-4">
-            <InfoRow
-              icon="calendar-outline"
-              label={when.date}
-              sub={when.time}
-            />
+            {sortedOccurrences.length > 1 ? (
+              <View className="flex-row gap-3">
+                <Icon
+                  name="calendar-outline"
+                  size={18}
+                  tone="muted"
+                  style={{ marginTop: 2 }}
+                />
+                <View className="flex-1 gap-1">
+                  <AppText variant="body">
+                    {sortedOccurrences.length} dates
+                  </AppText>
+                  {sortedOccurrences.map((o) => {
+                    const w = formatFullDateTimeRange(o.starts_at, o.ends_at);
+                    return (
+                      <AppText key={o.id} variant="meta">
+                        {w.date} · {w.time}
+                      </AppText>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : (
+              <InfoRow
+                icon="calendar-outline"
+                label={when.date}
+                sub={when.time}
+              />
+            )}
             <InfoRow
               icon="location-outline"
               label={address ?? "Location unavailable"}
@@ -561,7 +630,20 @@ export default function EventDetailScreen() {
             ) : (
               <View className="gap-2">
                 {reviews.map((r) => (
-                  <ReviewItem key={r.id} review={r} />
+                  <ReviewItem
+                    key={r.id}
+                    review={r}
+                    onReport={
+                      session
+                        ? () =>
+                            setReportTarget({
+                              targetType: "event_review",
+                              targetId: r.id,
+                              label: `Review by ${r.reviewer?.username ?? "an attendee"}`,
+                            })
+                        : undefined
+                    }
+                  />
                 ))}
                 {reviewsList.hasNextPage ? (
                   <Pressable
@@ -603,6 +685,24 @@ export default function EventDetailScreen() {
               />
             </View>
           ) : null}
+
+          {session && event.organizer_id !== session.user.id ? (
+            <Pressable
+              accessibilityRole="button"
+              className="items-center py-2 active:opacity-60"
+              onPress={() =>
+                setReportTarget({
+                  targetType: "event",
+                  targetId: event.id,
+                  label: event.title,
+                })
+              }
+            >
+              <AppText variant="caption" tone="muted" className="font-medium">
+                Report this event
+              </AppText>
+            </Pressable>
+          ) : null}
         </View>
 
         <AddReviewSheet
@@ -610,6 +710,14 @@ export default function EventDetailScreen() {
           onClose={() => setReviewOpen(false)}
           eventId={event.id}
           eventTitle={event.title}
+        />
+
+        <ReportSheet
+          open={reportTarget != null}
+          onClose={() => setReportTarget(null)}
+          targetType={reportTarget?.targetType ?? "event"}
+          targetId={reportTarget?.targetId ?? event.id}
+          label={reportTarget?.label ?? event.title}
         />
       </ScrollView>
     </View>
