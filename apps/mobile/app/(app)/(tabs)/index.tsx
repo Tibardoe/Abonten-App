@@ -373,9 +373,9 @@ export default function Explore() {
         />
       </View>
 
-      {/* Filter line, then the List / Map toggle — ordered tabs → filters →
-          map so the view switch reads as the last control before content. */}
-      <View className="flex-row items-center justify-between gap-2 px-4 pb-1 pt-1">
+      {/* Ordered tabs → filter line → map line, each on its own row, so the
+          view switch reads as the last control before the content. */}
+      <View className="flex-row px-4 pb-1 pt-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
@@ -396,7 +396,9 @@ export default function Explore() {
             </View>
           ) : null}
         </Pressable>
+      </View>
 
+      <View className="flex-row justify-end px-4 pb-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={view === "list" ? "Show map" : "Show list"}
