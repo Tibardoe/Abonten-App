@@ -1,5 +1,6 @@
 "use client";
 
+import { deleteEventReviewResponse } from "@/actions/deleteEventReviewResponse";
 import { respondToEventReview } from "@/actions/respondToEventReview";
 import ReviewListItem from "@/components/molecules/ReviewListItem";
 import ReviewRowSkeleton from "@/components/molecules/ReviewRowSkeleton";
@@ -40,11 +41,10 @@ type EventReviewsSectionProps = {
 // Combines the public review list AND the organizer's reply affordance in
 // one component -- unlike Places (which has a separate manage/places/[id]
 // dashboard with its own ManagePlaceReviewsSection), there is no per-event
-// manage page for events, so "Reply" simply appears inline for whichever
-// viewer happens to be this event's organizer, exactly like
-// ManagePlaceReviewsSection's RespondForm but gated by an isOrganizer check
-// instead of living on a separate route. respondToEventReview.ts is the
-// real authorization boundary regardless of what this component shows.
+// manage page for events, so the reply / edit / delete controls simply
+// appear inline for whichever viewer happens to be this event's organizer.
+// respondToEventReview / deleteEventReviewResponse are the real
+// authorization boundary regardless of what this component shows.
 export default function EventReviewsSection({
   eventId,
   organizerId,
@@ -61,6 +61,9 @@ export default function EventReviewsSection({
   const { data: user } = useCurrentUser();
   const toast = useToast();
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(
+    null,
+  );
   // Repopulates the reply textarea with what the organizer typed if the
   // optimistic post below has to roll back — otherwise reopening the form
   // after a failure would silently drop their draft.
@@ -75,6 +78,22 @@ export default function EventReviewsSection({
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: reviewsQueryKey });
+
+  const patchResponse = (reviewId: string, value: string | null) => {
+    queryClient.setQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+      reviewsQueryKey,
+      (old) =>
+        old && {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.map((row) =>
+              row.id === reviewId ? { ...row, organizer_response: value } : row,
+            ),
+          })),
+        },
+    );
+  };
 
   const replyMutation = useMutation({
     mutationFn: ({ reviewId, text }: { reviewId: string; text: string }) =>
@@ -95,28 +114,14 @@ export default function EventReviewsSection({
           reviewsQueryKey,
         );
 
-      queryClient.setQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
-        reviewsQueryKey,
-        (old) =>
-          old && {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              data: page.data.map((row) =>
-                row.id === reviewId
-                  ? { ...row, organizer_response: text }
-                  : row,
-              ),
-            })),
-          },
-      );
+      patchResponse(reviewId, text);
 
       return { previousReviews };
     },
 
     onSuccess: (response, vars, context) => {
       if (response.status === 200) {
-        toast.success("✅ Reply posted successfully!");
+        toast.success("✅ Reply saved");
         invalidate();
       } else {
         if (context?.previousReviews) {
@@ -135,6 +140,40 @@ export default function EventReviewsSection({
       toast.error("❌ Something went wrong. Please try again.");
       setDraftText(vars);
       setRespondingToId(vars.reviewId);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (reviewId: string) => deleteEventReviewResponse(reviewId),
+
+    onMutate: async (reviewId) => {
+      setConfirmingDeleteId(null);
+      await queryClient.cancelQueries({ queryKey: reviewsQueryKey });
+      const previousReviews =
+        queryClient.getQueryData<InfiniteData<PaginatedResult<EventReviewRow>>>(
+          reviewsQueryKey,
+        );
+      patchResponse(reviewId, null);
+      return { previousReviews };
+    },
+
+    onSuccess: (response, _reviewId, context) => {
+      if (response.status === 200) {
+        toast.success("Reply removed");
+        invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+        }
+        toast.error(`❌ ${response.message}`);
+      }
+    },
+
+    onError: (_error, _reviewId, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+      }
+      toast.error("❌ Something went wrong. Please try again.");
     },
   });
 
@@ -173,56 +212,103 @@ export default function EventReviewsSection({
         emptyState={
           <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
         }
-        renderItem={(review: EventReviewRow) => (
-          <ReviewListItem
-            key={review.id}
-            avatarPublicId={review.user_info?.avatar_public_id}
-            avatarVersion={review.user_info?.avatar_version}
-            username={review.user_info?.username}
-            createdAt={review.created_at}
-            rating={review.rating}
-            title={review.title}
-            comment={review.comment}
-            isVerifiedAttendee={review.is_verified_attendee}
-            photos={review.event_review_photo}
-            responseLabel="Organizer reply"
-            responseText={review.organizer_response}
-            reportTargetType="event_review"
-            reportTargetId={review.id}
-            reportReviewerId={review.reviewer_id}
-          >
-            {!review.organizer_response &&
-              isOrganizer &&
-              (respondingToId === review.id ? (
-                <RespondForm
-                  initialText={
-                    draftText && draftText.reviewId === review.id
-                      ? draftText.text
-                      : ""
-                  }
-                  isSubmitting={
-                    replyMutation.isPending &&
-                    replyMutation.variables?.reviewId === review.id
-                  }
-                  onCancel={() => {
-                    setRespondingToId(null);
-                    setDraftText(null);
-                  }}
-                  onSubmit={(text) =>
-                    replyMutation.mutate({ reviewId: review.id, text })
-                  }
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setRespondingToId(review.id)}
-                  className="mt-2 text-sm text-primary hover:underline"
-                >
-                  Reply
-                </button>
-              ))}
-          </ReviewListItem>
-        )}
+        renderItem={(review: EventReviewRow) => {
+          const isEditing = respondingToId === review.id;
+          const isSubmitting =
+            replyMutation.isPending &&
+            replyMutation.variables?.reviewId === review.id;
+          const isDeleting =
+            deleteMutation.isPending && deleteMutation.variables === review.id;
+
+          return (
+            <ReviewListItem
+              key={review.id}
+              avatarPublicId={review.user_info?.avatar_public_id}
+              avatarVersion={review.user_info?.avatar_version}
+              username={review.user_info?.username}
+              createdAt={review.created_at}
+              rating={review.rating}
+              title={review.title}
+              comment={review.comment}
+              isVerifiedAttendee={review.is_verified_attendee}
+              photos={review.event_review_photo}
+              responseLabel="Organizer reply"
+              responseText={review.organizer_response}
+              reportTargetType="event_review"
+              reportTargetId={review.id}
+              reportReviewerId={review.reviewer_id}
+            >
+              {isOrganizer &&
+                (isEditing ? (
+                  <RespondForm
+                    initialText={
+                      draftText && draftText.reviewId === review.id
+                        ? draftText.text
+                        : (review.organizer_response ?? "")
+                    }
+                    isSubmitting={isSubmitting}
+                    isEdit={Boolean(review.organizer_response)}
+                    onCancel={() => {
+                      setRespondingToId(null);
+                      setDraftText(null);
+                    }}
+                    onSubmit={(text) =>
+                      replyMutation.mutate({ reviewId: review.id, text })
+                    }
+                  />
+                ) : review.organizer_response ? (
+                  <div className="mt-2 ml-4 md:ml-8 flex items-center gap-3 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setRespondingToId(review.id)}
+                      className="text-primary hover:underline"
+                    >
+                      Edit reply
+                    </button>
+                    {confirmingDeleteId === review.id ? (
+                      <>
+                        <span className="text-muted-foreground">
+                          Remove this reply?
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => deleteMutation.mutate(review.id)}
+                          className="text-destructive font-medium hover:underline disabled:opacity-60"
+                        >
+                          {isDeleting ? "Removing…" : "Yes, remove"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => setConfirmingDeleteId(null)}
+                          className="text-muted-foreground hover:underline"
+                        >
+                          Keep
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingDeleteId(review.id)}
+                        className="text-destructive hover:underline"
+                      >
+                        Delete reply
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setRespondingToId(review.id)}
+                    className="mt-2 text-sm text-primary hover:underline"
+                  >
+                    Reply
+                  </button>
+                ))}
+            </ReviewListItem>
+          );
+        }}
       />
     </div>
   );
@@ -231,11 +317,13 @@ export default function EventReviewsSection({
 function RespondForm({
   initialText,
   isSubmitting,
+  isEdit,
   onCancel,
   onSubmit,
 }: {
   initialText: string;
   isSubmitting: boolean;
+  isEdit: boolean;
   onCancel: () => void;
   onSubmit: (text: string) => void;
 }) {
@@ -253,6 +341,7 @@ function RespondForm({
         value={response}
         onChange={(e) => setResponse(e.target.value)}
         placeholder="Write a reply to this review..."
+        maxLength={500}
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
         rows={2}
       />
@@ -263,7 +352,7 @@ function RespondForm({
           onClick={handleSubmit}
           className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSubmitting ? "Posting..." : "Post reply"}
+          {isSubmitting ? "Saving..." : isEdit ? "Save changes" : "Post reply"}
         </button>
         <button
           type="button"

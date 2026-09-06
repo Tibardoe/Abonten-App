@@ -76,12 +76,30 @@ export function flattenReviews(
   return pages?.flatMap((p) => p.data) ?? [];
 }
 
+function invalidatePlaceReviewCaches(
+  qc: ReturnType<typeof useQueryClient>,
+  placeId: string,
+) {
+  qc.invalidateQueries({ queryKey: [...REVIEWS_KEY, placeId] });
+  // Public place-detail surfaces that embed the owner response.
+  qc.invalidateQueries({ queryKey: ["mobile", "place-reviews", placeId] });
+  qc.invalidateQueries({ queryKey: ["mobile", "place", placeId] });
+}
+
 export function useRespondToPlaceReview(placeId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (v: { reviewId: string; response: string }) =>
       api.organizer.respondToPlaceReview(placeId, v),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: [...REVIEWS_KEY, placeId] }),
+    onSuccess: () => invalidatePlaceReviewCaches(qc, placeId),
+  });
+}
+
+export function useDeletePlaceReviewResponse(placeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (reviewId: string) =>
+      api.organizer.deletePlaceReviewResponse(placeId, reviewId),
+    onSuccess: () => invalidatePlaceReviewCaches(qc, placeId),
   });
 }

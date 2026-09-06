@@ -1,5 +1,6 @@
 "use client";
 
+import { deletePlaceReviewResponse } from "@/actions/deletePlaceReviewResponse";
 import { respondToPlaceReview } from "@/actions/respondToPlaceReview";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReviewPhotoGrid from "@/components/molecules/ReviewPhotoGrid";
@@ -32,8 +33,9 @@ type ManagePlaceReviewsSectionProps = {
 
 // Owner-facing counterpart to PlaceReviewsSection.tsx (the public detail
 // page's read-only reviews list): same layout and the same "Response from
-// owner" styling convention, plus a Respond action per review that has no
-// owner_response yet.
+// owner" styling, plus create / edit / delete of the owner's response per
+// review. respondToPlaceReview / deletePlaceReviewResponse are the real
+// authorization boundary regardless of what this component shows.
 export default function ManagePlaceReviewsSection({
   placeId,
   initialPage,
@@ -42,6 +44,9 @@ export default function ManagePlaceReviewsSection({
   const queryClient = useQueryClient();
   const toast = useToast();
   const [respondingToId, setRespondingToId] = useState<string | null>(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(
+    null,
+  );
   // Repopulates the response textarea with what the owner typed if the
   // optimistic post below has to roll back — otherwise reopening the form
   // after a failure would silently drop their draft.
@@ -55,14 +60,26 @@ export default function ManagePlaceReviewsSection({
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: reviewsQueryKey });
 
+  const patchResponse = (reviewId: string, value: string | null) => {
+    queryClient.setQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(
+      reviewsQueryKey,
+      (old) =>
+        old && {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.map((row) =>
+              row.id === reviewId ? { ...row, owner_response: value } : row,
+            ),
+          })),
+        },
+    );
+  };
+
   const replyMutation = useMutation({
     mutationFn: ({ reviewId, text }: { reviewId: string; text: string }) =>
       respondToPlaceReview(reviewId, text),
 
-    // The response is a short, low-stakes text field an owner already chose
-    // to submit, so it appears in place immediately; if the server rejects
-    // it, the cache rolls back and the form reopens with the same text so
-    // nothing typed is lost.
     onMutate: async ({ reviewId, text }) => {
       setRespondingToId(null);
       setDraftText(null);
@@ -74,26 +91,14 @@ export default function ManagePlaceReviewsSection({
           reviewsQueryKey,
         );
 
-      queryClient.setQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(
-        reviewsQueryKey,
-        (old) =>
-          old && {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              data: page.data.map((row) =>
-                row.id === reviewId ? { ...row, owner_response: text } : row,
-              ),
-            })),
-          },
-      );
+      patchResponse(reviewId, text);
 
       return { previousReviews };
     },
 
     onSuccess: (response, vars, context) => {
       if (response.status === 200) {
-        toast.success("✅ Response posted successfully!");
+        toast.success("✅ Response saved");
         invalidate();
       } else {
         if (context?.previousReviews) {
@@ -115,6 +120,40 @@ export default function ManagePlaceReviewsSection({
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (reviewId: string) => deletePlaceReviewResponse(reviewId),
+
+    onMutate: async (reviewId) => {
+      setConfirmingDeleteId(null);
+      await queryClient.cancelQueries({ queryKey: reviewsQueryKey });
+      const previousReviews =
+        queryClient.getQueryData<InfiniteData<PaginatedResult<PlaceReviewRow>>>(
+          reviewsQueryKey,
+        );
+      patchResponse(reviewId, null);
+      return { previousReviews };
+    },
+
+    onSuccess: (response, _reviewId, context) => {
+      if (response.status === 200) {
+        toast.success("Response removed");
+        invalidate();
+      } else {
+        if (context?.previousReviews) {
+          queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+        }
+        toast.error(`❌ ${response.message}`);
+      }
+    },
+
+    onError: (_error, _reviewId, context) => {
+      if (context?.previousReviews) {
+        queryClient.setQueryData(reviewsQueryKey, context.previousReviews);
+      }
+      toast.error("❌ Something went wrong. Please try again.");
+    },
+  });
+
   return (
     <div className="space-y-4">
       <InfiniteList<PlaceReviewRow>
@@ -125,93 +164,142 @@ export default function ManagePlaceReviewsSection({
         emptyState={
           <p className="text-muted-foreground text-sm py-4">No reviews yet.</p>
         }
-        renderItem={(review: PlaceReviewRow) => (
-          <li
-            key={review.id}
-            className="border-b border-border pb-6 last:border-0 last:pb-0"
-          >
-            <div className="flex items-center gap-3">
-              {review.user_info?.avatar_public_id ? (
-                <Image
-                  src={buildCloudinaryUrl(
-                    review.user_info.avatar_public_id,
-                    review.user_info.avatar_version,
-                    { width: 40, height: 40 },
-                  )}
-                  alt={review.user_info?.username ?? "Reviewer"}
-                  width={40}
-                  height={40}
-                  className="rounded-full border border-border"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-muted" />
+        renderItem={(review: PlaceReviewRow) => {
+          const isEditing = respondingToId === review.id;
+          const isSubmitting =
+            replyMutation.isPending &&
+            replyMutation.variables?.reviewId === review.id;
+          const isDeleting =
+            deleteMutation.isPending && deleteMutation.variables === review.id;
+
+          return (
+            <li
+              key={review.id}
+              className="border-b border-border pb-6 last:border-0 last:pb-0"
+            >
+              <div className="flex items-center gap-3">
+                {review.user_info?.avatar_public_id ? (
+                  <Image
+                    src={buildCloudinaryUrl(
+                      review.user_info.avatar_public_id,
+                      review.user_info.avatar_version,
+                      { width: 40, height: 40 },
+                    )}
+                    alt={review.user_info?.username ?? "Reviewer"}
+                    width={40}
+                    height={40}
+                    className="rounded-full border border-border"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-muted" />
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-card-foreground truncate">
+                    {review.user_info?.username ?? "Anonymous"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {getRelativeTime(review.created_at)}
+                  </p>
+                </div>
+
+                <StarRatingDisplay rating={review.rating} />
+              </div>
+
+              {review.title && (
+                <h4 className="font-medium text-card-foreground mt-2">
+                  {review.title}
+                </h4>
               )}
 
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-card-foreground truncate">
-                  {review.user_info?.username ?? "Anonymous"}
+              {review.comment && (
+                <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
+                  {review.comment}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {getRelativeTime(review.created_at)}
-                </p>
-              </div>
+              )}
 
-              <StarRatingDisplay rating={review.rating} />
-            </div>
+              <ReviewPhotoGrid photos={review.place_review_photo} />
 
-            {review.title && (
-              <h4 className="font-medium text-card-foreground mt-2">
-                {review.title}
-              </h4>
-            )}
-
-            {review.comment && (
-              <p className="text-muted-foreground text-sm mt-1 leading-relaxed">
-                {review.comment}
-              </p>
-            )}
-
-            <ReviewPhotoGrid photos={review.place_review_photo} />
-
-            {review.owner_response ? (
-              <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
-                <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-                  Response from owner
-                </p>
-                <p className="text-sm text-foreground">
-                  {review.owner_response}
-                </p>
-              </div>
-            ) : respondingToId === review.id ? (
-              <RespondForm
-                initialText={
-                  draftText && draftText.reviewId === review.id
-                    ? draftText.text
-                    : ""
-                }
-                isSubmitting={
-                  replyMutation.isPending &&
-                  replyMutation.variables?.reviewId === review.id
-                }
-                onCancel={() => {
-                  setRespondingToId(null);
-                  setDraftText(null);
-                }}
-                onSubmit={(text) =>
-                  replyMutation.mutate({ reviewId: review.id, text })
-                }
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setRespondingToId(review.id)}
-                className="mt-2 text-sm text-primary hover:underline"
-              >
-                Respond
-              </button>
-            )}
-          </li>
-        )}
+              {review.owner_response && !isEditing ? (
+                <>
+                  <div className="mt-3 ml-4 md:ml-8 p-3 rounded-lg bg-muted border-l-4 border-primary">
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+                      Response from owner
+                    </p>
+                    <p className="text-sm text-foreground">
+                      {review.owner_response}
+                    </p>
+                  </div>
+                  <div className="mt-2 ml-4 md:ml-8 flex items-center gap-3 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setRespondingToId(review.id)}
+                      className="text-primary hover:underline"
+                    >
+                      Edit response
+                    </button>
+                    {confirmingDeleteId === review.id ? (
+                      <>
+                        <span className="text-muted-foreground">
+                          Remove this response?
+                        </span>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => deleteMutation.mutate(review.id)}
+                          className="text-destructive font-medium hover:underline disabled:opacity-60"
+                        >
+                          {isDeleting ? "Removing…" : "Yes, remove"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isDeleting}
+                          onClick={() => setConfirmingDeleteId(null)}
+                          className="text-muted-foreground hover:underline"
+                        >
+                          Keep
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingDeleteId(review.id)}
+                        className="text-destructive hover:underline"
+                      >
+                        Delete response
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : isEditing ? (
+                <RespondForm
+                  initialText={
+                    draftText && draftText.reviewId === review.id
+                      ? draftText.text
+                      : (review.owner_response ?? "")
+                  }
+                  isSubmitting={isSubmitting}
+                  isEdit={Boolean(review.owner_response)}
+                  onCancel={() => {
+                    setRespondingToId(null);
+                    setDraftText(null);
+                  }}
+                  onSubmit={(text) =>
+                    replyMutation.mutate({ reviewId: review.id, text })
+                  }
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setRespondingToId(review.id)}
+                  className="mt-2 text-sm text-primary hover:underline"
+                >
+                  Respond
+                </button>
+              )}
+            </li>
+          );
+        }}
       />
     </div>
   );
@@ -220,11 +308,13 @@ export default function ManagePlaceReviewsSection({
 function RespondForm({
   initialText,
   isSubmitting,
+  isEdit,
   onCancel,
   onSubmit,
 }: {
   initialText: string;
   isSubmitting: boolean;
+  isEdit: boolean;
   onCancel: () => void;
   onSubmit: (text: string) => void;
 }) {
@@ -242,6 +332,7 @@ function RespondForm({
         value={response}
         onChange={(e) => setResponse(e.target.value)}
         placeholder="Write a response to this review..."
+        maxLength={500}
         className="w-full rounded-md border border-input bg-background p-2 text-sm"
         rows={2}
       />
@@ -252,7 +343,11 @@ function RespondForm({
           onClick={handleSubmit}
           className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-60"
         >
-          {isSubmitting ? "Posting..." : "Post response"}
+          {isSubmitting
+            ? "Saving..."
+            : isEdit
+              ? "Save changes"
+              : "Post response"}
         </button>
         <button
           type="button"

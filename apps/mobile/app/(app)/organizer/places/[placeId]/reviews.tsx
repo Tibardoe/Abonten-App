@@ -1,5 +1,6 @@
 import {
   flattenReviews,
+  useDeletePlaceReviewResponse,
   usePlaceReviews,
   useRespondToPlaceReview,
 } from "@/features/organizer/usePlaceBookingsReviews";
@@ -45,10 +46,19 @@ function ReviewCard({
   placeId: string;
 }) {
   const reply = useRespondToPlaceReview(placeId);
+  const remove = useDeletePlaceReviewResponse(placeId);
   const [open, setOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [text, setText] = useState("");
 
   const photos = review.place_review_photo ?? [];
+  const hasResponse = Boolean(review.owner_response);
+
+  const openEditor = () => {
+    setText(review.owner_response ?? "");
+    setConfirmingDelete(false);
+    setOpen(true);
+  };
 
   const submit = () => {
     const trimmed = text.trim();
@@ -61,16 +71,33 @@ function ReviewCard({
             setOpen(false);
             setText("");
           } else {
-            Alert.alert("Couldn't post response", res.message);
+            Alert.alert("Couldn't save response", res.message);
           }
         },
         onError: () =>
           Alert.alert(
-            "Couldn't post response",
+            "Couldn't save response",
             "Please try again in a moment.",
           ),
       },
     );
+  };
+
+  const confirmDelete = () => {
+    remove.mutate(review.id, {
+      onSuccess: (res) => {
+        if (res.status === 200) {
+          setConfirmingDelete(false);
+        } else {
+          Alert.alert("Couldn't remove response", res.message);
+        }
+      },
+      onError: () =>
+        Alert.alert(
+          "Couldn't remove response",
+          "Please try again in a moment.",
+        ),
+    });
   };
 
   return (
@@ -127,14 +154,7 @@ function ReviewCard({
         </View>
       ) : null}
 
-      {review.owner_response ? (
-        <View className="ml-4 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
-          <AppText variant="label" className="mb-1 text-primary">
-            Response from owner
-          </AppText>
-          <AppText variant="small">{review.owner_response}</AppText>
-        </View>
-      ) : open ? (
+      {open ? (
         <View className="ml-4 mt-1 gap-2">
           <Input
             value={text}
@@ -142,11 +162,18 @@ function ReviewCard({
             placeholder="Write a response to this review…"
             multiline
             numberOfLines={3}
+            maxLength={500}
           />
           <View className="flex-row gap-2">
             <View className="flex-1">
               <Button
-                title={reply.isPending ? "Posting…" : "Post response"}
+                title={
+                  reply.isPending
+                    ? "Saving…"
+                    : hasResponse
+                      ? "Save changes"
+                      : "Post response"
+                }
                 onPress={submit}
                 loading={reply.isPending}
                 disabled={reply.isPending || !text.trim()}
@@ -167,11 +194,58 @@ function ReviewCard({
             </View>
           </View>
         </View>
+      ) : hasResponse ? (
+        <View className="ml-4 gap-2">
+          <View className="mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
+            <AppText variant="label" className="mb-1 text-primary">
+              Response from owner
+            </AppText>
+            <AppText variant="small">{review.owner_response}</AppText>
+          </View>
+          {confirmingDelete ? (
+            <View className="flex-row items-center gap-3">
+              <AppText variant="caption">Remove this response?</AppText>
+              <AppText
+                variant="small"
+                tone="error"
+                className="font-semibold"
+                onPress={remove.isPending ? undefined : confirmDelete}
+              >
+                {remove.isPending ? "Removing…" : "Yes, remove"}
+              </AppText>
+              <AppText
+                variant="small"
+                tone="muted"
+                onPress={() => setConfirmingDelete(false)}
+              >
+                Keep
+              </AppText>
+            </View>
+          ) : (
+            <View className="flex-row gap-4">
+              <AppText
+                variant="small"
+                className="font-semibold text-primary"
+                onPress={openEditor}
+              >
+                Edit response
+              </AppText>
+              <AppText
+                variant="small"
+                tone="error"
+                className="font-semibold"
+                onPress={() => setConfirmingDelete(true)}
+              >
+                Delete response
+              </AppText>
+            </View>
+          )}
+        </View>
       ) : (
         <AppText
           variant="small"
           className="mt-1 font-semibold text-primary"
-          onPress={() => setOpen(true)}
+          onPress={openEditor}
         >
           Respond
         </AppText>

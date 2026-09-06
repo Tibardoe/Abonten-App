@@ -85,12 +85,12 @@ const TARGET_SNAPSHOT: Record<
   event_review: {
     table: "event_review",
     columns:
-      "id, event_id, reviewer_id, rating, title, comment, status, moderation_state",
+      "id, event_id, reviewer_id, rating, title, comment, status, moderation_state, organizer_response, organizer_response_at",
   },
   place_review: {
     table: "place_review",
     columns:
-      "id, place_id, reviewer_id, rating, title, comment, status, moderation_state",
+      "id, place_id, reviewer_id, rating, title, comment, status, moderation_state, owner_response, owner_response_at",
   },
   user_review: {
     table: "review",

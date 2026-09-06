@@ -1,16 +1,16 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { respondToPlaceReviewCore } from "@abonten/services/reviews/reviewResponseCore";
+import { deletePlaceReviewResponseCore } from "@abonten/services/reviews/reviewResponseCore";
 import { revalidatePath } from "next/cache";
 
 /**
- * Owner reply to a place review — create OR edit (the core detects which
- * from whether a reply already exists). Thin wrapper: auth here, the
- * join-through-to-place ownership check + validation + update in
- * respondToPlaceReviewCore (shared with /api/mobile).
+ * Owner-only removal of their reply to a place review. Thin wrapper: auth
+ * here, ownership check + null-out in deletePlaceReviewResponseCore (shared
+ * with /api/mobile). Idempotent — deleting an already-absent reply is a
+ * success.
  */
-export async function respondToPlaceReview(reviewId: string, response: string) {
+export async function deletePlaceReviewResponse(reviewId: string) {
   const supabase = await createClient();
 
   const {
@@ -22,11 +22,10 @@ export async function respondToPlaceReview(reviewId: string, response: string) {
     return { status: 401 as const, message: "User not authenticated" };
   }
 
-  const result = await respondToPlaceReviewCore(
+  const result = await deletePlaceReviewResponseCore(
     supabase,
     user.id,
     reviewId,
-    response,
   );
 
   if (result.status === 200 && result.data?.placeSlug) {

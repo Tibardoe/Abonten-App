@@ -5,6 +5,7 @@ import {
   addAdminNote,
   applyModeration,
   assignReport,
+  clearReviewResponse,
   requestReportInfo,
   resolveReport,
   updateReportStatus,
@@ -317,6 +318,28 @@ export function ActionPanel({
                 </Button>
               )}
             </div>
+
+            {(targetType === "event_review" || targetType === "place_review") &&
+              can("moderation.remove") && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  disabled={pending}
+                  onClick={() =>
+                    run(() =>
+                      clearReviewResponse({
+                        targetType,
+                        reviewId: targetId,
+                        reason: reason.trim() || undefined,
+                        reportId,
+                      }),
+                    )
+                  }
+                >
+                  Clear owner/organizer reply
+                </Button>
+              )}
           </div>
         )}
 

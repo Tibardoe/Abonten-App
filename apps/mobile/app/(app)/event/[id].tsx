@@ -125,6 +125,14 @@ function ReviewItem({
       {review.event_review_photo?.length ? (
         <ReviewPhotoStrip photos={review.event_review_photo} />
       ) : null}
+      {review.organizer_response ? (
+        <View className="ml-3 mt-1 rounded-lg border-l-4 border-primary bg-muted p-3">
+          <AppText variant="label" className="mb-1 text-primary">
+            Organizer reply
+          </AppText>
+          <AppText variant="small">{review.organizer_response}</AppText>
+        </View>
+      ) : null}
       <View className="flex-row items-center justify-between">
         <AppText variant="caption">
           {getRelativeTime(review.created_at)}
