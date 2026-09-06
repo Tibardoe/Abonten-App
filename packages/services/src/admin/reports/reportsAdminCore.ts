@@ -109,6 +109,16 @@ const TARGET_SNAPSHOT: Record<
     table: "highlight",
     columns: "id, user_id, content, media_type, media_url, moderation_state",
   },
+  message: {
+    table: "message",
+    columns:
+      "id, conversation_id, sender_id, message_type, content, moderation_state, created_at, edited_at, deleted_at",
+  },
+  conversation: {
+    table: "conversation",
+    columns:
+      "id, type, event_id, place_id, created_by, status, moderation_state, created_at",
+  },
 };
 
 async function fetchTargetSnapshot(

@@ -6,6 +6,7 @@ import type {
   AddPlaceServiceBody,
   ApiEnvelope,
   AttendanceRow,
+  BlockParticipantBody,
   BookingStatus,
   CancelEventResult,
   CancelPlaceBookingResult,
@@ -18,7 +19,13 @@ import type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  ConversationDetailResult,
+  ConversationFilter,
+  ConversationMessagesResult,
+  ConversationsListResult,
   DeleteEventDraftResult,
+  DeleteMessageBody,
+  EditMessageBody,
   DeleteHighlightResult,
   DeletePlaceDraftResult,
   DeletePromoCodeResult,
@@ -35,9 +42,13 @@ import type {
   EventPromotionContextResult,
   FreeRsvpBody,
   FreeRsvpResult,
+  MarkConversationReadBody,
+  MessagingActionResult,
   MomoNetwork,
   MutatePayoutAccountResult,
   NotificationType,
+  OpenConversationInput,
+  OpenConversationResult,
   OrganizerDashboardPeriod,
   OrganizerDashboardWidgetsResult,
   OrganizerFinanceResult,
@@ -83,10 +94,14 @@ import type {
   SaveEventDraftResult,
   SavePlaceDraftBody,
   SavePlaceDraftResult,
+  SendMessageInput,
+  SendMessageResult,
+  SetConversationStateBody,
   SetPlaceStatusBody,
   SubmitChargeOtpResult,
   SubmitReportBody,
   SubmitReportResult,
+  UnreadMessageCountResult,
   UpdateEventBody,
   UpdateEventResult,
   UpdateEventTicketTypesBody,
@@ -299,6 +314,118 @@ export function createApiClient(options: ApiClientOptions) {
           "/api/mobile/notifications/unread-count",
           { method: "GET", auth: true },
         );
+      },
+    },
+
+    messaging: {
+      /** Get-or-create the caller's conversation for a subject. Idempotent —
+       *  the same body always resolves to the same conversationId. */
+      open(body: OpenConversationInput) {
+        return request<OpenConversationResult>("/api/mobile/messages/open", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** The caller's inbox, newest activity first, with per-conversation
+       *  unread counts. */
+      list(params?: {
+        filter?: ConversationFilter;
+        cursor?: string | null;
+        pageSize?: number;
+      }) {
+        const query = new URLSearchParams();
+        if (params?.filter) query.set("filter", params.filter);
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<ConversationsListResult>(
+          `/api/mobile/messages${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Global unread-conversation count for the Messages tab badge. */
+      unreadCount() {
+        return request<UnreadMessageCountResult>(
+          "/api/mobile/messages/unread-count",
+          { method: "GET", auth: true },
+        );
+      },
+      /** Header/context for one conversation (subject, participants, blocks).
+       *  404 if the caller isn't a participant. */
+      detail(conversationId: string) {
+        return request<ConversationDetailResult>(
+          `/api/mobile/messages/${encodeURIComponent(conversationId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Newest-first, keyset-paginated page of one conversation's messages
+       *  (scroll up for older). Soft-deleted messages come back redacted. */
+      messages(
+        conversationId: string,
+        params?: { cursor?: string | null; pageSize?: number },
+      ) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<ConversationMessagesResult>(
+          `/api/mobile/messages/${encodeURIComponent(
+            conversationId,
+          )}/messages${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Send one message. Idempotent on `clientGeneratedId` so an optimistic
+       *  retry collapses onto the same row. */
+      send(body: SendMessageInput) {
+        return request<SendMessageResult>("/api/mobile/messages/send", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Edit one of the caller's own text messages (15-minute window). */
+      edit(body: EditMessageBody) {
+        return request<MessagingActionResult>("/api/mobile/messages/edit", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Soft-delete one of the caller's own messages. Idempotent. */
+      remove(body: DeleteMessageBody) {
+        return request<MessagingActionResult>("/api/mobile/messages/delete", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Advance the caller's read position (drives unread + read receipts). */
+      markRead(body: MarkConversationReadBody) {
+        return request<MessagingActionResult>("/api/mobile/messages/read", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Per-participant mute / archive. */
+      setState(body: SetConversationStateBody) {
+        return request<MessagingActionResult>("/api/mobile/messages/state", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Block / unblock another participant. Enforced server-side in
+       *  send_message — once a block exists in either direction, neither can
+       *  send. */
+      block(body: BlockParticipantBody) {
+        return request<MessagingActionResult>("/api/mobile/messages/block", {
+          method: "POST",
+          body,
+          auth: true,
+        });
       },
     },
 

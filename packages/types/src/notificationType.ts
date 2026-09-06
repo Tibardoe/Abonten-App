@@ -16,7 +16,8 @@ export type NotificationEntityKind =
   | "review_received"
   | "profile"
   | "place_claim"
-  | "place_booking";
+  | "place_booking"
+  | "message";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -25,6 +26,7 @@ export type NotificationData = {
   placeSlug?: string;
   ticketId?: string;
   reviewId?: string;
+  conversationId?: string;
 };
 
 export type NotificationType = {

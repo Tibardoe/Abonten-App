@@ -85,7 +85,9 @@ export type ReportTargetType =
   | "user_review"
   | "user"
   | "organizer"
-  | "highlight";
+  | "highlight"
+  | "message"
+  | "conversation";
 
 export type ReportCategory =
   | "spam"
@@ -194,6 +196,22 @@ export const REPORTABLE_CATEGORIES: Record<ReportTargetType, ReportCategory[]> =
       "safety",
       "other",
     ],
+    message: [
+      "harassment",
+      "spam",
+      "fraud_scam",
+      "inappropriate",
+      "safety",
+      "other",
+    ],
+    conversation: [
+      "harassment",
+      "spam",
+      "fraud_scam",
+      "inappropriate",
+      "safety",
+      "other",
+    ],
   };
 
 export const REPORT_CATEGORY_LABEL: Record<ReportCategory, string> = {
@@ -218,6 +236,8 @@ export const REPORT_TARGET_LABEL: Record<ReportTargetType, string> = {
   user: "profile",
   organizer: "organizer",
   highlight: "highlight",
+  message: "message",
+  conversation: "conversation",
 };
 
 export type ReportAttachmentInput = {
