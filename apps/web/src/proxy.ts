@@ -57,10 +57,16 @@ export const config = {
      *   getMobileAuth, not the cookie session this middleware refreshes;
      *   without this exclusion every /api/mobile/** request from the app
      *   is 302'd to /auth/signin because it carries no Supabase cookie)
+     * - api/paystack/webhook (Paystack's server calling us directly, no
+     *   Supabase cookie either — same failure mode as api/mobile above.
+     *   Confirmed live 2026-09-06: every refund/charge webhook Paystack
+     *   ever sent was silently 307'd to /auth/signin before reaching the
+     *   route handler, which is why refund confirmations never worked
+     *   even after a webhook URL was configured in the Paystack dashboard)
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|favicon.ico|api/mobile|api/observability|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/mobile|api/observability|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
