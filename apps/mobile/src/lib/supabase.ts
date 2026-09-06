@@ -45,6 +45,15 @@ export function startSupabaseAutoRefresh(): void {
   if (appStateSubscribed) return;
   appStateSubscribed = true;
 
+  // AppState only emits "change" on a *transition*. A cold start is already
+  // "active", so without this the refresh ticker would never start until the
+  // app was backgrounded and foregrounded once — and a foregrounded session
+  // older than the access-token TTL (~1h) would then 401 every /api/mobile
+  // call until the app was restarted.
+  if (AppState.currentState === "active") {
+    supabase.auth.startAutoRefresh();
+  }
+
   AppState.addEventListener("change", (state) => {
     if (state === "active") {
       supabase.auth.startAutoRefresh();
