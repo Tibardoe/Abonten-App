@@ -165,22 +165,35 @@ export async function getFinanceOverviewCore(
 
   let organizerEarningsBooked = 0;
   let organizerEarningsHeld = 0;
-  let organizerEarningsOutstanding = 0;
+  let organizerEarningsPaidOut = 0;
   for (const l of earnRows ?? []) {
     const a = num(l.amount);
     if (l.entry_type === "earning") {
       organizerEarningsBooked += a;
-      if (!l.payout_id) organizerEarningsOutstanding += a;
-    } else if (l.entry_type === "refund_hold") {
-      // refund_hold rows are stored as NEGATIVE amounts (money withheld from
-      // the organizer pending a refund) — track the magnitude withheld.
-      organizerEarningsHeld += Math.abs(a);
+    } else if (
+      l.entry_type === "refund_hold" ||
+      l.entry_type === "refund_release"
+    ) {
+      // refund_hold is stored NEGATIVE (money withheld pending a refund);
+      // refund_release is its exact positive mirror, inserted only if the
+      // refund attempt later fails and the hold is reversed. Summing both
+      // gives the net amount still withheld right now.
+      organizerEarningsHeld -= a;
+    } else if (
+      l.entry_type === "payout_hold" ||
+      l.entry_type === "payout_release"
+    ) {
+      // Same shape as refund_hold/refund_release: payout_hold is stored
+      // NEGATIVE the moment a payout is originated, payout_release is its
+      // positive mirror if the payout later fails/is cancelled. Net amount
+      // is money currently paid out (or reserved for an in-flight payout).
+      organizerEarningsPaidOut -= a;
     }
   }
-  // held amounts are not payable until released
-  organizerEarningsOutstanding = Math.max(
+  // held and paid-out amounts are not payable until released
+  const organizerEarningsOutstanding = Math.max(
     0,
-    organizerEarningsOutstanding - organizerEarningsHeld,
+    organizerEarningsBooked - organizerEarningsHeld - organizerEarningsPaidOut,
   );
 
   let payoutsPending = 0;
@@ -730,10 +743,24 @@ export async function getOrganizerFinanceCore(
     const a = num(l.amount);
     if (l.entry_type === "earning") {
       earned += a;
-      if (l.payout_id) paidOut += a;
-    } else if (l.entry_type === "refund_hold") {
-      // stored negative — magnitude withheld
-      held += Math.abs(a);
+    } else if (
+      l.entry_type === "refund_hold" ||
+      l.entry_type === "refund_release"
+    ) {
+      // refund_hold is stored NEGATIVE (money withheld pending a refund);
+      // refund_release is its exact positive mirror, inserted only if the
+      // refund attempt later fails and the hold is reversed. Summing both
+      // gives the net amount still withheld right now.
+      held -= a;
+    } else if (
+      l.entry_type === "payout_hold" ||
+      l.entry_type === "payout_release"
+    ) {
+      // Same shape: payout_hold goes NEGATIVE the moment a payout is
+      // originated, payout_release is its positive mirror if the payout
+      // later fails/is cancelled. Net amount is money currently paid out
+      // (or reserved for an in-flight payout).
+      paidOut -= a;
     }
   }
   const outstanding = Math.max(0, earned - paidOut - held);
