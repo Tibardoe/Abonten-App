@@ -3,6 +3,10 @@ import { getNearByPlaces } from "@/actions/getNearByPlaces";
 import { getPlaceCategories } from "@/actions/getPlaceCategories";
 import { getQueriedPlaces } from "@/actions/getQueriedPlaces";
 import ViewToggle from "@/components/molecules/ViewToggle";
+import {
+  type PlaceFilters,
+  filterPlaceList,
+} from "@abonten/core/exploreFilters";
 import NoPlacesEmptyState from "../molecules/NoPlacesEmptyState";
 import PlaceCategoryChips from "../molecules/PlaceCategoryChips";
 import AllPlacesList from "./AllPlacesList";
@@ -119,7 +123,33 @@ export default async function PlacesTabContent({
     }),
   ]);
 
-  const topRatedPlaces = [...(topRatedResult.data ?? [])]
+  // The category chip row + Filter modal now drive EVERY section on this
+  // tab, not just "All Places". The curated sliders are filtered
+  // client-side against the same bounded payloads they're already derived
+  // from — no extra query.
+  const curatedPlaceFilters: PlaceFilters = {
+    categoryId: selectedCategory?.id ?? null,
+    openNow: openNow ?? false,
+    minRating: minRatingParam ?? null,
+    maxDistanceKm: maxDistanceKmParam ?? null,
+  };
+
+  const featuredPlaces = filterPlaceList(
+    featuredResult.data ?? [],
+    curatedPlaceFilters,
+  );
+  const aroundYouPlaces = filterPlaceList(
+    aroundYouResult.data ?? [],
+    curatedPlaceFilters,
+  );
+  const openNowPlaces = filterPlaceList(
+    openNowResult.data ?? [],
+    curatedPlaceFilters,
+  );
+  const topRatedPlaces = filterPlaceList(
+    [...(topRatedResult.data ?? [])],
+    curatedPlaceFilters,
+  )
     .sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0))
     .slice(0, TOP_RATED_DISPLAY_SIZE);
 
@@ -139,18 +169,9 @@ export default async function PlacesTabContent({
 
   return (
     <div className="space-y-6">
-      {/* Featured Places (Milestone 5, paid promotion) is positioned first,
-          per the original spec's ordering. "Popular Places" still has no
-          ranking signal beyond raw place_analytics_event counts and stays
-          out of scope. */}
-      <FeaturedPlacesSlider places={featuredResult.data ?? []} />
-
-      <PlacesSlider heading="Around You" places={aroundYouResult.data ?? []} />
-
-      <PlacesSlider heading="Open Now" places={openNowResult.data ?? []} />
-
-      <PlacesSlider heading="Top Rated" places={topRatedPlaces} />
-
+      {/* Category chips sit directly under the Events/Places tabs, above
+          every curated section — one filter surface that drives Featured,
+          Around You, Open Now, Top Rated and the "All Places" list below. */}
       {categories.length > 0 && (
         <PlaceCategoryChips
           categories={categories}
@@ -158,6 +179,18 @@ export default async function PlacesTabContent({
           selectedSlug={selectedCategory?.slug ?? null}
         />
       )}
+
+      {/* Featured Places (Milestone 5, paid promotion) is positioned first,
+          per the original spec's ordering. "Popular Places" still has no
+          ranking signal beyond raw place_analytics_event counts and stays
+          out of scope. */}
+      <FeaturedPlacesSlider places={featuredPlaces} />
+
+      <PlacesSlider heading="Around You" places={aroundYouPlaces} />
+
+      <PlacesSlider heading="Open Now" places={openNowPlaces} />
+
+      <PlacesSlider heading="Top Rated" places={topRatedPlaces} />
 
       <div>
         <div className="flex items-center justify-between gap-2 mb-1">

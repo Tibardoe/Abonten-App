@@ -14,6 +14,14 @@ type EventsSliderProp = {
   eventCategory?: string;
   urlPath?: string;
   events: UserPostType[];
+  /**
+   * Render nothing (not even the "no events in this category yet" row) when
+   * this window is empty. Used on the Explore page when a category/filter is
+   * active — several curated windows can be empty at once then, and the
+   * inline placeholder rows stack into noise. The native Explore screen
+   * hides empty curated rows the same way.
+   */
+  hideWhenEmpty?: boolean;
 };
 
 export default function EventsSlider({
@@ -21,6 +29,7 @@ export default function EventsSlider({
   events,
   eventCategory,
   urlPath,
+  hideWhenEmpty = false,
 }: EventsSliderProp) {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
 
@@ -78,6 +87,8 @@ export default function EventsSlider({
           eventCategory,
         )}`
       : null;
+
+  if (hideWhenEmpty && events.length === 0) return null;
 
   return (
     <div>
