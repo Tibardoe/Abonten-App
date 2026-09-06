@@ -1,11 +1,14 @@
 import { getUserFavoritePlaces } from "@/actions/getUserFavoritePlaces";
 import { getUserFavoritePosts } from "@/actions/getUserFavoritePosts";
+import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import FavoritePlacesList from "./FavoritePlacesList";
 import FavoritesList from "./FavoritesList";
 
 type FavoritesPageProps = {
+  params: Promise<{ username: string }>;
   searchParams: Promise<{ tab?: string }>;
 };
 
@@ -53,7 +56,19 @@ const placesEmptyState = (
 // ExploreTabs/exploreTab.ts "events"|"places" switcher the Explore page
 // already uses instead of a bespoke tab UI, and the same "fully fetched
 // server-side, handed in as children" shape.
-export default async function page({ searchParams }: FavoritesPageProps) {
+export default async function page({
+  params,
+  searchParams,
+}: FavoritesPageProps) {
+  const { username } = await params;
+  // Favorites are private to the viewer — the queries below are self-scoped
+  // and ignore `:username`, so 404 rather than render your own favorites
+  // under someone else's profile URL.
+  const profile = await getUserProfileDetails(username);
+  if (profile.status !== 200 || profile.ownUsername !== username) {
+    notFound();
+  }
+
   const resolvedSearchParams = await searchParams;
   const initialTab =
     resolvedSearchParams.tab === "places" ? "places" : "events";
