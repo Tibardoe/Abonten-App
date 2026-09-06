@@ -12,6 +12,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // caller does its own revalidatePath with the returned eventId.
 
 type TicketRow = {
+  id: string;
   status: string;
   ticket_type: {
     event: { id: string; organizer_id: string } | null;
@@ -22,22 +23,39 @@ export type CheckInTicketCoreResult =
   | { status: 400 | 403 | 404 | 500; message: string }
   | { status: 200; message: string; eventId: string | null };
 
+// A `TKT-XXXXXXXX` human code (what the ticket QR encodes) vs. the raw
+// ticket UUID. Passing a non-UUID string into `.eq("id", …)` makes Postgres
+// throw a cast error, so the two have to be routed to different columns.
+const TICKET_CODE_RE = /^TKT-[A-Z0-9]+$/i;
+
+/**
+ * @param ticketRef  either the ticket's UUID (the attendee-list toggle) or
+ *   its `TKT-…` code parsed out of a scanned QR (the organizer scanner).
+ */
 export async function checkInTicketCore(
   supabase: SupabaseClient<Database>,
   userId: string,
-  ticketId: string,
+  ticketRef: string,
   checkedIn: boolean,
 ): Promise<CheckInTicketCoreResult> {
+  const ref = ticketRef.trim();
+  const byCode = TICKET_CODE_RE.test(ref);
+
   const { data: rawTicket, error: ticketError } = await supabase
     .from("ticket")
     .select(
-      "status, ticket_type:ticket_type_id(event:event_id(id, organizer_id))",
+      "id, status, ticket_type:ticket_type_id(event:event_id(id, organizer_id))",
     )
-    .eq("id", ticketId)
+    .eq(byCode ? "ticket_code" : "id", ref)
     .maybeSingle();
 
   if (ticketError || !rawTicket) {
-    return { status: 404, message: "Ticket not found" };
+    return {
+      status: 404,
+      message: byCode
+        ? "That code doesn't match a ticket for this event."
+        : "Ticket not found",
+    };
   }
 
   const ticket = rawTicket as unknown as TicketRow;
@@ -68,7 +86,7 @@ export async function checkInTicketCore(
       used_at: checkedIn ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", ticketId);
+    .eq("id", ticket.id);
 
   if (updateError) {
     logger.error(

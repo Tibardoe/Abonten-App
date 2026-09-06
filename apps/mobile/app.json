@@ -84,6 +84,12 @@
           "photosPermission": "Abonten needs access to your photos so you can set a profile picture."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Abonten uses the camera so organizers can scan ticket QR codes to check attendees in."
+        }
+      ],
       "expo-video",
       [
         "@sentry/react-native/expo",
