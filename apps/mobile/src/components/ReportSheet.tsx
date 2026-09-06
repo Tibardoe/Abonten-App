@@ -9,15 +9,7 @@ import {
   REPORT_TARGET_LABEL,
   type ReportTargetType,
 } from "@abonten/types/adminTypes";
-import {
-  AppText,
-  Button,
-  Chip,
-  Field,
-  Icon,
-  Input,
-  Sheet,
-} from "@abonten/ui-native";
+import { AppText, Button, Field, Icon, Input, Sheet } from "@abonten/ui-native";
 import {
   REPORT_ATTACHMENT_MAX_BYTES,
   REPORT_ATTACHMENT_MIME_TYPES,
@@ -240,15 +232,43 @@ export function ReportSheet({
 
           <View className="gap-2">
             <AppText variant="label">Why are you reporting this?</AppText>
-            <View className="flex-row flex-wrap gap-2">
-              {categories.map((c) => (
-                <Chip
-                  key={c}
-                  label={REPORT_CATEGORY_LABEL[c]}
-                  selected={category === c}
-                  onPress={() => setCategory(c)}
-                />
-              ))}
+            <AppText variant="caption" className="-mt-1">
+              Pick the one that fits best.
+            </AppText>
+            <View className="overflow-hidden rounded-xl border border-border">
+              {categories.map((c, i) => {
+                const on = category === c;
+                return (
+                  <Pressable
+                    key={c}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: on }}
+                    onPress={() => setCategory(c)}
+                    className={[
+                      "flex-row items-center gap-3 px-3.5 py-3 active:opacity-80",
+                      i > 0 ? "border-t border-border" : "",
+                      on ? "bg-primary/10" : "",
+                    ].join(" ")}
+                  >
+                    <View
+                      className={[
+                        "h-[18px] w-[18px] items-center justify-center rounded-full border-2",
+                        on ? "border-primary" : "border-border",
+                      ].join(" ")}
+                    >
+                      {on ? (
+                        <View className="h-2 w-2 rounded-full bg-primary" />
+                      ) : null}
+                    </View>
+                    <AppText
+                      variant="body"
+                      className={on ? "font-semibold" : undefined}
+                    >
+                      {REPORT_CATEGORY_LABEL[c]}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 

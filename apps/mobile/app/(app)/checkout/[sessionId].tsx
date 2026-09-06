@@ -149,15 +149,15 @@ export default function CheckoutReviewScreen() {
     return (
       <View className="flex-1 items-center justify-center gap-3 bg-background px-6">
         <AppText className="text-center text-muted-foreground">
-          This checkout has expired. Your seats were released — start again from
-          the event.
+          This checkout has expired and the seats it was holding went back on
+          sale. You can pick your tickets again.
         </AppText>
         <Pressable
           className="rounded-lg bg-primary px-4 py-2 active:opacity-90"
           onPress={() => router.back()}
         >
           <AppText className="font-semibold text-primary-foreground">
-            Back to event
+            Choose tickets again
           </AppText>
         </Pressable>
       </View>
@@ -216,7 +216,7 @@ export default function CheckoutReviewScreen() {
         <Pressable
           disabled={cancel.isPending}
           onPress={onCancel}
-          className="items-center rounded-xl border border-border py-3 active:opacity-90"
+          className="items-center rounded-xl border border-destructive/40 bg-destructive/10 py-3 active:opacity-80"
         >
           {cancel.isPending ? (
             <ActivityIndicator />

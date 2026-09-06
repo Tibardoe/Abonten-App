@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   Modal,
@@ -96,6 +96,21 @@ export function Sheet({
   // a stale height from a previous session can't affect the next open.
   const kb = open ? kbHeight : 0;
 
+  // When the keyboard opens over the sheet, bring the focused field into
+  // view. In every sheet form the text inputs sit at/near the bottom of the
+  // content, and RN's ScrollView does NOT auto-scroll to a focused TextInput
+  // inside a <Modal> (no `adjustResize`), so the field would stay hidden
+  // behind the keyboard until you scrolled by hand.
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    if (kb <= 0) return;
+    const t = setTimeout(
+      () => scrollRef.current?.scrollToEnd({ animated: true }),
+      Platform.OS === "ios" ? 60 : 140,
+    );
+    return () => clearTimeout(t);
+  }, [kb]);
+
   // Space available for the panel above the keyboard (and below the status
   // bar). The panel is lifted by `kb` so its footer sits just above the
   // keyboard; its max-height is clamped to what's left so the header never
@@ -166,6 +181,7 @@ export function Sheet({
           ) : null}
 
           <ScrollView
+            ref={scrollRef}
             style={minHeight != null ? { flexGrow: 1 } : undefined}
             contentContainerStyle={{
               padding: 16,
