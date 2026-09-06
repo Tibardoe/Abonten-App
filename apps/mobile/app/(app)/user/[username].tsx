@@ -109,7 +109,7 @@ export default function UserProfileScreen() {
           />
         ) : session ? (
           <HeaderIconButton
-            name="ellipsis-horizontal"
+            name="flag-outline"
             accessibilityLabel="Report this user"
             onPress={() => setReportOpen(true)}
           />

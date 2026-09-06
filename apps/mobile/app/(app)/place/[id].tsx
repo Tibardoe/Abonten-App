@@ -190,6 +190,16 @@ export default function PlaceDetailScreen() {
           id={id}
           shareTitle={place?.name ?? "Place"}
           shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
+          onReport={
+            session && place?.owner_id && place.owner_id !== session.user.id
+              ? () =>
+                  setReportTarget({
+                    targetType: "place",
+                    targetId: place.id,
+                    label: place.name,
+                  })
+              : undefined
+          }
         />
       }
     />

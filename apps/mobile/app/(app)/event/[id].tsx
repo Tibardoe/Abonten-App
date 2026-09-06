@@ -191,6 +191,18 @@ export default function EventDetailScreen() {
           id={id}
           shareTitle={eventTitle ?? "Event"}
           shareUrl={eventCode ? eventShareUrl(eventCode) : null}
+          onReport={
+            session &&
+            data?.event.organizer_id &&
+            data.event.organizer_id !== session.user.id
+              ? () =>
+                  setReportTarget({
+                    targetType: "event",
+                    targetId: data.event.id,
+                    label: data.event.title,
+                  })
+              : undefined
+          }
         />
       }
     />

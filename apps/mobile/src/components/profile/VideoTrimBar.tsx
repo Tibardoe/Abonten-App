@@ -5,8 +5,7 @@ import {
 } from "@/features/profile/useHighlights";
 import formatDuration from "@abonten/core/formatVideoDuration";
 import { AppText } from "@abonten/ui-native";
-import { Image } from "expo-image";
-import type { VideoPlayer, VideoThumbnail } from "expo-video";
+import type { VideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type LayoutChangeEvent, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -16,21 +15,21 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 
-// Native echo of the web `VideoTrimEditor`: a real thumbnail timeline with
-// two draggable handles + a draggable selection window + a playhead synced
-// to the player's own time updates. Playback loops within the selected
-// range. The raw clip is never re-encoded — the [start, end] window is
-// handed back up and baked into the Cloudinary delivery URL at upload
-// (see resolveTrimmedDelivery in useHighlights.ts).
+// Native echo of the web `VideoTrimEditor`: a scrub track with two
+// draggable handles + a draggable selection window + a playhead synced to
+// the player's own time updates. Playback loops within the selected range.
+// The raw clip is never re-encoded — the [start, end] window is handed back
+// up and baked into the Cloudinary delivery URL at upload (see
+// resolveTrimmedDelivery in useHighlights.ts).
+//
+// NOTE: this intentionally does NOT render a thumbnail filmstrip.
+// expo-video's `generateThumbnailsAsync` crashes the app hard on iOS for
+// some sources (uncatchable — it faults in the native retriever), so the
+// track is a plain tick strip instead. The trim behaviour is unaffected.
 
 const HANDLE_W = 22;
 const TRACK_H = 56;
-const THUMB_COUNT = 6;
-const THUMB_MAX_HEIGHT = 80;
-// Below this the strip is skipped entirely — sampling frames from a very
-// short / zero-duration source is a native crash path, not just an ugly UI.
-const MIN_THUMBNAIL_DURATION = 1;
-const READY_TIMEOUT_MS = 4000;
+const TICK_COUNT = 6;
 // Cap how often the drag handlers poke player.currentTime — a seek on every
 // gesture frame can wedge the native player on some Android devices.
 const SEEK_THROTTLE_MS = 60;
@@ -42,34 +41,6 @@ type Props = {
   onTrimChange: (startSeconds: number, endSeconds: number) => void;
 };
 
-/** Resolve once the player has a genuinely playable source (or times out /
- * errors) — asking a not-yet-decoded video for thumbnails is what crashes
- * the native retriever. */
-function waitForReady(
-  player: VideoPlayer,
-  timeoutMs: number,
-): Promise<boolean> {
-  if (player.status === "readyToPlay") return Promise.resolve(true);
-  return new Promise<boolean>((resolve) => {
-    let done = false;
-    const finish = (value: boolean) => {
-      if (done) return;
-      done = true;
-      sub.remove();
-      clearTimeout(timer);
-      resolve(value);
-    };
-    const sub = player.addListener("statusChange", ({ status }) => {
-      if (status === "readyToPlay") finish(true);
-      else if (status === "error") finish(false);
-    });
-    const timer = setTimeout(
-      () => finish(player.status === "readyToPlay"),
-      timeoutMs,
-    );
-  });
-}
-
 export function VideoTrimBar({ player, item, onTrimChange }: Props) {
   const duration = Math.max(
     item.durationSeconds ?? player.duration ?? 0,
@@ -77,8 +48,6 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
   );
 
   const [trackW, setTrackW] = useState(0);
-  const [thumbs, setThumbs] = useState<VideoThumbnail[]>([]);
-  const [thumbsFailed, setThumbsFailed] = useState(false);
 
   // px positions of the two handles' inner edges.
   const startX = useSharedValue(0);
@@ -115,66 +84,6 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
     endX.value = xForSec(e);
     windowRef.current = { start: s, end: e };
   }, [trackW, item.startSeconds, item.endSeconds, duration, xForSec]);
-
-  // Thumbnail strip. Only sampled once the player reports a real playable
-  // source, and only for clips long enough to sample safely — a batched
-  // generateThumbnailsAsync call that lands on an undecodable frame can take
-  // the native media retriever (and the whole app) down, so frames are
-  // requested ONE AT A TIME, each guarded, and the strip degrades to plain
-  // placeholder cells on the first hard failure. None of this is catchable
-  // once it reaches native, hence the up-front gating.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the clip identity
-  useEffect(() => {
-    let cancelled = false;
-    setThumbs([]);
-    setThumbsFailed(false);
-
-    const usable =
-      Number.isFinite(duration) && duration >= MIN_THUMBNAIL_DURATION
-        ? duration
-        : 0;
-    if (usable === 0) {
-      setThumbsFailed(true);
-      return;
-    }
-
-    const times = Array.from(
-      { length: THUMB_COUNT },
-      (_, i) => (usable * (i + 0.5)) / THUMB_COUNT,
-    );
-
-    (async () => {
-      const ready = await waitForReady(player, READY_TIMEOUT_MS);
-      if (cancelled) return;
-      if (!ready) {
-        setThumbsFailed(true);
-        return;
-      }
-      const out: VideoThumbnail[] = [];
-      for (const t of times) {
-        if (cancelled) return;
-        try {
-          const frames = await player.generateThumbnailsAsync([t], {
-            maxHeight: THUMB_MAX_HEIGHT,
-          });
-          const frame = frames?.[0];
-          if (frame) {
-            out.push(frame);
-            if (!cancelled) setThumbs([...out]);
-          }
-        } catch {
-          // One bad frame shouldn't blank the whole strip; keep what we
-          // have. If we have nothing yet, drop to the placeholder cells.
-          if (out.length === 0 && !cancelled) setThumbsFailed(true);
-          return;
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [item.uri, duration]);
 
   // Playhead + loop-within-range. The seek back to `start` is wrapped —
   // a currentTime write can throw if the player was torn down between the
@@ -297,31 +206,21 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
         style={{ height: TRACK_H }}
         className="w-full overflow-visible rounded-lg"
       >
-        {/* thumbnail row (clipped to the rounded shape) */}
+        {/* scrub track — plain tick strip (no thumbnail generation) */}
         <View
           className="absolute inset-0 flex-row overflow-hidden rounded-lg"
-          style={{ backgroundColor: "#1a1a1a" }}
+          style={{ backgroundColor: "#1f1f1f" }}
         >
-          {thumbs.length > 0
-            ? thumbs.map((t, i) => (
-                <Image
-                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed positional frames
-                  key={i}
-                  source={t}
-                  style={{ flex: 1, height: "100%" }}
-                  contentFit="cover"
-                />
-              ))
-            : !thumbsFailed
-              ? Array.from({ length: THUMB_COUNT }).map((_, i) => (
-                  <View
-                    // biome-ignore lint/suspicious/noArrayIndexKey: placeholder cells
-                    key={i}
-                    style={{ flex: 1, height: "100%" }}
-                    className="border-r border-white/5 bg-white/5"
-                  />
-                ))
-              : null}
+          {Array.from({ length: TICK_COUNT }).map((_, i) => (
+            <View
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed tick cells
+              key={i}
+              style={{ flex: 1, height: "100%" }}
+              className={
+                i === 0 ? "bg-white/5" : "border-l border-white/10 bg-white/5"
+              }
+            />
+          ))}
         </View>
 
         {/* dim the excluded portions */}

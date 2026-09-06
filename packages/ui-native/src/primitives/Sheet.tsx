@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -18,17 +19,17 @@ import { SectionTitle } from "./Typography";
 // Same prop shape (`open` / `onClose` / `title` / `footer`) so those flows
 // port across. Built on RN's Modal so it needs no extra dependency.
 //
-// The panel is wrapped in a KeyboardAvoidingView so a focused input inside
-// the sheet lifts it clear of the keyboard instead of being hidden behind
-// it, and its scroll + footer carry the bottom safe-area inset so nothing
-// sits under the home indicator. Every bottom sheet in the app renders
-// through here, so this behaviour is uniform.
-//
-// `behavior="padding"` is used on BOTH platforms deliberately: Android's
-// `adjustResize` soft-input mode does NOT apply to content inside a RN
-// <Modal>, so relying on it (behavior=undefined) left inputs near the
-// footer hidden behind the Android keyboard. Padding works inside the modal
-// on both platforms with no double-counting.
+// Keyboard handling: `adjustResize` does NOT apply to content inside a RN
+// <Modal>, and a `KeyboardAvoidingView behavior="padding"` on a flex-end
+// container pushes the WHOLE panel up by the keyboard height without
+// shrinking it — so a tall sheet (location picker, filters) ends up with
+// its header shoved off the top of the screen. Instead we track the
+// keyboard height ourselves and (a) lift the panel by exactly that height
+// so the footer clears the keyboard, and (b) cap the panel's max-height to
+// the space that's left above the keyboard so the title bar and close
+// button stay on-screen. The scroll view then scrolls the focused field
+// into that visible window. Every bottom sheet renders through here, so
+// this behaviour is uniform.
 
 export type SheetProps = {
   open: boolean;
@@ -62,9 +63,35 @@ export function Sheet({
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
+
+  // Live keyboard height. `will*` events fire before the animation on iOS
+  // (smoother); Android only emits `did*`.
+  const [kbHeight, setKbHeight] = useState(0);
+  useEffect(() => {
+    if (!open) return;
+    const showEvt =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvt =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const s = Keyboard.addListener(showEvt, (e) =>
+      setKbHeight(e.endCoordinates?.height ?? 0),
+    );
+    const h = Keyboard.addListener(hideEvt, () => setKbHeight(0));
+    return () => {
+      s.remove();
+      h.remove();
+    };
+  }, [open]);
+
+  // Space available for the panel above the keyboard (and below the status
+  // bar). The panel is lifted by `kbHeight` so its footer sits just above
+  // the keyboard; its max-height is clamped to what's left so the header
+  // never runs off the top.
+  const available = Math.max(220, height - kbHeight - insets.top - 8);
+  const maxHeight = Math.min(height * maxHeightRatio, available);
   const minHeight =
     minHeightRatio != null
-      ? Math.min(height * maxHeightRatio, height * minHeightRatio)
+      ? Math.min(maxHeight, height * minHeightRatio)
       : undefined;
 
   return (
@@ -75,10 +102,7 @@ export function Sheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1, justifyContent: "flex-end" }}
-        behavior="padding"
-      >
+      <View style={{ flex: 1, justifyContent: "flex-end" }}>
         <Pressable
           accessibilityLabel="Close"
           onPress={onClose}
@@ -95,7 +119,7 @@ export function Sheet({
         <View
           className="rounded-t-2xl border-t border-border bg-popover"
           style={[
-            { maxHeight: height * maxHeightRatio },
+            { maxHeight, marginBottom: kbHeight },
             minHeight != null ? { minHeight } : null,
             shadow.sheet,
           ]}
@@ -142,13 +166,15 @@ export function Sheet({
           {footer ? (
             <View
               className="border-t border-border px-4 pt-4"
-              style={{ paddingBottom: 16 + insets.bottom }}
+              style={{
+                paddingBottom: 16 + (kbHeight > 0 ? 4 : insets.bottom),
+              }}
             >
               {footer}
             </View>
           ) : null}
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

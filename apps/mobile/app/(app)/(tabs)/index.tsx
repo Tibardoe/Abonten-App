@@ -343,40 +343,19 @@ export default function Explore() {
     <View className="flex-1 bg-background">
       <AppHeader variant="branded" />
       {/* Location switcher — the web LocationAndFilterSection's location
-          button. */}
-      <View className="flex-row items-center justify-between gap-2 px-4 pb-2 pt-3">
+          button. Full width on its own row. */}
+      <View className="px-4 pb-2 pt-3">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Change location"
           onPress={() => setLocationOpen(true)}
-          className="flex-row items-center gap-1 active:opacity-70"
+          className="flex-row items-center gap-1 self-start active:opacity-70"
         >
           <Icon name="location-outline" size={20} tone="foreground" />
           <AppText variant="bodyStrong" numberOfLines={1}>
             {location?.label ?? "Set location"}
           </AppText>
           <Icon name="chevron-down" size={16} tone="muted" />
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            activeCount > 0 ? `Filters (${activeCount} active)` : "Filters"
-          }
-          onPress={() => setFilterOpen(true)}
-          className="flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
-        >
-          <Icon name="options-outline" size={18} tone="foreground" />
-          <AppText variant="small" className="font-medium">
-            Filters
-          </AppText>
-          {activeCount > 0 ? (
-            <View className="ml-0.5 min-w-[18px] items-center rounded-full bg-primary px-1">
-              <AppText className="text-[13px] font-semibold text-primary-foreground">
-                {activeCount}
-              </AppText>
-            </View>
-          ) : null}
         </Pressable>
       </View>
 
@@ -394,9 +373,30 @@ export default function Explore() {
         />
       </View>
 
-      {/* List / Map view toggle — the web EventsTabContent's list-vs-map
-          switch, kept as a compact right-aligned control. */}
-      <View className="flex-row justify-end px-4 pb-1">
+      {/* Filter line, then the List / Map toggle — ordered tabs → filters →
+          map so the view switch reads as the last control before content. */}
+      <View className="flex-row items-center justify-between gap-2 px-4 pb-1 pt-1">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            activeCount > 0 ? `Filters (${activeCount} active)` : "Filters"
+          }
+          onPress={() => setFilterOpen(true)}
+          className="min-h-[36px] flex-row items-center gap-1 rounded-lg border border-border px-3 py-1.5 active:opacity-70"
+        >
+          <Icon name="options-outline" size={18} tone="foreground" />
+          <AppText variant="small" className="font-medium">
+            Filters
+          </AppText>
+          {activeCount > 0 ? (
+            <View className="ml-0.5 min-w-[18px] items-center rounded-full bg-primary px-1">
+              <AppText className="text-[13px] font-semibold text-primary-foreground">
+                {activeCount}
+              </AppText>
+            </View>
+          ) : null}
+        </Pressable>
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={view === "list" ? "Show map" : "Show list"}
