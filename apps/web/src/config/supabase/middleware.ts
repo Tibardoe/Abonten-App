@@ -54,6 +54,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/reviews") ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/auth") ||
+    // The "your account is restricted" landing itself — must stay reachable
+    // for a signed-in-but-banned user so the redirect below can't loop.
+    pathname.startsWith("/account-restricted") ||
     // Digital Asset Links / Apple App Site Association — must be publicly
     // fetchable (by Google/Apple's verifiers and by curl) for Android App
     // Links + iOS Universal Links to verify. Without this the middleware
@@ -74,6 +77,27 @@ export async function updateSession(request: NextRequest) {
     url.search = "";
     url.searchParams.set("next", pathname + request.nextUrl.search);
     return NextResponse.redirect(url);
+  }
+
+  // A signed-in but suspended (status_id 2) / banned (status_id 3) account
+  // is bounced off every protected route to the restriction landing. One
+  // indexed PK read, only on authenticated non-public requests. An admin
+  // ban also revokes their Supabase sessions (setUserStatusCore); this
+  // closes the window before the JWT expires and covers server-rendered
+  // pages + Server Actions (both pass through this middleware). Fails open.
+  if (user && !isPublicRoute) {
+    const { data: statusRow } = await supabase
+      .from("user_info")
+      .select("status_id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (statusRow && (statusRow.status_id === 2 || statusRow.status_id === 3)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/account-restricted";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.

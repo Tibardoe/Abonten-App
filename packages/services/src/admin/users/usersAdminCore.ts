@@ -375,6 +375,23 @@ export async function setUserStatusCore(
     return { status: 500, message: "Something went wrong" };
   }
 
+  // Revoke every live session for a suspended/banned account so their JWT
+  // stops refreshing and expires within its TTL — this is what makes the
+  // ban bite everywhere (direct Supabase reads included), not just on the
+  // paths that re-check status_id. Best-effort: the status change already
+  // committed; a failed sign-out is logged, not surfaced.
+  if (input.status !== "Active") {
+    try {
+      await supabase.auth.admin.signOut(input.userId, "global");
+    } catch (signOutErr) {
+      logger.error(
+        `setUserStatusCore: failed to revoke sessions for ${input.userId}: ${
+          signOutErr instanceof Error ? signOutErr.message : signOutErr
+        }`,
+      );
+    }
+  }
+
   await recordAdminAudit(supabase, {
     actorId: ctx.userId,
     actorRoles: ctx.roles,
