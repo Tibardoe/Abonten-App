@@ -52,6 +52,11 @@ const WEBSITE = "https://abontenhub.com";
 const OPEN_MS = 260;
 const CLOSE_MS = 200;
 const EDGE_WIDTH = 22;
+// The branded AppHeader is insets.top + 54 tall. Start the left-edge swipe
+// catcher below it so its GestureDetector never sits on top of the header's
+// menu button — that overlap was swallowing taps on the button (the swipe
+// still worked), so the menu "sometimes" didn't open.
+const HEADER_HEIGHT = 54;
 
 function Row({
   icon,
@@ -222,7 +227,7 @@ export function AppDrawer() {
             style={{
               position: "absolute",
               left: 0,
-              top: 0,
+              top: insets.top + HEADER_HEIGHT,
               bottom: 0,
               width: EDGE_WIDTH,
             }}
