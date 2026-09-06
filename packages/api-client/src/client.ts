@@ -294,6 +294,12 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", auth: true },
         );
       },
+      unreadCount() {
+        return request<ApiEnvelope<{ count: number }>>(
+          "/api/mobile/notifications/unread-count",
+          { method: "GET", auth: true },
+        );
+      },
     },
 
     profile: {

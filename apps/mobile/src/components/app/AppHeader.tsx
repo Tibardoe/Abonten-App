@@ -1,4 +1,6 @@
+import { useSession } from "@/auth/SessionProvider";
 import { useMenuSheet } from "@/components/app/menuSheet";
+import { useUnreadNotificationCount } from "@/features/notifications/useUnreadNotificationCount";
 import {
   AbontenLogo,
   AppText,
@@ -20,8 +22,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 // so every screen reads as one navigation system instead of N separately
 // designed bars.
 //
-//   branded  — primary/root screens: menu (left) · Abonten mark (centre) ·
-//              optional contextual action (right). No back button.
+//   branded  — primary/root screens: menu + notification bell (left,
+//              grouped, mirroring the web mobile header) · optional
+//              contextual action then the Abonten mark (right edge). No
+//              back button, no centred title.
 //   title    — secondary/list/settings screens: back (left) · centred title ·
 //              optional contextual action (right).
 //   detail   — event/place/profile screens: back (left) · optional centred
@@ -89,6 +93,44 @@ export function HeaderIconButton({
   );
 }
 
+/** Notification bell for the branded header — sits right next to the menu
+ * button, same as the web mobile header. Badges the unread count (capped
+ * "9+") from the dedicated count endpoint. */
+function HeaderBellButton() {
+  const router = useRouter();
+  const { data: unread = 0 } = useUnreadNotificationCount();
+  const label =
+    unread > 0 ? `Notifications, ${unread} unread` : "Notifications";
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      hitSlop={8}
+      onPress={() => router.push("/(app)/notifications")}
+      style={{
+        width: HIT,
+        height: HIT,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+      className="rounded-full active:opacity-60"
+    >
+      <Icon name="notifications-outline" size={ICON_SIZE} tone="foreground" />
+      {unread > 0 ? (
+        <View
+          className="absolute items-center justify-center rounded-full bg-primary px-1"
+          style={{ top: 4, right: 2, minWidth: 16, height: 16 }}
+        >
+          <AppText className="text-[10px] font-bold text-primary-foreground">
+            {unread > 9 ? "9+" : unread}
+          </AppText>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
 export function AppHeader({
   variant = "title",
   title,
@@ -105,6 +147,7 @@ export function AppHeader({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setOpen } = useMenuSheet();
+  const { session } = useSession();
 
   // Reserve the same width on both sides of the centred title/logo — the
   // wider of the two clusters — so it sits at the true screen midpoint and
@@ -135,11 +178,14 @@ export function AppHeader({
       onLayout={onLeftLayout}
     >
       {variant === "branded" ? (
-        <HeaderIconButton
-          name="menu"
-          accessibilityLabel="Menu"
-          onPress={() => setOpen(true)}
-        />
+        <>
+          <HeaderIconButton
+            name="menu"
+            accessibilityLabel="Menu"
+            onPress={() => setOpen(true)}
+          />
+          {session ? <HeaderBellButton /> : null}
+        </>
       ) : null}
       {backVisible ? (
         <Pressable
@@ -187,7 +233,16 @@ export function AppHeader({
           </AppText>
         </Pressable>
       ) : (
-        rightAccessory
+        <>
+          {rightAccessory}
+          {variant === "branded" ? (
+            <View
+              style={{ marginLeft: rightAccessory ? 6 : 0, paddingRight: 2 }}
+            >
+              <AbontenLogo size={34} />
+            </View>
+          ) : null}
+        </>
       )}
     </View>
   );
@@ -215,9 +270,7 @@ export function AppHeader({
             justifyContent: "center",
           }}
         >
-          {variant === "branded" ? (
-            <AbontenLogo size={38} />
-          ) : title ? (
+          {title ? (
             <AppText
               numberOfLines={1}
               ellipsizeMode="tail"
