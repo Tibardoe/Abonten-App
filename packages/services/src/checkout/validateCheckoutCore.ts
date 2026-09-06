@@ -4,7 +4,10 @@ import {
   allocatePromoEligibility,
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
-import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import {
+  resolveOccurrenceState,
+  validatePurchaseOccurrence,
+} from "@abonten/core/eventPurchaseEligibility";
 import { logger } from "@abonten/core/logger";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
@@ -169,47 +172,56 @@ export async function validateCheckoutCore(
     };
   }
 
-  const eventEndDate = resolveEventEndDate(
+  // Authoritative sales-window check, computed from the event's full
+  // schedule against the server's clock (never the caller's stale copy).
+  // A ticket may only be sold against a *strictly future* occurrence, so:
+  //  - "ended"             -> every session is over
+  //  - "ongoing_no_future" -> a session is in progress but nothing upcoming
+  //    (covers a single-date event that has already started — walk-up sales
+  //    are intentionally closed, product decision 2026-09-06)
+  // registerForFreeEventCore runs the same helper for the free path.
+  const occurrenceState = resolveOccurrenceState(
     event.starts_at,
     event.ends_at,
     event.event_occurrence,
   );
 
-  if (!eventEndDate) {
+  if (occurrenceState.blockReason === "no_dates") {
     logger.error(`Event ${eventId} has no resolvable start/end date`);
     return { status: 500, message: "This event has no scheduled date" };
   }
 
-  // Whole event is over — every session's end time is in the past (covers
-  // single-date past-end, all-past multi-date, and past date ranges).
-  if (eventEndDate.getTime() < Date.now()) {
+  if (occurrenceState.blockReason === "ended") {
     return {
       status: 409,
       message: "Ticket sales for this event have closed — it has ended.",
     };
   }
 
+  if (occurrenceState.blockReason === "ongoing_no_future") {
+    return {
+      status: 409,
+      message: "This event is currently in progress and has no upcoming dates.",
+    };
+  }
+
   // occurrenceId is client-supplied and affects a DB write, so verify it
   // belongs to this event (a tampered client could otherwise stamp a
   // purchase with another event's occurrence id) AND that the chosen date
-  // hasn't already passed while future dates of the same event remain.
+  // has not already started while later dates of the same event remain.
   if (occurrenceId) {
-    const occurrence = event.event_occurrence?.find(
-      (occ: { id: string }) => occ.id === occurrenceId,
+    const occurrenceCheck = validatePurchaseOccurrence(
+      occurrenceId,
+      event.event_occurrence,
     );
 
-    if (!occurrence) {
-      return { status: 400, message: "Invalid event date" };
-    }
-
-    if (
-      occurrence.ends_at &&
-      new Date(occurrence.ends_at).getTime() < Date.now()
-    ) {
-      return {
-        status: 409,
-        message: "That date has already passed — pick another date.",
-      };
+    if (!occurrenceCheck.ok) {
+      return occurrenceCheck.reason === "unknown"
+        ? { status: 400, message: "Invalid event date" }
+        : {
+            status: 409,
+            message: "That date has already started — pick an upcoming date.",
+          };
     }
   }
 

@@ -7,13 +7,14 @@ import {
 } from "@/features/checkout/useCheckout";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
+import { useNowTick } from "@/lib/useNowTick";
 import {
   allocatePromoEligibility,
   computeCheckoutFee,
   computeLineAmount,
 } from "@abonten/core/checkoutPricing";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { getEventStatus } from "@abonten/core/eventStatus";
+import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import {
   AppText,
@@ -76,16 +77,30 @@ export default function BuyTicketsScreen() {
   const [applied, setApplied] = useState<AppliedPromo | null>(null);
 
   const event = data?.event;
-  const now = Date.now();
+  // Recomputed every 30s / on foreground so a checkout left open across an
+  // occurrence's start time can't proceed against a date that has since
+  // begun (issue §4 / §5).
+  const now = useNowTick();
   const occurrences = event?.event_occurrence ?? [];
-  // A multi-date event where some dates have already passed: only the future
-  // ones are selectable, and the default selection is the first future one
-  // (never a past date the buyer would otherwise checkout against).
-  const isOccurrencePast = (o: { ends_at: string | null }) =>
-    !!o.ends_at && new Date(o.ends_at).getTime() < now;
-  const firstFutureOccurrenceId =
-    occurrences.find((o) => !isOccurrencePast(o))?.id ?? null;
-  const activeOccurrenceId = occurrenceId ?? firstFutureOccurrenceId;
+  // A ticket may only be bought for a *strictly future* occurrence: a date
+  // that has already started (or finished) is not selectable, and the
+  // default selection is the earliest not-yet-started one.
+  const occurrenceState = resolveOccurrenceState(
+    event?.starts_at,
+    event?.ends_at,
+    occurrences,
+    now,
+  );
+  const isOccurrenceSelectable = (o: { starts_at: string | Date }) =>
+    new Date(o.starts_at).getTime() > now;
+  const firstFutureOccurrenceId = occurrenceState.nextPurchasable?.id ?? null;
+  // If the tick advanced past the date the buyer had picked, drop back to
+  // the next selectable one rather than carrying a now-started id.
+  const activeOccurrenceId =
+    occurrenceId &&
+    occurrences.some((o) => o.id === occurrenceId && isOccurrenceSelectable(o))
+      ? occurrenceId
+      : firstFutureOccurrenceId;
   const currency = event?.ticket_type[0]?.currency ?? "GHS";
 
   const lines = useMemo(
@@ -166,16 +181,19 @@ export default function BuyTicketsScreen() {
   }
 
   const canceled = event.status === "canceled";
-  const ended =
-    getEventStatus(event.starts_at, event.ends_at, event.event_occurrence) ===
-    "ended";
+  // No strictly-future occurrence -> nothing can be sold. Covers a fully
+  // ended event and a single-/multi-date event that is mid-occurrence with
+  // no upcoming date (the server enforces the same rule).
+  const salesClosed =
+    occurrenceState.blockReason === "ended" ||
+    occurrenceState.blockReason === "ongoing_no_future";
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: data.attendanceCount,
     ticketTypes: event.ticket_type,
   });
 
-  if (canceled || ended || soldOut || event.ticket_type.length === 0) {
+  if (canceled || salesClosed || soldOut || event.ticket_type.length === 0) {
     return (
       <View className="flex-1 bg-background">
         {header}
@@ -184,8 +202,10 @@ export default function BuyTicketsScreen() {
           <AppText variant="muted" className="text-center">
             {canceled
               ? "This event was canceled."
-              : ended
-                ? "Ticket sales for this event have closed — it has ended."
+              : salesClosed
+                ? occurrenceState.blockReason === "ended"
+                  ? "Ticket sales for this event have closed — it has ended."
+                  : "This event is in progress — ticket sales are closed."
                 : soldOut
                   ? "This event is sold out."
                   : "No tickets are available for this event."}
@@ -318,16 +338,18 @@ export default function BuyTicketsScreen() {
             <AppText variant="overline">Date</AppText>
             <View className="flex-row flex-wrap gap-2">
               {occurrences.map((o) => {
-                const past = isOccurrencePast(o);
-                return past ? (
+                const selectable = isOccurrenceSelectable(o);
+                const inProgress =
+                  !selectable && new Date(o.ends_at).getTime() > now;
+                return !selectable ? (
                   <View
                     key={o.id}
                     className="opacity-40"
-                    accessibilityLabel={`${formatDateWithSuffix(o.starts_at)} — this date has passed`}
+                    accessibilityLabel={`${formatDateWithSuffix(o.starts_at)} — ${inProgress ? "in progress" : "this date has passed"}`}
                     accessibilityState={{ disabled: true }}
                   >
                     <Chip
-                      label={`${formatDateWithSuffix(o.starts_at)} · past`}
+                      label={`${formatDateWithSuffix(o.starts_at)} · ${inProgress ? "in progress" : "past"}`}
                     />
                   </View>
                 ) : (

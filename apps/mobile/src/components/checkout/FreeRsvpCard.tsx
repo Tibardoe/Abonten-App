@@ -2,7 +2,9 @@ import { useSession } from "@/auth/SessionProvider";
 import { useFreeRsvp } from "@/features/checkout/useFreeRsvp";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
+import { useNowTick } from "@/lib/useNowTick";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
+import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { AppText, Button } from "@abonten/ui-native";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
@@ -16,10 +18,28 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
   const { session } = useSession();
   const rsvp = useFreeRsvp(event.id);
 
+  const now = useNowTick();
   const occurrences = event.event_occurrence ?? [];
-  const [occurrenceId, setOccurrenceId] = useState<string | null>(
-    occurrences[0]?.id ?? null,
+  // Only a strictly-future occurrence can be RSVP'd (same rule the server
+  // enforces); default to the earliest one.
+  const occurrenceState = resolveOccurrenceState(
+    event.starts_at,
+    event.ends_at,
+    occurrences,
+    now,
   );
+  const [pickedOccurrenceId, setPickedOccurrenceId] = useState<string | null>(
+    null,
+  );
+  const isOccurrenceSelectable = (o: { starts_at: string | Date }) =>
+    new Date(o.starts_at).getTime() > now;
+  const occurrenceId =
+    pickedOccurrenceId &&
+    occurrences.some(
+      (o) => o.id === pickedOccurrenceId && isOccurrenceSelectable(o),
+    )
+      ? pickedOccurrenceId
+      : (occurrenceState.nextPurchasable?.id ?? null);
   const [done, setDone] = useState(false);
 
   async function onRsvp() {
@@ -73,16 +93,20 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
           </AppText>
           <View className="flex-row flex-wrap gap-2">
             {occurrences.map((o) => {
-              const selected = o.id === occurrenceId;
+              const selectable = isOccurrenceSelectable(o);
+              const selected = selectable && o.id === occurrenceId;
+              const inProgress =
+                !selectable && new Date(o.ends_at).getTime() > now;
               return (
                 <Pressable
                   key={o.id}
-                  onPress={() => setOccurrenceId(o.id)}
+                  disabled={!selectable}
+                  onPress={() => setPickedOccurrenceId(o.id)}
                   className={`rounded-full border px-3 py-1.5 ${
                     selected
                       ? "border-primary bg-primary"
                       : "border-border bg-card"
-                  }`}
+                  } ${selectable ? "" : "opacity-40"}`}
                 >
                   <AppText
                     className={`text-[13px] ${
@@ -90,6 +114,11 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
                     }`}
                   >
                     {formatDateWithSuffix(o.starts_at)}
+                    {selectable
+                      ? ""
+                      : inProgress
+                        ? " · in progress"
+                        : " · past"}
                   </AppText>
                 </Pressable>
               );

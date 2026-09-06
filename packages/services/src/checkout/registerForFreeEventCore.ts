@@ -1,4 +1,8 @@
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import {
+  resolveOccurrenceState,
+  validatePurchaseOccurrence,
+} from "@abonten/core/eventPurchaseEligibility";
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -81,6 +85,32 @@ export async function registerForFreeEventCore(
     return { status: 409, message: "This event is no longer accepting RSVPs." };
   }
 
+  // Same authoritative sales-window check as validateCheckoutCore (the paid
+  // path): an RSVP may only be taken while a strictly-future session
+  // remains. `resolveEventEndDate` is still used below for the ticket's
+  // `expires_at` (the last session's end), which is a different question.
+  const occurrenceState = resolveOccurrenceState(
+    event.starts_at,
+    event.ends_at,
+    event.event_occurrence,
+  );
+
+  if (occurrenceState.blockReason === "no_dates") {
+    logger.error(`Event ${eventId} has no resolvable start/end date`);
+    return { status: 500, message: "This event has no scheduled date" };
+  }
+
+  if (occurrenceState.blockReason === "ended") {
+    return { status: 409, message: "This event has ended." };
+  }
+
+  if (occurrenceState.blockReason === "ongoing_no_future") {
+    return {
+      status: 409,
+      message: "This event is currently in progress and has no upcoming dates.",
+    };
+  }
+
   const eventEndDate = resolveEventEndDate(
     event.starts_at,
     event.ends_at,
@@ -92,28 +122,22 @@ export async function registerForFreeEventCore(
     return { status: 500, message: "This event has no scheduled date" };
   }
 
-  if (eventEndDate < new Date()) {
-    return { status: 409, message: "This event has ended." };
-  }
-
   // occurrenceId is client-supplied and affects a DB write, so verify it
   // belongs to this event (same check validateCheckoutCore does) AND that
-  // the chosen date hasn't already passed while later dates remain.
+  // the chosen date has not already started while later dates remain.
   if (occurrenceId) {
-    const occurrence = event.event_occurrence.find(
-      (occ) => occ.id === occurrenceId,
+    const occurrenceCheck = validatePurchaseOccurrence(
+      occurrenceId,
+      event.event_occurrence,
     );
-    if (!occurrence) {
-      return { status: 400, message: "Invalid event date" };
-    }
-    if (
-      occurrence.ends_at &&
-      new Date(occurrence.ends_at).getTime() < Date.now()
-    ) {
-      return {
-        status: 409,
-        message: "That date has already passed — pick another date.",
-      };
+
+    if (!occurrenceCheck.ok) {
+      return occurrenceCheck.reason === "unknown"
+        ? { status: 400, message: "Invalid event date" }
+        : {
+            status: 409,
+            message: "That date has already started — pick an upcoming date.",
+          };
     }
   }
 

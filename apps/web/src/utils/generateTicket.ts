@@ -1,6 +1,7 @@
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
+import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
@@ -242,6 +243,28 @@ export default async function generateTicket(
     } catch {
       parsedMetadata = { raw: transactionMetada };
     }
+  }
+
+  // Defensive: the sales-window is enforced up front (validateCheckoutCore
+  // + the create_ticket_checkout RPC), but an event can still end in the
+  // gap between payment authorisation and this fulfilment step. The payment
+  // has already been taken, so we never strand the buyer without a ticket —
+  // instead we still issue it and flag the anomaly on the ticket metadata
+  // for admin finance to review (no automatic refund).
+  if (
+    getEventStatus(event.starts_at, event.ends_at, event.event_occurrence) ===
+    "ended"
+  ) {
+    logger.error(
+      `generateTicket: issuing tickets for event ${eventId} that has already ended (checkout ${checkoutSessionId})`,
+    );
+    parsedMetadata =
+      parsedMetadata && typeof parsedMetadata === "object"
+        ? {
+            ...(parsedMetadata as Record<string, unknown>),
+            issued_after_event_end: true,
+          }
+        : { issued_after_event_end: true };
   }
 
   const { data: issueData, error: issueError } = await supabase.rpc(
