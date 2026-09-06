@@ -164,18 +164,23 @@ export function FilterSheet({
         </View>
       }
     >
-      <View className="flex-row items-center justify-between pb-4">
-        <AppText variant="meta">
-          {activeCount === 0
-            ? "No filters applied"
-            : `${activeCount} filter${activeCount === 1 ? "" : "s"} set${dirty ? " · not applied yet" : ""}`}
-        </AppText>
+      <View className="flex-row items-center gap-2 pb-4">
         {activeCount > 0 ? (
-          <View className="rounded-full bg-primary px-2 py-0.5">
+          <View className="min-w-[20px] items-center rounded-full bg-primary px-1.5 py-0.5">
             <AppText className="text-[12px] font-bold text-primary-foreground">
               {activeCount}
             </AppText>
           </View>
+        ) : null}
+        <AppText variant="meta" className="flex-1">
+          {activeCount === 0
+            ? "No filters applied"
+            : `${activeCount} filter${activeCount === 1 ? "" : "s"} selected`}
+        </AppText>
+        {dirty ? (
+          <AppText variant="caption" tone="brand" className="font-semibold">
+            Not applied yet
+          </AppText>
         ) : null}
       </View>
 

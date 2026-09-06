@@ -346,8 +346,8 @@ export default function NewHighlight() {
         </GestureDetector>
 
         {/* trim bar (video only). Held back until the player has actually
-            loaded this clip — mounting it earlier meant it asked a
-            not-yet-ready native player for thumbnails, a crash path. */}
+            loaded this clip so its duration / seek calls act on a ready
+            native player. */}
         {active && active.type === "video" ? (
           <View className="py-3" style={{ minHeight: 84 }}>
             {previewReady ? (

@@ -119,10 +119,27 @@ function HeaderBellButton() {
       <Icon name="notifications-outline" size={ICON_SIZE} tone="foreground" />
       {unread > 0 ? (
         <View
-          className="absolute items-center justify-center rounded-full bg-primary px-1"
-          style={{ top: 4, right: 2, minWidth: 16, height: 16 }}
+          pointerEvents="none"
+          className="absolute items-center justify-center rounded-full bg-primary"
+          style={{
+            top: 3,
+            right: 1,
+            minWidth: 16,
+            height: 16,
+            paddingHorizontal: 3,
+          }}
         >
-          <AppText className="text-[10px] font-bold text-primary-foreground">
+          <AppText
+            allowFontScaling={false}
+            className="font-bold text-primary-foreground"
+            style={{
+              fontSize: 10,
+              lineHeight: 16,
+              textAlign: "center",
+              includeFontPadding: false,
+              textAlignVertical: "center",
+            }}
+          >
             {unread > 9 ? "9+" : unread}
           </AppText>
         </View>

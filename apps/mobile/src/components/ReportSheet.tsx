@@ -229,13 +229,17 @@ export function ReportSheet({
           </AppText>
         </View>
       ) : (
-        <View className="gap-4">
-          <AppText variant="muted" numberOfLines={2}>
-            {label}
-          </AppText>
+        <View className="gap-5">
+          {/* what's being reported */}
+          <View className="flex-row items-center gap-2.5 rounded-xl border border-border bg-muted p-3">
+            <Icon name="flag-outline" size={18} tone="muted" />
+            <AppText variant="small" className="flex-1" numberOfLines={2}>
+              {label}
+            </AppText>
+          </View>
 
           <View className="gap-2">
-            <AppText variant="label">Reason</AppText>
+            <AppText variant="label">Why are you reporting this?</AppText>
             <View className="flex-row flex-wrap gap-2">
               {categories.map((c) => (
                 <Chip
@@ -252,7 +256,7 @@ export function ReportSheet({
             <Input
               value={detail}
               onChangeText={setDetail}
-              placeholder="Add any detail that helps"
+              placeholder="Add any detail that helps our team"
               multiline
               numberOfLines={3}
               maxLength={2000}
