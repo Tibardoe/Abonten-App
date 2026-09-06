@@ -10,12 +10,7 @@ import {
   generateQRCodeDataURL,
   generateTicketCode,
 } from "../tickets/generateTicketCode";
-import { insertUserAttendanceCore } from "../tickets/insertUserAttendance";
 import { saveEventQrCodeToCloudinary } from "../tickets/saveEventQrCodeToCloudinary";
-import {
-  releaseTicketQuantity,
-  reserveTicketQuantity,
-} from "./ticketInventory";
 
 // Post-auth body of registerForFreeEvent, shared by the "use server" action
 // and the mobile API route (`/api/mobile/checkout/free-rsvp`) so both run
@@ -24,6 +19,13 @@ import {
 // never taken from the client. `revalidatePath` and the confirmation email
 // (React template + Resend) stay in apps/web: the caller passes
 // `onRegistered`, which the web wrapper schedules via next/server `after`.
+//
+// The DB mutation — free ticket_type lookup, atomic 1-unit reservation,
+// ticket + attendance insert, sales-window re-check against now() — is done
+// in one transaction by the `issue_free_ticket` SECURITY DEFINER RPC
+// (migration 20260906222054). Only QR generation + the Cloudinary upload
+// happen here (the one step Postgres can't do). No client session inserts
+// `ticket` directly anymore.
 
 type TicketWithEvent = {
   user_id: string;
@@ -79,16 +81,13 @@ export async function registerForFreeEventCore(
     return { status: 500, message: "Something went wrong" };
   }
 
-  // The caller's copy of event status can be stale (cached detail page) —
-  // never trust it, re-check the live row.
+  // Fast-fail on the obvious cases before spending a Cloudinary upload — the
+  // issue_free_ticket RPC re-checks all of this against now() as the
+  // authoritative gate.
   if (event.status !== "published") {
     return { status: 409, message: "This event is no longer accepting RSVPs." };
   }
 
-  // Same authoritative sales-window check as validateCheckoutCore (the paid
-  // path): an RSVP may only be taken while a strictly-future session
-  // remains. `resolveEventEndDate` is still used below for the ticket's
-  // `expires_at` (the last session's end), which is a different question.
   const occurrenceState = resolveOccurrenceState(
     event.starts_at,
     event.ends_at,
@@ -122,9 +121,6 @@ export async function registerForFreeEventCore(
     return { status: 500, message: "This event has no scheduled date" };
   }
 
-  // occurrenceId is client-supplied and affects a DB write, so verify it
-  // belongs to this event (same check validateCheckoutCore does) AND that
-  // the chosen date has not already started while later dates remain.
   if (occurrenceId) {
     const occurrenceCheck = validatePurchaseOccurrence(
       occurrenceId,
@@ -141,29 +137,6 @@ export async function registerForFreeEventCore(
     }
   }
 
-  const { data: ticketType, error: ticketTypeError } = await supabase
-    .from("ticket_type")
-    .select("id")
-    .eq("event_id", eventId)
-    .eq("type", "FREE")
-    .maybeSingle();
-
-  if (ticketTypeError || !ticketType) {
-    return {
-      status: 404,
-      message: "This event has no free registration available",
-    };
-  }
-
-  const reservation = await reserveTicketQuantity(ticketType.id, 1);
-
-  if (reservation.status !== 200) {
-    return {
-      status: reservation.status,
-      message: reservation.message ?? "That ticket is no longer available.",
-    };
-  }
-
   const ticketCode = generateTicketCode();
   const qrCodeBase64 = await generateQRCodeDataURL(ticketCode);
   const uploadResponse = await saveEventQrCodeToCloudinary(
@@ -173,54 +146,44 @@ export async function registerForFreeEventCore(
 
   if ("error" in uploadResponse) {
     logger.error(`Error saving QR code to cloudinary:${uploadResponse.error}`);
-    await releaseTicketQuantity(ticketType.id, 1);
     return { status: 500, message: "Something went wrong!" };
   }
 
-  const { data: insertedTicket, error: insertTicketError } = await supabase
-    .from("ticket")
-    .insert({
-      user_id: userId,
-      ticket_type_id: ticketType.id,
-      qr_public_id: uploadResponse.public_id,
-      qr_version: String(uploadResponse.version),
-      expires_at: eventEndDate.toISOString(),
-      used_at: null,
-      transaction_id: null,
-      seat_number: null,
-      status: "active",
-      ticket_code: ticketCode,
-      created_at: new Date().toISOString(),
-      updated_at: null,
-      occurrence_id: occurrenceId ?? null,
-    })
-    .select("id")
-    .maybeSingle();
-
-  if (insertTicketError || !insertedTicket) {
-    logger.error(`Error inserting ticket: ${insertTicketError?.message}`);
-    await releaseTicketQuantity(ticketType.id, 1);
-    return { status: 500, message: "Something went wrong!" };
-  }
-
-  const attendanceInsertResponse = await insertUserAttendanceCore(
-    supabase,
-    userId,
-    eventId,
-    ticketType.id,
-    [insertedTicket.id],
+  // One atomic transaction: reserve 1 free unit, re-check the sales window +
+  // occurrence, insert ticket + attendance. On any failure nothing is
+  // written, so there is no reservation to hand back — only a (rare,
+  // race-only) orphan QR in Cloudinary, same as the paid path.
+  const { data: ticketId, error: issueError } = await supabase.rpc(
+    "issue_free_ticket",
+    {
+      p_user_id: userId,
+      p_event_id: eventId,
+      p_occurrence_id: occurrenceId ?? null,
+      p_ticket_code: ticketCode,
+      p_qr_public_id: uploadResponse.public_id,
+      p_qr_version: String(uploadResponse.version),
+      p_expires_at: eventEndDate.toISOString(),
+    } as unknown as Database["public"]["Functions"]["issue_free_ticket"]["Args"],
   );
 
-  if (attendanceInsertResponse.status !== 200) {
+  if (issueError || !ticketId) {
+    logger.error(
+      `issue_free_ticket failed for event ${eventId}, user ${userId}: ${issueError?.message}`,
+    );
+    const message = issueError?.message ?? "";
+    // The RPC's own exception messages are user-safe.
+    if (/already bought/i.test(message)) {
+      return { status: 300, message: "Ticket for this event already bought" };
+    }
     return {
-      status: attendanceInsertResponse.status,
-      message: attendanceInsertResponse.message ?? "Something went wrong!",
+      status: 409,
+      message: message || "Something went wrong!",
     };
   }
 
   // The confirmation email (React PDF + Resend) is apps/web-only — the
   // caller schedules it via next/server `after` once this returns 200.
-  onRegistered?.(insertedTicket.id);
+  onRegistered?.(ticketId as string);
 
   return {
     status: 200,

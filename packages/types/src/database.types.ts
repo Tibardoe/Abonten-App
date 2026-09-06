@@ -6328,6 +6328,18 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean };
       is_event_settled: { Args: { p_event_id: string }; Returns: boolean };
       is_staff: { Args: never; Returns: boolean };
+      issue_free_ticket: {
+        Args: {
+          p_event_id: string;
+          p_expires_at: string;
+          p_occurrence_id: string;
+          p_qr_public_id: string;
+          p_qr_version: string;
+          p_ticket_code: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
       issue_tickets_for_checkout: {
         Args: {
           p_checkout_session_id: string;
