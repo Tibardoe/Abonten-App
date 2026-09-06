@@ -171,9 +171,16 @@ function ZoomablePage({
 
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  // Mirrors the shared `scale` on the JS thread so the pan gesture's
+  // activation offsets can switch between "vertical-only (let the pager
+  // handle horizontal)" and "free pan" depending on zoom.
+  const [zoomed, setZoomed] = useState(false);
 
   const reportZoom = useCallback(
-    (z: boolean) => onZoomChange(z),
+    (z: boolean) => {
+      setZoomed(z);
+      onZoomChange(z);
+    },
     [onZoomChange],
   );
 
@@ -202,8 +209,17 @@ function ZoomablePage({
       }
     });
 
-  const pan = Gesture.Pan()
-    .maxPointers(2)
+  // When not zoomed, the pan only claims a clearly *vertical* drag (the
+  // drag-to-dismiss) and yields a horizontal one to the FlatList pager —
+  // otherwise RNGH's pan swallows the touch and swiping between photos
+  // never reaches the list. When zoomed, paging is disabled anyway, so the
+  // pan is free to move the image in any direction.
+  const panBase = Gesture.Pan().maxPointers(2);
+  const pan = (
+    zoomed
+      ? panBase.activeOffsetX([-8, 8]).activeOffsetY([-8, 8])
+      : panBase.activeOffsetY([-14, 14]).failOffsetX([-16, 16])
+  )
     .onUpdate((e) => {
       if (scale.value > 1) {
         // Pan the zoomed image, bounded so it can't be flung far offscreen.
