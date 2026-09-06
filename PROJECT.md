@@ -121,8 +121,10 @@ cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 - **Event creation/management** (organizer side): `/manage/my-events`, `/manage/attendance/attendance-list`, `/manage/attendance/event-list`; actions `postEvent`, `deleteEvent`, `cancelEvent`, `getOrganizerEvents`.
 - **Organizer Dashboard**: `/manage/dashboard` — cross-event overview (gross sales, tickets sold/registrations, active events, sales timeline chart, event performance ranking, upcoming events, needs-attention rules, recent activity), distinct from the single-event `EventAnalyticsDashboard` on `/manage/attendance/attendance-list`. Aggregation happens in six Postgres RPCs (`get_organizer_dashboard_overview`, `..._sales_timeline`, `..._event_performance`, `..._upcoming_events`, `..._needs_attention`, `..._recent_activity` — `supabase/migrations/20260816230724_add_organizer_dashboard_analytics.sql`), each scoped to `auth.uid()` internally (no organizer-id parameter accepted anywhere) and restricted to the organizer's `published` events; actions in `src/actions/getOrganizer{DashboardOverview,SalesTimeline,EventPerformance,UpcomingEvents,NeedsAttention,RecentActivity}.ts`. Nav link gated on actual organizer status (`useIsOrganizer()` in `src/hooks/useCurrentUser.ts`, wired from the previously-disabled `getUserEventRole` action) rather than "any signed-in user" like My Events/Manage Attendance. Not the same concept as `/transactions` (that page is the signed-in user's own payment/purchase history as a buyer — see below — organizer gross sales are a separate query against `ticket_checkout.total_price WHERE status='paid'`, scoped by event ownership, not by buyer `user_id`).
 - **Ticketing**: `validateCheckout` → `generateTicket` (QR-coded tickets), `cancelUserTicket`, `issueRefund`, `getTickets`, `getUserAttendingEvents`, ticket PDF (`TicketModal.tsx`, via `html2canvas`+`jspdf`) and email (`ticketPurchaseNotification`, `TicketPurchaseEmailTemplate.tsx`).
+- **Check-in**: `checkInTicketCore` flips a ticket `active ↔ used` (organizer-scoped, 403 unless the caller owns the event). It now accepts **either** the ticket UUID (the attendee-list toggle on web + mobile) **or** the `TKT-XXXXXXXX` code (2026-09-06). Mobile added a **camera QR scanner** — `apps/mobile/src/components/organizer/TicketScannerSheet.tsx` (`expo-camera` `CameraView` + `useCameraPermissions`), opened from the organizer attendee screen; it parses the `TKT-…` code out of the scanned QR (`JSON.stringify("<base>/verify/<code>")`) and calls the same check-in path. `expo-camera@~57.0.4` + its config plugin were added — **needs a dev-client / EAS rebuild** before it runs on device. Web still has manual list check-in only. Note: the `<base>/verify/<code>` URL the QR encodes has no matching web route (pre-existing — scanning it in a generic reader 404s; only the in-app scanner uses it).
 - **Promo codes**: `getPromoCode`, `InsertPromoCodeUsage`.
-- **User profile & social**: `/user-account`, `/user-account/[username]`, `/(userPage)/user/[username]/{favorites,posts,reviews}`; actions `getUserDetails`, `getUserProfileDetails`, `updateUserDetails`, `getUserPosts`, `getUserFavoritePosts`, `getUserReviews`, `postReview`, `getUserRating`, `getUserHighlights`, `uploadHighlight`.
+- **User profile & social**: `/user-account`, `/user-account/[username]`, `/(userPage)/user/[username]/{favorites,posts,reviews,places,bookings}`; actions `getUserDetails`, `getUserProfileDetails`, `updateUserDetails`, `getUserPosts`, `getUserFavoritePosts`, `getUserReviews`, `postReview`, `getUserRating`, `getUserHighlights`, `uploadHighlight`. **`bookings` + `favorites` are private/self-scoped** — the underlying actions ignore `:username` and always read the signed-in viewer's own rows; both pages `notFound()` when `:username` isn't yours (added 2026-09-06) so the URL can't render your data under someone else's name. `posts` / `places` / `reviews` are genuinely per-username public views.
+- **Social scope — what does NOT exist** (verified 2026-09-06, no tables and no code): there is **no post-comment or reaction/like system**. User-generated content is (a) **highlights** — story-style photo/video, with owner delete + viewer report; and (b) **reviews** — event/place/user reviews with a single owner reply and viewer report. "Replies" in the product = the review owner-response only. If threaded comments or reactions become a requirement they are net-new (schema + service + UI), not a wiring gap.
 - **Favorites**: `addEventToFavorite`, `removeEventFromFavorite`, `checkIfEventIsFavorited` (React Query optimistic update per recent commit history).
 - **Wallet / saved payment methods**: `/wallet` — independent of checkout, lists/adds/removes the user's saved payment methods (`payment_method` table) via `getUserPaymentMethods`/`addPaymentMethod`/`removePaymentMethod`/`setDefaultPaymentMethod`; components `WalletManager`, `PaymentMethodCard`, `AddMomoWallet`, `AddBankCard`, `AddPaymentMethodPopup`. Only non-sensitive display data is stored in `payment_method.details` (network/brand, last 4 digits, expiry, label) — no full card number/CVV/PIN/mobile-money number ever touches this app's own storage. **Correction: Paystack itself is the tokenization provider** for bank cards — `AddBankCard.tsx` runs a real GHS 1 Paystack charge (`initCardVerification`/`confirmCardVerification.ts`) to obtain a reusable Paystack authorization code, which is what's actually stored and later charged against; the GHS 1 is refunded immediately. Mobile money wallets are saved as display data only (no verification charge). Distinct from the separate `wallet` table (a cash/store-credit balance concept, unused by the app). Payout accounts (organizer side) remain a separate concept — `postEvent` inserts into `receiving_account` (Mobile Money or Bank).
 - **Checkout / order basket**: `/checkout`, `/checkout/[checkoutId]` (moved from `/wallet/[checkoutId]` — see §16 item 18) — the pending-checkout "basket" (`PendingCheckoutsBasket`) and single-session order summary/payment step, shared by ticket and subscription checkout via `PaymentMethodSelector`.
@@ -391,6 +393,7 @@ Also note: §8 items 2 and 5 above (phone/OTP as "incomplete" with commented-out
 - Shared shadcn `Form` primitives in [src/components/ui/form.tsx](src/components/ui/form.tsx) (Radix `Label` + RHF context wiring), used alongside `src/components/ui/input.tsx`.
 - Reusable Zod schemas live in `src/utils/` — e.g. [eventSchema.ts](src/utils/eventSchema.ts) (title, description, website_url regex, price, capacity) and [receivingAcountSchema.ts](src/utils/receivingAcountSchema.ts) (name, email, phone regex, bank account number/name/branch validation with explicit user-facing messages).
 - Server Actions do **not** re-validate input against these Zod schemas (no shared schema import was found inside `src/actions/`) — validation appears to be client-side only via RHF/Zod at the form layer, with actions doing ad hoc presence/type checks (e.g. `postEvent` destructures `formData: PostsType` without a runtime schema check).
+- **Mobile keyboard handling (2026-09-06)**: every full-screen form in `apps/mobile` scrolls through the shared `KeyboardAwareScrollView` primitive (`@abonten/ui-native`) — a plain `ScrollView` with `automaticallyAdjustKeyboardInsets` (iOS) + generous bottom padding + `keyboardShouldPersistTaps="handled"` + drag-to-dismiss, no native dependency. Bottom sheets are the exception: `adjustResize` doesn't apply inside a RN `<Modal>`, so `<Sheet>` keeps its own `KeyboardAvoidingView` (now `behavior="padding"` on **both** platforms — Android was previously falling through to the inert `adjustResize` path and hiding footer inputs behind the keyboard).
 
 **Needs Investigation**
 - Whether any server-side re-validation exists that wasn't caught by this pass (recommend confirming before treating client validation as sufficient for security-sensitive fields).
@@ -414,6 +417,8 @@ Also note: §8 items 2 and 5 above (phone/OTP as "incomplete" with commented-out
 **Layout/navigation** (organisms): `Header`, `DesktopFooter`, `MobileFooter`, `MobileNavBar`, `SideBar`.
 
 **Event-related**: `EventCard` (molecule), `EventCardMenuBtn`/`EventCardMenuModal`, `EventsSlider`, `UploadEventForm`/`UploadEventModal`/`EventUploadMobileModal`/`MobileUploadModal`, `CategoryFilter`, `TypeFilter`, `FilterModalPopup`, `LocationAndFilterSection`, `FilterSearchBar`.
+
+**Explore filtering (shared, 2026-09-06)**: `@abonten/core/exploreFilters` is the single framework-free definition of the Explore Filter modal's field set (`EventFilters` / `PlaceFilters`) and its client-side predicates (`filterEventList` / `filterPlaceList` / `eventMatchesFilters` / `placeMatchesFilters`). Consumed verbatim by the web Explore page (`EventsTabContent` / `PlacesTabContent`) and the native Explore screen (via `apps/mobile/src/features/discovery/exploreFilters.ts`, which re-exports it and adds RN-only describe/clear/option-list helpers). Both platforms now place the category-chip row **directly under the Events/Places tabs, above every curated section** (Featured / Around You / Happening This… / Top Rated), and the active filter drives those curated sliders as well as the "All" list — previously the curated sliders ignored the filter.
 
 **Checkout/ticketing**: `CheckoutModal`, `OrderSummary`, `TicketType`, `TicketInputs`, `PromoCodeInputs`/`PromoCodeBtn`, `CheckoutBtn`, `TicketModal`, `RecieptModal`/`ViewReciptButton`, `CancelUserTicketBtn`. (`RefundButton` — listed here in an earlier revision — was a dead, unwired stub deleted by §21's change; don't reintroduce it from this list.)
 
@@ -925,6 +930,13 @@ path smoke above.
   renders a `ReportButton` (icon variant, hidden for the review's author) for both the event and
   place review sections; `HighlightViewer`'s `⋯` menu offers "Report this photo/video" to
   signed-in non-owners. Event detail, place detail and user profile were already wired.
+- ~~Mobile report affordance parity~~ **DONE (2026-09-06)**: the native app previously only
+  surfaced `ReportSheet` on place detail (place + place_review). It now also covers **event
+  detail** ("Report this event"), **event reviews** (per-review "Report"), **user profile**
+  (header `⋯` → report user), and the **native `HighlightViewer`** (non-owner `⋯` → "Report",
+  with the sheet hoisted into `HighlightsRow` so it isn't nested inside the viewer's `Modal`).
+  All route through `POST /api/mobile/reports` → `submitReportCore` (server-derived reporter id,
+  dedupe, rate-limit) — no client-trusted identity.
 - Still deferred: runtime-editable role matrix; Sentry adapter; the deep Web/Mobile/API monitoring
   dashboards + incident workflow.
 - Ops: create the `apps/admin` Vercel project + `admin.abonten.*` DNS; set
@@ -1141,6 +1153,35 @@ the transport, and `admin_audit_log`ged with a required free-text reason.
   payout completed.
 - Schemas `adminRefundSchema` / `settlePayoutSchema` / `createPayoutSchema`; actions
   `refundTransaction` / `settlePayout` / `createPayout` in `apps/admin/src/server/actions.ts`.
+
+#### 23.14b Automated payout transfers (Paystack Transfers) — 2026-09-06, **flag-gated OFF**
+
+Closes the "payouts don't actually move money" gap — but disabled by default so production
+behaviour is unchanged until the owner opts in.
+
+- Migration `20260906125504_payout_transfer_tracking` (applied live via MCP) adds
+  **additive nullable** columns to `payout`: `transfer_code`, `transfer_recipient_code`,
+  `transfer_status` (`none`/`pending`/`success`/`failed`/`reversed`, default `none`),
+  `transfer_failure_reason`, `transfer_initiated_at`; partial unique index on `transfer_code`.
+- `@abonten/services/payments/gateway/paystackTransfer.ts` — `paystackTransfersEnabled()`
+  (`process.env.PAYSTACK_TRANSFERS_ENABLED === "true"`), `resolvePaystackDestination()` (maps the
+  `payout_account.provider` free-text to a Paystack `/bank?currency=GHS` code — throws a
+  user-safe error rather than guessing), `createTransferRecipient()` (`POST /transferrecipient`),
+  `initiatePaystackTransfer()` (`POST /transfer`, `source: "balance"`).
+- `sendPayoutAdminCore` (`financeActionsCore.ts`) + `sendPayout` action + `sendPayoutSchema` +
+  `finance.payout` permission + step-up. With the flag unset it returns `409` and does nothing.
+  With it set it initiates a real transfer on a `processing` payout, stamps
+  `transfer_code`/`transfer_status='pending'`, audits `finance.payout.send` — and **does not**
+  touch `payout.status`.
+- The Paystack webhook (`api/paystack/webhook`) now handles `transfer.success` /
+  `transfer.failed` / `transfer.reversed`: look the payout up by `transfer_code` where
+  `transfer_status='pending'` (idempotent), set `transfer_status`, and call `admin_settle_payout`
+  (`completed` on success, `failed` otherwise) so the ledger releases/holds correctly.
+- **To activate**: enable Transfers on the Paystack account (secret key with the transfer
+  permission), set `PAYSTACK_TRANSFERS_ENABLED=true` on `apps/web` (webhook) + `apps/admin`
+  (action), add a "Send via Paystack" button on `/finance/payouts` (server action `sendPayout`
+  exists; the UI button is not built yet). **Not verified against live Paystack** —
+  transfer-recipient / transfer / webhook shapes are coded to Paystack's docs, not exercised.
 - Verified: `turbo typecheck` 11/11; `next build` apps/web + apps/admin green; biome clean;
   `get_advisors` — both new RPCs are `service_role`-only, `search_path`-pinned, not flagged.
   Rolled-back live SQL smokes: `admin_settle_payout` completed (status flips, hold retained) /

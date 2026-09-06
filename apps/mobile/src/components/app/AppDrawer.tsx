@@ -264,24 +264,27 @@ export function AppDrawer() {
           ]}
         >
           <View
-            style={{ paddingTop: insets.top }}
+            style={{
+              paddingTop: insets.top,
+              paddingLeft: Math.max(insets.left, 4),
+              paddingRight: Math.max(insets.right, 8),
+            }}
             className="border-b border-border"
           >
-            <View className="h-[54px] flex-row items-center justify-center px-1">
-              <AbontenLogo size={38} />
+            {/* Close on the left, Abonten mark on the right — mirrors the
+                new main header (logo right). Same AbontenLogo size as the
+                main header so the brand never jumps between the two. */}
+            <View className="h-[54px] flex-row items-center justify-between">
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close menu"
                 onPress={close}
                 hitSlop={10}
-                style={{
-                  position: "absolute",
-                  right: Math.max(insets.right, 4),
-                }}
                 className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
               >
                 <Icon name="close" size={26} tone="foreground" />
               </Pressable>
+              <AbontenLogo size={34} />
             </View>
           </View>
 

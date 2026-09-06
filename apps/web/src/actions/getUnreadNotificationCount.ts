@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
-import { logger } from "@abonten/core/logger";
+import { unreadNotificationCountFor } from "@abonten/services/notifications/notificationsQuery";
 
 type GetUnreadNotificationCountResult =
   | { status: 401 | 500; message: string }
@@ -11,7 +11,8 @@ type GetUnreadNotificationCountResult =
  * Count-only query backing the NotificationBell badge — deliberately a
  * separate action from getUserNotifications rather than deriving the count
  * from a fetched page, since the badge needs to stay accurate even while the
- * dropdown itself is closed/unfetched.
+ * dropdown itself is closed/unfetched. Thin wrapper over the shared
+ * @abonten/services query the mobile /notifications/unread-count route uses.
  */
 export async function getUnreadNotificationCount(): Promise<GetUnreadNotificationCountResult> {
   const supabase = await createClient();
@@ -25,16 +26,9 @@ export async function getUnreadNotificationCount(): Promise<GetUnreadNotificatio
     return { status: 401, message: "User not logged in" };
   }
 
-  const { count, error } = await supabase
-    .from("notification")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id)
-    .is("read_at", null);
-
-  if (error) {
-    logger.error(`Failed fetching unread notification count: ${error.message}`);
-    return { status: 500, message: "Something went wrong!" };
+  const result = await unreadNotificationCountFor(supabase, user.id);
+  if (result.status !== 200) {
+    return { status: 500, message: result.message ?? "Something went wrong!" };
   }
-
-  return { status: 200, count: count ?? 0 };
+  return { status: 200, count: result.count };
 }

@@ -81,3 +81,7 @@ export { Avatar, type AvatarProps } from "./Avatar";
 export { Stars } from "./Stars";
 export { Sheet, type SheetProps } from "./Sheet";
 export { SheetOption, type SheetOptionProps } from "./SheetOption";
+export {
+  KeyboardAwareScrollView,
+  type KeyboardAwareScrollViewProps,
+} from "./KeyboardAwareScrollView";

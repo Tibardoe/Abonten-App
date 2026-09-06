@@ -11,6 +11,10 @@ import NoEventsFound from "@/events/molecules/NoEventsFound";
 import NoEventsInLocation from "@/events/molecules/NoEventsInLocation";
 import EventsMapView from "@/events/organisms/EventsMapView";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
+import {
+  type EventFilters,
+  filterEventList,
+} from "@abonten/core/exploreFilters";
 import type { UserPostType } from "@abonten/types/postsType";
 
 // Radius (km) used for the "All Events" section — matches the previous
@@ -79,6 +83,25 @@ export default async function EventsTabContent({
     return <NoEventsInLocation location={location} />;
   }
 
+  // The category chip row + Filter modal now drive EVERY section on this
+  // tab, not just "All Events". The curated sliders below are filtered
+  // client-side against the same bounded nearby payload they're already
+  // derived from — no extra query. `minRating` is the one dimension that
+  // payload can't express: it still narrows "All Events" through the DB and
+  // is a no-op on the curated sliders (the native Explore screen documents
+  // the same limitation).
+  const curatedCoords = lat != null && lng != null ? { lat, lng } : null;
+  const curatedFilters: EventFilters = {
+    category: eventCategory ?? null,
+    types: eventTypes ?? [],
+    minPrice: minPrice ?? null,
+    maxPrice: maxPrice ?? null,
+    startDate: startDate ? startDate.slice(0, 10) : null,
+    endDate: endDate ? endDate.slice(0, 10) : null,
+    minRating: minRating ?? null,
+    maxDistanceKm: maxDistanceKm ?? null,
+  };
+
   // A paid Event Promotion makes an event featured-eligible for its
   // purchased period, exactly like the free, self-toggled `featured`
   // checkbox already does — same fold-in previously only wired into the
@@ -91,16 +114,30 @@ export default async function EventsTabContent({
       )
     : events;
 
-  const featuredEvents = getFeaturedEvents(eventsWithPromotion, location);
+  const curatedEvents = filterEventList(
+    eventsWithPromotion,
+    curatedFilters,
+    curatedCoords,
+  );
+  const curatedAroundYou = filterEventList(
+    aroundYouEvents,
+    curatedFilters,
+    curatedCoords,
+  );
+
+  const featuredEvents = getFeaturedEvents(curatedEvents, location);
 
   const topRatedOrganizers = filterEventsByWindow(
-    events,
+    curatedEvents,
     "top-rated-organizers",
   );
-  const happeningToday = filterEventsByWindow(events, "happening-today");
-  const happeningThisWeek = filterEventsByWindow(events, "happening-this-week");
+  const happeningToday = filterEventsByWindow(curatedEvents, "happening-today");
+  const happeningThisWeek = filterEventsByWindow(
+    curatedEvents,
+    "happening-this-week",
+  );
   const happeningThisMonth = filterEventsByWindow(
-    events,
+    curatedEvents,
     "happening-this-month",
   );
 
@@ -131,6 +168,20 @@ export default async function EventsTabContent({
     !!startDate ||
     !!endDate ||
     minRating != null ||
+    maxDistanceKm != null;
+
+  // When any filter that the curated sliders can actually honour is set,
+  // hide (rather than show a "nothing here" row for) whichever windows come
+  // back empty — several can be empty at once under a category filter, and
+  // the stacked placeholder rows read as noise. `minRating` is excluded: it
+  // can't narrow the curated payload, so it never empties those windows.
+  const curatedFilterActive =
+    !!eventCategory ||
+    !!eventTypes?.length ||
+    minPrice != null ||
+    maxPrice != null ||
+    !!startDate ||
+    !!endDate ||
     maxDistanceKm != null;
 
   const allEventsInitialPage = await getQueriedEvents({
@@ -168,41 +219,49 @@ export default async function EventsTabContent({
 
   return (
     <div className="space-y-6">
+      {/* Category chips sit directly under the Events/Places tabs, above
+          every curated section — one filter surface that drives Featured,
+          Around You, Happening This… and the "All Events" list below. */}
+      <EventCategoryChips
+        location={location}
+        selectedCategory={eventCategory}
+      />
+
       <FeaturedEventsCarousel events={featuredEvents} />
 
       <EventsSlider
         heading="Around-You"
-        events={aroundYouEvents}
+        events={curatedAroundYou}
         urlPath={`location/${location}/explore/around-you`}
+        hideWhenEmpty={curatedFilterActive}
       />
 
       <EventsSlider
         heading="Top-rated Organizers"
         events={topRatedOrganizers}
         urlPath={`location/${location}/explore/top-rated-organizers`}
+        hideWhenEmpty={curatedFilterActive}
       />
 
       <EventsSlider
         heading="Happening Today"
         events={happeningToday}
         urlPath={`location/${location}/explore/happening-today`}
+        hideWhenEmpty={curatedFilterActive}
       />
 
       <EventsSlider
         heading="Happening This Week"
         events={happeningThisWeek}
         urlPath={`location/${location}/explore/happening-this-week`}
+        hideWhenEmpty={curatedFilterActive}
       />
 
       <EventsSlider
         heading="Happening This Month"
         events={happeningThisMonth}
         urlPath={`location/${location}/explore/happening-this-month`}
-      />
-
-      <EventCategoryChips
-        location={location}
-        selectedCategory={eventCategory}
+        hideWhenEmpty={curatedFilterActive}
       />
 
       <div>

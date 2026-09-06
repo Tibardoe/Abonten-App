@@ -17,9 +17,8 @@ type BookingService = { id: string; name: string };
 
 // Native echo of the web RequestBookingModal. Reservation REQUEST only — no
 // payment. Optional service, a single future date + time, optional party
-// size + note. The place-detail screen only mounts this when the place has
-// at least one service (confirmed platform choice — web shows Book on any
-// place).
+// size + note. Offered on any place (matching web); the service picker
+// below only renders when the place actually lists services.
 export function BookPlaceSheet({
   open,
   onClose,

@@ -69,6 +69,27 @@ export async function fetchNotificationsPage(
   return { status: 200, data: page, nextCursor, hasNextPage };
 }
 
+// Count-only query backing the notification-bell badge on both platforms —
+// deliberately separate from fetchNotificationsPage so the badge stays
+// accurate even while the list itself is unfetched.
+export async function unreadNotificationCountFor(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+): Promise<{ status: 200 | 500; count: number; message?: string }> {
+  const { count, error } = await supabase
+    .from("notification")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .is("read_at", null);
+
+  if (error) {
+    logger.error(`Failed fetching unread notification count: ${error.message}`);
+    return { status: 500, count: 0, message: "Something went wrong!" };
+  }
+
+  return { status: 200, count: count ?? 0 };
+}
+
 export async function markNotificationReadFor(
   supabase: SupabaseClient<Database>,
   userId: string,

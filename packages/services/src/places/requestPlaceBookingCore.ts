@@ -82,6 +82,31 @@ export async function requestPlaceBookingCore(
     return { status: 400, message: "You cannot book your own place" };
   }
 
+  // A client can send any service id — make sure it's actually one of THIS
+  // place's services before it lands on the row (otherwise a booking could
+  // reference a service from an unrelated place).
+  if (serviceId) {
+    const { data: service, error: serviceError } = await supabase
+      .from("place_service")
+      .select("id")
+      .eq("id", serviceId)
+      .eq("place_id", placeId)
+      .maybeSingle();
+
+    if (serviceError) {
+      return {
+        status: 500,
+        message: `Error fetching service: ${serviceError.message}`,
+      };
+    }
+    if (!service) {
+      return {
+        status: 400,
+        message: "That service isn't offered by this place.",
+      };
+    }
+  }
+
   const { error: insertError } = await supabase.from("place_booking").insert({
     place_id: placeId,
     service_id: serviceId ?? null,

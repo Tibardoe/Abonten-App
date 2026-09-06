@@ -1,12 +1,13 @@
+import { TicketScannerSheet } from "@/components/organizer/TicketScannerSheet";
 import {
   flattenAttendees,
   useAttendees,
   useCheckInTicket,
 } from "@/features/organizer/useAttendees";
 import type { AttendanceRow } from "@abonten/api-client";
-import { AppText } from "@abonten/ui-native";
+import { AppText, Button } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -130,6 +131,8 @@ export default function EventAttendeesScreen() {
   const rows = flattenAttendees(q.data?.pages);
   const firstPage = q.data?.pages[0];
   const failed = q.isError || (firstPage && firstPage.status >= 400);
+  const [scanOpen, setScanOpen] = useState(false);
+  const canScan = !failed;
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -144,37 +147,53 @@ export default function EventAttendeesScreen() {
   }
 
   return (
-    <FlatList
-      className="flex-1 bg-background"
-      data={rows}
-      keyExtractor={(r) => r.id}
-      renderItem={({ item }) => <AttendeeRow attendee={item} eventId={id} />}
-      contentContainerClassName="gap-2 p-4 pb-16"
-      ListHeaderComponent={
-        <AppText variant="screenTitle" className="mb-1">
-          Attendees
-        </AppText>
-      }
-      onEndReached={onEndReached}
-      onEndReachedThreshold={0.5}
-      refreshControl={
-        <RefreshControl
-          refreshing={q.isRefetching && !q.isFetchingNextPage}
-          onRefresh={() => q.refetch()}
-        />
-      }
-      ListEmptyComponent={
-        <AppText className="mt-10 text-center text-sm text-muted-foreground">
-          {failed
-            ? firstPage && firstPage.status === 403
-              ? "You're not authorized to view this event."
-              : "Couldn't load the attendee list."
-            : "No attendees yet."}
-        </AppText>
-      }
-      ListFooterComponent={
-        q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null
-      }
-    />
+    <View className="flex-1 bg-background">
+      <FlatList
+        className="flex-1 bg-background"
+        data={rows}
+        keyExtractor={(r) => r.id}
+        renderItem={({ item }) => <AttendeeRow attendee={item} eventId={id} />}
+        contentContainerClassName="gap-2 p-4 pb-16"
+        ListHeaderComponent={
+          <View className="mb-2 flex-row items-center justify-between gap-3">
+            <AppText variant="screenTitle">Attendees</AppText>
+            {canScan ? (
+              <Button
+                title="Scan tickets"
+                size="sm"
+                leftIcon="qr-code-outline"
+                onPress={() => setScanOpen(true)}
+              />
+            ) : null}
+          </View>
+        }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={q.isRefetching && !q.isFetchingNextPage}
+            onRefresh={() => q.refetch()}
+          />
+        }
+        ListEmptyComponent={
+          <AppText className="mt-10 text-center text-sm text-muted-foreground">
+            {failed
+              ? firstPage && firstPage.status === 403
+                ? "You're not authorized to view this event."
+                : "Couldn't load the attendee list."
+              : "No attendees yet."}
+          </AppText>
+        }
+        ListFooterComponent={
+          q.isFetchingNextPage ? <ActivityIndicator className="my-4" /> : null
+        }
+      />
+
+      <TicketScannerSheet
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        eventId={id}
+      />
+    </View>
   );
 }

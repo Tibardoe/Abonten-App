@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   View,
@@ -24,6 +23,12 @@ import { SectionTitle } from "./Typography";
 // it, and its scroll + footer carry the bottom safe-area inset so nothing
 // sits under the home indicator. Every bottom sheet in the app renders
 // through here, so this behaviour is uniform.
+//
+// `behavior="padding"` is used on BOTH platforms deliberately: Android's
+// `adjustResize` soft-input mode does NOT apply to content inside a RN
+// <Modal>, so relying on it (behavior=undefined) left inputs near the
+// footer hidden behind the Android keyboard. Padding works inside the modal
+// on both platforms with no double-counting.
 
 export type SheetProps = {
   open: boolean;
@@ -72,7 +77,7 @@ export function Sheet({
     >
       <KeyboardAvoidingView
         style={{ flex: 1, justifyContent: "flex-end" }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior="padding"
       >
         <Pressable
           accessibilityLabel="Close"

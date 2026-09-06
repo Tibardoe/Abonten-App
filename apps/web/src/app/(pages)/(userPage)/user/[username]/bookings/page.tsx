@@ -1,4 +1,6 @@
 import { getUserBookings } from "@/actions/getUserBookings";
+import { getUserProfileDetails } from "@/actions/getUserProfileDetails";
+import { notFound } from "next/navigation";
 import UserBookingsList from "./UserBookingsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -17,15 +19,22 @@ const emptyState = (
 
 /**
  * getUserBookings.ts is self-scoped (auth.getUser(), no username param) --
- * same "always the signed-in viewer's own data, regardless of the profile
- * being viewed" shape getUserFavoritePosts/getUserFavoritePlaces already use
- * on the Favorites tab (see favorites/page.tsx). The nav tab that links here
- * is isCurrentUser-gated (see UserAccountTabsNavigation.tsx), so this only
- * reads as "wrong" if someone directly visits another user's /bookings URL
- * -- the same pre-existing quirk Favorites already has, not something new
- * introduced here.
+ * "my bookings" is inherently private. The `:username` in the route is only
+ * meaningful when it's yours: if someone opens another person's
+ * /user/<them>/bookings URL directly we 404 rather than silently render the
+ * viewer's own bookings under the wrong name. Same guard on favorites/page.tsx.
  */
-export default async function page() {
+export default async function page({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const { username } = await params;
+  const profile = await getUserProfileDetails(username);
+  if (profile.status !== 200 || profile.ownUsername !== username) {
+    notFound();
+  }
+
   const firstPage = await getUserBookings();
 
   if (firstPage.status !== 200) {

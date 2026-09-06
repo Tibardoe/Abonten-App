@@ -168,6 +168,76 @@ export async function POST(req: Request) {
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
+    // Automated organizer payouts (Paystack Transfers API). Only acts on a
+    // payout that actually has an automated transfer attached
+    // (transfer_status = 'pending'); a manually-settled payout has no
+    // transfer_code and is untouched here.
+    if (
+      event.event === "transfer.success" ||
+      event.event === "transfer.failed" ||
+      event.event === "transfer.reversed"
+    ) {
+      const transfer = event.data as unknown as {
+        transfer_code?: string;
+        reason?: string | null;
+      };
+      const transferCode = transfer.transfer_code ?? null;
+      if (!transferCode) {
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+
+      const supabase = getSupabaseServiceClient();
+      const succeeded = event.event === "transfer.success";
+      const nextTransferStatus = succeeded
+        ? "success"
+        : event.event === "transfer.reversed"
+          ? "reversed"
+          : "failed";
+
+      const { data: payout, error: payoutErr } = await supabase
+        .from("payout")
+        .update({
+          transfer_status: nextTransferStatus,
+          transfer_failure_reason: succeeded
+            ? null
+            : (transfer.reason ?? event.event),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("transfer_code", transferCode)
+        .eq("transfer_status", "pending")
+        .select("id")
+        .maybeSingle();
+
+      if (payoutErr) {
+        logger.error(
+          `Paystack webhook: failed updating payout for ${event.event} (${payoutErr.message})`,
+        );
+      } else if (!payout) {
+        logger.info(
+          `Paystack webhook: ${event.event} for transfer ${transferCode} — no pending payout matched (already settled or manual)`,
+        );
+      } else {
+        const { error: settleErr } = await supabase.rpc("admin_settle_payout", {
+          p_payout_id: payout.id,
+          p_status: succeeded ? "completed" : "failed",
+          p_failure_reason: succeeded
+            ? undefined
+            : (transfer.reason ?? event.event),
+        });
+        if (settleErr) {
+          logger.error(
+            `Paystack webhook: admin_settle_payout failed for payout ${payout.id}: ${settleErr.message}`,
+          );
+        } else {
+          logger.info(
+            `Paystack webhook: payout ${payout.id} settled via ${event.event}`,
+          );
+        }
+      }
+
+      return NextResponse.json({ received: true }, { status: 200 });
+    }
+
     if (event.event !== "charge.success") {
       // Acknowledge and ignore other event types so Paystack doesn't keep
       // retrying delivery of events this app doesn't act on.

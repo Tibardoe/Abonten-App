@@ -12,6 +12,7 @@ import {
   Field,
   Icon,
   Input,
+  KeyboardAwareScrollView,
   ScreenError,
   ScreenLoader,
   SegmentedTabs,
@@ -23,7 +24,6 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  ScrollView,
   Switch,
   View,
 } from "react-native";
@@ -81,7 +81,7 @@ export default function EditEventScreen() {
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 p-4 pb-16"
       keyboardShouldPersistTaps="handled"
@@ -573,6 +573,6 @@ export default function EditEventScreen() {
         initial={w.coords}
         onPick={(loc) => w.setMapLocation(loc)}
       />
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }

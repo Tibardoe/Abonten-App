@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { EventCard } from "@/components/EventCard";
 import { PlaceCard } from "@/components/PlaceCard";
+import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { CreateActionSheet } from "@/components/profile/CreateActionSheet";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -52,6 +53,7 @@ export default function UserProfileScreen() {
   const [favSub, setFavSub] = useState<FavSub>("events");
   const [reviewSub, setReviewSub] = useState<ReviewSub>("event");
   const [createOpen, setCreateOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // A quick content cross-fade on every tab / sub-tab change: the list data
   // swaps instantly (React Query serves each tab from cache — no refetch),
@@ -104,6 +106,12 @@ export default function UserProfileScreen() {
             name="settings-outline"
             accessibilityLabel="Settings"
             onPress={() => router.push("/(app)/settings")}
+          />
+        ) : session ? (
+          <HeaderIconButton
+            name="ellipsis-horizontal"
+            accessibilityLabel="Report this user"
+            onPress={() => setReportOpen(true)}
           />
         ) : undefined
       }
@@ -293,6 +301,14 @@ export default function UserProfileScreen() {
       <CreateActionSheet
         open={createOpen}
         onClose={() => setCreateOpen(false)}
+      />
+
+      <ReportSheet
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        targetType="user"
+        targetId={profile.user_id}
+        label={profile.username ? `@${profile.username}` : "this user"}
       />
     </View>
   );

@@ -1,3 +1,5 @@
+import { useSession } from "@/auth/SessionProvider";
+import { ReportSheet } from "@/components/ReportSheet";
 import { HighlightUploadStatus } from "@/components/profile/HighlightUploadStatus";
 import { useHighlightUpload } from "@/features/profile/HighlightUploadProvider";
 import {
@@ -32,10 +34,12 @@ export function HighlightsRow({
   avatarVersion?: number | string | null;
 }) {
   const router = useRouter();
+  const { session } = useSession();
   const { data: groups } = useHighlights(userId);
   const deleteGroup = useDeleteHighlightGroup(userId);
   const { isUploading } = useHighlightUpload();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [reportSlideId, setReportSlideId] = useState<string | null>(null);
 
   const hasGroups = !!groups && groups.length > 0;
   if (!hasGroups && !isOwn) return null;
@@ -119,8 +123,24 @@ export function HighlightsRow({
           avatarPublicId={avatarPublicId}
           avatarVersion={avatarVersion}
           onClose={() => setOpenIndex(null)}
+          onReport={
+            !isOwn && session
+              ? (slideId) => {
+                  setOpenIndex(null);
+                  setReportSlideId(slideId);
+                }
+              : undefined
+          }
         />
       ) : null}
+
+      <ReportSheet
+        open={reportSlideId != null}
+        onClose={() => setReportSlideId(null)}
+        targetType="highlight"
+        targetId={reportSlideId ?? ""}
+        label={`Highlight by @${username}`}
+      />
     </View>
   );
 }

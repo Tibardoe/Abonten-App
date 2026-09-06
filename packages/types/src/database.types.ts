@@ -2153,6 +2153,11 @@ export type Database = {
           reference: string;
           requested_at: string;
           status: string;
+          transfer_code: string | null;
+          transfer_failure_reason: string | null;
+          transfer_initiated_at: string | null;
+          transfer_recipient_code: string | null;
+          transfer_status: string;
           updated_at: string;
         };
         Insert: {
@@ -2167,6 +2172,11 @@ export type Database = {
           reference: string;
           requested_at?: string;
           status?: string;
+          transfer_code?: string | null;
+          transfer_failure_reason?: string | null;
+          transfer_initiated_at?: string | null;
+          transfer_recipient_code?: string | null;
+          transfer_status?: string;
           updated_at?: string;
         };
         Update: {
@@ -2181,6 +2191,11 @@ export type Database = {
           reference?: string;
           requested_at?: string;
           status?: string;
+          transfer_code?: string | null;
+          transfer_failure_reason?: string | null;
+          transfer_initiated_at?: string | null;
+          transfer_recipient_code?: string | null;
+          transfer_status?: string;
           updated_at?: string;
         };
         Relationships: [

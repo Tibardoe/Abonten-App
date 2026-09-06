@@ -14,17 +14,12 @@ import {
   Button,
   Icon,
   Input,
+  KeyboardAwareScrollView,
   Sheet,
   SheetOption,
 } from "@abonten/ui-native";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, View } from "react-native";
 
 const GH_PHONE = /^(0[0-9]{9}|\+233[0-9]{9})$/;
 
@@ -174,7 +169,7 @@ export default function PayoutAccountsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-4 p-4 pb-10"
       >
@@ -241,7 +236,7 @@ export default function PayoutAccountsScreen() {
           leftIcon="add"
           onPress={() => setStep("choose")}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <Sheet
         open={step !== "closed"}

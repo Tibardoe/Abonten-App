@@ -272,10 +272,13 @@ export default function Explore() {
       </View>
     );
 
+  // The category chip row + active-filter summary sit directly below the
+  // Events/Places tabs, above every curated section — one filter surface
+  // that drives Featured, Around You, Happening This…, Top Rated AND the
+  // "All" list below (each curated slider is client-filtered against the
+  // same nearby fetch via eventSlidersFiltered / placeSlidersFiltered).
   const listHeader = (
     <View>
-      {sliders}
-
       <CategoryChipsRow
         items={tab === "events" ? eventCategoryChips : placeCategoryChips}
         selectedKey={
@@ -305,6 +308,9 @@ export default function Explore() {
         onRemove={removeChip}
         onClearAll={clearAllChips}
       />
+
+      {sliders}
+
       <SectionTitle className="px-4 pb-1 pt-2">
         {tab === "events" ? "All events" : "All places"}
       </SectionTitle>
