@@ -277,32 +277,38 @@ export default function Explore() {
   // that drives Featured, Around You, Happening This…, Top Rated AND the
   // "All" list below (each curated slider is client-filtered against the
   // same nearby fetch via eventSlidersFiltered / placeSlidersFiltered).
+  // The category chip row sits directly under the Events/Places tabs and
+  // above the Map toggle — rendered outside the list so it stays put when
+  // the map view is showing.
+  const categoryRow = (
+    <CategoryChipsRow
+      items={tab === "events" ? eventCategoryChips : placeCategoryChips}
+      selectedKey={
+        tab === "events"
+          ? eventFilters.category
+          : placeFilters.categoryId != null
+            ? String(placeFilters.categoryId)
+            : null
+      }
+      onSelect={(key) => {
+        if (tab === "events") {
+          setEventFilters({
+            ...eventFilters,
+            category: key,
+            types: key ? eventFilters.types : [],
+          });
+        } else {
+          setPlaceFilters({
+            ...placeFilters,
+            categoryId: key != null ? Number(key) : null,
+          });
+        }
+      }}
+    />
+  );
+
   const listHeader = (
     <View>
-      <CategoryChipsRow
-        items={tab === "events" ? eventCategoryChips : placeCategoryChips}
-        selectedKey={
-          tab === "events"
-            ? eventFilters.category
-            : placeFilters.categoryId != null
-              ? String(placeFilters.categoryId)
-              : null
-        }
-        onSelect={(key) => {
-          if (tab === "events") {
-            setEventFilters({
-              ...eventFilters,
-              category: key,
-              types: key ? eventFilters.types : [],
-            });
-          } else {
-            setPlaceFilters({
-              ...placeFilters,
-              categoryId: key != null ? Number(key) : null,
-            });
-          }
-        }}
-      />
       <ActiveFilterChips
         chips={activeChips}
         onRemove={removeChip}
@@ -342,40 +348,22 @@ export default function Explore() {
   return (
     <View className="flex-1 bg-background">
       <AppHeader variant="branded" />
-      {/* Location switcher — the web LocationAndFilterSection's location
-          button. Full width on its own row. */}
-      <View className="px-4 pb-2 pt-3">
+      {/* Location switcher + Filters button — the web LocationAndFilterSection
+          row. */}
+      <View className="flex-row items-center justify-between gap-2 px-4 pb-2 pt-3">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Change location"
           onPress={() => setLocationOpen(true)}
-          className="flex-row items-center gap-1 self-start active:opacity-70"
+          className="flex-1 flex-row items-center gap-1 active:opacity-70"
         >
           <Icon name="location-outline" size={20} tone="foreground" />
-          <AppText variant="bodyStrong" numberOfLines={1}>
+          <AppText variant="bodyStrong" numberOfLines={1} className="shrink">
             {location?.label ?? "Set location"}
           </AppText>
           <Icon name="chevron-down" size={16} tone="muted" />
         </Pressable>
-      </View>
 
-      {/* Events / Places tabs — same segmented control as the web
-          ExploreTabs (shadcn Tabs): full-width track, active segment lifted
-          onto a bg-accent surface. */}
-      <View className="px-4 pb-1">
-        <SegmentedTabs
-          options={[
-            { key: "events", label: "Events" },
-            { key: "places", label: "Places" },
-          ]}
-          value={tab}
-          onChange={setTab}
-        />
-      </View>
-
-      {/* Ordered tabs → filter line → map line, each on its own row, so the
-          view switch reads as the last control before the content. */}
-      <View className="flex-row px-4 pb-1 pt-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
@@ -398,7 +386,26 @@ export default function Explore() {
         </Pressable>
       </View>
 
-      <View className="flex-row justify-end px-4 pb-1">
+      {/* Events / Places tabs — same segmented control as the web
+          ExploreTabs (shadcn Tabs): full-width track, active segment lifted
+          onto a bg-accent surface. */}
+      <View className="px-4 pb-1">
+        <SegmentedTabs
+          options={[
+            { key: "events", label: "Events" },
+            { key: "places", label: "Places" },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
+      </View>
+
+      {/* tabs → category chips → map toggle. Wrapped so the row's horizontal
+          ScrollView sizes to its content instead of stretching to fill the
+          screen's flex column. */}
+      <View>{categoryRow}</View>
+
+      <View className="flex-row justify-end px-4 pb-1 pt-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={view === "list" ? "Show map" : "Show list"}

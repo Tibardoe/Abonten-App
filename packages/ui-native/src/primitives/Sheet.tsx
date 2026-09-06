@@ -68,7 +68,16 @@ export function Sheet({
   // (smoother); Android only emits `did*`.
   const [kbHeight, setKbHeight] = useState(0);
   useEffect(() => {
-    if (!open) return;
+    // Every time the sheet closes, drop the keyboard and reset the tracked
+    // height — otherwise a sheet dismissed while its input was focused keeps
+    // the last height (the hide event is missed once the listener is torn
+    // down), and the NEXT open renders lifted / clipped with dead space at
+    // the bottom where the keyboard used to be.
+    if (!open) {
+      setKbHeight(0);
+      Keyboard.dismiss();
+      return;
+    }
     const showEvt =
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvt =
@@ -83,11 +92,15 @@ export function Sheet({
     };
   }, [open]);
 
+  // Guard: only ever apply a lift/clamp while the sheet is actually open, so
+  // a stale height from a previous session can't affect the next open.
+  const kb = open ? kbHeight : 0;
+
   // Space available for the panel above the keyboard (and below the status
-  // bar). The panel is lifted by `kbHeight` so its footer sits just above
-  // the keyboard; its max-height is clamped to what's left so the header
-  // never runs off the top.
-  const available = Math.max(220, height - kbHeight - insets.top - 8);
+  // bar). The panel is lifted by `kb` so its footer sits just above the
+  // keyboard; its max-height is clamped to what's left so the header never
+  // runs off the top.
+  const available = Math.max(220, height - kb - insets.top - 8);
   const maxHeight = Math.min(height * maxHeightRatio, available);
   const minHeight =
     minHeightRatio != null
@@ -119,7 +132,7 @@ export function Sheet({
         <View
           className="rounded-t-2xl border-t border-border bg-popover"
           style={[
-            { maxHeight, marginBottom: kbHeight },
+            { maxHeight, marginBottom: kb },
             minHeight != null ? { minHeight } : null,
             shadow.sheet,
           ]}
@@ -167,7 +180,7 @@ export function Sheet({
             <View
               className="border-t border-border px-4 pt-4"
               style={{
-                paddingBottom: 16 + (kbHeight > 0 ? 4 : insets.bottom),
+                paddingBottom: 16 + (kb > 0 ? 4 : insets.bottom),
               }}
             >
               {footer}

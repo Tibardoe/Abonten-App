@@ -20,6 +20,10 @@ export function CategoryChipsRow({
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      // flexGrow:0 so the row never stretches vertically when it isn't
+      // inside a height-bounded parent (e.g. rendered straight into a flex
+      // column) — that made the chips balloon into tall pills / circles.
+      style={{ flexGrow: 0 }}
       contentContainerClassName="gap-2 px-4 py-2"
     >
       <Chip
