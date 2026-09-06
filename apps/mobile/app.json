@@ -91,6 +91,7 @@
         }
       ],
       "expo-video",
+      "./plugins/withPictureInPictureManifest",
       [
         "@sentry/react-native/expo",
         {
