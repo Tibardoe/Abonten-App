@@ -196,6 +196,7 @@ export function FilterSheet({
               {eventCategoriesAndTypes.map((c) => (
                 <Chip
                   key={c.category}
+                  showCheck
                   label={c.category}
                   selected={eDraft.category === c.category}
                   onPress={() =>
@@ -223,6 +224,7 @@ export function FilterSheet({
                   return (
                     <Chip
                       key={type}
+                      showCheck
                       label={type}
                       selected={on}
                       onPress={() =>
@@ -282,6 +284,7 @@ export function FilterSheet({
               {RATING_OPTIONS.map((r) => (
                 <Chip
                   key={r.value}
+                  showCheck
                   label={r.label}
                   selected={eDraft.minRating === r.value}
                   onPress={() =>
@@ -304,6 +307,7 @@ export function FilterSheet({
               {DISTANCE_OPTIONS.map((opt) => (
                 <Chip
                   key={opt.km}
+                  showCheck
                   label={opt.label}
                   selected={eDraft.maxDistanceKm === opt.km}
                   onPress={() =>
@@ -329,6 +333,7 @@ export function FilterSheet({
               {placeCategories.map((c) => (
                 <Chip
                   key={c.id}
+                  showCheck
                   label={c.name}
                   selected={pDraft.categoryId === c.id}
                   onPress={() =>
@@ -349,6 +354,7 @@ export function FilterSheet({
           >
             <Wrap>
               <Chip
+                showCheck
                 label="Open now"
                 selected={pDraft.openNow}
                 onPress={() =>
@@ -367,6 +373,7 @@ export function FilterSheet({
               {RATING_OPTIONS.map((r) => (
                 <Chip
                   key={r.value}
+                  showCheck
                   label={r.label}
                   selected={pDraft.minRating === r.value}
                   onPress={() =>
@@ -389,6 +396,7 @@ export function FilterSheet({
               {DISTANCE_OPTIONS.map((opt) => (
                 <Chip
                   key={opt.km}
+                  showCheck
                   label={opt.label}
                   selected={pDraft.maxDistanceKm === opt.km}
                   onPress={() =>

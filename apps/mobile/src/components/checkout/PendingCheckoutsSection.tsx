@@ -18,6 +18,7 @@ import { Alert, Pressable, View } from "react-native";
 // into; this surface is resume + release only.
 export function PendingCheckoutsSection() {
   const q = usePendingCheckouts();
+  const clearAll = useCancelCheckout();
   const sessions =
     q.data?.status === 200
       ? (q.data.data ?? [])
@@ -25,9 +26,41 @@ export function PendingCheckoutsSection() {
 
   if (sessions.length === 0) return null;
 
+  function onClearAll() {
+    Alert.alert(
+      `Release all ${sessions.length} pending checkouts?`,
+      "The tickets they're holding go back on sale. You can start again anytime.",
+      [
+        { text: "Keep", style: "cancel" },
+        {
+          text: "Release all",
+          style: "destructive",
+          onPress: () => {
+            for (const s of sessions) {
+              clearAll.mutate(s.checkoutSessionId);
+            }
+          },
+        },
+      ],
+    );
+  }
+
   return (
     <View className="gap-3 pt-1 pb-1">
-      <SectionTitle>Continue checkout</SectionTitle>
+      <View className="flex-row items-center justify-between">
+        <SectionTitle>Continue checkout</SectionTitle>
+        {sessions.length > 1 ? (
+          <Pressable
+            onPress={onClearAll}
+            hitSlop={8}
+            disabled={clearAll.isPending}
+          >
+            <AppText variant="small" tone="error" className="font-medium">
+              {clearAll.isPending ? "Releasing…" : "Release all"}
+            </AppText>
+          </Pressable>
+        ) : null}
+      </View>
       {sessions.map((s) => (
         <SessionCard
           key={s.checkoutSessionId}

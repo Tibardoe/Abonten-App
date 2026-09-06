@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import {
+  useCancelCheckout,
   usePromoPreview,
   useValidateCheckout,
 } from "@/features/checkout/useCheckout";
@@ -64,6 +65,7 @@ export default function BuyTicketsScreen() {
   const { session } = useSession();
   const { data, isLoading, isError, refetch } = useEventDetail(eventId);
   const validate = useValidateCheckout();
+  const cancel = useCancelCheckout();
   const promoPreview = usePromoPreview();
 
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -232,19 +234,41 @@ export default function BuyTicketsScreen() {
       router.push("/(auth)/sign-in");
       return;
     }
-    const res = await validate.mutateAsync({
+
+    const input = {
       eventId,
       quantities,
       occurrenceId: activeOccurrenceId,
       promoCode: applied?.code ?? null,
-    });
+    };
+    let res = await validate.mutateAsync(input);
 
-    if (res.status === 200 && res.checkoutSessionId) {
-      router.replace(`/(app)/checkout/${res.checkoutSessionId}`);
-      return;
-    }
+    // 300 = the server already has a pending checkout for this event (it
+    // allows only one in flight at a time). That session was priced from an
+    // EARLIER selection, so resuming it would silently ignore a quantity /
+    // ticket-type / promo change the buyer just made after coming back here.
+    // Release the stale reservation and re-run checkout with what's on
+    // screen now, so the current selection is what they pay for.
     if (res.status === 300 && res.checkoutId) {
-      router.replace(`/(app)/checkout/${res.checkoutId}`);
+      try {
+        await cancel.mutateAsync(res.checkoutId);
+        res = await validate.mutateAsync(input);
+      } catch {
+        // Couldn't release it — fall through and resume the existing one
+        // rather than dead-ending the buyer.
+      }
+      if (res.status === 300 && res.checkoutId) {
+        router.push(`/(app)/checkout/${res.checkoutId}`);
+        return;
+      }
+    }
+
+    // push (not replace) so the hardware / gesture back from the checkout
+    // screen returns HERE with the ticket selection, occurrence and promo
+    // still intact — changing your mind about quantity shouldn't mean
+    // starting the whole order over.
+    if (res.status === 200 && res.checkoutSessionId) {
+      router.push(`/(app)/checkout/${res.checkoutSessionId}`);
       return;
     }
     // 409 = an availability problem the client's cached view didn't know
@@ -481,12 +505,15 @@ export default function BuyTicketsScreen() {
       <View className="border-t border-border p-4">
         <Button
           title={
-            validate.isPending ? "Starting checkout…" : "Proceed to checkout"
+            validate.isPending || cancel.isPending
+              ? "Starting checkout…"
+              : "Proceed to checkout"
           }
           fullWidth
-          loading={validate.isPending}
+          loading={validate.isPending || cancel.isPending}
           disabled={
             validate.isPending ||
+            cancel.isPending ||
             totalCount === 0 ||
             (occurrences.length > 1 && activeOccurrenceId == null)
           }

@@ -7,7 +7,7 @@ import type { HighlightMediaPick } from "@/features/profile/useHighlights";
 import { AppText, Button, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { VideoView, useVideoPlayer } from "expo-video";
+import { type VideoThumbnail, VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -49,6 +49,10 @@ export default function NewHighlight() {
   const [previewReady, setPreviewReady] = useState(false);
   const [muted, setMuted] = useState(false);
   const [playing, setPlaying] = useState(false);
+  // First timeline frame per video item — used as the filmstrip poster so a
+  // video cell isn't just a bare icon. Populated by VideoTrimBar once a clip
+  // has been opened; keyed by item id.
+  const [posters, setPosters] = useState<Record<string, VideoThumbnail>>({});
 
   const active = composer.activeItem;
   const isVideo = active?.type === "video";
@@ -356,6 +360,11 @@ export default function NewHighlight() {
                 player={player}
                 item={active}
                 onTrimChange={(s, e) => composer.updateTrim(active.id, s, e)}
+                onPoster={(thumb) =>
+                  setPosters((p) =>
+                    p[active.id] ? p : { ...p, [active.id]: thumb },
+                  )
+                }
               />
             ) : null}
           </View>
@@ -371,6 +380,7 @@ export default function NewHighlight() {
             >
               {composer.items.map((m, i) => {
                 const selected = m.id === composer.activeId;
+                const poster = m.type === "video" ? posters[m.id] : undefined;
                 return (
                   <Pressable
                     key={m.id}
@@ -386,6 +396,21 @@ export default function NewHighlight() {
                         style={{ width: "100%", height: "100%" }}
                         contentFit="cover"
                       />
+                    ) : poster ? (
+                      <>
+                        <Image
+                          source={poster}
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="cover"
+                        />
+                        <View
+                          pointerEvents="none"
+                          style={{ position: "absolute", left: 3, top: 3 }}
+                          className="h-4 w-4 items-center justify-center rounded-full bg-black/60"
+                        >
+                          <Icon name="play" size={9} color="#fff" />
+                        </View>
+                      </>
                     ) : (
                       <View className="flex-1 items-center justify-center bg-white/10">
                         <Icon name="videocam" size={18} color="#fff" />

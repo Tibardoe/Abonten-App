@@ -47,6 +47,9 @@ type Props = {
   item: EditableMedia;
   /** Fires continuously as the user drags. */
   onTrimChange: (startSeconds: number, endSeconds: number) => void;
+  /** First timeline frame, handed up so the filmstrip cell can show a
+   * poster instead of a generic video icon. Fires once per clip. */
+  onPoster?: (thumb: VideoThumbnail) => void;
 };
 
 /** Resolve once the player has a genuinely playable source (or times out /
@@ -77,7 +80,7 @@ function waitForReady(
   });
 }
 
-export function VideoTrimBar({ player, item, onTrimChange }: Props) {
+export function VideoTrimBar({ player, item, onTrimChange, onPoster }: Props) {
   const duration = Math.max(
     item.durationSeconds ?? player.duration ?? 0,
     0.001,
@@ -86,6 +89,11 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
   const [trackW, setTrackW] = useState(0);
   const [thumbs, setThumbs] = useState<VideoThumbnail[]>([]);
   const [thumbsFailed, setThumbsFailed] = useState(false);
+
+  // Keep the poster callback current without making it a thumbnail-effect
+  // dependency (that effect is keyed on clip identity only).
+  const onPosterRef = useRef(onPoster);
+  onPosterRef.current = onPoster;
 
   // px positions of the two handles' inner edges.
   const startX = useSharedValue(0);
@@ -166,6 +174,8 @@ export function VideoTrimBar({ player, item, onTrimChange }: Props) {
           const frame = frames?.[0];
           if (frame) {
             out.push(frame);
+            // Hand the first good frame up for the filmstrip poster.
+            if (out.length === 1) onPosterRef.current?.(frame);
             if (!cancelled) setThumbs([...out]);
           }
         } catch {
