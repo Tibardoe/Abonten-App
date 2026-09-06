@@ -13,6 +13,7 @@ import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore"
 import {
   createPayoutAdminCore,
   refundTransactionAdminCore,
+  sendPayoutAdminCore,
   settlePayoutAdminCore,
 } from "@abonten/services/admin/finance/financeActionsCore";
 import { applyModerationActionCore } from "@abonten/services/admin/moderation/applyModerationActionCore";
@@ -56,6 +57,7 @@ import {
   resolveReportGroupSchema,
   reviewClaimSchema,
   revokeAdminRoleSchema,
+  sendPayoutSchema,
   setAdminUserStatusSchema,
   setRolePermissionSchema,
   setUserStatusSchema,
@@ -339,6 +341,36 @@ export async function createPayout(input: unknown) {
     );
     if (res.status === 200) {
       revalidatePath(`/finance/organizers/${parsed.data.organizerId}`);
+      revalidatePath("/finance/payouts");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+// Initiate a real Paystack transfer for an existing pending payout.
+// No-op (409) unless PAYSTACK_TRANSFERS_ENABLED=true — see
+// sendPayoutAdminCore. The payout settles via the transfer.* webhook.
+export async function sendPayout(input: unknown) {
+  const parsed = sendPayoutSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await sendPayoutAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/finance/payouts/${parsed.data.payoutId}`);
       revalidatePath("/finance/payouts");
     }
     return res;

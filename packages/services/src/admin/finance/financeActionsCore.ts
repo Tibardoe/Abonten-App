@@ -2,6 +2,13 @@ import { logger } from "@abonten/core/logger";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { issueRefundCore } from "../../organizer/issueRefundCore";
+import { PaystackApiError } from "../../payments/gateway/paystackService";
+import {
+  createTransferRecipient,
+  initiatePaystackTransfer,
+  paystackTransfersEnabled,
+  resolvePaystackDestination,
+} from "../../payments/gateway/paystackTransfer";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -175,4 +182,140 @@ export async function createPayoutAdminCore(
     message: `Payout created (${data.reference}).`,
     data: { payoutId: data.payout_id, reference: data.reference },
   };
+}
+
+// ── Payout: initiate a real Paystack transfer ───────────────
+// Attaches an automated Paystack transfer to an existing pending payout.
+// The payout is NOT marked completed here — the transfer.success webhook
+// (api/paystack/webhook) settles it. GATED: with PAYSTACK_TRANSFERS_ENABLED
+// unset this returns 409 and changes nothing, so the manual "send then
+// admin_settle_payout" flow is unaffected.
+
+export async function sendPayoutAdminCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: { payoutId: string; reason: string },
+  requestMeta?: Record<string, unknown>,
+): Promise<AdminEnvelope<{ transferCode: string; transferStatus: string }>> {
+  try {
+    assertPermission(ctx, "finance.payout");
+  } catch (e) {
+    return { status: 403, message: (e as Error).message };
+  }
+
+  if (!paystackTransfersEnabled()) {
+    return {
+      status: 409,
+      message:
+        "Automated Paystack transfers aren't enabled. Send the funds, then mark this payout completed.",
+    };
+  }
+
+  const { data: payout, error: payoutError } = await supabase
+    .from("payout")
+    .select(
+      "id, organizer_id, payout_account_id, amount, currency, status, reference, transfer_status, payout_account:payout_account_id(account_type, account_holder_name, provider, account_number)",
+    )
+    .eq("id", input.payoutId)
+    .maybeSingle();
+
+  if (payoutError) {
+    logger.error(
+      `sendPayoutAdminCore: payout lookup failed: ${payoutError.message}`,
+    );
+    return { status: 500, message: "Couldn't load that payout." };
+  }
+  if (!payout) return { status: 404, message: "Payout not found" };
+
+  if (payout.status !== "processing") {
+    return {
+      status: 409,
+      message: `This payout is already ${payout.status} — nothing to send.`,
+    };
+  }
+  if (payout.transfer_status && payout.transfer_status !== "none") {
+    return {
+      status: 409,
+      message: `A transfer is already ${payout.transfer_status} for this payout.`,
+    };
+  }
+
+  // biome-ignore lint/suspicious/noExplicitAny: PostgREST embedded shape, no generated types in this repo
+  const acct = (payout as any).payout_account as {
+    account_type: "mobile_money" | "bank";
+    account_holder_name: string;
+    provider: string | null;
+    account_number: string;
+  } | null;
+  if (!acct) {
+    return { status: 400, message: "This payout has no payout account." };
+  }
+
+  try {
+    const dest = await resolvePaystackDestination({
+      provider: acct.provider,
+      accountType: acct.account_type,
+    });
+    const recipientCode = await createTransferRecipient({
+      recipientType: dest.recipientType,
+      name: acct.account_holder_name,
+      accountNumber: acct.account_number,
+      bankCode: dest.bankCode,
+      currency: payout.currency,
+    });
+    const { transferCode, status } = await initiatePaystackTransfer({
+      amountPesewas: Math.round(Number(payout.amount) * 100),
+      recipientCode,
+      reference: payout.reference,
+      reason: `Abonten organizer payout ${payout.reference}`,
+    });
+
+    const { error: updateError } = await supabase
+      .from("payout")
+      .update({
+        transfer_code: transferCode,
+        transfer_recipient_code: recipientCode,
+        transfer_status: "pending",
+        transfer_initiated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", payout.id)
+      .eq("status", "processing");
+
+    if (updateError) {
+      // The transfer is already in flight at Paystack — surface it so an
+      // admin reconciles rather than silently losing the transfer_code.
+      logger.error(
+        `sendPayoutAdminCore: transfer ${transferCode} initiated but payout ${payout.id} update failed: ${updateError.message}`,
+      );
+      return {
+        status: 500,
+        message: `Transfer ${transferCode} was initiated at Paystack but the payout couldn't be updated — reconcile manually.`,
+      };
+    }
+
+    await recordAdminAudit(supabase, {
+      actorId: ctx.userId,
+      actorRoles: ctx.roles,
+      action: "finance.payout.send",
+      targetType: "payout",
+      targetId: payout.id,
+      summary: `Initiated Paystack transfer ${transferCode} (${status}) for ${payout.currency} ${payout.amount} — ${payout.reference}`,
+      reason: input.reason,
+      after: { transferCode, transferStatus: "pending" },
+      requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+    });
+
+    return {
+      status: 200,
+      message: `Transfer initiated (${transferCode}). It settles when Paystack confirms.`,
+      data: { transferCode, transferStatus: status },
+    };
+  } catch (e) {
+    if (e instanceof PaystackApiError) {
+      return { status: 400, message: e.message };
+    }
+    logger.error("sendPayoutAdminCore failed", e);
+    return { status: 500, message: "Couldn't initiate the transfer." };
+  }
 }
