@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { keysetOlderThan } from "@abonten/core/pagination";
+import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import type { ReviewPhotoRow } from "./useEventReviews";
 
@@ -34,23 +35,18 @@ export function useEventRating(eventId: string | undefined) {
     enabled: !!eventId,
     staleTime: 60_000,
     queryFn: async () => {
+      // Aggregated in Postgres (get_event_rating) rather than pulling every
+      // approved review row onto the device to average two numbers. Called
+      // directly rather than through @abonten/services, which apps/mobile
+      // must not import -- the RPC is SECURITY INVOKER and granted to anon +
+      // authenticated, so this is the same RLS-safe read the raw table
+      // select here used to be.
       const { data, error } = await supabase
-        .from("event_review")
-        .select("rating")
-        .eq("event_id", eventId as string)
-        .eq("status", "approved");
+        .rpc("get_event_rating", { p_event_id: eventId as string })
+        .maybeSingle();
       if (error) throw error;
-      const ratings = (data ?? []) as { rating: number }[];
-      const count = ratings.length;
-      const average =
-        count > 0
-          ? Number(
-              (ratings.reduce((sum, r) => sum + r.rating, 0) / count).toFixed(
-                1,
-              ),
-            )
-          : 0;
-      return { average, count };
+      const { average, count } = parseRatingAggregate(data);
+      return { average: roundRating(average), count };
     },
   });
 }

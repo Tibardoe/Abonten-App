@@ -2,6 +2,7 @@ import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
 import type { PlaceOpeningHourRow } from "@abonten/core/computePlaceOpenStatus";
+import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
 import { useQuery } from "@tanstack/react-query";
 
 // Mirrors getPlaceBySlug.ts (the web place detail fetch) but keyed by id —
@@ -58,7 +59,7 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
     { data: openingHours },
     { data: services },
     { data: photos },
-    { data: reviews },
+    { data: ratingRow },
   ] = await Promise.all([
     supabase
       .from("place_opening_hours")
@@ -75,23 +76,17 @@ async function fetchPlaceDetail(id: string): Promise<PlaceDetail> {
       .select("*")
       .eq("place_id", place.id)
       .order("position", { ascending: true }),
+    // Aggregated in Postgres (get_place_rating) rather than transferring
+    // every approved review row for this place, still inside the same
+    // Promise.all so it stays one parallel round trip.
     supabase
-      .from("place_review")
-      .select("rating")
-      .eq("place_id", place.id)
-      .eq("status", "approved"),
+      .rpc("get_place_rating", { p_place_id: place.id })
+      .maybeSingle(),
   ]);
 
-  const reviewRows = (reviews ?? []) as { rating: number }[];
-  const reviewCount = reviewRows.length;
-  const avgRating =
-    reviewCount > 0
-      ? Number(
-          (
-            reviewRows.reduce((sum, r) => sum + r.rating, 0) / reviewCount
-          ).toFixed(1),
-        )
-      : 0;
+  const rating = parseRatingAggregate(ratingRow);
+  const reviewCount = rating.count;
+  const avgRating = roundRating(rating.average);
 
   return {
     ...(place as unknown as Omit<

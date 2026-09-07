@@ -6,6 +6,11 @@ import {
   type PlaceOpeningHourRow,
   computePlaceOpenStatus,
 } from "@abonten/core/computePlaceOpenStatus";
+import {
+  EMPTY_RATING,
+  type RatingAggregate,
+  parseRatingAggregate,
+} from "@abonten/core/ratings";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -19,17 +24,9 @@ function enrichPlaceRow(
   row: PlaceType & {
     place_category?: { name: string; slug: string } | null;
     place_opening_hours?: PlaceOpeningHourRow[] | null;
-    place_review?: { rating: number; status?: string | null }[] | null;
   },
+  rating: RatingAggregate = EMPTY_RATING,
 ): ProfilePlace {
-  const approved = (row.place_review ?? []).filter(
-    (r) => r.status == null || r.status === "approved",
-  );
-  const reviewCount = approved.length;
-  const avgRating =
-    reviewCount > 0
-      ? approved.reduce((s, r) => s + (r.rating ?? 0), 0) / reviewCount
-      : 0;
   const open = computePlaceOpenStatus(
     row.place_opening_hours ?? [],
     row.temporary_status ?? null,
@@ -37,10 +34,30 @@ function enrichPlaceRow(
   return {
     ...row,
     category_name: row.place_category?.name ?? row.category_name ?? null,
-    avg_rating: avgRating,
-    review_count: reviewCount,
+    avg_rating: rating.average,
+    review_count: rating.count,
     is_open: open.isOpen,
   } as ProfilePlace;
+}
+
+// One grouped aggregate for the whole page. These lists used to embed
+// `place_review(rating, status)` in the page query, which pulled every
+// review row for every place on the page just to derive a mean and a count
+// per card -- unbounded in the number of reviews. get_place_ratings returns
+// the two numbers directly, and omits places with no visible reviews.
+async function ratingsForPage(
+  placeIds: string[],
+): Promise<Record<string, RatingAggregate>> {
+  if (placeIds.length === 0) return {};
+  const { data, error } = await supabase.rpc("get_place_ratings", {
+    p_place_ids: placeIds,
+  });
+  if (error) return {};
+  const out: Record<string, RatingAggregate> = {};
+  for (const row of data ?? []) {
+    out[row.place_id] = parseRatingAggregate(row);
+  }
+  return out;
 }
 
 // Data for the public-profile tabs — native echoes of the web
@@ -127,7 +144,7 @@ export function useProfilePlaces(userId: string | undefined) {
       let q = supabase
         .from("place")
         .select(
-          "*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_review(rating, status)",
+          "*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed)",
         )
         .eq("owner_id", userId as string)
         .order("created_at", { ascending: false })
@@ -141,9 +158,13 @@ export function useProfilePlaces(userId: string | undefined) {
       const { data, error } = await q;
       if (error) throw error;
       // biome-ignore lint/suspicious/noExplicitAny: PostgREST embeds aren't in the generated PlaceType
-      const all = ((data ?? []) as any[]).map(enrichPlaceRow);
+      const all = (data ?? []) as any[];
       const hasNext = all.length > PAGE;
-      const rows = hasNext ? all.slice(0, PAGE) : all;
+      const page = hasNext ? all.slice(0, PAGE) : all;
+      const ratings = await ratingsForPage(page.map((r) => r.id as string));
+      const rows = page.map((r) =>
+        enrichPlaceRow(r, ratings[r.id as string] ?? EMPTY_RATING),
+      );
       const last = rows[rows.length - 1];
       return {
         rows,
@@ -221,7 +242,7 @@ export function useProfileFavoritePlaces(active: boolean) {
       let q = supabase
         .from("favorite_place")
         .select(
-          "created_at, place_id, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed), place_review(rating, status))",
+          "created_at, place_id, place(*, place_category(name, slug), place_opening_hours(day_of_week, open_time, close_time, is_closed))",
         )
         .order("created_at", { ascending: false })
         .limit(PAGE + 1);
@@ -236,9 +257,16 @@ export function useProfileFavoritePlaces(active: boolean) {
       }[];
       const hasNext = all.length > PAGE;
       const slice = hasNext ? all.slice(0, PAGE) : all;
-      const rows = slice
-        .filter((r) => r.place)
-        .map((r) => enrichPlaceRow(r.place));
+      const withPlace = slice.filter((r) => r.place);
+      const favRatings = await ratingsForPage(
+        withPlace.map((r) => r.place.id as string),
+      );
+      const rows = withPlace.map((r) =>
+        enrichPlaceRow(
+          r.place,
+          favRatings[r.place.id as string] ?? EMPTY_RATING,
+        ),
+      );
       const last = slice[slice.length - 1];
       return {
         rows,

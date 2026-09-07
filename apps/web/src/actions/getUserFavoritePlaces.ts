@@ -11,6 +11,10 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import {
+  fetchPlaceRatings,
+  roundRating,
+} from "@abonten/services/reviews/ratingsQuery";
 import type { FavoritePlaces } from "@abonten/types/favoritePlaceTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 
@@ -158,36 +162,22 @@ export async function getUserFavoritePlaces(options?: {
   };
 }
 
-// Single batched query for the whole page's rating data, same reasoning as
-// getEventAttendanceCounts (one round trip instead of one per place). Only
-// 'approved' reviews count, matching getPlaceBySlug.ts.
+// Single batched round trip for the whole page's rating data, same reasoning
+// as getEventAttendanceCounts (one round trip instead of one per place). The
+// grouping now happens in Postgres (get_place_ratings) rather than by
+// transferring every approved review row for every place on the page and
+// summing them here. Only publicly-visible reviews count, matching
+// getPlaceBySlug.ts.
 async function getPlaceRatingAggregates(
   supabase: Awaited<ReturnType<typeof createClient>>,
   placeIds: string[],
 ): Promise<Record<string, { avgRating: number; reviewCount: number }>> {
-  const { data, error } = await supabase
-    .from("place_review")
-    .select("place_id, rating")
-    .eq("status", "approved")
-    .in("place_id", placeIds);
-
-  if (error || !data) {
-    logger.error(`Error fetching place rating aggregates: ${error?.message}`);
-    return {};
-  }
-
-  const sums: Record<string, { sum: number; count: number }> = {};
-  for (const row of data) {
-    const entry = sums[row.place_id] ?? { sum: 0, count: 0 };
-    entry.sum += row.rating;
-    entry.count += 1;
-    sums[row.place_id] = entry;
-  }
+  const aggregates = await fetchPlaceRatings(supabase, placeIds);
 
   const result: Record<string, { avgRating: number; reviewCount: number }> = {};
-  for (const [placeId, { sum, count }] of Object.entries(sums)) {
+  for (const [placeId, { average, count }] of Object.entries(aggregates)) {
     result[placeId] = {
-      avgRating: Number.parseFloat((sum / count).toFixed(1)),
+      avgRating: roundRating(average),
       reviewCount: count,
     };
   }

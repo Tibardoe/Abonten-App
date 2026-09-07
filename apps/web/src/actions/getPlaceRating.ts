@@ -1,27 +1,14 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@abonten/core/logger";
+import {
+  fetchPlaceRating,
+  roundRating,
+} from "@abonten/services/reviews/ratingsQuery";
 
+// Aggregate rating for one place's reviews, computed in Postgres
+// (get_place_rating) rather than by transferring every approved review row.
 export async function getPlaceRating(placeId: string) {
-  const supabase = publicSupabase;
-
-  const { data: ratingsData, error } = await supabase
-    .from("place_review")
-    .select("rating")
-    .eq("place_id", placeId)
-    .eq("status", "approved");
-
-  if (error) {
-    logger.error("Error fetching place ratings:", error);
-    throw new Error("Could not load ratings");
-  }
-
-  const totalRatings = ratingsData?.length ?? 0;
-
-  const sum = ratingsData?.reduce((acc, { rating }) => acc + rating, 0) ?? 0;
-  const averageRaw = totalRatings > 0 ? sum / totalRatings : 0;
-  const averageRating = Number.parseFloat(averageRaw.toFixed(1)); // e.g. 4.3
-
-  return { averageRating, totalRatings };
+  const { average, count } = await fetchPlaceRating(publicSupabase, placeId);
+  return { averageRating: roundRating(average), totalRatings: count };
 }

@@ -20,6 +20,12 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import {
+  fetchEventRating,
+  fetchPlaceRating,
+  fetchUserRating,
+  roundRating,
+} from "../../reviews/ratingsQuery";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 
 // Read-only catalog views for the Admin Console (Phase 2): Events, Places,
@@ -130,28 +136,20 @@ async function ratingFor(
   fkCol: "event_id" | "place_id",
   id: string,
 ): Promise<{ avg: number; count: number }> {
-  // Branched (rather than a single .from(table)/.eq(fkCol,...) call) so
-  // each arm resolves a single, literal table and column -- the typed
-  // client can't narrow a query built from table name and column name
-  // varying together. See useFavorites.ts (mobile) for the same reasoning.
-  const { data } =
+  void fkCol;
+  // Aggregated in Postgres. This previously selected up to 5000 review rows
+  // and averaged them here, which had two defects beyond the wasted
+  // transfer: past 5000 reviews the average was silently WRONG rather than
+  // failing, and it filtered only `status` -- so a review an admin had
+  // hidden or removed still counted, meaning admin saw a different rating
+  // than the public did. The RPCs apply the same visibility rule the public
+  // RLS policies use, so the two agree.
+  const { average, count } =
     table === "event_review"
-      ? await supabase
-          .from("event_review")
-          .select("rating")
-          .eq("event_id", id)
-          .eq("status", "approved")
-          .limit(5000)
-      : await supabase
-          .from("place_review")
-          .select("rating")
-          .eq("place_id", id)
-          .eq("status", "approved")
-          .limit(5000);
-  const rows = (data ?? []) as { rating: number }[];
-  if (rows.length === 0) return { avg: 0, count: 0 };
-  const avg = rows.reduce((s, r) => s + (r.rating ?? 0), 0) / rows.length;
-  return { avg: Number(avg.toFixed(2)), count: rows.length };
+      ? await fetchEventRating(supabase, id)
+      : await fetchPlaceRating(supabase, id);
+
+  return { avg: roundRating(average, 2), count };
 }
 
 async function eventSales(
@@ -737,22 +735,10 @@ export async function getOrganizerDetailCore(
   ]);
 
   // Organizer-as-a-person rating lives in the generic `review` table.
-  const { data: orgReviews } = await supabase
-    .from("review")
-    .select("rating")
-    .eq("reviewed_id", organizerId)
-    .eq("status", "approved")
-    .limit(5000);
-  const orgRatingRows = (orgReviews ?? []) as { rating: number }[];
-  const avgOrganizerRating =
-    orgRatingRows.length > 0
-      ? Number(
-          (
-            orgRatingRows.reduce((s, r) => s + (r.rating ?? 0), 0) /
-            orgRatingRows.length
-          ).toFixed(2),
-        )
-      : 0;
+  // Same story as ratingFor above: aggregated in Postgres, no 5000-row cap,
+  // and moderated reviews excluded so admin matches the public number.
+  const organizerRating = await fetchUserRating(supabase, organizerId);
+  const avgOrganizerRating = roundRating(organizerRating.average, 2);
 
   let grossSales = 0;
   let ticketsSold = 0;
@@ -810,7 +796,7 @@ export async function getOrganizerDetailCore(
         grossSales,
         currency,
         avgOrganizerRating,
-        organizerRatingCount: orgRatingRows.length,
+        organizerRatingCount: organizerRating.count,
         reportsAgainst: reportsAgainst ?? 0,
         hiddenOrRemovedContent: hiddenContent ?? 0,
       },

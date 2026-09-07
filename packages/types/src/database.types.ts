@@ -6317,6 +6317,13 @@ export type Database = {
           units_discounted: number;
         }[];
       };
+      get_event_rating: {
+        Args: { p_event_id: string };
+        Returns: {
+          average_rating: number;
+          total_ratings: number;
+        }[];
+      };
       get_event_refund_breakdown: {
         Args: { p_event_id: string };
         Returns: {
@@ -6538,7 +6545,6 @@ export type Database = {
               created_at: string;
               currency: string;
               cursor_sort_key: string;
-              description: string;
               ends_at: string;
               event_category: string;
               event_code: string;
@@ -6713,6 +6719,21 @@ export type Database = {
           title: string;
         }[];
       };
+      get_place_rating: {
+        Args: { p_place_id: string };
+        Returns: {
+          average_rating: number;
+          total_ratings: number;
+        }[];
+      };
+      get_place_ratings: {
+        Args: { p_place_ids: string[] };
+        Returns: {
+          average_rating: number;
+          place_id: string;
+          total_ratings: number;
+        }[];
+      };
       get_place_suggestions: {
         Args: { p_limit?: number; p_search_text: string };
         Returns: {
@@ -6760,6 +6781,13 @@ export type Database = {
         Returns: number;
       };
       get_unread_conversation_count: { Args: never; Returns: number };
+      get_user_rating: {
+        Args: { p_reviewed_id: string };
+        Returns: {
+          average_rating: number;
+          total_ratings: number;
+        }[];
+      };
       get_user_transaction_history: {
         Args: {
           p_cursor_created_at: string;
