@@ -5,7 +5,11 @@ import {
   flattenConversations,
   useConversations,
 } from "@/features/messaging/useConversations";
-import type { ConversationFilter } from "@abonten/api-client";
+import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
+import type {
+  ConversationFilter,
+  ConversationRoleScope,
+} from "@abonten/api-client";
 import {
   AppText,
   Button,
@@ -21,8 +25,15 @@ import { FlatList, RefreshControl, View } from "react-native";
 export default function Messages() {
   const router = useRouter();
   const { session } = useSession();
+  const isOrganizer = useIsOrganizer();
+  const isPlaceOwner = useIsPlaceOwner();
+  // The customer/organizer split only means anything to someone who runs an
+  // event or place; a pure customer just sees the flat list.
+  const showRoleScope = isOrganizer || isPlaceOwner;
+
   const [filter, setFilter] = useState<ConversationFilter>("active");
-  const q = useConversations(filter);
+  const [roleScope, setRoleScope] = useState<ConversationRoleScope>("all");
+  const q = useConversations(filter, showRoleScope ? roleScope : "all");
   // The inbox realtime channel is mounted once by the tabs layout, so it
   // stays live on every tab; no need to re-subscribe here.
 
@@ -54,6 +65,19 @@ export default function Messages() {
   return (
     <View className="flex-1 bg-background">
       <AppHeader variant="branded" />
+      {showRoleScope ? (
+        <View className="px-4 pb-1 pt-3">
+          <SegmentedTabs
+            options={[
+              { key: "all", label: "All" },
+              { key: "member", label: "As customer" },
+              { key: "business", label: "As organizer" },
+            ]}
+            value={roleScope}
+            onChange={(k) => setRoleScope(k as ConversationRoleScope)}
+          />
+        </View>
+      ) : null}
       <View className="px-4 pb-1 pt-3">
         <SegmentedTabs
           options={[

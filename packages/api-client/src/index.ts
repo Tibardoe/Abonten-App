@@ -24,6 +24,7 @@ export type {
   ConversationDetailResult,
   ConversationFilter,
   ConversationListItem,
+  ConversationRoleScope,
   ConversationMessagesResult,
   ConversationsListResult,
   DeleteHighlightResult,

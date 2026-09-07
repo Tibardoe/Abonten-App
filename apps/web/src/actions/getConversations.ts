@@ -2,7 +2,10 @@
 
 import { createClient } from "@/config/supabase/server";
 import { fetchConversationsPage } from "@abonten/services/messaging/conversationsQuery";
-import type { ConversationFilter } from "@abonten/types/messagingType";
+import type {
+  ConversationFilter,
+  ConversationRoleScope,
+} from "@abonten/types/messagingType";
 
 /**
  * Cursor-paginated inbox list for the signed-in user, newest activity first.
@@ -12,6 +15,7 @@ import type { ConversationFilter } from "@abonten/types/messagingType";
  */
 export async function getConversations(options?: {
   filter?: ConversationFilter;
+  roleScope?: ConversationRoleScope;
   cursor?: string | null;
   pageSize?: number;
 }) {

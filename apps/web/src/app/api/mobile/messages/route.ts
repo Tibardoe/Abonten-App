@@ -16,12 +16,18 @@ export async function GET(req: Request) {
     const filter = conversationFilterSchema.safeParse(
       searchParams.get("filter") ?? undefined,
     );
+    const roleScopeParam = searchParams.get("roleScope");
+    const roleScope =
+      roleScopeParam === "member" || roleScopeParam === "business"
+        ? roleScopeParam
+        : "all";
     const cursor = searchParams.get("cursor");
     const pageSizeParam = searchParams.get("pageSize");
     const pageSize = pageSizeParam ? Number(pageSizeParam) : undefined;
 
     const result = await fetchConversationsPage(auth.supabase, auth.user.id, {
       filter: filter.success ? filter.data : "active",
+      roleScope,
       cursor,
       pageSize:
         pageSize && Number.isFinite(pageSize) && pageSize > 0

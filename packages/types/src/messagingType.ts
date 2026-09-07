@@ -19,6 +19,11 @@ export type MessagingModerationState = "visible" | "hidden" | "removed";
 
 export type ConversationFilter = "active" | "archived" | "all" | "unread";
 
+// Which side of the conversation the caller is on — for the unified inbox's
+// "All / As customer / As organizer" split (Phase 6). `member` = I opened it
+// as a customer; `business` = I'm the organizer / place owner / staff.
+export type ConversationRoleScope = "all" | "member" | "business";
+
 // ---- rows --------------------------------------------------------------
 
 export type MessageAttachmentRow = {

@@ -6760,6 +6760,7 @@ export type Database = {
           p_cursor_ts?: string;
           p_filter?: string;
           p_limit?: number;
+          p_role_scope?: string;
         };
         Returns: {
           archived: boolean;

@@ -6,6 +6,7 @@ import type {
   ConversationListItem,
   ConversationParticipantProfile,
   ConversationParticipantRow,
+  ConversationRoleScope,
   MessagingEnvelope,
 } from "@abonten/types/messagingType";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -43,6 +44,7 @@ export async function fetchConversationsPage(
   _userId: string,
   options?: {
     filter?: ConversationFilter;
+    roleScope?: ConversationRoleScope;
     cursor?: string | null;
     pageSize?: number;
   },
@@ -54,11 +56,13 @@ export async function fetchConversationsPage(
   message?: string;
 }> {
   const filter = options?.filter ?? "active";
+  const roleScope = options?.roleScope ?? "all";
   const pageSize = Math.min(Math.max(options?.pageSize ?? 20, 1), 50);
   const cursor = decodeListCursor(options?.cursor);
 
   const { data, error } = await supabase.rpc("list_conversations", {
     p_filter: filter,
+    p_role_scope: roleScope,
     p_cursor_ts: cursor?.ts ?? undefined,
     p_cursor_id: cursor?.id ?? undefined,
     p_limit: pageSize + 1,

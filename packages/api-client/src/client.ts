@@ -22,15 +22,16 @@ import type {
   ConversationDetailResult,
   ConversationFilter,
   ConversationMessagesResult,
+  ConversationRoleScope,
   ConversationsListResult,
   DeleteEventDraftResult,
-  DeleteMessageBody,
-  EditMessageBody,
   DeleteHighlightResult,
+  DeleteMessageBody,
   DeletePlaceDraftResult,
   DeletePromoCodeResult,
   DeviceRegisterBody,
   DeviceTokenResult,
+  EditMessageBody,
   EventCancellationImpactResult,
   EventCreateBody,
   EventCreateResult,
@@ -331,11 +332,15 @@ export function createApiClient(options: ApiClientOptions) {
        *  unread counts. */
       list(params?: {
         filter?: ConversationFilter;
+        roleScope?: ConversationRoleScope;
         cursor?: string | null;
         pageSize?: number;
       }) {
         const query = new URLSearchParams();
         if (params?.filter) query.set("filter", params.filter);
+        if (params?.roleScope && params.roleScope !== "all") {
+          query.set("roleScope", params.roleScope);
+        }
         if (params?.cursor) query.set("cursor", params.cursor);
         if (params?.pageSize) query.set("pageSize", String(params.pageSize));
         const qs = query.toString();
