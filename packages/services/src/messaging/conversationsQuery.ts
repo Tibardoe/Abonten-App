@@ -133,6 +133,12 @@ export async function getConversationContext(
     // RLS hides conversations the caller isn't in — treat as not found.
     return { status: 404, message: "Conversation not found." };
   }
+  if (conv.moderation_state !== "visible") {
+    // Hidden / removed / restricted by a moderator (Phase 8) — the thread is
+    // no longer reachable from the chat UI. Staff act on it from the admin
+    // report workspace, not here.
+    return { status: 404, message: "Conversation not found." };
+  }
 
   const { data: participantRows, error: partErr } = await supabase
     .from("conversation_participant")

@@ -66,7 +66,10 @@ export async function fetchMessagesPage(
       "id, conversation_id, sender_id, message_type, content, system_event, system_data, reply_to_message_id, client_generated_id, moderation_state, created_at, edited_at, deleted_at",
     )
     .eq("conversation_id", conversationId)
-    .neq("moderation_state", "removed")
+    // Only 'visible' rows reach a participant. A moderator's hide / remove /
+    // restrict (Phase 8) takes the message out of the thread for everyone
+    // except staff, who reach it through the report, not this query.
+    .eq("moderation_state", "visible")
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(pageSize + 1);
