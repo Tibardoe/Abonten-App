@@ -4,6 +4,7 @@ import { blockConversationParticipant } from "@/actions/blockConversationPartici
 import { deleteMessage } from "@/actions/deleteMessage";
 import { editMessage } from "@/actions/editMessage";
 import { markConversationRead } from "@/actions/markConversationRead";
+import { markConversationUnread } from "@/actions/markConversationUnread";
 import { setConversationState } from "@/actions/setConversationState";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { messagingKeys } from "./keys";
@@ -56,6 +57,24 @@ export function useMarkConversationRead() {
       qc.invalidateQueries({ queryKey: messagingKeys.lists() });
       qc.invalidateQueries({
         queryKey: messagingKeys.detail(input.conversationId),
+      });
+    },
+  });
+}
+
+// Rewind the caller's read cursor so a conversation reads as unread again
+// (inbox row menu). Server clamps it to just before the last inbound
+// message and no-ops when there's nothing inbound.
+export function useMarkConversationUnread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      markConversationUnread({ conversationId }),
+    onSuccess: (_res, conversationId) => {
+      qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
+      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
+      qc.invalidateQueries({
+        queryKey: messagingKeys.detail(conversationId),
       });
     },
   });

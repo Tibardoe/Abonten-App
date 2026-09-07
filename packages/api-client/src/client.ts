@@ -23,6 +23,7 @@ import type {
   ConversationFilter,
   ConversationMessagesResult,
   ConversationRoleScope,
+  ConversationType,
   ConversationsListResult,
   DeleteEventDraftResult,
   DeleteHighlightResult,
@@ -44,6 +45,7 @@ import type {
   FreeRsvpBody,
   FreeRsvpResult,
   MarkConversationReadBody,
+  MarkConversationUnreadBody,
   MessagingActionResult,
   MomoNetwork,
   MutatePayoutAccountResult,
@@ -335,6 +337,9 @@ export function createApiClient(options: ApiClientOptions) {
         roleScope?: ConversationRoleScope;
         cursor?: string | null;
         pageSize?: number;
+        search?: string | null;
+        type?: ConversationType | null;
+        muted?: boolean | null;
       }) {
         const query = new URLSearchParams();
         if (params?.filter) query.set("filter", params.filter);
@@ -343,6 +348,9 @@ export function createApiClient(options: ApiClientOptions) {
         }
         if (params?.cursor) query.set("cursor", params.cursor);
         if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        if (params?.search?.trim()) query.set("search", params.search.trim());
+        if (params?.type) query.set("type", params.type);
+        if (params?.muted != null) query.set("muted", String(params.muted));
         const qs = query.toString();
         return request<ConversationsListResult>(
           `/api/mobile/messages${qs ? `?${qs}` : ""}`,
@@ -417,6 +425,15 @@ export function createApiClient(options: ApiClientOptions) {
       /** Per-participant mute / archive. */
       setState(body: SetConversationStateBody) {
         return request<MessagingActionResult>("/api/mobile/messages/state", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      /** Rewind the caller's read cursor so the conversation reads as
+       *  unread again (inbox row menu / swipe action). */
+      markUnread(body: MarkConversationUnreadBody) {
+        return request<MessagingActionResult>("/api/mobile/messages/unread", {
           method: "POST",
           body,
           auth: true,

@@ -25,6 +25,18 @@ export async function markConversationReadCore(
   return { status: 200 };
 }
 
+export async function markConversationUnreadCore(
+  supabase: SupabaseClient<Database>,
+  _userId: string,
+  input: { conversationId: string },
+): Promise<MessagingEnvelope<never>> {
+  const { error } = await supabase.rpc("mark_conversation_unread", {
+    p_conversation_id: input.conversationId,
+  } as Database["public"]["Functions"]["mark_conversation_unread"]["Args"]);
+  if (error) return mapMessagingRpcError(error, "markConversationUnreadCore");
+  return { status: 200 };
+}
+
 export async function setConversationStateCore(
   supabase: SupabaseClient<Database>,
   _userId: string,

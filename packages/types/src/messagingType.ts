@@ -24,6 +24,21 @@ export type ConversationFilter = "active" | "archived" | "all" | "unread";
 // as a customer; `business` = I'm the organizer / place owner / staff.
 export type ConversationRoleScope = "all" | "member" | "business";
 
+// The user-addable inbox filter chips (spec §9–10). Backed by predefined,
+// safe filter definitions on list_conversations — never arbitrary client
+// SQL. `unread` reuses ConversationFilter; the rest narrow by conversation
+// type or the caller's mute flag.
+export type ConversationCustomFilter = "unread" | "events" | "places" | "muted";
+
+// Optional narrowing passed to list_conversations on top of the
+// active/archived filter + role scope: a trimmed free-text query and the
+// predefined custom-filter dimensions.
+export type ConversationListQuery = {
+  search?: string | null;
+  type?: ConversationType | null;
+  muted?: boolean | null;
+};
+
 // ---- rows --------------------------------------------------------------
 
 export type MessageAttachmentRow = {
@@ -104,6 +119,17 @@ export type ConversationListItem = {
   unread_count: number;
   other_participant_ids: string[];
   created_at: string;
+  // Resolved display fields (added by list_conversations for the inbox
+  // redesign). subject_title = the live event title / place name;
+  // other_* = the single primary other participant (the business side for a
+  // customer's row, the customer for a business row). All null for a
+  // support conversation, which has no other participant.
+  subject_title: string | null;
+  other_user_id: string | null;
+  other_display_name: string | null;
+  other_username: string | null;
+  other_avatar_public_id: string | null;
+  other_avatar_version: string | null;
 };
 
 export type ConversationSubjectContext = {

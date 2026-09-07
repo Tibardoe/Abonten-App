@@ -1,9 +1,10 @@
 import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
-import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
-import { memo } from "react";
+import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
+import { type ReactElement, memo, useRef } from "react";
 import { Pressable, View } from "react-native";
+import { Swipeable } from "react-native-gesture-handler";
 
 const TYPE_ICON: Record<ConversationType, IoniconName> = {
   event: "calendar-outline",
@@ -12,33 +13,110 @@ const TYPE_ICON: Record<ConversationType, IoniconName> = {
   direct: "chatbubble-ellipses-outline",
 };
 
-function subtitleFor(item: ConversationListItem, mine: boolean): string {
+const CONTEXT_ICON: Record<ConversationType, IoniconName> = {
+  event: "calendar-outline",
+  place: "location-outline",
+  support: "help-buoy-outline",
+  direct: "chatbubble-ellipses-outline",
+};
+
+function identityFor(item: ConversationListItem): string {
+  return (
+    item.other_display_name ||
+    item.subject_title ||
+    item.title ||
+    "Conversation"
+  );
+}
+
+function previewFor(item: ConversationListItem, mine: boolean): string {
   if (!item.last_message_preview) return "No messages yet";
   return mine ? `You: ${item.last_message_preview}` : item.last_message_preview;
+}
+
+function SwipeAction({
+  icon,
+  label,
+  tone,
+  align,
+}: {
+  icon: IoniconName;
+  label: string;
+  tone: "brand" | "muted";
+  align: "left" | "right";
+}) {
+  return (
+    <View
+      className={`w-24 items-center justify-center gap-1 ${
+        tone === "brand" ? "bg-primary" : "bg-muted"
+      } ${align === "left" ? "items-end pr-5" : "items-start pl-5"}`}
+    >
+      <Icon
+        name={icon}
+        size={20}
+        tone={tone === "brand" ? "inverse" : "foreground"}
+      />
+      <AppText
+        allowFontScaling={false}
+        className={`text-[11px] font-semibold ${
+          tone === "brand" ? "text-primary-foreground" : "text-foreground"
+        }`}
+      >
+        {label}
+      </AppText>
+    </View>
+  );
 }
 
 export const ConversationRow = memo(function ConversationRow({
   item,
   currentUserId,
   onPress,
+  onLongPress,
+  onArchiveToggle,
+  onToggleRead,
+  archivedView = false,
 }: {
   item: ConversationListItem;
   currentUserId: string | undefined;
   onPress: () => void;
+  onLongPress?: () => void;
+  onArchiveToggle?: () => void;
+  onToggleRead?: () => void;
+  archivedView?: boolean;
 }) {
   const unread = item.unread_count > 0;
   const lastFromMe =
     !!currentUserId && item.last_message_sender_id === currentUserId;
+  const identity = identityFor(item);
+  const context =
+    (item.type === "event" || item.type === "place") &&
+    item.subject_title &&
+    item.subject_title !== identity
+      ? item.subject_title
+      : null;
+  const showAvatar = item.type !== "support" && !!item.other_user_id;
 
-  return (
+  const row = (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={`${identity}${unread ? `, ${item.unread_count} unread` : ""}`}
       onPress={onPress}
-      className="flex-row items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 active:opacity-80"
+      onLongPress={onLongPress}
+      delayLongPress={280}
+      className="flex-row items-center gap-3 border-b border-border/60 bg-background px-4 py-3 active:bg-muted"
     >
-      <View className="h-12 w-12 items-center justify-center rounded-full bg-muted">
-        <Icon name={TYPE_ICON[item.type]} size={22} tone="muted" />
-      </View>
+      {showAvatar ? (
+        <Avatar
+          publicId={item.other_avatar_public_id}
+          version={item.other_avatar_version}
+          size={52}
+        />
+      ) : (
+        <View className="h-[52px] w-[52px] items-center justify-center rounded-full bg-accent">
+          <Icon name={TYPE_ICON[item.type]} size={24} tone="primary" />
+        </View>
+      )}
 
       <View className="flex-1 gap-0.5">
         <View className="flex-row items-center gap-2">
@@ -47,7 +125,7 @@ export const ConversationRow = memo(function ConversationRow({
             numberOfLines={1}
             className="flex-1"
           >
-            {item.title ?? "Conversation"}
+            {identity}
           </AppText>
           {item.last_message_at ? (
             <AppText variant="caption" tone={unread ? "brand" : "muted"}>
@@ -56,13 +134,22 @@ export const ConversationRow = memo(function ConversationRow({
           ) : null}
         </View>
 
+        {context ? (
+          <View className="flex-row items-center gap-1">
+            <Icon name={CONTEXT_ICON[item.type]} size={12} tone="muted" />
+            <AppText variant="meta" numberOfLines={1} className="flex-1">
+              {context}
+            </AppText>
+          </View>
+        ) : null}
+
         <View className="flex-row items-center gap-2">
           <AppText
             variant={unread ? "bodyStrong" : "meta"}
             numberOfLines={1}
             className="flex-1"
           >
-            {subtitleFor(item, lastFromMe)}
+            {previewFor(item, lastFromMe)}
           </AppText>
           {item.muted ? (
             <Icon name="notifications-off-outline" size={13} tone="muted" />
@@ -81,4 +168,70 @@ export const ConversationRow = memo(function ConversationRow({
       </View>
     </Pressable>
   );
+
+  if (!onArchiveToggle && !onToggleRead) return row;
+
+  return (
+    <SwipeableRow
+      row={row}
+      unread={unread}
+      archivedView={archivedView}
+      onArchiveToggle={onArchiveToggle}
+      onToggleRead={onToggleRead}
+    />
+  );
 });
+
+function SwipeableRow({
+  row,
+  unread,
+  archivedView,
+  onArchiveToggle,
+  onToggleRead,
+}: {
+  row: ReactElement;
+  unread: boolean;
+  archivedView: boolean;
+  onArchiveToggle?: () => void;
+  onToggleRead?: () => void;
+}) {
+  const ref = useRef<Swipeable>(null);
+  return (
+    <Swipeable
+      ref={ref}
+      overshootLeft={false}
+      overshootRight={false}
+      renderLeftActions={
+        onToggleRead
+          ? () => (
+              <SwipeAction
+                align="left"
+                tone="muted"
+                icon={unread ? "checkmark-done-outline" : "ellipse-outline"}
+                label={unread ? "Read" : "Unread"}
+              />
+            )
+          : undefined
+      }
+      renderRightActions={
+        onArchiveToggle
+          ? () => (
+              <SwipeAction
+                align="right"
+                tone="brand"
+                icon={archivedView ? "arrow-undo-outline" : "archive-outline"}
+                label={archivedView ? "Unarchive" : "Archive"}
+              />
+            )
+          : undefined
+      }
+      onSwipeableOpen={(dir) => {
+        ref.current?.close();
+        if (dir === "right") onArchiveToggle?.();
+        else onToggleRead?.();
+      }}
+    >
+      {row}
+    </Swipeable>
+  );
+}

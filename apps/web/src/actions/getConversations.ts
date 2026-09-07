@@ -5,6 +5,7 @@ import { fetchConversationsPage } from "@abonten/services/messaging/conversation
 import type {
   ConversationFilter,
   ConversationRoleScope,
+  ConversationType,
 } from "@abonten/types/messagingType";
 
 /**
@@ -18,6 +19,9 @@ export async function getConversations(options?: {
   roleScope?: ConversationRoleScope;
   cursor?: string | null;
   pageSize?: number;
+  search?: string | null;
+  type?: ConversationType | null;
+  muted?: boolean | null;
 }) {
   const supabase = await createClient();
 

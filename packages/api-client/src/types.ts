@@ -1,8 +1,11 @@
 import type {
   ConversationContext,
+  ConversationCustomFilter,
   ConversationFilter,
   ConversationListItem,
+  ConversationListQuery,
   ConversationRoleScope,
+  ConversationType,
   MessageRow,
   OpenConversationInput,
   SendMessageInput,
@@ -41,9 +44,12 @@ export type ApiEnvelope<T> = {
 
 export type {
   ConversationContext,
+  ConversationCustomFilter,
   ConversationFilter,
   ConversationListItem,
+  ConversationListQuery,
   ConversationRoleScope,
+  ConversationType,
   EventPromotionTier,
   MessageRow,
   NotificationType,
@@ -83,6 +89,7 @@ export type SetConversationStateBody = {
   muted?: boolean;
   archived?: boolean;
 };
+export type MarkConversationUnreadBody = { conversationId: string };
 export type BlockParticipantBody = {
   conversationId: string;
   blockedUserId: string;
