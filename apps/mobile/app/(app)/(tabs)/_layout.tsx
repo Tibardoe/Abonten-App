@@ -75,7 +75,18 @@ export default function TabsLayout() {
         options={{
           title: t("messages"),
           tabBarBadge: unread > 0 ? (unread > 99 ? "99+" : unread) : undefined,
-          tabBarBadgeStyle: { backgroundColor: c.primary, fontSize: 10 },
+          // A plain hex — NOT the `hsl(171 65% 45%)` space-separated token
+          // from useThemeColors(). react-navigation's <Badge> feeds
+          // `backgroundColor` through its bundled `color` lib to pick the
+          // text colour, and that parser throws on CSS Color 4
+          // space-separated hsl(), red-screening every tab-bar screen the
+          // moment unread > 0. Hex is always parseable; #0F9D8F is the
+          // brand teal (~ the primary token) and dark enough for white text.
+          tabBarBadgeStyle: {
+            backgroundColor: "#0F9D8F",
+            color: "#ffffff",
+            fontSize: 10,
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="chatbubble-ellipses-outline"
