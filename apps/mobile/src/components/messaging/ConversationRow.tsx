@@ -2,7 +2,7 @@ import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
-import { type ReactElement, memo, useRef } from "react";
+import { type ReactElement, memo, useCallback, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 
@@ -113,12 +113,30 @@ export const ConversationRow = memo(function ConversationRow({
 }: {
   item: ConversationListItem;
   currentUserId: string | undefined;
-  onPress: () => void;
-  onLongPress?: () => void;
-  onArchiveToggle?: () => void;
-  onToggleRead?: () => void;
+  // These take the row's item so the parent can hand down *stable*
+  // callbacks. Previously the inbox built four fresh closures per row on
+  // every render, which gave this component new prop references every time
+  // and made the `memo` above a no-op — every row re-rendered whenever any
+  // list state changed. Binding the item here keeps that memo effective.
+  onPress: (item: ConversationListItem) => void;
+  onLongPress?: (item: ConversationListItem) => void;
+  onArchiveToggle?: (item: ConversationListItem) => void;
+  onToggleRead?: (item: ConversationListItem) => void;
   archivedView?: boolean;
 }) {
+  const handlePress = useCallback(() => onPress(item), [onPress, item]);
+  const handleLongPress = useCallback(
+    () => onLongPress?.(item),
+    [onLongPress, item],
+  );
+  const handleArchiveToggle = useCallback(
+    () => onArchiveToggle?.(item),
+    [onArchiveToggle, item],
+  );
+  const handleToggleRead = useCallback(
+    () => onToggleRead?.(item),
+    [onToggleRead, item],
+  );
   const unread = item.unread_count > 0;
   const lastFromMe =
     !!currentUserId && item.last_message_sender_id === currentUserId;
@@ -135,8 +153,8 @@ export const ConversationRow = memo(function ConversationRow({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${identity}${unread ? `, ${item.unread_count} unread` : ""}`}
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={handlePress}
+      onLongPress={onLongPress ? handleLongPress : undefined}
       delayLongPress={280}
       className="flex-row items-center gap-3 border-b border-border/60 bg-background px-4 py-3 active:bg-muted"
     >
@@ -201,8 +219,8 @@ export const ConversationRow = memo(function ConversationRow({
       row={row}
       unread={unread}
       archivedView={archivedView}
-      onArchiveToggle={onArchiveToggle}
-      onToggleRead={onToggleRead}
+      onArchiveToggle={onArchiveToggle ? handleArchiveToggle : undefined}
+      onToggleRead={onToggleRead ? handleToggleRead : undefined}
     />
   );
 });

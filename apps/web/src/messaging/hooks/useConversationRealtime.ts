@@ -2,6 +2,7 @@
 
 import { supabase } from "@/config/supabase/client";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
 import {
   MESSAGING_BROADCAST_EVENTS,
   TYPING_THROTTLE_MS,
@@ -12,6 +13,7 @@ import {
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
 type Options = { onIncomingMessage?: () => void };
@@ -71,10 +73,28 @@ export function useConversationRealtime(
     let cancelled = false;
     const timers = typingTimers.current;
 
-    const bump = () => {
+    // The INSERT payload carries the whole message, so the conversation's
+    // inbox row can be bumped from it directly rather than refetching every
+    // cached inbox view. The thread is on screen here, so it is marked read
+    // immediately and the unread count never moves. Invalidation stays as
+    // the fallback for a conversation not present in any cached list.
+    const bump = (row?: {
+      content?: string | null;
+      message_type?: string | null;
+      created_at?: string | null;
+      sender_id?: string | null;
+    }) => {
       qc.invalidateQueries({
         queryKey: messagingKeys.messages(conversationId),
       });
+      if (row?.created_at) {
+        const patched = bumpConversationRow(qc, conversationId, {
+          last_message_at: row.created_at,
+          last_message_preview: conversationPreviewFor(row),
+          last_message_sender_id: row.sender_id ?? null,
+        });
+        if (patched) return;
+      }
       qc.invalidateQueries({ queryKey: messagingKeys.lists() });
       qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
     };
@@ -101,8 +121,10 @@ export function useConversationRealtime(
             const row = payload.new as {
               sender_id: string | null;
               message_type: string;
+              content?: string | null;
+              created_at?: string | null;
             };
-            bump();
+            bump(row);
             if (row.sender_id) dropTyping(row.sender_id);
             if (
               row.sender_id &&

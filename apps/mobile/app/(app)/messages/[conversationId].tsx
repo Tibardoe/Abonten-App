@@ -8,7 +8,10 @@ import { MessageBubble } from "@/components/messaging/MessageBubble";
 import { SystemMessage } from "@/components/messaging/SystemMessage";
 import { TypingIndicator } from "@/components/messaging/TypingIndicator";
 import { setActiveConversation } from "@/features/messaging/activeConversation";
-import { buildChatEntries } from "@/features/messaging/chatEntries";
+import {
+  type ChatEntry,
+  buildChatEntries,
+} from "@/features/messaging/chatEntries";
 import {
   flattenMessages,
   useConversationDetail,
@@ -152,9 +155,37 @@ export default function ConversationScreen() {
     }
   }, [messagesQ]);
 
-  function openMessageMenu(m: MessageRow) {
-    setMenuTarget(m);
-  }
+  // Stable identity: MessageBubble is memoised, and a fresh handler on every
+  // render would defeat that and re-render every bubble in the thread on any
+  // state change (a keystroke in the composer, a typing indicator, an
+  // incoming message).
+  const openMessageMenu = useCallback((m: MessageRow) => setMenuTarget(m), []);
+
+  const renderEntry = useCallback(
+    ({ item }: { item: ChatEntry }) => {
+      if (item.kind === "day") return <DaySeparator label={item.label} />;
+      if (item.message.message_type === "system") {
+        return <SystemMessage message={item.message} currentUserId={myId} />;
+      }
+      const seen =
+        item.isMine &&
+        !item.pending &&
+        new Date(item.message.created_at).getTime() <= otherReadAt;
+      return (
+        <MessageBubble
+          message={item.message}
+          pending={item.pending}
+          isMine={item.isMine}
+          isGroupStart={item.isGroupStart}
+          seen={seen}
+          onPressImage={setViewerUri}
+          onLongPress={openMessageMenu}
+          onRetry={retry}
+        />
+      );
+    },
+    [myId, otherReadAt, openMessageMenu, retry],
+  );
 
   function submitEdit() {
     if (!editing) return;
@@ -266,35 +297,7 @@ export default function ConversationScreen() {
                 </AppText>
               </View>
             }
-            renderItem={({ item }) => {
-              if (item.kind === "day") {
-                return <DaySeparator label={item.label} />;
-              }
-              if (item.message.message_type === "system") {
-                return (
-                  <SystemMessage message={item.message} currentUserId={myId} />
-                );
-              }
-              const seen =
-                item.isMine &&
-                !item.pending &&
-                new Date(item.message.created_at).getTime() <= otherReadAt;
-              return (
-                <MessageBubble
-                  message={item.message}
-                  pending={item.pending}
-                  isMine={item.isMine}
-                  isGroupStart={item.isGroupStart}
-                  seen={seen}
-                  onPressImage={setViewerUri}
-                  onLongPress={openMessageMenu}
-                  onRetry={(cid) => {
-                    const has = outbox.some((o) => o.clientGeneratedId === cid);
-                    if (has) retry(cid);
-                  }}
-                />
-              );
-            }}
+            renderItem={renderEntry}
           />
         )}
 

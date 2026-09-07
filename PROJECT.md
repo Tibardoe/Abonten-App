@@ -1222,4 +1222,105 @@ behaviour is unchanged until the owner opts in.
 
 ---
 
+## 24. Read-Path Caching & Optimistic Reconciliation (performance pass, 2026-09-07)
+
+A platform-wide performance audit established the baseline below and changed
+the client caching architecture. Measurements are from production
+(`pg_stat_statements`, `EXPLAIN ANALYZE`) and the repo itself, not estimates.
+
+### 24.1 Baseline: where the time actually goes
+
+- **The database is not the bottleneck at current volume.** Production holds
+  18 events, 4 places, 26 tickets, 11 messages, 24 notifications. The top
+  entries in `pg_stat_statements` by total time are all infrastructure:
+  pg_net's response-queue cleanup (43.3M calls), `cron.job_run_details`
+  bookkeeping (80.5K runs, 232s), and `pg_timezone_names` (618 calls at a
+  217ms mean).
+- **`get_nearby_events` is fast, but only when warm.** First call in a backend
+  costs ~142ms (1,383 shared buffer hits, PostGIS library + plpgsql plan
+  load); measured warm over 20 iterations it is **0.276ms**
+  (`get_nearby_places`: 0.470ms). The 69–145ms means recorded in
+  `pg_stat_statements` are therefore dominated by per-connection cold-start,
+  not query work. **Do not "optimise" these queries or add indexes for it** —
+  the fix, if it is ever worth one, is connection reuse/pool warmth.
+- **The real cost was client-side**: mobile had 127 `invalidateQueries` calls
+  against 5 `setQueryData` and 2 `onMutate`. The web `QueryClient` was
+  constructed with **no options at all** — library defaults meant
+  `staleTime: 0` plus `refetchOnWindowFocus`, so every query refetched on
+  every remount and every tab focus.
+
+### 24.2 Inbox: targeted reconciliation instead of invalidation
+
+`mark_conversation_read`, `mark_conversation_unread` and
+`set_conversation_state` all write to `conversation_participant` **only** —
+never to `conversation`. The inbox realtime channel watches `conversation`, so
+it never fires for them, which means the blanket
+`invalidateQueries(messagingKeys.lists())` those mutations ran was the *sole*
+mechanism refreshing the inbox — and it refetched **every loaded page of every
+cached (filter × roleScope × search × type × muted) view** just because a
+thread was opened. On web this is always a visible refetch, because the
+two-pane workspace keeps `ConversationList` mounted beside the open thread.
+
+Replaced by pure transforms in
+[packages/core/src/messagingInboxCache.ts](packages/core/src/messagingInboxCache.ts)
+(11 unit tests), applied through per-app plumbing
+(`apps/{mobile/src/features,web/src}/messaging/.../inboxCache.ts`):
+
+- read / unread / mute are optimistic with snapshot rollback on failure;
+- archive removes the row from the list it is leaving immediately;
+- the tab/nav badge moves by the row's own unread count rather than refetching
+  the count endpoint;
+- realtime `conversation` UPDATEs apply the `last_message_*` payload directly
+  and re-seat the row at the top — the same result a refetch produces, with no
+  round-trip. Invalidation remains the fallback for the two cases a client
+  genuinely cannot synthesise: a conversation not present in the cached list,
+  and a brand-new one.
+
+Every transform returns the **identical object reference** when nothing
+matched, so views that do not hold the row notify no observers.
+
+### 24.3 Render stability
+
+`ConversationRow` and `MessageBubble` were already wrapped in `memo`, but the
+memo was inert: `renderItem` built fresh inline closures for every callback on
+every render, so every prop was a new reference and every visible row
+re-rendered on any list state change. `renderItem` and its handlers are now
+stable (`useCallback`), with the item bound inside the row component.
+
+### 24.4 Web QueryClient defaults
+
+`staleTime: 30_000` (matching native), `gcTime: 10min`, `refetchOnWindowFocus:
+false`, and a retry predicate that does not retry terminal errors (401/403/404,
+expired JWT) — those previously burned ~7s of backoff before a screen could
+show its error state. Money-path freshness is unchanged and explicit: the
+checkout modal keeps its own 20s ticket-availability poll, and checkout/payment
+state is re-validated server-side at the write, never trusted from cache.
+
+### 24.5 Known scalability limits (found, not changed — need a decision)
+
+- **`get_nearby_events` builds its LATERAL aggregates before `LIMIT`.** The
+  `matched` CTE computes min-price, the occurrences JSON and a `MIN(starts_at)`
+  sort key for *every* event inside the radius, then takes 20. Fine at 18
+  events; quadratic-feeling once a city has thousands. It also returns
+  `description`, the full `location` geography and every occurrence to a feed
+  that renders none of them (§12 payload reduction).
+- **Rating averages are computed in JS over unbounded fetches** in
+  `getEventRating`, `getPlaceRating`, `getUserRating`, `getPlaceBySlug` and
+  `catalogAdminCore` (×2) — every approved rating row is transferred to
+  compute a count and a mean. The reason is now confirmed: **PostgREST
+  aggregate functions are disabled on this project** (a live request returns
+  `PGRST123: Use of aggregate functions is not allowed`), so `.select("rating.avg()")`
+  is not available. Fixing it needs either `db-aggregates-enabled` turned on or
+  a `SECURITY DEFINER` aggregate RPC — both owner decisions.
+- **Highlight videos are delivered untransformed.** Both
+  `apps/web/src/actions/uploadHighlight.ts` and
+  `apps/mobile/src/features/profile/useHighlights.ts` deliver the raw uploaded
+  clip with only `so_`/`eo_` trim offsets — no `q_auto`, no width cap. A
+  phone-shot 1080p/4K clip streams at full source bitrate. Adding a transform
+  is a one-line change per platform but risks Cloudinary returning `423 Locked`
+  while it derives the video on first request, so it wants an eager/streaming
+  profile at upload time plus a device test before shipping.
+
+---
+
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*

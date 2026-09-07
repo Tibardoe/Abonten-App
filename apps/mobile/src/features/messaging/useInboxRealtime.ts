@@ -2,14 +2,30 @@ import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { getActiveConversation } from "./activeConversation";
+import { adjustUnreadBadge, bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
+
+type ConversationRow = {
+  id?: string;
+  last_message_at?: string | null;
+  last_message_preview?: string | null;
+  last_message_sender_id?: string | null;
+};
 
 // Keeps the inbox list + the tab badge live. postgres_changes on
 // public.conversation (non-private channel — authorized by the table's own
 // participant-or-staff RLS, so only the user's own conversations are
-// delivered): a last_message_* bump or a new conversation invalidates the
-// list and the unread count. Mounted by the Messages list screen and by the
-// tab badge host so the badge updates even when the list isn't open.
+// delivered). Mounted by the Messages list screen and by the tab badge host
+// so the badge updates even when the list isn't open.
+//
+// An UPDATE carries the whole new row, so a last_message_* bump is applied
+// straight to the cached rows and re-seated at the top — the same result a
+// refetch would produce, without the round-trip. Previously every bump
+// (including the user's own outgoing message) invalidated every cached inbox
+// view, refetching all of their loaded pages. Invalidation is now the
+// fallback for the two cases the client genuinely can't synthesise: a
+// conversation that isn't in the cached list yet, and a brand-new one.
 export function useInboxRealtime() {
   const qc = useQueryClient();
   const { session } = useSession();
@@ -17,7 +33,6 @@ export function useInboxRealtime() {
 
   useEffect(() => {
     if (!myId) return;
-    let cancelled = false;
 
     const invalidate = () => {
       qc.invalidateQueries({ queryKey: messagingKeys.lists() });
@@ -28,7 +43,46 @@ export function useInboxRealtime() {
       .channel(`inbox:${myId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "conversation" },
+        { event: "UPDATE", schema: "public", table: "conversation" },
+        (payload) => {
+          const row = payload.new as ConversationRow | undefined;
+          if (!row?.id) return invalidate();
+
+          // An inbound message the user isn't already reading is the only
+          // thing that raises the unread count. Their own message, and one
+          // arriving in the thread that's on screen (the chat screen marks
+          // it read immediately), must not.
+          const inbound =
+            !!row.last_message_sender_id &&
+            row.last_message_sender_id !== myId &&
+            row.id !== getActiveConversation();
+          const delta = inbound ? 1 : 0;
+
+          const patched = bumpConversationRow(
+            qc,
+            row.id,
+            {
+              last_message_at: row.last_message_at ?? null,
+              last_message_preview: row.last_message_preview ?? null,
+              last_message_sender_id: row.last_message_sender_id ?? null,
+            },
+            delta,
+          );
+
+          if (!patched) return invalidate();
+          if (delta) adjustUnreadBadge(qc, delta);
+        },
+      )
+      // A new conversation (or being added to one) can't be placed from the
+      // payload alone — its position depends on rows this view may not hold.
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "conversation" },
+        invalidate,
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "conversation" },
         invalidate,
       )
       .on(
@@ -44,8 +98,6 @@ export function useInboxRealtime() {
       .subscribe();
 
     return () => {
-      cancelled = true;
-      void cancelled;
       supabase.removeChannel(channel);
     };
   }, [myId, qc]);
