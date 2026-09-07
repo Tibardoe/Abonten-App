@@ -12,7 +12,7 @@ import {
 } from "@/server/actions";
 import type {
   AdminPermissionKey,
-  ModeratableTargetType,
+  ReportModeratableTargetType,
   ReportStatus,
   ReportTargetType,
 } from "@abonten/types/adminTypes";
@@ -26,6 +26,8 @@ const MODERATABLE: ReportTargetType[] = [
   "place_review",
   "user_review",
   "highlight",
+  "message",
+  "conversation",
 ];
 
 type Res = { status: number; message?: string };
@@ -245,7 +247,7 @@ export function ActionPanel({
                   onClick={() =>
                     run(() =>
                       applyModeration({
-                        targetType: targetType as ModeratableTargetType,
+                        targetType: targetType as ReportModeratableTargetType,
                         targetId,
                         action: "hide",
                         reason: reason.trim(),
@@ -265,7 +267,7 @@ export function ActionPanel({
                   onClick={() =>
                     run(() =>
                       applyModeration({
-                        targetType: targetType as ModeratableTargetType,
+                        targetType: targetType as ReportModeratableTargetType,
                         targetId,
                         action: "restrict",
                         reason: reason.trim(),
@@ -285,7 +287,7 @@ export function ActionPanel({
                   onClick={() =>
                     run(() =>
                       applyModeration({
-                        targetType: targetType as ModeratableTargetType,
+                        targetType: targetType as ReportModeratableTargetType,
                         targetId,
                         action: "remove",
                         reason: reason.trim(),
@@ -305,7 +307,7 @@ export function ActionPanel({
                   onClick={() =>
                     run(() =>
                       applyModeration({
-                        targetType: targetType as ModeratableTargetType,
+                        targetType: targetType as ReportModeratableTargetType,
                         targetId,
                         action: "restore",
                         reason: reason.trim(),

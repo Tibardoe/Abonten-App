@@ -8,12 +8,12 @@ import {
 import type {
   AdminContext,
   AdminNoteEntry,
-  ModeratableTargetType,
   ModerationActionKind,
   ReportCategory,
   ReportDetail,
   ReportGroupItem,
   ReportListItem,
+  ReportModeratableTargetType,
   ReportPriority,
   ReportStatus,
   ReportTargetType,
@@ -821,6 +821,8 @@ const MODERATABLE_SET = new Set<string>([
   "place_review",
   "user_review",
   "highlight",
+  "message",
+  "conversation",
 ]);
 
 export async function resolveReportGroupCore(
@@ -896,7 +898,7 @@ export async function resolveReportGroupCore(
     }
     const { error: modErr } = await supabase.rpc("apply_moderation_action", {
       p_actor_id: ctx.userId,
-      p_target_type: first.target_type as ModeratableTargetType,
+      p_target_type: first.target_type as ReportModeratableTargetType,
       p_target_id: first.target_id,
       p_action: input.moderation.action,
       p_reason: input.moderation.reason,

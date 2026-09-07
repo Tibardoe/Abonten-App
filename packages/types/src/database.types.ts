@@ -467,6 +467,9 @@ export type Database = {
           last_message_at: string | null;
           last_message_preview: string | null;
           last_message_sender_id: string | null;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
           moderation_state: string;
           place_id: string | null;
           status: string;
@@ -482,6 +485,9 @@ export type Database = {
           last_message_at?: string | null;
           last_message_preview?: string | null;
           last_message_sender_id?: string | null;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
           moderation_state?: string;
           place_id?: string | null;
           status?: string;
@@ -497,6 +503,9 @@ export type Database = {
           last_message_at?: string | null;
           last_message_preview?: string | null;
           last_message_sender_id?: string | null;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
           moderation_state?: string;
           place_id?: string | null;
           status?: string;
@@ -536,6 +545,20 @@ export type Database = {
           {
             foreignKeyName: "conversation_last_message_sender_id_fkey";
             columns: ["last_message_sender_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_moderated_by_fkey";
+            columns: ["moderated_by"];
             isOneToOne: false;
             referencedRelation: "user_profile_details";
             referencedColumns: ["user_id"];
@@ -1847,6 +1870,9 @@ export type Database = {
           edited_at: string | null;
           id: string;
           message_type: string;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
           moderation_state: string;
           reply_to_message_id: string | null;
           sender_id: string | null;
@@ -1862,6 +1888,9 @@ export type Database = {
           edited_at?: string | null;
           id?: string;
           message_type?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
           moderation_state?: string;
           reply_to_message_id?: string | null;
           sender_id?: string | null;
@@ -1877,6 +1906,9 @@ export type Database = {
           edited_at?: string | null;
           id?: string;
           message_type?: string;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
           moderation_state?: string;
           reply_to_message_id?: string | null;
           sender_id?: string | null;
@@ -1890,6 +1922,20 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "conversation";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
           },
           {
             foreignKeyName: "message_reply_to_message_id_fkey";

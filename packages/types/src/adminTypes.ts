@@ -366,6 +366,18 @@ export type ModeratableTargetType =
   | "user_review"
   | "highlight";
 
+/**
+ * Also moderatable, but only from a report (never browsed in the Content
+ * module — a moderator doesn't page through every private conversation).
+ * apply_moderation_action flips message.moderation_state /
+ * conversation.moderation_state; the messaging read paths drop hidden /
+ * removed rows from participants.
+ */
+export type ReportModeratableTargetType =
+  | ModeratableTargetType
+  | "message"
+  | "conversation";
+
 // ─────────────────────────────────────────────────────────────
 // Users
 // ─────────────────────────────────────────────────────────────
