@@ -143,7 +143,11 @@ export default function WalletScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 bg-background">
-        <AppHeader variant="branded" />
+        <AppHeader
+          variant="title"
+          title="Wallets"
+          backFallback="/(app)/account"
+        />
         <WalletSkeleton />
       </View>
     );
@@ -152,7 +156,11 @@ export default function WalletScreen() {
   if (loadFailed) {
     return (
       <View className="flex-1 bg-background">
-        <AppHeader variant="branded" />
+        <AppHeader
+          variant="title"
+          title="Wallets"
+          backFallback="/(app)/account"
+        />
         <View className="flex-1 items-center justify-center gap-3 px-6">
           <Icon name="cloud-offline-outline" size={28} tone="muted" />
           <AppText variant="muted" className="text-center">
@@ -167,7 +175,11 @@ export default function WalletScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="branded" />
+      <AppHeader
+        variant="title"
+        title="Wallets"
+        backFallback="/(app)/account"
+      />
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-4 p-4 pb-10"

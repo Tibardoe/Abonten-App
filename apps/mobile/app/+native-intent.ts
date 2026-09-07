@@ -49,6 +49,13 @@ export async function redirectSystemPath({
       const id = await resolvePlace(decodeURIComponent(parts[1]));
       return id ? `/(app)/place/${id}` : "/(app)/(tabs)";
     }
+    // Conversation deep links (notification tap / cross-device). The segment
+    // is already a conversation id — no lookup needed; RLS gates the screen.
+    if (parts[0] === "messages") {
+      return parts[1]
+        ? `/(app)/messages/${decodeURIComponent(parts[1])}`
+        : "/(app)/(tabs)/messages";
+    }
   } catch {
     // fall through
   }
