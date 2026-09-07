@@ -47,6 +47,9 @@ export async function fetchConversationsPage(
     roleScope?: ConversationRoleScope;
     cursor?: string | null;
     pageSize?: number;
+    search?: string | null;
+    type?: ConversationListItem["type"] | null;
+    muted?: boolean | null;
   },
 ): Promise<{
   status: number;
@@ -59,6 +62,9 @@ export async function fetchConversationsPage(
   const roleScope = options?.roleScope ?? "all";
   const pageSize = Math.min(Math.max(options?.pageSize ?? 20, 1), 50);
   const cursor = decodeListCursor(options?.cursor);
+  const search = options?.search?.trim() || undefined;
+  const type = options?.type ?? undefined;
+  const muted = options?.muted ?? undefined;
 
   const { data, error } = await supabase.rpc("list_conversations", {
     p_filter: filter,
@@ -66,6 +72,9 @@ export async function fetchConversationsPage(
     p_cursor_ts: cursor?.ts ?? undefined,
     p_cursor_id: cursor?.id ?? undefined,
     p_limit: pageSize + 1,
+    p_search: search,
+    p_type: type,
+    p_muted: muted,
   } as Database["public"]["Functions"]["list_conversations"]["Args"]);
 
   if (error) {

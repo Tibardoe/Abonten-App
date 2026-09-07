@@ -3,6 +3,15 @@ import type {
   ConversationRoleScope,
 } from "@abonten/api-client";
 
+// Narrowing applied on top of filter + role scope (search bar + the
+// user-addable Events / Places / Muted chips). Part of the list query key
+// so each distinct view has its own cache entry.
+export type ConversationListNarrow = {
+  search?: string;
+  type?: "event" | "place" | "support" | "direct";
+  muted?: boolean;
+};
+
 // One place for every messaging React Query key so the realtime layer and
 // the mutation hooks invalidate exactly what the screens read.
 export const messagingKeys = {
@@ -11,7 +20,17 @@ export const messagingKeys = {
   list: (
     filter: ConversationFilter,
     roleScope: ConversationRoleScope = "all",
-  ) => [...messagingKeys.all, "list", filter, roleScope] as const,
+    narrow: ConversationListNarrow = {},
+  ) =>
+    [
+      ...messagingKeys.all,
+      "list",
+      filter,
+      roleScope,
+      narrow.search ?? "",
+      narrow.type ?? "",
+      narrow.muted ?? false,
+    ] as const,
   unreadCount: () => [...messagingKeys.all, "unread-count"] as const,
   detail: (conversationId: string) =>
     [...messagingKeys.all, "detail", conversationId] as const,

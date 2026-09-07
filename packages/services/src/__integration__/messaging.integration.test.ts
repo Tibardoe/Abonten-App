@@ -444,6 +444,113 @@ describe("messaging: conversations, RLS, and write RPCs", () => {
     expect(state.error?.message).toMatch(/not authorized/i);
   });
 
+  it("list_conversations resolves subject + other-participant display fields", async () => {
+    const conversationId = await openEventConversation(member);
+
+    const { data } = await member.client.rpc(
+      "list_conversations",
+      rpcArgs<"list_conversations">({ p_filter: "all" }),
+    );
+    const row = (data ?? []).find((r) => r.conversation_id === conversationId);
+    // subject_title = the live event title; other_* = the organizer.
+    expect(row?.subject_title).toBeTruthy();
+    expect(row?.other_user_id).toBe(organizer.id);
+  });
+
+  it("list_conversations narrows by search, type, and muted", async () => {
+    const eventConv = await openEventConversation(member);
+    await member.client.rpc(
+      "send_message",
+      rpcArgs<"send_message">({
+        p_conversation_id: eventConv,
+        p_content: "hello there",
+      }),
+    );
+
+    // type filter: only 'place' rows -> the event conversation drops out.
+    const places = await member.client.rpc(
+      "list_conversations",
+      rpcArgs<"list_conversations">({ p_filter: "all", p_type: "place" }),
+    );
+    expect(
+      (places.data ?? []).some((r) => r.conversation_id === eventConv),
+    ).toBe(false);
+
+    // search against a string that can't match anything -> empty.
+    const noMatch = await member.client.rpc(
+      "list_conversations",
+      rpcArgs<"list_conversations">({
+        p_filter: "all",
+        p_search: "zzz-no-such-name-zzz",
+      }),
+    );
+    expect(
+      (noMatch.data ?? []).some((r) => r.conversation_id === eventConv),
+    ).toBe(false);
+
+    // muted filter reflects set_conversation_state.
+    await member.client.rpc(
+      "set_conversation_state",
+      rpcArgs<"set_conversation_state">({
+        p_conversation_id: eventConv,
+        p_muted: true,
+      }),
+    );
+    const mutedOnly = await member.client.rpc(
+      "list_conversations",
+      rpcArgs<"list_conversations">({ p_filter: "all", p_muted: true }),
+    );
+    expect(
+      (mutedOnly.data ?? []).some((r) => r.conversation_id === eventConv),
+    ).toBe(true);
+    const unmutedOnly = await member.client.rpc(
+      "list_conversations",
+      rpcArgs<"list_conversations">({ p_filter: "all", p_muted: false }),
+    );
+    expect(
+      (unmutedOnly.data ?? []).some((r) => r.conversation_id === eventConv),
+    ).toBe(false);
+  });
+
+  it("mark_conversation_unread rewinds the read cursor; rejects a non-participant", async () => {
+    const conversationId = await openEventConversation(member);
+    await member.client.rpc(
+      "send_message",
+      rpcArgs<"send_message">({
+        p_conversation_id: conversationId,
+        p_content: "a question",
+      }),
+    );
+
+    // Organizer reads it -> unread clears.
+    await organizer.client.rpc(
+      "mark_conversation_read",
+      rpcArgs<"mark_conversation_read">({ p_conversation_id: conversationId }),
+    );
+    const cleared = await organizer.client.rpc("get_unread_conversation_count");
+    expect(cleared.data).toBe(0);
+
+    // Then marks it unread again.
+    const unread = await organizer.client.rpc(
+      "mark_conversation_unread",
+      rpcArgs<"mark_conversation_unread">({
+        p_conversation_id: conversationId,
+      }),
+    );
+    expect(unread.error).toBeNull();
+    const back = await organizer.client.rpc("get_unread_conversation_count");
+    expect(back.data).toBe(1);
+
+    // A non-participant can't touch it.
+    const outsiderTry = await outsider.client.rpc(
+      "mark_conversation_unread",
+      rpcArgs<"mark_conversation_unread">({
+        p_conversation_id: conversationId,
+      }),
+    );
+    expect(outsiderTry.error?.message).toMatch(/not authorized/i);
+  });
+
   it("a participant cannot escalate their role via a direct table write", async () => {
     const conversationId = await openEventConversation(member);
     const { error } = await member.client

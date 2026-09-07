@@ -19,7 +19,9 @@ export const openConversationSchema = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("support") }),
 ]);
-export type OpenConversationSchemaInput = z.infer<typeof openConversationSchema>;
+export type OpenConversationSchemaInput = z.infer<
+  typeof openConversationSchema
+>;
 
 export const sendMessageAttachmentSchema = z.object({
   storagePath: z.string().min(1).max(512),
@@ -74,6 +76,25 @@ export const conversationFilterSchema = z
   .enum(["active", "archived", "all", "unread"])
   .default("active");
 
+// Optional narrowing on top of the filter + role scope: a free-text query
+// (trimmed, bounded) and the predefined custom-filter dimensions. `type`
+// and `muted` back the user-addable "Events / Places / Muted" chips.
+export const conversationListQuerySchema = z.object({
+  search: z.string().trim().max(120).optional(),
+  type: z.enum(["event", "place", "support", "direct"]).optional(),
+  muted: z.boolean().optional(),
+});
+export type ConversationListQuerySchemaInput = z.infer<
+  typeof conversationListQuerySchema
+>;
+
+export const markConversationUnreadSchema = z.object({
+  conversationId: z.string().uuid(),
+});
+export type MarkConversationUnreadSchemaInput = z.infer<
+  typeof markConversationUnreadSchema
+>;
+
 export const setConversationStateSchema = z
   .object({
     conversationId: z.string().uuid(),
@@ -92,4 +113,6 @@ export const blockParticipantSchema = z.object({
   blockedUserId: z.string().uuid(),
   block: z.boolean(),
 });
-export type BlockParticipantSchemaInput = z.infer<typeof blockParticipantSchema>;
+export type BlockParticipantSchemaInput = z.infer<
+  typeof blockParticipantSchema
+>;

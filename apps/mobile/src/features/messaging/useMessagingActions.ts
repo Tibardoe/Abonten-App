@@ -74,6 +74,24 @@ export function useSetConversationState() {
   });
 }
 
+// Rewind the caller's read cursor so the row reads as unread again (swipe
+// action / row menu). Server clamps it to just before the last inbound
+// message, and no-ops when there's nothing inbound.
+export function useMarkConversationUnread() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      api.messaging.markUnread({ conversationId }),
+    onSuccess: (_res, conversationId) => {
+      qc.invalidateQueries({ queryKey: messagingKeys.lists() });
+      qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
+      qc.invalidateQueries({
+        queryKey: messagingKeys.detail(conversationId),
+      });
+    },
+  });
+}
+
 export function useBlockParticipant() {
   const qc = useQueryClient();
   return useMutation({

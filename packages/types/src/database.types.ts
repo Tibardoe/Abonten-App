@@ -6843,7 +6843,10 @@ export type Database = {
           p_cursor_ts?: string;
           p_filter?: string;
           p_limit?: number;
+          p_muted?: boolean;
           p_role_scope?: string;
+          p_search?: string;
+          p_type?: string;
         };
         Returns: {
           archived: boolean;
@@ -6856,9 +6859,15 @@ export type Database = {
           muted: boolean;
           my_last_read_at: string;
           my_role: string;
+          other_avatar_public_id: string;
+          other_avatar_version: string;
+          other_display_name: string;
           other_participant_ids: string[];
+          other_user_id: string;
+          other_username: string;
           place_id: string;
           status: string;
+          subject_title: string;
           title: string;
           type: string;
           unread_count: number;
@@ -6866,6 +6875,10 @@ export type Database = {
       };
       mark_conversation_read: {
         Args: { p_conversation_id: string; p_up_to?: string };
+        Returns: undefined;
+      };
+      mark_conversation_unread: {
+        Args: { p_conversation_id: string };
         Returns: undefined;
       };
       open_conversation: {
