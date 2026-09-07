@@ -1,6 +1,6 @@
 import type { ConversationRoleScope } from "@abonten/api-client";
 import * as SecureStore from "expo-secure-store";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Remembers the user's last inbox mode (All / As customer / As organizer)
 // and which of the optional filter chips they've added, so re-opening
@@ -62,17 +62,11 @@ function sanitize(raw: unknown): InboxPrefs {
 export function useInboxPrefs(userId: string | undefined) {
   const [prefs, setPrefs] = useState<InboxPrefs>(DEFAULTS);
   const [ready, setReady] = useState(false);
-  const loadedFor = useRef<string | null>(null);
-  // Latest prefs in a ref so the mutators below can stay stable (no `prefs`
-  // in their dep list) without reading a stale value.
-  const prefsRef = useRef(prefs);
-  prefsRef.current = prefs;
 
   useEffect(() => {
     if (!userId) {
       setPrefs(DEFAULTS);
       setReady(false);
-      loadedFor.current = null;
       return;
     }
     let active = true;
@@ -87,7 +81,6 @@ export function useInboxPrefs(userId: string | undefined) {
       }
       if (!active) return;
       setPrefs(next);
-      loadedFor.current = userId;
       setReady(true);
     })();
     return () => {
@@ -95,9 +88,8 @@ export function useInboxPrefs(userId: string | undefined) {
     };
   }, [userId]);
 
-  const persist = useCallback(
+  const write = useCallback(
     (next: InboxPrefs) => {
-      setPrefs(next);
       if (!userId) return;
       SecureStore.setItemAsync(storageKey(userId), JSON.stringify(next)).catch(
         () => {
@@ -110,20 +102,23 @@ export function useInboxPrefs(userId: string | undefined) {
 
   const setRoleScope = useCallback(
     (roleScope: ConversationRoleScope) => {
-      persist({ ...prefsRef.current, roleScope });
+      const next = { ...prefs, roleScope };
+      setPrefs(next);
+      write(next);
     },
-    [persist],
+    [prefs, write],
   );
 
   const toggleCustomFilter = useCallback(
     (key: CustomFilterKey) => {
-      const current = prefsRef.current.customFilters;
-      const customFilters = current.includes(key)
-        ? current.filter((k) => k !== key)
-        : [...current, key];
-      persist({ ...prefsRef.current, customFilters });
+      const customFilters = prefs.customFilters.includes(key)
+        ? prefs.customFilters.filter((k) => k !== key)
+        : [...prefs.customFilters, key];
+      const next = { ...prefs, customFilters };
+      setPrefs(next);
+      write(next);
     },
-    [persist],
+    [prefs, write],
   );
 
   return {

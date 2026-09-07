@@ -6,7 +6,11 @@ import { z } from "zod";
 
 const schema = z.object({
   conversationId: z.string().uuid(),
-  upTo: z.string().datetime().nullish(),
+  // `offset: true` — Postgres timestamptz (message.created_at) serialises as
+  // "…+00:00", which the default Z-only datetime() rejects; without this
+  // every "mark read up to <message>" call silently 400s and the
+  // conversation never clears.
+  upTo: z.string().datetime({ offset: true }).nullish(),
 });
 
 // POST /api/mobile/messages/read  { conversationId, upTo? }

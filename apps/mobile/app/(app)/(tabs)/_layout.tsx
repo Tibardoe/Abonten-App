@@ -4,6 +4,61 @@ import { useTranslations } from "@abonten/ui-native/i18n";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { type ColorValue, Text, View } from "react-native";
+
+// The Messages tab icon with its own unread badge. Hand-rolled rather than
+// react-navigation's `tabBarBadge`: that <Badge> pushes `backgroundColor`
+// through its bundled `color` lib (fragile — see the hsl-token crash) and
+// sizes/positions itself in a way that reads as a stretched pill next to a
+// labelled tab. This is a real 16px circle (a pill only past one digit),
+// number centred, matching the header bell badge.
+function MessagesTabIcon({
+  color,
+  size,
+  count,
+}: {
+  color: ColorValue;
+  size: number;
+  count: number;
+}) {
+  const label = count > 99 ? "99+" : String(count);
+  return (
+    <View style={{ width: size, height: size }}>
+      <Ionicons name="chatbubble-ellipses-outline" color={color} size={size} />
+      {count > 0 ? (
+        <View
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            top: -5,
+            right: label.length > 1 ? -12 : -8,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            paddingHorizontal: label.length > 1 ? 4 : 0,
+            backgroundColor: "#0F9D8F",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            allowFontScaling={false}
+            style={{
+              color: "#ffffff",
+              fontSize: 10,
+              lineHeight: 16,
+              fontWeight: "700",
+              textAlign: "center",
+              includeFontPadding: false,
+            }}
+          >
+            {label}
+          </Text>
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 // The five bottom tabs — Home · Search · Tickets · Messages · Account, the
 // native echo of the web MobileNavBar. The nav header is hidden here: every
@@ -74,25 +129,8 @@ export default function TabsLayout() {
         name="messages"
         options={{
           title: t("messages"),
-          tabBarBadge: unread > 0 ? (unread > 99 ? "99+" : unread) : undefined,
-          // A plain hex — NOT the `hsl(171 65% 45%)` space-separated token
-          // from useThemeColors(). react-navigation's <Badge> feeds
-          // `backgroundColor` through its bundled `color` lib to pick the
-          // text colour, and that parser throws on CSS Color 4
-          // space-separated hsl(), red-screening every tab-bar screen the
-          // moment unread > 0. Hex is always parseable; #0F9D8F is the
-          // brand teal (~ the primary token) and dark enough for white text.
-          tabBarBadgeStyle: {
-            backgroundColor: "#0F9D8F",
-            color: "#ffffff",
-            fontSize: 10,
-          },
           tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="chatbubble-ellipses-outline"
-              color={color}
-              size={size}
-            />
+            <MessagesTabIcon color={color} size={size} count={unread} />
           ),
         }}
       />
