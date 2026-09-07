@@ -59,7 +59,9 @@ export type AdminPermissionKey =
   | "audit.view"
   | "settings.view"
   | "settings.manage"
-  | "admins.manage";
+  | "admins.manage"
+  | "support.view"
+  | "support.respond";
 
 export type AdminUserStatus = "active" | "disabled";
 
@@ -85,7 +87,9 @@ export type ReportTargetType =
   | "user_review"
   | "user"
   | "organizer"
-  | "highlight";
+  | "highlight"
+  | "message"
+  | "conversation";
 
 export type ReportCategory =
   | "spam"
@@ -194,6 +198,22 @@ export const REPORTABLE_CATEGORIES: Record<ReportTargetType, ReportCategory[]> =
       "safety",
       "other",
     ],
+    message: [
+      "harassment",
+      "spam",
+      "fraud_scam",
+      "inappropriate",
+      "safety",
+      "other",
+    ],
+    conversation: [
+      "harassment",
+      "spam",
+      "fraud_scam",
+      "inappropriate",
+      "safety",
+      "other",
+    ],
   };
 
 export const REPORT_CATEGORY_LABEL: Record<ReportCategory, string> = {
@@ -218,6 +238,8 @@ export const REPORT_TARGET_LABEL: Record<ReportTargetType, string> = {
   user: "profile",
   organizer: "organizer",
   highlight: "highlight",
+  message: "message",
+  conversation: "conversation",
 };
 
 export type ReportAttachmentInput = {
@@ -345,6 +367,18 @@ export type ModeratableTargetType =
   | "place_review"
   | "user_review"
   | "highlight";
+
+/**
+ * Also moderatable, but only from a report (never browsed in the Content
+ * module — a moderator doesn't page through every private conversation).
+ * apply_moderation_action flips message.moderation_state /
+ * conversation.moderation_state; the messaging read paths drop hidden /
+ * removed rows from participants.
+ */
+export type ReportModeratableTargetType =
+  | ModeratableTargetType
+  | "message"
+  | "conversation";
 
 // ─────────────────────────────────────────────────────────────
 // Users
@@ -1003,4 +1037,80 @@ export type RoleMatrix = {
   grants: Record<string, string[]>;
   /** roles whose grant set is immutable (super_admin). */
   lockedRoles: string[];
+};
+
+// ─────────────────────────────────────────────────────────────
+// In-app support queue (Admin Console — support.view / support.respond).
+// A support conversation is a public.conversation with type='support'.
+// The claiming agent is tracked on conversation.assigned_to and is
+// deliberately NOT a conversation_participant, so their identity never
+// reaches the requester.
+// ─────────────────────────────────────────────────────────────
+
+export type SupportQueueScope =
+  | "unassigned"
+  | "mine"
+  | "open"
+  | "closed"
+  | "all";
+
+export type SupportConversationListItem = {
+  id: string;
+  status: "open" | "closed";
+  requesterId: string;
+  requesterName: string | null;
+  assignedToId: string | null;
+  assignedToName: string | null;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  /** true when the most recent message was sent by the requester (awaiting a reply). */
+  awaitingReply: boolean;
+  messageCount: number;
+  createdAt: string;
+};
+
+export type SupportMessageEntry = {
+  id: string;
+  /** 'requester' | 'support' | 'system' — never the agent's real name. */
+  author: "requester" | "support" | "system";
+  senderId: string | null;
+  body: string | null;
+  systemEvent: string | null;
+  createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+};
+
+export type SupportConversationDetail = {
+  id: string;
+  status: "open" | "closed";
+  createdAt: string;
+  requester: {
+    id: string;
+    username: string | null;
+    fullName: string | null;
+    email: string | null; // only for users.view_pii
+  };
+  assignedToId: string | null;
+  assignedToName: string | null;
+  assignedAt: string | null;
+  messages: SupportMessageEntry[];
+  notes: AdminNoteEntry[];
+};
+
+// ─────────────────────────────────────────────────────────────
+// Blocked-users browser (Admin Console — read-only, users.view).
+// Rows come straight from public.conversation_block.
+// ─────────────────────────────────────────────────────────────
+
+export type ConversationBlockListItem = {
+  id: string;
+  blockerId: string;
+  blockerName: string | null;
+  blockedId: string;
+  blockedName: string | null;
+  /** null => a global block; otherwise scoped to this conversation. */
+  conversationId: string | null;
+  conversationType: string | null;
+  createdAt: string;
 };

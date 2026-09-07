@@ -20,6 +20,7 @@ const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   profile: "person-circle-outline",
   place_claim: "shield-checkmark-outline",
   place_booking: "bookmark-outline",
+  message: "chatbubble-ellipses-outline",
 };
 
 function fallbackIcon(kind?: NotificationEntityKind): IoniconName {

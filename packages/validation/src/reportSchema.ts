@@ -18,6 +18,8 @@ const TARGET_TYPES = [
   "user",
   "organizer",
   "highlight",
+  "message",
+  "conversation",
 ] as const satisfies readonly ReportTargetType[];
 
 const CATEGORIES = [

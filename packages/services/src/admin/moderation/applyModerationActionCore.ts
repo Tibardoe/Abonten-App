@@ -1,8 +1,8 @@
 import { logger } from "@abonten/core/logger";
 import type {
   AdminContext,
-  ModeratableTargetType,
   ModerationActionKind,
+  ReportModeratableTargetType,
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
@@ -35,7 +35,7 @@ export async function applyModerationActionCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
   input: {
-    targetType: ModeratableTargetType;
+    targetType: ReportModeratableTargetType;
     targetId: string;
     action: ModerationActionKind;
     reason: string;

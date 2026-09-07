@@ -18,6 +18,7 @@ import { EventDetailSkeleton } from "@/components/skeletons";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
+import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useEventReviewEligibility } from "@/features/reviews/useEventReviews";
 import {
   type EventReviewListItem,
@@ -49,7 +50,14 @@ import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
+import {
+  Alert,
+  FlatList,
+  Linking,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 function priceRange(tickets: { price: number; currency: string }[]): string {
   if (tickets.length === 0) return "Free";
@@ -158,6 +166,7 @@ export default function EventDetailScreen() {
   const similarCardWidth = useCarouselCardWidth();
   const { data, isLoading, isError, refetch } = useEventDetail(id);
   const { session } = useSession();
+  const messageOrganizer = useOpenConversation();
   // Advances every 30s and on foreground so the "ongoing / ended / next
   // date" state below recomputes while the screen sits open across an
   // occurrence boundary (issue §4).
@@ -410,6 +419,35 @@ export default function EventDetailScreen() {
                 <Icon name="chevron-forward" size={16} tone="muted" />
               </View>
             </Pressable>
+          ) : null}
+
+          {session && event.organizer_id !== session.user.id ? (
+            <Button
+              title="Message organizer"
+              variant="outline"
+              leftIcon="chatbubble-ellipses-outline"
+              loading={messageOrganizer.isPending}
+              onPress={() =>
+                messageOrganizer.mutate(
+                  { type: "event", eventId: id },
+                  {
+                    onSuccess: (res) => {
+                      if (res.status !== 200) {
+                        Alert.alert(
+                          "Can't start a conversation",
+                          res.message ?? "Please try again.",
+                        );
+                      }
+                    },
+                    onError: () =>
+                      Alert.alert(
+                        "Can't start a conversation",
+                        "Please try again.",
+                      ),
+                  },
+                )
+              }
+            />
           ) : null}
 
           {/* Date / location / attendance */}

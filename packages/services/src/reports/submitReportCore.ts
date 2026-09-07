@@ -57,7 +57,9 @@ type TargetTableName =
   | "place_review"
   | "review"
   | "user_info"
-  | "highlight";
+  | "highlight"
+  | "message"
+  | "conversation";
 
 const TARGET_TABLE: Record<
   ReportTargetType,
@@ -71,6 +73,11 @@ const TARGET_TABLE: Record<
   user: { table: "user_info", idColumn: "id" },
   organizer: { table: "user_info", idColumn: "id" },
   highlight: { table: "highlight", idColumn: "id" },
+  // message / conversation lookups run on the reporter's own session client,
+  // so RLS already limits these to rows in a conversation they belong to —
+  // you can only report a message you can actually see.
+  message: { table: "message", idColumn: "id" },
+  conversation: { table: "conversation", idColumn: "id" },
 };
 
 function seedPriority(category: ReportCategory): ReportPriority {

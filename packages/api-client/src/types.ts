@@ -1,3 +1,12 @@
+import type {
+  ConversationContext,
+  ConversationFilter,
+  ConversationListItem,
+  ConversationRoleScope,
+  MessageRow,
+  OpenConversationInput,
+  SendMessageInput,
+} from "@abonten/types/messagingType";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type {
   OrganizerFinanceOverviewRow,
@@ -31,8 +40,14 @@ export type ApiEnvelope<T> = {
 };
 
 export type {
+  ConversationContext,
+  ConversationFilter,
+  ConversationListItem,
+  ConversationRoleScope,
   EventPromotionTier,
+  MessageRow,
   NotificationType,
+  OpenConversationInput,
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
   OrganizerPayoutRow,
@@ -40,7 +55,38 @@ export type {
   PayoutAccountRow,
   PayoutAccountType,
   PayoutStatus,
+  SendMessageInput,
   UserPostType,
+};
+
+// ---- messaging ---------------------------------------------------------
+
+export type ConversationsListResult = PaginatedResult<ConversationListItem>;
+export type ConversationMessagesResult = PaginatedResult<MessageRow>;
+export type ConversationDetailResult = ApiEnvelope<ConversationContext>;
+export type UnreadMessageCountResult = ApiEnvelope<{ count: number }>;
+export type OpenConversationResult = ApiEnvelope<{ conversationId: string }>;
+export type SendMessageResult = ApiEnvelope<{ message: MessageRow }>;
+export type MessagingActionResult = {
+  status: number;
+  message?: string;
+};
+
+export type EditMessageBody = { messageId: string; content: string };
+export type DeleteMessageBody = { messageId: string };
+export type MarkConversationReadBody = {
+  conversationId: string;
+  upTo?: string | null;
+};
+export type SetConversationStateBody = {
+  conversationId: string;
+  muted?: boolean;
+  archived?: boolean;
+};
+export type BlockParticipantBody = {
+  conversationId: string;
+  blockedUserId: string;
+  block: boolean;
 };
 
 // ---- auth ----------------------------------------------------------------
@@ -1347,7 +1393,9 @@ export type SubmitReportBody = {
     | "user_review"
     | "user"
     | "organizer"
-    | "highlight";
+    | "highlight"
+    | "message"
+    | "conversation";
   targetId: string;
   category:
     | "spam"

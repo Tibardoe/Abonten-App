@@ -17,6 +17,7 @@ import type {
 const LINK_RULES: [RegExp, (id: string) => string][] = [
   [/^\/manage\/events\/([^/?#]+)/, (id) => `/(app)/organizer/events/${id}`],
   [/^\/manage\/places\/([^/?#]+)/, (id) => `/(app)/organizer/places/${id}`],
+  [/^\/messages\/([^/?#]+)/, (id) => `/(app)/messages/${id}`],
   [/^\/events?\/([^/?#]+)/, (id) => `/(app)/event/${id}`],
   // NOTE: no rule for /places/:slug — the native place route is keyed by id,
   // not slug, so a bare slug link can't be routed. New notifications carry
@@ -41,6 +42,10 @@ function targetFromData(
 ): string | null {
   if (!data || !data.kind) return null;
   switch (data.kind) {
+    case "message":
+      return data.conversationId
+        ? `/(app)/messages/${data.conversationId}`
+        : "/(app)/(tabs)/messages";
     case "ticket":
       return data.ticketId
         ? `/(app)/ticket/${data.ticketId}`

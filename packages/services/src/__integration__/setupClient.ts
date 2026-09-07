@@ -30,6 +30,9 @@ export type TestUser = {
   id: string;
   email: string;
   client: SupabaseClient<Database>;
+  /** The signed-in access token — needed for realtime.setAuth() in the
+   *  realtime authorization tests (the plain header client has no session). */
+  accessToken: string;
 };
 
 let userCounter = 0;
@@ -75,7 +78,12 @@ export async function createTestUser(
     },
   );
 
-  return { id: created.user.id, email, client };
+  return {
+    id: created.user.id,
+    email,
+    client,
+    accessToken: signedIn.session.access_token,
+  };
 }
 
 export async function deleteTestUser(

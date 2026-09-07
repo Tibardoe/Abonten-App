@@ -16,6 +16,7 @@ import {
   useIsPlaceOwner,
 } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
+import { MessagesNavLink } from "@/messaging/components/MessagesNavLink";
 import { signOut } from "@/services/authService";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { generateSlug } from "@abonten/core/geerateSlug";
@@ -136,8 +137,9 @@ export default function Header() {
               notifications -- this is the only place mobile/tablet users
               can reach them, right next to the menu button. */}
               {!sessionLoading && userSession && (
-                <div className="lg:hidden text-sidebar-foreground">
+                <div className="lg:hidden flex items-center gap-3 text-sidebar-foreground">
                   <NotificationBell align="left" />
+                  <MessagesNavLink />
                 </div>
               )}
             </div>
@@ -169,7 +171,10 @@ export default function Header() {
               <EventUploadButton />
 
               {/* Not gated on isOrganizer/isPlaceOwner like the links above --
-              every signed-in user can have notifications, regardless of role. */}
+              every signed-in user can have messages/notifications, regardless
+              of role. */}
+              <MessagesNavLink />
+
               <NotificationBell />
 
               <button

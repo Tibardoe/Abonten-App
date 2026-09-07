@@ -80,6 +80,8 @@ export const moderationActionSchema = z.object({
     "place_review",
     "user_review",
     "highlight",
+    "message",
+    "conversation",
   ]),
   targetId: z.string().uuid(),
   action: z.enum([
@@ -214,6 +216,28 @@ export const dashboardRangeSchema = z.object({
   range: z.enum(["today", "yesterday", "7d", "30d", "90d", "custom"]),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),
+});
+
+// ── In-app support queue ────────────────────────────────────
+
+export const supportAssignSchema = z.object({
+  conversationId: z.string().uuid(),
+  // null = unassign; omitted-as-null handled by the caller
+  assigneeId: z.string().uuid().nullable(),
+});
+
+export const supportReplySchema = z.object({
+  conversationId: z.string().uuid(),
+  body: z
+    .string()
+    .trim()
+    .min(1, "A reply is required")
+    .max(4000, "That reply is too long"),
+});
+
+export const supportStatusSchema = z.object({
+  conversationId: z.string().uuid(),
+  status: z.enum(["open", "closed"]),
 });
 
 export type ReportResolveInput = z.infer<typeof reportResolveSchema>;

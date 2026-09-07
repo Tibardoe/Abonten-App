@@ -22,6 +22,7 @@ const PROTECTED_PREFIXES = [
   "/tickets",
   "/ticket/",
   "/wallet",
+  "/messages",
   "/account",
   "/notifications",
   "/checkout",

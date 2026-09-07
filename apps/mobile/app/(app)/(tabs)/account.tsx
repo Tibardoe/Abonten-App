@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { AppearanceToggle } from "@/components/app/AppearanceToggle";
+import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer } from "@/features/roles/useRoles";
@@ -49,6 +50,7 @@ export default function Account() {
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
+  const openSupport = useOpenConversation();
 
   async function onSignOut() {
     await unregisterPushToken();
@@ -158,6 +160,14 @@ export default function Account() {
               onPress={() => router.push("/(app)/organizer")}
             />
           ) : null}
+          <NavRow
+            icon="help-buoy-outline"
+            label="Help & support"
+            onPress={() => {
+              if (!openSupport.isPending)
+                openSupport.mutate({ type: "support" });
+            }}
+          />
         </View>
 
         <View className="gap-2">

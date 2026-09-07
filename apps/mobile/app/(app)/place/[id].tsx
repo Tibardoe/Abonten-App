@@ -17,6 +17,7 @@ import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
+import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
 import { usePlaceDetail } from "@/features/places/usePlaceDetail";
@@ -177,6 +178,7 @@ export default function PlaceDetailScreen() {
     label: string;
   } | null>(null);
   const { session } = useSession();
+  const messagePlace = useOpenConversation();
 
   const placeSlug = place?.slug;
   const header = (
@@ -369,6 +371,36 @@ export default function PlaceDetailScreen() {
               leftIcon="calendar-outline"
               fullWidth
               onPress={() => setBookOpen(true)}
+            />
+          ) : null}
+
+          {session && place.owner_id !== session.user.id ? (
+            <Button
+              title="Message this place"
+              variant="outline"
+              fullWidth
+              leftIcon="chatbubble-ellipses-outline"
+              loading={messagePlace.isPending}
+              onPress={() =>
+                messagePlace.mutate(
+                  { type: "place", placeId: place.id },
+                  {
+                    onSuccess: (res) => {
+                      if (res.status !== 200) {
+                        Alert.alert(
+                          "Can't start a conversation",
+                          res.message ?? "Please try again.",
+                        );
+                      }
+                    },
+                    onError: () =>
+                      Alert.alert(
+                        "Can't start a conversation",
+                        "Please try again.",
+                      ),
+                  },
+                )
+              }
             />
           ) : null}
 

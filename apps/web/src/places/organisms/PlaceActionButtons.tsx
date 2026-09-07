@@ -2,6 +2,7 @@
 
 import { logPlaceEngagement } from "@/actions/logPlaceEngagement";
 import GetDirectionBtn from "@/components/atoms/GetDirectionBtn";
+import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import RequestBookingButton from "@/places/molecules/RequestBookingButton";
 import { FiPhone } from "react-icons/fi";
 import { IoLogoWhatsapp } from "react-icons/io5";
@@ -57,6 +58,13 @@ export default function PlaceActionButtons({
         placeName={placeName}
         ownerId={ownerId}
         services={services}
+      />
+
+      <MessageSubjectButton
+        input={{ type: "place", placeId }}
+        ownerId={ownerId}
+        label="Message"
+        className="w-full"
       />
 
       {phone && (

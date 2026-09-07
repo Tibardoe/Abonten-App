@@ -16,6 +16,7 @@ import EventsSlider from "@/components/organisms/EventsSlider";
 import { CardTitle, SectionTitle } from "@/components/ui/typography";
 import { publicSupabase } from "@/config/supabase/publicClient";
 import EventReviewsSection from "@/events/organisms/EventReviewsSection";
+import { MessageSubjectButton } from "@/messaging/components/MessageSubjectButton";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
@@ -330,6 +331,12 @@ export default async function page({
                   Posted {postedAt}
                 </span>
               </div>
+              <MessageSubjectButton
+                input={{ type: "event", eventId: event.id }}
+                ownerId={event.organizer_id}
+                label="Message organizer"
+                className="mt-4 w-full sm:w-auto"
+              />
             </div>
 
             {/* Action Buttons - Mobile Top */}
