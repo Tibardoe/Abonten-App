@@ -2,14 +2,15 @@
 
 import { useCurrentUserDetails } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
+import { useUnreadMessageCount } from "@/messaging/hooks/useUnreadMessageCount";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { getSignInUrl } from "@abonten/core/getSignInUrl";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { BiWallet } from "react-icons/bi";
 import { GoHome } from "react-icons/go";
+import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { MdOutlineReceipt } from "react-icons/md";
 import { RiSearchLine } from "react-icons/ri";
 import { VscAccount } from "react-icons/vsc";
@@ -31,6 +32,7 @@ export default function MobileNavBar() {
     userLoading: userDataLoading,
   } = useCurrentUserDetails();
   const username = userDetails?.username;
+  const { data: unreadMessages = 0 } = useUnreadMessageCount();
 
   // The account button's target must be driven by whether there's a *session*
   // (`user`), not by whether the profile row (`username`) has loaded yet.
@@ -68,7 +70,12 @@ export default function MobileNavBar() {
             text={t("transactions")}
             Icon={MdOutlineReceipt}
           />
-          <MobileNavButton href="/wallet" text={t("wallets")} Icon={BiWallet} />
+          <MobileNavButton
+            href="/messages"
+            text={t("messages")}
+            Icon={IoChatbubbleEllipsesOutline}
+            badge={unreadMessages}
+          />
 
           <MobileNavButton
             href={accountHref}

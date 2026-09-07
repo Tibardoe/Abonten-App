@@ -1,7 +1,10 @@
-import { api } from "@/lib/api";
-import { uuidv4 } from "@/lib/uuid";
-import type { MessageRow } from "@abonten/api-client";
-import type { SendMessageAttachmentInput } from "@abonten/types/messagingType";
+"use client";
+
+import { sendMessage } from "@/actions/sendMessage";
+import type {
+  MessageRow,
+  SendMessageAttachmentInput,
+} from "@abonten/types/messagingType";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import { upsertMessageIntoCache } from "./cache";
@@ -10,16 +13,15 @@ import { messagingKeys } from "./keys";
 // A locally-staged message the user has sent but the server hasn't confirmed
 // yet. Rendered in the thread with a "sending" / "failed" status until it
 // reconciles. `clientGeneratedId` is the idempotency key send_message keys
-// off — a retry with the same id collapses onto the same row rather than
-// duplicating.
+// off — a retry with the same id collapses onto the same row.
 export type OutboxMessage = {
   clientGeneratedId: string;
   content: string | null;
   replyToMessageId: string | null;
   attachments: SendMessageAttachmentInput[];
-  // Local file:// URIs of any staged photos, for an instant preview while the
-  // send is in flight (the uploaded copy is private and would need signing).
-  localPreviewUris: string[];
+  // Object URLs for staged images — instant preview while the send is in
+  // flight (the uploaded copy is private and would need signing).
+  localPreviewUrls: string[];
   // Structurally satisfies @abonten/core/messagingThread PendingMessageLike.
   hasAttachments: boolean;
   createdAt: string;
@@ -30,19 +32,17 @@ export type OutboxDraft = {
   content: string | null;
   replyToMessageId?: string | null;
   attachments?: SendMessageAttachmentInput[];
-  localPreviewUris?: string[];
+  localPreviewUrls?: string[];
 };
 
 // The outbox lives in component state (not persisted): a failed send stays
-// visible with a Retry until the user acts or leaves the screen. Multi-device
-// / reconnection correctness comes from the server being the source of truth
-// — anything that actually landed comes back on the next fetch or realtime
+// visible with a Retry until the user acts or navigates away. Multi-device /
+// reconnection correctness comes from the server being the source of truth —
+// anything that actually landed comes back on the next fetch or realtime
 // event and is filtered out of the rendered outbox by clientGeneratedId.
 export function useMessageOutbox(conversationId: string) {
   const qc = useQueryClient();
   const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
-  // Keep the newest drafts around for retry without re-plumbing them through
-  // the UI.
   const draftsRef = useRef<Map<string, OutboxDraft>>(new Map());
 
   const patch = useCallback(
@@ -58,7 +58,7 @@ export function useMessageOutbox(conversationId: string) {
 
   const dispatch = useCallback(
     async (clientGeneratedId: string, draft: OutboxDraft) => {
-      const res = await api.messaging.send({
+      const res = await sendMessage({
         conversationId,
         clientGeneratedId,
         content: draft.content ?? null,
@@ -66,10 +66,8 @@ export function useMessageOutbox(conversationId: string) {
         attachments: draft.attachments ?? [],
       });
 
-      if (res.status === 200 && res.data?.message) {
+      if (res.status === 200 && "data" in res && res.data?.message) {
         const canonical: MessageRow = res.data.message;
-        // Drop the optimistic row, seed the real one into the cache so it
-        // shows immediately even if the realtime INSERT is slow / missed.
         draftsRef.current.delete(clientGeneratedId);
         setOutbox((prev) =>
           prev.filter((m) => m.clientGeneratedId !== clientGeneratedId),
@@ -80,8 +78,8 @@ export function useMessageOutbox(conversationId: string) {
         return;
       }
 
-      // Blocked (403), closed conversation (409), rate-limited (429),
-      // network 5xx — all land here. Keep the row, let the user retry.
+      // Blocked (403), closed conversation (409), rate-limited (429), 5xx —
+      // all land here. Keep the row, let the user retry.
       patch(clientGeneratedId, { status: "failed" });
     },
     [conversationId, patch, qc],
@@ -89,7 +87,7 @@ export function useMessageOutbox(conversationId: string) {
 
   const send = useCallback(
     (draft: OutboxDraft) => {
-      const clientGeneratedId = uuidv4();
+      const clientGeneratedId = crypto.randomUUID();
       draftsRef.current.set(clientGeneratedId, draft);
       setOutbox((prev) => [
         {
@@ -97,10 +95,10 @@ export function useMessageOutbox(conversationId: string) {
           content: draft.content ?? null,
           replyToMessageId: draft.replyToMessageId ?? null,
           attachments: draft.attachments ?? [],
-          localPreviewUris: draft.localPreviewUris ?? [],
+          localPreviewUrls: draft.localPreviewUrls ?? [],
           hasAttachments:
             (draft.attachments?.length ?? 0) > 0 ||
-            (draft.localPreviewUris?.length ?? 0) > 0,
+            (draft.localPreviewUrls?.length ?? 0) > 0,
           createdAt: new Date().toISOString(),
           status: "sending",
         },
@@ -130,13 +128,6 @@ export function useMessageOutbox(conversationId: string) {
     [dispatch, patch],
   );
 
-  const discard = useCallback((clientGeneratedId: string) => {
-    draftsRef.current.delete(clientGeneratedId);
-    setOutbox((prev) =>
-      prev.filter((m) => m.clientGeneratedId !== clientGeneratedId),
-    );
-  }, []);
-
   // Called by the screen once it knows which clientGeneratedIds the server
   // has confirmed (present in the fetched thread) — clears any outbox row
   // that raced ahead of its own send response.
@@ -150,5 +141,5 @@ export function useMessageOutbox(conversationId: string) {
     });
   }, []);
 
-  return { outbox, send, retry, discard, reconcile };
+  return { outbox, send, retry, reconcile };
 }
