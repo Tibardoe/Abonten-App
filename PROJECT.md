@@ -1222,4 +1222,223 @@ behaviour is unchanged until the owner opts in.
 
 ---
 
+## 24. Read-Path Caching & Optimistic Reconciliation (performance pass, 2026-09-07)
+
+A platform-wide performance audit established the baseline below and changed
+the client caching architecture. Measurements are from production
+(`pg_stat_statements`, `EXPLAIN ANALYZE`) and the repo itself, not estimates.
+
+### 24.1 Baseline: where the time actually goes
+
+- **The database is not the bottleneck at current volume.** Production holds
+  18 events, 4 places, 26 tickets, 11 messages, 24 notifications. The top
+  entries in `pg_stat_statements` by total time are all infrastructure:
+  pg_net's response-queue cleanup (43.3M calls), `cron.job_run_details`
+  bookkeeping (80.5K runs, 232s), and `pg_timezone_names` (618 calls at a
+  217ms mean).
+- **`get_nearby_events` is fast, but only when warm.** First call in a backend
+  costs ~142ms (1,383 shared buffer hits, PostGIS library + plpgsql plan
+  load); measured warm over 20 iterations it is **0.276ms**
+  (`get_nearby_places`: 0.470ms). The 69–145ms means recorded in
+  `pg_stat_statements` are therefore dominated by per-connection cold-start,
+  not query work. **Do not "optimise" these queries or add indexes for it** —
+  the fix, if it is ever worth one, is connection reuse/pool warmth.
+- **The real cost was client-side**: mobile had 127 `invalidateQueries` calls
+  against 5 `setQueryData` and 2 `onMutate`. The web `QueryClient` was
+  constructed with **no options at all** — library defaults meant
+  `staleTime: 0` plus `refetchOnWindowFocus`, so every query refetched on
+  every remount and every tab focus.
+
+### 24.2 Inbox: targeted reconciliation instead of invalidation
+
+`mark_conversation_read`, `mark_conversation_unread` and
+`set_conversation_state` all write to `conversation_participant` **only** —
+never to `conversation`. The inbox realtime channel watches `conversation`, so
+it never fires for them, which means the blanket
+`invalidateQueries(messagingKeys.lists())` those mutations ran was the *sole*
+mechanism refreshing the inbox — and it refetched **every loaded page of every
+cached (filter × roleScope × search × type × muted) view** just because a
+thread was opened. On web this is always a visible refetch, because the
+two-pane workspace keeps `ConversationList` mounted beside the open thread.
+
+Replaced by pure transforms in
+[packages/core/src/messagingInboxCache.ts](packages/core/src/messagingInboxCache.ts)
+(11 unit tests), applied through per-app plumbing
+(`apps/{mobile/src/features,web/src}/messaging/.../inboxCache.ts`):
+
+- read / unread / mute are optimistic with snapshot rollback on failure;
+- archive removes the row from the list it is leaving immediately;
+- the tab/nav badge moves by the row's own unread count rather than refetching
+  the count endpoint;
+- realtime `conversation` UPDATEs apply the `last_message_*` payload directly
+  and re-seat the row at the top — the same result a refetch produces, with no
+  round-trip. Invalidation remains the fallback for the two cases a client
+  genuinely cannot synthesise: a conversation not present in the cached list,
+  and a brand-new one.
+
+Every transform returns the **identical object reference** when nothing
+matched, so views that do not hold the row notify no observers.
+
+### 24.3 Render stability
+
+`ConversationRow` and `MessageBubble` were already wrapped in `memo`, but the
+memo was inert: `renderItem` built fresh inline closures for every callback on
+every render, so every prop was a new reference and every visible row
+re-rendered on any list state change. `renderItem` and its handlers are now
+stable (`useCallback`), with the item bound inside the row component.
+
+### 24.4 Web QueryClient defaults
+
+`staleTime: 30_000` (matching native), `gcTime: 10min`, `refetchOnWindowFocus:
+false`, and a retry predicate that does not retry terminal errors (401/403/404,
+expired JWT) — those previously burned ~7s of backoff before a screen could
+show its error state. Money-path freshness is unchanged and explicit: the
+checkout modal keeps its own 20s ticket-availability poll, and checkout/payment
+state is re-validated server-side at the write, never trusted from cache.
+
+### 24.5 Known scalability limits (found, not changed — need a decision)
+
+- **`get_nearby_events` builds its LATERAL aggregates before `LIMIT`.** The
+  `matched` CTE computes min-price, the occurrences JSON and a `MIN(starts_at)`
+  sort key for *every* event inside the radius, then takes 20. Fine at 18
+  events; quadratic-feeling once a city has thousands. It also returns
+  `description`, the full `location` geography and every occurrence to a feed
+  that renders none of them (§12 payload reduction).
+- **Rating averages are computed in JS over unbounded fetches** in
+  `getEventRating`, `getPlaceRating`, `getUserRating`, `getPlaceBySlug` and
+  `catalogAdminCore` (×2) — every approved rating row is transferred to
+  compute a count and a mean. The reason is now confirmed: **PostgREST
+  aggregate functions are disabled on this project** (a live request returns
+  `PGRST123: Use of aggregate functions is not allowed`), so `.select("rating.avg()")`
+  is not available. Fixing it needs either `db-aggregates-enabled` turned on or
+  a `SECURITY DEFINER` aggregate RPC — both owner decisions.
+- **Highlight videos are delivered untransformed.** Both
+  `apps/web/src/actions/uploadHighlight.ts` and
+  `apps/mobile/src/features/profile/useHighlights.ts` deliver the raw uploaded
+  clip with only `so_`/`eo_` trim offsets — no `q_auto`, no width cap. A
+  phone-shot 1080p/4K clip streams at full source bitrate. Adding a transform
+  is a one-line change per platform but risks Cloudinary returning `423 Locked`
+  while it derives the video on first request, so it wants an eager/streaming
+  profile at upload time plus a device test before shipping.
+
+---
+
+## 25. Deferred Performance Items, Resolved (2026-09-07)
+
+The three items 24.5 left open are now done. Everything below is measured, not
+estimated; the benchmark harness ran against a **local** Supabase stack, never
+production.
+
+### 25.1 `get_nearby_events` scalability
+
+Benchmarked by generating events in a ring around Accra on the local stack and
+timing 20 warm calls per data point. The old implementation degraded linearly
+with the number of candidates in the radius while always returning 20 rows:
+
+| candidates in radius | before | after | speedup |
+| --- | --- | --- | --- |
+| 18 (production today) | 0.276 ms | 0.258 ms | ~1x |
+| 1,093 | 7.08 ms | ~1.7 ms | ~4x |
+| 9,055 | 66.29 ms | ~14 ms | ~4.5x |
+| 44,454 | 375.82 ms | 94.99 ms | 4.0x |
+
+Root cause was ordering: the old `matched` CTE ran three probes against
+`event_occurrence` (a correlated `MIN`, an `EXISTS` and a `NOT EXISTS`), a
+`ticket_type` aggregate and a `json_agg` of occurrences **for every event in
+the radius**, then applied `ORDER BY` + `LIMIT`. Now `candidate` narrows to
+`(id, sort_key)` with one index-only probe, `page` applies the cursor and the
+limit, and the wide row + expensive aggregates run only for that page.
+
+Two indexes, both justified from the plan rather than added speculatively:
+`idx_event_geo_discoverable` (partial GIST over exactly the discoverable rows
+— confirmed chosen by the planner for a 2 km radius) and
+`idx_event_occurrence_event_ends_starts` (makes the probe index-only; it was
+157k of the old plan's 247k buffers). Buffers for the candidate stage fell
+247,478 → 147,175.
+
+`description` was dropped from the returned columns — `UserPostType` does not
+declare it and no card renders it, while the rows average over a kilobyte of
+text. `location` was **kept**: `EventsMapView` parses it with `parseWKBHex`.
+
+**Security is unchanged and was verified, not assumed.** Still SECURITY
+INVOKER, same `search_path`, same grants, same visibility predicates. A
+harness compared old vs new over **290 page-comparisons** spanning 7
+geographies / radii / page sizes with full keyset pagination walks, checking
+ids, ordering and payload: **0 mismatches**.
+
+### 25.2 Rating aggregation
+
+The audit found six JS-aggregation call sites; there were **twelve** — four
+more in mobile (`useEventDetail`, `usePlaceDetail`, `usePublicProfile`,
+`useProfileTabs`) and the batch one in `getUserFavoritePlaces`. `useProfileTabs`
+was the worst: its two list queries embedded `place_review(rating, status)`,
+pulling every review row for every place on the page.
+
+PostgREST aggregates stay **disabled** — enabling `db-aggregates-enabled`
+would let any anon caller aggregate over every readable table, which is a
+materially wider surface on a public consumer app. Instead: four
+purpose-specific SECURITY INVOKER RPCs (`get_event_rating`, `get_place_rating`,
+`get_user_rating`, `get_place_ratings`) plus covering partial indexes, behind
+one shared implementation (`@abonten/core/ratings` for the pure parts,
+`@abonten/services/reviews/ratingsQuery` for the client-taking wrappers).
+`apps/mobile` calls the RPCs directly, since it must not import
+`@abonten/services`.
+
+Two real defects fixed on the way:
+- **No call site filtered `moderation_state`**, so a review an admin had
+  hidden or removed still counted toward the average. RLS masked that for anon
+  callers but *not* for the admin console's service-role client, so admin saw
+  a different rating than the public did.
+- The admin aggregates capped at `.limit(5000)`, which silently returns a
+  **wrong** average past 5000 reviews rather than failing.
+
+### 25.3 Highlight video delivery
+
+Measured against this project's own Cloudinary account before designing
+anything — and the measurements changed the design twice:
+
+| source | sync derive | result |
+| --- | --- | --- |
+| 576x1024, 4.79 MB, 1.29 Mbps | 16,960 ms | 18.7% smaller |
+| 496x480, 0.36 MB, 0.31 Mbps | 1,810 ms | 40.9% smaller (of 0.36 MB) |
+| 576x576, 0.57 MB, 0.60 Mbps | 2,337 ms | **9.1% LARGER** |
+
+1. Derivation is far too slow to block a request on (17 s for a 4.8 MB clip,
+   against a 90 MB upload ceiling), so it has to be asynchronous.
+2. **Blanket re-encoding is not a win.** An already-small, already-low-bitrate
+   phone clip can come out bigger. So `@abonten/core/videoDelivery`
+   decides per source: re-encode only when the long edge exceeds 1280 px or
+   the average bitrate exceeds 2.5 Mbps — the 1080p/4K phone clips the audit
+   was actually worried about. All three clips above are correctly skipped.
+
+Pipeline: upload (unchanged) → conditional eager derivation through the
+Cloudinary Admin API → `highlight.playback_url` stored beside `media_url` →
+players prefer `playback_url` and fall back to `media_url` on a load error.
+That fallback is what makes the `423 Locked` problem structurally impossible:
+`media_url` is always the original and always immediately playable.
+
+**The upload signature is deliberately untouched.** The 2026-09-05 incident in
+§0 (an unrecognised signed param broke 100% of uploads everywhere) is exactly
+why the derivation is requested separately, server-side, instead of as an
+`eager` upload param.
+
+`apps/mobile` cannot hold the Cloudinary secret and must not import
+`@abonten/services`, so it calls `POST /api/mobile/highlights/playback`, which
+runs the same shared service and re-checks that the `publicId` sits in the
+caller's own upload folder.
+
+**A device test caught a real bug in the first version of the fallback.**
+`player.replaceAsync()` does **not** reject for a source that 404s -- expo-video
+resolves the promise and ExoPlayer reports the failure asynchronously on its
+own thread (`ExoPlaybackException: Source error / Response code: 404`). The
+original `try/catch` around `replaceAsync` therefore never fired and the viewer
+sat on a spinner forever. Verified on an Android emulator by pointing
+`playback_url` at a deliberately broken URL. The fallback now lives in the
+player's `statusChange` listener (`status === "error"`), which was re-tested the
+same way: the 404 is still logged, the viewer swaps to `media_url`, and the
+video plays. Playback straight from a real optimised rendition was then
+confirmed with zero ExoPlayer errors.
+
+---
+
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*

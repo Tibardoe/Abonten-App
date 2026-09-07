@@ -12,7 +12,7 @@ import { ConversationList } from "./ConversationList";
 export function MessagingWorkspace({ activeId }: { activeId?: string }) {
   // Mounted here (not just in the list) so the nav badge + list stay live
   // even while the user is reading a thread.
-  useInboxRealtime();
+  useInboxRealtime(activeId);
 
   return (
     <div className="mx-auto flex h-[calc(100dvh-13rem)] max-w-5xl overflow-hidden rounded-xl border bg-background md:h-[calc(100dvh-11rem)]">

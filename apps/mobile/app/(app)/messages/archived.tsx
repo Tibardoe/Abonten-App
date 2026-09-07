@@ -45,6 +45,27 @@ export default function ArchivedMessages() {
     [setState],
   );
 
+  const onOpen = useCallback(
+    (item: ConversationListItem) =>
+      router.push(`/(app)/messages/${item.conversation_id}`),
+    [router],
+  );
+
+  // Stable renderItem + handlers so ConversationRow's `memo` actually holds.
+  const currentUserId = session?.user.id;
+  const renderRow = useCallback(
+    ({ item }: { item: ConversationListItem }) => (
+      <ConversationRow
+        item={item}
+        currentUserId={currentUserId}
+        archivedView
+        onPress={onOpen}
+        onArchiveToggle={unarchive}
+      />
+    ),
+    [currentUserId, onOpen, unarchive],
+  );
+
   return (
     <View className="flex-1 bg-background">
       <AppHeader variant="title" title="Archived" />
@@ -60,17 +81,7 @@ export default function ArchivedMessages() {
         className="flex-1"
         data={rows}
         keyExtractor={(c) => c.conversation_id}
-        renderItem={({ item }) => (
-          <ConversationRow
-            item={item}
-            currentUserId={session?.user.id}
-            archivedView
-            onPress={() =>
-              router.push(`/(app)/messages/${item.conversation_id}`)
-            }
-            onArchiveToggle={() => unarchive(item)}
-          />
-        )}
+        renderItem={renderRow}
         contentContainerClassName="pb-16"
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}

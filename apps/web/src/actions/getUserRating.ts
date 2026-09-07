@@ -1,26 +1,15 @@
 "use server";
 
 import { publicSupabase } from "@/config/supabase/publicClient";
-import { logger } from "@abonten/core/logger";
+import {
+  fetchUserRating,
+  roundRating,
+} from "@abonten/services/reviews/ratingsQuery";
 
+// Aggregate rating left on a person (an organizer), from the generic
+// `review` table. Computed in Postgres (get_user_rating) rather than by
+// transferring every review row for that user.
 export async function getUserRating(reviewedId: string) {
-  const supabase = publicSupabase;
-
-  const { data: ratingsData, error } = await supabase
-    .from("review")
-    .select("rating")
-    .eq("reviewed_id", reviewedId);
-
-  if (error) {
-    logger.error("Error fetching ratings:", error);
-    throw new Error("Could not load ratings");
-  }
-
-  const totalRatings = ratingsData?.length ?? 0;
-
-  const sum = ratingsData?.reduce((acc, { rating }) => acc + rating, 0) ?? 0;
-  const averageRaw = totalRatings > 0 ? sum / totalRatings : 0;
-  const averageRating = Number.parseFloat(averageRaw.toFixed(1)); // e.g. 4.3
-
-  return { averageRating, totalRatings };
+  const { average, count } = await fetchUserRating(publicSupabase, reviewedId);
+  return { averageRating: roundRating(average), totalRatings: count };
 }

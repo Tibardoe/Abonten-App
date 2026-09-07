@@ -14,6 +14,12 @@ export type CloudinaryUpload = {
   url: string;
   resourceType: "image" | "video";
   duration?: number;
+  // Source dimensions + size, forwarded so the server can decide whether an
+  // optimised playback rendition is worth building (see
+  // @abonten/core/videoDelivery).
+  width?: number;
+  height?: number;
+  bytes?: number;
 };
 
 type CloudinaryResponse = {
@@ -22,6 +28,9 @@ type CloudinaryResponse = {
   secure_url: string;
   resource_type: "image" | "video";
   duration?: number;
+  width?: number;
+  height?: number;
+  bytes?: number;
 };
 
 function safeJsonParse(text: string): unknown {
@@ -153,5 +162,8 @@ export async function uploadToCloudinary(
     url: json.secure_url,
     resourceType: json.resource_type,
     duration: json.duration,
+    width: json.width,
+    height: json.height,
+    bytes: json.bytes,
   };
 }

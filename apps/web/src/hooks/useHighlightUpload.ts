@@ -112,6 +112,8 @@ export function useHighlightUpload(username: string) {
               resourceType: cloudinaryResult.resource_type,
               bytes: cloudinaryResult.bytes,
               durationSeconds: cloudinaryResult.duration ?? null,
+              width: cloudinaryResult.width ?? null,
+              height: cloudinaryResult.height ?? null,
               trimStartSeconds:
                 mediaItem.type === "video"
                   ? (mediaItem.startTime ?? null)

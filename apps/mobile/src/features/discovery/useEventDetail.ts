@@ -1,6 +1,7 @@
 import { NotFoundError } from "@/lib/queryErrors";
 import { supabase } from "@/lib/supabase";
 import { isUuid } from "@/lib/uuid";
+import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
 import { useQuery } from "@tanstack/react-query";
 
 // Same select shape the web event detail page (`events/[eventCode]/page.tsx`)
@@ -78,20 +79,16 @@ async function fetchEventDetail(id: string): Promise<{
   });
 
   // Same as the web page's getUserRating(organizer_id): the organizer rated
-  // as a person via the generic `review` table (anon-readable).
-  const { data: ratings } = await supabase
-    .from("review")
-    .select("rating")
-    .eq("reviewed_id", event.organizer_id);
-  const list = (ratings ?? []) as { rating: number }[];
+  // as a person via the generic `review` table. Aggregated in Postgres
+  // (get_user_rating, SECURITY INVOKER + anon-granted) rather than pulling
+  // every review row for that organizer onto the device.
+  const { data: ratingRow } = await supabase
+    .rpc("get_user_rating", { p_reviewed_id: event.organizer_id })
+    .maybeSingle();
+  const parsed = parseRatingAggregate(ratingRow);
   const organizerRating: OrganizerRating = {
-    count: list.length,
-    average:
-      list.length > 0
-        ? Number(
-            (list.reduce((a, r) => a + r.rating, 0) / list.length).toFixed(1),
-          )
-        : 0,
+    count: parsed.count,
+    average: roundRating(parsed.average),
   };
 
   return { event, attendanceCount: Number(count ?? 0), organizerRating };

@@ -7,6 +7,11 @@ export type HighlightUploadMetadataItem = {
   resourceType: "image" | "video";
   bytes: number;
   durationSeconds?: number | null;
+  // Source pixel dimensions, straight from Cloudinary's upload response.
+  // Used server-side to decide whether an optimised playback rendition is
+  // actually worth building -- see @abonten/core/videoDelivery.
+  width?: number | null;
+  height?: number | null;
   // Video only -- the user's selected trim range. The full file is always
   // uploaded; these tell the server to build a delivery URL that serves
   // only this segment (see uploadHighlight.ts).

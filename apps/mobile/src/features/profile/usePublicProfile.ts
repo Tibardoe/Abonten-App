@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { parseRatingAggregate, roundRating } from "@abonten/core/ratings";
 import { useQuery } from "@tanstack/react-query";
 
 // A public user profile, keyed by username — the native echo of the web
@@ -36,18 +37,16 @@ async function fetchProfile(username: string): Promise<PublicProfile> {
 
   const row = data as Record<string, unknown>;
 
-  const { data: ratings, error: ratingsError } = await supabase
-    .from("review")
-    .select("rating")
-    .eq("reviewed_id", row.user_id as string);
+  // Aggregated in Postgres (get_user_rating) rather than transferring every
+  // review row written about this user.
+  const { data: ratingRow, error: ratingsError } = await supabase
+    .rpc("get_user_rating", { p_reviewed_id: row.user_id as string })
+    .maybeSingle();
   if (ratingsError) throw ratingsError;
 
-  const list = (ratings ?? []) as { rating: number }[];
-  const total = list.length;
-  const avg =
-    total > 0
-      ? Number((list.reduce((a, r) => a + r.rating, 0) / total).toFixed(1))
-      : 0;
+  const parsed = parseRatingAggregate(ratingRow);
+  const total = parsed.count;
+  const avg = roundRating(parsed.average);
 
   return {
     user_id: row.user_id as string,

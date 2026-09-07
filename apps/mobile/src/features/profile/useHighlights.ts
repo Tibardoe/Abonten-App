@@ -146,6 +146,32 @@ function resolveTrimmedDelivery(
   };
 }
 
+// The editor's trim window, only when it is a real strict sub-range -- the
+// same validity rules resolveTrimmedDelivery applies, so the eager rendition
+// and the fallback delivery URL always describe the same segment.
+function trimWindowFor(
+  item: HighlightMediaPick,
+  durationSeconds: number | null,
+): { start: number; end: number } | null {
+  const start = item.startSeconds;
+  const end = item.endSeconds;
+  const valid =
+    typeof start === "number" &&
+    typeof end === "number" &&
+    Number.isFinite(start) &&
+    Number.isFinite(end) &&
+    start >= 0 &&
+    end > start &&
+    (typeof durationSeconds !== "number" || end <= durationSeconds + 0.5);
+  if (!valid) return null;
+
+  const isFullLength =
+    start <= 0.05 &&
+    typeof durationSeconds === "number" &&
+    end >= durationSeconds - 0.05;
+  return isFullLength ? null : { start, end };
+}
+
 export function useUploadHighlights(
   userId: string | undefined,
   opts?: { onProgress?: (fraction: number) => void },
@@ -178,12 +204,43 @@ export function useUploadHighlights(
         const { mediaUrl, durationSeconds } = isVideo
           ? resolveTrimmedDelivery(up, item, rawDuration)
           : { mediaUrl: up.url, durationSeconds: null };
+
+        // Ask the server to build an optimised playback rendition. The
+        // derivation needs the Cloudinary API secret, which the app doesn't
+        // have, so it goes through /api/mobile/highlights/playback -- the
+        // same shared service the web upload action uses. A null playbackUrl
+        // is the normal outcome for a clip already within the profile, and a
+        // failure here must never fail the upload: media_url already points
+        // at the original, which is immediately playable.
+        let playbackUrl: string | null = null;
+        let posterUrl: string | null = null;
+        if (isVideo) {
+          try {
+            const res = await api.highlights.playback({
+              publicId: up.publicId,
+              version: up.version,
+              width: up.width ?? null,
+              height: up.height ?? null,
+              bytes: up.bytes ?? null,
+              durationSeconds: rawDuration,
+              trim: trimWindowFor(item, rawDuration),
+            });
+            if (res.status === 200 && res.data) {
+              playbackUrl = res.data.playbackUrl;
+              posterUrl = res.data.posterUrl;
+            }
+          } catch {
+            // Serve the original; nothing else to do.
+          }
+        }
+
         const { error } = await supabase.from("highlight").insert({
           user_id: userId,
           media_url: mediaUrl,
+          playback_url: playbackUrl,
           media_type: up.resourceType,
           thumbnail_url: isVideo
-            ? videoThumbnailUrl(up.publicId, up.version)
+            ? (posterUrl ?? videoThumbnailUrl(up.publicId, up.version))
             : null,
           media_duration: durationSeconds,
           group_id: groupId,

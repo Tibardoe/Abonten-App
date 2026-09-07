@@ -227,6 +227,30 @@ export type CancelTicketResult = { status: number; message?: string };
 
 // ---- highlights -------------------------------------------------------
 
+// Request/response for POST /api/mobile/highlights/playback -- the
+// server-side step that builds an optimised playback rendition for a
+// highlight video the app has just uploaded to Cloudinary.
+export type HighlightPlaybackBody = {
+  publicId: string;
+  version: number;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number | null;
+  durationSeconds?: number | null;
+  /** Trim window set by the editor, when it is a real strict sub-range. */
+  trim?: { start: number; end: number } | null;
+};
+
+export type HighlightPlaybackResult = {
+  status: number;
+  message?: string;
+  data?: {
+    /** null = the source was already within the profile; serve the original. */
+    playbackUrl: string | null;
+    posterUrl: string | null;
+  };
+};
+
 export type DeleteHighlightResult = {
   status: 200 | 400 | 401 | 404 | 500;
   message: string;

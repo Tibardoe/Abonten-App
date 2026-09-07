@@ -2,6 +2,10 @@
 
 import { publicSupabase } from "@/config/supabase/publicClient";
 import { logger } from "@abonten/core/logger";
+import {
+  fetchPlaceRating,
+  roundRating,
+} from "@abonten/services/reviews/ratingsQuery";
 
 /**
  * Public read for a place's detail page — slug + status='published' scoped,
@@ -33,7 +37,7 @@ export async function getPlaceBySlug(slug: string) {
     { data: openingHours, error: openingHoursError },
     { data: services, error: servicesError },
     { data: photos, error: photosError },
-    { data: reviews, error: reviewsError },
+    rating,
   ] = await Promise.all([
     supabase
       .from("place_opening_hours")
@@ -50,30 +54,20 @@ export async function getPlaceBySlug(slug: string) {
       .select("*")
       .eq("place_id", place.id)
       .order("position", { ascending: true }),
-    supabase
-      .from("place_review")
-      .select("rating")
-      .eq("place_id", place.id)
-      .eq("status", "approved"),
+    // Aggregated in Postgres (get_place_rating) instead of transferring every
+    // approved review row just to compute a mean and a count.
+    fetchPlaceRating(supabase, place.id),
   ]);
 
-  const firstError =
-    openingHoursError ?? servicesError ?? photosError ?? reviewsError;
+  const firstError = openingHoursError ?? servicesError ?? photosError;
 
   if (firstError) {
     logger.error(`Error fetching place details: ${firstError.message}`);
     return { status: 500, message: "Something went wrong!" };
   }
 
-  const reviewCount = reviews?.length ?? 0;
-  const avgRating =
-    reviewCount > 0
-      ? Number.parseFloat(
-          (
-            (reviews ?? []).reduce((sum, r) => sum + r.rating, 0) / reviewCount
-          ).toFixed(1),
-        )
-      : 0;
+  const reviewCount = rating.count;
+  const avgRating = roundRating(rating.average);
 
   return {
     status: 200,

@@ -83,6 +83,11 @@ export default function Messages() {
       }),
     [setState],
   );
+  const onOpen = useCallback(
+    (item: ConversationListItem) =>
+      router.push(`/(app)/messages/${item.conversation_id}`),
+    [router],
+  );
   const onToggleRead = useCallback(
     (item: ConversationListItem) => {
       if (item.unread_count > 0) {
@@ -105,6 +110,24 @@ export default function Messages() {
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
+
+  // Stable renderItem + stable per-row handlers keep ConversationRow's
+  // `memo` effective: only rows whose own data actually changed re-render,
+  // instead of the whole visible window on every list state change.
+  const currentUserId = session?.user.id;
+  const renderRow = useCallback(
+    ({ item }: { item: ConversationListItem }) => (
+      <ConversationRow
+        item={item}
+        currentUserId={currentUserId}
+        onPress={onOpen}
+        onLongPress={setMenuFor}
+        onArchiveToggle={onArchiveToggle}
+        onToggleRead={onToggleRead}
+      />
+    ),
+    [currentUserId, onOpen, onArchiveToggle, onToggleRead],
+  );
 
   if (!session) {
     return (
@@ -156,18 +179,7 @@ export default function Messages() {
         className="flex-1"
         data={rows}
         keyExtractor={(c) => c.conversation_id}
-        renderItem={({ item }) => (
-          <ConversationRow
-            item={item}
-            currentUserId={session.user.id}
-            onPress={() =>
-              router.push(`/(app)/messages/${item.conversation_id}`)
-            }
-            onLongPress={() => setMenuFor(item)}
-            onArchiveToggle={() => onArchiveToggle(item)}
-            onToggleRead={() => onToggleRead(item)}
-          />
-        )}
+        renderItem={renderRow}
         ListHeaderComponent={
           searching || filtered ? null : (
             <ArchivedEntryRow

@@ -1,6 +1,7 @@
 "use client";
 
 import { sendMessage } from "@/actions/sendMessage";
+import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
 import type {
   MessageRow,
   SendMessageAttachmentInput,
@@ -8,6 +9,7 @@ import type {
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useRef, useState } from "react";
 import { upsertMessageIntoCache } from "./cache";
+import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
 // A locally-staged message the user has sent but the server hasn't confirmed
@@ -73,8 +75,19 @@ export function useMessageOutbox(conversationId: string) {
           prev.filter((m) => m.clientGeneratedId !== clientGeneratedId),
         );
         upsertMessageIntoCache(qc, conversationId, canonical);
-        qc.invalidateQueries({ queryKey: messagingKeys.lists() });
-        qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
+        // Bump this conversation's inbox row from the message we already
+        // hold instead of refetching every cached inbox view. send_message
+        // also advances the sender's own last_read_at, so an outgoing
+        // message never changes our unread count. Falls back to
+        // invalidation only when the row isn't in any cached list yet.
+        const bumped = bumpConversationRow(qc, conversationId, {
+          last_message_at: canonical.created_at,
+          last_message_preview: conversationPreviewFor(canonical),
+          last_message_sender_id: canonical.sender_id,
+        });
+        if (!bumped) {
+          qc.invalidateQueries({ queryKey: messagingKeys.lists() });
+        }
         return;
       }
 

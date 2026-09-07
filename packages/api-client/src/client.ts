@@ -44,6 +44,8 @@ import type {
   EventPromotionContextResult,
   FreeRsvpBody,
   FreeRsvpResult,
+  HighlightPlaybackBody,
+  HighlightPlaybackResult,
   MarkConversationReadBody,
   MarkConversationUnreadBody,
   MessagingActionResult,
@@ -649,6 +651,16 @@ export function createApiClient(options: ApiClientOptions) {
         return request<DeleteHighlightResult>(
           "/api/mobile/highlights/slide/delete",
           { method: "POST", body: { slideId }, auth: true },
+        );
+      },
+      /** Build an optimised playback rendition for a just-uploaded highlight
+       *  video (the derivation needs the Cloudinary API secret, which only
+       *  the server has). A null playbackUrl means the source was already
+       *  within the playback profile -- serve the original. */
+      playback(body: HighlightPlaybackBody) {
+        return request<HighlightPlaybackResult>(
+          "/api/mobile/highlights/playback",
+          { method: "POST", body, auth: true },
         );
       },
     },
