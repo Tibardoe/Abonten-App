@@ -103,6 +103,10 @@ export function HighlightViewer({
   const transX = useSharedValue(0);
   const chrome = useSharedValue(1);
 
+  // Which URL the player is currently loading, so a load failure knows
+  // what to fall back from.
+  const currentUriRef = useRef<string | null>(null);
+
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
     p.timeUpdateEventInterval = 0.25;
@@ -216,27 +220,20 @@ export function HighlightViewer({
     if (!slide || !isVideo) return;
     let cancelled = false;
     (async () => {
-      // Prefer the optimised rendition; fall back to the original if it
-      // isn't ready yet (Cloudinary answers 423 while a derivation is still
-      // running). media_url is always immediately playable, so a viewer can
-      // never be left with a broken video.
+      // Prefer the optimised rendition. If it is not ready yet (Cloudinary
+      // answers 423 while a derivation is still running) or is otherwise
+      // unfetchable, the "statusChange" listener below swaps in media_url,
+      // which is always the original and always immediately playable.
+      //
+      // The swap CANNOT live here: replaceAsync resolves fine for a source
+      // that later fails to load -- a 404 surfaces asynchronously as an
+      // ExoPlayer source error, not as a rejected promise. Verified on an
+      // Android emulator, where a deliberately broken playback_url left the
+      // viewer spinning forever until this moved to the status listener.
       const preferred = playbackSourceFor(slide);
+      currentUriRef.current = preferred;
       try {
         await player.replaceAsync({ uri: preferred });
-        if (cancelled) return;
-        if (!paused) player.play();
-        return;
-      } catch {
-        if (cancelled) return;
-      }
-
-      const fallback = fallbackPlaybackSource(slide, preferred);
-      if (!fallback) {
-        nextSlide();
-        return;
-      }
-      try {
-        await player.replaceAsync({ uri: fallback });
         if (cancelled) return;
         if (!paused) player.play();
       } catch {
@@ -257,7 +254,27 @@ export function HighlightViewer({
     let timeSub: { remove: () => void } | undefined;
     runPlayer((p) => {
       statusSub = p.addListener("statusChange", ({ status }) => {
-        if (status === "readyToPlay") setLoaded(true);
+        if (status === "readyToPlay") {
+          setLoaded(true);
+          return;
+        }
+        if (status !== "error" || !slide) return;
+
+        // The source we were playing failed to load. Try the original
+        // before giving up; fallbackPlaybackSource returns null once the
+        // original itself has failed, so this can never loop.
+        const next = fallbackPlaybackSource(slide, currentUriRef.current ?? "");
+        if (!next) {
+          nextSlide();
+          return;
+        }
+        currentUriRef.current = next;
+        void p
+          .replaceAsync({ uri: next })
+          .then(() => {
+            if (!paused) runPlayer((pl) => pl.play());
+          })
+          .catch(() => nextSlide());
       });
       endSub = p.addListener("playToEnd", () => nextSlide());
       timeSub = p.addListener("timeUpdate", (e) => {
@@ -274,7 +291,7 @@ export function HighlightViewer({
         // player released on unmount
       }
     };
-  }, [isVideo, nextSlide, progress, slide?.media_duration, runPlayer]);
+  }, [isVideo, nextSlide, progress, slide, paused, runPlayer]);
 
   // ---- video: pause / resume with the shared paused state ----------
   useEffect(() => {
