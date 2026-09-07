@@ -51,7 +51,14 @@ export function ConversationActionSheet({
     <Sheet
       open={!!item}
       onClose={onClose}
-      title={item ? (item.title ?? "Conversation") : undefined}
+      title={
+        item
+          ? (item.other_display_name ??
+            item.subject_title ??
+            item.title ??
+            "Conversation")
+          : undefined
+      }
     >
       <View className="gap-1">
         {rows.map((r) => (

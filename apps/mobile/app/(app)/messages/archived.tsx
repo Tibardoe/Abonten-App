@@ -100,7 +100,7 @@ export default function ArchivedMessages() {
                   ? "Pull down to try again."
                   : search
                     ? "Try another name, event, or place."
-                    : "Conversations you archive show up here. Swipe a chat right to bring it back."
+                    : "Conversations you archive show up here. Swipe one left to bring it back."
               }
               actionLabel={q.isError ? "Retry" : undefined}
               onAction={q.isError ? () => q.refetch() : undefined}
