@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { getActiveConversation } from "@/features/messaging/activeConversation";
 import { notificationTarget } from "@/features/notifications/notificationLink";
 import { api } from "@/lib/api";
 import type { NotificationData } from "@abonten/types/notificationType";
@@ -8,14 +9,27 @@ import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
-// Foreground notifications still show a banner + play a sound.
+// Foreground notifications still show a banner + play a sound — except a
+// message for the conversation that's already on screen: the realtime layer
+// has already dropped it into the thread, so a banner + ping would just be
+// noise (spec §7, foreground suppression).
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (notification) => {
+    const data = notification.request.content.data as
+      | (NotificationData & Record<string, unknown>)
+      | undefined;
+    const suppress =
+      data?.kind === "message" &&
+      typeof data.conversationId === "string" &&
+      data.conversationId === getActiveConversation();
+
+    return {
+      shouldShowBanner: !suppress,
+      shouldShowList: !suppress,
+      shouldPlaySound: !suppress,
+      shouldSetBadge: false,
+    };
+  },
 });
 
 function resolveProjectId(): string | undefined {
