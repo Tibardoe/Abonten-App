@@ -34,6 +34,10 @@ import {
   listTransactionsCore,
 } from "@abonten/services/admin/finance/financeAdminCore";
 import {
+  type ListBlocksFilters,
+  listConversationBlocksCore,
+} from "@abonten/services/admin/moderation/blocksAdminCore";
+import {
   type ListNotificationsFilters,
   getNotificationAdminCore,
   listNotificationsAdminCore,
@@ -56,6 +60,11 @@ import {
   getRoleMatrixCore,
   listAdminStaffCore,
 } from "@abonten/services/admin/settings/adminSettingsCore";
+import {
+  type ListSupportFilters,
+  getSupportConversationDetailCore,
+  listSupportConversationsCore,
+} from "@abonten/services/admin/support/supportAdminCore";
 import {
   type ListUsersFilters,
   getUserDetailCore,
@@ -274,4 +283,21 @@ export async function loadAnalytics(
 export async function loadSearch(q: string) {
   const ctx = await requireAdmin();
   return globalSearchCore(getServiceClient(), ctx, { q });
+}
+
+// ── In-app support queue + blocked-users browser ────────────
+
+export async function loadSupportQueue(filters: ListSupportFilters) {
+  const ctx = await requireAdmin();
+  return listSupportConversationsCore(getServiceClient(), ctx, filters);
+}
+
+export async function loadSupportConversation(id: string) {
+  const ctx = await requireAdmin();
+  return getSupportConversationDetailCore(getServiceClient(), ctx, id);
+}
+
+export async function loadBlocks(filters: ListBlocksFilters) {
+  const ctx = await requireAdmin();
+  return listConversationBlocksCore(getServiceClient(), ctx, filters);
 }

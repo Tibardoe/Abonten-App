@@ -11,6 +11,7 @@ import {
   flattenConversations,
   useConversations,
 } from "@/messaging/hooks/useConversations";
+import { useOpenConversation } from "@/messaging/hooks/useOpenConversation";
 import type {
   ConversationFilter,
   ConversationRoleScope,
@@ -27,6 +28,7 @@ const ROLE_LABEL: Record<ConversationRoleScope, string> = {
 
 export function ConversationList({ activeId }: { activeId?: string }) {
   const { data: user } = useCurrentUser();
+  const openSupport = useOpenConversation();
   const isOrganizer = useIsOrganizer();
   const isPlaceOwner = useIsPlaceOwner();
   // The customer/organizer split only means anything to someone who runs an
@@ -109,6 +111,15 @@ export function ConversationList({ activeId }: { activeId?: string }) {
                 className="text-sm font-medium text-primary hover:underline"
               >
                 Retry
+              </button>
+            ) : filter !== "archived" ? (
+              <button
+                type="button"
+                disabled={openSupport.isPending}
+                onClick={() => openSupport.mutate({ type: "support" })}
+                className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+              >
+                Contact Abonten Support
               </button>
             ) : null}
           </div>

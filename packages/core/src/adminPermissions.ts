@@ -65,6 +65,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "settings.view",
   "settings.manage",
   "admins.manage",
+  "support.view",
+  "support.respond",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -122,6 +124,8 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "claims.view",
   "reviews.view",
   "monitoring.view",
+  "support.view",
+  "support.respond",
 ];
 
 const ANALYST: AdminPermissionKey[] = [

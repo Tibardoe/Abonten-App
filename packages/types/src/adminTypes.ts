@@ -59,7 +59,9 @@ export type AdminPermissionKey =
   | "audit.view"
   | "settings.view"
   | "settings.manage"
-  | "admins.manage";
+  | "admins.manage"
+  | "support.view"
+  | "support.respond";
 
 export type AdminUserStatus = "active" | "disabled";
 
@@ -1035,4 +1037,80 @@ export type RoleMatrix = {
   grants: Record<string, string[]>;
   /** roles whose grant set is immutable (super_admin). */
   lockedRoles: string[];
+};
+
+// ─────────────────────────────────────────────────────────────
+// In-app support queue (Admin Console — support.view / support.respond).
+// A support conversation is a public.conversation with type='support'.
+// The claiming agent is tracked on conversation.assigned_to and is
+// deliberately NOT a conversation_participant, so their identity never
+// reaches the requester.
+// ─────────────────────────────────────────────────────────────
+
+export type SupportQueueScope =
+  | "unassigned"
+  | "mine"
+  | "open"
+  | "closed"
+  | "all";
+
+export type SupportConversationListItem = {
+  id: string;
+  status: "open" | "closed";
+  requesterId: string;
+  requesterName: string | null;
+  assignedToId: string | null;
+  assignedToName: string | null;
+  lastMessageAt: string | null;
+  lastMessagePreview: string | null;
+  /** true when the most recent message was sent by the requester (awaiting a reply). */
+  awaitingReply: boolean;
+  messageCount: number;
+  createdAt: string;
+};
+
+export type SupportMessageEntry = {
+  id: string;
+  /** 'requester' | 'support' | 'system' — never the agent's real name. */
+  author: "requester" | "support" | "system";
+  senderId: string | null;
+  body: string | null;
+  systemEvent: string | null;
+  createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+};
+
+export type SupportConversationDetail = {
+  id: string;
+  status: "open" | "closed";
+  createdAt: string;
+  requester: {
+    id: string;
+    username: string | null;
+    fullName: string | null;
+    email: string | null; // only for users.view_pii
+  };
+  assignedToId: string | null;
+  assignedToName: string | null;
+  assignedAt: string | null;
+  messages: SupportMessageEntry[];
+  notes: AdminNoteEntry[];
+};
+
+// ─────────────────────────────────────────────────────────────
+// Blocked-users browser (Admin Console — read-only, users.view).
+// Rows come straight from public.conversation_block.
+// ─────────────────────────────────────────────────────────────
+
+export type ConversationBlockListItem = {
+  id: string;
+  blockerId: string;
+  blockerName: string | null;
+  blockedId: string;
+  blockedName: string | null;
+  /** null => a global block; otherwise scoped to this conversation. */
+  conversationId: string | null;
+  conversationType: string | null;
+  createdAt: string;
 };

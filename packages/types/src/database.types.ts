@@ -460,6 +460,9 @@ export type Database = {
       };
       conversation: {
         Row: {
+          assigned_at: string | null;
+          assigned_by: string | null;
+          assigned_to: string | null;
           created_at: string;
           created_by: string | null;
           event_id: string | null;
@@ -478,6 +481,9 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          assigned_at?: string | null;
+          assigned_by?: string | null;
+          assigned_to?: string | null;
           created_at?: string;
           created_by?: string | null;
           event_id?: string | null;
@@ -496,6 +502,9 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          assigned_at?: string | null;
+          assigned_by?: string | null;
+          assigned_to?: string | null;
           created_at?: string;
           created_by?: string | null;
           event_id?: string | null;
@@ -514,6 +523,34 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "conversation_assigned_by_fkey";
+            columns: ["assigned_by"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_assigned_by_fkey";
+            columns: ["assigned_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "conversation_assigned_to_fkey";
+            columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_assigned_to_fkey";
+            columns: ["assigned_to"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
           {
             foreignKeyName: "conversation_created_by_fkey";
             columns: ["created_by"];
