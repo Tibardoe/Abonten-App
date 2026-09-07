@@ -124,7 +124,12 @@ export default function ConversationScreen() {
     const newest = serverMessages[0];
     if (!newest || newest.created_at === lastMarkedRef.current) return;
     lastMarkedRef.current = newest.created_at;
-    markRead.mutate({ conversationId, upTo: newest.created_at });
+    // No `upTo` — the RPC defaults to now(), which reads past every message.
+    // (Passing newest.created_at was doubly broken: the raw "+00:00" string
+    // failed the datetime validation, and even normalised its millisecond
+    // precision landed just before a microsecond-stamped message, so the
+    // unread count never reached zero.)
+    markRead.mutate({ conversationId });
   }, [valid, serverMessages, conversationId, markRead]);
 
   const { typingUserIds, sendTyping } = useConversationRealtime(

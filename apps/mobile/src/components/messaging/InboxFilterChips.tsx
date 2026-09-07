@@ -30,13 +30,18 @@ export function InboxFilterChips({
   onAddPress: () => void;
 }) {
   return (
+    // The horizontal ScrollView must not flex-grow: dropped straight into a
+    // flex column it otherwise balloons to fill the free vertical space and
+    // the chips float in the middle with big gaps above/below (same trap as
+    // CategoryChipsRow). flexGrow:0 pins it to its content height.
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
+      style={{ flexGrow: 0 }}
       contentContainerStyle={{
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 6,
         gap: 8,
         alignItems: "center",
       }}

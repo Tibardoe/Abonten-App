@@ -6,7 +6,10 @@ import { z } from "zod";
 
 const schema = z.object({
   conversationId: z.string().uuid(),
-  upTo: z.string().datetime().nullish(),
+  // `offset: true` — Postgres timestamptz values (message.created_at) come
+  // back as "…+00:00", which the default (Z-only) datetime() rejects, so
+  // every "mark read up to this message" call was silently 400ing.
+  upTo: z.string().datetime({ offset: true }).nullish(),
 });
 
 /**

@@ -3,8 +3,42 @@ import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
 import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
 import { type ReactElement, memo, useRef } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
+
+// A tight unread count pill — a real 18px circle (a short pill past one
+// digit), number centred. Raw Text + fixed geometry so AppText's default
+// line-height ratio can't stretch it into a tall oval.
+function UnreadPill({ count }: { count: number }) {
+  const label = count > 99 ? "99+" : String(count);
+  return (
+    <View
+      className="bg-primary"
+      style={{
+        minWidth: 18,
+        height: 18,
+        borderRadius: 9,
+        paddingHorizontal: label.length > 1 ? 5 : 0,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        allowFontScaling={false}
+        style={{
+          color: "#ffffff",
+          fontSize: 11,
+          lineHeight: 18,
+          fontWeight: "700",
+          textAlign: "center",
+          includeFontPadding: false,
+        }}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+}
 
 const TYPE_ICON: Record<ConversationType, IoniconName> = {
   event: "calendar-outline",
@@ -154,16 +188,7 @@ export const ConversationRow = memo(function ConversationRow({
           {item.muted ? (
             <Icon name="notifications-off-outline" size={13} tone="muted" />
           ) : null}
-          {unread ? (
-            <View className="min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5">
-              <AppText
-                allowFontScaling={false}
-                className="text-[11px] font-bold text-primary-foreground"
-              >
-                {item.unread_count > 99 ? "99+" : item.unread_count}
-              </AppText>
-            </View>
-          ) : null}
+          {unread ? <UnreadPill count={item.unread_count} /> : null}
         </View>
       </View>
     </Pressable>

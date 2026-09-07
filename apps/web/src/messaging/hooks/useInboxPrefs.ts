@@ -1,7 +1,7 @@
 "use client";
 
 import type { ConversationRoleScope } from "@abonten/types/messagingType";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Remembers the user's last inbox mode + added filter chips so re-opening
 // /messages lands on the same view (spec §11). Keyed by user id — a
@@ -60,25 +60,27 @@ function sanitize(raw: unknown): InboxPrefs {
 
 export function useInboxPrefs(userId: string | undefined) {
   const [prefs, setPrefs] = useState<InboxPrefs>(DEFAULTS);
-  const prefsRef = useRef(prefs);
-  prefsRef.current = prefs;
 
   useEffect(() => {
     if (!userId) {
       setPrefs(DEFAULTS);
       return;
     }
+    let cancelled = false;
     try {
       const raw = window.localStorage.getItem(storageKey(userId));
-      setPrefs(raw ? sanitize(JSON.parse(raw)) : DEFAULTS);
+      const next = raw ? sanitize(JSON.parse(raw)) : DEFAULTS;
+      if (!cancelled) setPrefs(next);
     } catch {
-      setPrefs(DEFAULTS);
+      if (!cancelled) setPrefs(DEFAULTS);
     }
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
-  const persist = useCallback(
+  const write = useCallback(
     (next: InboxPrefs) => {
-      setPrefs(next);
       if (!userId) return;
       try {
         window.localStorage.setItem(storageKey(userId), JSON.stringify(next));
@@ -90,22 +92,24 @@ export function useInboxPrefs(userId: string | undefined) {
   );
 
   const setRoleScope = useCallback(
-    (roleScope: ConversationRoleScope) =>
-      persist({ ...prefsRef.current, roleScope }),
-    [persist],
+    (roleScope: ConversationRoleScope) => {
+      const next = { ...prefs, roleScope };
+      setPrefs(next);
+      write(next);
+    },
+    [prefs, write],
   );
 
   const toggleCustomFilter = useCallback(
     (key: CustomFilterKey) => {
-      const current = prefsRef.current.customFilters;
-      persist({
-        ...prefsRef.current,
-        customFilters: current.includes(key)
-          ? current.filter((k) => k !== key)
-          : [...current, key],
-      });
+      const customFilters = prefs.customFilters.includes(key)
+        ? prefs.customFilters.filter((k) => k !== key)
+        : [...prefs.customFilters, key];
+      const next = { ...prefs, customFilters };
+      setPrefs(next);
+      write(next);
     },
-    [persist],
+    [prefs, write],
   );
 
   return {

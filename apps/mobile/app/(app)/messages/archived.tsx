@@ -57,6 +57,7 @@ export default function ArchivedMessages() {
       />
 
       <FlatList
+        className="flex-1"
         data={rows}
         keyExtractor={(c) => c.conversation_id}
         renderItem={({ item }) => (

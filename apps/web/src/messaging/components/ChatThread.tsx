@@ -116,7 +116,11 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
     const newest = serverMessages[0];
     if (!newest || newest.created_at === lastMarkedRef.current) return;
     lastMarkedRef.current = newest.created_at;
-    markRead.mutate({ conversationId, upTo: newest.created_at });
+    // No `upTo` — the RPC defaults to now(), which reads past every message.
+    // (Passing newest.created_at was doubly broken: the raw "+00:00" string
+    // failed datetime validation, and normalising it to millisecond
+    // precision still landed before a microsecond-stamped message.)
+    markRead.mutate({ conversationId });
   }, [serverMessages, conversationId, markRead]);
 
   const { typingUserIds, sendTyping } = useConversationRealtime(
