@@ -1,5 +1,9 @@
 import { useDeleteHighlightSlide } from "@/features/profile/useHighlights";
 import { hapticLight } from "@/lib/haptics";
+import {
+  fallbackPlaybackSource,
+  playbackSourceFor,
+} from "@abonten/core/highlightPlayback";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { AppText, Avatar, Icon } from "@abonten/ui-native";
 import { Image } from "expo-image";
@@ -212,8 +216,27 @@ export function HighlightViewer({
     if (!slide || !isVideo) return;
     let cancelled = false;
     (async () => {
+      // Prefer the optimised rendition; fall back to the original if it
+      // isn't ready yet (Cloudinary answers 423 while a derivation is still
+      // running). media_url is always immediately playable, so a viewer can
+      // never be left with a broken video.
+      const preferred = playbackSourceFor(slide);
       try {
-        await player.replaceAsync({ uri: slide.media_url });
+        await player.replaceAsync({ uri: preferred });
+        if (cancelled) return;
+        if (!paused) player.play();
+        return;
+      } catch {
+        if (cancelled) return;
+      }
+
+      const fallback = fallbackPlaybackSource(slide, preferred);
+      if (!fallback) {
+        nextSlide();
+        return;
+      }
+      try {
+        await player.replaceAsync({ uri: fallback });
         if (cancelled) return;
         if (!paused) player.play();
       } catch {

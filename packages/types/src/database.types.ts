@@ -1748,6 +1748,7 @@ export type Database = {
           moderated_by: string | null;
           moderation_reason: string | null;
           moderation_state: string | null;
+          playback_url: string | null;
           public_id: string | null;
           thumbnail_url: string | null;
           user_id: string;
@@ -1764,6 +1765,7 @@ export type Database = {
           moderated_by?: string | null;
           moderation_reason?: string | null;
           moderation_state?: string | null;
+          playback_url?: string | null;
           public_id?: string | null;
           thumbnail_url?: string | null;
           user_id: string;
@@ -1780,6 +1782,7 @@ export type Database = {
           moderated_by?: string | null;
           moderation_reason?: string | null;
           moderation_state?: string | null;
+          playback_url?: string | null;
           public_id?: string | null;
           thumbnail_url?: string | null;
           user_id?: string;

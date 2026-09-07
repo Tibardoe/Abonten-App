@@ -28,6 +28,8 @@ export type {
   ConversationMessagesResult,
   ConversationsListResult,
   DeleteHighlightResult,
+  HighlightPlaybackBody,
+  HighlightPlaybackResult,
   DeleteMessageBody,
   DeletePromoCodeResult,
   DeleteEventDraftResult,

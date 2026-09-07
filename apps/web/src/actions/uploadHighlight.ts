@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { prepareHighlightVideoDelivery } from "@abonten/services/uploads/highlightVideoDelivery";
 import type { HighlightUploadMetadataItem } from "@abonten/types/highlightUploadType";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -79,6 +80,34 @@ function resolveVideoDelivery(item: HighlightUploadMetadataItem): {
   };
 }
 
+// The trim window, only when the editor set a real strict sub-range -- the
+// same validity rules resolveVideoDelivery applies above, reused so the eager
+// rendition and the fallback delivery URL always describe the same segment.
+function resolveTrimWindow(
+  item: HighlightUploadMetadataItem,
+): { start: number; end: number } | null {
+  if (item.resourceType !== "video") return null;
+  const start = item.trimStartSeconds;
+  const end = item.trimEndSeconds;
+  const duration = item.durationSeconds;
+
+  const valid =
+    typeof start === "number" &&
+    typeof end === "number" &&
+    Number.isFinite(start) &&
+    Number.isFinite(end) &&
+    start >= 0 &&
+    end > start &&
+    (typeof duration !== "number" || end <= duration + 0.5);
+  if (!valid) return null;
+
+  const isFullLength =
+    start <= 0.05 && typeof duration === "number" && end >= duration - 0.05;
+  if (isFullLength) return null;
+
+  return { start, end };
+}
+
 // The video bytes themselves never reach this action -- they go straight
 // from the browser to Cloudinary (see uploadToCloudinary.ts +
 // getHighlightUploadSignature.ts). This only ever receives small JSON
@@ -149,11 +178,31 @@ export default async function uploadHighlight(
 
       const { mediaUrl, durationSeconds } = resolveVideoDelivery(item);
 
+      // Ask Cloudinary to build an optimised playback rendition, but only
+      // when the source actually exceeds the playback profile -- see
+      // @abonten/core/videoDelivery for the measured reasoning (re-encoding
+      // an already-small clip can produce a LARGER file). The derivation runs
+      // in the background, so this returns immediately; media_url still holds
+      // the original, which the players fall back to while it builds.
+      const delivery =
+        item.resourceType === "video"
+          ? await prepareHighlightVideoDelivery({
+              publicId: item.publicId,
+              version: item.version,
+              width: item.width ?? null,
+              height: item.height ?? null,
+              bytes: item.bytes,
+              durationSeconds: item.durationSeconds ?? null,
+              trim: resolveTrimWindow(item),
+            })
+          : null;
+
       const { error: dbError } = await supabase.from("highlight").insert({
         user_id: user.id,
         media_url: mediaUrl,
+        playback_url: delivery?.playbackUrl ?? null,
         media_type: item.resourceType,
-        thumbnail_url: thumbnailUrl,
+        thumbnail_url: delivery?.posterUrl ?? thumbnailUrl,
         media_duration: item.resourceType === "video" ? durationSeconds : null,
         group_id: groupId,
         public_id: item.publicId,

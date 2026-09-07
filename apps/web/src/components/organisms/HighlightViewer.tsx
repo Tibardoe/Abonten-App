@@ -9,10 +9,20 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { ReportDialog } from "@/components/organisms/ReportDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useHighlightViewer } from "@/hooks/useHighlightViewer";
+import {
+  fallbackPlaybackSource,
+  playbackSourceFor,
+} from "@abonten/core/highlightPlayback";
 import type { HighlightGroup } from "@abonten/types/highlightType";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
-import { useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { IoMdArrowBack } from "react-icons/io";
 import { IoChevronBack, IoChevronForward, IoPlay } from "react-icons/io5";
 import { SlControlPause } from "react-icons/sl";
@@ -201,6 +211,21 @@ export default function HighlightViewer({
     currentSlide.media_type === "video"
       ? currentSlide.thumbnail_url
       : currentSlide.media_url;
+
+  // Which URL the <video> is currently pointing at. Reset whenever the slide
+  // changes so each slide starts from its preferred (optimised) source.
+  const [videoSrc, setVideoSrc] = useState(() =>
+    playbackSourceFor(currentSlide),
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on slide identity
+  useEffect(() => {
+    setVideoSrc(playbackSourceFor(currentSlide));
+  }, [currentSlide.id]);
+
+  const handleVideoError = useCallback(() => {
+    const fallback = fallbackPlaybackSource(currentSlide, videoSrc);
+    if (fallback) setVideoSrc(fallback);
+  }, [currentSlide, videoSrc]);
 
   // Defined once and reused by both the mobile and desktop header rows below
   // (two separate elements, per this file's existing responsive-duplication
@@ -478,16 +503,22 @@ export default function HighlightViewer({
           ) : (
             <video
               ref={videoRef}
-              src={currentSlide.media_url}
+              // Prefer the optimised rendition; if it is not ready yet
+              // (Cloudinary answers 423 while a derivation is still running)
+              // onError swaps in the original, which is always playable.
+              src={videoSrc}
+              poster={currentSlide.thumbnail_url ?? undefined}
               className={`max-w-full max-h-full transition-opacity duration-200 ${
                 isLoading ? "opacity-0" : "opacity-100"
               }`}
               controls={false}
               playsInline
               autoPlay
+              preload="metadata"
               onEnded={handleNextSlide}
               onLoadedMetadata={handleVideoLoadedMetadata}
               onCanPlay={handleVideoCanPlay}
+              onError={handleVideoError}
               muted={false}
             />
           )}
