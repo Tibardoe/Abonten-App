@@ -85,3 +85,5 @@ export {
   KeyboardAwareScrollView,
   type KeyboardAwareScrollViewProps,
 } from "./KeyboardAwareScrollView";
+export { BottomBar, type BottomBarProps } from "./BottomBar";
+export { useKeyboardHeight, useKeyboardVisible } from "./useKeyboard";

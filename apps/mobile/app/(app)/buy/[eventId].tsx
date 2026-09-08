@@ -18,6 +18,7 @@ import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import {
   AppText,
+  BottomBar,
   Button,
   Chip,
   Icon,
@@ -524,7 +525,7 @@ export default function BuyTicketsScreen() {
         </View>
       </KeyboardAwareScrollView>
 
-      <View className="border-t border-border p-4">
+      <BottomBar className="border-t border-border bg-background px-4 pt-4">
         <Button
           title={
             validate.isPending || cancel.isPending
@@ -541,7 +542,7 @@ export default function BuyTicketsScreen() {
           }
           onPress={proceed}
         />
-      </View>
+      </BottomBar>
     </View>
   );
 }

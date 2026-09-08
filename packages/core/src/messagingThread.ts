@@ -15,6 +15,9 @@ export type PendingMessageLike = {
   replyToMessageId: string | null;
   createdAt: string;
   hasAttachments: boolean;
+  /** Set for a non-text optimistic send (a photo, a voice note) so the
+   *  bubble renders the right shape before the server confirms it. */
+  messageType?: MessageRow["message_type"];
 };
 
 export type ChatEntry<P extends PendingMessageLike = PendingMessageLike> =
@@ -72,7 +75,7 @@ function pendingToRow(p: PendingMessageLike, myId: string): MessageRow {
     id: p.clientGeneratedId,
     conversation_id: "",
     sender_id: myId,
-    message_type: p.hasAttachments ? "image" : "text",
+    message_type: p.messageType ?? (p.hasAttachments ? "image" : "text"),
     content: p.content,
     system_event: null,
     system_data: {},

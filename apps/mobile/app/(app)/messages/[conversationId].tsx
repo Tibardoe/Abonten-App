@@ -5,6 +5,7 @@ import { Composer } from "@/components/messaging/Composer";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { DaySeparator } from "@/components/messaging/DaySeparator";
 import { MessageBubble } from "@/components/messaging/MessageBubble";
+import { NewMessagesPill } from "@/components/messaging/NewMessagesPill";
 import { SystemMessage } from "@/components/messaging/SystemMessage";
 import { TypingIndicator } from "@/components/messaging/TypingIndicator";
 import { setActiveConversation } from "@/features/messaging/activeConversation";
@@ -12,6 +13,7 @@ import {
   type ChatEntry,
   buildChatEntries,
 } from "@/features/messaging/chatEntries";
+import { useChatScroll } from "@/features/messaging/useChatScroll";
 import {
   flattenMessages,
   useConversationDetail,
@@ -39,6 +41,7 @@ import {
   Sheet,
   SheetOption,
   Spinner,
+  useKeyboardVisible,
 } from "@abonten/ui-native";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -48,6 +51,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   TextInput,
   View,
 } from "react-native";
@@ -65,10 +69,21 @@ export default function ConversationScreen() {
   const { session } = useSession();
   const myId = session?.user.id;
   const c = useThemeColors();
+  const kbVisible = useKeyboardVisible();
+  const chat = useChatScroll<ChatEntry>();
 
   const detailQ = useConversationDetail(valid ? conversationId : undefined);
   const messagesQ = useConversationMessages(valid ? conversationId : undefined);
   const { outbox, send, retry, reconcile } = useMessageOutbox(conversationId);
+
+  // The user just sent something — always follow it to the bottom.
+  const handleSend = useCallback(
+    (draft: Parameters<typeof send>[0]) => {
+      send(draft);
+      chat.followOwnMessage();
+    },
+    [send, chat],
+  );
 
   const markRead = useMarkConversationRead();
   const editMsg = useEditMessage(conversationId);
@@ -95,6 +110,11 @@ export default function ConversationScreen() {
     () => buildChatEntries(serverMessages, outbox, myId),
     [serverMessages, outbox, myId],
   );
+
+  // No cached pages AND not yet errored -> genuine first load. A return
+  // visit has `messagesQ.data` from the (now long-lived) query cache, so the
+  // thread renders instantly and only a quiet background refetch runs.
+  const noThreadYet = messagesQ.data === undefined && !messagesQ.isError;
 
   // Once the server thread contains a client-generated id, the matching
   // optimistic row has done its job — drop it from the outbox so a long
@@ -135,10 +155,25 @@ export default function ConversationScreen() {
     markRead.mutate({ conversationId });
   }, [valid, serverMessages, conversationId, markRead]);
 
+  // A message from the other side landed: the thread is open so mark it
+  // read, and let the scroll logic decide whether to follow it down or
+  // raise the "N new messages" pill.
+  const onIncomingMessage = useCallback(() => {
+    markNewestRead();
+    chat.noteIncoming();
+  }, [markNewestRead, chat]);
+
   const { typingUserIds, sendTyping } = useConversationRealtime(
     valid ? conversationId : undefined,
-    { onIncomingMessage: markNewestRead },
+    { onIncomingMessage },
   );
+
+  // Keyboard opened — if the reader was already at the latest message, keep
+  // them pinned there rather than leaving the newest bubble under the
+  // keyboard.
+  useEffect(() => {
+    if (kbVisible) chat.onKeyboardShow();
+  }, [kbVisible, chat]);
 
   // Mark read when the thread is focused and whenever a fresh page settles.
   useFocusEffect(
@@ -263,49 +298,77 @@ export default function ConversationScreen() {
               This conversation isn't available.
             </AppText>
           </View>
-        ) : messagesQ.isLoading ? (
+        ) : noThreadYet ? (
+          // Genuine first load only — never on a return visit, where the
+          // cached pages render straight away and a background refetch
+          // reconciles silently (task §4 / §14).
           <View className="flex-1 items-center justify-center">
             <Spinner />
           </View>
         ) : (
-          <FlatList
-            data={entries}
-            inverted
-            keyExtractor={(e) => e.id}
-            keyboardDismissMode="interactive"
-            keyboardShouldPersistTaps="handled"
-            maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
-            contentContainerClassName="py-3"
-            onEndReached={onEndReached}
-            onEndReachedThreshold={0.4}
-            ListHeaderComponent={
-              typingUserIds.length > 0 ? <TypingIndicator /> : null
-            }
-            ListFooterComponent={
-              messagesQ.isFetchingNextPage ? (
-                <View className="py-3">
-                  <Spinner />
+          <View className="flex-1">
+            <FlatList
+              ref={chat.listRef}
+              data={entries}
+              inverted
+              keyExtractor={(e) => e.id}
+              keyboardDismissMode="interactive"
+              keyboardShouldPersistTaps="handled"
+              maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
+              onScroll={chat.onScroll}
+              scrollEventThrottle={16}
+              contentContainerClassName="py-3"
+              onEndReached={onEndReached}
+              onEndReachedThreshold={0.4}
+              refreshControl={
+                <RefreshControl
+                  refreshing={
+                    messagesQ.isRefetching && !messagesQ.isFetchingNextPage
+                  }
+                  onRefresh={() => messagesQ.refetch()}
+                  tintColor={c["muted-foreground"]}
+                />
+              }
+              ListHeaderComponent={
+                typingUserIds.length > 0 ? <TypingIndicator /> : null
+              }
+              ListFooterComponent={
+                messagesQ.isFetchingNextPage ? (
+                  <View className="py-3">
+                    <Spinner />
+                  </View>
+                ) : null
+              }
+              ListEmptyComponent={
+                <View className="flex-1 items-center gap-3 px-8 pt-16">
+                  <AppText variant="muted" className="text-center">
+                    {messagesQ.isError
+                      ? "Couldn't load messages."
+                      : "No messages yet — say hello."}
+                  </AppText>
+                  {messagesQ.isError ? (
+                    <Button
+                      title="Retry"
+                      variant="outline"
+                      onPress={() => messagesQ.refetch()}
+                    />
+                  ) : null}
                 </View>
-              ) : null
-            }
-            ListEmptyComponent={
-              <View className="flex-1 items-center px-8 pt-16">
-                <AppText variant="muted" className="text-center">
-                  {messagesQ.isError
-                    ? "Couldn't load messages. Pull to retry."
-                    : "No messages yet — say hello."}
-                </AppText>
-              </View>
-            }
-            renderItem={renderEntry}
-          />
+              }
+              renderItem={renderEntry}
+            />
+            <NewMessagesPill
+              count={chat.unseenCount}
+              onPress={() => chat.scrollToBottom(true)}
+            />
+          </View>
         )}
 
         <Composer
           conversationId={conversationId}
           replyingTo={replyingTo}
           onCancelReply={() => setReplyingTo(null)}
-          onSend={send}
+          onSend={handleSend}
           onTyping={sendTyping}
           disabled={closed || iBlockedThem}
           disabledReason={

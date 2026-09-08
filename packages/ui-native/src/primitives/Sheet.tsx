@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import {
   Keyboard,
   Modal,
@@ -13,6 +13,7 @@ import { useThemeColors } from "../theme/ThemeProvider";
 import { shadow } from "../theme/tokens";
 import { Icon } from "./Icon";
 import { SectionTitle } from "./Typography";
+import { useKeyboardHeight } from "./useKeyboard";
 
 // Native echo of apps/web/src/components/atoms/BottomSheet.tsx — the surface
 // the web app uses for the filter modal, date pickers, and anchored menus.
@@ -64,32 +65,13 @@ export function Sheet({
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
 
-  // Live keyboard height. `will*` events fire before the animation on iOS
-  // (smoother); Android only emits `did*`.
-  const [kbHeight, setKbHeight] = useState(0);
+  // Live keyboard height, from the shared listener hook.
+  const kbHeight = useKeyboardHeight();
   useEffect(() => {
-    // Every time the sheet closes, drop the keyboard and reset the tracked
-    // height — otherwise a sheet dismissed while its input was focused keeps
-    // the last height (the hide event is missed once the listener is torn
-    // down), and the NEXT open renders lifted / clipped with dead space at
-    // the bottom where the keyboard used to be.
-    if (!open) {
-      setKbHeight(0);
-      Keyboard.dismiss();
-      return;
-    }
-    const showEvt =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvt =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-    const s = Keyboard.addListener(showEvt, (e) =>
-      setKbHeight(e.endCoordinates?.height ?? 0),
-    );
-    const h = Keyboard.addListener(hideEvt, () => setKbHeight(0));
-    return () => {
-      s.remove();
-      h.remove();
-    };
+    // Every time the sheet closes, drop the keyboard — otherwise a sheet
+    // dismissed while its input was focused can leave the keyboard up over
+    // the next screen.
+    if (!open) Keyboard.dismiss();
   }, [open]);
 
   // Guard: only ever apply a lift/clamp while the sheet is actually open, so

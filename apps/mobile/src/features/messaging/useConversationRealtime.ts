@@ -11,6 +11,7 @@ import {
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState } from "react-native";
 import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
@@ -51,6 +52,7 @@ export function useConversationRealtime(
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
 
   const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
+  const changesChannelRef = useRef<RealtimeChannel | null>(null);
   const typingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   );
@@ -112,19 +114,41 @@ export function useConversationRealtime(
       qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
     };
 
-    let changesChannel: RealtimeChannel | null = null;
+    // Tear down any channel left over from a previous mount of THIS
+    // conversation before opening a new one — a fast back/forward
+    // (unmount + remount) could otherwise run cleanup before the async
+    // subscribe below had assigned the ref, leaking the old socket and
+    // ending up with two `msgchanges:<id>` subscriptions delivering every
+    // INSERT twice.
+    const changesTopic = `msgchanges:${conversationId}`;
+    const broadcastTopic = conversationChannelName(conversationId);
+    for (const ch of supabase.getChannels()) {
+      const t = ch.topic.replace(/^realtime:/, "");
+      if (t === changesTopic || t === broadcastTopic) {
+        void supabase.removeChannel(ch);
+      }
+    }
+
+    // --- durable changes (non-private) --------------------------------
+    // supabase.channel() / .on() are synchronous; only setAuth + subscribe
+    // are async. Build + ref both channels up front so cleanup always has
+    // something concrete to remove.
+    const changesChannel = supabase.channel(changesTopic);
+    changesChannelRef.current = changesChannel;
+
+    const pushAuthAndRefresh = async () => {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (token) await supabase.realtime.setAuth(token);
+    };
 
     (async () => {
       // The RN client has a persisted session, but push the current access
       // token into the socket explicitly so a token refreshed mid-session is
       // used for the private channel's RLS check.
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (token) await supabase.realtime.setAuth(token);
+      await pushAuthAndRefresh();
       if (cancelled) return;
 
-      // --- durable changes (non-private) --------------------------------
-      changesChannel = supabase.channel(`msgchanges:${conversationId}`);
       changesChannel
         .on(
           "postgres_changes",
@@ -194,10 +218,10 @@ export function useConversationRealtime(
         });
 
       // --- typing / presence (private) ---------------------------------
-      const broadcastChannel = supabase.channel(
-        conversationChannelName(conversationId),
-        { config: { private: true, broadcast: { self: false } } },
-      );
+      const broadcastChannel = supabase.channel(broadcastTopic, {
+        config: { private: true, broadcast: { self: false } },
+      });
+      broadcastChannelRef.current = broadcastChannel;
       broadcastChannel.on(
         "broadcast",
         { event: MESSAGING_BROADCAST_EVENTS.typing },
@@ -209,20 +233,34 @@ export function useConversationRealtime(
         },
       );
       broadcastChannel.subscribe();
-      broadcastChannelRef.current = broadcastChannel;
     })();
+
+    // Foreground the app after a spell in the background: the socket may
+    // have dropped rows while suspended. Re-push the (possibly refreshed)
+    // token and force a reconcile — the same close-the-gap step the
+    // `wasConnected` reconnect path does.
+    const appStateSub = AppState.addEventListener("change", (next) => {
+      if (next === "active") {
+        void pushAuthAndRefresh().then(() => {
+          if (!cancelled) bump();
+        });
+      }
+    });
 
     return () => {
       cancelled = true;
+      appStateSub.remove();
       for (const t of timers.values()) clearTimeout(t);
       timers.clear();
       setTypingUserIds([]);
       setConnected(false);
       wasConnected.current = false;
       const bc = broadcastChannelRef.current;
+      const cc = changesChannelRef.current;
       broadcastChannelRef.current = null;
-      if (bc) supabase.removeChannel(bc);
-      if (changesChannel) supabase.removeChannel(changesChannel);
+      changesChannelRef.current = null;
+      if (bc) void supabase.removeChannel(bc);
+      if (cc) void supabase.removeChannel(cc);
     };
   }, [conversationId, myId, qc, dropTyping, markTyping]);
 

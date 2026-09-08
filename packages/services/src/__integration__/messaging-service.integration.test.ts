@@ -97,6 +97,46 @@ describe("messaging service layer (Cores + read queries)", () => {
     expect(denied.status).toBe(403);
   });
 
+  it("sendMessageCore stores a voice note as an audio message with duration + a '[Voice message]' preview", async () => {
+    const path = `${conversationId}/${crypto.randomUUID()}.m4a`;
+    const sent = await sendMessageCore(member.client, member.id, {
+      conversationId,
+      content: null,
+      // messageType left at the default — send_message classifies it from
+      // the first attachment's audio/* MIME.
+      attachments: [
+        {
+          storagePath: path,
+          mimeType: "audio/m4a",
+          fileName: "voice-message.m4a",
+          fileSize: 4096,
+          durationSeconds: 12,
+        },
+      ],
+    });
+    expect(sent.status).toBe(200);
+    expect(sent.data?.message.message_type).toBe("audio");
+    expect(sent.data?.message.attachments).toHaveLength(1);
+    expect(sent.data?.message.attachments[0].storage_path).toBe(path);
+    expect(Number(sent.data?.message.attachments[0].duration_seconds)).toBe(12);
+
+    const list = await fetchConversationsPage(organizer.client, organizer.id, {
+      filter: "all",
+    });
+    const row = list.data.find((r) => r.conversation_id === conversationId);
+    expect(row?.last_message_preview).toBe("[Voice message]");
+
+    // A non-participant still cannot attach anything to the thread.
+    const denied = await sendMessageCore(outsider.client, outsider.id, {
+      conversationId,
+      content: null,
+      attachments: [
+        { storagePath: `${conversationId}/x.m4a`, mimeType: "audio/m4a" },
+      ],
+    });
+    expect(denied.status).toBe(403);
+  });
+
   it("fetchMessagesPage returns newest-first, resolves replies, redacts deletes", async () => {
     const first = await sendMessageCore(member.client, member.id, {
       conversationId,
