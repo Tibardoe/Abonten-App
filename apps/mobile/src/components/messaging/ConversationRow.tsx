@@ -1,3 +1,4 @@
+import { hapticMedium } from "@/lib/haptics";
 import type { ConversationListItem } from "@abonten/api-client";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
 import type { ConversationType } from "@abonten/types/messagingType";
@@ -5,6 +6,8 @@ import { AppText, Avatar, Icon, type IoniconName } from "@abonten/ui-native";
 import { type ReactElement, memo, useCallback, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
+import type { Rect } from "./contextMenu/menuPlacement";
+import { useAnchorMeasure } from "./contextMenu/useAnchorMeasure";
 
 // A tight unread count pill — a real 18px circle (a short pill past one
 // digit), number centred. Raw Text + fixed geometry so AppText's default
@@ -15,10 +18,10 @@ function UnreadPill({ count }: { count: number }) {
     <View
       className="bg-primary"
       style={{
-        minWidth: 18,
-        height: 18,
-        borderRadius: 9,
-        paddingHorizontal: label.length > 1 ? 5 : 0,
+        minWidth: 20,
+        height: 20,
+        borderRadius: 10,
+        paddingHorizontal: label.length > 1 ? 6 : 0,
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -27,8 +30,8 @@ function UnreadPill({ count }: { count: number }) {
         allowFontScaling={false}
         style={{
           color: "#ffffff",
-          fontSize: 11,
-          lineHeight: 18,
+          fontSize: 12,
+          lineHeight: 20,
           fontWeight: "700",
           textAlign: "center",
           includeFontPadding: false,
@@ -110,6 +113,7 @@ export const ConversationRow = memo(function ConversationRow({
   onArchiveToggle,
   onToggleRead,
   archivedView = false,
+  hidden = false,
 }: {
   item: ConversationListItem;
   currentUserId: string | undefined;
@@ -119,16 +123,23 @@ export const ConversationRow = memo(function ConversationRow({
   // and made the `memo` above a no-op — every row re-rendered whenever any
   // list state changed. Binding the item here keeps that memo effective.
   onPress: (item: ConversationListItem) => void;
-  onLongPress?: (item: ConversationListItem) => void;
+  onLongPress?: (item: ConversationListItem, rect: Rect) => void;
   onArchiveToggle?: (item: ConversationListItem) => void;
   onToggleRead?: (item: ConversationListItem) => void;
   archivedView?: boolean;
+  /** Its lifted peek is showing in the overlay — hide the real row so it
+   *  isn't visible behind the lift-out. */
+  hidden?: boolean;
 }) {
+  const { ref: rowRef, measure } = useAnchorMeasure();
   const handlePress = useCallback(() => onPress(item), [onPress, item]);
-  const handleLongPress = useCallback(
-    () => onLongPress?.(item),
-    [onLongPress, item],
-  );
+  const handleLongPress = useCallback(() => {
+    if (!onLongPress) return;
+    hapticMedium();
+    measure().then((rect) => {
+      if (rect) onLongPress(item, rect);
+    });
+  }, [onLongPress, item, measure]);
   const handleArchiveToggle = useCallback(
     () => onArchiveToggle?.(item),
     [onArchiveToggle, item],
@@ -151,13 +162,18 @@ export const ConversationRow = memo(function ConversationRow({
 
   const row = (
     <Pressable
+      ref={rowRef}
       accessibilityRole="button"
-      accessibilityLabel={`${identity}${unread ? `, ${item.unread_count} unread` : ""}`}
+      accessibilityLabel={`${identity}${unread ? `, ${item.unread_count} unread` : ""}. Long press for actions`}
       onPress={handlePress}
       onLongPress={onLongPress ? handleLongPress : undefined}
       delayLongPress={280}
-      className="flex-row items-center gap-3 border-b border-border/60 bg-background px-4 py-3 active:bg-muted"
+      style={hidden ? { opacity: 0 } : undefined}
+      className="relative flex-row items-center gap-3.5 bg-background px-4 py-3.5 active:bg-muted"
     >
+      {/* Divider inset to the text start — the WhatsApp / iMessage list look. */}
+      <View className="absolute bottom-0 left-[82px] right-0 h-px bg-border/60" />
+
       {showAvatar ? (
         <Avatar
           publicId={item.other_avatar_public_id}
@@ -170,17 +186,21 @@ export const ConversationRow = memo(function ConversationRow({
         </View>
       )}
 
-      <View className="flex-1 gap-0.5">
+      <View className="flex-1 gap-1">
         <View className="flex-row items-center gap-2">
           <AppText
             variant={unread ? "bodyStrong" : "body"}
             numberOfLines={1}
-            className="flex-1"
+            className="flex-1 text-[16.5px] leading-[21px]"
           >
             {identity}
           </AppText>
           {item.last_message_at ? (
-            <AppText variant="caption" tone={unread ? "brand" : "muted"}>
+            <AppText
+              variant="caption"
+              tone={unread ? "brand" : "muted"}
+              className={`text-[13px] ${unread ? "font-semibold" : ""}`}
+            >
               {getRelativeTime(item.last_message_at)}
             </AppText>
           ) : null}
@@ -199,7 +219,7 @@ export const ConversationRow = memo(function ConversationRow({
           <AppText
             variant={unread ? "bodyStrong" : "meta"}
             numberOfLines={1}
-            className="flex-1"
+            className="flex-1 text-[14px] leading-[19px]"
           >
             {previewFor(item, lastFromMe)}
           </AppText>

@@ -2,9 +2,12 @@ import { api } from "@/lib/api";
 import type {
   BlockParticipantBody,
   EditMessageBody,
+  MessageRow,
   SetConversationStateBody,
 } from "@abonten/api-client";
+import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { applyReactionToCache } from "./cache";
 import {
   adjustUnreadBadge,
   applyConversationPatch,
@@ -168,6 +171,71 @@ export function useMarkConversationUnread() {
         queryKey: messagingKeys.detail(conversationId),
         refetchType: "active",
       });
+    },
+  });
+}
+
+// Toggle the caller's reaction on one message. Fully optimistic: the pill
+// row updates on tap, the server call reconciles. The toggle_message_reaction
+// RPC is author-agnostic (any participant may react) and idempotent, and the
+// realtime `message_reaction` subscription is the cross-device catch-up — so
+// on success we only correct the cache if the server disagreed with our
+// optimistic guess.
+type MessagesCache = InfiniteData<{ data: MessageRow[] }>;
+
+export function useToggleReaction(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { messageId: string; emoji: string }) =>
+      api.messaging.react(input),
+    onMutate: (input) => {
+      const key = messagingKeys.messages(conversationId);
+      const snapshot = qc.getQueryData<MessagesCache>(key);
+      // What we think will happen: if the caller already reacted with this
+      // emoji, the toggle removes it; otherwise it adds it.
+      const row = snapshot?.pages
+        .flatMap((p) => p.data)
+        .find((m) => m.id === input.messageId);
+      const mine = (row?.reactions ?? []).some(
+        (r) => r.emoji === input.emoji && r.reacted_by_me,
+      );
+      const optimisticAdded = !mine;
+      applyReactionToCache(
+        qc,
+        conversationId,
+        input.messageId,
+        input.emoji,
+        optimisticAdded,
+        true,
+      );
+      return { snapshot, optimisticAdded };
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx?.snapshot !== undefined) {
+        qc.setQueryData(messagingKeys.messages(conversationId), ctx.snapshot);
+      }
+    },
+    onSuccess: (res, input, ctx) => {
+      const serverAdded =
+        res.status === 200 ? (res.data?.added ?? ctx?.optimisticAdded) : null;
+      if (serverAdded == null) {
+        // A 4xx/5xx that didn't throw — roll the optimistic change back.
+        if (ctx?.snapshot !== undefined) {
+          qc.setQueryData(messagingKeys.messages(conversationId), ctx.snapshot);
+        }
+        return;
+      }
+      if (serverAdded !== ctx?.optimisticAdded && ctx?.snapshot !== undefined) {
+        qc.setQueryData(messagingKeys.messages(conversationId), ctx.snapshot);
+        applyReactionToCache(
+          qc,
+          conversationId,
+          input.messageId,
+          input.emoji,
+          serverAdded,
+          true,
+        );
+      }
     },
   });
 }

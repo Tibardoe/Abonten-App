@@ -56,13 +56,49 @@ export type MessageAttachmentRow = {
 };
 
 // The trimmed shape shown in a "replying to" quote — never carries its own
-// attachments or reply chain.
+// attachments or reply chain. The `attachment_*` / `duration_seconds` fields
+// are populated only for a non-text reply target so the quote can render a
+// thumbnail + "Photo" / "🎬 Video" / "🎤 Voice message · 0:18" instead of a
+// bare label.
 export type MessageReplyPreview = {
   id: string;
   sender_id: string | null;
   message_type: MessageType;
   content: string | null;
   deleted_at: string | null;
+  duration_seconds?: number | null;
+  /** Storage path of the first attachment (image/file), for a quote thumbnail. */
+  attachment_path?: string | null;
+  attachment_mime?: string | null;
+};
+
+// The fixed reaction palette offered by the contextual message menu. Kept in
+// lock-step with the CHECK inside the toggle_message_reaction RPC
+// (20260908133841_message_reactions.sql) — changing one means changing both.
+export const MESSAGE_REACTION_EMOJIS = [
+  "👍",
+  "❤️",
+  "😂",
+  "😮",
+  "😢",
+  "🙏",
+] as const;
+export type MessageReactionEmoji = (typeof MESSAGE_REACTION_EMOJIS)[number];
+
+// One raw reaction row (participant-readable via RLS).
+export type MessageReactionRow = {
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+};
+
+// Per-emoji rollup attached to a MessageRow for rendering the little pill row
+// under a bubble. `reacted_by_me` drives the "mine" highlight + toggle-off.
+export type MessageReactionSummary = {
+  emoji: string;
+  count: number;
+  reacted_by_me: boolean;
 };
 
 export type MessageRow = {
@@ -81,6 +117,10 @@ export type MessageRow = {
   deleted_at: string | null;
   attachments: MessageAttachmentRow[];
   reply_to: MessageReplyPreview | null;
+  // Per-emoji reaction rollup. Optional so the shared thread builder's
+  // optimistic-row factory and other MessageRow constructors don't have to
+  // supply it; `fetchMessagesPage` always populates it (possibly `[]`).
+  reactions?: MessageReactionSummary[];
 };
 
 export type ConversationParticipantRow = {
@@ -203,6 +243,12 @@ export type BlockParticipantInput = {
   conversationId: string;
   blockedUserId: string;
   block: boolean;
+};
+
+// Add or remove the caller's reaction on one message (idempotent toggle).
+export type ToggleMessageReactionInput = {
+  messageId: string;
+  emoji: string;
 };
 
 // ---- envelopes ------------------------------------------------------

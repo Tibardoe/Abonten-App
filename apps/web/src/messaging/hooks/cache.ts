@@ -1,3 +1,4 @@
+import { rollReaction } from "@abonten/core/messagingReactions";
 import type { MessageRow } from "@abonten/types/messagingType";
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
 import { messagingKeys } from "./keys";
@@ -45,6 +46,39 @@ export function upsertMessageIntoCache(
         pi === 0 ? { ...page, data: [row, ...page.data] } : page,
       );
       return { ...old, pages };
+    },
+  );
+}
+
+// Fold a reaction change into whichever loaded row it belongs to. `mine`
+// distinguishes the caller's own optimistic toggle from another
+// participant's realtime event — see @abonten/core/messagingReactions.
+// No-op if the row isn't loaded.
+export function applyReactionToCache(
+  qc: QueryClient,
+  conversationId: string,
+  messageId: string,
+  emoji: string,
+  added: boolean,
+  mine: boolean,
+): void {
+  qc.setQueryData<MessagesCache>(
+    messagingKeys.messages(conversationId),
+    (old) => {
+      if (!old) return old;
+      let hit = false;
+      const pages = old.pages.map((page) => ({
+        ...page,
+        data: page.data.map((m) => {
+          if (m.id !== messageId) return m;
+          hit = true;
+          return {
+            ...m,
+            reactions: rollReaction(m.reactions ?? [], emoji, added, mine),
+          };
+        }),
+      }));
+      return hit ? { ...old, pages } : old;
     },
   );
 }

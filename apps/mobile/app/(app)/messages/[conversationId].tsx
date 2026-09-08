@@ -1,18 +1,28 @@
 import { useSession } from "@/auth/SessionProvider";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ReportSheet } from "@/components/ReportSheet";
+import { ChatToast } from "@/components/messaging/ChatToast";
 import { Composer } from "@/components/messaging/Composer";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
 import { DaySeparator } from "@/components/messaging/DaySeparator";
+import {
+  MessageActionOverlay,
+  type MessageMenuTarget,
+} from "@/components/messaging/MessageActionOverlay";
 import { MessageBubble } from "@/components/messaging/MessageBubble";
 import { NewMessagesPill } from "@/components/messaging/NewMessagesPill";
 import { SystemMessage } from "@/components/messaging/SystemMessage";
 import { TypingIndicator } from "@/components/messaging/TypingIndicator";
+import type { Rect } from "@/components/messaging/contextMenu/menuPlacement";
 import { setActiveConversation } from "@/features/messaging/activeConversation";
 import {
   type ChatEntry,
   buildChatEntries,
 } from "@/features/messaging/chatEntries";
+import {
+  CLIPBOARD_SUPPORTED,
+  copyText,
+} from "@/features/messaging/clipboardSupport";
 import { useChatScroll } from "@/features/messaging/useChatScroll";
 import {
   flattenMessages,
@@ -27,7 +37,9 @@ import {
   useEditMessage,
   useMarkConversationRead,
   useSetConversationState,
+  useToggleReaction,
 } from "@/features/messaging/useMessagingActions";
+import { hapticSelection } from "@/lib/haptics";
 import { isUuid } from "@/lib/uuid";
 import type { MessageRow } from "@abonten/api-client";
 import {
@@ -90,14 +102,18 @@ export default function ConversationScreen() {
   const deleteMsg = useDeleteMessage(conversationId);
   const setState = useSetConversationState();
   const block = useBlockParticipant();
+  const toggleReaction = useToggleReaction(conversationId);
 
   const [replyingTo, setReplyingTo] = useState<MessageRow | null>(null);
-  const [menuTarget, setMenuTarget] = useState<MessageRow | null>(null);
+  const [menuTarget, setMenuTarget] = useState<MessageMenuTarget | null>(null);
   const [convMenuOpen, setConvMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [editing, setEditing] = useState<MessageRow | null>(null);
   const [editText, setEditText] = useState("");
   const [viewerUri, setViewerUri] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const pendingScrollRef = useRef<{ id: string; tries: number } | null>(null);
 
   const lastMarkedRef = useRef<string>("");
 
@@ -138,6 +154,16 @@ export default function ConversationScreen() {
   const otherUserId = context?.participants.find(
     (p) => p.user_id !== myId,
   )?.user_id;
+
+  // "Replying to X" label for the composer preview (spec §10–11).
+  const replyingToName = useMemo(() => {
+    if (!replyingTo) return undefined;
+    if (replyingTo.sender_id === myId) return "yourself";
+    const p = context?.participants.find(
+      (x) => x.user_id === replyingTo.sender_id,
+    );
+    return p?.profile?.full_name || p?.profile?.username || "them";
+  }, [replyingTo, myId, context]);
   const iBlockedThem =
     !!otherUserId && (context?.blocked_user_ids ?? []).includes(otherUserId);
   const closed = context?.status === "closed";
@@ -194,7 +220,101 @@ export default function ConversationScreen() {
   // render would defeat that and re-render every bubble in the thread on any
   // state change (a keystroke in the composer, a typing indicator, an
   // incoming message).
-  const openMessageMenu = useCallback((m: MessageRow) => setMenuTarget(m), []);
+  const openMessageMenu = useCallback(
+    (m: MessageRow, rect: Rect) => setMenuTarget({ message: m, rect }),
+    [],
+  );
+
+  const handleToggleReaction = useCallback(
+    (messageId: string, emoji: string) =>
+      toggleReaction.mutate(
+        { messageId, emoji },
+        {
+          // The optimistic pill is applied/reverted in the mutation hook; the
+          // screen just surfaces a lightweight failure note (spec §16).
+          onSettled: (res) => {
+            if (!res || res.status !== 200) setToast("Couldn't add reaction");
+          },
+        },
+      ),
+    [toggleReaction],
+  );
+
+  const handleCopy = useCallback(async (text: string) => {
+    const ok = await copyText(text);
+    if (ok) {
+      hapticSelection();
+      setToast("Copied");
+    } else {
+      setToast("Couldn't copy");
+    }
+  }, []);
+
+  // Jump to a message referenced by a reply quote (spec §11). If it isn't in
+  // the loaded pages yet, page older messages in until it is (capped).
+  const scrollToLoaded = useCallback(
+    (messageId: string) => {
+      const idx = entries.findIndex(
+        (e) => e.kind === "msg" && e.message.id === messageId,
+      );
+      if (idx < 0) return false;
+      chat.listRef.current?.scrollToIndex({
+        index: idx,
+        viewPosition: 0.4,
+        animated: true,
+      });
+      setHighlightId(messageId);
+      return true;
+    },
+    [entries, chat],
+  );
+
+  const scrollToMessage = useCallback(
+    (messageId: string) => {
+      if (!messageId) return;
+      if (scrollToLoaded(messageId)) return;
+      if (messagesQ.hasNextPage && !messagesQ.isFetchingNextPage) {
+        pendingScrollRef.current = { id: messageId, tries: 0 };
+        messagesQ.fetchNextPage();
+      } else {
+        setToast("Original message isn't loaded");
+      }
+    },
+    [scrollToLoaded, messagesQ],
+  );
+
+  // Resolve a pending "scroll to reply target" as older pages arrive.
+  // `scrollToLoaded` is re-created whenever `entries` changes (a new page
+  // landing), so this re-runs on every page fetch without listing `entries`.
+  useEffect(() => {
+    const pending = pendingScrollRef.current;
+    if (!pending) return;
+    if (scrollToLoaded(pending.id)) {
+      pendingScrollRef.current = null;
+      return;
+    }
+    if (pending.tries >= 6 || !messagesQ.hasNextPage) {
+      pendingScrollRef.current = null;
+      setToast("Couldn't find that message");
+      return;
+    }
+    if (!messagesQ.isFetchingNextPage) {
+      pending.tries += 1;
+      messagesQ.fetchNextPage();
+    }
+  }, [scrollToLoaded, messagesQ]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 1600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const t = setTimeout(() => setHighlightId(null), 1800);
+    return () => clearTimeout(t);
+  }, [highlightId]);
 
   const renderEntry = useCallback(
     ({ item }: { item: ChatEntry }) => {
@@ -213,13 +333,29 @@ export default function ConversationScreen() {
           isMine={item.isMine}
           isGroupStart={item.isGroupStart}
           seen={seen}
+          highlighted={item.message.id === highlightId}
+          // While its lifted clone is on screen in the action overlay, hide
+          // the real bubble so there's no "ghost" behind the lift-out.
+          hiddenForMenu={menuTarget?.message.id === item.message.id}
           onPressImage={setViewerUri}
           onLongPress={openMessageMenu}
+          onReply={setReplyingTo}
+          onReplyQuotePress={scrollToMessage}
+          onToggleReaction={handleToggleReaction}
           onRetry={retry}
         />
       );
     },
-    [myId, otherReadAt, openMessageMenu, retry],
+    [
+      myId,
+      otherReadAt,
+      openMessageMenu,
+      retry,
+      highlightId,
+      scrollToMessage,
+      handleToggleReaction,
+      menuTarget?.message.id,
+    ],
   );
 
   function submitEdit() {
@@ -320,6 +456,21 @@ export default function ConversationScreen() {
               contentContainerClassName="py-3"
               onEndReached={onEndReached}
               onEndReachedThreshold={0.4}
+              onScrollToIndexFailed={(info) => {
+                // The reply target isn't laid out yet — nudge toward it, then
+                // retry once the window has caught up.
+                chat.listRef.current?.scrollToOffset({
+                  offset: info.averageItemLength * info.index,
+                  animated: true,
+                });
+                setTimeout(() => {
+                  chat.listRef.current?.scrollToIndex({
+                    index: info.index,
+                    viewPosition: 0.4,
+                    animated: true,
+                  });
+                }, 120);
+              }}
               refreshControl={
                 <RefreshControl
                   refreshing={
@@ -367,6 +518,7 @@ export default function ConversationScreen() {
         <Composer
           conversationId={conversationId}
           replyingTo={replyingTo}
+          replyingToName={replyingToName}
           onCancelReply={() => setReplyingTo(null)}
           onSend={handleSend}
           onTyping={sendTyping}
@@ -381,49 +533,27 @@ export default function ConversationScreen() {
         />
       </KeyboardAvoidingView>
 
-      {/* Per-message actions */}
-      <Sheet
-        open={!!menuTarget}
-        onClose={() => setMenuTarget(null)}
-        title="Message"
-      >
-        <View className="gap-2">
-          {menuTarget && !menuTarget.deleted_at ? (
-            <SheetOption
-              icon="arrow-undo-outline"
-              title="Reply"
-              onPress={() => {
-                setReplyingTo(menuTarget);
-                setMenuTarget(null);
-              }}
-            />
-          ) : null}
-          {menuTarget && canEdit(menuTarget, myId) ? (
-            <SheetOption
-              icon="create-outline"
-              title="Edit"
-              onPress={() => {
-                setEditText(menuTarget.content ?? "");
-                setEditing(menuTarget);
-                setMenuTarget(null);
-              }}
-            />
-          ) : null}
-          {menuTarget &&
-          menuTarget.sender_id === myId &&
-          !menuTarget.deleted_at ? (
-            <SheetOption
-              icon="trash-outline"
-              title="Delete"
-              onPress={() => {
-                const t = menuTarget;
-                setMenuTarget(null);
-                confirmDelete(t);
-              }}
-            />
-          ) : null}
-        </View>
-      </Sheet>
+      {/* Per-message contextual action overlay (spec §1–7) */}
+      <MessageActionOverlay
+        target={menuTarget}
+        isMine={menuTarget?.message.sender_id === myId}
+        canCopy={CLIPBOARD_SUPPORTED}
+        canEdit={menuTarget ? canEdit(menuTarget.message, myId) : false}
+        canDelete={
+          !!menuTarget &&
+          menuTarget.message.sender_id === myId &&
+          !menuTarget.message.deleted_at
+        }
+        onDismiss={() => setMenuTarget(null)}
+        onReply={(m) => setReplyingTo(m)}
+        onEdit={(m) => {
+          setEditText(m.content ?? "");
+          setEditing(m);
+        }}
+        onDelete={(m) => confirmDelete(m)}
+        onCopy={handleCopy}
+        onReact={handleToggleReaction}
+      />
 
       {/* Conversation actions */}
       <Sheet
@@ -528,6 +658,8 @@ export default function ConversationScreen() {
         open={!!viewerUri}
         onClose={() => setViewerUri(null)}
       />
+
+      <ChatToast message={toast} />
     </View>
   );
 }

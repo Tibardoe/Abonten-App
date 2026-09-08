@@ -155,6 +155,8 @@ export type {
   SubmitChargeOtpResult,
   SubmitReportBody,
   SubmitReportResult,
+  ToggleMessageReactionBody,
+  ToggleMessageReactionResult,
   UpdateEventBody,
   UpdateEventResult,
   UpdateEventTicketTypesBody,

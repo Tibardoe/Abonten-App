@@ -65,6 +65,26 @@ export const sendMessageSchema = z
   });
 export type SendMessageSchemaInput = z.infer<typeof sendMessageSchema>;
 
+// Fixed reaction palette — mirrors MESSAGE_REACTION_EMOJIS in @abonten/types
+// and the CHECK inside the toggle_message_reaction RPC. The RPC rejects
+// anything else too; this is the first gate.
+export const MESSAGE_REACTION_EMOJIS = [
+  "👍",
+  "❤️",
+  "😂",
+  "😮",
+  "😢",
+  "🙏",
+] as const;
+
+export const toggleMessageReactionSchema = z.object({
+  messageId: z.string().uuid(),
+  emoji: z.enum(MESSAGE_REACTION_EMOJIS),
+});
+export type ToggleMessageReactionSchemaInput = z.infer<
+  typeof toggleMessageReactionSchema
+>;
+
 export const editMessageSchema = z.object({
   messageId: z.string().uuid(),
   content: z

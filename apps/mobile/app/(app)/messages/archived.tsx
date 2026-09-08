@@ -1,13 +1,22 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import {
+  type ConversationMenuTarget,
+  ConversationPeekOverlay,
+} from "@/components/messaging/ConversationPeekOverlay";
 import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxSearchBar } from "@/components/messaging/InboxSearchBar";
+import type { Rect } from "@/components/messaging/contextMenu/menuPlacement";
 import {
   flattenConversations,
   hasConversationsPageError,
   useConversations,
 } from "@/features/messaging/useConversations";
-import { useSetConversationState } from "@/features/messaging/useMessagingActions";
+import {
+  useMarkConversationRead,
+  useMarkConversationUnread,
+  useSetConversationState,
+} from "@/features/messaging/useMessagingActions";
 import type { ConversationListItem } from "@abonten/api-client";
 import { EmptyState, ListFooter, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
@@ -33,6 +42,10 @@ export default function ArchivedMessages() {
   const rows = flattenConversations(q.data?.pages);
   const isError = q.isError || hasConversationsPageError(q.data?.pages);
   const setState = useSetConversationState();
+  const markRead = useMarkConversationRead();
+  const markUnread = useMarkConversationUnread();
+
+  const [menuFor, setMenuFor] = useState<ConversationMenuTarget | null>(null);
 
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
@@ -43,6 +56,29 @@ export default function ArchivedMessages() {
       setState.mutate({
         conversationId: item.conversation_id,
         archived: false,
+      }),
+    [setState],
+  );
+
+  const openMenu = useCallback(
+    (item: ConversationListItem, rect: Rect) => setMenuFor({ item, rect }),
+    [],
+  );
+  const onToggleRead = useCallback(
+    (item: ConversationListItem) => {
+      if (item.unread_count > 0) {
+        markRead.mutate({ conversationId: item.conversation_id });
+      } else {
+        markUnread.mutate(item.conversation_id);
+      }
+    },
+    [markRead, markUnread],
+  );
+  const onToggleMute = useCallback(
+    (item: ConversationListItem) =>
+      setState.mutate({
+        conversationId: item.conversation_id,
+        muted: !item.muted,
       }),
     [setState],
   );
@@ -61,11 +97,13 @@ export default function ArchivedMessages() {
         item={item}
         currentUserId={currentUserId}
         archivedView
+        hidden={menuFor?.item.conversation_id === item.conversation_id}
         onPress={onOpen}
+        onLongPress={openMenu}
         onArchiveToggle={unarchive}
       />
     ),
-    [currentUserId, onOpen, unarchive],
+    [currentUserId, onOpen, openMenu, unarchive, menuFor?.item.conversation_id],
   );
 
   return (
@@ -130,6 +168,16 @@ export default function ArchivedMessages() {
             onRetry={() => q.fetchNextPage()}
           />
         }
+      />
+
+      <ConversationPeekOverlay
+        target={menuFor}
+        archivedView
+        onDismiss={() => setMenuFor(null)}
+        onOpen={onOpen}
+        onToggleRead={onToggleRead}
+        onToggleMute={onToggleMute}
+        onToggleArchive={unarchive}
       />
     </View>
   );

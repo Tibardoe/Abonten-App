@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const TYPE_ICON: Record<ConversationType, typeof Calendar> = {
   event: Calendar,
@@ -66,6 +67,7 @@ export function ConversationListRow({
   const setState = useSetConversationState();
   const markRead = useMarkConversationRead();
   const markUnread = useMarkConversationUnread();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const Icon = TYPE_ICON[item.type];
   const ContextIcon = CONTEXT_ICON[item.type];
@@ -105,6 +107,10 @@ export function ConversationListRow({
 
   return (
     <div
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setMenuOpen(true);
+      }}
       className={cn(
         "group relative flex items-center gap-3 border-b pr-2 transition hover:bg-accent/60",
         active && "bg-accent",
@@ -176,7 +182,7 @@ export function ConversationListRow({
         </div>
       </Link>
 
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger
           aria-label="Conversation actions"
           className="shrink-0 rounded-md p-1.5 text-muted-foreground opacity-0 transition hover:bg-accent hover:text-foreground focus:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"

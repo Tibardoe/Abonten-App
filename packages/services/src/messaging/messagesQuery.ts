@@ -8,6 +8,7 @@ import {
 import type { Database } from "@abonten/types/database.types";
 import type {
   MessageAttachmentRow,
+  MessageReactionSummary,
   MessageReplyPreview,
   MessageRow,
 } from "@abonten/types/messagingType";
@@ -52,7 +53,15 @@ function redactDeleted<T extends { deleted_at: string | null }>(
 export async function fetchMessagesPage(
   supabase: SupabaseClient<Database>,
   conversationId: string,
-  options?: { cursor?: string | null; pageSize?: number },
+  options?: {
+    cursor?: string | null;
+    pageSize?: number;
+    /** The authenticated caller, used to flag which reactions are theirs.
+     *  Both transports have already resolved it, so passing it here avoids a
+     *  redundant auth-server round trip on this hot read path. Omitted only
+     *  by tests, which fall back to an `auth.getUser()` lookup. */
+    callerId?: string | null;
+  },
 ): Promise<PaginatedResult<MessageRow>> {
   const pageSize = Math.min(
     Math.max(options?.pageSize ?? DEFAULT_PAGE_SIZE, 1),
@@ -103,10 +112,20 @@ export async function fetchMessagesPage(
     ),
   ];
 
-  const [attachmentsByMessage, replyPreviews] = await Promise.all([
-    loadAttachments(supabase, messageIds),
-    loadReplyPreviews(supabase, replyIds),
-  ]);
+  // The caller's own id — needed to mark which reactions are "mine" so the
+  // pill row can highlight them and toggle them off. RLS already scopes this
+  // query to a participant, so a failed lookup just means no "mine" flag.
+  // `auth.getUser()` hits the auth server, so it runs only when the caller
+  // didn't already supply the id (tests); both transports do supply it.
+  const callerId =
+    options?.callerId ?? (await supabase.auth.getUser()).data.user?.id ?? null;
+
+  const [attachmentsByMessage, replyPreviews, reactionsByMessage] =
+    await Promise.all([
+      loadAttachments(supabase, messageIds),
+      loadReplyPreviews(supabase, replyIds),
+      loadReactions(supabase, messageIds, callerId),
+    ]);
 
   const shaped: MessageRow[] = page.map((m) => {
     const redacted = redactDeleted(m);
@@ -130,6 +149,9 @@ export async function fetchMessagesPage(
       reply_to: redacted.reply_to_message_id
         ? (replyPreviews.get(redacted.reply_to_message_id) ?? null)
         : null,
+      reactions: redacted.deleted_at
+        ? []
+        : (reactionsByMessage.get(redacted.id) ?? []),
     };
   });
 
@@ -189,8 +211,91 @@ async function loadReplyPreviews(
     return byId;
   }
 
-  for (const row of (data ?? []) as MessageReplyPreview[]) {
+  const previews = (data ?? []) as MessageReplyPreview[];
+  for (const row of previews) {
     byId.set(row.id, row.deleted_at ? { ...row, content: null } : row);
   }
+
+  // Non-text reply targets: pull the first attachment's storage path + mime +
+  // (for audio/video) duration so the quote can render a thumbnail and read
+  // "Photo" / "🎬 Video" / "🎤 Voice message · 0:18" instead of a bare label.
+  const mediaIds = previews
+    .filter(
+      (p) =>
+        !p.deleted_at &&
+        (p.message_type === "audio" ||
+          p.message_type === "image" ||
+          p.message_type === "file"),
+    )
+    .map((p) => p.id);
+  if (mediaIds.length > 0) {
+    const { data: atts } = await supabase
+      .from("message_attachment")
+      .select("message_id, storage_path, mime_type, duration_seconds")
+      .in("message_id", mediaIds);
+    // Keep only the first attachment per message.
+    const seen = new Set<string>();
+    for (const a of atts ?? []) {
+      if (seen.has(a.message_id)) continue;
+      seen.add(a.message_id);
+      const existing = byId.get(a.message_id);
+      if (existing) {
+        byId.set(a.message_id, {
+          ...existing,
+          attachment_path: a.storage_path,
+          attachment_mime: a.mime_type,
+          duration_seconds: a.duration_seconds,
+        });
+      }
+    }
+  }
+
   return byId;
+}
+
+// Per-emoji reaction rollup for a page of messages, with the caller's own
+// reactions flagged. One flat read (RLS-scoped to the participant) folded
+// client-side — reaction volume per page is tiny.
+async function loadReactions(
+  supabase: SupabaseClient<Database>,
+  messageIds: string[],
+  callerId: string | null,
+): Promise<Map<string, MessageReactionSummary[]>> {
+  const byMessage = new Map<string, MessageReactionSummary[]>();
+  if (messageIds.length === 0) return byMessage;
+
+  const { data, error } = await supabase
+    .from("message_reaction")
+    .select("message_id, emoji, user_id")
+    .in("message_id", messageIds);
+
+  if (error) {
+    logger.error(`fetchMessagesPage: reaction load failed: ${error.message}`);
+    return byMessage;
+  }
+
+  // message_id -> emoji -> { count, mine }
+  const scratch = new Map<
+    string,
+    Map<string, { count: number; mine: boolean }>
+  >();
+  for (const row of data ?? []) {
+    const perEmoji = scratch.get(row.message_id) ?? new Map();
+    const cur = perEmoji.get(row.emoji) ?? { count: 0, mine: false };
+    cur.count += 1;
+    if (callerId && row.user_id === callerId) cur.mine = true;
+    perEmoji.set(row.emoji, cur);
+    scratch.set(row.message_id, perEmoji);
+  }
+
+  for (const [messageId, perEmoji] of scratch) {
+    const summary: MessageReactionSummary[] = [];
+    for (const [emoji, { count, mine }] of perEmoji) {
+      summary.push({ emoji, count, reacted_by_me: mine });
+    }
+    // Most-reacted first, stable within a tie.
+    summary.sort((a, b) => b.count - a.count);
+    byMessage.set(messageId, summary);
+  }
+  return byMessage;
 }

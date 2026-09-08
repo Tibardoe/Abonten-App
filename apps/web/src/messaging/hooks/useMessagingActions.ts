@@ -6,7 +6,11 @@ import { editMessage } from "@/actions/editMessage";
 import { markConversationRead } from "@/actions/markConversationRead";
 import { markConversationUnread } from "@/actions/markConversationUnread";
 import { setConversationState } from "@/actions/setConversationState";
+import { toggleMessageReaction } from "@/actions/toggleMessageReaction";
+import type { MessageRow } from "@abonten/types/messagingType";
+import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { applyReactionToCache } from "./cache";
 import {
   adjustUnreadBadge,
   applyConversationPatch,
@@ -170,6 +174,65 @@ export function useSetConversationState() {
           refetchType: "active",
         });
         qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
+      }
+    },
+  });
+}
+
+// Toggle the caller's reaction on one message. Optimistic; the realtime
+// `message_reaction` subscription reconciles across clients. Only corrects
+// the cache on success if the server disagreed with the optimistic guess.
+type MessagesCache = InfiniteData<{ data: MessageRow[] }>;
+
+export function useToggleReaction(conversationId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { messageId: string; emoji: string }) =>
+      toggleMessageReaction(input),
+    onMutate: (input) => {
+      const key = messagingKeys.messages(conversationId);
+      const snapshot = qc.getQueryData<MessagesCache>(key);
+      const row = snapshot?.pages
+        .flatMap((p) => p.data)
+        .find((m) => m.id === input.messageId);
+      const mine = (row?.reactions ?? []).some(
+        (r) => r.emoji === input.emoji && r.reacted_by_me,
+      );
+      const optimisticAdded = !mine;
+      applyReactionToCache(
+        qc,
+        conversationId,
+        input.messageId,
+        input.emoji,
+        optimisticAdded,
+        true,
+      );
+      return { snapshot, optimisticAdded };
+    },
+    onError: (_err, _input, ctx) => {
+      if (ctx?.snapshot !== undefined) {
+        qc.setQueryData(messagingKeys.messages(conversationId), ctx.snapshot);
+      }
+    },
+    onSuccess: (res, input, ctx) => {
+      const serverAdded =
+        res.status === 200 ? (res.data?.added ?? ctx?.optimisticAdded) : null;
+      if (serverAdded == null) {
+        if (ctx?.snapshot !== undefined) {
+          qc.setQueryData(messagingKeys.messages(conversationId), ctx.snapshot);
+        }
+        return;
+      }
+      if (serverAdded !== ctx?.optimisticAdded && ctx?.snapshot !== undefined) {
+        qc.setQueryData(messagingKeys.messages(conversationId), ctx.snapshot);
+        applyReactionToCache(
+          qc,
+          conversationId,
+          input.messageId,
+          input.emoji,
+          serverAdded,
+          true,
+        );
       }
     },
   });
