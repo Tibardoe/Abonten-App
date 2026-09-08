@@ -2,10 +2,14 @@ import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
 import { AddFilterSheet } from "@/components/messaging/AddFilterSheet";
 import { ArchivedEntryRow } from "@/components/messaging/ArchivedEntryRow";
-import { ConversationActionSheet } from "@/components/messaging/ConversationActionSheet";
+import {
+  type ConversationMenuTarget,
+  ConversationPeekOverlay,
+} from "@/components/messaging/ConversationPeekOverlay";
 import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxFilterChips } from "@/components/messaging/InboxFilterChips";
 import { InboxSearchBar } from "@/components/messaging/InboxSearchBar";
+import type { Rect } from "@/components/messaging/contextMenu/menuPlacement";
 import { useInboxPrefs } from "@/features/messaging/inboxPrefs";
 import type { ConversationListNarrow } from "@/features/messaging/keys";
 import {
@@ -47,7 +51,7 @@ export default function Messages() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [addFilterOpen, setAddFilterOpen] = useState(false);
-  const [menuFor, setMenuFor] = useState<ConversationListItem | null>(null);
+  const [menuFor, setMenuFor] = useState<ConversationMenuTarget | null>(null);
 
   // Debounce the field before it reaches the query key (spec §3).
   useEffect(() => {
@@ -112,6 +116,11 @@ export default function Messages() {
     [setState],
   );
 
+  const openMenu = useCallback(
+    (item: ConversationListItem, rect: Rect) => setMenuFor({ item, rect }),
+    [],
+  );
+
   const onEndReached = useCallback(() => {
     if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
   }, [q]);
@@ -125,13 +134,21 @@ export default function Messages() {
       <ConversationRow
         item={item}
         currentUserId={currentUserId}
+        hidden={menuFor?.item.conversation_id === item.conversation_id}
         onPress={onOpen}
-        onLongPress={setMenuFor}
+        onLongPress={openMenu}
         onArchiveToggle={onArchiveToggle}
         onToggleRead={onToggleRead}
       />
     ),
-    [currentUserId, onOpen, onArchiveToggle, onToggleRead],
+    [
+      currentUserId,
+      onOpen,
+      openMenu,
+      onArchiveToggle,
+      onToggleRead,
+      menuFor?.item.conversation_id,
+    ],
   );
 
   if (!session) {
@@ -272,9 +289,10 @@ export default function Messages() {
         active={customFilters}
         onToggle={toggleCustomFilter}
       />
-      <ConversationActionSheet
-        item={menuFor}
-        onClose={() => setMenuFor(null)}
+      <ConversationPeekOverlay
+        target={menuFor}
+        onDismiss={() => setMenuFor(null)}
+        onOpen={onOpen}
         onToggleRead={onToggleRead}
         onToggleMute={onToggleMute}
         onToggleArchive={onArchiveToggle}

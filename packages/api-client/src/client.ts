@@ -108,6 +108,8 @@ import type {
   SubmitChargeOtpResult,
   SubmitReportBody,
   SubmitReportResult,
+  ToggleMessageReactionBody,
+  ToggleMessageReactionResult,
   UnreadMessageCountResult,
   UpdateEventBody,
   UpdateEventResult,
@@ -481,6 +483,14 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+      /** Add or remove the caller's reaction on one message. Idempotent
+       *  toggle; `data.added` says which way it went. */
+      react(body: ToggleMessageReactionBody) {
+        return request<ToggleMessageReactionResult>(
+          "/api/mobile/messages/react",
+          { method: "POST", body, auth: true },
+        );
       },
     },
 

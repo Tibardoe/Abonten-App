@@ -25,6 +25,7 @@ import {
   useEditMessage,
   useMarkConversationRead,
   useSetConversationState,
+  useToggleReaction,
 } from "@/messaging/hooks/useMessagingActions";
 import { buildChatEntries } from "@abonten/core/messagingThread";
 import {
@@ -76,11 +77,33 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
   const deleteMsg = useDeleteMessage(conversationId);
   const setState = useSetConversationState();
   const block = useBlockParticipant();
+  const toggleReaction = useToggleReaction(conversationId);
 
   const [replyingTo, setReplyingTo] = useState<MessageRow | null>(null);
   const [editing, setEditing] = useState<MessageRow | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
   const lastMarkedRef = useRef("");
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    if (!messageId) return;
+    const el = document.getElementById(`msg-${messageId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    setHighlightId(messageId);
+  }, []);
+
+  const onReact = useCallback(
+    (messageId: string, emoji: string) =>
+      toggleReaction.mutate({ messageId, emoji }),
+    [toggleReaction],
+  );
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const t = setTimeout(() => setHighlightId(null), 1600);
+    return () => clearTimeout(t);
+  }, [highlightId]);
 
   const context =
     detailQ.data?.status === 200 ? (detailQ.data.data ?? null) : null;
@@ -337,10 +360,13 @@ export function ChatThread({ conversationId }: { conversationId: string }) {
                 pending={entry.pending}
                 isMine={entry.isMine}
                 seen={seen}
+                highlighted={entry.message.id === highlightId}
                 canEdit={canEditMessage(entry.message, myId)}
                 onReply={setReplyingTo}
                 onEdit={setEditing}
                 onDelete={onDelete}
+                onReact={onReact}
+                onReplyQuotePress={scrollToMessage}
                 onRetry={(cid) => {
                   if (outbox.some((o) => o.clientGeneratedId === cid))
                     retry(cid);

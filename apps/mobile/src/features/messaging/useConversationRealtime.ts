@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
 import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
+import { reactionRealtimePatches } from "@abonten/core/messagingReactions";
 import {
   MESSAGING_BROADCAST_EVENTS,
   TYPING_THROTTLE_MS,
@@ -12,6 +13,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
+import { applyReactionToCache } from "./cache";
 import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
@@ -205,6 +207,34 @@ export function useConversationRealtime(
             qc.invalidateQueries({
               queryKey: messagingKeys.detail(conversationId),
             });
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "message_reaction",
+            filter: `conversation_id=eq.${conversationId}`,
+          },
+          (payload) => {
+            // A reaction changed. The payload carries the exact row (the table
+            // is REPLICA IDENTITY FULL), so patch the affected message in
+            // place rather than invalidating — invalidating refetched EVERY
+            // loaded page of the thread on every reaction tap, including the
+            // echo of this device's own optimistic toggle. The reducer is
+            // shared + unit-tested in @abonten/core/messagingReactions: it
+            // suppresses our own echo and ignores malformed payloads.
+            for (const p of reactionRealtimePatches(payload, myId)) {
+              applyReactionToCache(
+                qc,
+                conversationId,
+                p.messageId,
+                p.emoji,
+                p.added,
+                false,
+              );
+            }
           },
         )
         .subscribe((status) => {

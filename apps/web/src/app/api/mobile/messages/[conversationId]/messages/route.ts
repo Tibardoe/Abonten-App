@@ -26,6 +26,7 @@ export async function GET(
     const pageSize = pageSizeParam ? Number(pageSizeParam) : undefined;
 
     const result = await fetchMessagesPage(auth.supabase, conversationId, {
+      callerId: auth.user.id,
       cursor,
       pageSize:
         pageSize && Number.isFinite(pageSize) && pageSize > 0

@@ -95,6 +95,8 @@ export type BlockParticipantBody = {
   blockedUserId: string;
   block: boolean;
 };
+export type ToggleMessageReactionBody = { messageId: string; emoji: string };
+export type ToggleMessageReactionResult = ApiEnvelope<{ added: boolean }>;
 
 // ---- auth ----------------------------------------------------------------
 

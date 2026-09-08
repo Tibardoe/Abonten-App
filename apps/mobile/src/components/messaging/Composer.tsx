@@ -6,6 +6,7 @@ import {
   pickChatMedia,
   uploadChatAttachment,
 } from "@/features/messaging/attachments";
+import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type {
   OutboxDraft,
   OutboxMessageType,
@@ -26,6 +27,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { AttachmentPreview } from "./AttachmentPreview";
 import { AttachmentSheet } from "./AttachmentSheet";
 import type VoiceComposerComponent from "./VoiceComposer";
@@ -65,9 +67,94 @@ function reportAttachmentError(e: unknown, fallbackTitle: string) {
   );
 }
 
+function ReplyPreview({
+  message,
+  senderName,
+  onCancel,
+}: {
+  message: MessageRow;
+  senderName: string;
+  onCancel: () => void;
+}) {
+  const att = message.attachments[0];
+  const isImage = message.message_type === "image";
+  const isAudio = message.message_type === "audio";
+  const isVideo =
+    message.message_type === "file" && !!att?.mime_type?.startsWith("video/");
+  const isFile = message.message_type === "file";
+  const dur = att?.duration_seconds ?? null;
+  const durLabel =
+    (isAudio || isVideo) && dur != null
+      ? ` · ${Math.floor(dur / 60)}:${String(Math.round(dur % 60)).padStart(2, "0")}`
+      : "";
+  const thumb = useAttachmentUrl(isImage ? att?.storage_path : undefined);
+
+  const line = message.deleted_at
+    ? "Deleted message"
+    : isImage
+      ? "Photo"
+      : isVideo
+        ? `Video${durLabel}`
+        : isAudio
+          ? `Voice message${durLabel}`
+          : isFile
+            ? (att?.file_name ?? "Attachment")
+            : (message.content ?? "Message");
+
+  const glyph = isVideo ? "videocam" : isAudio ? "mic" : "document";
+
+  return (
+    <Animated.View
+      entering={FadeInDown.duration(150)}
+      exiting={FadeOutDown.duration(110)}
+      className="px-3 pt-2"
+    >
+      <View className="flex-row items-stretch overflow-hidden rounded-xl bg-accent">
+        <View className="w-1 bg-primary" />
+        <View className="flex-1 justify-center gap-[3px] py-2 pl-2.5 pr-1">
+          <AppText
+            numberOfLines={1}
+            className="text-[13px] font-semibold leading-[16px] text-primary"
+          >
+            Replying to {senderName}
+          </AppText>
+          <AppText
+            variant="meta"
+            numberOfLines={1}
+            className="text-[13px] leading-[17px] opacity-80"
+          >
+            {line}
+          </AppText>
+        </View>
+        {isImage && thumb.data ? (
+          <Image
+            source={{ uri: thumb.data }}
+            style={{ width: 44 }}
+            contentFit="cover"
+          />
+        ) : isImage || isAudio || isFile ? (
+          <View className="w-11 items-center justify-center bg-muted">
+            <Icon name={isImage ? "image" : glyph} size={18} tone="muted" />
+          </View>
+        ) : null}
+        <Pressable
+          onPress={onCancel}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Cancel reply"
+          className="w-10 items-center justify-center active:opacity-60"
+        >
+          <Icon name="close" size={18} tone="muted" />
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+}
+
 export function Composer({
   conversationId,
   replyingTo,
+  replyingToName,
   onCancelReply,
   onSend,
   onTyping,
@@ -76,6 +163,7 @@ export function Composer({
 }: {
   conversationId: string;
   replyingTo: MessageRow | null;
+  replyingToName?: string;
   onCancelReply: () => void;
   onSend: (draft: OutboxDraft) => void;
   onTyping: (isTyping: boolean) => void;
@@ -166,7 +254,19 @@ export function Composer({
       replyToMessageId: replyingTo?.id ?? null,
       attachments,
       localPreviewUris,
-      messageType: anyAudio ? "audio" : anyImage ? "image" : "file",
+      // A message with NO attachment is "text". This chain previously fell
+      // through to "file" for a plain typed message, so every text message
+      // sent from mobile was stored as message_type='file' with zero
+      // attachments — which silently disabled emoji-only rendering and the
+      // Copy action (both gated on "text"), and made reply previews of a
+      // text message read "Attachment".
+      messageType: anyAudio
+        ? "audio"
+        : anyImage
+          ? "image"
+          : toUpload.length > 0
+            ? "file"
+            : "text",
     });
     onCancelReply();
   }
@@ -210,7 +310,7 @@ export function Composer({
     <Pressable
       onPress={handleSend}
       disabled={!canSend}
-      className="h-9 w-9 items-center justify-center rounded-full bg-primary active:opacity-80"
+      className="h-10 w-10 items-center justify-center rounded-full bg-primary active:opacity-80"
       style={{ opacity: canSend ? 1 : 0.4 }}
       accessibilityRole="button"
       accessibilityLabel="Send message"
@@ -218,14 +318,14 @@ export function Composer({
       {uploading ? (
         <ActivityIndicator color={c["primary-foreground"]} size="small" />
       ) : (
-        <Icon name="arrow-up" size={20} tone="inverse" />
+        <Icon name="arrow-up" size={21} tone="inverse" />
       )}
     </Pressable>
   ) : VOICE_SUPPORTED ? (
     <Suspense
       fallback={
-        <View className="h-9 w-9 items-center justify-center rounded-full bg-primary opacity-60">
-          <Icon name="mic" size={19} tone="inverse" />
+        <View className="h-10 w-10 items-center justify-center rounded-full bg-primary opacity-60">
+          <Icon name="mic" size={20} tone="inverse" />
         </View>
       }
     >
@@ -238,11 +338,11 @@ export function Composer({
     </Suspense>
   ) : (
     <View
-      className="h-9 w-9 items-center justify-center rounded-full bg-primary opacity-40"
+      className="h-10 w-10 items-center justify-center rounded-full bg-primary opacity-40"
       accessibilityRole="button"
       accessibilityLabel="Send message"
     >
-      <Icon name="arrow-up" size={20} tone="inverse" />
+      <Icon name="arrow-up" size={21} tone="inverse" />
     </View>
   );
 
@@ -253,47 +353,31 @@ export function Composer({
       keyboardInset={4}
     >
       {replyingTo ? (
-        <View className="flex-row items-center gap-2 border-b border-border px-3 py-2">
-          <Icon name="arrow-undo-outline" size={15} tone="muted" />
-          <View className="flex-1">
-            <AppText variant="caption" className="font-semibold">
-              Replying to
-            </AppText>
-            <AppText variant="caption" numberOfLines={1}>
-              {replyingTo.deleted_at
-                ? "Deleted message"
-                : replyingTo.message_type === "image"
-                  ? "Photo"
-                  : replyingTo.message_type === "audio"
-                    ? "Voice message"
-                    : (replyingTo.content ?? "Message")}
-            </AppText>
-          </View>
-          <Pressable onPress={onCancelReply} hitSlop={8}>
-            <Icon name="close" size={18} tone="muted" />
-          </Pressable>
-        </View>
+        <ReplyPreview
+          message={replyingTo}
+          senderName={replyingToName ?? "message"}
+          onCancel={onCancelReply}
+        />
       ) : null}
 
       {staged.length > 0 ? (
-        <View className="flex-row flex-wrap gap-2 px-3 pt-2">
+        <View className="flex-row flex-wrap gap-2.5 px-3 pt-2.5">
           {staged.map((s, i) => (
             <View key={s.uri} className="relative">
               {s.kind === "image" ? (
                 <Image
                   source={{ uri: s.uri }}
-                  style={{ width: 56, height: 56, borderRadius: 8 }}
+                  style={{ width: 62, height: 62, borderRadius: 12 }}
                   contentFit="cover"
                 />
               ) : (
-                <View className="h-14 w-14 items-center justify-center rounded-lg bg-muted">
+                <View
+                  className="items-center justify-center rounded-xl bg-muted"
+                  style={{ width: 62, height: 62 }}
+                >
                   <Icon
-                    name={
-                      s.kind === "video"
-                        ? "videocam-outline"
-                        : "document-outline"
-                    }
-                    size={20}
+                    name={s.kind === "video" ? "videocam" : "document-text"}
+                    size={22}
                     tone="muted"
                   />
                 </View>
@@ -305,7 +389,7 @@ export function Composer({
                 hitSlop={6}
                 accessibilityRole="button"
                 accessibilityLabel="Remove attachment"
-                className="absolute -right-1.5 -top-1.5 h-5 w-5 items-center justify-center rounded-full bg-foreground"
+                className="absolute -right-2 -top-2 h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-card bg-foreground"
               >
                 <Icon name="close" size={12} tone="inverse" />
               </Pressable>
@@ -319,12 +403,12 @@ export function Composer({
           onPress={() => setSheetOpen(true)}
           hitSlop={8}
           disabled={staged.length >= MAX_ATTACHMENTS}
-          className="h-9 w-9 items-center justify-center rounded-full active:opacity-60"
+          className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
           style={{ opacity: staged.length >= MAX_ATTACHMENTS ? 0.4 : 1 }}
           accessibilityRole="button"
           accessibilityLabel="Add attachment"
         >
-          <Icon name="add-circle-outline" size={26} tone="muted" />
+          <Icon name="add" size={26} tone="muted" />
         </Pressable>
 
         <TextInput
@@ -338,7 +422,7 @@ export function Composer({
           placeholderTextColor={c["muted-foreground"]}
           multiline
           maxLength={MESSAGE_MAX_LENGTH}
-          className="max-h-28 flex-1 rounded-2xl border border-input bg-background px-3 py-2 text-[15px] text-foreground"
+          className="max-h-28 flex-1 rounded-[22px] border border-input bg-background px-4 py-2.5 text-[16px] text-foreground"
           style={family.body ? { fontFamily: family.body } : undefined}
         />
 

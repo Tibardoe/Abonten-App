@@ -30,5 +30,8 @@ export async function getConversationMessages(
     };
   }
 
-  return fetchMessagesPage(supabase, conversationId, options);
+  return fetchMessagesPage(supabase, conversationId, {
+    ...options,
+    callerId: user.id,
+  });
 }
