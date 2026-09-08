@@ -35,6 +35,9 @@ export const sendMessageAttachmentSchema = z.object({
     .nullish(),
   width: z.number().int().positive().max(20000).nullish(),
   height: z.number().int().positive().max(20000).nullish(),
+  // Voice-note / audio length. Capped at 10 min so a runaway recording
+  // can't be claimed as an implausible duration.
+  durationSeconds: z.number().positive().max(600).nullish(),
 });
 
 export const sendMessageSchema = z
@@ -47,7 +50,7 @@ export const sendMessageSchema = z
       .transform((v) => (typeof v === "string" ? v : null)),
     clientGeneratedId: z.string().uuid().nullish(),
     replyToMessageId: z.string().uuid().nullish(),
-    messageType: z.enum(["text", "image", "file"]).default("text"),
+    messageType: z.enum(["text", "image", "file", "audio"]).default("text"),
     attachments: z.array(sendMessageAttachmentSchema).max(10).default([]),
   })
   .superRefine((val, ctx) => {

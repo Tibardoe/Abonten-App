@@ -8,7 +8,7 @@ import {
   labelForCoords,
   useExploreLocation,
 } from "@/features/discovery/ExploreLocationProvider";
-import { AppText, Button, Icon } from "@abonten/ui-native";
+import { AppText, BottomBar, Button, Icon } from "@abonten/ui-native";
 import { useRef, useState } from "react";
 import { Modal, Platform, Pressable, View } from "react-native";
 
@@ -131,13 +131,13 @@ export function MapPickerSheet({
             </View>
           </View>
 
-          <View className="border-t border-border p-4">
+          <BottomBar className="border-t border-border bg-background px-4 pt-4">
             <Button
               title={busy ? "Setting…" : "Use this location"}
               onPress={confirm}
               disabled={busy}
             />
-          </View>
+          </BottomBar>
         </View>
       </MapErrorBoundary>
     </Modal>

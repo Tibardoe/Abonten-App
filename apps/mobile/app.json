@@ -90,6 +90,12 @@
           "cameraPermission": "Abonten uses the camera so organizers can scan ticket QR codes to check attendees in."
         }
       ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Abonten uses the microphone so you can record and send voice messages in chat."
+        }
+      ],
       "expo-video",
       "./plugins/withPictureInPictureManifest",
       [

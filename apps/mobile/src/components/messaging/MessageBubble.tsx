@@ -1,10 +1,26 @@
 import { clockTime } from "@/features/messaging/messagingTime";
 import type { OutboxMessage } from "@/features/messaging/useMessageOutbox";
+import { VOICE_SUPPORTED } from "@/features/messaging/voiceSupport";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
-import { memo } from "react";
-import { Pressable, View } from "react-native";
+import { Suspense, lazy, memo } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { ChatImage } from "./ChatImage";
+import { FileAttachmentCard } from "./FileAttachmentCard";
+import type VoiceMessageBubbleComponent from "./VoiceMessageBubble";
+
+// Loaded only when the native audio module is present — VoiceMessageBubble
+// pulls in `expo-audio` via useVoicePlayer. The `require` inside the lazy
+// factory runs only when this actually renders (never, without a rebuild),
+// so `expo-audio` never enters the synchronous route graph. `import type`
+// is erased at compile time.
+const LazyVoiceMessageBubble = lazy(async () => ({
+  default: (
+    require("./VoiceMessageBubble") as {
+      default: typeof VoiceMessageBubbleComponent;
+    }
+  ).default,
+}));
 
 type Props = {
   message: MessageRow;
@@ -23,7 +39,9 @@ function ReplyQuote({ reply }: { reply: NonNullable<MessageRow["reply_to"]> }) {
     ? "Deleted message"
     : reply.message_type === "image"
       ? "Photo"
-      : (reply.content ?? "Message");
+      : reply.message_type === "audio"
+        ? "Voice message"
+        : (reply.content ?? "Message");
   return (
     <View className="mb-1 border-l-2 border-primary/60 pl-2">
       <AppText variant="caption" numberOfLines={2} className="opacity-80">
@@ -79,10 +97,14 @@ export const MessageBubble = memo(function MessageBubble({
   onRetry,
 }: Props) {
   const deleted = !!message.deleted_at;
+  const isAudio =
+    message.message_type === "audio" || pending?.messageType === "audio";
   const hasImages =
     message.message_type === "image" &&
     (message.attachments.length > 0 ||
       (pending?.localPreviewUris.length ?? 0) > 0);
+  const isFile =
+    message.message_type === "file" && message.attachments.length > 0;
   const canActOn = isMine && !deleted && !pending;
 
   return (
@@ -109,6 +131,61 @@ export const MessageBubble = memo(function MessageBubble({
           >
             This message was deleted
           </AppText>
+        ) : isAudio ? (
+          pending ? (
+            <View
+              className="flex-row items-center gap-2 py-1"
+              style={{ minWidth: 168 }}
+            >
+              <Icon
+                name="mic-outline"
+                size={18}
+                tone={isMine ? "inverse" : "muted"}
+              />
+              <AppText
+                variant="caption"
+                className={isMine ? "text-primary-foreground/80" : undefined}
+              >
+                Voice message
+              </AppText>
+              <ActivityIndicator size="small" />
+            </View>
+          ) : VOICE_SUPPORTED ? (
+            <Suspense
+              fallback={
+                <View
+                  className="flex-row items-center gap-2 py-1"
+                  style={{ minWidth: 168 }}
+                >
+                  <Icon
+                    name="mic-outline"
+                    size={18}
+                    tone={isMine ? "inverse" : "muted"}
+                  />
+                  <ActivityIndicator size="small" />
+                </View>
+              }
+            >
+              <LazyVoiceMessageBubble message={message} isMine={isMine} />
+            </Suspense>
+          ) : (
+            <View
+              className="flex-row items-center gap-2 py-1"
+              style={{ minWidth: 180 }}
+            >
+              <Icon
+                name="mic-outline"
+                size={18}
+                tone={isMine ? "inverse" : "muted"}
+              />
+              <AppText
+                variant="caption"
+                className={isMine ? "text-primary-foreground/80" : undefined}
+              >
+                Voice message · update the app to play
+              </AppText>
+            </View>
+          )
         ) : (
           <>
             {hasImages ? (
@@ -130,6 +207,16 @@ export const MessageBubble = memo(function MessageBubble({
                         onPress={onPressImage}
                       />
                     ))}
+              </View>
+            ) : isFile ? (
+              <View className="gap-1.5">
+                {message.attachments.map((a) => (
+                  <FileAttachmentCard
+                    key={a.id}
+                    attachment={a}
+                    isMine={isMine}
+                  />
+                ))}
               </View>
             ) : null}
 

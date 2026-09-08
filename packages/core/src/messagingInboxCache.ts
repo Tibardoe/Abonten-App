@@ -206,6 +206,10 @@ export function conversationPreviewFor(message: {
   message_type?: string | null;
 }): string {
   const fallback =
-    message.message_type === "image" ? "[Photo]" : "[Attachment]";
+    message.message_type === "image"
+      ? "[Photo]"
+      : message.message_type === "audio"
+        ? "[Voice message]"
+        : "[Attachment]";
   return (message.content ?? fallback).slice(0, 140);
 }

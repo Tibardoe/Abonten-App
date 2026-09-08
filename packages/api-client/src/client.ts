@@ -138,6 +138,12 @@ export type ApiClientOptions = {
   /** Defaults to the global `fetch`. */
   fetch?: typeof fetch;
   /**
+   * Per-request timeout in ms. A mobile `fetch` on a flaky connection can
+   * otherwise hang indefinitely, leaving a React Query stuck in its loading
+   * state forever (no reject → no error UI, no retry). Defaults to 20 000.
+   */
+  timeoutMs?: number;
+  /**
    * Fraction [0..1] of requests to beacon into `app_request_metric` via
    * POST /api/mobile/observability/metric (fire-and-forget, best effort).
    * 0 / undefined disables it. Set ~0.1 in release builds, 0 in dev.
@@ -180,6 +186,7 @@ function joinUrl(base: string, path: string): string {
 export function createApiClient(options: ApiClientOptions) {
   const doFetch = options.fetch ?? globalThis.fetch;
   const metricRate = options.metricSampleRate ?? 0;
+  const timeoutMs = options.timeoutMs ?? 20_000;
 
   // Fire-and-forget request-timing beacon. Never throws, never awaited by
   // the caller. Skips itself so the beacon can't beacon.
@@ -230,12 +237,15 @@ export function createApiClient(options: ApiClientOptions) {
     }
 
     const startedAt = Date.now();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
     let response: Response;
     try {
       response = await doFetch(joinUrl(options.baseUrl, path), {
         method: init.method,
         headers,
         body: init.body === undefined ? undefined : JSON.stringify(init.body),
+        signal: controller.signal,
       });
     } catch (error) {
       beaconMetric({
@@ -245,7 +255,15 @@ export function createApiClient(options: ApiClientOptions) {
         durationMs: Date.now() - startedAt,
         ok: false,
       });
-      throw new ApiTransportError(`Request to ${path} failed`, error);
+      const timedOut = controller.signal.aborted;
+      throw new ApiTransportError(
+        timedOut
+          ? `Request to ${path} timed out after ${timeoutMs}ms`
+          : `Request to ${path} failed`,
+        error,
+      );
+    } finally {
+      clearTimeout(timer);
     }
 
     let parsed: unknown;

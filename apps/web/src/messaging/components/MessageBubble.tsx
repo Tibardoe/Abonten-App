@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAttachmentUrl } from "@/messaging/hooks/useAttachmentUrl";
 import type { OutboxMessage } from "@/messaging/hooks/useMessageOutbox";
 import { clockTime } from "@abonten/core/messagingThread";
 import type { MessageRow } from "@abonten/types/messagingType";
@@ -15,9 +16,33 @@ import {
   Check,
   CheckCheck,
   Clock,
+  Mic,
   MoreHorizontal,
 } from "lucide-react";
 import { ChatImageThumb } from "./ChatImageThumb";
+
+function VoiceAttachment({
+  attachment,
+}: {
+  attachment: MessageRow["attachments"][number];
+}) {
+  const signed = useAttachmentUrl(attachment.storage_path);
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      <Mic className="h-4 w-4 shrink-0 opacity-70" />
+      {signed.data ? (
+        // biome-ignore lint/a11y/useMediaCaption: user-generated voice note
+        <audio controls src={signed.data} className="h-9 max-w-[16rem]" />
+      ) : (
+        <span className="text-xs opacity-70">
+          {signed.isError
+            ? "Voice message unavailable"
+            : "Loading voice message…"}
+        </span>
+      )}
+    </div>
+  );
+}
 
 type Props = {
   message: MessageRow;
@@ -36,7 +61,9 @@ function ReplyQuote({ reply }: { reply: NonNullable<MessageRow["reply_to"]> }) {
     ? "Deleted message"
     : reply.message_type === "image"
       ? "Photo"
-      : (reply.content ?? "Message");
+      : reply.message_type === "audio"
+        ? "Voice message"
+        : (reply.content ?? "Message");
   return (
     <div className="mb-1 border-l-2 border-primary/60 pl-2 text-xs opacity-80">
       <span className="line-clamp-2">{label}</span>
@@ -91,6 +118,8 @@ export function MessageBubble({
     message.message_type === "image" &&
     (message.attachments.length > 0 ||
       (pending?.localPreviewUrls.length ?? 0) > 0);
+  const isAudio =
+    message.message_type === "audio" && message.attachments.length > 0;
   const actionable = !deleted && !pending;
 
   return (
@@ -160,6 +189,10 @@ export function MessageBubble({
             >
               This message was deleted
             </span>
+          ) : isAudio ? (
+            message.attachments.map((a) => (
+              <VoiceAttachment key={a.id} attachment={a} />
+            ))
           ) : (
             <>
               {hasImages ? (

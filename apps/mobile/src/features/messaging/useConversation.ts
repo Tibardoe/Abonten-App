@@ -3,6 +3,15 @@ import type { MessageRow } from "@abonten/api-client";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { messagingKeys } from "./keys";
 
+// Keep a conversation's header + messages in the cache long after the screen
+// unmounts, so backing out to the inbox and stepping straight back in
+// renders instantly from cache (a quiet background refetch reconciles) —
+// instead of dropping to a full-screen spinner after the default 5-min GC.
+// (No `placeholderData` — the query key is per-conversation, and showing the
+// previous thread's rows while a new one loads would be worse than a brief
+// spinner.)
+const CONVERSATION_GC_TIME = 30 * 60_000;
+
 // Header / context for one conversation: subject (event or place), the
 // other participant's profile, my mute/archive state, who I've blocked.
 // The envelope carries status 404 (not a throw) when the caller isn't a
@@ -13,6 +22,7 @@ export function useConversationDetail(conversationId: string | undefined) {
     enabled: !!conversationId,
     queryFn: () => api.messaging.detail(conversationId as string),
     staleTime: 30_000,
+    gcTime: CONVERSATION_GC_TIME,
   });
 }
 
@@ -33,6 +43,7 @@ export function useConversationMessages(conversationId: string | undefined) {
       }),
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     staleTime: 10_000,
+    gcTime: CONVERSATION_GC_TIME,
   });
 }
 

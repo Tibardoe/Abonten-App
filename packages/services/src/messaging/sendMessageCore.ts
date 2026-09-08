@@ -37,6 +37,7 @@ export async function sendMessageCore(
     file_size: a.fileSize ?? null,
     width: a.width ?? null,
     height: a.height ?? null,
+    duration_seconds: a.durationSeconds ?? null,
   }));
 
   const { data: messageId, error } = await supabase.rpc("send_message", {
@@ -208,6 +209,7 @@ function messagePreview(message: MessageRow): string {
     return message.content.trim().slice(0, 140);
   }
   if (message.message_type === "image") return "📷 Photo";
+  if (message.message_type === "audio") return "🎤 Voice message";
   if (message.message_type === "file") return "📎 Attachment";
   return "New message";
 }

@@ -19,6 +19,7 @@ import {
   ScrollView,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function CheckoutExpiryBanner({
   expiresAt,
@@ -97,6 +98,7 @@ function Line({
 export default function CheckoutReviewScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { data, isLoading, isError, refetch } = useCheckoutPrepare(sessionId);
   const sessionQuery = useCheckoutSession(sessionId);
   const cancel = useCancelCheckout();
@@ -169,7 +171,8 @@ export default function CheckoutReviewScreen() {
       <AppHeader variant="title" title="Checkout" backFallback="/(app)" />
       <ScrollView
         className="flex-1 bg-background"
-        contentContainerClassName="gap-5 p-4 pb-10"
+        contentContainerClassName="gap-5 p-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
       >
         <CheckoutExpiryBanner
           expiresAt={expiresAt}

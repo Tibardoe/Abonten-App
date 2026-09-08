@@ -14,6 +14,8 @@ import { messagingKeys } from "./keys";
 // reconciles. `clientGeneratedId` is the idempotency key send_message keys
 // off — a retry with the same id collapses onto the same row rather than
 // duplicating.
+export type OutboxMessageType = "text" | "image" | "audio" | "file";
+
 export type OutboxMessage = {
   clientGeneratedId: string;
   content: string | null;
@@ -24,6 +26,7 @@ export type OutboxMessage = {
   localPreviewUris: string[];
   // Structurally satisfies @abonten/core/messagingThread PendingMessageLike.
   hasAttachments: boolean;
+  messageType: OutboxMessageType;
   createdAt: string;
   status: "sending" | "failed";
 };
@@ -33,6 +36,7 @@ export type OutboxDraft = {
   replyToMessageId?: string | null;
   attachments?: SendMessageAttachmentInput[];
   localPreviewUris?: string[];
+  messageType?: OutboxMessageType;
 };
 
 // The outbox lives in component state (not persisted): a failed send stays
@@ -66,6 +70,7 @@ export function useMessageOutbox(conversationId: string) {
         content: draft.content ?? null,
         replyToMessageId: draft.replyToMessageId ?? null,
         attachments: draft.attachments ?? [],
+        messageType: draft.messageType ?? "text",
       });
 
       if (res.status === 200 && res.data?.message) {
@@ -114,6 +119,7 @@ export function useMessageOutbox(conversationId: string) {
           hasAttachments:
             (draft.attachments?.length ?? 0) > 0 ||
             (draft.localPreviewUris?.length ?? 0) > 0,
+          messageType: draft.messageType ?? "text",
           createdAt: new Date().toISOString(),
           status: "sending",
         },

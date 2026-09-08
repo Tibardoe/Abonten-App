@@ -13,7 +13,7 @@ export type ConversationParticipantRole =
   | "staff"
   | "admin";
 
-export type MessageType = "text" | "image" | "file" | "system";
+export type MessageType = "text" | "image" | "file" | "audio" | "system";
 
 export type MessagingModerationState = "visible" | "hidden" | "removed";
 
@@ -180,6 +180,8 @@ export type SendMessageAttachmentInput = {
   fileSize?: number | null;
   width?: number | null;
   height?: number | null;
+  /** Audio / video length in seconds — set for voice-note attachments. */
+  durationSeconds?: number | null;
 };
 
 export type SendMessageInput = {
