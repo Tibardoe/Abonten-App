@@ -5,7 +5,10 @@ import { useThemeColors } from "@abonten/ui-native/theme";
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
-const BAR_COUNT = 27;
+const BAR_COUNT = 22;
+const BAR_W = 2.5;
+const BAR_GAP = 2;
+const WAVE_W = BAR_COUNT * BAR_W + (BAR_COUNT - 1) * BAR_GAP;
 
 // Deterministic pseudo-waveform from the message id, so a given voice note
 // always draws the same bars (we don't ship real per-sample amplitude data).
@@ -66,10 +69,7 @@ export default function VoiceMessageBubble({
       }`;
 
   return (
-    <View
-      className="flex-row items-center gap-2.5 py-0.5"
-      style={{ minWidth: 200 }}
-    >
+    <View className="flex-row items-center gap-2.5 py-0.5">
       <Pressable
         onPress={player.toggle}
         disabled={!player.ready && !player.loadFailed}
@@ -77,6 +77,7 @@ export default function VoiceMessageBubble({
         accessibilityLabel={a11y}
         className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
         style={{
+          flexShrink: 0,
           backgroundColor: isMine ? "rgba(255,255,255,0.2)" : c.muted,
         }}
       >
@@ -98,17 +99,14 @@ export default function VoiceMessageBubble({
       </Pressable>
 
       <Pressable
-        className="flex-1 flex-row items-center gap-[3px]"
+        className="flex-row items-center"
         accessibilityRole="adjustable"
         accessibilityLabel="Seek voice message"
         onPress={(e) => {
-          // Seek to the tapped fraction of the waveform width.
-          const { locationX } = e.nativeEvent;
-          // The waveform view width isn't measured here; approximate with the
-          // bar layout — good enough for a tap seek.
-          player.seekToFraction(locationX / (BAR_COUNT * 5));
+          // Seek to the tapped fraction of the (fixed) waveform width.
+          player.seekToFraction(e.nativeEvent.locationX / WAVE_W);
         }}
-        style={{ height: 28 }}
+        style={{ width: WAVE_W, height: 28, gap: BAR_GAP }}
       >
         {bars.map((v, i) => {
           const filled = i / BAR_COUNT <= player.progress;
@@ -117,9 +115,9 @@ export default function VoiceMessageBubble({
               // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length static waveform
               key={i}
               style={{
-                width: 3,
+                width: BAR_W,
                 borderRadius: 2,
-                height: Math.max(4, v * 26),
+                height: Math.max(4, v * 24),
                 backgroundColor: filled ? played : trackDim,
               }}
             />
@@ -129,7 +127,11 @@ export default function VoiceMessageBubble({
 
       <AppText
         variant="caption"
+        numberOfLines={1}
         style={{
+          flexShrink: 0,
+          minWidth: 34,
+          textAlign: "right",
           color: isMine ? "rgba(255,255,255,0.75)" : c["muted-foreground"],
         }}
       >
