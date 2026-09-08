@@ -4,6 +4,7 @@ import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxSearchBar } from "@/components/messaging/InboxSearchBar";
 import {
   flattenConversations,
+  hasConversationsPageError,
   useConversations,
 } from "@/features/messaging/useConversations";
 import { useSetConversationState } from "@/features/messaging/useMessagingActions";
@@ -30,6 +31,7 @@ export default function ArchivedMessages() {
     search: search || undefined,
   });
   const rows = flattenConversations(q.data?.pages);
+  const isError = q.isError || hasConversationsPageError(q.data?.pages);
   const setState = useSetConversationState();
 
   const onEndReached = useCallback(() => {
@@ -80,7 +82,7 @@ export default function ArchivedMessages() {
       <FlatList
         className="flex-1"
         data={rows}
-        keyExtractor={(c) => c.conversation_id}
+        keyExtractor={(c, i) => c?.conversation_id ?? `row-${i}`}
         renderItem={renderRow}
         contentContainerClassName="pb-16"
         onEndReached={onEndReached}
@@ -99,23 +101,23 @@ export default function ArchivedMessages() {
             </View>
           ) : (
             <EmptyState
-              icon={q.isError ? "cloud-offline-outline" : "archive-outline"}
+              icon={isError ? "cloud-offline-outline" : "archive-outline"}
               title={
-                q.isError
+                isError
                   ? "Couldn't load archived chats"
                   : search
                     ? "No conversations found"
                     : "No archived chats"
               }
               description={
-                q.isError
+                isError
                   ? "Pull down to try again."
                   : search
                     ? "Try another name, event, or place."
                     : "Conversations you archive show up here. Swipe one left to bring it back."
               }
-              actionLabel={q.isError ? "Retry" : undefined}
-              onAction={q.isError ? () => q.refetch() : undefined}
+              actionLabel={isError ? "Retry" : undefined}
+              onAction={isError ? () => q.refetch() : undefined}
             />
           )
         }
@@ -124,7 +126,7 @@ export default function ArchivedMessages() {
             count={rows.length}
             isFetchingNextPage={q.isFetchingNextPage}
             hasNextPage={q.hasNextPage}
-            isError={q.isError}
+            isError={isError}
             onRetry={() => q.fetchNextPage()}
           />
         }

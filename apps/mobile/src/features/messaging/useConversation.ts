@@ -37,7 +37,9 @@ export function useConversationMessages(conversationId: string | undefined) {
 }
 
 export function flattenMessages(
-  pages: { data: MessageRow[] }[] | undefined,
+  pages: { data?: MessageRow[] }[] | undefined,
 ): MessageRow[] {
-  return pages?.flatMap((p) => p.data) ?? [];
+  // Skip any error-envelope page ({ status, message }, no `data` array) so a
+  // transient failure can't inject `undefined` into the thread list.
+  return pages?.flatMap((p) => (Array.isArray(p.data) ? p.data : [])) ?? [];
 }
