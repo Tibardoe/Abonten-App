@@ -112,6 +112,17 @@ export type VerifyPhoneOtpBody = {
   code: string;
 };
 
+// Email one-time-code sign-in. Only the SEND has a route (rate limiting +
+// enumeration-safe result live server-side); the app verifies the code with
+// supabase.auth.verifyOtp({ type: "email" }) directly.
+export type RequestEmailOtpBody = {
+  email: string;
+};
+
+export type RequestEmailOtpData = {
+  sent: true;
+};
+
 export type PhoneSession = {
   access_token: string;
   refresh_token: string;

@@ -6,13 +6,17 @@ import updateVerifiedPhone from "@/actions/updateVerifiedPhone";
 import { supabase } from "@/config/supabase/client";
 import { useToast } from "@/hooks/useToast";
 import { linkGoogleIdentity } from "@/services/authService";
+import {
+  EMAIL_OTP_CODE_LENGTH,
+  isLikelyEmail,
+  maskEmail,
+} from "@abonten/core/emailOtp";
 import { logger } from "@abonten/core/logger";
 import { maskPhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import Input from "../atoms/Input";
 import MaskIcon from "../atoms/MaskIcon";
 import OtpInput from "../molecules/OtpInput";
@@ -69,10 +73,21 @@ export default function SecurityInputFields({
   const [currentPhoneVerified, setCurrentPhoneVerified] =
     useState(initialPhoneVerified);
 
-  const { register, handleSubmit } = useForm({
-    defaultValues: { email: initialEmail ?? "" },
-  });
-  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
+  // Add / change email — a 6-digit code flow (verifyOtp type "email_change"),
+  // not the old confirmation-link that dead-ended on /auth/callback. Runs on
+  // the caller's existing session, so it never signs the user out.
+  const [emailInput, setEmailInput] = useState(initialEmail ?? "");
+  const [emailStep, setEmailStep] = useState<"idle" | "code">("idle");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [emailOtp, setEmailOtp] = useState("");
+  const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState<string | null>(
+    null,
+  );
+  const [currentEmail, setCurrentEmail] = useState(initialEmail);
+  const [currentEmailVerified, setCurrentEmailVerified] =
+    useState(initialEmailVerified);
 
   const [countryCode, setCountryCode] = useState("");
   const [phone, setPhone] = useState("");
@@ -98,34 +113,97 @@ export default function SecurityInputFields({
     }
   };
 
-  const handleEmailSubmit = handleSubmit(async ({ email }) => {
-    if (!email || email === initialEmail) return;
+  const sendEmailChangeCode = async () => {
+    const email = emailInput.trim().toLowerCase();
 
-    setIsUpdatingEmail(true);
+    if (!isLikelyEmail(email)) {
+      setEmailErrorMessage("Enter a valid email address.");
+      return false;
+    }
+    if (email === currentEmail) {
+      setEmailErrorMessage("That's already your email address.");
+      return false;
+    }
+
+    setIsSendingEmailCode(true);
+    setEmailErrorMessage(null);
 
     try {
-      const { error } = await supabase.auth.updateUser(
-        { email },
-        {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent("/settings/security")}`,
-        },
-      );
+      // Supabase emails a 6-digit code (the "Confirm email change" template
+      // must include {{ .Token }} — see docs/architecture/email-auth.md).
+      const { error } = await supabase.auth.updateUser({ email });
 
       if (error) {
-        toast.error(error.message);
+        // Don't echo provider text that could confirm the address belongs
+        // to someone else (enumeration guard).
+        const conflict =
+          error.status === 422 ||
+          /already.*(registered|exists|in use)/i.test(error.message);
+        setEmailErrorMessage(
+          conflict
+            ? "That email can't be used."
+            : "Couldn't send a code. Please try again.",
+        );
+        return false;
+      }
+
+      setPendingEmail(email);
+      return true;
+    } catch (error) {
+      logger.error("Email change send error:", error);
+      setEmailErrorMessage("Something went wrong. Please try again.");
+      return false;
+    } finally {
+      setIsSendingEmailCode(false);
+    }
+  };
+
+  const handleEmailSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setEmailOtp("");
+    const sent = await sendEmailChangeCode();
+    if (sent) setEmailStep("code");
+  };
+
+  const handleEmailOtpSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsVerifyingEmail(true);
+    setEmailErrorMessage(null);
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token: emailOtp,
+        type: "email_change",
+      });
+
+      if (error) {
+        setEmailErrorMessage(
+          /expired/i.test(error.message)
+            ? "That code has expired. Request a new one."
+            : "That code isn't correct.",
+        );
         return;
       }
 
+      const confirmed = !!data.user?.email_confirmed_at;
+      setCurrentEmail(pendingEmail);
+      setCurrentEmailVerified(confirmed);
+      setEmailInput(pendingEmail);
+      setEmailStep("idle");
+      setEmailOtp("");
       toast.success(
-        `We've sent a confirmation link to ${email}. Click it to verify your new email.`,
+        confirmed
+          ? "Email updated."
+          : "Almost there — also confirm the code we sent to your current email address.",
       );
     } catch (error) {
-      logger.error("Email update error:", error);
-      toast.error("Something went wrong. Please try again.");
+      logger.error("Email change verify error:", error);
+      setEmailErrorMessage("Verification failed. Please try again.");
     } finally {
-      setIsUpdatingEmail(false);
+      setIsVerifyingEmail(false);
     }
-  });
+  };
 
   const sendPhoneCode = async () => {
     setIsSendingOtp(true);
@@ -240,41 +318,116 @@ export default function SecurityInputFields({
               </div>
             )}
 
-            <form onSubmit={handleEmailSubmit} className="space-y-2">
-              <Input
-                title="Email"
-                inputPlaceholder="Email"
-                {...register("email")}
-              />
+            {emailStep === "idle" ? (
+              <form onSubmit={handleEmailSubmit} className="space-y-2">
+                <Input
+                  title="Email"
+                  inputPlaceholder="you@example.com"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  value={emailInput}
+                  onChange={(event) => {
+                    setEmailInput(event.target.value);
+                    if (emailErrorMessage) setEmailErrorMessage(null);
+                  }}
+                />
 
-              {initialEmail && !initialEmailVerified && (
+                {currentEmail && !currentEmailVerified && (
+                  <p className="text-sm text-muted-foreground">
+                    This email hasn't been verified yet.
+                  </p>
+                )}
+
+                {emailErrorMessage && (
+                  <p
+                    role="alert"
+                    className="text-destructive text-sm md:text-base"
+                  >
+                    {emailErrorMessage}
+                  </p>
+                )}
+
+                <div className="flex justify-between items-center pt-3">
+                  <button
+                    type="button"
+                    onClick={handleDeleteUser}
+                    className="text-destructive flex items-center gap-1 font-bold md:text-lg"
+                  >
+                    <MaskIcon
+                      src="/assets/images/delete.svg"
+                      alt="Delete icon"
+                      className="w-6 h-6 md:w-8 md:h-8 bg-destructive"
+                    />
+                    Delete account
+                  </button>
+
+                  <Button
+                    disabled={
+                      isSendingEmailCode ||
+                      emailInput.trim().length === 0 ||
+                      emailInput.trim().toLowerCase() === currentEmail
+                    }
+                    className="self-end font-medium"
+                  >
+                    {isSendingEmailCode
+                      ? tAuth("sendingCode")
+                      : currentEmail
+                        ? t("change")
+                        : t("add")}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleEmailOtpSubmit} className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  This email hasn't been verified yet.
+                  {tAuth("codeSentTo")} {maskEmail(pendingEmail)}
                 </p>
-              )}
 
-              <div className="flex justify-between items-center pt-3">
-                <button
-                  type="button"
-                  onClick={handleDeleteUser}
-                  className="text-destructive flex items-center gap-1 font-bold md:text-lg"
-                >
-                  <MaskIcon
-                    src="/assets/images/delete.svg"
-                    alt="Delete icon"
-                    className="w-6 h-6 md:w-8 md:h-8 bg-destructive"
+                <OtpInput
+                  value={emailOtp}
+                  onChange={setEmailOtp}
+                  disabled={isVerifyingEmail}
+                  error={emailErrorMessage}
+                  length={EMAIL_OTP_CODE_LENGTH}
+                />
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    className="w-full rounded-md md:text-lg font-bold py-6"
+                    onClick={() => {
+                      setEmailStep("idle");
+                      setEmailErrorMessage(null);
+                    }}
+                  >
+                    {tAuth("back")}
+                  </Button>
+
+                  <Button
+                    className="w-full rounded-md md:text-lg font-bold py-6"
+                    disabled={
+                      isVerifyingEmail ||
+                      emailOtp.length !== EMAIL_OTP_CODE_LENGTH
+                    }
+                  >
+                    {isVerifyingEmail ? tAuth("verifying") : tAuth("continue")}
+                  </Button>
+                </div>
+
+                <div className="flex justify-center">
+                  <ResendOtpButton
+                    onResend={sendEmailChangeCode}
+                    readyLabel={tAuth("resendCode")}
+                    cooldownLabel={(seconds) =>
+                      tAuth("resendCodeIn", { seconds })
+                    }
                   />
-                  Delete account
-                </button>
-
-                <Button
-                  disabled={isUpdatingEmail}
-                  className="self-end font-medium"
-                >
-                  {isUpdatingEmail ? "Updating..." : "Update"}
-                </Button>
-              </div>
-            </form>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
