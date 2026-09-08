@@ -29,9 +29,11 @@ export function useNotifications(options?: { enabled?: boolean }) {
 }
 
 export function flattenNotifications(
-  pages: { data: NotificationType[] }[] | undefined,
+  pages: { data?: NotificationType[] }[] | undefined,
 ): NotificationType[] {
-  return pages?.flatMap((p) => p.data) ?? [];
+  // Skip any error-envelope page ({ status, message }, no `data` array) so a
+  // transient failure can't inject `undefined` into the list.
+  return pages?.flatMap((p) => (Array.isArray(p.data) ? p.data : [])) ?? [];
 }
 
 // Stamp `read_at` on the rows already in the cache instead of refetching the

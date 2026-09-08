@@ -36,7 +36,20 @@ export function useConversations(
 }
 
 export function flattenConversations(
-  pages: { data: ConversationListItem[] }[] | undefined,
+  pages: { data?: ConversationListItem[] }[] | undefined,
 ): ConversationListItem[] {
-  return pages?.flatMap((p) => p.data) ?? [];
+  // An error envelope ({ status, message }) has no `data` array — skip it so
+  // a transient 401/500 (e.g. the first inbox fetch firing the instant after
+  // sign-in) can't put `undefined` into the FlatList and crash keyExtractor.
+  return pages?.flatMap((p) => (Array.isArray(p.data) ? p.data : [])) ?? [];
+}
+
+/** True when any loaded page came back as an error envelope rather than a
+ *  real result — the screen shows its "couldn't load / retry" state. */
+export function hasConversationsPageError(
+  pages: { status?: number }[] | undefined,
+): boolean {
+  return (
+    pages?.some((p) => typeof p.status === "number" && p.status >= 400) ?? false
+  );
 }

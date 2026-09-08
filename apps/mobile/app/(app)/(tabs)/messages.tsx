@@ -10,6 +10,7 @@ import { useInboxPrefs } from "@/features/messaging/inboxPrefs";
 import type { ConversationListNarrow } from "@/features/messaging/keys";
 import {
   flattenConversations,
+  hasConversationsPageError,
   useConversations,
 } from "@/features/messaging/useConversations";
 import {
@@ -70,6 +71,10 @@ export default function Messages() {
 
   const q = useConversations(filter, roleScope, narrow);
   const rows = flattenConversations(q.data?.pages);
+  // The mobile API returns errors as a { status, message } envelope (not a
+  // thrown error), so React Query's `isError` stays false for a 401/500 —
+  // fold the envelope status in so the "couldn't load / retry" UI still shows.
+  const isError = q.isError || hasConversationsPageError(q.data?.pages);
 
   const setState = useSetConversationState();
   const markRead = useMarkConversationRead();
@@ -178,7 +183,7 @@ export default function Messages() {
       <FlatList
         className="flex-1"
         data={rows}
-        keyExtractor={(c) => c.conversation_id}
+        keyExtractor={(c, i) => c?.conversation_id ?? `row-${i}`}
         renderItem={renderRow}
         ListHeaderComponent={
           searching || filtered ? null : (
@@ -205,14 +210,14 @@ export default function Messages() {
           ) : (
             <EmptyState
               icon={
-                q.isError
+                isError
                   ? "cloud-offline-outline"
                   : searching
                     ? "search-outline"
                     : "chatbubbles-outline"
               }
               title={
-                q.isError
+                isError
                   ? "Couldn't load messages"
                   : searching
                     ? "No conversations found"
@@ -223,7 +228,7 @@ export default function Messages() {
                         : "No conversations yet"
               }
               description={
-                q.isError
+                isError
                   ? "Pull down to try again."
                   : searching
                     ? "Try another name, event, or place."
@@ -234,14 +239,14 @@ export default function Messages() {
                         : "Chat with an organizer or place when you have a question about an event, venue, or experience."
               }
               actionLabel={
-                q.isError
+                isError
                   ? "Retry"
                   : !searching && !filtered && roleScope !== "business"
                     ? "Explore events"
                     : undefined
               }
               onAction={
-                q.isError
+                isError
                   ? () => q.refetch()
                   : !searching && !filtered && roleScope !== "business"
                     ? () => router.push("/(app)/(tabs)")
@@ -255,7 +260,7 @@ export default function Messages() {
             count={rows.length}
             isFetchingNextPage={q.isFetchingNextPage}
             hasNextPage={q.hasNextPage}
-            isError={q.isError}
+            isError={isError}
             onRetry={() => q.fetchNextPage()}
           />
         }
