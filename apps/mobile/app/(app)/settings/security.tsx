@@ -97,9 +97,15 @@ export default function Security() {
   }
 
   // ---- email --------------------------------------------------------------
+  // emailPhase: "new" = enter the code sent to the NEW address;
+  //             "current" = (Secure email change only) also enter the code
+  //             Supabase sent to the CURRENT address — the change only
+  //             completes once both are confirmed.
   const [emailOpen, setEmailOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [emailPhase, setEmailPhase] = useState<"new" | "current">("new");
+  const [changeFromEmail, setChangeFromEmail] = useState<string | null>(null);
   const [emailOtp, setEmailOtp] = useState("");
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailMsg, setEmailMsg] = useState<string | null>(null);
@@ -109,6 +115,8 @@ export default function Security() {
     setEmailOpen(false);
     setEmail("");
     setPendingEmail(null);
+    setEmailPhase("new");
+    setChangeFromEmail(null);
     setEmailOtp("");
     setEmailErr(null);
   }
@@ -142,6 +150,9 @@ export default function Security() {
         return;
       }
       setPendingEmail(next);
+      setChangeFromEmail(user?.email ?? null);
+      setEmailPhase("new");
+      setEmailOtp("");
     } catch {
       setEmailErr("Network error. Please try again.");
     } finally {
@@ -153,11 +164,16 @@ export default function Security() {
     if (!pendingEmail) return;
     const token = (value ?? emailOtp).trim();
     if (token.length < EMAIL_OTP_CODE_LENGTH) return;
+
+    // Which address this code was sent to.
+    const target = emailPhase === "current" ? changeFromEmail : pendingEmail;
+    if (!target) return;
+
     setEmailErr(null);
     setEmailBusy(true);
     try {
       const { data, error } = await supabase.auth.verifyOtp({
-        email: pendingEmail,
+        email: target,
         token,
         type: "email_change",
       });
@@ -169,13 +185,18 @@ export default function Security() {
         );
         return;
       }
-      // Pull the new claim into the local session.
+
+      // Secure email change ON: the address only flips once BOTH codes are
+      // in. After the NEW-address code, if it's not confirmed yet, collect
+      // the CURRENT-address code. Otherwise we're done.
+      if (emailPhase === "new" && !data.user?.email_confirmed_at) {
+        setEmailOtp("");
+        setEmailPhase("current");
+        return;
+      }
+
       await supabase.auth.refreshSession();
-      setEmailMsg(
-        data.user?.email_confirmed_at
-          ? "Email updated."
-          : "Almost there — also confirm the code sent to your current email address.",
-      );
+      setEmailMsg("Email updated.");
       resetEmail();
     } catch {
       setEmailErr("Network error. Please try again.");
@@ -285,7 +306,17 @@ export default function Security() {
             <View className="gap-3 pt-2">
               {pendingEmail ? (
                 <>
-                  <Field label={`Code sent to ${maskEmail(pendingEmail)}`}>
+                  <Field
+                    label={
+                      emailPhase === "current"
+                        ? `One more code — sent to your current address${
+                            changeFromEmail
+                              ? ` (${maskEmail(changeFromEmail)})`
+                              : ""
+                          }`
+                        : `Code sent to ${maskEmail(pendingEmail)}`
+                    }
+                  >
                     <OtpInput
                       value={emailOtp}
                       onChange={setEmailOtp}
@@ -309,12 +340,14 @@ export default function Security() {
                         emailOtp.trim().length < EMAIL_OTP_CODE_LENGTH
                       }
                     />
-                    <Button
-                      title="Resend"
-                      variant="outline"
-                      onPress={sendEmailCode}
-                      disabled={emailBusy}
-                    />
+                    {emailPhase === "new" ? (
+                      <Button
+                        title="Resend"
+                        variant="outline"
+                        onPress={sendEmailCode}
+                        disabled={emailBusy}
+                      />
+                    ) : null}
                     <Button
                       title="Cancel"
                       variant="outline"
