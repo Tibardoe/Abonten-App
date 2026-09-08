@@ -76,9 +76,17 @@ export default function SecurityInputFields({
   // Add / change email — a 6-digit code flow (verifyOtp type "email_change"),
   // not the old confirmation-link that dead-ended on /auth/callback. Runs on
   // the caller's existing session, so it never signs the user out.
+  //
+  // "code"         -> enter the code sent to the NEW address
+  // "code-current" -> only when Supabase's "Secure email change" is on: it
+  //                   also mails a code to the CURRENT address, and the
+  //                   change only completes once BOTH are confirmed.
   const [emailInput, setEmailInput] = useState(initialEmail ?? "");
-  const [emailStep, setEmailStep] = useState<"idle" | "code">("idle");
+  const [emailStep, setEmailStep] = useState<"idle" | "code" | "code-current">(
+    "idle",
+  );
   const [pendingEmail, setPendingEmail] = useState("");
+  const [changeFromEmail, setChangeFromEmail] = useState<string | null>(null);
   const [emailOtp, setEmailOtp] = useState("");
   const [isSendingEmailCode, setIsSendingEmailCode] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
@@ -148,6 +156,7 @@ export default function SecurityInputFields({
       }
 
       setPendingEmail(email);
+      setChangeFromEmail(currentEmail);
       return true;
     } catch (error) {
       logger.error("Email change send error:", error);
@@ -165,6 +174,23 @@ export default function SecurityInputFields({
     if (sent) setEmailStep("code");
   };
 
+  // Marks the change fully applied and returns to the overview.
+  const finishEmailChange = (confirmed: boolean) => {
+    setCurrentEmail(pendingEmail);
+    setCurrentEmailVerified(confirmed);
+    setEmailInput(pendingEmail);
+    setChangeFromEmail(null);
+    setEmailStep("idle");
+    setEmailOtp("");
+    toast.success("Email updated.");
+  };
+
+  const mapOtpError = (message: string) =>
+    /expired/i.test(message)
+      ? "That code has expired. Request a new one."
+      : "That code isn't correct.";
+
+  // Step 1: the code sent to the NEW address.
   const handleEmailOtpSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsVerifyingEmail(true);
@@ -178,27 +204,49 @@ export default function SecurityInputFields({
       });
 
       if (error) {
-        setEmailErrorMessage(
-          /expired/i.test(error.message)
-            ? "That code has expired. Request a new one."
-            : "That code isn't correct.",
-        );
+        setEmailErrorMessage(mapOtpError(error.message));
         return;
       }
 
-      const confirmed = !!data.user?.email_confirmed_at;
-      setCurrentEmail(pendingEmail);
-      setCurrentEmailVerified(confirmed);
-      setEmailInput(pendingEmail);
-      setEmailStep("idle");
-      setEmailOtp("");
-      toast.success(
-        confirmed
-          ? "Email updated."
-          : "Almost there — also confirm the code we sent to your current email address.",
-      );
+      // With Supabase's "Secure email change" ON, the address only flips
+      // once the CURRENT address is also confirmed — go collect that code.
+      // With it OFF, email_confirmed_at is already set and we're done.
+      if (data.user?.email_confirmed_at) {
+        finishEmailChange(true);
+      } else {
+        setEmailOtp("");
+        setEmailStep("code-current");
+      }
     } catch (error) {
       logger.error("Email change verify error:", error);
+      setEmailErrorMessage("Verification failed. Please try again.");
+    } finally {
+      setIsVerifyingEmail(false);
+    }
+  };
+
+  // Step 2 (Secure email change only): the code sent to the CURRENT address.
+  const handleCurrentEmailOtpSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!changeFromEmail) return;
+    setIsVerifyingEmail(true);
+    setEmailErrorMessage(null);
+
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: changeFromEmail,
+        token: emailOtp,
+        type: "email_change",
+      });
+
+      if (error) {
+        setEmailErrorMessage(mapOtpError(error.message));
+        return;
+      }
+
+      finishEmailChange(!!data.user?.email_confirmed_at);
+    } catch (error) {
+      logger.error("Email change (current) verify error:", error);
       setEmailErrorMessage("Verification failed. Please try again.");
     } finally {
       setIsVerifyingEmail(false);
@@ -380,7 +428,7 @@ export default function SecurityInputFields({
                   </Button>
                 </div>
               </form>
-            ) : (
+            ) : emailStep === "code" ? (
               <form onSubmit={handleEmailOtpSubmit} className="space-y-3">
                 <p className="text-sm text-muted-foreground">
                   {tAuth("codeSentTo")} {maskEmail(pendingEmail)}
@@ -425,6 +473,50 @@ export default function SecurityInputFields({
                       tAuth("resendCodeIn", { seconds })
                     }
                   />
+                </div>
+              </form>
+            ) : (
+              <form
+                onSubmit={handleCurrentEmailOtpSubmit}
+                className="space-y-3"
+              >
+                <p className="text-sm text-muted-foreground">
+                  One more step — enter the code we also sent to your current
+                  address
+                  {changeFromEmail ? `, ${maskEmail(changeFromEmail)}` : ""}.
+                </p>
+
+                <OtpInput
+                  value={emailOtp}
+                  onChange={setEmailOtp}
+                  disabled={isVerifyingEmail}
+                  error={emailErrorMessage}
+                  length={EMAIL_OTP_CODE_LENGTH}
+                />
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    className="w-full rounded-md md:text-lg font-bold py-6"
+                    onClick={() => {
+                      setEmailStep("idle");
+                      setChangeFromEmail(null);
+                      setEmailOtp("");
+                      setEmailErrorMessage(null);
+                    }}
+                  >
+                    {tAuth("back")}
+                  </Button>
+
+                  <Button
+                    className="w-full rounded-md md:text-lg font-bold py-6"
+                    disabled={
+                      isVerifyingEmail ||
+                      emailOtp.length !== EMAIL_OTP_CODE_LENGTH
+                    }
+                  >
+                    {isVerifyingEmail ? tAuth("verifying") : tAuth("continue")}
+                  </Button>
                 </div>
               </form>
             )}
