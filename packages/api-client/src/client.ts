@@ -87,6 +87,8 @@ import type {
   PromoteEventResult,
   PromotePlaceResult,
   PromotionPaymentAttemptResult,
+  RequestEmailOtpBody,
+  RequestEmailOtpData,
   RequestPayoutBody,
   RequestPayoutResult,
   RequestPhoneOtpBody,
@@ -285,6 +287,17 @@ export function createApiClient(options: ApiClientOptions) {
       verifyPhoneOtp(body: VerifyPhoneOtpBody) {
         return request<ApiEnvelope<PhoneSession>>(
           "/api/mobile/auth/phone/verify",
+          { method: "POST", body, auth: false },
+        );
+      },
+      // Sends a 6-digit email sign-in code. There is no verifyEmailOtp here
+      // on purpose: the app consumes the code with
+      // supabase.auth.verifyOtp({ type: "email" }) directly (no server
+      // secret needed), so the session persists to secure-store natively —
+      // same split as Google sign-in.
+      requestEmailOtp(body: RequestEmailOtpBody) {
+        return request<ApiEnvelope<RequestEmailOtpData>>(
+          "/api/mobile/auth/email/request",
           { method: "POST", body, auth: false },
         );
       },

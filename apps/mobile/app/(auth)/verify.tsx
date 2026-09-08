@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { hapticError, hapticSuccess } from "@/lib/haptics";
 import { supabase } from "@/lib/supabase";
+import { EMAIL_OTP_CODE_LENGTH, maskEmail } from "@abonten/core/emailOtp";
 import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import {
   AbontenLogo,
@@ -21,12 +22,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// Hubtel's OTP product issues 4-digit codes — single source of truth shared
-// with the web OTP UI and the verify actions.
-const CODE_LENGTH = HUBTEL_OTP_CODE_LENGTH;
 const RESEND_SECONDS = 30;
 
-// Mask all but the last two digits of the destination so the screen confirms
+// Mask all but the last two digits of a phone number so the screen confirms
 // which number was used without printing it in full.
 function maskPhone(e164: string | undefined) {
   if (!e164) return "your phone";
@@ -35,14 +33,35 @@ function maskPhone(e164: string | undefined) {
   return `${head}••••${tail}`;
 }
 
+// Shared OTP screen for both sign-in channels:
+//   channel === "phone" (default) — Hubtel 4-digit code, verified through
+//     /api/mobile/auth/phone/verify, which returns session tokens we
+//     setSession() with.
+//   channel === "email" — Supabase 6-digit code, verified directly against
+//     Supabase (supabase.auth.verifyOtp), which persists the session to
+//     secure-store itself. No server round-trip on verify.
 export default function Verify() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { phoneE164, dialCode, rawPhone } = useLocalSearchParams<{
-    phoneE164: string;
+  const params = useLocalSearchParams<{
+    channel?: "phone" | "email";
+    phoneE164?: string;
     dialCode?: string;
     rawPhone?: string;
+    email?: string;
   }>();
+
+  const channel = params.channel === "email" ? "email" : "phone";
+  const { phoneE164, dialCode, rawPhone, email } = params;
+
+  const codeLength =
+    channel === "email" ? EMAIL_OTP_CODE_LENGTH : HUBTEL_OTP_CODE_LENGTH;
+  const destination =
+    channel === "email"
+      ? email
+        ? maskEmail(email)
+        : "your email"
+      : maskPhone(phoneE164);
 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -77,15 +96,41 @@ export default function Verify() {
 
   const verify = useCallback(
     async (value: string) => {
-      if (!phoneE164) {
-        setError("Missing phone number — go back and try again.");
-        return;
-      }
-      if (value.length < CODE_LENGTH) return;
+      if (value.length < codeLength) return;
       setError(null);
       setNotice(null);
       setBusy(true);
       try {
+        if (channel === "email") {
+          if (!email) {
+            setError("Missing email — go back and try again.");
+            return;
+          }
+          // verifyOtp persists the session to secure-store on success;
+          // SessionProvider's onAuthStateChange then routes into the app.
+          const { error: verifyErr } = await supabase.auth.verifyOtp({
+            email: email.trim().toLowerCase(),
+            token: value,
+            type: "email",
+          });
+          if (verifyErr) {
+            hapticError();
+            setError(
+              /expired/i.test(verifyErr.message)
+                ? "That code has expired. Request a new one."
+                : "That code isn't correct.",
+            );
+            setCode("");
+            return;
+          }
+          hapticSuccess();
+          return;
+        }
+
+        if (!phoneE164) {
+          setError("Missing phone number — go back and try again.");
+          return;
+        }
         const res = await api.auth.verifyPhoneOtp({ phoneE164, code: value });
 
         if (res.status !== 200 || !res.data) {
@@ -95,8 +140,6 @@ export default function Verify() {
           return;
         }
 
-        // Persist the returned session — SessionProvider's onAuthStateChange
-        // then routes into the app.
         const { error: setErr } = await supabase.auth.setSession({
           access_token: res.data.access_token,
           refresh_token: res.data.refresh_token,
@@ -115,23 +158,35 @@ export default function Verify() {
         setBusy(false);
       }
     },
-    [phoneE164],
+    [channel, phoneE164, email, codeLength],
   );
 
   async function resend() {
     if (secondsLeft > 0 || resending || busy) return;
-    if (!dialCode || !rawPhone) {
-      setError("Go back and re-enter your number to get a new code.");
-      return;
-    }
     setError(null);
     setNotice(null);
     setResending(true);
     try {
-      const res = await api.auth.requestPhoneOtp({ dialCode, rawPhone });
-      if (res.status !== 200 || !res.data) {
-        setError(res.message ?? "Couldn't resend the code. Try again.");
-        return;
+      if (channel === "email") {
+        if (!email) {
+          setError("Go back and re-enter your email to get a new code.");
+          return;
+        }
+        const res = await api.auth.requestEmailOtp({ email: email.trim() });
+        if (res.status !== 200) {
+          setError(res.message ?? "Couldn't resend the code. Try again.");
+          return;
+        }
+      } else {
+        if (!dialCode || !rawPhone) {
+          setError("Go back and re-enter your number to get a new code.");
+          return;
+        }
+        const res = await api.auth.requestPhoneOtp({ dialCode, rawPhone });
+        if (res.status !== 200 || !res.data) {
+          setError(res.message ?? "Couldn't resend the code. Try again.");
+          return;
+        }
       }
       setCode("");
       setNotice("A new code is on its way.");
@@ -188,7 +243,7 @@ export default function Verify() {
                 Enter your code
               </AppText>
               <AppText variant="muted" className="text-center">
-                We sent a {CODE_LENGTH}-digit code to {maskPhone(phoneE164)}.
+                We sent a {codeLength}-digit code to {destination}.
               </AppText>
             </View>
 
@@ -200,7 +255,7 @@ export default function Verify() {
                   if (error) setError(null);
                 }}
                 onComplete={verify}
-                length={CODE_LENGTH}
+                length={codeLength}
                 disabled={busy}
                 invalid={!!error}
               />
@@ -225,7 +280,7 @@ export default function Verify() {
                 title={busy ? "Verifying…" : "Verify"}
                 fullWidth
                 loading={busy}
-                disabled={busy || code.length < CODE_LENGTH}
+                disabled={busy || code.length < codeLength}
                 onPress={() => verify(code)}
               />
 
@@ -250,7 +305,9 @@ export default function Verify() {
                   tone="brand"
                   className="text-center font-semibold"
                 >
-                  Use a different number
+                  {channel === "email"
+                    ? "Use a different email"
+                    : "Use a different number"}
                 </AppText>
               </Pressable>
             </View>

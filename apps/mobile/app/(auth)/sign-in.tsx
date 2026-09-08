@@ -165,6 +165,17 @@ export default function SignIn() {
               )}
             </Pressable>
 
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Continue with email"
+              disabled={busy !== null}
+              onPress={() => router.push("/(auth)/email")}
+              className="h-14 flex-row items-center justify-center gap-3 rounded-xl border border-border bg-card active:opacity-80 disabled:opacity-50"
+            >
+              <Icon name="mail-outline" size={20} tone="foreground" />
+              <AppText variant="bodyStrong">Continue with email</AppText>
+            </Pressable>
+
             <View className="flex-row items-center gap-3">
               <View className="h-px flex-1 bg-border" />
               <AppText variant="overline">or</AppText>

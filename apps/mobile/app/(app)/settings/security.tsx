@@ -3,6 +3,11 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import {
+  EMAIL_OTP_CODE_LENGTH,
+  isLikelyEmail,
+  maskEmail,
+} from "@abonten/core/emailOtp";
 import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import {
   AppText,
@@ -18,13 +23,12 @@ import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 
 // Native echo of the web settings/security page (SecurityInputFields):
-// change email (Supabase's own confirmation-link flow) and change/add phone
-// (Hubtel OTP -> Admin API, via /api/mobile/account/phone/*). Linked Google
-// identity is shown read-only. The email confirmation link opens the web
-// callback — the app picks up the change on its next session refresh.
+// change/add email (Supabase 6-digit code, verifyOtp type "email_change" —
+// runs on the current session, no sign-out) and change/add phone (Hubtel
+// OTP -> Admin API, via /api/mobile/account/phone/*). Linked Google identity
+// is shown read-only.
 
 const DEFAULT_DIAL_CODE = "+233";
-const WEB_ORIGIN = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 function VerifiedTag({ verified }: { verified: boolean }) {
   return verified ? (
@@ -95,36 +99,84 @@ export default function Security() {
   // ---- email --------------------------------------------------------------
   const [emailOpen, setEmailOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [emailOtp, setEmailOtp] = useState("");
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailMsg, setEmailMsg] = useState<string | null>(null);
   const [emailErr, setEmailErr] = useState<string | null>(null);
 
-  async function submitEmail() {
+  function resetEmail() {
+    setEmailOpen(false);
+    setEmail("");
+    setPendingEmail(null);
+    setEmailOtp("");
+    setEmailErr(null);
+  }
+
+  async function sendEmailCode() {
     setEmailErr(null);
     setEmailMsg(null);
-    const next = email.trim();
-    if (!next || next === user?.email) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(next)) {
+    const next = email.trim().toLowerCase();
+    if (!isLikelyEmail(next)) {
       setEmailErr("Enter a valid email address.");
+      return;
+    }
+    if (next === user?.email) {
+      setEmailErr("That's already your email address.");
       return;
     }
     setEmailBusy(true);
     try {
-      const { error } = await supabase.auth.updateUser(
-        { email: next },
-        WEB_ORIGIN
-          ? { emailRedirectTo: `${WEB_ORIGIN}/auth/callback` }
-          : undefined,
-      );
+      // Supabase emails a 6-digit code (the "Confirm email change" template
+      // must carry {{ .Token }} — see docs/architecture/email-auth.md).
+      const { error } = await supabase.auth.updateUser({ email: next });
       if (error) {
-        setEmailErr(error.message);
+        const conflict =
+          error.status === 422 ||
+          /already.*(registered|exists|in use)/i.test(error.message);
+        setEmailErr(
+          conflict
+            ? "That email can't be used."
+            : "Couldn't send a code. Please try again.",
+        );
         return;
       }
+      setPendingEmail(next);
+    } catch {
+      setEmailErr("Network error. Please try again.");
+    } finally {
+      setEmailBusy(false);
+    }
+  }
+
+  async function verifyEmailCode(value?: string) {
+    if (!pendingEmail) return;
+    const token = (value ?? emailOtp).trim();
+    if (token.length < EMAIL_OTP_CODE_LENGTH) return;
+    setEmailErr(null);
+    setEmailBusy(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token,
+        type: "email_change",
+      });
+      if (error) {
+        setEmailErr(
+          /expired/i.test(error.message)
+            ? "That code has expired. Request a new one."
+            : "That code isn't correct.",
+        );
+        return;
+      }
+      // Pull the new claim into the local session.
+      await supabase.auth.refreshSession();
       setEmailMsg(
-        `We've sent a confirmation link to ${next}. Open it to verify your new email.`,
+        data.user?.email_confirmed_at
+          ? "Email updated."
+          : "Almost there — also confirm the code sent to your current email address.",
       );
-      setEmail("");
-      setEmailOpen(false);
+      resetEmail();
     } catch {
       setEmailErr("Network error. Please try again.");
     } finally {
@@ -231,37 +283,79 @@ export default function Security() {
 
           {emailOpen ? (
             <View className="gap-3 pt-2">
-              <Field label="New email">
-                <Input
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="you@example.com"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-              </Field>
-              {emailErr ? (
-                <AppText variant="small" tone="error">
-                  {emailErr}
-                </AppText>
-              ) : null}
-              <View className="flex-row gap-2">
-                <Button
-                  title={emailBusy ? "Sending…" : "Send confirmation"}
-                  onPress={submitEmail}
-                  disabled={emailBusy}
-                />
-                <Button
-                  title="Cancel"
-                  variant="outline"
-                  onPress={() => {
-                    setEmailOpen(false);
-                    setEmailErr(null);
-                  }}
-                  disabled={emailBusy}
-                />
-              </View>
+              {pendingEmail ? (
+                <>
+                  <Field label={`Code sent to ${maskEmail(pendingEmail)}`}>
+                    <OtpInput
+                      value={emailOtp}
+                      onChange={setEmailOtp}
+                      onComplete={verifyEmailCode}
+                      length={EMAIL_OTP_CODE_LENGTH}
+                      disabled={emailBusy}
+                      invalid={!!emailErr}
+                    />
+                  </Field>
+                  {emailErr ? (
+                    <AppText variant="small" tone="error">
+                      {emailErr}
+                    </AppText>
+                  ) : null}
+                  <View className="flex-row gap-2">
+                    <Button
+                      title={emailBusy ? "Verifying…" : "Verify"}
+                      onPress={() => verifyEmailCode()}
+                      disabled={
+                        emailBusy ||
+                        emailOtp.trim().length < EMAIL_OTP_CODE_LENGTH
+                      }
+                    />
+                    <Button
+                      title="Resend"
+                      variant="outline"
+                      onPress={sendEmailCode}
+                      disabled={emailBusy}
+                    />
+                    <Button
+                      title="Cancel"
+                      variant="outline"
+                      onPress={resetEmail}
+                      disabled={emailBusy}
+                    />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Field label="New email">
+                    <Input
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="you@example.com"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      textContentType="emailAddress"
+                    />
+                  </Field>
+                  {emailErr ? (
+                    <AppText variant="small" tone="error">
+                      {emailErr}
+                    </AppText>
+                  ) : null}
+                  <View className="flex-row gap-2">
+                    <Button
+                      title={emailBusy ? "Sending…" : "Send code"}
+                      onPress={sendEmailCode}
+                      disabled={emailBusy}
+                    />
+                    <Button
+                      title="Cancel"
+                      variant="outline"
+                      onPress={resetEmail}
+                      disabled={emailBusy}
+                    />
+                  </View>
+                </>
+              )}
             </View>
           ) : (
             <Button
@@ -402,8 +496,8 @@ export default function Security() {
 
         <Divider />
         <AppText variant="caption">
-          Changing your email sends a confirmation link — open it to finish. A
-          new phone number is verified by a one-time code.
+          Email and phone changes are each confirmed with a one-time code. You
+          stay signed in.
         </AppText>
 
         {/* Danger zone */}
