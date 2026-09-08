@@ -4,6 +4,8 @@ import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { Rect } from "./contextMenu/menuPlacement";
+import { useAnchorMeasure } from "./contextMenu/useAnchorMeasure";
 
 const HEIGHT = 54;
 
@@ -18,8 +20,9 @@ export function ConversationHeader({
 }: {
   context: ConversationContext | null | undefined;
   currentUserId: string | undefined;
-  onMenu: () => void;
+  onMenu: (anchor: Rect | null) => void;
 }) {
+  const { ref: menuRef, measure: measureMenu } = useAnchorMeasure();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -120,10 +123,16 @@ export function ConversationHeader({
         </Pressable>
 
         <Pressable
+          ref={menuRef}
           accessibilityRole="button"
           accessibilityLabel="Conversation options"
+          accessibilityHint="Opens mute, archive and report"
           hitSlop={8}
-          onPress={onMenu}
+          // Hand the caller this button's own frame so the menu can hang off
+          // it instead of arriving from the bottom of the screen.
+          onPress={() => {
+            measureMenu().then((rect) => onMenu(rect));
+          }}
           className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
         >
           <Icon name="ellipsis-vertical" size={20} tone="foreground" />

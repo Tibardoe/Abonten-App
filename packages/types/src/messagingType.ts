@@ -72,9 +72,11 @@ export type MessageReplyPreview = {
   attachment_mime?: string | null;
 };
 
-// The fixed reaction palette offered by the contextual message menu. Kept in
-// lock-step with the CHECK inside the toggle_message_reaction RPC
-// (20260908133841_message_reactions.sql) — changing one means changing both.
+// The DEFAULT quick reactions shown in the contextual menu's reaction bar.
+// This is a convenience palette, NOT a whitelist: the bar's "+" opens the OS
+// emoji keyboard and any emoji passing isValidReactionEmoji (@abonten/
+// validation) may be stored — see 20260908215500_message_reaction_custom_emoji.
+// Recently-used custom picks are prepended to this list on the client.
 export const MESSAGE_REACTION_EMOJIS = [
   "👍",
   "❤️",

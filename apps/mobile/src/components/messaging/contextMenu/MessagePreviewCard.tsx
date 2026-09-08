@@ -3,11 +3,11 @@ import {
   emojiOnlyFontSize,
 } from "@/features/messaging/emojiOnly";
 import { clockTime } from "@/features/messaging/messagingTime";
-import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
-import { Image } from "expo-image";
 import { View } from "react-native";
+import { ChatImage } from "../ChatImage";
+import { FileAttachmentCard } from "../FileAttachmentCard";
 import { ReplyQuote } from "../ReplyQuote";
 
 // A gesture-free, playback-free clone of a message bubble, shown "lifted" in
@@ -49,37 +49,17 @@ function AudioPreview({ isMine }: { isMine: boolean }) {
   );
 }
 
-function ImagePreview({ message }: { message: MessageRow }) {
-  const a = message.attachments[0];
-  const signed = useAttachmentUrl(a?.storage_path);
-  const ratio = a?.width && a?.height ? a.width / a.height : 1;
-  return (
-    <View
-      style={{
-        width: 200,
-        aspectRatio: Math.min(Math.max(ratio, 0.6), 1.8),
-        borderRadius: 12,
-        overflow: "hidden",
-        backgroundColor: "rgba(0,0,0,0.06)",
-      }}
-    >
-      {signed.data ? (
-        <Image
-          source={{ uri: signed.data }}
-          style={{ width: "100%", height: "100%" }}
-          contentFit="cover"
-        />
-      ) : null}
-    </View>
-  );
-}
+const noop = () => {};
 
 export function MessagePreviewCard({
   message,
   isMine,
+  seen = false,
 }: {
   message: MessageRow;
   isMine: boolean;
+  /** Mirrors the bubble's read state so the clone shows the same tick. */
+  seen?: boolean;
 }) {
   const deleted = !!message.deleted_at;
   const isAudio = message.message_type === "audio";
@@ -131,24 +111,27 @@ export function MessagePreviewCard({
         ) : isAudio ? (
           <AudioPreview isMine={isMine} />
         ) : isImage ? (
-          <ImagePreview message={message} />
+          // The SAME component the bubble uses, so the lifted clone has
+          // byte-identical geometry (ChatImage's fittedSize) and hits the
+          // already-warm signed-URL cache -- the picture does not resize,
+          // reload or flash as the message lifts out. The overlay renders
+          // this tree with pointerEvents="none", so its Pressable is inert.
+          <View className="gap-1.5">
+            {message.attachments.map((a) => (
+              <ChatImage
+                key={a.id}
+                storagePath={a.storage_path}
+                width={a.width}
+                height={a.height}
+                onPress={noop}
+              />
+            ))}
+          </View>
         ) : isFile ? (
-          <View
-            className="flex-row items-center gap-2 py-1"
-            style={{ minWidth: 168 }}
-          >
-            <Icon
-              name="document"
-              size={18}
-              tone={isMine ? "inverse" : "muted"}
-            />
-            <AppText
-              variant="caption"
-              numberOfLines={1}
-              className={isMine ? "text-primary-foreground/80" : undefined}
-            >
-              {message.attachments[0]?.file_name ?? "Attachment"}
-            </AppText>
+          <View className="gap-1.5">
+            {message.attachments.map((a) => (
+              <FileAttachmentCard key={a.id} attachment={a} isMine={isMine} />
+            ))}
           </View>
         ) : null}
 
@@ -163,13 +146,32 @@ export function MessagePreviewCard({
           </AppText>
         ) : null}
 
-        <View className="mt-1 flex-row items-center justify-end">
+        {/* Same footer the bubble draws, ticks included. Dropping them made
+            the lifted clone a few px narrower than the message it replaced,
+            so the bubble visibly re-flowed on long-press and again on
+            dismiss. */}
+        <View className="mt-0.5 flex-row items-center justify-end gap-1">
+          {message.edited_at && !deleted ? (
+            <AppText
+              variant="caption"
+              className={isMine ? "text-primary-foreground/70" : undefined}
+            >
+              edited
+            </AppText>
+          ) : null}
           <AppText
             variant="caption"
             className={isMine ? "text-primary-foreground/70" : undefined}
           >
             {clockTime(message.created_at)}
           </AppText>
+          {isMine && !deleted ? (
+            <Icon
+              name={seen ? "checkmark-done" : "checkmark"}
+              size={14}
+              tone={seen ? "primary" : "muted"}
+            />
+          ) : null}
         </View>
       </View>
     </View>

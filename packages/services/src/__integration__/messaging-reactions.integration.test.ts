@@ -167,12 +167,43 @@ describe("messaging: reactions", () => {
     expect(data ?? []).toEqual([]);
   });
 
-  it("refuses an emoji outside the fixed palette", async () => {
+  it("accepts an emoji outside the quick palette (custom picker)", async () => {
+    // The reaction bar's "+" opens the OS emoji keyboard, so the six-emoji
+    // palette is a convenience list, not a whitelist -- anything passing the
+    // shape rule is storable.
     const res = await toggleReactionCore(organizer.client, organizer.id, {
       messageId,
-      emoji: "🤡",
+      emoji: "\u{1F921}",
+    });
+    expect(res.status).toBe(200);
+    expect(res.data?.added).toBe(true);
+
+    const { data } = await service
+      .from("message_reaction")
+      .select("emoji")
+      .eq("message_id", messageId);
+    expect(data).toEqual([{ emoji: "\u{1F921}" }]);
+  });
+
+  it.each([
+    ["a plain word", "SPAM"],
+    ["digits", "12345"],
+    ["punctuation", "!!!!"],
+    ["an emoji with letters glued on", "\u{1F680}go"],
+    ["two emoji with a space", "\u{1F680} \u{1F680}"],
+    ["a latin-1 letter", "\u00e9"],
+  ])("refuses %s as a reaction", async (_label, value) => {
+    const res = await toggleReactionCore(organizer.client, organizer.id, {
+      messageId,
+      emoji: value,
     });
     expect(res.status).toBe(409);
+
+    const { data } = await service
+      .from("message_reaction")
+      .select("emoji")
+      .eq("message_id", messageId);
+    expect(data ?? []).toEqual([]);
   });
 
   // message_reaction also carries an own-row RLS INSERT policy, so a
@@ -180,7 +211,7 @@ describe("messaging: reactions", () => {
   // toggle_message_reaction. These two cover the table-level guards added in
   // 20260908170944_message_reaction_table_hardening.sql.
   describe("direct-table writes (bypassing the RPC)", () => {
-    it("rejects an off-palette 'emoji' written straight to the table", async () => {
+    it("rejects readable text written straight to the table", async () => {
       const { error } = await organizer.client.from("message_reaction").insert({
         message_id: messageId,
         user_id: organizer.id,

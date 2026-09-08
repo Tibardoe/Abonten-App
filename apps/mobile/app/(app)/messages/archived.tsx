@@ -172,6 +172,7 @@ export default function ArchivedMessages() {
 
       <ConversationPeekOverlay
         target={menuFor}
+        currentUserId={currentUserId}
         archivedView
         onDismiss={() => setMenuFor(null)}
         onOpen={onOpen}
