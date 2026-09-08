@@ -1,7 +1,30 @@
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import {
+  setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+} from "expo-audio";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { useAttachmentUrl } from "./useAttachmentUrl";
+
+// Force the audio session into a playback route before starting a clip. After
+// recording, iOS leaves the session in `.playAndRecord`, which routes to the
+// quiet earpiece receiver — so a voice note is inaudible on the phone speaker
+// unless a headset is connected. `allowsRecording: false` reverts the
+// category to `.playback` (speaker); `shouldRouteThroughEarpiece: false` is
+// belt-and-braces; `playsInSilentMode` keeps a deliberately-tapped voice
+// note audible with the ring switch on, like WhatsApp.
+async function ensurePlaybackRoute(): Promise<void> {
+  try {
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      allowsRecording: false,
+      shouldRouteThroughEarpiece: false,
+    });
+  } catch {
+    // best effort — playback still works, just possibly on the wrong route
+  }
+}
 
 // Cross-bubble coordination: only one voice note plays at a time. Starting
 // one pauses whichever was playing (task §7). A tiny module-level pub/sub —
@@ -71,7 +94,7 @@ export function useVoiceBubblePlayer(
     if (url && wantPlayRef.current) {
       wantPlayRef.current = false;
       setActiveVoice(messageId);
-      player.play();
+      void ensurePlaybackRoute().then(() => player.play());
     }
   }, [url, player, messageId]);
 
@@ -123,7 +146,7 @@ export function useVoiceBubblePlayer(
     }
     if (!url) return; // still loading
     setActiveVoice(messageId);
-    player.play();
+    void ensurePlaybackRoute().then(() => player.play());
   }, [status.playing, player, messageId, armed, url]);
 
   const seekToFraction = useCallback(
