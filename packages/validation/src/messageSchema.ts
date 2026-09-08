@@ -1,3 +1,7 @@
+import {
+  MESSAGE_REACTION_MAX_LENGTH,
+  isValidReactionEmoji,
+} from "@abonten/core/messagingReactions";
 import { z } from "zod";
 
 // Shared Zod for the in-app messaging transports (web Server Actions +
@@ -65,21 +69,17 @@ export const sendMessageSchema = z
   });
 export type SendMessageSchemaInput = z.infer<typeof sendMessageSchema>;
 
-// Fixed reaction palette — mirrors MESSAGE_REACTION_EMOJIS in @abonten/types
-// and the CHECK inside the toggle_message_reaction RPC. The RPC rejects
-// anything else too; this is the first gate.
-export const MESSAGE_REACTION_EMOJIS = [
-  "👍",
-  "❤️",
-  "😂",
-  "😮",
-  "😢",
-  "🙏",
-] as const;
-
+// Reaction emoji validation lives in @abonten/core/messagingReactions so it
+// can be unit-tested next to the reaction rollup, and so the mobile reaction
+// picker can reuse it without pulling in zod. It mirrors the
+// message_reaction_emoji_shape CHECK in migration 20260908215500.
 export const toggleMessageReactionSchema = z.object({
   messageId: z.string().uuid(),
-  emoji: z.enum(MESSAGE_REACTION_EMOJIS),
+  emoji: z
+    .string()
+    .min(1)
+    .max(MESSAGE_REACTION_MAX_LENGTH)
+    .refine(isValidReactionEmoji, { message: "That isn't a valid reaction." }),
 });
 export type ToggleMessageReactionSchemaInput = z.infer<
   typeof toggleMessageReactionSchema

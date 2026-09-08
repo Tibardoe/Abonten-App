@@ -27,6 +27,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PeekThread } from "./PeekThread";
 import type { Rect } from "./contextMenu/menuPlacement";
 
 // The inbox long-press interaction (spec §1–7, §21–22). NOT the shared
@@ -79,6 +80,7 @@ type Action = {
 
 export function ConversationPeekOverlay({
   target,
+  currentUserId,
   archivedView = false,
   onDismiss,
   onOpen,
@@ -87,6 +89,8 @@ export function ConversationPeekOverlay({
   onToggleArchive,
 }: {
   target: ConversationMenuTarget | null;
+  /** Whose messages are "mine" in the mini thread. */
+  currentUserId: string | undefined;
   archivedView?: boolean;
   onDismiss: () => void;
   onOpen: (item: ConversationListItem) => void;
@@ -145,10 +149,10 @@ export function ConversationPeekOverlay({
   // the whole cluster on screen.
   const settledTop = useMemo(() => {
     if (!anchor) return insets.top + 24;
-    const estH = 150;
+    const estH = 300;
     const minTop = insets.top + 16;
     const maxTop = screen.height - insets.bottom - 16 - estH - GAP - actionsH;
-    const want = anchor.y - 24;
+    const want = anchor.y - 60;
     return Math.max(minTop, Math.min(want, Math.max(minTop, maxTop)));
   }, [anchor, screen.height, insets.top, insets.bottom, actionsH]);
 
@@ -284,11 +288,10 @@ export function ConversationPeekOverlay({
     item.subject_title !== identityFor(item)
       ? item.subject_title
       : null;
-  const preview = item.last_message_preview || "No messages yet";
   // Sit the action card just under the peek, but never let it run off the
   // bottom edge (spec §18 — respect the safe area / home indicator).
   const actionsTop = Math.min(
-    settledTop + (peekH ?? 150) + GAP,
+    settledTop + (peekH ?? 300) + GAP,
     screen.height - insets.bottom - 12 - actionsH,
   );
 
@@ -397,12 +400,11 @@ export function ConversationPeekOverlay({
                 }}
               />
 
-              <AppText
-                numberOfLines={2}
-                className="text-[14.5px] leading-[20px] text-muted-foreground"
-              >
-                {preview}
-              </AppText>
+              {/* The chat itself, not just its last line -- see PeekThread. */}
+              <PeekThread
+                conversationId={item.conversation_id}
+                currentUserId={currentUserId}
+              />
 
               {item.muted || item.unread_count > 0 ? (
                 <View className="mt-2.5 flex-row items-center gap-2">

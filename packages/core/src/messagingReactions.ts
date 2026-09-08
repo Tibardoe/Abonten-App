@@ -141,3 +141,41 @@ export function reactionRealtimePatches(
       return [];
   }
 }
+
+// ---------------------------------------------------------------------------
+// Reaction emoji validation
+// ---------------------------------------------------------------------------
+
+/** Longest reaction we will store: a ZWJ sequence with modifiers still fits. */
+export const MESSAGE_REACTION_MAX_LENGTH = 16;
+
+/**
+ * Is this a storable reaction emoji?
+ *
+ * Validated by SHAPE, not by an allowlist, because the reaction bar's "+"
+ * lets the user pick any emoji from the OS keyboard. The rules mirror the
+ * `message_reaction_emoji_shape` CHECK and the identical guard inside
+ * `toggle_message_reaction` (migration 20260908215500) -- change one, change
+ * all three. Together they make it impossible to store readable text while
+ * accepting every real emoji: ZWJ sequences, skin-tone modifiers, flags and
+ * keycaps all qualify.
+ *
+ * This is deliberately not a pictographic-property test. Postgres has no
+ * \p{Extended_Pictographic}, so a property-based rule could not be mirrored
+ * in the database, and a guard that only exists in TypeScript is not a guard
+ * at all -- the table carries an own-row RLS INSERT policy, so a client can
+ * reach it directly.
+ */
+export function isValidReactionEmoji(value: string): boolean {
+  if (value.length < 1 || value.length > MESSAGE_REACTION_MAX_LENGTH) {
+    return false;
+  }
+  // No ASCII letter: blocks "SPAM", "http", "lol".
+  if (/[A-Za-z]/.test(value)) return false;
+  // No whitespace: blocks multi-token phrases.
+  if (/\s/.test(value)) return false;
+  // At least one code unit above Latin-1, i.e. a multi-byte character:
+  // blocks "12345", "!!!!", "<3" and friends, which the two rules above
+  // would otherwise allow.
+  return /[^\u0000-\u00FF]/u.test(value);
+}

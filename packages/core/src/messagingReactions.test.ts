@@ -1,6 +1,10 @@
 import type { MessageReactionSummary } from "@abonten/types/messagingType";
 import { describe, expect, it } from "vitest";
-import { reactionRealtimePatches, rollReaction } from "./messagingReactions";
+import {
+  isValidReactionEmoji,
+  reactionRealtimePatches,
+  rollReaction,
+} from "./messagingReactions";
 
 const r = (
   emoji: string,
@@ -253,5 +257,44 @@ describe("reactionRealtimePatches", () => {
         ME,
       ),
     ).toEqual([{ messageId: MSG, emoji: "😮", added: false }]);
+  });
+});
+
+describe("isValidReactionEmoji", () => {
+  describe("accepts real emoji", () => {
+    for (const [label, emoji] of [
+      ["simple", "\u{1F680}"],
+      ["from the default palette", "\u{1F44D}"],
+      ["ZWJ family sequence", "\u{1F468}\u200D\u{1F469}\u200D\u{1F467}"],
+      ["skin-tone modifier", "\u{1F44D}\u{1F3FE}"],
+      ["keycap (contains an ASCII digit)", "1\uFE0F\u20E3"],
+      ["regional-indicator flag", "\u{1F1EC}\u{1F1ED}"],
+      ["variation selector", "\u2764\uFE0F"],
+    ] as const) {
+      it(label, () => expect(isValidReactionEmoji(emoji)).toBe(true));
+    }
+  });
+
+  describe("rejects anything that could carry readable text", () => {
+    for (const [label, value] of [
+      ["plain word", "SPAM"],
+      ["lowercase word", "lol"],
+      ["a URL", "http://x.co"],
+      ["digits only", "12345"],
+      ["punctuation only", "!!!!"],
+      ["ascii emoticon", "<3"],
+      ["emoji with letters appended", "\u{1F680}go"],
+      ["two emoji separated by a space", "\u{1F680} \u{1F680}"],
+      ["emoji with a newline", "\u{1F680}\n"],
+      ["latin-1 accented letter", "\u00e9"],
+      ["empty string", ""],
+    ] as const) {
+      it(label, () => expect(isValidReactionEmoji(value)).toBe(false));
+    }
+  });
+
+  it("enforces the length ceiling", () => {
+    expect(isValidReactionEmoji("\u{1F680}".repeat(8))).toBe(true); // 16 units
+    expect(isValidReactionEmoji("\u{1F680}".repeat(9))).toBe(false); // 18 units
   });
 });

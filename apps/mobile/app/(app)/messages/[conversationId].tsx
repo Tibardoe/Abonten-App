@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { ImageViewer } from "@/components/ImageViewer";
 import { ReportSheet } from "@/components/ReportSheet";
+import { AnchoredMenu } from "@/components/messaging/AnchoredMenu";
 import { ChatToast } from "@/components/messaging/ChatToast";
 import { Composer } from "@/components/messaging/Composer";
 import { ConversationHeader } from "@/components/messaging/ConversationHeader";
@@ -50,6 +51,7 @@ import {
   AppText,
   Button,
   Icon,
+  type IoniconName,
   Sheet,
   SheetOption,
   Spinner,
@@ -106,7 +108,7 @@ export default function ConversationScreen() {
 
   const [replyingTo, setReplyingTo] = useState<MessageRow | null>(null);
   const [menuTarget, setMenuTarget] = useState<MessageMenuTarget | null>(null);
-  const [convMenuOpen, setConvMenuOpen] = useState(false);
+  const [convMenuAnchor, setConvMenuAnchor] = useState<Rect | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [editing, setEditing] = useState<MessageRow | null>(null);
   const [editText, setEditText] = useState("");
@@ -419,7 +421,7 @@ export default function ConversationScreen() {
       <ConversationHeader
         context={context}
         currentUserId={myId}
-        onMenu={() => setConvMenuOpen(true)}
+        onMenu={setConvMenuAnchor}
       />
 
       <KeyboardAvoidingView
@@ -537,6 +539,13 @@ export default function ConversationScreen() {
       <MessageActionOverlay
         target={menuTarget}
         isMine={menuTarget?.message.sender_id === myId}
+        // Same rule the bubble uses, so its lifted clone keeps the tick and
+        // therefore keeps the bubble's exact width.
+        seen={
+          !!menuTarget &&
+          menuTarget.message.sender_id === myId &&
+          new Date(menuTarget.message.created_at).getTime() <= otherReadAt
+        }
         canCopy={CLIPBOARD_SUPPORTED}
         canEdit={menuTarget ? canEdit(menuTarget.message, myId) : false}
         canDelete={
@@ -553,67 +562,67 @@ export default function ConversationScreen() {
         onDelete={(m) => confirmDelete(m)}
         onCopy={handleCopy}
         onReact={handleToggleReaction}
+        currentUserId={myId}
       />
 
-      {/* Conversation actions */}
-      <Sheet
-        open={convMenuOpen}
-        onClose={() => setConvMenuOpen(false)}
-        title="Conversation"
-      >
-        <View className="gap-2">
-          <SheetOption
-            icon={
-              context?.my_participant.muted
-                ? "notifications-outline"
-                : "notifications-off-outline"
-            }
-            title={context?.my_participant.muted ? "Unmute" : "Mute"}
-            onPress={() => {
-              setConvMenuOpen(false);
+      {/* Conversation actions — an anchored drop-down hanging off the "..."
+          button, not a bottom sheet (a sheet threw a full-width surface up
+          from the far end of the screen for a small header-level choice). */}
+      <AnchoredMenu
+        open={!!convMenuAnchor}
+        anchor={convMenuAnchor}
+        onClose={() => setConvMenuAnchor(null)}
+        items={[
+          {
+            key: "mute",
+            label: context?.my_participant.muted ? "Unmute" : "Mute",
+            icon: context?.my_participant.muted
+              ? "notifications-outline"
+              : "notifications-off-outline",
+            onPress: () =>
               setState.mutate({
                 conversationId,
                 muted: !context?.my_participant.muted,
-              });
-            }}
-          />
-          <SheetOption
-            icon={
-              context?.my_participant.archived ? "archive-outline" : "archive"
-            }
-            title={context?.my_participant.archived ? "Unarchive" : "Archive"}
-            onPress={() => {
-              setConvMenuOpen(false);
+              }),
+          },
+          {
+            key: "archive",
+            label: context?.my_participant.archived ? "Unarchive" : "Archive",
+            icon: context?.my_participant.archived
+              ? "arrow-undo-outline"
+              : "archive-outline",
+            onPress: () =>
               setState.mutate({
                 conversationId,
                 archived: !context?.my_participant.archived,
-              });
-            }}
-          />
-          {otherUserId ? (
-            <SheetOption
-              icon={iBlockedThem ? "person-add-outline" : "hand-left-outline"}
-              title={iBlockedThem ? "Unblock" : "Block"}
-              onPress={() => {
-                setConvMenuOpen(false);
-                block.mutate({
-                  conversationId,
-                  blockedUserId: otherUserId,
-                  block: !iBlockedThem,
-                });
-              }}
-            />
-          ) : null}
-          <SheetOption
-            icon="flag-outline"
-            title="Report conversation"
-            onPress={() => {
-              setConvMenuOpen(false);
-              setReportOpen(true);
-            }}
-          />
-        </View>
-      </Sheet>
+              }),
+          },
+          ...(otherUserId
+            ? [
+                {
+                  key: "block",
+                  label: iBlockedThem ? "Unblock" : "Block",
+                  icon: (iBlockedThem
+                    ? "person-add-outline"
+                    : "hand-left-outline") as IoniconName,
+                  onPress: () =>
+                    block.mutate({
+                      conversationId,
+                      blockedUserId: otherUserId,
+                      block: !iBlockedThem,
+                    }),
+                },
+              ]
+            : []),
+          {
+            key: "report",
+            label: "Report conversation",
+            icon: "flag-outline",
+            destructive: true,
+            onPress: () => setReportOpen(true),
+          },
+        ]}
+      />
 
       {/* Edit sheet */}
       <Sheet

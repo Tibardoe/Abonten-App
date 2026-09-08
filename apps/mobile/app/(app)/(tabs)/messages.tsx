@@ -291,6 +291,7 @@ export default function Messages() {
       />
       <ConversationPeekOverlay
         target={menuFor}
+        currentUserId={currentUserId}
         onDismiss={() => setMenuFor(null)}
         onOpen={onOpen}
         onToggleRead={onToggleRead}
