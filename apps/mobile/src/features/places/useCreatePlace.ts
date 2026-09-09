@@ -20,6 +20,10 @@ export type CreatePlaceInput = Omit<
   coverUri?: string | null;
   coverPublicId?: string;
   coverVersion?: string;
+  /** Real byte progress of the cover upload (0..1), for the screen's bar. */
+  onUploadProgress?: (fraction: number) => void;
+  /** Bytes are in; what remains is the server-side create call. */
+  onUploadComplete?: () => void;
 };
 
 export function useCreatePlace() {
@@ -30,15 +34,20 @@ export function useCreatePlace() {
       coverUri,
       coverPublicId,
       coverVersion,
+      onUploadProgress,
+      onUploadComplete,
       ...rest
     }: CreatePlaceInput) => {
       let publicId = coverPublicId;
       let version = coverVersion;
       if (coverUri) {
-        const up = await uploadToCloudinary(coverUri, "place_photo");
+        const up = await uploadToCloudinary(coverUri, "place_photo", {
+          onProgress: onUploadProgress,
+        });
         publicId = up.publicId;
         version = String(up.version);
       }
+      onUploadComplete?.();
       if (!publicId || !version) {
         throw new Error("A cover photo is required");
       }

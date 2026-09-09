@@ -12,6 +12,7 @@ import {
 import { FeaturedEventsCarousel } from "@/components/explore/FeaturedEventsCarousel";
 import { FeaturedPlacesCarousel } from "@/components/explore/FeaturedPlacesCarousel";
 import { FilterSheet } from "@/components/explore/FilterSheet";
+import { ExploreSkeleton } from "@/components/skeletons";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
@@ -39,13 +40,13 @@ import {
   EmptyState,
   Icon,
   ListFooter,
-  ScreenLoader,
+  Refresher,
   SectionTitle,
   SegmentedTabs,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import { FlatList, Pressable, RefreshControl, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 
 type Tab = "events" | "places";
 
@@ -176,7 +177,7 @@ export default function Explore() {
     else clearPlaceFilters();
   }
 
-  if (resolving) return <ScreenLoader />;
+  if (resolving) return <ExploreSkeleton />;
 
   const activeQuery = tab === "events" ? eventsQuery : placesQuery;
 
@@ -447,7 +448,7 @@ export default function Explore() {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
-            <RefreshControl
+            <Refresher
               refreshing={
                 eventsQuery.isRefetching && !eventsQuery.isFetchingNextPage
               }
@@ -489,7 +490,7 @@ export default function Explore() {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
-            <RefreshControl
+            <Refresher
               refreshing={
                 placesQuery.isRefetching && !placesQuery.isFetchingNextPage
               }

@@ -28,11 +28,12 @@ import {
   Button,
   EmptyState,
   ListFooter,
+  Refresher,
   Spinner,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 const MODE_SUBTITLE = {
   all: "All your conversations",
@@ -214,7 +215,7 @@ export default function Messages() {
         onEndReachedThreshold={0.5}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl
+          <Refresher
             refreshing={q.isRefetching && !q.isFetchingNextPage}
             onRefresh={() => q.refetch()}
           />

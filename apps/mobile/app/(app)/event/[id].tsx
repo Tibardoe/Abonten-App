@@ -42,22 +42,17 @@ import {
   Button,
   Icon,
   type IoniconName,
+  Refresher,
   ScreenError,
   SectionTitle,
   Stars,
+  useToast,
 } from "@abonten/ui-native";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  Alert,
-  FlatList,
-  Linking,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
 
 function priceRange(tickets: { price: number; currency: string }[]): string {
   if (tickets.length === 0) return "Free";
@@ -161,10 +156,12 @@ function ReviewItem({
 }
 
 export default function EventDetailScreen() {
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const similarCardWidth = useCarouselCardWidth();
-  const { data, isLoading, isError, refetch } = useEventDetail(id);
+  const { data, isLoading, isError, isRefetching, refetch } =
+    useEventDetail(id);
   const { session } = useSession();
   const messageOrganizer = useOpenConversation();
   // Advances every 30s and on foreground so the "ongoing / ended / next
@@ -318,6 +315,9 @@ export default function EventDetailScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="pb-12"
+        refreshControl={
+          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
+        }
       >
         {/* Hero */}
         <View className="relative h-72 bg-muted">
@@ -433,17 +433,15 @@ export default function EventDetailScreen() {
                   {
                     onSuccess: (res) => {
                       if (res.status !== 200) {
-                        Alert.alert(
-                          "Can't start a conversation",
-                          res.message ?? "Please try again.",
-                        );
+                        toast.error("Can't start a conversation", {
+                          description: res.message ?? "Please try again.",
+                        });
                       }
                     },
                     onError: () =>
-                      Alert.alert(
-                        "Can't start a conversation",
-                        "Please try again.",
-                      ),
+                      toast.error("Can't start a conversation", {
+                        description: "Please try again.",
+                      }),
                   },
                 )
               }

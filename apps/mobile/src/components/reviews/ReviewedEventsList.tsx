@@ -1,3 +1,4 @@
+import { RowListSkeleton } from "@/components/skeletons";
 import {
   useDeleteEventReview,
   useUserEventReviews,
@@ -9,7 +10,6 @@ import {
   Badge,
   EmptyState,
   Icon,
-  ScreenLoader,
   Spinner,
   Stars,
 } from "@abonten/ui-native";
@@ -45,7 +45,7 @@ export function ReviewedEventsList() {
       },
     ]);
 
-  if (q.isLoading) return <ScreenLoader />;
+  if (q.isLoading) return <RowListSkeleton count={4} />;
 
   if (reviews.length === 0) {
     return (

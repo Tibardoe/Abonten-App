@@ -1,15 +1,22 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  type PressableProps,
-  View,
-} from "react-native";
+import { ActivityIndicator, type PressableProps, View } from "react-native";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { Icon, type IoniconName } from "./Icon";
+import { PressableScale } from "./PressableScale";
 import { AppText } from "./Typography";
 
 // Native echo of apps/web/src/components/ui/button.tsx (shadcn "new-york").
 // Same variant names + a size scale, so a ported screen keeps its buttons.
+//
+// Interaction contract (the app-wide standard for a tappable action):
+//   • touch-down  — the button dips ~4% on the native driver, instantly,
+//                   even if the JS thread is busy. Optional haptic.
+//   • working     — `loading` shows a spinner *beside the label*, never
+//                   instead of it: the width stays put (no layout jump) and
+//                   the label can say what is happening ("Publishing…").
+//                   Presses are blocked, so an action can't be fired twice.
+//   • disabled    — 50% opacity + `accessibilityState.disabled`, so the
+//                   state is legible to sighted users and to a screen
+//                   reader, not colour alone.
 
 export type ButtonVariant =
   | "primary"
@@ -54,9 +61,14 @@ export type ButtonProps = Omit<PressableProps, "children" | "style"> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  /** Label to show while `loading`. Defaults to `title`. Prefer a present
+   *  participle that names the work — "Publishing…", "Uploading photos…". */
+  loadingTitle?: string;
   fullWidth?: boolean;
   leftIcon?: IoniconName;
   rightIcon?: IoniconName;
+  /** Selection haptic on touch-down. On by default for primary/destructive. */
+  haptic?: boolean;
   className?: string;
 };
 
@@ -65,9 +77,11 @@ export function Button({
   variant = "primary",
   size = "md",
   loading = false,
+  loadingTitle,
   fullWidth = false,
   leftIcon,
   rightIcon,
+  haptic,
   disabled,
   className,
   ...rest
@@ -86,13 +100,18 @@ export function Button({
       : variant === "destructive"
         ? "inverse"
         : "foreground";
+  const label = loading ? (loadingTitle ?? title) : title;
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
+      accessibilityState={{ disabled: !!isDisabled, busy: loading }}
+      accessibilityLabel={label}
       disabled={isDisabled}
+      activeScale={0.96}
+      haptic={haptic ?? (variant === "primary" || variant === "destructive")}
       className={[
-        "flex-row items-center justify-center gap-2 active:opacity-80",
+        "flex-row items-center justify-center gap-2 active:opacity-90",
         SIZE[size],
         CONTAINER[variant],
         fullWidth ? "w-full" : "",
@@ -103,21 +122,21 @@ export function Button({
         .join(" ")}
       {...rest}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={spinnerColor} />
-      ) : (
-        <View className="flex-row items-center gap-2">
-          {leftIcon ? <Icon name={leftIcon} size={16} tone={iconTone} /> : null}
-          <AppText
-            className={`${LABEL[variant]} ${LABEL_SIZE[size]} font-semibold`}
-          >
-            {title}
-          </AppText>
-          {rightIcon ? (
-            <Icon name={rightIcon} size={16} tone={iconTone} />
-          ) : null}
-        </View>
-      )}
-    </Pressable>
+      <View className="flex-row items-center gap-2">
+        {loading ? (
+          <ActivityIndicator size="small" color={spinnerColor} />
+        ) : leftIcon ? (
+          <Icon name={leftIcon} size={16} tone={iconTone} />
+        ) : null}
+        <AppText
+          className={`${LABEL[variant]} ${LABEL_SIZE[size]} font-semibold`}
+        >
+          {label}
+        </AppText>
+        {rightIcon && !loading ? (
+          <Icon name={rightIcon} size={16} tone={iconTone} />
+        ) : null}
+      </View>
+    </PressableScale>
   );
 }

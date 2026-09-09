@@ -42,9 +42,11 @@ import {
   Button,
   Icon,
   type IoniconName,
+  Refresher,
   ScreenError,
   SectionTitle,
   Stars,
+  useToast,
 } from "@abonten/ui-native";
 import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
@@ -165,10 +167,17 @@ function PlaceReviewCard({
 }
 
 export default function PlaceDetailScreen() {
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const carouselCardWidth = useCarouselCardWidth();
-  const { data: place, isLoading, isError, refetch } = usePlaceDetail(id);
+  const {
+    data: place,
+    isLoading,
+    isError,
+    isRefetching,
+    refetch,
+  } = usePlaceDetail(id);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
@@ -290,6 +299,9 @@ export default function PlaceDetailScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="pb-12"
+        refreshControl={
+          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
+        }
       >
         {/* Hero */}
         <View className="relative h-72 bg-muted">
@@ -387,17 +399,15 @@ export default function PlaceDetailScreen() {
                   {
                     onSuccess: (res) => {
                       if (res.status !== 200) {
-                        Alert.alert(
-                          "Can't start a conversation",
-                          res.message ?? "Please try again.",
-                        );
+                        toast.error("Can't start a conversation", {
+                          description: res.message ?? "Please try again.",
+                        });
                       }
                     },
                     onError: () =>
-                      Alert.alert(
-                        "Can't start a conversation",
-                        "Please try again.",
-                      ),
+                      toast.error("Can't start a conversation", {
+                        description: "Please try again.",
+                      }),
                   },
                 )
               }

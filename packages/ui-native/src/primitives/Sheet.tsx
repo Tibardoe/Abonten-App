@@ -8,6 +8,18 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { shadow } from "../theme/tokens";
@@ -31,6 +43,21 @@ import { useKeyboardHeight } from "./useKeyboard";
 // button stay on-screen. The scroll view then scrolls the focused field
 // into that visible window. Every bottom sheet renders through here, so
 // this behaviour is uniform.
+//
+// Dismissal: tap the scrim, tap the X, hardware back — or drag the grab
+// handle down. The pan gesture is bound to the handle + title bar ONLY,
+// never to the scrolling content: a sheet is often a form or a long option
+// list, and a whole-panel drag would fight the ScrollView and swallow taps
+// on inputs. Dragging past a third of the panel (or flicking) dismisses;
+// anything less springs back, so a half-committed drag never loses the
+// user's place. It runs on the UI thread via Reanimated, so it tracks the
+// finger even while the screen underneath is busy.
+//
+// The panel is wrapped in its own <GestureHandlerRootView>: an RN <Modal>
+// renders into a SEPARATE native view hierarchy, so the app-root one in
+// app/_layout.tsx does not reach inside it and every gesture here is
+// silently dropped without it. (Confirmed on device — the drag simply did
+// nothing until this was added.)
 
 export type SheetProps = {
   open: boolean;
@@ -65,6 +92,11 @@ export function Sheet({
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
 
+  // Live drag offset of the panel, and the panel's measured height (the
+  // dismissal threshold and the scrim fade are both fractions of it).
+  const dragY = useSharedValue(0);
+  const panelHeight = useSharedValue(0);
+
   // Live keyboard height, from the shared listener hook.
   const kbHeight = useKeyboardHeight();
   useEffect(() => {
@@ -72,7 +104,41 @@ export function Sheet({
     // dismissed while its input was focused can leave the keyboard up over
     // the next screen.
     if (!open) Keyboard.dismiss();
-  }, [open]);
+    // Reset the drag on open, so a sheet dismissed by dragging doesn't
+    // reopen already pushed off the bottom of the screen.
+    else dragY.value = 0;
+  }, [open, dragY]);
+
+  const dragStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: dragY.value }],
+  }));
+
+  // The scrim thins out as the panel is dragged away, so the gesture reads
+  // as letting go of this screen rather than a panel sliding over a constant
+  // wall of grey.
+  const scrimStyle = useAnimatedStyle(() => {
+    const h = panelHeight.value || 1;
+    const progress = Math.min(1, Math.max(0, dragY.value / h));
+    return { opacity: 0.6 * (1 - progress) };
+  });
+
+  const dragGesture = Gesture.Pan()
+    .onChange((e) => {
+      // Downward only — a sheet already at its max height has nowhere to go
+      // upward, and letting it rubber-band up would uncover the scrim.
+      dragY.value = Math.max(0, dragY.value + e.changeY);
+    })
+    .onEnd((e) => {
+      const shouldClose =
+        dragY.value > panelHeight.value * 0.33 || e.velocityY > 900;
+      if (shouldClose) {
+        dragY.value = withTiming(panelHeight.value, { duration: 160 }, () => {
+          runOnJS(onClose)();
+        });
+      } else {
+        dragY.value = withSpring(0, { damping: 22, stiffness: 260 });
+      }
+    });
 
   // Guard: only ever apply a lift/clamp while the sheet is actually open, so
   // a stale height from a previous session can't affect the next open.
@@ -112,55 +178,75 @@ export function Sheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <View style={{ flex: 1, justifyContent: "flex-end" }}>
-        <Pressable
-          accessibilityLabel="Close"
-          onPress={onClose}
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-            backgroundColor: c.overlay,
-            opacity: 0.6,
+      <GestureHandlerRootView style={{ flex: 1, justifyContent: "flex-end" }}>
+        <Animated.View
+          style={[
+            {
+              position: "absolute",
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              backgroundColor: c.overlay,
+            },
+            scrimStyle,
+          ]}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            onPress={onClose}
+            style={{ flex: 1 }}
+          />
+        </Animated.View>
+
+        <Animated.View
+          onLayout={(e) => {
+            panelHeight.value = e.nativeEvent.layout.height;
           }}
-        />
-        <View
           className="rounded-t-2xl border-t border-border bg-popover"
           style={[
             { maxHeight, marginBottom: kb },
             minHeight != null ? { minHeight } : null,
             shadow.sheet,
+            dragStyle,
           ]}
         >
-          <View className="items-center pb-1 pt-3">
-            <View className="h-1 w-10 rounded-full bg-border" />
-          </View>
-
-          {title ? (
-            <View className="flex-row items-center gap-2 border-b border-border px-4 pb-3 pt-1">
-              {onBack ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Back"
-                  onPress={onBack}
-                  hitSlop={8}
-                >
-                  <Icon name="chevron-back" size={22} tone="foreground" />
-                </Pressable>
-              ) : null}
-              <SectionTitle className="flex-1">{title}</SectionTitle>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                onPress={onClose}
-                hitSlop={8}
+          <GestureDetector gesture={dragGesture}>
+            <View>
+              <View
+                accessible
+                accessibilityLabel="Drag down to close"
+                className="items-center pb-1 pt-3"
               >
-                <Icon name="close" size={22} tone="muted" />
-              </Pressable>
+                <View className="h-1 w-10 rounded-full bg-border" />
+              </View>
+
+              {title ? (
+                <View className="flex-row items-center gap-2 border-b border-border px-4 pb-3 pt-1">
+                  {onBack ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Back"
+                      onPress={onBack}
+                      hitSlop={8}
+                    >
+                      <Icon name="chevron-back" size={22} tone="foreground" />
+                    </Pressable>
+                  ) : null}
+                  <SectionTitle className="flex-1">{title}</SectionTitle>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Close"
+                    onPress={onClose}
+                    hitSlop={8}
+                  >
+                    <Icon name="close" size={22} tone="muted" />
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
-          ) : null}
+          </GestureDetector>
 
           <ScrollView
             ref={scrollRef}
@@ -184,8 +270,8 @@ export function Sheet({
               {footer}
             </View>
           ) : null}
-        </View>
-      </View>
+        </Animated.View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

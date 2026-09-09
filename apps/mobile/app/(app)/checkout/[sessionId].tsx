@@ -9,16 +9,10 @@ import {
   formatCountdown,
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
-import { AppText } from "@abonten/ui-native";
+import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function CheckoutExpiryBanner({
@@ -96,6 +90,7 @@ function Line({
 }
 
 export default function CheckoutReviewScreen() {
+  const toast = useToast();
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -144,7 +139,9 @@ export default function CheckoutReviewScreen() {
       router.back();
       return;
     }
-    Alert.alert("Couldn't cancel", res.message ?? "Please try again.");
+    toast.error("Couldn't cancel", {
+      description: res.message ?? "Please try again.",
+    });
   }
 
   if (expired || !session) {

@@ -188,3 +188,169 @@ export function PlaceDetailSkeleton() {
     </ScrollView>
   );
 }
+
+/** Ticket detail: the QR block, then the event + holder rows. */
+export function TicketDetailSkeleton() {
+  return (
+    <ScrollView contentContainerClassName="gap-4 p-4 pb-10">
+      <View className="items-center gap-3 rounded-2xl border border-border bg-card p-6">
+        <Skeleton width={200} height={200} radius={12} />
+        <Skeleton width={140} height={13} />
+      </View>
+      <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+        <Skeleton width="75%" height={18} />
+        {keys(4).map((k) => (
+          <Skeleton key={k} width="55%" height={13} />
+        ))}
+      </View>
+      <Skeleton height={46} radius={10} />
+    </ScrollView>
+  );
+}
+
+/**
+ * Transactions: the period chips, the 2x2 summary tiles, then history cards.
+ * Deliberately laid out row-for-row against the real screen — a skeleton that
+ * is the wrong shape still makes the content jump when it lands, which is the
+ * thing skeletons exist to prevent.
+ */
+export function TransactionsSkeleton() {
+  return (
+    <View className="gap-4 p-4">
+      <View className="flex-row gap-2">
+        {keys(3).map((k) => (
+          <Skeleton key={k} width={110} height={40} radius={999} />
+        ))}
+      </View>
+      <View className="gap-3">
+        {keys(2).map((row) => (
+          <View key={row} className="flex-row gap-3">
+            {keys(2).map((k) => (
+              <View
+                key={k}
+                className="flex-1 gap-2 rounded-xl border border-border bg-card p-4"
+              >
+                <Skeleton width="55%" height={12} />
+                <Skeleton width="40%" height={20} />
+              </View>
+            ))}
+          </View>
+        ))}
+      </View>
+      {keys(4).map((k) => (
+        <View
+          key={k}
+          className="gap-2.5 rounded-2xl border border-border bg-card p-4"
+        >
+          <View className="flex-row justify-between">
+            <Skeleton width="45%" height={16} />
+            <Skeleton width={80} height={16} />
+          </View>
+          <Skeleton width="30%" height={12} />
+          <View className="flex-row justify-between">
+            <Skeleton width={96} height={26} radius={999} />
+            <Skeleton width={70} height={12} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** A single transaction / receipt: header amount then labelled rows. */
+export function DetailRowsSkeleton({ rows = 6 }: { rows?: number }) {
+  return (
+    <View className="gap-4 p-4">
+      <View className="items-center gap-2 py-4">
+        <Skeleton width={120} height={28} />
+        <Skeleton width={90} height={12} />
+      </View>
+      <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+        {keys(rows).map((k) => (
+          <View key={k} className="flex-row justify-between">
+            <Skeleton width="35%" height={13} />
+            <Skeleton width="30%" height={13} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** A public / own profile: avatar, name, stat row, then the tab grid. */
+export function ProfileSkeleton() {
+  return (
+    <View className="gap-5 p-4">
+      <View className="items-center gap-3">
+        <Skeleton width={88} height={88} radius={999} />
+        <Skeleton width={150} height={18} />
+        <Skeleton width={100} height={12} />
+      </View>
+      <View className="flex-row justify-around">
+        {keys(3).map((k) => (
+          <View key={k} className="items-center gap-1.5">
+            <Skeleton width={38} height={18} />
+            <Skeleton width={56} height={11} />
+          </View>
+        ))}
+      </View>
+      <Skeleton height={38} radius={10} />
+      <View className="flex-row flex-wrap gap-3">
+        {keys(4).map((k) => (
+          <Skeleton key={k} width="47%" height={130} radius={12} />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/** A form screen while its current values load: labelled input blocks. */
+export function FormSkeleton({ fields = 5 }: { fields?: number }) {
+  return (
+    <View className="gap-5 p-4">
+      {keys(fields).map((k) => (
+        <View key={k} className="gap-2">
+          <Skeleton width={90} height={12} />
+          <Skeleton height={46} radius={8} />
+        </View>
+      ))}
+      <Skeleton height={48} radius={10} />
+    </View>
+  );
+}
+
+/**
+ * The Explore tab while the device location is still resolving. This is the
+ * app's first screen after the splash, so a bare spinner here is the single
+ * most-seen "is it working?" moment — the shape of the real feed (filter
+ * chips, a horizontal carousel, then the vertical list) reads as "loading
+ * your area" instead.
+ */
+export function ExploreSkeleton() {
+  return (
+    <ScrollView
+      scrollEnabled={false}
+      contentContainerClassName="gap-5 pt-3 pb-10"
+    >
+      <View className="flex-row gap-2 px-4">
+        {keys(4).map((k) => (
+          <Skeleton key={k} width={84} height={32} radius={999} />
+        ))}
+      </View>
+      <View className="gap-2">
+        <Skeleton width={130} height={16} className="mx-4" />
+        <ScrollView
+          horizontal
+          scrollEnabled={false}
+          showsHorizontalScrollIndicator={false}
+          contentContainerClassName="gap-3 px-4"
+        >
+          {keys(3).map((k) => (
+            <Skeleton key={k} width={260} height={150} radius={14} />
+          ))}
+        </ScrollView>
+      </View>
+      <EventListSkeleton count={3} />
+    </ScrollView>
+  );
+}

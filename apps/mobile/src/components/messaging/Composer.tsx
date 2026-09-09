@@ -15,7 +15,13 @@ import { VOICE_SUPPORTED } from "@/features/messaging/voiceSupport";
 import { hapticLight } from "@/lib/haptics";
 import type { MessageRow } from "@abonten/api-client";
 import { MESSAGE_MAX_LENGTH } from "@abonten/types/messagingType";
-import { AppText, BottomBar, Icon } from "@abonten/ui-native";
+import {
+  AppText,
+  BottomBar,
+  Icon,
+  type ToastApi,
+  useToast,
+} from "@abonten/ui-native";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
@@ -53,7 +59,14 @@ function kindToType(kind: StagedAttachment["kind"]): OutboxMessageType {
   return "file"; // video is sent as a file for now
 }
 
-function reportAttachmentError(e: unknown, fallbackTitle: string) {
+// Module-level helper, so the toast api is passed in rather than hooked.
+// The permission case stays a real Alert: it is a dead end the user can only
+// leave via the Settings app, and that needs a button, not a pill that fades.
+function reportAttachmentError(
+  toast: ToastApi,
+  e: unknown,
+  fallbackTitle: string,
+) {
   if (e instanceof AttachmentPermissionError) {
     Alert.alert("Permission needed", e.message, [
       { text: "Not now", style: "cancel" },
@@ -61,10 +74,9 @@ function reportAttachmentError(e: unknown, fallbackTitle: string) {
     ]);
     return;
   }
-  Alert.alert(
-    fallbackTitle,
-    e instanceof Error ? e.message : "Please try again.",
-  );
+  toast.error(fallbackTitle, {
+    description: e instanceof Error ? e.message : "Please try again.",
+  });
 }
 
 function ReplyPreview({
@@ -170,6 +182,7 @@ export function Composer({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const toast = useToast();
   const c = useThemeColors();
   const [text, setText] = useState("");
   const [staged, setStaged] = useState<StagedAttachment[]>([]);
@@ -191,7 +204,7 @@ export function Composer({
       if (items.length === 1) setPreview(items[0]);
       else setStaged((prev) => [...prev, ...items].slice(0, MAX_ATTACHMENTS));
     } catch (e) {
-      reportAttachmentError(e, "Can't add media");
+      reportAttachmentError(toast, e, "Can't add media");
     }
   }
 
@@ -200,7 +213,7 @@ export function Composer({
       const shot = await captureChatPhoto();
       if (shot) setPreview(shot);
     } catch (e) {
-      reportAttachmentError(e, "Can't open the camera");
+      reportAttachmentError(toast, e, "Can't open the camera");
     }
   }
 
@@ -209,7 +222,7 @@ export function Composer({
       const doc = await pickChatDocument();
       if (doc) setPreview(doc);
     } catch (e) {
-      reportAttachmentError(e, "Can't add file");
+      reportAttachmentError(toast, e, "Can't add file");
     }
   }
 
@@ -238,10 +251,12 @@ export function Composer({
         setUploading(false);
         setText(body);
         setStaged(toUpload);
-        Alert.alert(
-          "Upload failed",
-          e instanceof Error ? e.message : "Your attachment couldn't be sent.",
-        );
+        toast.error("Upload failed", {
+          description:
+            e instanceof Error
+              ? e.message
+              : "Your attachment couldn't be sent.",
+        });
         return;
       }
       setUploading(false);
@@ -287,10 +302,9 @@ export function Composer({
       onCancelReply();
       setPreview(null);
     } catch (e) {
-      Alert.alert(
-        "Upload failed",
-        e instanceof Error ? e.message : "Please try again.",
-      );
+      toast.error("Upload failed", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      });
     } finally {
       setPreviewSending(false);
     }

@@ -18,10 +18,10 @@ import {
   useSetConversationState,
 } from "@/features/messaging/useMessagingActions";
 import type { ConversationListItem } from "@abonten/api-client";
-import { EmptyState, ListFooter, Spinner } from "@abonten/ui-native";
+import { EmptyState, ListFooter, Refresher, Spinner } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 // Dedicated Archived destination (spec §14). Back nav + its own search +
 // the archived conversation list; swipe right to unarchive.
@@ -127,7 +127,7 @@ export default function ArchivedMessages() {
         onEndReachedThreshold={0.5}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl
+          <Refresher
             refreshing={q.isRefetching && !q.isFetchingNextPage}
             onRefresh={() => q.refetch()}
           />

@@ -13,12 +13,14 @@ import {
   Button,
   EmptyState,
   ListFooter,
+  Refresher,
   ScreenError,
   Spinner,
+  useToast,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
-import { Alert, FlatList, RefreshControl, View } from "react-native";
+import { Alert, FlatList, View } from "react-native";
 
 const STATUS_META: Record<BookingStatus, { tone: BadgeTone; label: string }> = {
   pending: { tone: "warning", label: "Pending" },
@@ -34,6 +36,7 @@ function BookingRow({
   booking: MyBooking;
   onOpen: () => void;
 }) {
+  const toast = useToast();
   const cancel = useCancelBooking();
   const meta = STATUS_META[booking.status];
   const canCancel =
@@ -93,12 +96,19 @@ function BookingRow({
                     },
                     {
                       onSettled: (res) => {
-                        if (res && res.status !== 200) {
-                          Alert.alert(
-                            "Couldn't cancel",
-                            res.message ?? "Please try again.",
-                          );
+                        if (res && res.status === 200) {
+                          toast.success("Booking cancelled", {
+                            description: "The owner has been notified.",
+                          });
+                          return;
                         }
+                        toast.error(
+                          res?.message ?? "We couldn't cancel this booking.",
+                          {
+                            description:
+                              "Your booking is unchanged. Please try again.",
+                          },
+                        );
                       },
                     },
                   ),
@@ -156,7 +166,7 @@ export default function MyBookingsScreen() {
         keyExtractor={(b) => b.id}
         contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
         refreshControl={
-          <RefreshControl
+          <Refresher
             refreshing={q.isRefetching && !q.isFetchingNextPage}
             onRefresh={() => q.refetch()}
           />
@@ -167,7 +177,9 @@ export default function MyBookingsScreen() {
           <EmptyState
             icon="calendar-outline"
             title="No bookings yet"
-            description="When you request a booking at a place, it'll show up here."
+            description="Find a place you like and tap Book — your requests and their status land here."
+            actionLabel="Browse places"
+            onAction={() => router.push("/(app)/places")}
           />
         }
         ListFooterComponent={

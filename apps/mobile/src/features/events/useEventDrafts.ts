@@ -37,18 +37,28 @@ export type SaveEventDraftInput = {
   /** A newly picked local flyer URI to upload before saving, or null to
    *  leave the draft's current flyer untouched. */
   flyerUri?: string | null;
+  onUploadProgress?: (fraction: number) => void;
+  onUploadComplete?: () => void;
 };
 
 export function useSaveEventDraft() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ flyerUri, ...rest }: SaveEventDraftInput) => {
+    mutationFn: async ({
+      flyerUri,
+      onUploadProgress,
+      onUploadComplete,
+      ...rest
+    }: SaveEventDraftInput) => {
       const body: SaveEventDraftBody = { ...rest };
       if (flyerUri) {
-        const up = await uploadToCloudinary(flyerUri, "event_flyer");
+        const up = await uploadToCloudinary(flyerUri, "event_flyer", {
+          onProgress: onUploadProgress,
+        });
         body.flyerPublicId = up.publicId;
         body.flyerVersion = String(up.version);
       }
+      onUploadComplete?.();
       return api.organizer.saveEventDraft(body);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY] }),

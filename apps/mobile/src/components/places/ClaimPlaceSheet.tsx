@@ -16,12 +16,13 @@ import {
   Input,
   Sheet,
   Spinner,
+  useToast,
 } from "@abonten/ui-native";
 import * as DocumentPicker from "expo-document-picker";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 // Native echo of the web ClaimPlaceModal + §12 supporting documents.
 // Submitting only ever creates a pending place_claim_request row — an admin
@@ -110,6 +111,7 @@ export function ClaimPlaceSheet({
   placeId: string;
   placeName: string;
 }) {
+  const toast = useToast();
   const { session } = useSession();
   const userId = session?.user.id;
   const [note, setNote] = useState("");
@@ -152,10 +154,9 @@ export function ClaimPlaceSheet({
   async function addPhoto() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to attach a document photo.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to attach a document photo.",
+      });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({

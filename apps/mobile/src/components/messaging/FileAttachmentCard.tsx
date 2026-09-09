@@ -1,8 +1,8 @@
 import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageRow } from "@abonten/api-client";
-import { AppText, Icon } from "@abonten/ui-native";
+import { AppText, Icon, useToast } from "@abonten/ui-native";
 import * as WebBrowser from "expo-web-browser";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 type MessageAttachmentRow = MessageRow["attachments"][number];
 
@@ -29,6 +29,7 @@ export function FileAttachmentCard({
   attachment: MessageAttachmentRow;
   isMine: boolean;
 }) {
+  const toast = useToast();
   const signed = useAttachmentUrl(attachment.storage_path);
   const size = formatBytes(attachment.file_size);
 
@@ -37,7 +38,9 @@ export function FileAttachmentCard({
     try {
       await WebBrowser.openBrowserAsync(signed.data);
     } catch {
-      Alert.alert("Couldn't open", "This file couldn't be opened.");
+      toast.error("Couldn't open", {
+        description: "This file couldn't be opened.",
+      });
     }
   }
 

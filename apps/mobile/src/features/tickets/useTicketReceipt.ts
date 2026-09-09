@@ -7,7 +7,8 @@ import { File, Paths } from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useState } from "react";
-import { Alert } from "react-native";
+
+import { useToast } from "@abonten/ui-native";
 import { buildTicketReceiptHtml } from "./ticketReceiptHtml";
 
 /**
@@ -18,6 +19,7 @@ import { buildTicketReceiptHtml } from "./ticketReceiptHtml";
  * (Save to Files, WhatsApp, …).
  */
 export function useTicketReceipt() {
+  const toast = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
 
   async function downloadReceipt(ticket: UserTicketType) {
@@ -53,16 +55,16 @@ export function useTicketReceipt() {
           dialogTitle: "Abonten ticket receipt",
         });
       } else {
-        Alert.alert(
-          "Receipt ready",
-          "Sharing isn't available on this device, but the receipt PDF was generated.",
-        );
+        toast.success("Receipt ready", {
+          description:
+            "Sharing isn't available on this device, but the receipt PDF was generated.",
+        });
       }
     } catch {
-      Alert.alert(
-        "Couldn't create the receipt",
-        "Something went wrong generating the PDF. Please try again.",
-      );
+      toast.error("Couldn't create the receipt", {
+        description:
+          "Something went wrong generating the PDF. Please try again.",
+      });
     } finally {
       setIsGenerating(false);
     }

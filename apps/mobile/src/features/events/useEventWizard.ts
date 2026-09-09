@@ -4,6 +4,7 @@ import {
   useEventDraft,
   useSaveEventDraft,
 } from "@/features/events/useEventDrafts";
+import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { TIME_RE, combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import { uuidv4 } from "@/lib/uuid";
 import type {
@@ -22,7 +23,8 @@ import { getEventSchema } from "@abonten/validation/eventSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert } from "react-native";
+
+import { useToast } from "@abonten/ui-native";
 
 // All state, validation and submit logic for the native event-creation
 // wizard — the mobile echo of the web useEventUploadForm hook. Publishes an
@@ -85,10 +87,15 @@ export type EventWizardTextErrors = Partial<
 >;
 
 export function useEventWizard(resumeDraftId?: string) {
+  const toast = useToast();
   const autocomplete = usePlacesAutocomplete();
   const create = useEventCreate();
   const saveDraftMutation = useSaveEventDraft();
   const draftQuery = useEventDraft(resumeDraftId);
+  // Flyer uploads are the slow part of both Publish and Save-as-draft; the
+  // wizard owns one progress state so the screen can show a real bar
+  // instead of a spinner that says nothing.
+  const uploadProgress = useUploadProgress();
 
   const clientRequestId = useRef(uuidv4()).current;
   const eventSchema = useMemo(() => getEventSchema(EVENT_MESSAGES), []);
@@ -201,11 +208,15 @@ export function useEventWizard(resumeDraftId?: string) {
   function validateBasics(): boolean {
     if (!validateText()) return false;
     if (!category) {
-      Alert.alert("Pick a category", "Choose the category that fits best.");
+      toast.error("Pick a category", {
+        description: "Choose the category that fits best.",
+      });
       return false;
     }
     if (types.length === 0) {
-      Alert.alert("Pick at least one type", "Add one or more event types.");
+      toast.error("Pick at least one type", {
+        description: "Add one or more event types.",
+      });
       return false;
     }
     return true;
@@ -224,10 +235,9 @@ export function useEventWizard(resumeDraftId?: string) {
     const resolved = await autocomplete.resolvePlace(placeId);
     setResolvingLocation(false);
     if (!resolved) {
-      Alert.alert(
-        "Couldn't use that location",
-        "Please try another suggestion or type the address.",
-      );
+      toast.error("Couldn't use that location", {
+        description: "Please try another suggestion or type the address.",
+      });
       return;
     }
     applyLocation(resolved.lat, resolved.lng, resolved.address);
@@ -238,10 +248,9 @@ export function useEventWizard(resumeDraftId?: string) {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          "Location access needed",
-          "Allow location access to use your current position.",
-        );
+        toast.error("Location access needed", {
+          description: "Allow location access to use your current position.",
+        });
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -256,10 +265,9 @@ export function useEventWizard(resumeDraftId?: string) {
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      Alert.alert(
-        "Couldn't get your location",
-        "Please try again or type the address.",
-      );
+      toast.error("Couldn't get your location", {
+        description: "Please try again or type the address.",
+      });
     } finally {
       setResolvingLocation(false);
     }
@@ -278,10 +286,9 @@ export function useEventWizard(resumeDraftId?: string) {
   } | null> {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to pick an event flyer.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to pick an event flyer.",
+      });
       return null;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -489,12 +496,21 @@ export function useEventWizard(resumeDraftId?: string) {
         ? flyerUri
         : null;
 
-    const res = await saveDraftMutation.mutateAsync({
-      draftId: currentDraftId,
-      payload: buildDraftPayload(),
-      expectedUpdatedAt: draftUpdatedAt.current,
-      flyerUri: localFlyer,
-    });
+    if (localFlyer) uploadProgress.start();
+    else uploadProgress.setPhase("saving");
+    let res: SaveEventDraftResult;
+    try {
+      res = await saveDraftMutation.mutateAsync({
+        draftId: currentDraftId,
+        payload: buildDraftPayload(),
+        expectedUpdatedAt: draftUpdatedAt.current,
+        flyerUri: localFlyer,
+        onUploadProgress: uploadProgress.onProgress,
+        onUploadComplete: uploadProgress.finishUpload,
+      });
+    } finally {
+      uploadProgress.reset();
+    }
 
     if (res.status === 200) {
       setCurrentDraftId(res.data.draftId);
@@ -628,16 +644,47 @@ export function useEventWizard(resumeDraftId?: string) {
   }
 
   async function submit(): Promise<EventCreateResult | null> {
-    if (!category || !coords || !flyerUri) return null;
+    // A missing prerequisite used to return null here and Publish did
+    // nothing at all — the organiser was left tapping a dead button with no
+    // idea which of seven steps was incomplete. Now each gap names itself
+    // and sends them back to the step that owns it.
+    if (!flyerUri) {
+      toast.error("Your event needs a flyer.", {
+        description: "Add one on the first step.",
+        action: { label: "Go there", onPress: () => setStep(0) },
+      });
+      return null;
+    }
+    if (!category) {
+      toast.error("Pick a category.", {
+        description: "It is on the Basic info step.",
+        action: { label: "Go there", onPress: () => setStep(1) },
+      });
+      return null;
+    }
+    if (!coords) {
+      toast.error("Confirm the location.", {
+        description:
+          "Pick the address from a suggestion, the map, or your current location.",
+        action: { label: "Go there", onPress: () => setStep(3) },
+      });
+      return null;
+    }
 
     const schedule = buildSchedule();
     if (!schedule.ok) {
-      Alert.alert("Check the schedule", schedule.message);
+      toast.error(schedule.message, {
+        description: "Check the date and time step.",
+        action: { label: "Go there", onPress: () => setStep(2) },
+      });
       return null;
     }
     const tickets = buildTickets();
     if (!tickets.ok) {
-      Alert.alert("Check ticketing", tickets.message);
+      toast.error(tickets.message, {
+        description: "Check the tickets and pricing step.",
+        action: { label: "Go there", onPress: () => setStep(4) },
+      });
       return null;
     }
 
@@ -653,27 +700,36 @@ export function useEventWizard(resumeDraftId?: string) {
         }
       : { flyerUri };
 
-    return create.mutateAsync({
-      title: title.trim(),
-      description: description.trim(),
-      category,
-      types,
-      address: address.trim(),
-      latitude: coords.lat,
-      longitude: coords.lng,
-      capacity: capNum && Number.isFinite(capNum) && capNum > 0 ? capNum : null,
-      websiteUrl: website.trim() || null,
-      requireRegistration,
-      currency: CURRENCY,
-      clientRequestId,
-      ...flyerFields,
-      startsAt: schedule.startsAt ?? null,
-      endsAt: schedule.endsAt ?? null,
-      specificDates: schedule.specificDates ?? null,
-      ...tickets.body,
-      promoCodes: buildPromos(),
-      placeId: null,
-    });
+    if (!isRemote(flyerUri)) uploadProgress.start();
+    else uploadProgress.setPhase("saving");
+    try {
+      return await create.mutateAsync({
+        onUploadProgress: uploadProgress.onProgress,
+        onUploadComplete: uploadProgress.finishUpload,
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        types,
+        address: address.trim(),
+        latitude: coords.lat,
+        longitude: coords.lng,
+        capacity:
+          capNum && Number.isFinite(capNum) && capNum > 0 ? capNum : null,
+        websiteUrl: website.trim() || null,
+        requireRegistration,
+        currency: CURRENCY,
+        clientRequestId,
+        ...flyerFields,
+        startsAt: schedule.startsAt ?? null,
+        endsAt: schedule.endsAt ?? null,
+        specificDates: schedule.specificDates ?? null,
+        ...tickets.body,
+        promoCodes: buildPromos(),
+        placeId: null,
+      });
+    } finally {
+      uploadProgress.reset();
+    }
   }
 
   // Whether the current step's requirements are met, so the header's "Next"
@@ -778,6 +834,7 @@ export function useEventWizard(resumeDraftId?: string) {
     setPromos,
     // submit
     submit,
+    uploadProgress,
     isSubmitting: create.isPending,
     isSubmitError: create.isError,
     // draft

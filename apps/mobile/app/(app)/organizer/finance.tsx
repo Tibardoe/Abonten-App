@@ -8,16 +8,17 @@ import type {
   OrganizerLedgerTransactionRow,
 } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText, Chip, Icon, Overline, StatusPill } from "@abonten/ui-native";
+import {
+  AppText,
+  Chip,
+  Icon,
+  Overline,
+  Refresher,
+  StatusPill,
+} from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
 function NavRow({ href, label }: { href: string; label: string }) {
   return (
@@ -231,7 +232,7 @@ export default function OrganizerFinanceScreen() {
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={
             (finance.isRefetching || ledger.isRefetching) &&
             !ledger.isFetchingNextPage

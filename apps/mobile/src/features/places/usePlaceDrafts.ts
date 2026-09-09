@@ -37,18 +37,28 @@ export type SavePlaceDraftInput = {
   /** A newly picked local cover URI to upload before saving, or null to
    *  leave the draft's current cover untouched. */
   coverUri?: string | null;
+  onUploadProgress?: (fraction: number) => void;
+  onUploadComplete?: () => void;
 };
 
 export function useSavePlaceDraft() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ coverUri, ...rest }: SavePlaceDraftInput) => {
+    mutationFn: async ({
+      coverUri,
+      onUploadProgress,
+      onUploadComplete,
+      ...rest
+    }: SavePlaceDraftInput) => {
       const body: SavePlaceDraftBody = { ...rest };
       if (coverUri) {
-        const up = await uploadToCloudinary(coverUri, "place_photo");
+        const up = await uploadToCloudinary(coverUri, "place_photo", {
+          onProgress: onUploadProgress,
+        });
         body.coverPublicId = up.publicId;
         body.coverVersion = String(up.version);
       }
+      onUploadComplete?.();
       return api.organizer.savePlaceDraft(body);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY] }),

@@ -5,17 +5,11 @@ import {
 import type { UserPostType } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText } from "@abonten/ui-native";
+import { AppText, Refresher } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
 const STATUS_LABEL: Record<string, string> = {
   published: "Published",
@@ -129,7 +123,7 @@ export default function OrganizerEventsScreen() {
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={q.isRefetching && !q.isFetchingNextPage}
           onRefresh={() => q.refetch()}
         />

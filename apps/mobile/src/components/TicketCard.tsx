@@ -4,7 +4,7 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import type { UserTicketType } from "@abonten/types/ticketType";
-import { AppText, Icon, TicketStatusBadge } from "@abonten/ui-native";
+import { AppText, Icon, TicketStatusBadge, useToast } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Alert, Pressable, View } from "react-native";
@@ -22,6 +22,7 @@ export function TicketCard({
   showRefundInfo?: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
   const cancel = useCancelTicket();
 
   const event = ticket.event;
@@ -62,11 +63,15 @@ export function TicketCard({
               ticketId: ticket.id,
               transactionId: ticket.transaction_id,
             });
-            Alert.alert(
-              res.status === 200 ? "Ticket cancelled" : "Couldn't cancel",
-              res.message ??
-                (res.status === 200 ? "" : "Please try again in a moment."),
-            );
+            if (res.status === 200) {
+              toast.success("Ticket cancelled", {
+                description: res.message ?? undefined,
+              });
+            } else {
+              toast.error(res.message ?? "We couldn't cancel this ticket.", {
+                description: "Nothing has changed. Please try again.",
+              });
+            }
           },
         },
       ],

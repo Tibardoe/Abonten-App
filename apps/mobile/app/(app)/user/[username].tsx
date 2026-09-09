@@ -10,6 +10,7 @@ import {
   ProfileTabBar,
   type ProfileTabKey,
 } from "@/components/profile/ProfileTabBar";
+import { ProfileSkeleton } from "@/components/skeletons";
 import {
   useProfileEvents,
   useProfileFavoriteEvents,
@@ -21,14 +22,14 @@ import {
 import { usePublicProfile } from "@/features/profile/usePublicProfile";
 import {
   EmptyState,
+  Refresher,
   ScreenError,
-  ScreenLoader,
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -160,7 +161,7 @@ export default function UserProfileScreen() {
     return (
       <View className="flex-1 bg-background">
         {navHeader}
-        <ScreenLoader />
+        <ProfileSkeleton />
       </View>
     );
   }
@@ -235,6 +236,19 @@ export default function UserProfileScreen() {
             ? "No reviews yet"
             : "No place reviews yet";
 
+  // An empty tab should say what fills it, not just that it is empty. The
+  // wording is second-person for your own profile and third for someone
+  // else's — "you haven't saved any" vs "they haven't saved any".
+  const emptyDescription = isOwn
+    ? tab === "events"
+      ? "Events you publish will be listed here."
+      : tab === "places"
+        ? "Places you publish will be listed here."
+        : tab === "favorites"
+          ? `Tap the heart on any ${favSub === "events" ? "event" : "place"} to save it here.`
+          : "Reviews you leave will be listed here."
+    : "Nothing here yet.";
+
   return (
     <View className="flex-1 bg-background">
       {navHeader}
@@ -276,7 +290,7 @@ export default function UserProfileScreen() {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
-            <RefreshControl
+            <Refresher
               refreshing={active.isRefetching && !active.isFetchingNextPage}
               onRefresh={() => active.refetch()}
             />
@@ -287,11 +301,17 @@ export default function UserProfileScreen() {
             ) : tab === "favorites" && !session ? null : active.isError ? (
               <EmptyState
                 icon="cloud-offline-outline"
-                title="Couldn't load"
-                description="Pull down to try again."
+                title="Couldn't load this tab"
+                description="We couldn't reach the server. Check your connection."
+                actionLabel="Try again"
+                onAction={() => active.refetch()}
               />
             ) : (
-              <EmptyState icon="albums-outline" title={emptyTitle} />
+              <EmptyState
+                icon="albums-outline"
+                title={emptyTitle}
+                description={emptyDescription}
+              />
             )
           }
           ListFooterComponent={active.isFetchingNextPage ? <Spinner /> : null}

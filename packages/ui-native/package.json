@@ -19,11 +19,14 @@
   },
   "peerDependencies": {
     "@expo/vector-icons": "*",
+    "expo-haptics": "*",
     "expo-image": "*",
     "expo-secure-store": "*",
     "nativewind": ">=4",
     "react": "*",
     "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-reanimated": "*",
     "react-native-safe-area-context": "*",
     "react-native-svg": "*"
   },

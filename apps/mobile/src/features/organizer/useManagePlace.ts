@@ -127,8 +127,15 @@ export function useRemovePlaceService(placeId: string) {
 export function useAddPlacePhoto(placeId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (uri: string) => {
-      const up = await uploadToCloudinary(uri, "place_photo");
+    mutationFn: async ({
+      uri,
+      onProgress,
+    }: {
+      uri: string;
+      /** Real byte progress (0..1) so the screen can show a bar. */
+      onProgress?: (fraction: number) => void;
+    }) => {
+      const up = await uploadToCloudinary(uri, "place_photo", { onProgress });
       return api.organizer.addPlacePhoto(placeId, {
         publicId: up.publicId,
         version: String(up.version),

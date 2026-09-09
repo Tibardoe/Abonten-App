@@ -14,8 +14,10 @@ import {
   Button,
   Icon,
   Input,
+  Refresher,
   Sheet,
   SheetOption,
+  useToast,
 } from "@abonten/ui-native";
 import { useState } from "react";
 import {
@@ -43,7 +45,9 @@ function methodTitle(m: PaymentMethodRow): string {
 }
 
 export default function WalletScreen() {
-  const { data, isLoading, isError, refetch } = usePaymentMethods();
+  const toast = useToast();
+  const { data, isLoading, isError, isRefetching, refetch } =
+    usePaymentMethods();
   const networks = useMomoNetworks();
   const addMomo = useAddMomoWallet();
   const addCard = useAddCard();
@@ -122,9 +126,13 @@ export default function WalletScreen() {
         style: "destructive",
         onPress: async () => {
           const res = await removeMethod.mutateAsync(id);
-          if (res.status !== 200) {
-            Alert.alert("Couldn't remove", res.message ?? "Please try again.");
+          if (res.status === 200) {
+            toast.success("Payment method removed");
+            return;
           }
+          toast.error(res.message ?? "We couldn't remove that card.", {
+            description: "It is still on your account. Please try again.",
+          });
         },
       },
     ]);
@@ -183,6 +191,9 @@ export default function WalletScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-4 p-4 pb-10"
+        refreshControl={
+          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
+        }
       >
         {methods.length === 0 ? (
           <View className="items-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-10">
@@ -221,17 +232,15 @@ export default function WalletScreen() {
                       setDefault.mutate(m.id, {
                         onSettled: (res) => {
                           if (res && res.status !== 200) {
-                            Alert.alert(
-                              "Couldn't set default",
-                              res.message ?? "Please try again.",
-                            );
+                            toast.error("Couldn't set default", {
+                              description: res.message ?? "Please try again.",
+                            });
                           }
                         },
                         onError: () =>
-                          Alert.alert(
-                            "Couldn't set default",
-                            "Please try again.",
-                          ),
+                          toast.error("Couldn't set default", {
+                            description: "Please try again.",
+                          }),
                       })
                     }
                     disabled={setDefault.isPending}

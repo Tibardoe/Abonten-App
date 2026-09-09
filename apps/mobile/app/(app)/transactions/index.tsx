@@ -1,3 +1,4 @@
+import { TransactionsSkeleton } from "@/components/skeletons";
 import {
   useTransactionHistory,
   useTransactionSummary,
@@ -13,19 +14,13 @@ import {
   Chip,
   EmptyState,
   Icon,
-  ScreenLoader,
+  Refresher,
   Spinner,
   StatusPill,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  View,
-} from "react-native";
+import { FlatList, Pressable, ScrollView, View } from "react-native";
 
 // Native echo of the web /transactions page: a period filter, summary
 // tiles, and the merged ticket + subscription history timeline. Status
@@ -140,7 +135,8 @@ export default function Transactions() {
       historyQuery.fetchNextPage();
   }, [historyQuery]);
 
-  if (summaryQuery.isLoading && historyQuery.isLoading) return <ScreenLoader />;
+  if (summaryQuery.isLoading && historyQuery.isLoading)
+    return <TransactionsSkeleton />;
 
   const header = (
     <View className="gap-4 pb-2">
@@ -197,7 +193,7 @@ export default function Transactions() {
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={
             (summaryQuery.isRefetching || historyQuery.isRefetching) &&
             !historyQuery.isFetchingNextPage

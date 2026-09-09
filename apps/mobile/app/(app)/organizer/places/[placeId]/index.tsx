@@ -1,13 +1,7 @@
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
-import { AppText, Overline } from "@abonten/ui-native";
+import { AppText, Overline, Refresher } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 // Per-place management landing — the Insights tab of the web ManagePlaceView
 // (ManagePlaceInsightsSection stat tiles), plus links to the other tabs as
@@ -44,10 +38,7 @@ export default function PlaceManageScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-6 p-4 pb-16"
       refreshControl={
-        <RefreshControl
-          refreshing={q.isRefetching}
-          onRefresh={() => q.refetch()}
-        />
+        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
       }
     >
       {q.isLoading ? (

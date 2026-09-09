@@ -1,5 +1,6 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { shadow } from "../theme/tokens";
+import { PressableScale } from "./PressableScale";
 import { AppText } from "./Typography";
 
 // Native echo of the web shadcn <Tabs>/<TabsList>/<TabsTrigger> segmented
@@ -9,6 +10,10 @@ import { AppText } from "./Typography";
 // `text-muted-foreground`. Used for the Explore Events/Places switch, the
 // profile tab bar, the Tickets tab strip, and the Favorites sub-tabs so
 // every tab control in the app reads the same as the web one.
+//
+// Switching a tab fires a selection haptic: it changes what the whole screen
+// below is showing, which is exactly the class of change a tap should be
+// felt for.
 
 export type SegmentedTabOption<T extends string> = {
   key: T;
@@ -42,12 +47,14 @@ export function SegmentedTabs<T extends string>({
       {options.map((option) => {
         const active = option.key === value;
         return (
-          <Pressable
+          <PressableScale
             key={option.key}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
             accessibilityLabel={option.label}
             onPress={() => onChange(option.key)}
+            haptic={!active}
+            activeScale={0.96}
             className={`h-full flex-1 items-center justify-center rounded-md px-3 ${
               active ? "bg-accent" : ""
             } active:opacity-80`}
@@ -61,7 +68,7 @@ export function SegmentedTabs<T extends string>({
             >
               {option.label}
             </AppText>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>

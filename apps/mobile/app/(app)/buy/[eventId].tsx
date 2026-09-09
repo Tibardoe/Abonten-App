@@ -27,10 +27,11 @@ import {
   ScreenError,
   Spinner,
   Stepper,
+  useToast,
 } from "@abonten/ui-native";
 import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 const MAX_PER_TYPE = 10;
 
@@ -61,6 +62,7 @@ function money(currency: string, n: number): string {
 // Proceed. No money moves here — the code is claimed + the fee finalised by
 // api.checkout.validate on /checkout/[sessionId].
 export default function BuyTicketsScreen() {
+  const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const router = useRouter();
   const pathname = usePathname();
@@ -298,10 +300,9 @@ export default function BuyTicketsScreen() {
     // gate instead of leaving a dead "Proceed" button.
     if (res.status === 409) {
       refetch();
-      Alert.alert(
-        "Can't start checkout",
-        res.message ?? "This event is no longer available.",
-      );
+      toast.error("Can't start checkout", {
+        description: res.message ?? "This event is no longer available.",
+      });
       return;
     }
     if (applied) {
@@ -311,10 +312,9 @@ export default function BuyTicketsScreen() {
       setPromoError(res.message ?? "That promo code couldn't be applied.");
       return;
     }
-    Alert.alert(
-      "Can't start checkout",
-      res.message ?? "Please try again in a moment.",
-    );
+    toast.error("Can't start checkout", {
+      description: res.message ?? "Please try again in a moment.",
+    });
   }
 
   return (

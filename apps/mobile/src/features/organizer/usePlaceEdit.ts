@@ -17,7 +17,8 @@ import { getPlaceSchema } from "@abonten/validation/placeSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert } from "react-native";
+
+import { useToast } from "@abonten/ui-native";
 
 // Mobile echo of the web useManagePlaceDetailsForm + ManagePlaceHoursSection.
 // One hook backing the per-place edit screen: core-fields form (Details &
@@ -70,6 +71,7 @@ function toHoursRows(
 }
 
 export function usePlaceEdit(placeId: string) {
+  const toast = useToast();
   const query = usePlaceManageContext(placeId);
   const categoriesQuery = usePlaceCategories();
   const autocomplete = usePlacesAutocomplete();
@@ -193,10 +195,9 @@ export function usePlaceEdit(placeId: string) {
     const resolved = await autocomplete.resolvePlace(id);
     setResolvingLocation(false);
     if (!resolved) {
-      Alert.alert(
-        "Couldn't use that location",
-        "Please try another suggestion or type the address.",
-      );
+      toast.error("Couldn't use that location", {
+        description: "Please try another suggestion or type the address.",
+      });
       return;
     }
     applyLocation(resolved.lat, resolved.lng, resolved.address);
@@ -207,10 +208,9 @@ export function usePlaceEdit(placeId: string) {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          "Location access needed",
-          "Allow location access to use your current position.",
-        );
+        toast.error("Location access needed", {
+          description: "Allow location access to use your current position.",
+        });
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -225,10 +225,9 @@ export function usePlaceEdit(placeId: string) {
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      Alert.alert(
-        "Couldn't get your location",
-        "Please try again or type the address.",
-      );
+      toast.error("Couldn't get your location", {
+        description: "Please try again or type the address.",
+      });
     } finally {
       setResolvingLocation(false);
     }
@@ -241,10 +240,9 @@ export function usePlaceEdit(placeId: string) {
   async function pickCover() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to pick a cover photo.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to pick a cover photo.",
+      });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -266,14 +264,16 @@ export function usePlaceEdit(placeId: string) {
   async function saveDetails(): Promise<UpdatePlaceResult | null> {
     if (!validateText()) return null;
     if (categoryId === null) {
-      Alert.alert("Pick a category", "Choose the category that fits best.");
+      toast.error("Pick a category", {
+        description: "Choose the category that fits best.",
+      });
       return null;
     }
     if (!address.trim() || !coords) {
-      Alert.alert(
-        "Confirm the location",
-        "Pick the address from a suggestion, the map, or your current location.",
-      );
+      toast.error("Confirm the location", {
+        description:
+          "Pick the address from a suggestion, the map, or your current location.",
+      });
       return null;
     }
 
@@ -295,10 +295,10 @@ export function usePlaceEdit(placeId: string) {
 
   async function saveHours(): Promise<PlaceHoursStatusResult | null> {
     if (!hoursComplete) {
-      Alert.alert(
-        "Check your hours",
-        "Every open day needs an open and close time in HH:MM format.",
-      );
+      toast.error("Check your hours", {
+        description:
+          "Every open day needs an open and close time in HH:MM format.",
+      });
       return null;
     }
     return updateHours.mutateAsync(hours);

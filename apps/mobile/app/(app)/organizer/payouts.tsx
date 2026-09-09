@@ -1,13 +1,8 @@
 import { usePayouts } from "@/features/organizer/usePayouts";
 import type { OrganizerPayoutRow } from "@abonten/api-client";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText, StatusPill } from "@abonten/ui-native";
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  View,
-} from "react-native";
+import { AppText, Refresher, StatusPill } from "@abonten/ui-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
 
 function PayoutRow({ row }: { row: OrganizerPayoutRow }) {
   return (
@@ -50,10 +45,7 @@ export default function PayoutsScreen() {
       renderItem={({ item }) => <PayoutRow row={item} />}
       contentContainerClassName="gap-3 p-4 pb-16"
       refreshControl={
-        <RefreshControl
-          refreshing={q.isRefetching}
-          onRefresh={() => q.refetch()}
-        />
+        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
       }
       ListEmptyComponent={
         <AppText className="mt-10 text-center text-sm text-muted-foreground">

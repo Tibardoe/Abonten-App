@@ -7,17 +7,18 @@ import {
 import type { OwnerPlaceReviewRow } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
-import { AppText, Button, Icon, Input } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Icon,
+  Input,
+  Refresher,
+  useToast,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, View } from "react-native";
 
 // Per-place reviews (owner view) + reply — the native mirror of the web
 // ManagePlaceReviewsSection. Approved reviews only, newest first; each
@@ -45,6 +46,7 @@ function ReviewCard({
   review: OwnerPlaceReviewRow;
   placeId: string;
 }) {
+  const toast = useToast();
   const reply = useRespondToPlaceReview(placeId);
   const remove = useDeletePlaceReviewResponse(placeId);
   const [open, setOpen] = useState(false);
@@ -71,14 +73,13 @@ function ReviewCard({
             setOpen(false);
             setText("");
           } else {
-            Alert.alert("Couldn't save response", res.message);
+            toast.error("Couldn't save response", { description: res.message });
           }
         },
         onError: () =>
-          Alert.alert(
-            "Couldn't save response",
-            "Please try again in a moment.",
-          ),
+          toast.error("Couldn't save response", {
+            description: "Please try again in a moment.",
+          }),
       },
     );
   };
@@ -89,14 +90,13 @@ function ReviewCard({
         if (res.status === 200) {
           setConfirmingDelete(false);
         } else {
-          Alert.alert("Couldn't remove response", res.message);
+          toast.error("Couldn't remove response", { description: res.message });
         }
       },
       onError: () =>
-        Alert.alert(
-          "Couldn't remove response",
-          "Please try again in a moment.",
-        ),
+        toast.error("Couldn't remove response", {
+          description: "Please try again in a moment.",
+        }),
     });
   };
 
@@ -277,7 +277,7 @@ export default function PlaceReviewsScreen() {
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={q.isRefetching && !q.isFetchingNextPage}
           onRefresh={() => q.refetch()}
         />

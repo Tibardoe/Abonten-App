@@ -5,6 +5,7 @@ import {
   usePlaceDraft,
   useSavePlaceDraft,
 } from "@/features/places/usePlaceDrafts";
+import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { api } from "@/lib/api";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { uuidv4 } from "@/lib/uuid";
@@ -19,7 +20,8 @@ import { getPlaceSchema } from "@abonten/validation/placeSchema";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert } from "react-native";
+
+import { useToast } from "@abonten/ui-native";
 
 // All state, validation and submit logic for the native place-creation
 // wizard — the mobile echo of the web usePlaceUploadForm hook, so the
@@ -73,10 +75,15 @@ export type PlaceWizardTextErrors = Partial<
 >;
 
 export function usePlaceWizard(resumeDraftId?: string) {
+  const toast = useToast();
   const categoriesQuery = usePlaceCategories();
   const autocomplete = usePlacesAutocomplete();
   const create = useCreatePlace();
   const saveDraftMutation = useSavePlaceDraft();
+  // Cover-photo uploads are the slow part of Publish and Save-as-draft, and
+  // the staged gallery photos are slower still; one progress state drives
+  // the bar for all of them.
+  const uploadProgress = useUploadProgress();
   const draftQuery = usePlaceDraft(resumeDraftId);
 
   const clientRequestId = useRef(uuidv4()).current;
@@ -174,10 +181,9 @@ export function usePlaceWizard(resumeDraftId?: string) {
     const resolved = await autocomplete.resolvePlace(placeId);
     setResolvingLocation(false);
     if (!resolved) {
-      Alert.alert(
-        "Couldn't use that location",
-        "Please try another suggestion or type the address.",
-      );
+      toast.error("Couldn't use that location", {
+        description: "Please try another suggestion or type the address.",
+      });
       return;
     }
     applyLocation(resolved.lat, resolved.lng, resolved.address);
@@ -188,10 +194,9 @@ export function usePlaceWizard(resumeDraftId?: string) {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          "Location access needed",
-          "Allow location access to use your current position.",
-        );
+        toast.error("Location access needed", {
+          description: "Allow location access to use your current position.",
+        });
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -206,10 +211,9 @@ export function usePlaceWizard(resumeDraftId?: string) {
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      Alert.alert(
-        "Couldn't get your location",
-        "Please try again or type the address.",
-      );
+      toast.error("Couldn't get your location", {
+        description: "Please try again or type the address.",
+      });
     } finally {
       setResolvingLocation(false);
     }
@@ -229,10 +233,9 @@ export function usePlaceWizard(resumeDraftId?: string) {
   } | null> {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to pick a cover photo.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to pick a cover photo.",
+      });
       return null;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -259,10 +262,9 @@ export function usePlaceWizard(resumeDraftId?: string) {
   async function pickGalleryPhotos() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to add gallery photos.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to add gallery photos.",
+      });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -288,11 +290,18 @@ export function usePlaceWizard(resumeDraftId?: string) {
   async function uploadStagedPhotos(placeId: string): Promise<number> {
     if (photoUris.length === 0) return 0;
     setUploadingPhotos(true);
+    uploadProgress.start();
     let saved = 0;
+    const total = photoUris.length;
     try {
-      for (const uri of photoUris) {
+      for (const [i, uri] of photoUris.entries()) {
         try {
-          const up = await uploadToCloudinary(uri, "place_photo");
+          const up = await uploadToCloudinary(uri, "place_photo", {
+            // Each photo's own 0..1 folded into the run as a whole, so the
+            // bar walks steadily across "photo 2 of 5" rather than
+            // restarting from zero five times.
+            onProgress: (f) => uploadProgress.onProgress((i + f) / total),
+          });
           const res = await api.organizer.addPlacePhoto(placeId, {
             publicId: up.publicId,
             version: String(up.version),
@@ -304,6 +313,7 @@ export function usePlaceWizard(resumeDraftId?: string) {
       }
     } finally {
       setUploadingPhotos(false);
+      uploadProgress.reset();
     }
     return saved;
   }
@@ -318,14 +328,16 @@ export function usePlaceWizard(resumeDraftId?: string) {
   function validateBasics(): boolean {
     if (!validateText()) return false;
     if (categoryId === null) {
-      Alert.alert("Pick a category", "Choose the category that fits best.");
+      toast.error("Pick a category", {
+        description: "Choose the category that fits best.",
+      });
       return false;
     }
     if (!address || !coords) {
-      Alert.alert(
-        "Add a location",
-        "Pick a suggestion, choose on the map, or use your current location so people can find this place.",
-      );
+      toast.error("Add a location", {
+        description:
+          "Pick a suggestion, choose on the map, or use your current location so people can find this place.",
+      });
       return false;
     }
     return true;
@@ -393,12 +405,21 @@ export function usePlaceWizard(resumeDraftId?: string) {
         ? coverUri
         : null;
 
-    const res = await saveDraftMutation.mutateAsync({
-      draftId: currentDraftId,
-      payload: buildDraftPayload(),
-      expectedUpdatedAt: draftUpdatedAt.current,
-      coverUri: localCover,
-    });
+    if (localCover) uploadProgress.start();
+    else uploadProgress.setPhase("saving");
+    let res: SavePlaceDraftResult;
+    try {
+      res = await saveDraftMutation.mutateAsync({
+        draftId: currentDraftId,
+        payload: buildDraftPayload(),
+        expectedUpdatedAt: draftUpdatedAt.current,
+        coverUri: localCover,
+        onUploadProgress: uploadProgress.onProgress,
+        onUploadComplete: uploadProgress.finishUpload,
+      });
+    } finally {
+      uploadProgress.reset();
+    }
 
     if (res.status === 200) {
       setCurrentDraftId(res.data.draftId);
@@ -409,12 +430,31 @@ export function usePlaceWizard(resumeDraftId?: string) {
   }
 
   async function submit(): Promise<PlaceCreateResult | null> {
-    if (categoryId === null || !coords || !coverUri) return null;
-    if (!hoursComplete) {
-      Alert.alert(
-        "Check your hours",
-        "Every open day needs an open and close time in HH:MM format.",
+    // Same reasoning as the event wizard: a missing prerequisite used to
+    // make Publish silently do nothing. Each gap now names itself and offers
+    // a jump to the step that owns it.
+    if (!coverUri) {
+      toast.error("Your place needs a cover photo.", {
+        description: "Add one on the first step.",
+        action: { label: "Go there", onPress: () => setStep(0) },
+      });
+      return null;
+    }
+    if (categoryId === null || !coords) {
+      toast.error(
+        categoryId === null ? "Pick a category." : "Confirm the location.",
+        {
+          description: "Both are on the Basic info step.",
+          action: { label: "Go there", onPress: () => setStep(2) },
+        },
       );
+      return null;
+    }
+    if (!hoursComplete) {
+      toast.error("Every open day needs an open and close time.", {
+        description: "Use HH:MM, or mark the day closed.",
+        action: { label: "Go there", onPress: () => setStep(3) },
+      });
       return null;
     }
 
@@ -428,20 +468,28 @@ export function usePlaceWizard(resumeDraftId?: string) {
         }
       : { coverUri };
 
-    return create.mutateAsync({
-      name: name.trim(),
-      categoryId,
-      description: description.trim(),
-      address: address.trim(),
-      latitude: coords.lat,
-      longitude: coords.lng,
-      ...coverFields,
-      openingHours,
-      websiteUrl: website.trim() || null,
-      phone: phone.trim() || null,
-      whatsapp: whatsapp.trim() || null,
-      clientRequestId,
-    });
+    if (!isRemote(coverUri)) uploadProgress.start();
+    else uploadProgress.setPhase("saving");
+    try {
+      return await create.mutateAsync({
+        onUploadProgress: uploadProgress.onProgress,
+        onUploadComplete: uploadProgress.finishUpload,
+        name: name.trim(),
+        categoryId,
+        description: description.trim(),
+        address: address.trim(),
+        latitude: coords.lat,
+        longitude: coords.lng,
+        ...coverFields,
+        openingHours,
+        websiteUrl: website.trim() || null,
+        phone: phone.trim() || null,
+        whatsapp: whatsapp.trim() || null,
+        clientRequestId,
+      });
+    } finally {
+      uploadProgress.reset();
+    }
   }
 
   // Step order (see app/(app)/place/new.tsx): 0 Cover · 1 Photos (optional) ·
@@ -506,6 +554,7 @@ export function usePlaceWizard(resumeDraftId?: string) {
     // submit
     validateBasics,
     submit,
+    uploadProgress,
     isSubmitting: create.isPending,
     isSubmitError: create.isError,
     // draft

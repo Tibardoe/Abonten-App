@@ -17,7 +17,12 @@ export function useAvatarUpload() {
   const userId = session?.user.id;
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (opts?: {
+      /** Real byte progress (0..1) so the screen can show a bar. */
+      onProgress?: (fraction: number) => void;
+      /** Bytes are in; what remains is the `user_info` write. */
+      onUploadComplete?: () => void;
+    }) => {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
         throw new Error("Photo access is needed to change your picture.");
@@ -33,7 +38,9 @@ export function useAvatarUpload() {
       const { publicId, version } = await uploadToCloudinary(
         picked.assets[0].uri,
         "avatar",
+        { onProgress: opts?.onProgress },
       );
+      opts?.onUploadComplete?.();
 
       if (!userId) throw new Error("Not signed in.");
       const { error } = await supabase

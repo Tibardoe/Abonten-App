@@ -11,6 +11,7 @@ import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { type ReactNode, useState } from "react";
 import {
+  ActivityIndicator,
   type LayoutChangeEvent,
   Pressable,
   StyleSheet,
@@ -62,6 +63,14 @@ export type AppHeaderProps = {
   onNext?: () => void;
   nextLabel?: string;
   nextDisabled?: boolean;
+  /**
+   * "form" variant only. While true the action shows a spinner beside its
+   * label and stops accepting presses. The wizards submit from this header,
+   * so without it "Publish" just dimmed and sat there for the length of a
+   * flyer upload — the single most common "did that work?" moment in the
+   * app. Pair it with `nextLabel="Publishing…"`.
+   */
+  nextLoading?: boolean;
 };
 
 /** 40x40 pressable wrapping a single header icon — one definition for menu / + / gear / share. */
@@ -159,6 +168,7 @@ export function AppHeader({
   onNext,
   nextLabel = "Next",
   nextDisabled,
+  nextLoading = false,
 }: AppHeaderProps) {
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
@@ -235,16 +245,23 @@ export function AppHeader({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={nextLabel}
-          disabled={nextDisabled}
+          accessibilityState={{
+            disabled: !!(nextDisabled || nextLoading),
+            busy: nextLoading,
+          }}
+          disabled={nextDisabled || nextLoading}
           hitSlop={8}
           onPress={onNext}
-          className="rounded-full px-3 active:opacity-60"
+          className="flex-row items-center gap-1.5 rounded-full px-3 active:opacity-60"
           style={{
             height: HIT,
             justifyContent: "center",
-            opacity: nextDisabled ? 0.4 : 1,
+            opacity: nextDisabled || nextLoading ? 0.5 : 1,
           }}
         >
+          {nextLoading ? (
+            <ActivityIndicator size="small" color={c.primary} />
+          ) : null}
           <AppText className="text-[15px] font-semibold text-primary">
             {nextLabel}
           </AppText>
