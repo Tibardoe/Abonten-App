@@ -144,7 +144,7 @@ export default function SignIn() {
                 Log in or sign up
               </AppText>
               <AppText variant="muted" className="text-center">
-                Continue with your phone number or Google account.
+                Continue with Google, your email address, or your phone number.
               </AppText>
             </View>
 
