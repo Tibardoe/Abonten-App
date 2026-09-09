@@ -87,11 +87,25 @@ export async function cancelTicketCheckoutSessionCore(
   );
 
   if (promoCode && totalDiscountedUnits > 0) {
-    const { data: promoCodeRow } = await supabase
+    // Codes are unique per EVENT, not globally
+    // (promo_code_event_id_normalized_code_key), so two organizers can both
+    // run "EARLYBIRD" — the placeholder this app's own promo field suggests.
+    // Without the event scope this lookup matched every event using the same
+    // string: maybeSingle() then errored on the multiple rows and returned
+    // null, so the buyer's usage was silently never released and they could
+    // not re-apply their own code after cancelling.
+    const { data: promoCodeRow, error: promoCodeLookupError } = await supabase
       .from("promo_code")
       .select("id")
+      .eq("event_id", eventId)
       .eq("promo_code", promoCode)
       .maybeSingle();
+
+    if (promoCodeLookupError) {
+      logger.error(
+        `Could not resolve promo code "${promoCode}" on event ${eventId} while cancelling a checkout: ${promoCodeLookupError.message}`,
+      );
+    }
 
     if (promoCodeRow) {
       await releasePromoUsage(

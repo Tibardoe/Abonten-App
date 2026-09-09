@@ -16,6 +16,7 @@ import { AppState } from "react-native";
 import { applyReactionToCache } from "./cache";
 import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
+import { uniqueRealtimeTopic } from "./realtimeTopic";
 
 type Options = {
   // Fired when a message from someone else lands (drives "mark read while
@@ -126,7 +127,11 @@ export function useConversationRealtime(
     const broadcastTopic = conversationChannelName(conversationId);
     for (const ch of supabase.getChannels()) {
       const t = ch.topic.replace(/^realtime:/, "");
-      if (t === changesTopic || t === broadcastTopic) {
+      // The changes channel carries a per-subscription "#n" suffix (see
+      // below), so match on its base as well as the exact broadcast name.
+      const isStaleChanges =
+        t === changesTopic || t.startsWith(`${changesTopic}#`);
+      if (isStaleChanges || t === broadcastTopic) {
         void supabase.removeChannel(ch);
       }
     }
@@ -135,7 +140,14 @@ export function useConversationRealtime(
     // supabase.channel() / .on() are synchronous; only setAuth + subscribe
     // are async. Build + ref both channels up front so cleanup always has
     // something concrete to remove.
-    const changesChannel = supabase.channel(changesTopic);
+    //
+    // The topic gets a per-subscription suffix because removeChannel() above
+    // is async — it awaits an unsubscribe round trip before the old channel
+    // leaves the client's list, so channel(changesTopic) could still hand back
+    // the previous, already-subscribed one and the .on() calls below would
+    // throw. Only postgres_changes channels may be renamed like this; the
+    // private broadcast topic keeps its shared name (see realtimeTopic.ts).
+    const changesChannel = supabase.channel(uniqueRealtimeTopic(changesTopic));
     changesChannelRef.current = changesChannel;
 
     const pushAuthAndRefresh = async () => {

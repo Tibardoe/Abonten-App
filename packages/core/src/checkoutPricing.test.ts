@@ -77,4 +77,16 @@ describe("computeCheckoutFee", () => {
   it("respects an explicit fee rate over the default", () => {
     expect(computeCheckoutFee(1000, 0.1)).toBe(100);
   });
+
+  it("returns a 2dp amount instead of a raw floating-point product", () => {
+    // 24 * 0.05 is 1.2000000000000002 in binary floating point. The mobile
+    // checkout screen rendered that in full, next to the Pay button.
+    expect(computeCheckoutFee(24)).toBe(1.2);
+    expect(computeCheckoutFee(0.1 + 0.2)).toBe(0.02);
+  });
+
+  it("rounds a half-pesewa up, matching toPesewas", () => {
+    // 3.3 * 0.05 = 0.165 -> 0.17, the same pesewa Paystack is charged.
+    expect(computeCheckoutFee(3.3)).toBe(0.17);
+  });
 });

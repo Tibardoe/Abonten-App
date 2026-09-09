@@ -1,4 +1,4 @@
-import { withEventAttendanceCounts } from "@/lib/eventAttendance";
+import { withEventAvailability } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import { getFeaturedEvents } from "@abonten/core/dailyEventCache";
 import { filterEventsByWindow } from "@abonten/core/eventDateWindow";
@@ -80,7 +80,7 @@ export function useExploreEventSliders(
       // get_nearby_events carries no attendance figure — backfill it once
       // for the whole set so every derived slider's cards show real
       // "going" / spots-left / Sold-out (matches the web EventsTabContent).
-      const events = await withEventAttendanceCounts(nearby);
+      const events = await withEventAvailability(nearby);
 
       // A paid promotion makes an event featured-eligible, same fold-in as
       // the web page (before getFeaturedEvents runs).

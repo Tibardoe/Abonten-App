@@ -91,7 +91,17 @@ export type EventDates = {
 
 export type UserPostType = {
   id: string;
-  ticket_type?: { price: number; currency: string }[]; // ✅ Fix here
+  // `quantity` is remaining stock (create_ticket_checkout decrements it,
+  // expire_stale_ticket_checkouts restocks it) and is null for an unlimited
+  // tier. Optional because the discovery RPCs return an aggregated
+  // min_price/currency rather than the tier rows; mobile backfills it via
+  // withEventTicketAvailability so cards can show real "spots left"/"Sold out"
+  // instead of the capacity figure alone.
+  ticket_type?: {
+    price: number;
+    currency: string;
+    quantity?: number | null;
+  }[];
   // Postgres returns this as an ISO timestamp string over PostgREST — it
   // was never actually a real Date object at runtime (every consumer
   // already treats it as string-like: String(), .localeCompare, or a

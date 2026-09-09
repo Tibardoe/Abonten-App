@@ -492,11 +492,29 @@ export default function EventDetailScreen() {
 
             {MapConfigured && MapView && coords ? (
               <MapErrorBoundary fallback={null}>
-                <View className="mt-1 h-40 overflow-hidden rounded-lg">
+                {/*
+                  This map is a static preview — "Get directions" below is the
+                  only interaction. pointerEvents on the MapView itself is not
+                  enough on Android: the native Google view still swallowed
+                  vertical drags, so a finger landing anywhere on this band
+                  (most of the width, in the middle of the page) could not
+                  scroll the screen. Blocking touches on the RN wrapper is
+                  honoured reliably; the gesture props below make the intent
+                  explicit and cover the iOS side too.
+                */}
+                <View
+                  className="mt-1 h-40 overflow-hidden rounded-lg"
+                  pointerEvents="none"
+                >
                   <MapView
                     style={{ flex: 1 }}
                     provider={PROVIDER_GOOGLE}
                     pointerEvents="none"
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    toolbarEnabled={false}
                     initialRegion={{
                       latitude: coords.lat,
                       longitude: coords.lng,

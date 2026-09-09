@@ -10,6 +10,41 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 const MAX_PROMO_LOOKUPS_PER_MINUTE = 20;
 
+/**
+ * The instant a promo code stops being usable.
+ *
+ * `promo_code.expires_at` is a `timestamp without time zone` written from a
+ * date-only picker, so it lands on midnight at the START of the chosen day —
+ * while every surface that shows it says "until <that day>" (the create-event
+ * wizard renders "20% off · 5 uses · until Wed, Sep 30, 2026"). Comparing the
+ * stored value directly against now() therefore rejected the code for the
+ * whole of its final day, one day earlier than the organizer and buyer were
+ * both told.
+ *
+ * The expiry day is inclusive, so the cutoff is the end of it. The stored
+ * string carries no offset, so it is read as UTC rather than through the
+ * server's local timezone, which keeps the boundary identical wherever this
+ * runs.
+ */
+export function promoExpiryCutoff(expiresAt: string): Date {
+  const normalized = expiresAt
+    .replace(" ", "T")
+    .replace(/(Z|[+-]\d\d:?\d\d)$/, "");
+  const parsed = new Date(`${normalized}Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    // Unparseable value: fall back to the old strict reading rather than
+    // handing out a discount that should have lapsed.
+    return new Date(expiresAt);
+  }
+  return new Date(
+    Date.UTC(
+      parsed.getUTCFullYear(),
+      parsed.getUTCMonth(),
+      parsed.getUTCDate() + 1,
+    ),
+  );
+}
+
 export type GetPromoCodeCoreResult =
   | { status: 400 | 401 | 404 | 429 | 500; message: string }
   | {
@@ -80,7 +115,10 @@ export async function getPromoCodeCore(
     return { status: 401, message: "Promo code is no longer active!" };
   }
 
-  if (promoCode.expires_at && new Date(promoCode.expires_at) < new Date()) {
+  if (
+    promoCode.expires_at &&
+    promoExpiryCutoff(promoCode.expires_at) <= new Date()
+  ) {
     return { status: 401, message: "Promo code has expired!" };
   }
 

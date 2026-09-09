@@ -59,14 +59,17 @@ export async function saveToSupabase(
     });
 
   if (insertEror) {
+    // The avatar itself is already saved above. user_image_history is a
+    // bookkeeping trail, so failing the whole action here told the user their
+    // photo change had failed when it had actually worked — and a retry just
+    // uploaded another Cloudinary asset. That is exactly what happened between
+    // 2026-08-25 (RLS enabled on this table with only a SELECT policy) and the
+    // 20260909115349 migration that added the missing owner INSERT policy.
+    // Log it and report the success the user can actually see.
     logger.error(
       "saveAvatarToSupabase: failed to record image history",
       insertEror,
     );
-    return {
-      status: 500,
-      message: "We couldn't update your profile photo. Please try again.",
-    };
   }
 
   return { status: 200, message: "Profile updated successfully." };

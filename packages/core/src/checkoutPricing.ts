@@ -69,5 +69,14 @@ export function computeCheckoutFee(
   amountBeforeFee: number,
   feeRate: number = DEFAULT_SERVICE_FEE_RATE,
 ): number {
-  return amountBeforeFee > 0 ? amountBeforeFee * feeRate : 0;
+  if (amountBeforeFee <= 0) return 0;
+  // Money is 2dp everywhere it is stored (numeric(10,2)) and charged
+  // (toPesewas rounds to the nearest pesewa), so the fee is rounded to 2dp
+  // here too rather than being left as a raw product. A rate like 0.05 on
+  // GHS 24 otherwise yields 1.2000000000000002, and any surface that renders
+  // the number without its own formatter prints that float in full — the
+  // mobile checkout screen showed "Service fee GHS 1.2000000000000002"
+  // directly above the Pay button. The charged and stored amounts are
+  // unchanged; this only removes the binary-floating-point tail.
+  return Math.round(amountBeforeFee * feeRate * 100) / 100;
 }

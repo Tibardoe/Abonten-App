@@ -492,11 +492,25 @@ export default function PlaceDetailScreen() {
             </AppText>
             {MapConfigured && MapView && coords ? (
               <MapErrorBoundary fallback={null}>
-                <View className="h-40 overflow-hidden rounded-lg">
+                {/*
+                  Static preview only — see the same block in
+                  app/(app)/event/[id].tsx. pointerEvents on the MapView alone
+                  did not stop the native Android map swallowing vertical
+                  drags, which trapped the page scroll.
+                */}
+                <View
+                  className="h-40 overflow-hidden rounded-lg"
+                  pointerEvents="none"
+                >
                   <MapView
                     style={{ flex: 1 }}
                     provider={PROVIDER_GOOGLE}
                     pointerEvents="none"
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    toolbarEnabled={false}
                     initialRegion={{
                       latitude: coords.lat,
                       longitude: coords.lng,
