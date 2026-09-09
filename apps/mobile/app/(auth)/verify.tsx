@@ -1,7 +1,11 @@
 import { api } from "@/lib/api";
 import { hapticError, hapticSuccess } from "@/lib/haptics";
 import { supabase } from "@/lib/supabase";
-import { EMAIL_OTP_CODE_LENGTH, maskEmail } from "@abonten/core/emailOtp";
+import {
+  EMAIL_OTP_CODE_LENGTH,
+  EMAIL_OTP_MESSAGES,
+  maskEmail,
+} from "@abonten/core/emailOtp";
 import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import {
   AbontenLogo,
@@ -22,7 +26,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const RESEND_SECONDS = 30;
+// Must not be shorter than the shortest interval either provider will
+// actually honour, or the button re-enables into a guaranteed failure:
+//   * email — Supabase refuses a second send inside 60s (measured against
+//     the live project 2026-09-09: 35s and 50s -> 429, 65s -> 200), and
+//   * phone — phoneOtpStore.ts enforces its own RESEND_COOLDOWN_MS of 60s.
+// At the old 30s a tap between 30s and 60s returned "Too many requests" and
+// still consumed one of the three sends requestEmailOtpCore allows per 15
+// minutes, so two impatient taps could lock a real user out of resending
+// for the rest of that window. Web already uses 60s (ResendOtpButton).
+const RESEND_SECONDS = 60;
 
 // Mask all but the last two digits of a phone number so the screen confirms
 // which number was used without printing it in full.
@@ -115,11 +128,7 @@ export default function Verify() {
           });
           if (verifyErr) {
             hapticError();
-            setError(
-              /expired/i.test(verifyErr.message)
-                ? "That code has expired. Request a new one."
-                : "That code isn't correct.",
-            );
+            setError(EMAIL_OTP_MESSAGES.invalidOrExpired);
             setCode("");
             return;
           }

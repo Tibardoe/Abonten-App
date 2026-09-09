@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import {
   EMAIL_OTP_CODE_LENGTH,
+  EMAIL_OTP_MESSAGES,
   isLikelyEmail,
   maskEmail,
 } from "@abonten/core/emailOtp";
@@ -182,11 +183,7 @@ export default function Security() {
         type: "email_change",
       });
       if (error) {
-        setEmailErr(
-          /expired/i.test(error.message)
-            ? "That code has expired. Request a new one."
-            : "That code isn't correct.",
-        );
+        setEmailErr(EMAIL_OTP_MESSAGES.invalidOrExpired);
         return;
       }
 

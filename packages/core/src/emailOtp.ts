@@ -57,8 +57,14 @@ export const EMAIL_OTP_MESSAGES = {
   // is registered.
   codeSent: "If that email can receive mail, we've sent a 6-digit code.",
   invalidFormat: "Enter the 6-digit code we emailed you.",
-  incorrect: "That code isn't correct.",
-  expired: "That code has expired. Request a new one.",
+  // Supabase deliberately answers a wrong code and an expired one
+  // identically — 403 `otp_expired`, "Token has expired or is invalid" — so
+  // that a caller can't use the error as an oracle. The app therefore
+  // cannot tell them apart and must not claim to: telling someone who
+  // mistyped one digit that the code "has expired" sends them to Resend,
+  // which burns one of their three sends per 15 minutes for nothing.
+  invalidOrExpired:
+    "That code is incorrect or has expired. Try again, or request a new one.",
   rateLimited: "Too many requests. Please wait a moment and try again.",
   generic: "Something went wrong. Please try again.",
 } as const;

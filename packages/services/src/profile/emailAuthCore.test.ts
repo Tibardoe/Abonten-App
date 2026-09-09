@@ -146,10 +146,24 @@ describe("verifyEmailOtpCore", () => {
     });
   });
 
-  it("maps an expired code to the 'expired' message (AUTH-EMAIL-005)", async () => {
+  // Both of these assert against the payload Supabase actually returns,
+  // captured from the live project on 2026-09-09:
+  //   403 {"error_code":"otp_expired","msg":"Token has expired or is invalid"}
+  // It is byte-identical for a wrong code and an expired one — GoTrue will
+  // not act as an oracle for either — so the app must say the same thing in
+  // both cases. An earlier revision branched on /expired/i and asserted the
+  // "wrong code" case with an invented message ("otp_disabled / invalid")
+  // that GoTrue never sends, which is why it passed while every real
+  // mistyped code was reported to the user as expired (AUTH-EMAIL-005).
+  const realGoTrueRejection = {
+    status: 403,
+    message: "Token has expired or is invalid",
+  };
+
+  it("maps a genuinely expired code to the shared message (AUTH-EMAIL-005)", async () => {
     const verifyOtp = vi.fn(async () => ({
       data: { user: null },
-      error: { status: 401, message: "Token has expired or is invalid" },
+      error: realGoTrueRejection,
     }));
 
     const result = await verifyEmailOtpCore(fakeClient({ verifyOtp }), {
@@ -160,14 +174,14 @@ describe("verifyEmailOtpCore", () => {
     expect(result).toEqual({
       ok: false,
       status: 401,
-      message: EMAIL_OTP_MESSAGES.expired,
+      message: EMAIL_OTP_MESSAGES.invalidOrExpired,
     });
   });
 
-  it("maps a wrong code to the 'incorrect' message", async () => {
+  it("maps a merely mistyped code to that same message, not 'expired'", async () => {
     const verifyOtp = vi.fn(async () => ({
       data: { user: null },
-      error: { status: 403, message: "otp_disabled / invalid" },
+      error: realGoTrueRejection,
     }));
 
     const result = await verifyEmailOtpCore(fakeClient({ verifyOtp }), {
@@ -175,10 +189,18 @@ describe("verifyEmailOtpCore", () => {
       token: "000000",
     });
 
+    expect(result.ok).toBe(false);
     expect(result).toEqual({
       ok: false,
       status: 401,
-      message: EMAIL_OTP_MESSAGES.incorrect,
+      message: EMAIL_OTP_MESSAGES.invalidOrExpired,
     });
+    // The old copy blamed expiry outright and told the user to request a new
+    // code, which burns one of their three sends per 15 minutes for a typo.
+    // The message must still offer "incorrect" as the likelier explanation.
+    expect(result).not.toMatchObject({
+      message: "That code has expired. Request a new one.",
+    });
+    expect(EMAIL_OTP_MESSAGES.invalidOrExpired).toMatch(/incorrect/i);
   });
 });

@@ -142,17 +142,14 @@ export async function verifyEmailOtpCore(
       };
     }
 
-    // Supabase returns 401/403 for both a wrong code and an expired one and
-    // does not reliably distinguish them in `error.code`; "expired or
-    // invalid" is the honest, still-actionable message. The message never
-    // depends on whether the email is registered.
-    const expired = /expired/i.test(error?.message ?? "");
+    // Supabase returns the same 403 (`otp_expired`, "Token has expired or
+    // is invalid") for a wrong code and an expired one, so there is nothing
+    // to branch on — one message covers both. It never depends on whether
+    // the email is registered.
     return {
       ok: false,
       status: 401,
-      message: expired
-        ? EMAIL_OTP_MESSAGES.expired
-        : EMAIL_OTP_MESSAGES.incorrect,
+      message: EMAIL_OTP_MESSAGES.invalidOrExpired,
     };
   }
 
