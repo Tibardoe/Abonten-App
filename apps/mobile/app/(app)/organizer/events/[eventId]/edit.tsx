@@ -1,6 +1,7 @@
 import { TimeField, prettyTime } from "@/components/datetime/TimeField";
 import { DateRangeField } from "@/components/explore/DateRangeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
+import { FormSkeleton } from "@/components/skeletons";
 import { useEventEdit } from "@/features/events/useEventEdit";
 import { TIME_RE, prettyDate } from "@/lib/datetime";
 import { uuidv4 as makeId } from "@/lib/uuid";
@@ -14,21 +15,16 @@ import {
   Input,
   KeyboardAwareScrollView,
   ScreenError,
-  ScreenLoader,
   SegmentedTabs,
+  useToast,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  Switch,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, Switch, View } from "react-native";
 
 export default function EditEventScreen() {
+  const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const w = useEventEdit(eventId ?? "");
   const [mapOpen, setMapOpen] = useState(false);
@@ -46,7 +42,7 @@ export default function EditEventScreen() {
         />
       );
     }
-    return <ScreenLoader />;
+    return <FormSkeleton fields={6} />;
   }
 
   const flyerPreview = w.newFlyerUri
@@ -62,22 +58,26 @@ export default function EditEventScreen() {
     const res = await w.save();
     if (!res) return;
     if (res.status === 200) {
-      Alert.alert("Saved", "Your event has been updated.");
+      toast.success("Saved", { description: "Your event has been updated." });
       router.back();
     } else {
-      Alert.alert("Couldn't save", res.message ?? "Please try again.");
+      toast.error("Couldn't save", {
+        description: res.message ?? "Please try again.",
+      });
     }
   }
 
   async function onSaveTicketTypes() {
     const res = await w.saveTicketTypes();
     if (!res) return;
-    Alert.alert(
-      res.status === 200 ? "Saved" : "Couldn't save",
-      res.status === 200
-        ? "Ticket types updated."
-        : (res.message ?? "Please try again."),
-    );
+    if (res.status === 200) {
+      toast.success("Ticket types updated");
+    } else {
+      toast.error(res.message ?? "We couldn't save your ticket types.", {
+        description: "Your changes are still on screen — try again.",
+        action: { label: "Retry", onPress: onSaveTicketTypes },
+      });
+    }
   }
 
   return (

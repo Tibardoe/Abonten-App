@@ -18,6 +18,7 @@ import {
   Icon,
   Input,
   OtpInput,
+  useToast,
 } from "@abonten/ui-native";
 import { useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
@@ -44,6 +45,7 @@ function VerifiedTag({ verified }: { verified: boolean }) {
 }
 
 export default function Security() {
+  const toast = useToast();
   const { session, signOut } = useSession();
   const user = session?.user;
   const google = (user?.identities ?? []).some((i) => i.provider === "google");
@@ -84,13 +86,15 @@ export default function Security() {
     try {
       const res = await api.account.deleteAccount();
       if (res.status !== 200) {
-        Alert.alert("Couldn't delete", res.message ?? "Please try again.");
+        toast.error("Couldn't delete", {
+          description: res.message ?? "Please try again.",
+        });
         return;
       }
       await unregisterPushToken();
       await signOut();
     } catch {
-      Alert.alert("Network error", "Please try again.");
+      toast.error("Network error", { description: "Please try again." });
     } finally {
       setDeleteBusy(false);
     }

@@ -5,14 +5,15 @@ import { setPendingRedirect } from "@/lib/authRedirect";
 import { useNowTick } from "@/lib/useNowTick";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
-import { AppText, Button } from "@abonten/ui-native";
+import { AppText, Button, useToast } from "@abonten/ui-native";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 // Native echo of the web AttendingButton's RSVP path. One free ticket per
 // event, quantity fixed at 1 server-side.
 export function FreeRsvpCard({ event }: { event: EventDetail }) {
+  const toast = useToast();
   const router = useRouter();
   const pathname = usePathname();
   const { session } = useSession();
@@ -57,13 +58,14 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
     }
     if (res.status === 300) {
       setDone(true);
-      Alert.alert("You're in", "You already have a ticket for this event.");
+      toast.success("You're in", {
+        description: "You already have a ticket for this event.",
+      });
       return;
     }
-    Alert.alert(
-      "Couldn't RSVP",
-      res.message ?? "Please try again in a moment.",
-    );
+    toast.error("Couldn't RSVP", {
+      description: res.message ?? "Please try again in a moment.",
+    });
   }
 
   if (done) {

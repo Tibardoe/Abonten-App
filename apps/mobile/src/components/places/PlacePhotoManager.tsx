@@ -1,12 +1,20 @@
+import { UploadProgress } from "@/components/UploadProgress";
 import {
   useAddPlacePhoto,
   useRemovePlacePhoto,
   useReorderPlacePhotos,
   useSetPlaceCover,
 } from "@/features/organizer/useManagePlace";
+import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import type { PlacePhotoRow } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import { AppText, Button, Icon } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  EmptyState,
+  Icon,
+  useToast,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
@@ -26,10 +34,12 @@ export function PlacePhotoManager({
   photos: PlacePhotoRow[];
   currentCoverPublicId?: string | null;
 }) {
+  const toast = useToast();
   const addPhoto = useAddPlacePhoto(placeId);
   const reorder = useReorderPlacePhotos(placeId);
   const remove = useRemovePlacePhoto(placeId);
   const setCover = useSetPlaceCover(placeId);
+  const progress = useUploadProgress();
 
   // Local order for snappy ◀ ▶ moves; re-synced whenever the server list
   // identity changes (add / remove / reorder settling).
@@ -47,10 +57,9 @@ export function PlacePhotoManager({
   async function pickAndAdd() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to add gallery photos.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to add gallery photos.",
+      });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -60,17 +69,38 @@ export function PlacePhotoManager({
     });
     if (picked.canceled || !picked.assets?.length) return;
 
-    for (const asset of picked.assets) {
-      try {
-        const res = await addPhoto.mutateAsync(asset.uri);
-        if (res.status !== 200) {
-          Alert.alert("Couldn't add a photo", res.message);
-          break;
+    // Photo-by-photo, with a real bar: a gallery upload on a slow
+    // connection used to be a completely silent multi-minute wait.
+    const total = picked.assets.length;
+    let added = 0;
+    progress.start();
+    try {
+      for (const [i, asset] of picked.assets.entries()) {
+        try {
+          const res = await addPhoto.mutateAsync({
+            uri: asset.uri,
+            onProgress: (f) => progress.onProgress((i + f) / total),
+          });
+          if (res.status !== 200) {
+            toast.error(res.message ?? "We couldn't add that photo.", {
+              description:
+                added > 0
+                  ? `${added} of ${total} were added. Try the rest again.`
+                  : "Nothing was added. Please try again.",
+            });
+            return;
+          }
+          added += 1;
+        } catch {
+          toast.error("That upload didn't finish.", {
+            description: "Check your connection and try again.",
+          });
+          return;
         }
-      } catch {
-        Alert.alert("Upload failed", "Please try again.");
-        break;
       }
+      toast.success(added === 1 ? "Photo added" : `${added} photos added`);
+    } finally {
+      progress.reset();
     }
   }
 
@@ -86,7 +116,9 @@ export function PlacePhotoManager({
       {
         onError: () => {
           setOrder(photos);
-          Alert.alert("Couldn't reorder", "Please try again.");
+          toast.error("We couldn't save the new order.", {
+            description: "The gallery has been put back as it was.",
+          });
         },
       },
     );
@@ -104,11 +136,18 @@ export function PlacePhotoManager({
           onPress: () =>
             remove.mutate(photo.id, {
               onSuccess: (res) => {
-                if (res.status !== 200)
-                  Alert.alert("Couldn't remove", res.message);
+                if (res.status === 200) {
+                  toast.success("Photo removed");
+                  return;
+                }
+                toast.error(res.message ?? "We couldn't remove that photo.", {
+                  description: "It is still in your gallery. Try again.",
+                });
               },
               onError: () =>
-                Alert.alert("Couldn't remove", "Please try again."),
+                toast.error("We couldn't reach the server.", {
+                  description: "Check your connection and try again.",
+                }),
             }),
         },
       ],
@@ -118,24 +157,42 @@ export function PlacePhotoManager({
   function onSetCover(photo: PlacePhotoRow) {
     setCover.mutate(photo.id, {
       onSuccess: (res) => {
-        if (res.status !== 200) Alert.alert("Couldn't set cover", res.message);
+        if (res.status === 200) {
+          toast.success("Cover photo updated");
+          return;
+        }
+        toast.error(res.message ?? "We couldn't set that as the cover.", {
+          description: "Your cover is unchanged. Please try again.",
+        });
       },
-      onError: () => Alert.alert("Couldn't set cover", "Please try again."),
+      onError: () =>
+        toast.error("We couldn't reach the server.", {
+          description: "Check your connection and try again.",
+        }),
     });
   }
 
   return (
     <View className="gap-3">
       <Button
-        title={addPhoto.isPending ? "Uploading…" : "Add photos"}
+        title="Add photos"
+        loadingTitle="Uploading…"
         variant="outline"
         loading={addPhoto.isPending}
         disabled={busy}
         onPress={pickAndAdd}
       />
 
+      <UploadProgress state={progress} what="photos" />
+
       {order.length === 0 ? (
-        <AppText variant="meta">No gallery photos yet.</AppText>
+        <EmptyState
+          icon="images-outline"
+          title="No gallery photos yet"
+          description="Photos of the space are what make a listing worth tapping. Add a few and they show on the place page."
+          actionLabel="Add photos"
+          onAction={pickAndAdd}
+        />
       ) : (
         <View className="flex-row flex-wrap gap-3">
           {order.map((photo, index) => {

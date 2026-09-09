@@ -1,5 +1,6 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { Icon } from "./Icon";
+import { PressableScale } from "./PressableScale";
 import { AppText } from "./Typography";
 
 // The selectable pill used everywhere for quick filters, category chips,
@@ -11,6 +12,11 @@ import { AppText } from "./Typography";
 // a solid primary fill when selected. `showCheck` adds a leading tick on the
 // selected state — use it in multi-/single-select filter groups so which
 // chips are on is unmistakable at a glance.
+//
+// Selecting a chip is a state change the user chose, so it earns a selection
+// haptic and a press dip — that is what makes a filter row feel like
+// switches rather than links. Both are skipped under reduce-motion / on a
+// device with no taptic engine.
 
 export type ChipProps = {
   label: string;
@@ -57,14 +63,16 @@ export function Chip({
     return <View className={box}>{body}</View>;
   }
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
+      haptic
+      activeScale={0.95}
       className={`${box} active:opacity-80`}
     >
       {body}
-    </Pressable>
+    </PressableScale>
   );
 }
 

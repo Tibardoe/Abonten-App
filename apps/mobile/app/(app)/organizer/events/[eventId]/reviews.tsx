@@ -13,13 +13,15 @@ import {
   Icon,
   Input,
   ListFooter,
+  Refresher,
   ScreenError,
   Spinner,
   Stars,
+  useToast,
 } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 function ReviewCard({
   review,
@@ -28,6 +30,7 @@ function ReviewCard({
   review: ManageEventReview;
   eventId: string;
 }) {
+  const toast = useToast();
   const reply = useRespondToEventReview(eventId);
   const remove = useDeleteEventReviewResponse(eventId);
   const [open, setOpen] = useState(false);
@@ -53,10 +56,9 @@ function ReviewCard({
           setText("");
         },
         onError: (e) =>
-          Alert.alert(
-            "Couldn't save reply",
-            e instanceof Error ? e.message : "Please try again.",
-          ),
+          toast.error("Couldn't save reply", {
+            description: e instanceof Error ? e.message : "Please try again.",
+          }),
       },
     );
   }
@@ -65,10 +67,9 @@ function ReviewCard({
     remove.mutate(review.id, {
       onSuccess: () => setConfirmingDelete(false),
       onError: (e) =>
-        Alert.alert(
-          "Couldn't remove reply",
-          e instanceof Error ? e.message : "Please try again.",
-        ),
+        toast.error("Couldn't remove reply", {
+          description: e instanceof Error ? e.message : "Please try again.",
+        }),
     });
   }
 
@@ -251,7 +252,7 @@ export default function ManageEventReviewsScreen() {
         renderItem={({ item }) => <ReviewCard review={item} eventId={id} />}
         contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
         refreshControl={
-          <RefreshControl
+          <Refresher
             refreshing={q.isRefetching && !q.isFetchingNextPage}
             onRefresh={() => q.refetch()}
           />

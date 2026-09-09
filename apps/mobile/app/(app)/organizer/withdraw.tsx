@@ -1,3 +1,4 @@
+import { FormSkeleton } from "@/components/skeletons";
 import { useOrganizerFinance } from "@/features/organizer/useOrganizer";
 import {
   usePayoutAccounts,
@@ -11,7 +12,6 @@ import {
   KeyboardAwareScrollView,
   Overline,
   ScreenError,
-  ScreenLoader,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Link, useRouter } from "expo-router";
@@ -104,7 +104,7 @@ export default function WithdrawScreen() {
     );
   }
 
-  if (loading) return <ScreenLoader />;
+  if (loading) return <FormSkeleton fields={3} />;
 
   if (loadFailed) {
     return (

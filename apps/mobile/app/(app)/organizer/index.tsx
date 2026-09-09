@@ -16,10 +16,11 @@ import {
   Icon,
   type IoniconName,
   Overline,
+  Refresher,
 } from "@abonten/ui-native";
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 
 const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
   { key: "today", label: "Today" },
@@ -198,7 +199,7 @@ export default function OrganizerDashboard() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 p-4 pb-12"
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={q.isRefetching || widgetsQuery.isRefetching}
           onRefresh={() => {
             q.refetch();

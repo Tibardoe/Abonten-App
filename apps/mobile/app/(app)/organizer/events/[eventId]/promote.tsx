@@ -5,16 +5,10 @@ import {
   usePromoteEvent,
 } from "@/features/organizer/useEventPromotion";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText } from "@abonten/ui-native";
+import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 type Reserved = {
   checkoutId: string;
@@ -24,6 +18,7 @@ type Reserved = {
 };
 
 export default function PromoteEventScreen() {
+  const toast = useToast();
   const { eventId } = useLocalSearchParams<{ eventId: string }>();
   const id = eventId ?? "";
   const q = useEventPromotionContext(id);
@@ -78,7 +73,9 @@ export default function PromoteEventScreen() {
       tierId: selectedTierId,
     });
     if (res.status !== 200) {
-      Alert.alert("Couldn't start", res.message ?? "Please try again.");
+      toast.error("Couldn't start", {
+        description: res.message ?? "Please try again.",
+      });
       return;
     }
     setReserved(res.data);

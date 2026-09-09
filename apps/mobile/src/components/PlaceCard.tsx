@@ -3,7 +3,13 @@ import { CardImageScrim } from "@/components/cards/CardImageScrim";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { derivePlaceCardOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import type { PlaceType } from "@abonten/types/placeType";
-import { AppText, Icon, Skeleton, Stars } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  PressableScale,
+  Skeleton,
+  Stars,
+} from "@abonten/ui-native";
 import { shadow } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -60,8 +66,9 @@ export function PlaceCard({
   const hasDistance = typeof place.distance_km === "number";
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
+      activeScale={0.98}
       accessibilityLabel={place.name}
       className="overflow-hidden rounded-2xl border border-border bg-card active:opacity-95"
       style={shadow.card}
@@ -169,7 +176,7 @@ export function PlaceCard({
           </View>
         ) : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

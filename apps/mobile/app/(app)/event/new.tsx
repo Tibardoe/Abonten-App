@@ -1,4 +1,6 @@
 import { StepDots } from "@/components/StepDots";
+import { StepTransition } from "@/components/StepTransition";
+import { UploadProgress } from "@/components/UploadProgress";
 import { AppHeader } from "@/components/app/AppHeader";
 import { EventWizardBasics } from "@/components/events/EventWizardBasics";
 import { EventWizardFlyer } from "@/components/events/EventWizardFlyer";
@@ -7,6 +9,7 @@ import { EventWizardPromos } from "@/components/events/EventWizardPromos";
 import { EventWizardReview } from "@/components/events/EventWizardReview";
 import { EventWizardSchedule } from "@/components/events/EventWizardSchedule";
 import { EventWizardTickets } from "@/components/events/EventWizardTickets";
+import { FormSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
 import {
@@ -14,9 +17,10 @@ import {
   Hero,
   KeyboardAwareScrollView,
   Overline,
+  useToast,
 } from "@abonten/ui-native";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, Alert, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 // Native echo of the web EventUploadModal / useEventUploadForm — a 7-step
 // wizard that publishes an event via useEventCreate. With `?draftId=`, it
@@ -54,6 +58,7 @@ const BASICS_STEP = 1;
 export default function CreateEventScreen() {
   const router = useRouter();
   const { draftId } = useLocalSearchParams<{ draftId?: string }>();
+  const toast = useToast();
   const w = useEventWizard(draftId);
   const draftsList = useEventDrafts();
   const draftCount =
@@ -64,19 +69,20 @@ export default function CreateEventScreen() {
     if (!res) return;
 
     if (res.status === 200 && "eventId" in res) {
-      Alert.alert("Event published", "Your event is now live.", [
-        {
-          text: "View it",
-          onPress: () => router.replace(`/(app)/event/${res.eventId}`),
-        },
-      ]);
+      // Go straight to the published event — the confirmation rides along as
+      // a toast rather than an alert the organiser has to dismiss before
+      // they can see what they just made.
+      router.replace(`/(app)/event/${res.eventId}`);
+      toast.success("Event published", {
+        description: "It is live and discoverable now.",
+      });
       return;
     }
 
-    Alert.alert(
-      "Couldn't publish",
-      res.message ?? "Something went wrong. Please try again.",
-    );
+    toast.error(res.message ?? "We couldn't publish your event.", {
+      description: "Everything you entered is still here. Try again.",
+      action: { label: "Retry", onPress: onPublish },
+    });
   }
 
   function goBack() {
@@ -100,9 +106,14 @@ export default function CreateEventScreen() {
   async function onSaveDraft() {
     const res = await w.saveDraft();
     if (res.status === 200) {
-      Alert.alert("Draft saved", "Pick it back up any time from Event drafts.");
+      toast.success("Draft saved", {
+        description: "Pick it back up any time from Event drafts.",
+      });
     } else {
-      Alert.alert("Couldn't save draft", res.message ?? "Please try again.");
+      toast.error(res.message ?? "We couldn't save your draft.", {
+        description: "Nothing was lost — try again.",
+        action: { label: "Retry", onPress: onSaveDraft },
+      });
     }
   }
 
@@ -112,8 +123,15 @@ export default function CreateEventScreen() {
       title="Create Event"
       onBack={goBack}
       onNext={goNext}
-      nextLabel={w.step === LAST_STEP ? "Publish" : "Next"}
-      nextDisabled={w.isSubmitting || (w.step !== BASICS_STEP && !w.canAdvance)}
+      nextLabel={
+        w.step !== LAST_STEP
+          ? "Next"
+          : w.isSubmitting
+            ? "Publishing…"
+            : "Publish"
+      }
+      nextLoading={w.isSubmitting}
+      nextDisabled={w.step !== BASICS_STEP && !w.canAdvance}
     />
   );
 
@@ -121,9 +139,7 @@ export default function CreateEventScreen() {
     return (
       <View className="flex-1 bg-background">
         {header}
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator />
-        </View>
+        <FormSkeleton fields={4} />
       </View>
     );
   }
@@ -161,6 +177,10 @@ export default function CreateEventScreen() {
           </View>
         </View>
 
+        {/* Real byte progress for the flyer upload — a publish over a slow
+            connection is otherwise indistinguishable from a frozen app. */}
+        <UploadProgress state={w.uploadProgress} what="flyer" />
+
         {w.draftLoadError ? (
           <AppText variant="small" tone="error">
             {w.draftLoadError}
@@ -180,13 +200,15 @@ export default function CreateEventScreen() {
           </Link>
         ) : null}
 
-        {w.step === 0 ? <EventWizardFlyer w={w} /> : null}
-        {w.step === 1 ? <EventWizardBasics w={w} /> : null}
-        {w.step === 2 ? <EventWizardSchedule w={w} /> : null}
-        {w.step === 3 ? <EventWizardLocation w={w} /> : null}
-        {w.step === 4 ? <EventWizardTickets w={w} /> : null}
-        {w.step === 5 ? <EventWizardPromos w={w} /> : null}
-        {w.step === 6 ? <EventWizardReview w={w} /> : null}
+        <StepTransition step={w.step}>
+          {w.step === 0 ? <EventWizardFlyer w={w} /> : null}
+          {w.step === 1 ? <EventWizardBasics w={w} /> : null}
+          {w.step === 2 ? <EventWizardSchedule w={w} /> : null}
+          {w.step === 3 ? <EventWizardLocation w={w} /> : null}
+          {w.step === 4 ? <EventWizardTickets w={w} /> : null}
+          {w.step === 5 ? <EventWizardPromos w={w} /> : null}
+          {w.step === 6 ? <EventWizardReview w={w} /> : null}
+        </StepTransition>
       </KeyboardAwareScrollView>
     </View>
   );

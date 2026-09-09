@@ -26,10 +26,10 @@ import {
 import { usePlaceCategories } from "@/features/discovery/usePlaceCategories";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
-import { EmptyState } from "@abonten/ui-native";
+import { EmptyState, Refresher } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 // The "See all" window for one curated Explore slider. It re-uses the exact
 // same curated hook the Explore screen's strip is derived from — one bounded
@@ -140,7 +140,7 @@ export default function ExploreSectionScreen() {
           renderItem={({ item }) => <EventCard event={item} />}
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
           refreshControl={
-            <RefreshControl
+            <Refresher
               refreshing={query.isRefetching}
               onRefresh={() => query.refetch()}
             />
@@ -170,7 +170,7 @@ export default function ExploreSectionScreen() {
           renderItem={({ item }) => <PlaceCard place={item} />}
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
           refreshControl={
-            <RefreshControl
+            <Refresher
               refreshing={query.isRefetching}
               onRefresh={() => query.refetch()}
             />

@@ -4,10 +4,16 @@ import { PlaceListSkeleton } from "@/components/skeletons";
 import { useDeviceLocation } from "@/features/discovery/useDeviceLocation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import type { PlaceType } from "@abonten/types/placeType";
-import { Button, Caption, EmptyState, Spinner } from "@abonten/ui-native";
+import {
+  Button,
+  Caption,
+  EmptyState,
+  Refresher,
+  Spinner,
+} from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 export default function Places() {
   const router = useRouter();
@@ -60,7 +66,7 @@ export default function Places() {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl
+          <Refresher
             refreshing={q.isRefetching && !q.isFetchingNextPage}
             onRefresh={() => q.refetch()}
           />

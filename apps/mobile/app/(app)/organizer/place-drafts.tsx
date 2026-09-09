@@ -5,7 +5,7 @@ import {
 import type { PlaceDraftListItem } from "@abonten/api-client";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getRelativeTime } from "@abonten/core/dateFormatter";
-import { AppText, Icon } from "@abonten/ui-native";
+import { AppText, Icon, Refresher, useToast } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import {
@@ -13,7 +13,6 @@ import {
   Alert,
   FlatList,
   Pressable,
-  RefreshControl,
   View,
 } from "react-native";
 
@@ -22,6 +21,7 @@ import {
 // deletes the draft (and its Cloudinary cover). Mirrors event-drafts.tsx.
 
 function DraftRow({ draft }: { draft: PlaceDraftListItem }) {
+  const toast = useToast();
   const router = useRouter();
   const del = useDeletePlaceDraft();
 
@@ -34,7 +34,9 @@ function DraftRow({ draft }: { draft: PlaceDraftListItem }) {
         onPress: () =>
           del.mutate(draft.id, {
             onError: () =>
-              Alert.alert("Couldn't delete", "Please try again in a moment."),
+              toast.error("Couldn't delete", {
+                description: "Please try again in a moment.",
+              }),
           }),
       },
     ]);
@@ -101,10 +103,7 @@ export default function PlaceDraftsScreen() {
         </AppText>
       }
       refreshControl={
-        <RefreshControl
-          refreshing={q.isRefetching}
-          onRefresh={() => q.refetch()}
-        />
+        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
       }
       ListEmptyComponent={
         q.isLoading ? (

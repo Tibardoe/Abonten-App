@@ -6,7 +6,7 @@ import {
   useDeleteHighlightGroup,
   useHighlights,
 } from "@/features/profile/useHighlights";
-import { Icon } from "@abonten/ui-native";
+import { Icon, useToast } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -33,6 +33,7 @@ export function HighlightsRow({
   avatarPublicId?: string | null;
   avatarVersion?: number | string | null;
 }) {
+  const toast = useToast();
   const router = useRouter();
   const { session } = useSession();
   const { data: groups } = useHighlights(userId);
@@ -53,10 +54,10 @@ export function HighlightsRow({
         onPress: () =>
           deleteGroup.mutate(groupId, {
             onError: (e) =>
-              Alert.alert(
-                "Couldn't delete",
-                e instanceof Error ? e.message : "Please try again.",
-              ),
+              toast.error("Couldn't delete", {
+                description:
+                  e instanceof Error ? e.message : "Please try again.",
+              }),
           }),
       },
     ]);

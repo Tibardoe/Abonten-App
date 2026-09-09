@@ -17,6 +17,7 @@ import {
   KeyboardAwareScrollView,
   Sheet,
   SheetOption,
+  useToast,
 } from "@abonten/ui-native";
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, View } from "react-native";
@@ -34,6 +35,7 @@ function accountTitle(a: PayoutAccountRow): string {
 }
 
 export default function PayoutAccountsScreen() {
+  const toast = useToast();
   const { data, isLoading, isError, refetch } = usePayoutAccounts();
   const networks = useMomoNetworks();
   const add = useAddPayoutAccount();
@@ -130,9 +132,13 @@ export default function PayoutAccountsScreen() {
         style: "destructive",
         onPress: async () => {
           const res = await remove.mutateAsync(id);
-          if (res.status !== 200) {
-            Alert.alert("Couldn't remove", res.message ?? "Please try again.");
+          if (res.status === 200) {
+            toast.success("Payout account removed");
+            return;
           }
+          toast.error(res.message ?? "We couldn't remove that account.", {
+            description: "It is still on your profile. Please try again.",
+          });
         },
       },
     ]);

@@ -1,12 +1,7 @@
+import { RowListSkeleton } from "@/components/skeletons";
 import { useEventsAwaitingReview } from "@/features/reviews/useEventReviews";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
-import {
-  AppText,
-  Button,
-  Card,
-  EmptyState,
-  ScreenLoader,
-} from "@abonten/ui-native";
+import { AppText, Button, Card, EmptyState } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -25,7 +20,7 @@ export function EventsToReviewList() {
     title: string;
   } | null>(null);
 
-  if (isLoading) return <ScreenLoader />;
+  if (isLoading) return <RowListSkeleton count={4} />;
 
   const events = data ?? [];
   if (events.length === 0) {

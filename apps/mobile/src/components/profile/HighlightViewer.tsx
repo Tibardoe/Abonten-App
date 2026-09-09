@@ -5,7 +5,7 @@ import {
   playbackSourceFor,
 } from "@abonten/core/highlightPlayback";
 import type { HighlightGroup } from "@abonten/types/highlightType";
-import { AppText, Avatar, Icon } from "@abonten/ui-native";
+import { AppText, Avatar, Icon, useToast } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -82,6 +82,7 @@ export function HighlightViewer({
   avatarVersion,
   onReport,
 }: Props) {
+  const toast = useToast();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
@@ -412,10 +413,10 @@ export function HighlightViewer({
                   );
               },
               onError: (err) =>
-                Alert.alert(
-                  "Couldn't delete",
-                  err instanceof Error ? err.message : "Please try again.",
-                ),
+                toast.error("Couldn't delete", {
+                  description:
+                    err instanceof Error ? err.message : "Please try again.",
+                }),
             }),
         },
       ],

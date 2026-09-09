@@ -1,3 +1,4 @@
+import { DetailRowsSkeleton } from "@/components/skeletons";
 import { useTransactionDetail } from "@/features/transactions/useTransactionDetail";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
 import { getRefundStatusLabel } from "@abonten/core/refundStatus";
@@ -5,8 +6,8 @@ import type { TransactionKind } from "@abonten/types/transactions";
 import {
   AppText,
   Icon,
+  Refresher,
   ScreenError,
-  ScreenLoader,
   StatusPill,
   resolveStatus,
 } from "@abonten/ui-native";
@@ -53,13 +54,11 @@ export default function TransactionDetailScreen() {
     kind === "ticket" || kind === "subscription"
       ? (kind as TransactionKind)
       : undefined;
-  const { data, isLoading, isError, refetch } = useTransactionDetail(
-    validKind,
-    id,
-  );
+  const { data, isLoading, isError, isRefetching, refetch } =
+    useTransactionDetail(validKind, id);
 
   if (!validKind) return <ScreenError message="Unknown transaction type." />;
-  if (isLoading) return <ScreenLoader />;
+  if (isLoading) return <DetailRowsSkeleton />;
   if (isError || data === null || data === undefined) {
     return (
       <ScreenError
@@ -106,6 +105,9 @@ export default function TransactionDetailScreen() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-4 p-4 pb-16"
+      refreshControl={
+        <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
+      }
     >
       <View className="flex-row items-center justify-between rounded-xl bg-muted p-4">
         <AppText variant="bodyStrong" className="text-muted-foreground">

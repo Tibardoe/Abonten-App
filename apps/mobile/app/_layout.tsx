@@ -16,6 +16,7 @@ import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
 import { Sentry, initSentry, navigationIntegration } from "@/lib/sentry";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
+import { ToastProvider } from "@abonten/ui-native";
 import { I18nProvider } from "@abonten/ui-native/i18n";
 import { ThemeProvider } from "@abonten/ui-native/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -150,8 +151,14 @@ function RootLayout() {
           <ThemeProvider>
             <I18nProvider>
               <SessionProvider>
-                <StatusBar style="auto" />
-                <RootNavigator />
+                {/* ToastProvider wraps the navigator so a toast raised on one
+                    screen survives the navigation the same action triggers
+                    (publish -> replace to the new event, and the "Event
+                    published" confirmation still lands). */}
+                <ToastProvider>
+                  <StatusBar style="auto" />
+                  <RootNavigator />
+                </ToastProvider>
               </SessionProvider>
             </I18nProvider>
           </ThemeProvider>

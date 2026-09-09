@@ -5,7 +5,7 @@ import {
 } from "@/features/organizer/useEventPromoCodes";
 import { combineDateAndTime, hhmm, isoDate } from "@/lib/datetime";
 import type { EventPromoCode } from "@abonten/api-client";
-import { AppText, Button, Field, Input } from "@abonten/ui-native";
+import { AppText, Button, Field, Input, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import {
@@ -43,6 +43,7 @@ function PromoCodeCard({
   code: EventPromoCode;
   eventId: string;
 }) {
+  const toast = useToast();
   const update = useUpdatePromoCode(eventId);
   const del = useDeletePromoCode(eventId);
   const [editing, setEditing] = useState(false);
@@ -56,26 +57,23 @@ function PromoCodeCard({
   const save = () => {
     const discount = Number(s.discountPercentage);
     if (!Number.isFinite(discount) || discount <= 0 || discount > 100) {
-      Alert.alert(
-        "Check the discount",
-        "Enter a percentage between 1 and 100.",
-      );
+      toast.error("Check the discount", {
+        description: "Enter a percentage between 1 and 100.",
+      });
       return;
     }
     const maxUses = s.maxUses.trim() === "" ? null : Number(s.maxUses);
     if (maxUses != null && (!Number.isInteger(maxUses) || maxUses < 1)) {
-      Alert.alert(
-        "Check the usage cap",
-        "Leave it blank for unlimited, or enter a whole number.",
-      );
+      toast.error("Check the usage cap", {
+        description: "Leave it blank for unlimited, or enter a whole number.",
+      });
       return;
     }
     const expiry = combineDateAndTime(s.expiryDate, s.expiryTime);
     if (!expiry) {
-      Alert.alert(
-        "Check the expiry",
-        "Enter the date as YYYY-MM-DD and the time as HH:MM.",
-      );
+      toast.error("Check the expiry", {
+        description: "Enter the date as YYYY-MM-DD and the time as HH:MM.",
+      });
       return;
     }
     update.mutate(
@@ -91,11 +89,13 @@ function PromoCodeCard({
           if (res.status === 200) {
             setEditing(false);
           } else {
-            Alert.alert("Couldn't update", res.message);
+            toast.error("Couldn't update", { description: res.message });
           }
         },
         onError: () =>
-          Alert.alert("Couldn't update", "Please try again in a moment."),
+          toast.error("Couldn't update", {
+            description: "Please try again in a moment.",
+          }),
       },
     );
   };
@@ -113,16 +113,20 @@ function PromoCodeCard({
             del.mutate(code.id, {
               onSuccess: (res) => {
                 if (res.status === 200) {
-                  Alert.alert(
-                    res.deactivatedOnly ? "Deactivated" : "Deleted",
-                    res.message,
+                  toast.success(
+                    res.deactivatedOnly
+                      ? "Promo code deactivated"
+                      : "Promo code deleted",
+                    { description: res.message },
                   );
                 } else {
-                  Alert.alert("Couldn't delete", res.message);
+                  toast.error("Couldn't delete", { description: res.message });
                 }
               },
               onError: () =>
-                Alert.alert("Couldn't delete", "Please try again in a moment."),
+                toast.error("Couldn't delete", {
+                  description: "Please try again in a moment.",
+                }),
             }),
         },
       ],

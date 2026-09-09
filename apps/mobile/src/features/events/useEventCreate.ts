@@ -20,6 +20,10 @@ export type CreateEventInput = Omit<
   flyerUri?: string | null;
   flyerPublicId?: string;
   flyerVersion?: string;
+  /** Real byte progress of the flyer upload (0..1), for the screen's bar. */
+  onUploadProgress?: (fraction: number) => void;
+  /** Bytes are in; what remains is the server-side create call. */
+  onUploadComplete?: () => void;
 };
 
 export function useEventCreate() {
@@ -30,15 +34,20 @@ export function useEventCreate() {
       flyerUri,
       flyerPublicId,
       flyerVersion,
+      onUploadProgress,
+      onUploadComplete,
       ...rest
     }: CreateEventInput) => {
       let publicId = flyerPublicId;
       let version = flyerVersion;
       if (flyerUri) {
-        const up = await uploadToCloudinary(flyerUri, "event_flyer");
+        const up = await uploadToCloudinary(flyerUri, "event_flyer", {
+          onProgress: onUploadProgress,
+        });
         publicId = up.publicId;
         version = String(up.version);
       }
+      onUploadComplete?.();
       if (!publicId || !version) {
         throw new Error("A flyer is required");
       }

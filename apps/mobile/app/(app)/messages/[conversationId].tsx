@@ -52,10 +52,12 @@ import {
   Button,
   Icon,
   type IoniconName,
+  Refresher,
   Sheet,
   SheetOption,
   Spinner,
   useKeyboardVisible,
+  useToast,
 } from "@abonten/ui-native";
 import { family, useThemeColors } from "@abonten/ui-native/theme";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
@@ -65,7 +67,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  RefreshControl,
   TextInput,
   View,
 } from "react-native";
@@ -372,7 +373,7 @@ export default function ConversationScreen() {
       {
         onSettled: (res) => {
           if (res && res.status !== 200) {
-            Alert.alert("Couldn't edit", res.message ?? "Please try again.");
+            setToast(res.message ?? "Couldn't edit that message");
           }
           setEditing(null);
         },
@@ -390,10 +391,7 @@ export default function ConversationScreen() {
           deleteMsg.mutate(m.id, {
             onSettled: (res) => {
               if (res && res.status !== 200) {
-                Alert.alert(
-                  "Couldn't delete",
-                  res.message ?? "Please try again.",
-                );
+                setToast(res.message ?? "Couldn't delete that message");
               }
             },
           }),
@@ -474,7 +472,7 @@ export default function ConversationScreen() {
                 }, 120);
               }}
               refreshControl={
-                <RefreshControl
+                <Refresher
                   refreshing={
                     messagesQ.isRefetching && !messagesQ.isFetchingNextPage
                   }

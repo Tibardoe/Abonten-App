@@ -9,10 +9,10 @@ import {
   useNotifications,
 } from "@/features/notifications/useNotifications";
 import type { NotificationType } from "@abonten/types/notificationType";
-import { AppText, EmptyState, ListFooter } from "@abonten/ui-native";
+import { AppText, EmptyState, ListFooter, Refresher } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
-import { Pressable, RefreshControl, SectionList, View } from "react-native";
+import { Pressable, SectionList, View } from "react-native";
 
 type Section = { title: string; data: NotificationType[] };
 
@@ -112,7 +112,7 @@ export default function Notifications() {
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
           refreshControl={
-            <RefreshControl
+            <Refresher
               refreshing={q.isRefetching && !q.isFetchingNextPage}
               onRefresh={() => q.refetch()}
             />
@@ -127,9 +127,11 @@ export default function Notifications() {
               }
               description={
                 q.isError
-                  ? "Pull down to try again."
-                  : "Updates about your tickets and events show up here."
+                  ? "We couldn't reach the server. Check your connection."
+                  : "Updates about your tickets, events and messages show up here."
               }
+              actionLabel={q.isError ? "Try again" : undefined}
+              onAction={q.isError ? () => q.refetch() : undefined}
             />
           }
           ListFooterComponent={

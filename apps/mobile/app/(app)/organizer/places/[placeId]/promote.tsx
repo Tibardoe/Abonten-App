@@ -5,16 +5,10 @@ import {
   usePromotePlace,
 } from "@/features/organizer/usePlacePromotion";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
-import { AppText } from "@abonten/ui-native";
+import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 // Per-place Promotion tab — the native mirror of the web
 // ManagePlacePromotionSection. Tiers + current promotion, then a reserve
@@ -29,6 +23,7 @@ type Reserved = {
 };
 
 export default function PromotePlaceScreen() {
+  const toast = useToast();
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
   const q = usePlacePromotionContext(id);
@@ -74,7 +69,9 @@ export default function PromotePlaceScreen() {
       tierId: selectedTierId,
     });
     if (res.status !== 200) {
-      Alert.alert("Couldn't start", res.message ?? "Please try again.");
+      toast.error("Couldn't start", {
+        description: res.message ?? "Please try again.",
+      });
       return;
     }
     setReserved(res.data);

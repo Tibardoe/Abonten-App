@@ -9,16 +9,10 @@ import type {
   OrganizerDashboardPeriod,
 } from "@abonten/api-client";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
-import { AppText, Chip, Overline } from "@abonten/ui-native";
+import { AppText, Chip, Overline, Refresher } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
 
 const PERIODS: { key: OrganizerDashboardPeriod; label: string }[] = [
   { key: "today", label: "Today" },
@@ -432,10 +426,7 @@ export default function EventInsightsScreen() {
       className="flex-1 bg-background"
       contentContainerClassName="gap-6 p-4 pb-16"
       refreshControl={
-        <RefreshControl
-          refreshing={q.isRefetching}
-          onRefresh={() => q.refetch()}
-        />
+        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
       }
     >
       <View>

@@ -6,7 +6,8 @@ import {
 import { uuidv4 } from "@/lib/uuid";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useMemo, useState } from "react";
-import { Alert } from "react-native";
+
+import { useToast } from "@abonten/ui-native";
 
 // Single source of truth for the highlight compose/edit flow's media
 // selection — the native echo of the web `useMediaSelection` hook. Items
@@ -35,6 +36,7 @@ const MB = 1024 * 1024;
 const MAX_COMPOSER_ITEMS = 10;
 
 export function useHighlightComposer() {
+  const toast = useToast();
   const [items, setItems] = useState<EditableMedia[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -44,10 +46,9 @@ export function useHighlightComposer() {
   const pickFromLibrary = useCallback(async (): Promise<boolean> => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to add highlights.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to add highlights.",
+      });
       return false;
     }
 
@@ -56,10 +57,9 @@ export function useHighlightComposer() {
     // never replace it. Only offer the slots that are still free.
     const remaining = MAX_COMPOSER_ITEMS - items.length;
     if (remaining <= 0) {
-      Alert.alert(
-        "Highlight is full",
-        `A highlight can hold up to ${MAX_COMPOSER_ITEMS} photos and videos.`,
-      );
+      toast.error("Highlight is full", {
+        description: `A highlight can hold up to ${MAX_COMPOSER_ITEMS} photos and videos.`,
+      });
       return false;
     }
 
@@ -118,7 +118,9 @@ export function useHighlightComposer() {
     }
 
     if (skipped.length > 0) {
-      Alert.alert("Some items were skipped", [...new Set(skipped)].join("\n"));
+      toast.error("Some items were skipped", {
+        description: [...new Set(skipped)].join("\n"),
+      });
     }
     if (accepted.length === 0) return false;
 
@@ -126,7 +128,7 @@ export function useHighlightComposer() {
     // Jump to the first newly-added item so the pick visibly "took".
     setActiveId(accepted[0].id);
     return true;
-  }, [items]);
+  }, [items, toast]);
 
   const select = useCallback((id: string) => setActiveId(id), []);
 

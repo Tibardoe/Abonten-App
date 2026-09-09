@@ -9,7 +9,7 @@ import { getEventStatus } from "@abonten/core/eventStatus";
 import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
-import { AppText, Icon, Skeleton } from "@abonten/ui-native";
+import { AppText, Icon, PressableScale, Skeleton } from "@abonten/ui-native";
 import { shadow } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -124,8 +124,9 @@ export function EventCard({ event }: { event: UserPostType }) {
   const venue = event.address?.full_address || "Location not specified";
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
+      activeScale={0.98}
       accessibilityLabel={event.title}
       className="overflow-hidden rounded-2xl border border-border bg-card active:opacity-95"
       style={shadow.card}
@@ -232,7 +233,7 @@ export function EventCard({ event }: { event: UserPostType }) {
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
       />
-    </Pressable>
+    </PressableScale>
   );
 }
 

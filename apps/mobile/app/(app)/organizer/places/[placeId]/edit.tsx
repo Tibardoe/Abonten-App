@@ -1,6 +1,7 @@
 import { TimeField } from "@/components/datetime/TimeField";
 import { MapPickerSheet } from "@/components/explore/MapPickerSheet";
 import { PlacePhotoManager } from "@/components/places/PlacePhotoManager";
+import { FormSkeleton } from "@/components/skeletons";
 import {
   useAddPlaceService,
   useRemovePlaceService,
@@ -25,7 +26,7 @@ import {
   Input,
   KeyboardAwareScrollView,
   ScreenError,
-  ScreenLoader,
+  useToast,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
@@ -152,6 +153,7 @@ function ServicesSection({
   placeId: string;
   services: PlaceServiceRow[];
 }) {
+  const toast = useToast();
   const add = useAddPlaceService(placeId);
   const update = useUpdatePlaceService(placeId);
   const remove = useRemovePlaceService(placeId);
@@ -184,7 +186,9 @@ function ServicesSection({
 
   const submitAdd = () => {
     if (form.price.trim() !== "" && priceValue() === null) {
-      Alert.alert("Check the price", "Enter a number or leave it blank.");
+      toast.error("Check the price", {
+        description: "Enter a number or leave it blank.",
+      });
       return;
     }
     add.mutate(
@@ -198,16 +202,19 @@ function ServicesSection({
       {
         onSuccess: (res) => {
           if (res.status === 200) setAdding(false);
-          else Alert.alert("Couldn't add", res.message);
+          else toast.error("Couldn't add", { description: res.message });
         },
-        onError: () => Alert.alert("Couldn't add", "Please try again."),
+        onError: () =>
+          toast.error("Couldn't add", { description: "Please try again." }),
       },
     );
   };
 
   const submitEdit = (serviceId: string) => {
     if (form.price.trim() !== "" && priceValue() === null) {
-      Alert.alert("Check the price", "Enter a number or leave it blank.");
+      toast.error("Check the price", {
+        description: "Enter a number or leave it blank.",
+      });
       return;
     }
     update.mutate(
@@ -224,9 +231,10 @@ function ServicesSection({
       {
         onSuccess: (res) => {
           if (res.status === 200) setEditingId(null);
-          else Alert.alert("Couldn't save", res.message);
+          else toast.error("Couldn't save", { description: res.message });
         },
-        onError: () => Alert.alert("Couldn't save", "Please try again."),
+        onError: () =>
+          toast.error("Couldn't save", { description: "Please try again." }),
       },
     );
   };
@@ -241,9 +249,12 @@ function ServicesSection({
           remove.mutate(s.id, {
             onSuccess: (res) => {
               if (res.status !== 200)
-                Alert.alert("Couldn't remove", res.message);
+                toast.error("Couldn't remove", { description: res.message });
             },
-            onError: () => Alert.alert("Couldn't remove", "Please try again."),
+            onError: () =>
+              toast.error("Couldn't remove", {
+                description: "Please try again.",
+              }),
           }),
       },
     ]);
@@ -335,6 +346,7 @@ function ServicesSection({
 }
 
 export default function EditPlaceScreen() {
+  const toast = useToast();
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const w = usePlaceEdit(placeId ?? "");
   const [mapOpen, setMapOpen] = useState(false);
@@ -352,7 +364,7 @@ export default function EditPlaceScreen() {
         />
       );
     }
-    return <ScreenLoader />;
+    return <FormSkeleton fields={6} />;
   }
 
   const coverPreview = w.newCoverUri
@@ -367,24 +379,28 @@ export default function EditPlaceScreen() {
   async function onSaveDetails() {
     const res = await w.saveDetails();
     if (!res) return;
-    Alert.alert(
-      res.status === 200 ? "Saved" : "Couldn't save",
-      res.status === 200
-        ? "Your place has been updated."
-        : (res.message ?? "Please try again."),
-    );
+    if (res.status === 200) {
+      toast.success("Place updated");
+    } else {
+      toast.error(res.message ?? "We couldn't save your changes.", {
+        description: "Your edits are still on screen — try again.",
+        action: { label: "Retry", onPress: onSaveDetails },
+      });
+    }
     if (res.status === 200) router.back();
   }
 
   async function onSaveHours() {
     const res = await w.saveHours();
     if (!res) return;
-    Alert.alert(
-      res.status === 200 ? "Saved" : "Couldn't save",
-      res.status === 200
-        ? "Opening hours updated."
-        : (res.message ?? "Please try again."),
-    );
+    if (res.status === 200) {
+      toast.success("Opening hours updated");
+    } else {
+      toast.error(res.message ?? "We couldn't save your opening hours.", {
+        description: "Your edits are still on screen — try again.",
+        action: { label: "Retry", onPress: onSaveHours },
+      });
+    }
   }
 
   function onPickStatus(next: PlaceTemporaryStatus) {
@@ -392,7 +408,9 @@ export default function EditPlaceScreen() {
     const commit = async () => {
       const res = await w.applyStatus(next);
       if (res && res.status !== 200) {
-        Alert.alert("Couldn't update", res.message ?? "Please try again.");
+        toast.error("Couldn't update", {
+          description: res.message ?? "Please try again.",
+        });
       }
     };
     if (next === null) {

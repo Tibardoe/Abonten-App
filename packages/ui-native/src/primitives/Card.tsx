@@ -1,11 +1,7 @@
-import {
-  Pressable,
-  type PressableProps,
-  View,
-  type ViewProps,
-} from "react-native";
+import { type PressableProps, View, type ViewProps } from "react-native";
 import { shadow } from "../theme/tokens";
 import { Icon, type IoniconName } from "./Icon";
+import { PressableScale } from "./PressableScale";
 import { AppText } from "./Typography";
 
 // Native echo of the `bg-card border border-border rounded-xl` block that
@@ -48,13 +44,20 @@ export type PressableCardProps = Omit<PressableProps, "style"> & {
   className?: string;
 };
 
+/**
+ * A tappable card. Dips ~3% under the finger on the native driver, so a tap
+ * on a feed card reads as received even while the detail screen it opens is
+ * still fetching. No haptic — these appear dozens deep in a list, and a buzz
+ * per card would be noise rather than signal.
+ */
 export function PressableCard({
   className,
   children,
   ...rest
 }: PressableCardProps) {
   return (
-    <Pressable
+    <PressableScale
+      activeScale={0.98}
       className={[
         "overflow-hidden rounded-2xl border border-border bg-card active:opacity-90",
         className ?? "",
@@ -64,7 +67,7 @@ export function PressableCard({
       {...rest}
     >
       {children}
-    </Pressable>
+    </PressableScale>
   );
 }
 

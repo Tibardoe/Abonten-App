@@ -1,17 +1,27 @@
+import { UploadProgress } from "@/components/UploadProgress";
 import {
   type ReviewPhotoInput,
   usePostEventReview,
 } from "@/features/reviews/useEventReviews";
+import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import {
   MAX_REVIEW_PHOTOS,
   MAX_REVIEW_PHOTO_SIZE_BYTES,
 } from "@abonten/core/uploadLimits";
-import { AppText, Button, Field, Icon, Input, Sheet } from "@abonten/ui-native";
+import {
+  AppText,
+  Button,
+  Field,
+  Icon,
+  Input,
+  Sheet,
+  useToast,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { StarRatingInput } from "./StarRatingInput";
 
 // Native echo of the web EventReviewModal: rating (required, 1–5) + optional
@@ -34,11 +44,13 @@ export function AddReviewSheet({
   eventTitle: string;
   onSubmitted?: () => void;
 }) {
+  const toast = useToast();
   const [rating, setRating] = useState(0);
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const progress = useUploadProgress();
   const [error, setError] = useState<string | null>(null);
   const post = usePostEventReview();
 
@@ -59,10 +71,9 @@ export function AddReviewSheet({
     if (remaining <= 0) return;
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to attach photos to your review.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to attach photos to your review.",
+      });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -113,19 +124,29 @@ export function AddReviewSheet({
     let uploaded: ReviewPhotoInput[] = [];
     if (photos.length > 0) {
       setUploading(true);
+      progress.start();
       try {
-        uploaded = await Promise.all(
-          photos.map(async (uri) => {
-            const up = await uploadToCloudinary(uri, "event_review_photo");
-            return { publicId: up.publicId, version: String(up.version) };
-          }),
-        );
+        // Sequential, not Promise.all: one shared connection means parallel
+        // uploads only fight each other on a slow link, and a fraction only
+        // means something when one file is in flight at a time.
+        const total = photos.length;
+        uploaded = [];
+        for (const [i, uri] of photos.entries()) {
+          const up = await uploadToCloudinary(uri, "event_review_photo", {
+            onProgress: (f) => progress.onProgress((i + f) / total),
+          });
+          uploaded.push({ publicId: up.publicId, version: String(up.version) });
+        }
       } catch {
         setUploading(false);
-        setError("Couldn't upload one of your photos. Please try again.");
+        progress.reset();
+        setError(
+          "One of your photos didn't upload. Your review is still here — check your connection and try again.",
+        );
         return;
       }
       setUploading(false);
+      progress.finishUpload();
     }
 
     post.mutate(
@@ -138,11 +159,21 @@ export function AddReviewSheet({
       },
       {
         onSuccess: () => {
+          progress.reset();
           onSubmitted?.();
           onClose();
+          toast.success("Review posted", {
+            description: "Thanks — it is on the event page now.",
+          });
         },
-        onError: (e) =>
-          setError(e instanceof Error ? e.message : "Something went wrong."),
+        onError: (e) => {
+          progress.reset();
+          setError(
+            e instanceof Error
+              ? e.message
+              : "We couldn't post your review. Nothing was lost — try again.",
+          );
+        },
       },
     );
   }
@@ -238,6 +269,8 @@ export function AddReviewSheet({
             ) : null}
           </ScrollView>
         </View>
+
+        <UploadProgress state={progress} what="photos" />
 
         {error ? (
           <AppText variant="small" tone="error">

@@ -6,7 +6,7 @@ import {
 } from "@/features/organizer/usePlaceBookingsReviews";
 import type { BookingStatus, OwnerPlaceBooking } from "@abonten/api-client";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
-import { AppText, Chip } from "@abonten/ui-native";
+import { AppText, Chip, Refresher, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
@@ -14,7 +14,6 @@ import {
   Alert,
   FlatList,
   Pressable,
-  RefreshControl,
   View,
 } from "react-native";
 
@@ -52,6 +51,7 @@ function BookingRow({
   booking: OwnerPlaceBooking;
   placeId: string;
 }) {
+  const toast = useToast();
   const respond = useRespondToPlaceBooking(placeId);
   const { date, time } = formatSingleDateTime(booking.requested_time);
   const customer = booking.user_info?.username ?? "A customer";
@@ -62,11 +62,13 @@ function BookingRow({
       {
         onSuccess: (res) => {
           if (res.status !== 200) {
-            Alert.alert("Couldn't update", res.message);
+            toast.error("Couldn't update", { description: res.message });
           }
         },
         onError: () =>
-          Alert.alert("Couldn't update", "Please try again in a moment."),
+          toast.error("Couldn't update", {
+            description: "Please try again in a moment.",
+          }),
       },
     );
   };
@@ -185,7 +187,7 @@ export default function PlaceBookingsScreen() {
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={q.isRefetching && !q.isFetchingNextPage}
           onRefresh={() => q.refetch()}
         />

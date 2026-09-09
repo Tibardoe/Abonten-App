@@ -5,17 +5,10 @@ import {
   useCheckInTicket,
 } from "@/features/organizer/useAttendees";
 import type { AttendanceRow } from "@abonten/api-client";
-import { AppText, Button } from "@abonten/ui-native";
+import { AppText, Button, Refresher, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
 
 // Per-event attendee list + check-in — the native mirror of the web
 // AttendanceListView. Each row flips its ticket between 'active' and 'used';
@@ -28,6 +21,7 @@ function AttendeeRow({
   attendee: AttendanceRow;
   eventId: string;
 }) {
+  const toast = useToast();
   const checkIn = useCheckInTicket(eventId);
 
   const isCancelled = attendee.status === "cancelled";
@@ -41,12 +35,22 @@ function AttendeeRow({
       { ticketId: attendee.ticket_id, checkedIn },
       {
         onSuccess: (res) => {
-          if (res.status !== 200) {
-            Alert.alert("Check-in failed", res.message);
+          if (res.status === 200) {
+            toast.success(
+              checkedIn
+                ? `${attendee.user_info?.full_name ?? "Attendee"} checked in`
+                : "Check-in undone",
+            );
+            return;
           }
+          toast.error(res.message ?? "We couldn't check that ticket in.", {
+            description: "The attendee list is unchanged. Try again.",
+          });
         },
         onError: () => {
-          Alert.alert("Check-in failed", "Please try again.");
+          toast.error("We couldn't reach the server.", {
+            description: "Check your connection and try again.",
+          });
         },
       },
     );
@@ -170,7 +174,7 @@ export default function EventAttendeesScreen() {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl
+          <Refresher
             refreshing={q.isRefetching && !q.isFetchingNextPage}
             onRefresh={() => q.refetch()}
           />

@@ -2,7 +2,7 @@ import { AttachmentPermissionError } from "@/features/messaging/attachments";
 import type { OutboxDraft } from "@/features/messaging/useMessageOutbox";
 import { uploadVoiceNote, useVoiceRecorder } from "@/features/messaging/voice";
 import { hapticLight } from "@/lib/haptics";
-import { Icon } from "@abonten/ui-native";
+import { Icon, useToast } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import * as Linking from "expo-linking";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -41,6 +41,7 @@ export default function VoiceComposer({
   onSend: (draft: OutboxDraft) => void;
   onCancelReply: () => void;
 }) {
+  const toast = useToast();
   const c = useThemeColors();
   const rec = useVoiceRecorder();
   const recRef = useRef(rec);
@@ -78,14 +79,13 @@ export default function VoiceComposer({
       });
       onCancelReply();
     } catch (e) {
-      Alert.alert(
-        "Couldn't send voice message",
-        e instanceof Error ? e.message : "Please try again.",
-      );
+      toast.error("Couldn't send voice message", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      });
     } finally {
       setUploading(false);
     }
-  }, [conversationId, replyingTo, onSend, onCancelReply]);
+  }, [conversationId, replyingTo, onSend, onCancelReply, toast]);
 
   const discard = useCallback(() => {
     setCancelArmed(false);
@@ -99,10 +99,10 @@ export default function VoiceComposer({
     try {
       const res = await recRef.current.start();
       if (res === "permission-requested") {
-        Alert.alert(
-          "Microphone enabled",
-          "Press and hold the mic again to record a voice message.",
-        );
+        toast.success("Microphone enabled", {
+          description:
+            "Press and hold the mic again to record a voice message.",
+        });
         return;
       }
       if (res === "denied") {
@@ -128,13 +128,12 @@ export default function VoiceComposer({
           { text: "Open Settings", onPress: () => Linking.openSettings() },
         ]);
       } else {
-        Alert.alert(
-          "Can't record",
-          e instanceof Error ? e.message : "Please try again.",
-        );
+        toast.error("Can't record", {
+          description: e instanceof Error ? e.message : "Please try again.",
+        });
       }
     }
-  }, []);
+  }, [toast]);
 
   const releaseGesture = useCallback(() => {
     gestureHeldRef.current = false;

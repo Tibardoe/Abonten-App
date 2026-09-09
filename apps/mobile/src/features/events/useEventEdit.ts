@@ -19,7 +19,8 @@ import { useQuery } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert } from "react-native";
+
+import { useToast } from "@abonten/ui-native";
 import type {
   OccurrenceDraft,
   ScheduleMode,
@@ -56,6 +57,7 @@ function splitIso(iso: string): { date: string; time: string } {
 }
 
 export function useEventEdit(eventId: string) {
+  const toast = useToast();
   const autocomplete = usePlacesAutocomplete();
   const update = useUpdateEvent();
   const updateTickets = useUpdateEventTicketTypes();
@@ -259,10 +261,9 @@ export function useEventEdit(eventId: string) {
     const resolved = await autocomplete.resolvePlace(placeId);
     setResolvingLocation(false);
     if (!resolved) {
-      Alert.alert(
-        "Couldn't use that location",
-        "Please try another suggestion or type the address.",
-      );
+      toast.error("Couldn't use that location", {
+        description: "Please try another suggestion or type the address.",
+      });
       return;
     }
     applyLocation(resolved.lat, resolved.lng, resolved.address);
@@ -273,10 +274,9 @@ export function useEventEdit(eventId: string) {
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          "Location access needed",
-          "Allow location access to use your current position.",
-        );
+        toast.error("Location access needed", {
+          description: "Allow location access to use your current position.",
+        });
         return;
       }
       const pos = await Location.getCurrentPositionAsync({});
@@ -291,10 +291,9 @@ export function useEventEdit(eventId: string) {
         : `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
       applyLocation(pos.coords.latitude, pos.coords.longitude, label);
     } catch {
-      Alert.alert(
-        "Couldn't get your location",
-        "Please try again or type the address.",
-      );
+      toast.error("Couldn't get your location", {
+        description: "Please try again or type the address.",
+      });
     } finally {
       setResolvingLocation(false);
     }
@@ -307,10 +306,9 @@ export function useEventEdit(eventId: string) {
   async function pickFlyer() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      Alert.alert(
-        "Photo access needed",
-        "Allow photo access to pick an event flyer.",
-      );
+      toast.error("Photo access needed", {
+        description: "Allow photo access to pick an event flyer.",
+      });
       return;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -377,24 +375,28 @@ export function useEventEdit(eventId: string) {
   async function save(): Promise<UpdateEventResult | null> {
     if (!validateText()) return null;
     if (!category) {
-      Alert.alert("Pick a category", "Choose the category that fits best.");
+      toast.error("Pick a category", {
+        description: "Choose the category that fits best.",
+      });
       return null;
     }
     if (types.length === 0) {
-      Alert.alert("Pick at least one type", "Add one or more event types.");
+      toast.error("Pick at least one type", {
+        description: "Add one or more event types.",
+      });
       return null;
     }
     if (!address.trim() || !coords) {
-      Alert.alert(
-        "Confirm the location",
-        "Pick the address from a suggestion, the map, or your current location.",
-      );
+      toast.error("Confirm the location", {
+        description:
+          "Pick the address from a suggestion, the map, or your current location.",
+      });
       return null;
     }
 
     const schedule = buildSchedule();
     if (!schedule.ok) {
-      Alert.alert("Check the schedule", schedule.message);
+      toast.error("Check the schedule", { description: schedule.message });
       return null;
     }
 
@@ -436,17 +438,15 @@ export function useEventEdit(eventId: string) {
       const price = Number(ticketPrice);
       const qty = ticketQuantity.trim() === "" ? null : Number(ticketQuantity);
       if (!Number.isFinite(price) || price <= 0) {
-        Alert.alert(
-          "Check the price",
-          "Enter a ticket price greater than zero.",
-        );
+        toast.error("Check the price", {
+          description: "Enter a ticket price greater than zero.",
+        });
         return null;
       }
       if (qty != null && (!Number.isFinite(qty) || qty <= 0)) {
-        Alert.alert(
-          "Check the quantity",
-          "Quantity must be a whole number above zero.",
-        );
+        toast.error("Check the quantity", {
+          description: "Quantity must be a whole number above zero.",
+        });
         return null;
       }
       return updateTickets.mutateAsync({
@@ -462,7 +462,9 @@ export function useEventEdit(eventId: string) {
       quantity: t.quantity.trim() === "" ? null : Number(t.quantity),
     }));
     if (parsed.length === 0) {
-      Alert.alert("Add a ticket type", "Add at least one ticket type.");
+      toast.error("Add a ticket type", {
+        description: "Add at least one ticket type.",
+      });
       return null;
     }
     if (
@@ -475,10 +477,10 @@ export function useEventEdit(eventId: string) {
             (!Number.isFinite(t.quantity) || t.quantity <= 0)),
       )
     ) {
-      Alert.alert(
-        "Check the ticket types",
-        "Each ticket type needs a name, a price and a valid quantity.",
-      );
+      toast.error("Check the ticket types", {
+        description:
+          "Each ticket type needs a name, a price and a valid quantity.",
+      });
       return null;
     }
     return updateTickets.mutateAsync({

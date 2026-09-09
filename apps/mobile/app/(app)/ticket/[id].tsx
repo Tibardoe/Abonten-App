@@ -1,5 +1,6 @@
 import { RefundStatusPanel } from "@/components/RefundStatusPanel";
 import { AppHeader } from "@/components/app/AppHeader";
+import { TicketDetailSkeleton } from "@/components/skeletons";
 import { useCancelTicket } from "@/features/tickets/useCancelTicket";
 import { useTicketDetail } from "@/features/tickets/useTicketDetail";
 import { useTicketReceipt } from "@/features/tickets/useTicketReceipt";
@@ -11,9 +12,10 @@ import {
   Button,
   Icon,
   type IoniconName,
+  Refresher,
   ScreenError,
-  ScreenLoader,
   TicketStatusBadge,
+  useToast,
 } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -40,13 +42,23 @@ function Row({
 }
 
 export default function TicketDetailScreen() {
+  const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { data: ticket, isLoading, isError, refetch } = useTicketDetail(id);
+  const {
+    data: ticket,
+    isLoading,
+    isError,
+    isRefetching,
+    refetch,
+  } = useTicketDetail(id);
   const cancel = useCancelTicket();
   const receipt = useTicketReceipt();
 
-  if (isLoading) return <ScreenLoader />;
+  // A content-shaped skeleton, not a centred spinner: the QR block and the
+  // detail rows land in the same places they will occupy, so nothing jumps
+  // when the ticket arrives.
+  if (isLoading) return <TicketDetailSkeleton />;
   if (isError || !ticket) {
     return (
       <ScreenError
@@ -110,10 +122,9 @@ export default function TicketDetailScreen() {
                 { text: "OK", onPress: () => router.back() },
               ]);
             } else {
-              Alert.alert(
-                "Couldn't cancel",
-                res.message ?? "Please try again in a moment.",
-              );
+              toast.error("Couldn't cancel", {
+                description: res.message ?? "Please try again in a moment.",
+              });
             }
           },
         },
@@ -127,6 +138,9 @@ export default function TicketDetailScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4 pb-10"
+        refreshControl={
+          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
+        }
       >
         {/* Flyer hero — makes the ticket recognisable at a glance */}
         <View className="overflow-hidden rounded-2xl border border-border bg-card">

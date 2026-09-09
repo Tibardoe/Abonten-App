@@ -1,9 +1,12 @@
 import { ImageViewer } from "@/components/ImageViewer";
+import { UploadProgress } from "@/components/UploadProgress";
 import { AppHeader } from "@/components/app/AppHeader";
 import { ProfileCompletionCard } from "@/components/profile/ProfileCompletionCard";
+import { FormSkeleton } from "@/components/skeletons";
 import { useAvatarUpload } from "@/features/profile/useAvatarUpload";
 import { useProfile } from "@/features/profile/useProfile";
 import { useUpdateProfile } from "@/features/profile/useUpdateProfile";
+import { useUploadProgress } from "@/features/uploads/useUploadProgress";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import {
   AppText,
@@ -13,7 +16,7 @@ import {
   Input,
   KeyboardAwareScrollView,
   ScreenError,
-  ScreenLoader,
+  useToast,
 } from "@abonten/ui-native";
 import { editProfileSchema } from "@abonten/validation/editProfileSchema";
 import { useEffect, useMemo, useState } from "react";
@@ -40,7 +43,9 @@ export default function EditProfile() {
     refetch: refetchProfile,
   } = useProfile();
   const update = useUpdateProfile();
+  const toast = useToast();
   const avatar = useAvatarUpload();
+  const avatarProgress = useUploadProgress();
   const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
 
   const [form, setForm] = useState<FormState>({
@@ -53,6 +58,24 @@ export default function EditProfile() {
     Partial<Record<keyof FormState, string>>
   >({});
   const [saved, setSaved] = useState(false);
+
+  async function onChangePhoto() {
+    avatarProgress.start();
+    try {
+      const res = await avatar.mutateAsync({
+        onProgress: avatarProgress.onProgress,
+        onUploadComplete: avatarProgress.finishUpload,
+      });
+      // `null` means the picker was dismissed — not a failure, and not
+      // something to congratulate the user about either.
+      if (res) toast.success("Profile photo updated");
+    } catch {
+      // The inline error under the button already explains it; the mutation
+      // holds the message.
+    } finally {
+      avatarProgress.reset();
+    }
+  }
 
   // Seed the form once the profile loads.
   useEffect(() => {
@@ -109,7 +132,7 @@ export default function EditProfile() {
     );
   }
 
-  if (isLoading) return <ScreenLoader />;
+  if (isLoading) return <FormSkeleton fields={5} />;
   if (profileError || !profile) {
     return (
       <ScreenError
@@ -148,17 +171,19 @@ export default function EditProfile() {
           <View className="flex-1 gap-1">
             <AppText variant="bodyStrong">{profile.username}</AppText>
             <Button
-              title={avatar.isPending ? "Uploading…" : "Change photo"}
+              title="Change photo"
+              loadingTitle="Uploading…"
               variant="outline"
               size="sm"
-              onPress={() => avatar.mutate()}
-              disabled={avatar.isPending}
+              onPress={onChangePhoto}
+              loading={avatar.isPending}
             />
+            <UploadProgress state={avatarProgress} what="photo" />
             {avatar.isError ? (
               <AppText variant="small" tone="error">
                 {avatar.error instanceof Error
                   ? avatar.error.message
-                  : "Upload failed."}
+                  : "That photo didn't upload. Check your connection and try again."}
               </AppText>
             ) : null}
           </View>

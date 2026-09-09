@@ -2,7 +2,7 @@ import {
   useCancelEvent,
   useEventCancellationImpact,
 } from "@/features/organizer/usePayouts";
-import { AppText } from "@abonten/ui-native";
+import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -25,6 +25,7 @@ function Row({ label, value }: { label: string; value: string }) {
 }
 
 export default function CancelEventScreen() {
+  const toast = useToast();
   const { eventId, title } = useLocalSearchParams<{
     eventId: string;
     title?: string;
@@ -47,7 +48,9 @@ export default function CancelEventScreen() {
       ]);
       return;
     }
-    Alert.alert("Couldn't cancel", res.message ?? "Please try again.");
+    toast.error("Couldn't cancel", {
+      description: res.message ?? "Please try again.",
+    });
   }
 
   if (impact.isLoading) {

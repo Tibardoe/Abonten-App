@@ -9,9 +9,14 @@ import {
   useMyTickets,
 } from "@/features/tickets/useMyTickets";
 import type { UserTicketType } from "@abonten/types/ticketType";
-import { EmptyState, SegmentedTabs, Spinner } from "@abonten/ui-native";
+import {
+  EmptyState,
+  Refresher,
+  SegmentedTabs,
+  Spinner,
+} from "@abonten/ui-native";
 import { useCallback, useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
+import { FlatList, View } from "react-native";
 
 // Native echo of the web /manage/my-events tab set. The web strip is a
 // 4-column segmented control where "Active/Past" and "To review/Reviewed"
@@ -68,7 +73,7 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshControl={
-        <RefreshControl
+        <Refresher
           refreshing={q.isRefetching && !q.isFetchingNextPage}
           onRefresh={() => q.refetch()}
         />
