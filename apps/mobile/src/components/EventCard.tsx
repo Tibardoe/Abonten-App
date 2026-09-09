@@ -6,7 +6,10 @@ import { useAttendingEventIds } from "@/features/discovery/useAttendingEventIds"
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
-import { getEventSoldOutStatus } from "@abonten/core/getEventSoldOutStatus";
+import {
+  getEventSoldOutStatus,
+  getEventSpotsLeft,
+} from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
 import { AppText, Icon, PressableScale, Skeleton } from "@abonten/ui-native";
@@ -64,8 +67,15 @@ function priceLabel(event: UserPostType): string {
 }
 
 function spotsLeft(event: UserPostType, attendees: number): number | null {
-  if (!event.capacity || event.capacity <= 0) return null;
-  return Math.max(event.capacity - attendees, 0);
+  // Capacity and remaining ticket stock are independent limits, so the number
+  // a buyer can act on is the smaller one. `ticket_type` is backfilled onto
+  // discovery rows by withEventAvailability; when it is absent this is still
+  // the capacity figure.
+  return getEventSpotsLeft({
+    capacity: event.capacity,
+    attendeeCount: attendees,
+    ticketTypes: event.ticket_type,
+  });
 }
 
 // Same precedence as the web centerOverlay: canceled wins, then sold-out,
@@ -79,6 +89,7 @@ function statusOverlay(event: UserPostType): {
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: event.attendanceCount ?? event.attendance_count ?? 0,
+    ticketTypes: event.ticket_type,
   });
   if (soldOut) return { label: "Sold out", canceled: false };
   const lifecycle = getEventStatusOverlay(

@@ -1,6 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { favoritesListKey } from "@/features/favorites/useFavorites";
-import { withEventAttendanceCounts } from "@/lib/eventAttendance";
+import { withEventAvailability } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import {
   type PlaceOpeningHourRow,
@@ -116,7 +116,7 @@ export function useProfileEvents(userId: string | undefined) {
       const last = all[page.length - 1];
       // Raw `event` read carries no attendance — backfill so the profile
       // Events tab cards match every other EventCard surface.
-      const rows = await withEventAttendanceCounts(page);
+      const rows = await withEventAvailability(page);
       return {
         rows,
         nextCursor:

@@ -1,10 +1,12 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
+import { userInboxChannelName } from "@abonten/core/messagingRealtime";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { getActiveConversation } from "./activeConversation";
 import { adjustUnreadBadge, bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
+import { uniqueRealtimeTopic } from "./realtimeTopic";
 
 type ConversationRow = {
   id?: string;
@@ -39,8 +41,13 @@ export function useInboxRealtime() {
       qc.invalidateQueries({ queryKey: messagingKeys.unreadCount() });
     };
 
+    // Per-subscription topic: supabase.channel() hands back an existing
+    // channel for a repeated topic, and removeChannel() only drops the old one
+    // after an async unsubscribe — so re-running this effect could attach
+    // these listeners to an already-subscribed channel, which throws and
+    // red-screens the tab layout. See realtimeTopic.ts.
     const channel = supabase
-      .channel(`inbox:${myId}`)
+      .channel(uniqueRealtimeTopic(userInboxChannelName(myId)))
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "conversation" },

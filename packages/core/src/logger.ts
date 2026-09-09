@@ -19,9 +19,14 @@ const LEVEL_ORDER: Record<LogLevel, number> = {
 };
 
 function resolveMinLevel(): number {
-  const configured = (
-    process.env.LOG_LEVEL ??
-    process.env.NEXT_PUBLIC_LOG_LEVEL ??
+  // Annotated as string on purpose: under the mobile app's tsconfig
+  // `process.env.X` resolves to `any`, so without this the literal
+  // comparisons below narrow nothing and LEVEL_ORDER[configured] is an
+  // implicit-any index — which is an error the moment @abonten/core/logger is
+  // imported from apps/mobile.
+  const configured: string = (
+    (process.env.LOG_LEVEL as string | undefined) ??
+    (process.env.NEXT_PUBLIC_LOG_LEVEL as string | undefined) ??
     ""
   )
     .toLowerCase()

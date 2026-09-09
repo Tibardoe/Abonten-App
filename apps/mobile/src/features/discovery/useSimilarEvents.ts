@@ -1,4 +1,4 @@
-import { withEventAttendanceCounts } from "@/lib/eventAttendance";
+import { withEventAvailability } from "@/lib/eventAttendance";
 import { supabase } from "@/lib/supabase";
 import type { UserPostType } from "@abonten/types/postsType";
 import { useQuery } from "@tanstack/react-query";
@@ -48,7 +48,7 @@ export function useSimilarEvents(
               currency: e.ticket_currency,
             }) as unknown as UserPostType,
         );
-      return withEventAttendanceCounts(rows);
+      return withEventAvailability(rows);
     },
   });
 }

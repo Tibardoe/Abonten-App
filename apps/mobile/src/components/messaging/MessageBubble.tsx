@@ -393,7 +393,13 @@ export const MessageBubble = memo(function MessageBubble({
         </>
       )}
 
-      <View className="mt-0.5 flex-row items-center justify-end gap-1">
+      {/*
+        flex-wrap: the failed-send state replaces the tick with a "Tap to
+        retry" action, which on a short bubble is wider than the space left
+        beside the timestamp — without wrapping it clipped to "Tap to", hiding
+        the one instruction that recovers the message.
+      */}
+      <View className="mt-0.5 flex-row flex-wrap items-center justify-end gap-1">
         {message.edited_at && !deleted ? (
           <AppText
             variant="caption"
@@ -429,7 +435,8 @@ export const MessageBubble = memo(function MessageBubble({
       >
         {message.content}
       </AppText>
-      <View className="mt-0.5 flex-row items-center gap-1 px-1">
+      {/* Same wrap reason as the standard bubble footer above. */}
+      <View className="mt-0.5 flex-row flex-wrap items-center gap-1 px-1">
         <AppText variant="caption" tone="muted">
           {clockTime(message.created_at)}
         </AppText>

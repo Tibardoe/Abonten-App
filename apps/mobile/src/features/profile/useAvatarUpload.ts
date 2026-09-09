@@ -1,6 +1,7 @@
 import { useSession } from "@/auth/SessionProvider";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { supabase } from "@/lib/supabase";
+import { logger } from "@abonten/core/logger";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 
@@ -8,8 +9,8 @@ import * as ImagePicker from "expo-image-picker";
 // saveAvatarToSupabase): pick a square image, upload it straight to
 // Cloudinary with a short-lived signature (see src/lib/cloudinaryUpload.ts),
 // then write the new public_id / version to `user_info` (RLS self-update).
-// The `user_image_history` row the web action also writes is left to the
-// server — that table has no client INSERT policy.
+// The `user_image_history` row is written here too (owner INSERT policy
+// added in migration 20260909115349), so mobile and web keep the same trail.
 
 export function useAvatarUpload() {
   const qc = useQueryClient();
@@ -48,6 +49,24 @@ export function useAvatarUpload() {
         .update({ avatar_public_id: publicId, avatar_version: String(version) })
         .eq("id", userId);
       if (error) throw error;
+
+      // Same history row the web action writes, so a photo changed on mobile
+      // is recorded like one changed on web (migration 20260909115349 added
+      // the owner INSERT policy this needs). Best-effort: the avatar is
+      // already live at this point, and a bookkeeping failure must not report
+      // the change as failed — that was the web bug this parity fix followed.
+      const { error: historyError } = await supabase
+        .from("user_image_history")
+        .insert({
+          user_id: userId,
+          public_id: publicId,
+          version: String(version),
+        });
+      if (historyError) {
+        logger.error(
+          `useAvatarUpload: failed to record image history: ${historyError.message}`,
+        );
+      }
 
       return { publicId, version };
     },

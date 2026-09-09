@@ -9,6 +9,7 @@ import {
   formatCountdown,
   useCheckoutCountdown,
 } from "@/features/checkout/useCheckoutCountdown";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -185,21 +186,31 @@ export default function CheckoutReviewScreen() {
         </View>
 
         <View className="gap-3 rounded-xl border border-border bg-card p-4">
-          <Line label="Subtotal" value={`${currency} ${session.subtotal}`} />
+          <Line
+            label="Subtotal"
+            value={formatMoney(currency, session.subtotal)}
+          />
           {session.discount > 0 ? (
             <Line
               label="Discount"
-              value={`− ${currency} ${session.discount}`}
+              value={`− ${formatMoney(currency, session.discount)}`}
             />
           ) : null}
-          <Line label="Service fee" value={`${currency} ${session.fee}`} />
+          <Line
+            label="Service fee"
+            value={formatMoney(currency, session.fee)}
+          />
           <View className="my-1 h-px bg-border" />
-          <Line label="Total" value={`${currency} ${session.total}`} strong />
+          <Line
+            label="Total"
+            value={formatMoney(currency, session.total)}
+            strong
+          />
         </View>
 
         {grandTotal !== session.total ? (
           <AppText variant="muted">
-            Group total: {currency} {grandTotal}
+            Group total: {formatMoney(currency, grandTotal)}
           </AppText>
         ) : null}
 

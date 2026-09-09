@@ -1,5 +1,6 @@
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
+import { formatMoney } from "@abonten/core/formatMoney";
 import { AppText } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -73,7 +74,7 @@ export function PaymentSection({
         mode: ps.mode,
         deepLink: `abonten://checkout/${sessionId}`,
         contextTitle: eventTitle ?? "Your order",
-        amountLabel: `${currency} ${total}`,
+        amountLabel: formatMoney(currency, total),
         successHref: "/(app)/(tabs)/tickets",
         successCtaLabel: "View my tickets",
         ...(ps.mode === "popup"
@@ -152,7 +153,7 @@ export function PaymentSection({
               !chosenId ? "text-muted-foreground" : "text-primary-foreground"
             }`}
           >
-            Pay {currency} {total}
+            Pay {formatMoney(currency, total)}
           </AppText>
         )}
       </Pressable>
