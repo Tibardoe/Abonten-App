@@ -89,7 +89,8 @@ drafts, organizer dashboards / finance / ledger reads, payout accounts +
 saved payment methods + card verification, upload signatures, Abonten
 Rewards reads (`rewards/creditsQuery` — credit summary + activity;
 `rewards/rewardsProgramQuery` — which program features are on, honouring the
-`REWARDS_KILL_SWITCH` deploy flag). The two credit reads call
+`REWARDS_KILL_SWITCH` deploy flag; `rewards/creditRedemptionCore` — the
+promotion checkout "Use credit" quote). The two credit reads call
 `auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their
 own; they sit behind the API so the kill switch and the "program enabled for
 this user" gate apply identically on both platforms.
@@ -109,7 +110,9 @@ Paystack verify / charge / refund (secret key —
 credit-ledger mutation (`credit_grant` / `credit_release_lot` /
 `credit_void_lot` / `credit_debit_available` / `credit_*_adjustment` /
 `credit_grant_goodwill` / `credit_set_account_status` /
-`credit_close_account` / `record_payment_dispute` — `EXECUTE` for
+`credit_close_account` / `credit_spendable` / `credit_reserve` /
+`credit_capture_reservation` / `credit_release_reservation` /
+`record_payment_dispute` — `EXECUTE` for
 `service_role` only, and service_role itself has only `SELECT` on the ledger
 tables, so credit moves solely through these functions; see
 `docs/architecture/rewards-ledger.md`). All isolated

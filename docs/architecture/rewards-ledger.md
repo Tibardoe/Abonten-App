@@ -55,7 +55,11 @@ breakage, marks the account closed).
 | `expire` | `user:available` | `breakage` |
 | `account.close` | `user:available` | `breakage` (or a debt written off to `admin_adjustments`) |
 
-Reserved for later phases (already in the CHECK constraint): `redeem.*`,
+| `redeem.reserve` | `user:available` | `user:reserved` |
+| `redeem.release` | `user:reserved` | `user:available` |
+| `redeem.capture` | `user:reserved` | `redemption_promotions` (or `redemption_tickets`) |
+
+Reserved for later phases (already in the CHECK constraint): `redeem.refund`,
 `hold.*`, `withdraw.*`.
 
 ## Functions (all `SECURITY DEFINER`, `search_path = ''`)
@@ -103,6 +107,36 @@ lot only receives what's left after repayment).
   at the approved launch rates, all inactive until the engine ships.
 - `reward_campaign`, `reward_budget_period`: created now, used from Phase 4.
 
+## Spending credit at checkout (Phase 2: promotions)
+
+A `credit_reservation` holds credit for one checkout while it is paid for:
+
+```
+quote  → credit_spendable(user, scope) + allocateCredit()   (what the switch shows)
+start  → payment_attempt (amount = CASH part) → credit_reserve(…, attempt id)
+         credit only: provider 'abonten_credit', amount 0 → finalized at once
+paid   → finalizePaystackPayment: Paystack amount == reservation.cash_minor
+         → transaction(amount = cash, credit_amount) → credit_capture_reservation
+         → activate the promotion
+failed / replaced / lapsed → credit_release_reservation
+```
+
+- The payment path trusts the **reservation** (written only by service-role
+  functions), never `payment_attempt.credit_amount`, which its owner can edit.
+  A credit-only attempt without a matching full-credit reservation is failed.
+- Promotion prices come from the tier (`*_promotion_tier.price`), not the
+  checkout row's `total_price`.
+- Credit is captured **before** the promotion is activated, so nothing is
+  activated without its credit. If the checkout lapsed first, the credit is
+  released instead (a credit-only order fails; a part-credit order lands in
+  `fulfillment_failed` like any late cash payment and support refunds the cash).
+- A part-credit order leaves at least `min_cash_charge_minor` (GH₵ 1) for
+  Paystack; otherwise credit covers the whole order or nothing.
+- Spending order: credit that can't be withdrawn, then scope-restricted
+  credit (promotion credit before general credit), soonest expiry, oldest.
+- Switch: `reward_program_setting.redeem_promotions_enabled` (Admin › Rewards ›
+  Program settings). Tickets are Phase 3.
+
 ## Disputes
 
 `payment_dispute` records every Paystack `charge.dispute.*` webhook event
@@ -114,5 +148,7 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **Freeze an account:** Admin › Rewards › account › Freeze (`rewards.freeze`). Status only; the user keeps earning.
 - **Correct a balance:** Admin › Rewards › account › Adjust credit (`finance.adjust` + step-up). Never edit the tables. Over GH₵ 500 needs a second admin.
 - **Reconciliation incident:** freeze the affected accounts, compare `credit_account` with `select la.code, sum(e.amount_minor) from credit_entry e join credit_ledger_account la on la.id = e.ledger_account_id where la.owner_user_id = '<user>' group by 1`, then correct with an audited adjustment. The ledger is the truth.
+- **"Credit reservations need attention" incident:** `select id, payment_attempt_id, status, expires_at from credit_reservation where status = 'reserved' and expires_at < now() - interval '2 hours'`. Check the linked `payment_attempt`: if it succeeded, capture with `credit_capture_reservation(id, transaction_id)`; if it failed or never happened, `credit_release_reservation(id, 'manual')`. Both are idempotent.
+- **A paid promotion that never activated with credit captured:** give the credit back with an audited adjustment (Adjust credit) until `redeem.refund` ships in Phase 3.
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, redemption).
