@@ -1671,4 +1671,85 @@ handset), completing Google sign-in (needs real credentials), iOS.
 
 ---
 
+## 27. Abonten Rewards (credit ledger) — Phase 1 (2026-09-10)
+
+One unified **Abonten Credit** account per person (`user_info.id`),
+whatever their role. It's a closed-loop promotional liability: never mixed
+with organizer earnings, non-transferable, and **no cash withdrawals in
+version 1** (owner decision 2026-09-10, along with: 1% event referral capped
+at 35% of net revenue; GH₵ 3 + GH₵ 2 friend referral; 20% organizer
+net-revenue rebate as promotion credit; monthly budget max(GH₵ 1,000, 25% of
+trailing net revenue); credit purchases recorded as `transaction` rows;
+Playwright / Maestro / Android Install Referrer approved). Full reference and
+runbook: [docs/architecture/rewards-ledger.md](docs/architecture/rewards-ledger.md).
+
+**Migrations** (applied live via MCP, files renamed to the recorded
+versions, every function hash-identical to a from-scratch local replay,
+advisors show only the intended additions):
+- `20260910193609_credits_ledger_core`: `credit_account` (cached balances),
+  `credit_ledger_account` (double-entry buckets + system accounts),
+  `credit_journal` (UNIQUE idempotency key), `credit_entry` (pesewas; zero-sum
+  deferred trigger), `credit_lot` (per-grant remaining / expiry / scope);
+  append-only triggers; `credit_grant` / `credit_release_lot` /
+  `credit_void_lot` / `credit_debit_available` / `credit_expire_due_lots`
+  (pg_cron `credit-expire-lots`, daily) / `credit_set_account_status` /
+  `credit_close_account`; `get_my_credit_summary` / `get_my_credit_activity`;
+  `credit_reconciliation_checks`. Credit tables have **no FK to user_info**
+  so history outlives a deleted user.
+- `20260910193657_rewards_config_and_permissions`: `reward_program_setting`
+  (everything off, audience `staff`), versioned `reward_rule` (seeded at the
+  approved rates, all inactive), `reward_campaign`, `reward_budget_period`,
+  `rewards_enabled_for_user`, `get_rewards_program_public`; admin permissions
+  `rewards.view/review/freeze/goodwill/configure/withdrawals` (manual
+  adjustments reuse the previously unused `finance.adjust`).
+- `20260910193728_payment_dispute_and_credit_reconciliation`:
+  `payment_dispute` + `record_payment_dispute` (**chargebacks were not
+  tracked anywhere before**; the webhook now records `charge.dispute.*` and
+  opens one incident per new dispute); `run_financial_reconciliation` keeps
+  its four checks and adds the credit invariants.
+- `20260910194315_credit_admin_operations`: `credit_adjustment_request`
+  (maker-checker at ≥ GH₵ 500), `credit_grant_goodwill` (GH₵ 50 per user per
+  month, enforced under the account lock), `admin_rewards_overview`.
+
+**Security:** every credit-moving function is `service_role`-only;
+`authenticated`/`anon` can't write any credit table (grants revoked, not just
+RLS), and **service_role itself has SELECT only** on the ledger tables:
+credit moves through the functions and nowhere else. Users read their own
+account/lots under RLS and their activity through the definer RPC.
+
+**Code:** `@abonten/core/rewards/*` (`creditAmount`, `rewardMath`,
+`creditActivityCopy` + unit tests), `@abonten/types/rewards`,
+`@abonten/services/rewards/{creditsQuery,rewardsProgramQuery}`,
+`@abonten/services/admin/rewards/rewardsAdminCore`; web actions
+`getCreditSummary` / `getCreditActivity` / `getRewardsProgram`, page
+`/rewards` (404 until the program is on for the user) + a Header/SideBar
+entry that only appears when enabled; mobile routes `/api/mobile/rewards/
+{summary,activity,program}` + `api.rewards.*` + screen
+`app/(app)/rewards/index.tsx` + an Account-tab row (enabled users only);
+Admin › **Rewards** (overview with liability / flows / ledger health /
+second-approver queue / rules; credit accounts list; per-account balances,
+lots, full double-entry trace, adjust / goodwill / freeze; program settings
+with step-up, where switches for unbuilt phases are shown locked).
+`deleteAccountCore` closes the credit account before deleting the user.
+Notification kind `rewards` routes to the Rewards screen.
+
+**Verified:** 20 new unit tests; 19 new integration tests (ledger lifecycle,
+authorization with strict `42501` codes, 20-way concurrent spend and 10-way
+same-key grant, admin maker-checker + goodwill cap + freeze) and the full
+suite **131/131**; `turbo typecheck` 11/11; `next build` web + admin clean;
+API parity 107 routes; a rolled-back production SQL smoke of every function.
+UI driven for real against the local stack: Admin › Rewards (second-admin
+approval, freeze, settings save with a one-field audit diff), web `/rewards`
+as staff, and the mobile screen on the Android emulator (signed in to a local
+staff account through email OTP). Two defects found in that pass and fixed:
+input widths in the admin forms, and a reversed reward shown without
+strikethrough on mobile.
+
+**Not yet built (later phases):** spending credit (promotions P2, tickets P3),
+referral capture + reward engine (P4, shadow mode first), friend referral
+(P5), organizer/venue rebate (P6). Withdrawals are out of scope for
+version 1. Production is unchanged for users: the program is off.
+
+---
+
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*
