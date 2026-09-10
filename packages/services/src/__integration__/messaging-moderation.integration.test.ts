@@ -157,4 +157,31 @@ describe("messaging: role scope + moderation read paths", () => {
     const after = await fetchMessagesPage(member.client, conversationId, {});
     expect(after.data.map((m) => m.id)).not.toContain(target?.id);
   });
+
+  it("a non-participant gets 404 from the messages page, not an empty thread", async () => {
+    // RLS hides every row from a stranger, which used to come back as
+    // 200 + [] — indistinguishable from an empty conversation, and a
+    // different answer from the detail read's 404. Both now agree.
+    const stranger = await createTestUser(service);
+    try {
+      const res = await fetchMessagesPage(stranger.client, conversationId, {
+        callerId: stranger.id,
+      });
+      expect(res.status).toBe(404);
+      expect(res.data).toEqual([]);
+
+      // A real participant whose thread is genuinely empty still gets 200.
+      const empty = await openConversationCore(stranger.client, stranger.id, {
+        type: "event",
+        eventId,
+      });
+      const emptyId = empty.data?.conversationId as string;
+      const ok = await fetchMessagesPage(stranger.client, emptyId, {
+        callerId: stranger.id,
+      });
+      expect(ok.status).toBe(200);
+    } finally {
+      await deleteTestUser(service, stranger.id);
+    }
+  });
 });

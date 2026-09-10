@@ -4,6 +4,7 @@ import {
 } from "@/actions/getEventsInWindow";
 import { getNearByEvents } from "@/actions/getNearByEvents";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import { filterEventsByWindow } from "@abonten/core/eventDateWindow";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
 import ExploreEventsList from "./ExploreEventsList";
@@ -78,17 +79,26 @@ export default async function page({
       });
     };
   } else {
-    // "around-you" / "top-rated-organizers" / "category": radius-only —
-    // top-rated-organizers/category don't actually implement their named
-    // sort/filter (pre-existing gap, unrelated to pagination), matching
-    // prior behavior.
+    // "around-you" / "top-rated-organizers" / "category": radius-only
+    // fetches. "top-rated-organizers" additionally ranks each page by the
+    // organizer rating get_nearby_events now returns — the same
+    // filterEventsByWindow rule the preview slider uses — so this "see all"
+    // page agrees with the slider it came from. "category" has no named
+    // filter of its own (pre-existing gap, unrelated to pagination).
     const radius = filter === "around-you" ? 5000 : 10000;
+    const shape = (page: PaginatedResult<UserPostType>) =>
+      filter === "top-rated-organizers"
+        ? {
+            ...page,
+            data: filterEventsByWindow(page.data, "top-rated-organizers"),
+          }
+        : page;
 
-    firstPage = await getNearByEvents(lat, lng, radius);
+    firstPage = shape(await getNearByEvents(lat, lng, radius));
 
     fetchPage = async (cursor: string | null) => {
       "use server";
-      return getNearByEvents(lat, lng, radius, { cursor });
+      return shape(await getNearByEvents(lat, lng, radius, { cursor }));
     };
   }
 

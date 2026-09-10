@@ -1560,6 +1560,52 @@ mobile client samples 0% in `__DEV__` and no production build has run yet —
 a test beacon ingested fine (`202`, row landed). Verification: typecheck
 11/11, web + admin builds clean, integration **111/111** (+4), Biome clean.
 
+**Measured after deploy (medians, same harness, same machine):** 401 floor
+372 → 307 ms; Profile 799 → **373**; Notifications 679 → 363; Messages inbox
+877 → **362**; Organizer dashboard 1,453 → **391**; Organizer events 873 →
+379; Checkout pending 941 → 390. The 5–6 s outliers disappeared (worst
+sample 648 ms). Every authenticated route now sits within ~60–100 ms of the
+unauthenticated floor; what remains is the client's own edge round trip.
+
+### 26.1 The audit's six "reported, not changed" findings — now changed
+
+Migration **`20260910165605_audit_deferred_findings`** (applied live; local
+suite green) plus code:
+
+1. **"Top-rated organizers" is now ranked by rating.** `get_nearby_events`
+   gains `organizer_avg_rating` / `organizer_rating_count` (one pass over
+   `review` for the page's distinct organizers, `get_user_rating`'s
+   visibility predicate). `filterEventsByWindow(…, "top-rated-organizers")`
+   in `@abonten/core` keeps events whose organizer has ≥1 visible review,
+   best-rated first, ties by review count; rows that carry no rating field
+   at all pass through unchanged so a stale page never blanks the slider.
+   Both apps' sliders and the web "see all" page use it. 5 unit tests.
+2. **A failed message survives leaving the screen.** Rows that reach
+   `failed` are written per conversation to the document directory
+   (`features/messaging/failedOutbox.ts`) and restored as failed rows with
+   Retry on the next visit; removed on successful retry, discard, or when
+   reconcile finds the server has the message after all. Still never
+   auto-retried.
+3. **Wizard field errors clear as you type.** Each Basics text setter clears
+   its own error (`clearTextError`), so a corrected field stops being red
+   immediately instead of on the next Next press.
+4. **Legacy avatars can be restored.** `enforce_avatar_public_id_owner` also
+   accepts a path present in the user's own `user_image_history`; new
+   uploads are still forced under `user_profiles/<id>/`. The six legacy
+   avatars in production were backfilled into history. Verified live: a
+   history path is accepted, a foreign path still raises `23514`.
+5. **`GET /messages/<id>/messages` answers 404 for a non-participant**, the
+   same as the detail read. `fetchMessagesPage` checks membership
+   (`is_conversation_participant`) only when a *first* page comes back
+   empty, so the common path costs nothing. Integration test added; the
+   web action shares the body.
+6. **Place list ratings exclude hidden/removed reviews**, matching
+   `get_place_rating` — `get_filtered_places`, `get_nearby_places`,
+   `get_active_place_promotions`. Verified live: list and detail averages
+   agree on every published place.
+
+Unit **164/164** (+5), integration **112/112** (+1), typecheck 11/11.
+
 ---
 
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*

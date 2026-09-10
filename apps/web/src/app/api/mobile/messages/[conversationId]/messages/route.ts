@@ -5,8 +5,9 @@ import { fetchMessagesPage } from "@abonten/services/messaging/messagesQuery";
 
 // GET /api/mobile/messages/<conversationId>/messages?cursor=<opaque>&pageSize=<n>
 // Newest-first, keyset-paginated page of one conversation's messages. RLS
-// restricts this to the caller's conversations. Mirrors the
-// getConversationMessages Server Action.
+// restricts this to the caller's conversations; a non-participant gets 404,
+// the same answer as GET /messages/<id>. Mirrors the getConversationMessages
+// Server Action.
 export async function GET(
   req: Request,
   ctx: { params: Promise<{ conversationId: string }> },

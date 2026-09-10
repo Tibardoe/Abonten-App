@@ -4,8 +4,13 @@ import type { MessageRow } from "@abonten/api-client";
 import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
 import type { SendMessageAttachmentInput } from "@abonten/types/messagingType";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { upsertMessageIntoCache } from "./cache";
+import {
+  forgetFailedMessages,
+  loadFailedMessages,
+  rememberFailedMessage,
+} from "./failedOutbox";
 import { bumpConversationRow } from "./inboxCache";
 import { messagingKeys } from "./keys";
 
@@ -39,17 +44,50 @@ export type OutboxDraft = {
   messageType?: OutboxMessageType;
 };
 
-// The outbox lives in component state (not persisted): a failed send stays
-// visible with a Retry until the user acts or leaves the screen. Multi-device
-// / reconnection correctness comes from the server being the source of truth
-// — anything that actually landed comes back on the next fetch or realtime
-// event and is filtered out of the rendered outbox by clientGeneratedId.
+// The outbox lives in component state; rows that reach "failed" are also
+// written to disk (failedOutbox.ts) so leaving the screen or losing the app
+// no longer discards them — they come back as failed rows with Retry the
+// next time the thread opens. Multi-device / reconnection correctness comes
+// from the server being the source of truth — anything that actually landed
+// comes back on the next fetch or realtime event and is filtered out of the
+// rendered outbox by clientGeneratedId.
 export function useMessageOutbox(conversationId: string) {
   const qc = useQueryClient();
   const [outbox, setOutbox] = useState<OutboxMessage[]>([]);
   // Keep the newest drafts around for retry without re-plumbing them through
   // the UI.
   const draftsRef = useRef<Map<string, OutboxDraft>>(new Map());
+
+  // Restore anything that failed on an earlier visit to this thread.
+  useEffect(() => {
+    let cancelled = false;
+    void loadFailedMessages(conversationId).then((rows) => {
+      if (cancelled || rows.length === 0) return;
+      for (const r of rows) draftsRef.current.set(r.clientGeneratedId, r.draft);
+      setOutbox((prev) => {
+        const present = new Set(prev.map((m) => m.clientGeneratedId));
+        const restored: OutboxMessage[] = rows
+          .filter((r) => !present.has(r.clientGeneratedId))
+          .map((r) => ({
+            clientGeneratedId: r.clientGeneratedId,
+            content: r.draft.content ?? null,
+            replyToMessageId: r.draft.replyToMessageId ?? null,
+            attachments: r.draft.attachments ?? [],
+            localPreviewUris: r.draft.localPreviewUris ?? [],
+            hasAttachments:
+              (r.draft.attachments?.length ?? 0) > 0 ||
+              (r.draft.localPreviewUris?.length ?? 0) > 0,
+            messageType: r.draft.messageType ?? "text",
+            createdAt: r.createdAt,
+            status: "failed",
+          }));
+        return restored.length ? [...prev, ...restored] : prev;
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId]);
 
   const patch = useCallback(
     (clientGeneratedId: string, next: Partial<OutboxMessage>) => {
@@ -81,6 +119,7 @@ export function useMessageOutbox(conversationId: string) {
         setOutbox((prev) =>
           prev.filter((m) => m.clientGeneratedId !== clientGeneratedId),
         );
+        void forgetFailedMessages(conversationId, [clientGeneratedId]);
         upsertMessageIntoCache(qc, conversationId, canonical);
         // Bump this conversation's inbox row from the message we already
         // hold instead of refetching every cached inbox view. send_message
@@ -99,8 +138,14 @@ export function useMessageOutbox(conversationId: string) {
       }
 
       // Blocked (403), closed conversation (409), rate-limited (429),
-      // network 5xx — all land here. Keep the row, let the user retry.
+      // network 5xx — all land here. Keep the row, let the user retry, and
+      // write it down so it survives leaving the screen.
       patch(clientGeneratedId, { status: "failed" });
+      void rememberFailedMessage(conversationId, {
+        clientGeneratedId,
+        draft,
+        createdAt: new Date().toISOString(),
+      });
     },
     [conversationId, patch, qc],
   );
@@ -125,11 +170,16 @@ export function useMessageOutbox(conversationId: string) {
         },
         ...prev,
       ]);
-      void dispatch(clientGeneratedId, draft).catch(() =>
-        patch(clientGeneratedId, { status: "failed" }),
-      );
+      void dispatch(clientGeneratedId, draft).catch(() => {
+        patch(clientGeneratedId, { status: "failed" });
+        void rememberFailedMessage(conversationId, {
+          clientGeneratedId,
+          draft,
+          createdAt: new Date().toISOString(),
+        });
+      });
     },
-    [dispatch, patch],
+    [conversationId, dispatch, patch],
   );
 
   const retry = useCallback(
@@ -142,32 +192,47 @@ export function useMessageOutbox(conversationId: string) {
         return;
       }
       patch(clientGeneratedId, { status: "sending" });
-      void dispatch(clientGeneratedId, draft).catch(() =>
-        patch(clientGeneratedId, { status: "failed" }),
-      );
+      void dispatch(clientGeneratedId, draft).catch(() => {
+        patch(clientGeneratedId, { status: "failed" });
+        void rememberFailedMessage(conversationId, {
+          clientGeneratedId,
+          draft,
+          createdAt: new Date().toISOString(),
+        });
+      });
     },
-    [dispatch, patch],
+    [conversationId, dispatch, patch],
   );
 
-  const discard = useCallback((clientGeneratedId: string) => {
-    draftsRef.current.delete(clientGeneratedId);
-    setOutbox((prev) =>
-      prev.filter((m) => m.clientGeneratedId !== clientGeneratedId),
-    );
-  }, []);
+  const discard = useCallback(
+    (clientGeneratedId: string) => {
+      draftsRef.current.delete(clientGeneratedId);
+      setOutbox((prev) =>
+        prev.filter((m) => m.clientGeneratedId !== clientGeneratedId),
+      );
+      void forgetFailedMessages(conversationId, [clientGeneratedId]);
+    },
+    [conversationId],
+  );
 
   // Called by the screen once it knows which clientGeneratedIds the server
   // has confirmed (present in the fetched thread) — clears any outbox row
   // that raced ahead of its own send response.
-  const reconcile = useCallback((confirmedClientIds: Set<string>) => {
-    if (confirmedClientIds.size === 0) return;
-    setOutbox((prev) => {
-      const next = prev.filter(
-        (m) => !confirmedClientIds.has(m.clientGeneratedId),
-      );
-      return next.length === prev.length ? prev : next;
-    });
-  }, []);
+  const reconcile = useCallback(
+    (confirmedClientIds: Set<string>) => {
+      if (confirmedClientIds.size === 0) return;
+      setOutbox((prev) => {
+        const next = prev.filter(
+          (m) => !confirmedClientIds.has(m.clientGeneratedId),
+        );
+        return next.length === prev.length ? prev : next;
+      });
+      // A "failed" row the server actually has (the response was lost, not
+      // the send) must not come back on the next visit.
+      void forgetFailedMessages(conversationId, confirmedClientIds);
+    },
+    [conversationId],
+  );
 
   return { outbox, send, retry, discard, reconcile };
 }
