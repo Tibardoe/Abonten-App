@@ -612,6 +612,13 @@ export type OrganizerDashboardWidgets = {
   upcoming: OrganizerUpcomingRow[];
   attention: OrganizerAttentionRow[];
   activity: OrganizerActivityRow[];
+  // The KPI cards, in the same payload. Present since the route moved to
+  // the single get_organizer_dashboard round trip; optional so an app
+  // build talking to an older deploy keeps working via overview().
+  overview?: {
+    current: OrganizerOverviewRow[];
+    previous: OrganizerOverviewRow[] | null;
+  };
 };
 
 export type OrganizerDashboardWidgetsResult =

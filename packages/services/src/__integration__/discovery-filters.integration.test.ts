@@ -188,4 +188,135 @@ describe("discovery RPCs: archived events and event ratings", () => {
     const row = (await filtered(null)).find((r) => r.id === eventId);
     expect(Number(row?.avg_rating)).toBe(0);
   });
+
+  // Migration 20260910163552 rewrote the discovery RPCs for planning cost
+  // (SECURITY DEFINER, one lateral per table) and made get_nearby_events
+  // return the availability figures the cards need inline. These pin the
+  // behaviour that rewrite must not have changed, plus the new columns.
+
+  async function nearbyRows(): Promise<
+    {
+      id: string;
+      attendance_count: number | string;
+      ticket_types:
+        | { price: number; currency: string; quantity: number | null }[]
+        | null;
+      min_price: number | string | null;
+    }[]
+  > {
+    const { data, error } = await service.rpc("get_nearby_events", {
+      user_lat: LAT,
+      user_lng: LNG,
+      search_radius: 50_000,
+      p_cursor_sort_key: null,
+      p_cursor_id: null,
+      p_page_size: 1000,
+    } as never);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as never;
+  }
+
+  it("get_nearby_events returns attendance and per-tier stock inline", async () => {
+    const row = (await nearbyRows()).find((r) => r.id === eventId);
+    expect(row).toBeDefined();
+    expect(Number(row?.attendance_count)).toBe(0);
+    expect(Array.isArray(row?.ticket_types)).toBe(true);
+    expect(row?.ticket_types).toHaveLength(1);
+    expect(Number(row?.ticket_types?.[0]?.price)).toBe(25);
+    expect(row?.ticket_types?.[0]?.quantity).toBe(10);
+    expect(Number(row?.min_price)).toBe(25);
+  });
+
+  it("get_filtered_events price range keeps a tier inside it and drops one outside", async () => {
+    const inRange = await service.rpc("get_filtered_events", {
+      p_min_price: 20,
+      p_max_price: 30,
+      p_start_date: null,
+      p_end_date: null,
+      p_user_lat: LAT,
+      p_user_lng: LNG,
+      p_max_distance_km: 50,
+      p_search_text: null,
+      p_event_category: null,
+      p_event_type: null,
+      p_min_rating: null,
+      p_cursor_starts_at: null,
+      p_cursor_distance_km: null,
+      p_cursor_id: null,
+      p_page_size: 1000,
+    } as never);
+    expect(inRange.error).toBeNull();
+    expect(
+      ((inRange.data ?? []) as { id: string }[]).map((r) => r.id),
+    ).toContain(eventId);
+
+    const outOfRange = await service.rpc("get_filtered_events", {
+      p_min_price: 100,
+      p_max_price: 200,
+      p_start_date: null,
+      p_end_date: null,
+      p_user_lat: LAT,
+      p_user_lng: LNG,
+      p_max_distance_km: 50,
+      p_search_text: null,
+      p_event_category: null,
+      p_event_type: null,
+      p_min_rating: null,
+      p_cursor_starts_at: null,
+      p_cursor_distance_km: null,
+      p_cursor_id: null,
+      p_page_size: 1000,
+    } as never);
+    expect(outOfRange.error).toBeNull();
+    expect(
+      ((outOfRange.data ?? []) as { id: string }[]).map((r) => r.id),
+    ).not.toContain(eventId);
+  });
+
+  it("get_filtered_events matches an event by title search text", async () => {
+    const { data, error } = await service.rpc("get_filtered_events", {
+      p_min_price: null,
+      p_max_price: null,
+      p_start_date: null,
+      p_end_date: null,
+      p_user_lat: LAT,
+      p_user_lng: LNG,
+      p_max_distance_km: 50,
+      p_search_text: "Integration Test",
+      p_event_category: null,
+      p_event_type: null,
+      p_min_rating: null,
+      p_cursor_starts_at: null,
+      p_cursor_distance_km: null,
+      p_cursor_id: null,
+      p_page_size: 1000,
+    } as never);
+    expect(error).toBeNull();
+    expect(((data ?? []) as { id: string }[]).map((r) => r.id)).toContain(
+      eventId,
+    );
+  });
+
+  async function similarIds(): Promise<string[]> {
+    const { data: ev } = await service
+      .from("event")
+      .select("event_category")
+      .eq("id", eventId)
+      .single();
+    const { data, error } = await service.rpc("get_similar_events", {
+      input_category: ev?.event_category ?? "",
+      input_location: `SRID=4326;POINT(${LNG} ${LAT})`,
+      input_radius_km: 50,
+    } as never);
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as { id: string }[]).map((r) => r.id);
+  }
+
+  it("get_similar_events lists a live event and drops it once archived", async () => {
+    // 20260909130000 fixed the other three RPCs; get_similar_events was the
+    // one left still returning archived events.
+    expect(await similarIds()).toContain(eventId);
+    await archive();
+    expect(await similarIds()).not.toContain(eventId);
+  });
 });

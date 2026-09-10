@@ -6554,6 +6554,7 @@ export type Database = {
             };
             Returns: {
               address: Json;
+              attendance_count: number;
               capacity: number;
               created_at: string;
               currency: string;
@@ -6573,6 +6574,7 @@ export type Database = {
               slug: string;
               starts_at: string;
               status: string;
+              ticket_types: Json;
               title: string;
               website_url: string;
             }[];
@@ -6613,6 +6615,16 @@ export type Database = {
           website_url: string;
           whatsapp: string;
         }[];
+      };
+      get_organizer_dashboard: {
+        Args: {
+          p_bucket: string;
+          p_end: string | null;
+          p_prev_end: string | null;
+          p_prev_start: string | null;
+          p_start: string | null;
+        };
+        Returns: Json;
       };
       get_organizer_dashboard_overview: {
         Args: { p_end: string; p_start: string };
