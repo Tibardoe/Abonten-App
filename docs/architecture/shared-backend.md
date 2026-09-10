@@ -86,7 +86,13 @@ ticket checkout (`validateCheckout`), inventory reservation
 validate/claim, payment-attempt creation, event/place create & update,
 drafts, organizer dashboards / finance / ledger reads, payout accounts +
 `requestOrganizerPayout`, event cancellation, ticket check-in, promotions,
-saved payment methods + card verification, upload signatures.
+saved payment methods + card verification, upload signatures, Abonten
+Rewards reads (`rewards/creditsQuery` — credit summary + activity;
+`rewards/rewardsProgramQuery` — which program features are on, honouring the
+`REWARDS_KILL_SWITCH` deploy flag). The two credit reads call
+`auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their
+own; they sit behind the API so the kill switch and the "program enabled for
+this user" gate apply identically on both platforms.
 
 Mobile → `/api/mobile/**`; web → Server Action; **both → the same service
 module.** `request_organizer_payout` and `cancel_event_and_release_tickets`
@@ -99,7 +105,14 @@ Paystack verify / charge / refund (secret key —
 `payments/gateway/paystackService.ts`), the Paystack webhook
 (signature-verified, service-role), `finalizePaystackPayment`, the six
 `record_*` ledger RPCs, Supabase Admin API (phone attach, delete user),
-`ticketInventory` writes, the push sender, Cloudinary signing. All isolated
+`ticketInventory` writes, the push sender, Cloudinary signing, every
+credit-ledger mutation (`credit_grant` / `credit_release_lot` /
+`credit_void_lot` / `credit_debit_available` / `credit_*_adjustment` /
+`credit_grant_goodwill` / `credit_set_account_status` /
+`credit_close_account` / `record_payment_dispute` — `EXECUTE` for
+`service_role` only, and service_role itself has only `SELECT` on the ledger
+tables, so credit moves solely through these functions; see
+`docs/architecture/rewards-ledger.md`). All isolated
 behind `@abonten/services/supabase/serviceClient` or a server-only core, and
 never imported by a client component.
 

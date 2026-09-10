@@ -17,7 +17,8 @@ export type NotificationEntityKind =
   | "profile"
   | "place_claim"
   | "place_booking"
-  | "message";
+  | "message"
+  | "rewards";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;

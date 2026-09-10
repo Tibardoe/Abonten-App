@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Flag,
+  Gift,
   LayoutDashboard,
   LifeBuoy,
   ScrollText,
@@ -87,6 +88,12 @@ const ITEMS: Item[] = [
     label: "Finance",
     icon: Wallet,
     permission: "finance.view",
+  },
+  {
+    href: "/rewards",
+    label: "Rewards",
+    icon: Gift,
+    permission: "rewards.view",
   },
   {
     href: "/notifications",

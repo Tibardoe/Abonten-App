@@ -17,6 +17,7 @@ import {
 } from "@/hooks/useCurrentUser";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { MessagesNavLink } from "@/messaging/components/MessagesNavLink";
+import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { generateSlug } from "@abonten/core/geerateSlug";
@@ -169,6 +170,8 @@ export default function Header() {
               />
 
               <EventUploadButton />
+
+              <RewardsNavLink />
 
               {/* Not gated on isOrganizer/isPlaceOwner like the links above --
               every signed-in user can have messages/notifications, regardless

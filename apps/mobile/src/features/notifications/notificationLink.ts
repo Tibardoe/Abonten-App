@@ -74,6 +74,8 @@ function targetFromData(
       return data.placeId ? `/(app)/organizer/places/${data.placeId}` : null;
     case "place_booking":
       return data.placeId ? `/(app)/place/${data.placeId}` : null;
+    case "rewards":
+      return "/(app)/rewards";
     default:
       return null;
   }

@@ -61,7 +61,13 @@ export type AdminPermissionKey =
   | "settings.manage"
   | "admins.manage"
   | "support.view"
-  | "support.respond";
+  | "support.respond"
+  | "rewards.view"
+  | "rewards.review"
+  | "rewards.freeze"
+  | "rewards.goodwill"
+  | "rewards.configure"
+  | "rewards.withdrawals";
 
 export type AdminUserStatus = "active" | "disabled";
 

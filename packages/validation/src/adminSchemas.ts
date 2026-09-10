@@ -240,6 +240,85 @@ export const supportStatusSchema = z.object({
   status: z.enum(["open", "closed"]),
 });
 
+// ── Rewards (Abonten Credit) ────────────────────────────────
+// Amounts are entered in cedis and converted to pesewas by the action.
+
+const creditReason = z
+  .string()
+  .trim()
+  .min(3, "Give a reason (at least 3 characters)")
+  .max(1000, "Keep the reason under 1000 characters");
+
+export const creditAdjustmentSchema = z.object({
+  userId: z.string().uuid(),
+  direction: z.enum(["credit", "debit"]),
+  amount: z
+    .number()
+    .positive("Enter an amount greater than zero")
+    .max(100000, "That amount is too large for a manual adjustment"),
+  reason: creditReason,
+  userLabel: z.string().trim().max(120).optional(),
+  spendScope: z.enum(["any", "tickets", "promotions"]).default("any"),
+  expiresInDays: z.number().int().positive().max(730).optional(),
+  allowNegative: z.boolean().default(false),
+});
+
+export const creditAdjustmentDecisionSchema = z
+  .object({
+    requestId: z.string().uuid(),
+    decision: z.enum(["approve", "reject"]),
+    note: z.string().trim().max(1000).optional(),
+  })
+  .refine((v) => v.decision === "approve" || (v.note?.length ?? 0) >= 3, {
+    message: "Say why you are rejecting it",
+    path: ["note"],
+  });
+
+export const goodwillCreditSchema = z.object({
+  userId: z.string().uuid(),
+  amount: z
+    .number()
+    .positive("Enter an amount greater than zero")
+    .max(1000, "Goodwill credit is for small amounts"),
+  reason: creditReason,
+  // Generated once per form open, so a double-submit can't grant twice.
+  requestId: z.string().uuid(),
+});
+
+export const creditAccountStatusSchema = z.object({
+  userId: z.string().uuid(),
+  status: z.enum(["active", "frozen"]),
+  reason: creditReason,
+});
+
+// Withdrawal settings are deliberately NOT editable: cash withdrawal is out
+// of scope for version 1 (owner decision 2026-09-10) and there is no
+// withdrawal code for the switch to turn on.
+export const rewardsSettingsSchema = z.object({
+  expectedUpdatedAt: z.string().min(1),
+  reason: creditReason,
+  patch: z
+    .object({
+      rewardsEnabled: z.boolean(),
+      audience: z.enum(["staff", "beta", "all"]),
+      betaUserIds: z.array(z.string().uuid()).max(500),
+      referralCaptureEnabled: z.boolean(),
+      shadowMode: z.boolean(),
+      redeemPromotionsEnabled: z.boolean(),
+      redeemTicketsEnabled: z.boolean(),
+      allowFullCreditTicketOrders: z.boolean(),
+      maxCreditShareOfTicketOrderBps: z.number().int().min(0).max(10000),
+      minCashChargeMinor: z.number().int().min(0).max(100000),
+      budgetFloorMinor: z.number().int().min(0).max(100000000),
+      budgetNetRevenueShareBps: z.number().int().min(0).max(10000),
+      dualApprovalThresholdMinor: z.number().int().min(0).max(10000000),
+      supportGoodwillMonthlyCapMinor: z.number().int().min(0).max(1000000),
+      creditSharePayoutHoldBps: z.number().int().min(0).max(10000),
+    })
+    .strict()
+    .partial(),
+});
+
 export type ReportResolveInput = z.infer<typeof reportResolveSchema>;
 export type ModerationActionInput = z.infer<typeof moderationActionSchema>;
 export type SetUserStatusInput = z.infer<typeof setUserStatusSchema>;

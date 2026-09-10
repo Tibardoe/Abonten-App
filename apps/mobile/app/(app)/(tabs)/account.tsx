@@ -4,6 +4,7 @@ import { AppearanceToggle } from "@/components/app/AppearanceToggle";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
+import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { useIsOrganizer } from "@/features/roles/useRoles";
 import {
   AppText,
@@ -51,6 +52,8 @@ export default function Account() {
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
   const openSupport = useOpenConversation();
+  // Rewards rolls out by audience; the row appears once it's on for them.
+  const rewards = useRewardsProgram({ enabled: !!session });
 
   async function onSignOut() {
     await unregisterPushToken();
@@ -143,6 +146,13 @@ export default function Account() {
             label="Transactions"
             onPress={() => router.push("/(app)/transactions")}
           />
+          {rewards.data?.enabled ? (
+            <NavRow
+              icon="gift-outline"
+              label="Rewards"
+              onPress={() => router.push("/(app)/rewards")}
+            />
+          ) : null}
           <NavRow
             icon="card-outline"
             label={t("wallets")}

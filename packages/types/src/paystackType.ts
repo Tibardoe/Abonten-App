@@ -124,6 +124,22 @@ export type PaystackRefundWebhookData = {
   transaction?: { reference?: string } | null;
 };
 
+// charge.dispute.create / .remind / .resolve. Every field is optional and
+// read defensively: dispute payloads vary by channel and API version.
+export type PaystackDisputeWebhookData = {
+  id?: number | string;
+  status?: string | null;
+  resolution?: string | null;
+  refund_amount?: number | null;
+  currency?: string | null;
+  transaction_reference?: string | null;
+  transaction?: {
+    reference?: string | null;
+    amount?: number | null;
+    currency?: string | null;
+  } | null;
+};
+
 export type PaystackBank = {
   name: string;
   code: string;

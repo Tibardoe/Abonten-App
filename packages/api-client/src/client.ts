@@ -25,6 +25,8 @@ import type {
   ConversationRoleScope,
   ConversationType,
   ConversationsListResult,
+  CreditActivityResult,
+  CreditSummaryResult,
   DeleteEventDraftResult,
   DeleteHighlightResult,
   DeleteMessageBody,
@@ -97,6 +99,7 @@ import type {
   RequestPlaceBookingResult,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
+  RewardsProgramResult,
   SaveEventDraftBody,
   SaveEventDraftResult,
   SavePlaceDraftBody,
@@ -1392,6 +1395,34 @@ export function createApiClient(options: ApiClientOptions) {
           `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/promote`,
           { method: "POST", body: { tierId }, auth: true },
         );
+      },
+    },
+
+    rewards: {
+      /** The caller's Abonten Credit balance + whether Rewards is on for them. */
+      summary() {
+        return request<CreditSummaryResult>("/api/mobile/rewards/summary", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /** Credit activity, newest first (opaque cursor). */
+      activity(params?: { cursor?: string | null; pageSize?: number }) {
+        const query = new URLSearchParams();
+        if (params?.cursor) query.set("cursor", params.cursor);
+        if (params?.pageSize) query.set("pageSize", String(params.pageSize));
+        const qs = query.toString();
+        return request<CreditActivityResult>(
+          `/api/mobile/rewards/activity${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Active reward terms, for "How to earn" copy. */
+      program() {
+        return request<RewardsProgramResult>("/api/mobile/rewards/program", {
+          method: "GET",
+          auth: true,
+        });
       },
     },
 

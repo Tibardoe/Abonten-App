@@ -8,6 +8,7 @@ import {
 import { captureAdminActionError } from "@/lib/sentry";
 import { getServiceClient } from "@/lib/serviceClient";
 import { createSsrClient } from "@/lib/supabaseServer";
+import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
 import {
@@ -35,6 +36,14 @@ import {
   updateReportStatusCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
 import {
+  approveCreditAdjustmentCore,
+  grantGoodwillCreditCore,
+  rejectCreditAdjustmentCore,
+  requestCreditAdjustmentCore,
+  setCreditAccountStatusCore,
+  updateRewardsSettingsCore,
+} from "@abonten/services/admin/rewards/rewardsAdminCore";
+import {
   grantAdminRoleCore,
   revokeAdminRoleCore,
   setAdminUserStatusCore,
@@ -52,7 +61,11 @@ import {
   broadcastNotificationSchema,
   clearReviewResponseSchema,
   createPayoutSchema,
+  creditAccountStatusSchema,
+  creditAdjustmentDecisionSchema,
+  creditAdjustmentSchema,
   errorGroupStatusSchema,
+  goodwillCreditSchema,
   grantAdminRoleSchema,
   incidentUpsertSchema,
   moderationActionSchema,
@@ -64,6 +77,7 @@ import {
   resolveReportGroupSchema,
   reviewClaimSchema,
   revokeAdminRoleSchema,
+  rewardsSettingsSchema,
   sendPayoutSchema,
   setAdminUserStatusSchema,
   setRolePermissionSchema,
@@ -710,5 +724,147 @@ export async function addSupportNote(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e);
+  }
+}
+
+// ── Rewards (Abonten Credit) ────────────────────────────────
+// Credit only moves through the credit_* database functions; these actions
+// validate, re-check the admin (+ step-up for adjustments and settings) and
+// delegate to @abonten/services/admin/rewards.
+
+function firstIssue(error: { issues: { message: string }[] }) {
+  return { status: 400, message: error.issues[0]?.message ?? "Invalid input" };
+}
+
+export async function requestCreditAdjustment(input: unknown) {
+  const parsed = creditAdjustmentSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const d = parsed.data;
+    const res = await requestCreditAdjustmentCore(
+      svc(),
+      ctx,
+      {
+        userId: d.userId,
+        direction: d.direction,
+        amountMinor: cedisToCreditMinor(d.amount),
+        reason: d.reason,
+        userLabel: d.userLabel || null,
+        spendScope: d.spendScope,
+        expiresAt: d.expiresInDays
+          ? new Date(Date.now() + d.expiresInDays * 86_400_000).toISOString()
+          : null,
+        allowNegative: d.allowNegative,
+      },
+      await currentRequestMeta(),
+    );
+    if (res.status === 200 || res.status === 202) {
+      revalidatePath(`/rewards/accounts/${d.userId}`);
+      revalidatePath("/rewards");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "requestCreditAdjustment");
+  }
+}
+
+export async function decideCreditAdjustment(input: unknown) {
+  const parsed = creditAdjustmentDecisionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const meta = await currentRequestMeta();
+    const res =
+      parsed.data.decision === "approve"
+        ? await approveCreditAdjustmentCore(
+            svc(),
+            ctx,
+            { requestId: parsed.data.requestId, note: parsed.data.note },
+            meta,
+          )
+        : await rejectCreditAdjustmentCore(
+            svc(),
+            ctx,
+            { requestId: parsed.data.requestId, note: parsed.data.note ?? "" },
+            meta,
+          );
+    if (res.status === 200) {
+      revalidatePath("/rewards");
+      revalidatePath("/rewards/accounts", "layout");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "decideCreditAdjustment");
+  }
+}
+
+export async function grantGoodwillCredit(input: unknown) {
+  const parsed = goodwillCreditSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await grantGoodwillCreditCore(
+      svc(),
+      ctx,
+      {
+        userId: parsed.data.userId,
+        amountMinor: cedisToCreditMinor(parsed.data.amount),
+        reason: parsed.data.reason,
+        requestId: parsed.data.requestId,
+      },
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/rewards/accounts/${parsed.data.userId}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "grantGoodwillCredit");
+  }
+}
+
+export async function setCreditAccountStatus(input: unknown) {
+  const parsed = creditAccountStatusSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await setCreditAccountStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/rewards/accounts/${parsed.data.userId}`);
+      revalidatePath("/rewards/accounts");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "setCreditAccountStatus");
+  }
+}
+
+export async function updateRewardsSettings(input: unknown) {
+  const parsed = rewardsSettingsSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await updateRewardsSettingsCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/rewards");
+      revalidatePath("/rewards/settings");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "updateRewardsSettings");
   }
 }
