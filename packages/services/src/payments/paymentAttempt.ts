@@ -7,9 +7,14 @@ import type { Database } from "@abonten/types/database.types";
 // promoUsage.ts: it accepts an arbitrary userId with no session binding of
 // its own, so it must only ever be reached through actions that already
 // resolved userId from the caller's own session.
+//
+// payment_attempt is written only on the server (clients lost INSERT/UPDATE
+// in migration lock_money_path_client_writes), so the upsert below runs on
+// the service-role client and scopes every query to `userId` itself.
 
 import { logger } from "@abonten/core/logger";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 export type PaymentAttemptRow = {
   id: string;
@@ -56,8 +61,8 @@ export async function upsertPaymentAttemptForSession(
   currency: string,
   paymentMethodId: string,
   paymentGroupId: string | undefined,
-  supabase: SupabaseClient<Database>,
 ): Promise<UpsertPaymentAttemptResult> {
+  const supabase = getSupabaseServiceClient();
   const { data: existingAttempt, error: existingError } = await supabase
     .from("payment_attempt")
     .select(PAYMENT_ATTEMPT_ROW_SELECT)
@@ -86,6 +91,7 @@ export async function upsertPaymentAttemptForSession(
           updated_at: new Date().toISOString(),
         })
         .eq("id", existingAttempt.id)
+        .eq("user_id", userId)
         .select(PAYMENT_ATTEMPT_ROW_SELECT)
         .single();
 
@@ -102,7 +108,8 @@ export async function upsertPaymentAttemptForSession(
     await supabase
       .from("payment_attempt")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
-      .eq("id", existingAttempt.id);
+      .eq("id", existingAttempt.id)
+      .eq("user_id", userId);
   }
 
   const { data: attempt, error: insertError } = await supabase

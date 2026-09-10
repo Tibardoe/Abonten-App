@@ -38,6 +38,9 @@ export async function POST(req: Request) {
           ticketPurchaseNotification([ticketId], 0, {
             supabase: auth.supabase,
             userId: auth.user.id,
+            // See registerForFreeEvent.ts: auth.admin isn't available to
+            // the user's own client.
+            userEmail: auth.user.email,
           }).catch((error) =>
             logger.error(`Failed sending ticket purchase email: ${error}`),
           ),

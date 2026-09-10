@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
 import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
@@ -14,6 +15,9 @@ import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt
  * can only restock rows it still finds, so a deleted row's reservation was
  * gone for good. Releasing here, and cancelling instead of deleting, keeps
  * this consistent with every other place a checkout/ticket is given up.
+ *
+ * The status change runs on the service-role client (clients can't write
+ * ticket_checkout), scoped to the row the caller's own session just read.
  */
 export default async function deleteTicketSummaryCheckout(checkoutId: string) {
   const supabase = await createClient();
@@ -70,7 +74,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
     };
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await getSupabaseServiceClient()
     .from("ticket_checkout")
     .update({ status: "cancelled" })
     .eq("id", checkoutId)

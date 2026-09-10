@@ -21,6 +21,7 @@ import {
   reservationExpiry,
   reserveCredit,
 } from "../rewards/creditRedemptionCore";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import {
   type VerifyPaystackPaymentCoreResult,
@@ -34,8 +35,8 @@ import {
 // longer called by any UI.)
 //
 // Three shapes:
-//   * cash only (useCredit false): unchanged -- payment-method fetch, the
-//     stale-checkout sweep, the owner-scoped checkout read for the amount,
+//   * cash only (useCredit false): payment-method fetch, the stale-checkout
+//     sweep, the caller's own checkout priced from its tier,
 //     upsertPaymentAttemptForSession, initiatePaystackChargeForAttempt.
 //   * part credit: the credit is reserved against a new attempt whose
 //     `amount` is the CASH part only, and Paystack charges that. The credit
@@ -44,7 +45,9 @@ import {
 //     the credit is reserved and the purchase is finalized right here
 //     through the same finalizePaystackPayment (no Paystack call). The
 //     result carries that verification outcome.
-// Deliberately NOT a "use server" file.
+// payment_attempt is written with the service-role client (clients can't
+// write it -- migration lock_money_path_client_writes); every query is
+// scoped to the caller's userId. Deliberately NOT a "use server" file.
 
 export type PromotionPaystackInfo =
   | {
@@ -129,21 +132,20 @@ export async function createPromotionPaymentAttemptCore(
     return { status: 404, message: "Payment method not found" };
   }
 
-  const { data: checkout, error: checkoutError } = await supabase
-    .from(cfg.checkoutTable)
-    .select("total_price, currency")
-    .eq("id", input.checkoutId)
-    .eq("owner_id", userId)
-    .eq("status", "pending")
-    .maybeSingle();
-
-  if (checkoutError) {
-    logger.error(
-      `Failed fetching promotion checkout: ${checkoutError.message}`,
+  // Priced from the tier, the same way the credit path is, so cash and
+  // credit orders can never disagree about what a promotion costs.
+  let order: Awaited<ReturnType<typeof loadPromotionOrder>>;
+  try {
+    order = await loadPromotionOrder(
+      supabase,
+      userId,
+      input.kind,
+      input.checkoutId,
     );
+  } catch {
     return { status: 500, message: "Something went wrong!" };
   }
-  if (!checkout) {
+  if (!order || order.status !== "pending") {
     return {
       status: 410,
       message: "This checkout has expired. Please start again.",
@@ -162,8 +164,8 @@ export async function createPromotionPaymentAttemptCore(
   );
   if (switched !== "ok") return switched;
 
-  const amount = checkout.total_price as number;
-  const currency = checkout.currency as string;
+  const amount = fromPesewas(order.orderTotalMinor);
+  const currency = order.currency;
 
   const attemptResult = await upsertPaymentAttemptForSession(
     userId,
@@ -173,7 +175,6 @@ export async function createPromotionPaymentAttemptCore(
     currency,
     input.paymentMethodId,
     undefined,
-    supabase,
   );
 
   if (attemptResult.status !== 200) {
@@ -181,7 +182,6 @@ export async function createPromotionPaymentAttemptCore(
   }
 
   const paystackResult = await initiatePaystackChargeForAttempt(
-    supabase,
     attemptResult.data,
     amount,
     currency,
@@ -261,13 +261,14 @@ async function dropOpenCreditAttempts(
   }
 
   if (affected.length > 0) {
-    const { error: cancelError } = await supabase
+    const { error: cancelError } = await getSupabaseServiceClient()
       .from("payment_attempt")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .in(
         "id",
         affected.map((a) => a.id),
       )
+      .eq("user_id", userId)
       .in("status", ["initiated", "pending"]);
     if (cancelError) {
       logger.error(`Failed cancelling open attempts: ${cancelError.message}`);
@@ -354,7 +355,8 @@ async function startCreditPayment(
   if (dropped !== "ok") return dropped;
 
   const cashCedis = fromPesewas(quote.cashMinor);
-  const { data: inserted, error: insertError } = await supabase
+  const service = getSupabaseServiceClient();
+  const { data: inserted, error: insertError } = await service
     .from("payment_attempt")
     .insert({
       user_id: userId,
@@ -397,7 +399,7 @@ async function startCreditPayment(
   });
 
   if (!reserved.ok) {
-    await supabase
+    await service
       .from("payment_attempt")
       .update({
         status: "failed",
@@ -408,7 +410,7 @@ async function startCreditPayment(
     return { status: 409, message: reserved.message };
   }
 
-  await supabase
+  await service
     .from("payment_attempt")
     .update({ credit_reservation_id: reserved.reservationId })
     .eq("id", attempt.id);
@@ -432,7 +434,6 @@ async function startCreditPayment(
   }
 
   const paystackResult = await initiatePaystackChargeForAttempt(
-    supabase,
     attempt,
     cashCedis,
     quote.currency,
@@ -443,7 +444,7 @@ async function startCreditPayment(
 
   if (paystackResult.status !== 200) {
     await releaseReservation(reserved.reservationId, "payment_not_started");
-    await supabase
+    await service
       .from("payment_attempt")
       .update({
         status: "failed",

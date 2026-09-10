@@ -449,11 +449,7 @@ describe("paying for promotions with credit", () => {
     ).toBe(0);
 
     // Replaying verification changes nothing.
-    const replay = await finalizePaystackPayment(
-      organizer.client,
-      res.data.attempt.id,
-      deps,
-    );
+    const replay = await finalizePaystackPayment(res.data.attempt.id, deps);
     expect(replay.status).toBe("succeeded");
     expect((await available(organizer)).available_minor).toBe(
       after.available_minor,
@@ -470,28 +466,33 @@ describe("paying for promotions with credit", () => {
     });
   });
 
-  it("refuses a credit-only attempt the user forged themselves", async () => {
+  it("refuses a credit-only attempt with no credit reservation behind it", async () => {
     const checkoutId = await newCheckout();
-    const { data: forged, error } = await organizer.client
+    const forgedRow = {
+      user_id: organizer.id,
+      event_promotion_checkout_id: checkoutId,
+      amount: 0,
+      currency: "GHS",
+      status: "initiated",
+      provider: "abonten_credit",
+      provider_reference: `ABNCR-${crypto.randomUUID()}`,
+    };
+    // A user can't write the attempt at all any more...
+    const direct = await organizer.client
       .from("payment_attempt")
-      .insert({
-        user_id: organizer.id,
-        event_promotion_checkout_id: checkoutId,
-        amount: 0,
-        currency: "GHS",
-        status: "initiated",
-        provider: "abonten_credit",
-        provider_reference: `ABNCR-${crypto.randomUUID()}`,
-      })
+      .insert(forgedRow)
+      .select("id");
+    expect(direct.error?.code).toBe("42501");
+
+    // ...and even a row that got in some other way is refused at finalize.
+    const { data: forged, error } = await service
+      .from("payment_attempt")
+      .insert(forgedRow)
       .select("id")
       .single();
     expect(error).toBeNull();
 
-    const result = await finalizePaystackPayment(
-      organizer.client,
-      forged?.id as string,
-      deps,
-    );
+    const result = await finalizePaystackPayment(forged?.id as string, deps);
     expect(result.status).toBe("failed");
     const { count } = await service
       .from("event_promotion")
@@ -521,7 +522,7 @@ describe("paying for promotions with credit", () => {
     const pay = async (paystackAmount: number) => {
       const checkoutId = await newCheckout();
       const reference = `PSK-${crypto.randomUUID()}`;
-      const { data: attempt } = await organizer.client
+      const { data: attempt } = await service
         .from("payment_attempt")
         .insert({
           user_id: organizer.id,
@@ -561,11 +562,7 @@ describe("paying for promotions with credit", () => {
         channel: "card",
         customer: { email: organizer.email },
       });
-      const result = await finalizePaystackPayment(
-        organizer.client,
-        attempt?.id as string,
-        deps,
-      );
+      const result = await finalizePaystackPayment(attempt?.id as string, deps);
       return { result, checkoutId, reservationId: reserved.data as string };
     };
 
@@ -607,7 +604,7 @@ describe("paying for promotions with credit", () => {
     await grant(organizer, 400);
     const reserveFor = async (status: string) => {
       const checkoutId = await newCheckout();
-      const { data: attempt } = await organizer.client
+      const { data: attempt } = await service
         .from("payment_attempt")
         .insert({
           user_id: organizer.id,

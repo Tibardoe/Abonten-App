@@ -4,6 +4,7 @@ import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventor
 import { issueRefundCore } from "@abonten/services/organizer/issueRefundCore";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of cancelUserTicket, lifted so the mobile API route
 // (`/api/mobile/tickets/cancel`) and the "use server" action run the exact
@@ -11,6 +12,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // authenticated Supabase client + resolved userId. `revalidatePath` stays
 // in the web wrapper (it returns eventId/eventCode for that). Deliberately
 // NOT a "use server" file (see validateCheckoutCore.ts).
+//
+// Buyers can't write `ticket` or `ticket_checkout` themselves (migration
+// lock_money_path_client_writes -- otherwise a refunded ticket could be set
+// back to active), so those two status changes run on the service-role
+// client, scoped to the ticket the caller's own session just read.
 
 type TicketRow = {
   status: string;
@@ -70,7 +76,7 @@ export async function cancelUserTicketCore(
     };
   }
 
-  const { error: updateStatusError } = await supabase
+  const { error: updateStatusError } = await getSupabaseServiceClient()
     .from("ticket")
     .update({ status: "cancelled", updated_at: new Date().toISOString() })
     .eq("id", ticketId)
@@ -220,7 +226,7 @@ async function markCheckoutCancelledIfAllTicketsCancelled(
 
   if (!allCancelled) return;
 
-  const { error: checkoutUpdateError } = await supabase
+  const { error: checkoutUpdateError } = await getSupabaseServiceClient()
     .from("ticket_checkout")
     .update({ status: "cancelled" })
     .eq("id", ticketCheckoutId)

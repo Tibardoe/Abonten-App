@@ -53,11 +53,7 @@ export async function retryPaymentFulfillmentCore(
     return { status: 403, message: "Not authorized" };
   }
 
-  const result = await finalizePaystackPayment(
-    supabase,
-    paymentAttemptId,
-    deps,
-  );
+  const result = await finalizePaystackPayment(paymentAttemptId, deps);
 
   if (result.status === "succeeded") {
     return { status: 200, data: { finalized: "succeeded" } };

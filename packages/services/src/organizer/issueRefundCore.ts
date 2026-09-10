@@ -132,8 +132,9 @@ export async function issueRefundCore(
 
     // Still record that a request was actually made — refund_requested_at
     // is what lets the UI tell "attempted and failed" apart from "not
-    // requested yet" for a transaction stuck at status=successful.
-    await supabase
+    // requested yet" for a transaction stuck at status=successful. Service
+    // role: clients can't write `transaction`.
+    await getSupabaseServiceClient()
       .from("transaction")
       .update({
         refund_requested_at: new Date().toISOString(),

@@ -1,13 +1,13 @@
-import type { Database } from "@abonten/types/database.types";
 // Ensures exactly one Paystack transaction exists for a given payment_attempt
 // row, reusing a still-open one instead of re-initializing on every retry —
 // mirrors upsertPaymentAttemptForSession's own "reuse an open attempt"
 // philosophy, just one level up (reuse an open Paystack transaction).
 // Deliberately NOT a "use server" Server Action, same reasoning as
-// ticketInventory.ts/paymentAttempt.ts: it takes an already-authorized
-// Supabase client and a payment_attempt row resolved by the caller, so it
-// must only ever be reached through actions that already did their own
-// authorization.
+// ticketInventory.ts/paymentAttempt.ts: it takes a payment_attempt row
+// resolved by the caller, so it must only ever be reached through actions
+// that already did their own authorization. The attempt's Paystack
+// reference is stored with the service-role client -- clients can't write
+// payment_attempt (migration lock_money_path_client_writes).
 
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
@@ -18,7 +18,7 @@ import {
   initiateMobileMoneyCharge,
 } from "@abonten/services/payments/gateway/paystackService";
 import type { PaymentAttemptRow } from "@abonten/services/payments/paymentAttempt";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 type EnsurePaystackTransactionResult =
   | { status: 500; message: string }
@@ -37,7 +37,6 @@ type EnsurePaystackTransactionResult =
  * second Paystack transaction for the same attempt.
  */
 export async function ensurePaystackTransaction(
-  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -82,7 +81,7 @@ export async function ensurePaystackTransaction(
     };
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
       provider_reference: initialized.reference,
@@ -138,7 +137,6 @@ type PaystackChargeInitResult =
     };
 
 async function chargeCardDirect(
-  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -164,7 +162,7 @@ async function chargeCardDirect(
     };
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
       provider_reference: charge.reference,
@@ -195,7 +193,6 @@ async function chargeCardDirect(
 }
 
 async function chargeMomoDirect(
-  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -223,7 +220,7 @@ async function chargeMomoDirect(
     };
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await getSupabaseServiceClient()
     .from("payment_attempt")
     .update({
       provider_reference: charge.reference,
@@ -276,7 +273,6 @@ async function chargeMomoDirect(
  * re-initiated, on pain of double-charging the customer.
  */
 export async function initiatePaystackChargeForAttempt(
-  supabase: SupabaseClient<Database>,
   attempt: PaymentAttemptRow,
   amountInGhs: number,
   currency: string,
@@ -319,7 +315,6 @@ export async function initiatePaystackChargeForAttempt(
     // generic popup.
     if (canChargeCardDirect) {
       return chargeCardDirect(
-        supabase,
         attempt,
         amountInGhs,
         currency,
@@ -330,7 +325,6 @@ export async function initiatePaystackChargeForAttempt(
 
     if (canChargeMomoDirect) {
       return chargeMomoDirect(
-        supabase,
         attempt,
         amountInGhs,
         currency,
@@ -343,7 +337,6 @@ export async function initiatePaystackChargeForAttempt(
     // Still no direct-charge capability — delegate to
     // ensurePaystackTransaction's own cache check.
     const popupResult = await ensurePaystackTransaction(
-      supabase,
       attempt,
       amountInGhs,
       currency,
@@ -360,7 +353,6 @@ export async function initiatePaystackChargeForAttempt(
 
   if (canChargeCardDirect) {
     return chargeCardDirect(
-      supabase,
       attempt,
       amountInGhs,
       currency,
@@ -371,7 +363,6 @@ export async function initiatePaystackChargeForAttempt(
 
   if (canChargeMomoDirect) {
     return chargeMomoDirect(
-      supabase,
       attempt,
       amountInGhs,
       currency,
@@ -382,7 +373,6 @@ export async function initiatePaystackChargeForAttempt(
   }
 
   const popupResult = await ensurePaystackTransaction(
-    supabase,
     attempt,
     amountInGhs,
     currency,

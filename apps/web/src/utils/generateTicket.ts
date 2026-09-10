@@ -1,5 +1,6 @@
 import ticketPurchaseNotification from "@/actions/ticketPurchaseNotification";
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { getEventStatus } from "@abonten/core/eventStatus";
 import { logger } from "@abonten/core/logger";
@@ -267,17 +268,19 @@ export default async function generateTicket(
         : { issued_after_event_end: true };
   }
 
-  const { data: issueData, error: issueError } = await supabase.rpc(
-    "issue_tickets_for_checkout",
-    {
+  // Service role: issue_tickets_for_checkout is EXECUTE-revoked from clients
+  // (migration lock_money_path_client_writes). The session being issued was
+  // read above as this user's own, and the RPC itself still refuses a paid
+  // checkout without a verified transaction + payment attempt.
+  const { data: issueData, error: issueError } =
+    await getSupabaseServiceClient().rpc("issue_tickets_for_checkout", {
       p_checkout_session_id: checkoutSessionId,
       p_user_id: userId,
       p_transaction_id: transactionId ?? null,
       p_metadata: parsedMetadata,
       p_ticket_expires_at: eventEndDate.toISOString(),
       p_tickets: uploadedTickets,
-    } as unknown as Database["public"]["Functions"]["issue_tickets_for_checkout"]["Args"],
-  );
+    } as unknown as Database["public"]["Functions"]["issue_tickets_for_checkout"]["Args"]);
 
   if (issueError || !issueData) {
     logger.error(

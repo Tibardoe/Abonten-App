@@ -13,8 +13,9 @@ import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
 // when the purchase is confirmed, release when it fails or lapses.
 //
 // The order total used here comes from the promotion TIER, not from the
-// checkout row's total_price: that column is writable by its owner through
-// RLS, so it is not trusted for anything credit touches.
+// checkout row's total_price. (Clients can no longer write that row --
+// migration lock_money_path_client_writes -- but pricing from the tier keeps
+// a single source of truth for cash and credit orders alike.)
 
 export type PromotionKind = "event" | "place";
 
@@ -224,8 +225,8 @@ const RESERVATION_SELECT =
 
 /**
  * How long credit stays held for a checkout: until it lapses (capped at an
- * hour, since the checkout row's expiry is user-writable), plus 30 minutes
- * for a slow Mobile Money approval. The 5-minute sweep releases it after.
+ * hour as a backstop), plus 30 minutes for a slow Mobile Money approval.
+ * The 5-minute sweep releases it after.
  */
 export function reservationExpiry(checkoutExpiresAt: string | null): string {
   const now = Date.now();
@@ -326,8 +327,8 @@ export async function releaseReservation(
 
 /**
  * The reservation a payment attempt was started with. Looked up by the
- * attempt id the SERVER recorded on the reservation -- never from the
- * user-writable payment_attempt.credit_reservation_id.
+ * attempt id recorded on the reservation by credit_reserve -- the
+ * reservation, not the attempt row, is the source of truth for credit.
  */
 export async function getReservationForAttempt(
   paymentAttemptId: string,

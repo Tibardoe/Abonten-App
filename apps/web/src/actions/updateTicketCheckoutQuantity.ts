@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { computeLineAmount } from "@abonten/core/checkoutPricing";
 import { logger } from "@abonten/core/logger";
 import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
@@ -176,6 +177,9 @@ export default async function updateTicketCheckoutQuantity(
   };
 
   // --- Write the row, CAS-guarded on the quantity we read ---
+  // Service role: clients can't write ticket_checkout (its price is priced
+  // here, from the row's own unit_price and the promo code, never taken
+  // from the caller).
   const { discount, amount } = computeLineAmount(
     newQuantity,
     checkout.unit_price,
@@ -183,7 +187,7 @@ export default async function updateTicketCheckoutQuantity(
     newDiscountedUnits,
   );
 
-  const { data: updated, error: updateError } = await supabase
+  const { data: updated, error: updateError } = await getSupabaseServiceClient()
     .from("ticket_checkout")
     .update({
       quantity: newQuantity,

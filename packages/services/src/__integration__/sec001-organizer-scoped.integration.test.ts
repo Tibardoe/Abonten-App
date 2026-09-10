@@ -39,8 +39,9 @@ describe("SEC-001: organizer-scoped SECURITY DEFINER functions", () => {
 
     // A real ticket_checkout row, created through the actual RPC (not a
     // hand-rolled insert) so its shape matches a genuine purchase.
-    const { data: checkoutSessionId, error: checkoutError } =
-      await organizer.client.rpc("create_ticket_checkout", {
+    const { data: checkoutSessionId, error: checkoutError } = await service.rpc(
+      "create_ticket_checkout",
+      {
         p_user_id: organizer.id,
         p_event_id: eventId,
         p_occurrence_id: null,
@@ -58,7 +59,8 @@ describe("SEC-001: organizer-scoped SECURITY DEFINER functions", () => {
           },
         ],
         // Same generated-type gap create_event's fixture helper documents.
-      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"]);
+      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
+    );
     if (checkoutError || !checkoutSessionId) {
       throw new Error(`Fixture setup failed: ${checkoutError?.message}`);
     }

@@ -1,44 +1,28 @@
-"use server";
-
 import createNotification from "@/actions/createNotification";
-import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
+import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
  * Commit step for a Featured Places purchase — the place equivalent of
- * activateEventPromotion.ts. Called only by src/utils/finalizePaystackPayment.ts
- * once it has independently verified payment for the given checkout. Never
- * trusts a client-supplied duration/price — everything comes from the
- * already-priced place_promotion_checkout row and the tier it references.
+ * activateEventPromotion.ts. Called only by finalizePaystackPayment
+ * (injected as a paymentFulfillmentDeps step) once it has verified payment
+ * for the given checkout. Never trusts a client-supplied duration/price —
+ * everything comes from the already-priced place_promotion_checkout row and
+ * the tier it references.
  *
- * `authOverride` lets the Paystack webhook (no cookies/session) call this
- * without a browser session — see src/types/authOverrideType.ts, same
- * precedent as activateEventPromotion.ts/generateTicket.ts.
+ * **Server-only module function, not a Server Action** — see
+ * activateEventPromotion.ts. Writes with the service-role client and refuses
+ * unless a verified payment for this checkout exists.
  */
 export default async function activatePlacePromotion(
   checkoutId: string,
-  authOverride?: AuthOverride,
+  authOverride: AuthOverride,
 ) {
-  const supabase = authOverride?.supabase ?? (await createClient());
-
-  let userId: string;
-
-  if (authOverride) {
-    userId = authOverride.userId;
-  } else {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return { status: 401, message: "User not logged in" };
-    }
-
-    userId = user.id;
-  }
+  const supabase = getSupabaseServiceClient();
+  const userId = authOverride.userId;
 
   // Distinguish "never existed / wrong user" (404) from "existed but timed
   // out" (410) by checking existence BEFORE running the expiry sweep below —
@@ -60,6 +44,19 @@ export default async function activatePlacePromotion(
 
   if (!existingCheckout) {
     return { status: 404, message: "Checkout not found" };
+  }
+
+  if (
+    !(await hasVerifiedPromotionPayment(
+      "place_promotion_checkout_id",
+      checkoutId,
+      userId,
+    ))
+  ) {
+    logger.error(
+      `activatePlacePromotion: no verified payment for checkout ${checkoutId}`,
+    );
+    return { status: 402, message: "Payment not verified for this checkout" };
   }
 
   await supabase.rpc("expire_stale_place_promotion_checkouts");
@@ -158,7 +155,7 @@ export default async function activatePlacePromotion(
   );
 
   // Same reasoning as activateEventPromotion.ts: this was the one
-  // payment-completion action with no revalidatePath, leaving the
+  // payment-completion step with no revalidatePath, leaving the
   // organizer's own /manage/places/[placeId] promotion tab able to show
   // stale "pick a tier" state after a Back-button navigation post-payment.
   revalidatePath(`/manage/places/${checkout.place_id}`);

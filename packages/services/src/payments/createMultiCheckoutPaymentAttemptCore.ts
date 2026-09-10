@@ -11,6 +11,7 @@ import {
 } from "@abonten/services/payments/paystackInit";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of createMultiCheckoutPaymentAttempt, lifted so the mobile
 // route (`/api/mobile/checkout/attempt`) runs the exact same logic — see
@@ -116,14 +117,13 @@ export async function createMultiCheckoutPaymentAttemptCore(
       prepared.currency,
       input.paymentMethodId,
       paymentGroupId,
-      supabase,
     );
 
     if (result.status !== 200) {
       // Roll back everything already created in this group so a failed
       // multi-pay attempt never leaves a half-formed group behind.
       if (insertedAttempts.length > 0) {
-        await supabase
+        await getSupabaseServiceClient()
           .from("payment_attempt")
           .update({ status: "cancelled", updated_at: new Date().toISOString() })
           .in(
@@ -144,7 +144,6 @@ export async function createMultiCheckoutPaymentAttemptCore(
   // every member sharing this paymentGroupId.
   const primary = insertedAttempts[0];
   const paystackResult = await initiatePaystackChargeForAttempt(
-    supabase,
     primary,
     prepared.grandTotal,
     prepared.currency,
@@ -154,7 +153,7 @@ export async function createMultiCheckoutPaymentAttemptCore(
   );
 
   if (paystackResult.status !== 200) {
-    await supabase
+    await getSupabaseServiceClient()
       .from("payment_attempt")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .in(

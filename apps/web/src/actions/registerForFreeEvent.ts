@@ -38,6 +38,9 @@ export default async function registerForFreeEvent(
         ticketPurchaseNotification([ticketId], 0, {
           supabase,
           userId: user.id,
+          // Without it the email helper falls back to auth.admin, which the
+          // user's own client can't call -- the RSVP email was never sent.
+          userEmail: user.email,
         }).catch((error) =>
           logger.error(`Failed sending ticket purchase email: ${error}`),
         ),

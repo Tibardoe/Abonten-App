@@ -8,12 +8,17 @@ import type { Database, Json } from "@abonten/types/database.types";
 // logic, and neither ever marks a purchase successful without an
 // independent Paystack verification.
 //
-// Deliberately NOT a "use server" Server Action: it takes an
-// already-constructed Supabase client (cookie-bound for the frontend path,
-// service-role for the webhook), a payment_attempt id already resolved by
-// the caller, and the three purchase-fulfilment steps as injected deps
-// (they stay in apps/web — Next primitives + React email). Same category as
+// Deliberately NOT a "use server" Server Action: it takes a payment_attempt
+// id the caller has already authorized (verify/retry check the attempt is
+// the caller's own; the webhook's authority is Paystack's signature) and the
+// three purchase-fulfilment steps as injected deps (they stay in apps/web —
+// Next primitives + React email). Same category as
 // ticketInventory.ts/paymentAttempt.ts.
+//
+// Every read and write here uses the service-role client: payment_attempt,
+// transaction and the promotion/ticket tables are not client-writable
+// (migration lock_money_path_client_writes), and the fulfilment deps get the
+// same client through authOverride.
 
 import { logger } from "@abonten/core/logger";
 import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
@@ -97,9 +102,9 @@ function reservationTarget(
 
 /**
  * Whether the credit reservation really belongs to this attempt: same user,
- * same checkout. The reservation is written only by service-role functions,
- * so it -- not the user-writable payment_attempt row -- decides how much
- * credit paid and how much cash Paystack must have collected.
+ * same checkout. The reservation is written only by the credit_* functions,
+ * so it -- not the payment_attempt row -- decides how much credit paid and
+ * how much cash Paystack must have collected.
  */
 function reservationMatches(
   attempt: PaymentAttemptFullRow,
@@ -140,10 +145,10 @@ async function reservedCheckoutLapsed(
 }
 
 export async function finalizePaystackPayment(
-  supabase: SupabaseClient<Database>,
   primaryAttemptId: string,
   deps: PaymentFulfillmentDeps,
 ): Promise<FinalizeResult> {
+  const supabase = getSupabaseServiceClient();
   const { data: primary, error: primaryError } = await supabase
     .from("payment_attempt")
     .select(PAYMENT_ATTEMPT_FULL_SELECT)
@@ -409,8 +414,7 @@ type MarkGroup = (
  * A payment paid entirely with credit: no Paystack call, but the same
  * locking, transaction record, fulfilment and retry semantics. The credit
  * reservation must exist, belong to this attempt's user and checkout, and
- * cover the whole order -- otherwise the attempt (which its owner can write
- * to directly) is refused.
+ * cover the whole order -- otherwise the attempt is refused.
  */
 async function finalizeCreditOnly(
   supabase: SupabaseClient<Database>,
@@ -435,8 +439,9 @@ async function finalizeCreditOnly(
     return { status: "failed", message: "Payment could not be verified" };
   }
 
-  const { data: authUser } =
-    await getSupabaseServiceClient().auth.admin.getUserById(primary.user_id);
+  const { data: authUser } = await supabase.auth.admin.getUserById(
+    primary.user_id,
+  );
 
   return completeVerifiedPayment({
     supabase,
@@ -665,11 +670,8 @@ async function completeVerifiedPayment({
     // failed need re-fulfilling.
     if (member.status === "succeeded") continue;
 
-    // Carrying the already-verified email avoids ticketPurchaseNotification
-    // falling back to supabase.auth.admin.getUserById() — that admin API
-    // call only works with a service-role client (the webhook path), and
-    // silently fails on the ordinary cookie-bound client this frontend
-    // verify path uses, which was dropping the purchase email entirely.
+    // Carrying the already-verified email saves ticketPurchaseNotification
+    // a supabase.auth.admin.getUserById() lookup.
     const authOverride = {
       supabase,
       userId: primary.user_id,
@@ -799,11 +801,10 @@ async function completeVerifiedPayment({
     const processingCost =
       processingCostPesewas != null ? fromPesewas(processingCostPesewas) : null;
 
-    // Service-role, not the caller's client: record_platform_fee writes the
-    // RLS-less platform_fee_entry table and is EXECUTE-revoked from
-    // `authenticated` (migration 20260903200000). Safe — the payment is
-    // already verified against Paystack above.
-    const { error: platformFeeError } = await getSupabaseServiceClient().rpc(
+    // record_platform_fee writes the RLS-less platform_fee_entry table and
+    // is EXECUTE-revoked from `authenticated` (migration 20260903200000).
+    // Safe — the payment is already verified against Paystack above.
+    const { error: platformFeeError } = await supabase.rpc(
       "record_platform_fee",
       {
         p_transaction_id: transactionRow.id,
