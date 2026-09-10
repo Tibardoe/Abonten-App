@@ -55,6 +55,12 @@ import {
   listReportGroupsCore,
   listReportsCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
+import {
+  getCreditAccountDetailCore,
+  getRewardsOverviewCore,
+  listCreditAccountsCore,
+  listPendingCreditAdjustmentsCore,
+} from "@abonten/services/admin/rewards/rewardsAdminCore";
 import { globalSearchCore } from "@abonten/services/admin/search/globalSearchCore";
 import {
   getRoleMatrixCore,
@@ -300,4 +306,33 @@ export async function loadSupportConversation(id: string) {
 export async function loadBlocks(filters: ListBlocksFilters) {
   const ctx = await requireAdmin();
   return listConversationBlocksCore(getServiceClient(), ctx, filters);
+}
+
+// ── Rewards (Abonten Credit) ────────────────────────────────
+
+export async function loadRewardsOverview(range: { from: string; to: string }) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [overview, pending] = await Promise.all([
+    getRewardsOverviewCore(svc, ctx, range),
+    listPendingCreditAdjustmentsCore(svc, ctx),
+  ]);
+  return { ctx, overview, pending };
+}
+
+export async function loadCreditAccounts(
+  filters: Parameters<typeof listCreditAccountsCore>[2],
+) {
+  const ctx = await requireAdmin();
+  return listCreditAccountsCore(getServiceClient(), ctx, filters);
+}
+
+export async function loadCreditAccountDetail(userId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getCreditAccountDetailCore(
+    getServiceClient(),
+    ctx,
+    userId,
+  );
+  return { ctx, detail };
 }

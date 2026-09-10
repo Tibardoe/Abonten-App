@@ -40,7 +40,19 @@ export default async function UserDetailPage({
             ← Back to users
           </Link>
         }
-        actions={<Badge tone={tone}>{u.status}</Badge>}
+        actions={
+          <>
+            {ctx.permissions.includes("rewards.view") ? (
+              <Link
+                href={`/rewards/accounts/${id}`}
+                className="text-xs text-primary hover:underline"
+              >
+                Credit account →
+              </Link>
+            ) : null}
+            <Badge tone={tone}>{u.status}</Badge>
+          </>
+        }
       />
 
       <div className="grid gap-4 lg:grid-cols-3">
