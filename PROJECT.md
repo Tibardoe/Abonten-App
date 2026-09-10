@@ -1642,6 +1642,11 @@ Defects found were fixed in the same pass.
 - **Card verification.** "Start card verification" opens Paystack Checkout
   ("Pay GHS 1", test mode) in a Custom Tab; abandoning it returns to the
   app with "Couldn't verify your card. Please try again." — correct.
+  Completing it (Paystack's test checkout offers one-tap "Success" /
+  "Declined" outcomes, then "Pay GHS 1"; the callback lands on
+  abontenhub.com, close the tab to return) ended in "Card added." and — with
+  the de-duplication deployed — left the active card count at two rather
+  than inserting a third identical row.
 - **Highlights.** Two gallery photos posted from the profile composer →
   two `highlight` rows in one group under the owner's Cloudinary folder.
 - **Place creation.** Five-step wizard (cover, gallery, basics with
