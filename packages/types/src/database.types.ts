@@ -1099,6 +1099,106 @@ export type Database = {
         };
         Relationships: [];
       };
+      credit_reservation: {
+        Row: {
+          amount_minor: number;
+          capture_journal_id: string | null;
+          captured_at: string | null;
+          cash_minor: number | null;
+          created_at: string;
+          currency: string;
+          expires_at: string;
+          id: string;
+          label: string | null;
+          lots: Json;
+          order_total_minor: number;
+          payment_attempt_id: string | null;
+          release_journal_id: string | null;
+          release_reason: string | null;
+          released_at: string | null;
+          reserve_journal_id: string | null;
+          scope: string;
+          status: string;
+          target_id: string;
+          target_type: string;
+          transaction_id: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          amount_minor: number;
+          capture_journal_id?: string | null;
+          captured_at?: string | null;
+          cash_minor?: number | null;
+          created_at?: string;
+          currency?: string;
+          expires_at: string;
+          id?: string;
+          label?: string | null;
+          lots?: Json;
+          order_total_minor: number;
+          payment_attempt_id?: string | null;
+          release_journal_id?: string | null;
+          release_reason?: string | null;
+          released_at?: string | null;
+          reserve_journal_id?: string | null;
+          scope: string;
+          status?: string;
+          target_id: string;
+          target_type: string;
+          transaction_id?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          amount_minor?: number;
+          capture_journal_id?: string | null;
+          captured_at?: string | null;
+          cash_minor?: number | null;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string;
+          id?: string;
+          label?: string | null;
+          lots?: Json;
+          order_total_minor?: number;
+          payment_attempt_id?: string | null;
+          release_journal_id?: string | null;
+          release_reason?: string | null;
+          released_at?: string | null;
+          reserve_journal_id?: string | null;
+          scope?: string;
+          status?: string;
+          target_id?: string;
+          target_type?: string;
+          transaction_id?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "credit_reservation_capture_journal_id_fkey";
+            columns: ["capture_journal_id"];
+            isOneToOne: false;
+            referencedRelation: "credit_journal";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "credit_reservation_release_journal_id_fkey";
+            columns: ["release_journal_id"];
+            isOneToOne: false;
+            referencedRelation: "credit_journal";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "credit_reservation_reserve_journal_id_fkey";
+            columns: ["reserve_journal_id"];
+            isOneToOne: false;
+            referencedRelation: "credit_journal";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       device_token: {
         Row: {
           created_at: string;
@@ -2693,6 +2793,8 @@ export type Database = {
           amount: number;
           checkout_session_id: string | null;
           created_at: string;
+          credit_amount: number;
+          credit_reservation_id: string | null;
           currency: string;
           event_promotion_checkout_id: string | null;
           failure_reason: string | null;
@@ -2715,6 +2817,8 @@ export type Database = {
           amount: number;
           checkout_session_id?: string | null;
           created_at?: string;
+          credit_amount?: number;
+          credit_reservation_id?: string | null;
           currency?: string;
           event_promotion_checkout_id?: string | null;
           failure_reason?: string | null;
@@ -2737,6 +2841,8 @@ export type Database = {
           amount?: number;
           checkout_session_id?: string | null;
           created_at?: string;
+          credit_amount?: number;
+          credit_reservation_id?: string | null;
           currency?: string;
           event_promotion_checkout_id?: string | null;
           failure_reason?: string | null;
@@ -6107,6 +6213,7 @@ export type Database = {
         Row: {
           amount: number;
           created_at: string;
+          credit_amount: number;
           currency: string;
           email: string;
           full_name: string;
@@ -6126,6 +6233,7 @@ export type Database = {
         Insert: {
           amount: number;
           created_at?: string;
+          credit_amount?: number;
           currency?: string;
           email: string;
           full_name: string;
@@ -6145,6 +6253,7 @@ export type Database = {
         Update: {
           amount?: number;
           created_at?: string;
+          credit_amount?: number;
           currency?: string;
           email?: string;
           full_name?: string;
@@ -6655,6 +6764,7 @@ export type Database = {
         Returns: undefined;
       };
       _credit_expire_lot: { Args: { p_lot_id: string }; Returns: number };
+      _credit_scopes_for: { Args: { p_scope: string }; Returns: string[] };
       _credit_system_ledger_id: { Args: { p_code: string }; Returns: string };
       _credit_user_ledger_id: {
         Args: { p_code: string; p_user_id: string };
@@ -6810,6 +6920,18 @@ export type Database = {
         };
         Returns: string;
       };
+      credit_capture_reservation: {
+        Args: {
+          p_label?: string;
+          p_reservation_id: string;
+          p_transaction_id: string;
+        };
+        Returns: {
+          captured_minor: number;
+          created: boolean;
+          journal_id: string;
+        }[];
+      };
       credit_close_account: {
         Args: { p_actor_id?: string; p_actor_type?: string; p_user_id: string };
         Returns: undefined;
@@ -6903,6 +7025,19 @@ export type Database = {
           released_minor: number;
         }[];
       };
+      credit_release_reservation: {
+        Args: {
+          p_actor_id?: string;
+          p_actor_type?: string;
+          p_reason: string;
+          p_reservation_id: string;
+        };
+        Returns: boolean;
+      };
+      credit_release_stale_reservations: {
+        Args: { p_limit?: number };
+        Returns: number;
+      };
       credit_request_adjustment: {
         Args: {
           p_allow_negative?: boolean;
@@ -6920,6 +7055,20 @@ export type Database = {
           requires_second_approver: boolean;
         }[];
       };
+      credit_reserve: {
+        Args: {
+          p_amount_minor: number;
+          p_expires_at: string;
+          p_label?: string;
+          p_order_total_minor: number;
+          p_payment_attempt_id: string;
+          p_scope: string;
+          p_target_id: string;
+          p_target_type: string;
+          p_user_id: string;
+        };
+        Returns: string;
+      };
       credit_set_account_status: {
         Args: {
           p_actor_id?: string;
@@ -6928,6 +7077,10 @@ export type Database = {
           p_user_id: string;
         };
         Returns: string;
+      };
+      credit_spendable: {
+        Args: { p_scope: string; p_user_id: string };
+        Returns: Json;
       };
       credit_void_lot: {
         Args: {
