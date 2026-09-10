@@ -18,9 +18,20 @@ import type { Database, Json } from "@abonten/types/database.types";
 import { logger } from "@abonten/core/logger";
 import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  type CreditReservationRow,
+  captureReservation,
+  getReservationForAttempt,
+  releaseReservation,
+} from "../rewards/creditRedemptionCore";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import type { PaymentFulfillmentDeps } from "./fulfillmentDeps";
 import { verifyTransaction } from "./gateway/paystackService";
+
+// Payments paid entirely with Abonten Credit (createPromotionPaymentAttemptCore)
+// run through this same function so retries, fulfilment and the recovery
+// cron behave identically; they skip only the Paystack verification call.
+const CREDIT_PROVIDER = "abonten_credit";
 
 type PaymentAttemptFullRow = {
   id: string;
@@ -28,6 +39,7 @@ type PaymentAttemptFullRow = {
   status: string;
   amount: number;
   currency: string;
+  provider: string;
   provider_reference: string | null;
   payment_group_id: string | null;
   checkout_session_id: string | null;
@@ -61,14 +73,77 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id, updated_at";
+  "id, user_id, status, amount, currency, provider, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id, updated_at";
+
+type Verification = Awaited<ReturnType<typeof verifyTransaction>>;
+
+function reservationTarget(
+  attempt: PaymentAttemptFullRow,
+): { type: string; id: string } | null {
+  if (attempt.event_promotion_checkout_id) {
+    return {
+      type: "event_promotion_checkout",
+      id: attempt.event_promotion_checkout_id,
+    };
+  }
+  if (attempt.place_promotion_checkout_id) {
+    return {
+      type: "place_promotion_checkout",
+      id: attempt.place_promotion_checkout_id,
+    };
+  }
+  return null;
+}
+
+/**
+ * Whether the credit reservation really belongs to this attempt: same user,
+ * same checkout. The reservation is written only by service-role functions,
+ * so it -- not the user-writable payment_attempt row -- decides how much
+ * credit paid and how much cash Paystack must have collected.
+ */
+function reservationMatches(
+  attempt: PaymentAttemptFullRow,
+  reservation: CreditReservationRow,
+): boolean {
+  const target = reservationTarget(attempt);
+  return (
+    !!target &&
+    reservation.user_id === attempt.user_id &&
+    reservation.target_type === target.type &&
+    reservation.target_id === target.id
+  );
+}
+
+/** Has the promotion checkout this credit was reserved for lapsed? */
+async function reservedCheckoutLapsed(
+  reservation: CreditReservationRow,
+): Promise<boolean> {
+  const table =
+    reservation.target_type === "event_promotion_checkout"
+      ? "event_promotion_checkout"
+      : "place_promotion_checkout";
+  const { data } = await getSupabaseServiceClient()
+    .from(table)
+    .select("status, expires_at")
+    .eq("id", reservation.target_id)
+    .maybeSingle();
+  if (!data) return true;
+  if (data.status === "paid") return false;
+  // Same rule as expire_stale_*_promotion_checkouts, which the activation
+  // step runs first: pending but more than a minute past its expiry is
+  // about to be expired, so the activation would refuse it.
+  return (
+    data.status !== "pending" ||
+    (!!data.expires_at &&
+      new Date(data.expires_at).getTime() < Date.now() - 60 * 1000)
+  );
+}
 
 export async function finalizePaystackPayment(
   supabase: SupabaseClient<Database>,
   primaryAttemptId: string,
   deps: PaymentFulfillmentDeps,
 ): Promise<FinalizeResult> {
-  const { issueTickets, activatePlacePromotion, activateEventPromotion } = deps;
   const { data: primary, error: primaryError } = await supabase
     .from("payment_attempt")
     .select(PAYMENT_ATTEMPT_FULL_SELECT)
@@ -197,7 +272,37 @@ export async function finalizePaystackPayment(
       );
   };
 
-  let verification: Awaited<ReturnType<typeof verifyTransaction>>;
+  // Credit applied to this payment, if any (promotions only in Phase 2, so
+  // never part of a multi-checkout group).
+  let reservation: CreditReservationRow | null = null;
+  try {
+    reservation = await getReservationForAttempt(primary.id);
+  } catch {
+    await supabase
+      .from("payment_attempt")
+      .update({ status: "pending", updated_at: new Date().toISOString() })
+      .in(
+        "id",
+        groupMembers.map((m) => m.id),
+      );
+    return {
+      status: "pending",
+      message: "Could not verify payment right now. Please try again.",
+    };
+  }
+
+  if (primary.provider === CREDIT_PROVIDER) {
+    return finalizeCreditOnly(supabase, primary, reservation, deps, markGroup);
+  }
+
+  if (reservation && !reservationMatches(primary, reservation)) {
+    logger.error(
+      `finalizePaystackPayment: credit reservation ${reservation.id} does not match attempt ${primary.id}`,
+    );
+    reservation = null;
+  }
+
+  let verification: Verification;
   try {
     verification = await verifyTransaction(primary.provider_reference);
   } catch (error) {
@@ -223,9 +328,11 @@ export async function finalizePaystackPayment(
     };
   }
 
-  const expectedAmountPesewas = toPesewas(
-    groupMembers.reduce((sum, m) => sum + m.amount, 0),
-  );
+  // With credit applied, Paystack must have collected exactly the cash part
+  // the server worked out when it reserved the credit.
+  const expectedAmountPesewas = reservation
+    ? reservation.cash_minor
+    : toPesewas(groupMembers.reduce((sum, m) => sum + m.amount, 0));
 
   if (verification.reference !== primary.provider_reference) {
     logger.error(
@@ -267,6 +374,9 @@ export async function finalizePaystackPayment(
           ? `Paystack reported status: ${verification.status}`
           : "Amount/currency mismatch on verification",
     });
+    if (reservation) {
+      await releaseReservation(reservation.id, "payment_failed");
+    }
     return {
       status: "failed",
       message:
@@ -275,6 +385,137 @@ export async function finalizePaystackPayment(
           : "Your payment was declined. Please try another payment method.",
     };
   }
+
+  return completeVerifiedPayment({
+    supabase,
+    primary,
+    groupMembers,
+    deps,
+    markGroup,
+    reservation,
+    cashPesewas: expectedAmountPesewas,
+    payerEmail: verification.customer.email,
+    gatewayResponse: verification as unknown as Json,
+    processingCostPesewas: verification.fees ?? null,
+  });
+}
+
+type MarkGroup = (
+  status: "failed" | "succeeded",
+  extra?: Record<string, unknown>,
+) => Promise<void>;
+
+/**
+ * A payment paid entirely with credit: no Paystack call, but the same
+ * locking, transaction record, fulfilment and retry semantics. The credit
+ * reservation must exist, belong to this attempt's user and checkout, and
+ * cover the whole order -- otherwise the attempt (which its owner can write
+ * to directly) is refused.
+ */
+async function finalizeCreditOnly(
+  supabase: SupabaseClient<Database>,
+  primary: PaymentAttemptFullRow,
+  reservation: CreditReservationRow | null,
+  deps: PaymentFulfillmentDeps,
+  markGroup: MarkGroup,
+): Promise<FinalizeResult> {
+  if (
+    !reservation ||
+    !reservationMatches(primary, reservation) ||
+    reservation.cash_minor !== 0 ||
+    toPesewas(primary.amount) !== 0 ||
+    primary.payment_group_id
+  ) {
+    logger.error(
+      `finalizePaystackPayment: credit-only attempt ${primary.id} has no matching full-credit reservation`,
+    );
+    await markGroup("failed", {
+      failure_reason: "Credit payment could not be verified",
+    });
+    return { status: "failed", message: "Payment could not be verified" };
+  }
+
+  const { data: authUser } =
+    await getSupabaseServiceClient().auth.admin.getUserById(primary.user_id);
+
+  return completeVerifiedPayment({
+    supabase,
+    primary,
+    groupMembers: [primary],
+    deps,
+    markGroup,
+    reservation,
+    cashPesewas: 0,
+    payerEmail: authUser?.user?.email ?? "",
+    gatewayResponse: {
+      provider: CREDIT_PROVIDER,
+      reservation_id: reservation.id,
+      credit_minor: reservation.amount_minor,
+    },
+    processingCostPesewas: null,
+  });
+}
+
+/**
+ * Everything after the money is confirmed: the `transaction` row, capturing
+ * any credit, fulfilment per group member, and the platform-fee record.
+ */
+async function completeVerifiedPayment({
+  supabase,
+  primary,
+  groupMembers,
+  deps,
+  markGroup,
+  reservation,
+  cashPesewas,
+  payerEmail,
+  gatewayResponse,
+  processingCostPesewas,
+}: {
+  supabase: SupabaseClient<Database>;
+  primary: PaymentAttemptFullRow;
+  groupMembers: PaymentAttemptFullRow[];
+  deps: PaymentFulfillmentDeps;
+  markGroup: MarkGroup;
+  reservation: CreditReservationRow | null;
+  cashPesewas: number;
+  payerEmail: string;
+  gatewayResponse: Json;
+  processingCostPesewas: number | null;
+}): Promise<FinalizeResult> {
+  const { issueTickets, activatePlacePromotion, activateEventPromotion } = deps;
+  const creditOnly = primary.provider === CREDIT_PROVIDER;
+
+  // Credit reserved for a checkout that has since lapsed is given back
+  // rather than spent: the activation below would refuse the checkout
+  // anyway. A credit-only order then simply fails (nothing was charged); a
+  // part-credit order continues to "fulfillment_failed" exactly like a
+  // cash payment that lands after its checkout expired, and support refunds
+  // the cash.
+  let captureCredit = false;
+  if (reservation) {
+    // Already captured on an earlier run: the credit is spent, so carry on
+    // (a failed activation lands in "fulfillment_failed" for support).
+    if (
+      reservation.status !== "captured" &&
+      (await reservedCheckoutLapsed(reservation))
+    ) {
+      await releaseReservation(reservation.id, "checkout_lapsed");
+      if (creditOnly) {
+        await markGroup("failed", {
+          failure_reason: "Checkout expired before it was paid",
+        });
+        return {
+          status: "failed",
+          message: "This checkout expired. Please start again.",
+        };
+      }
+    } else {
+      captureCredit = true;
+    }
+  }
+  const creditAmount =
+    captureCredit && reservation ? fromPesewas(reservation.amount_minor) : 0;
 
   // One `transaction` row per Paystack charge (not per group member) — a
   // grouped multi-checkout payment shares a single Paystack reference across
@@ -309,7 +550,7 @@ export async function finalizePaystackPayment(
     const { data: existingTransaction } = await supabase
       .from("transaction")
       .select("id")
-      .eq("paystack_reference", primary.provider_reference)
+      .eq("paystack_reference", primary.provider_reference as string)
       .maybeSingle();
 
     transactionRow = existingTransaction ?? null;
@@ -321,18 +562,21 @@ export async function finalizePaystackPayment(
         .from("transaction")
         .insert({
           user_id: primary.user_id,
-          full_name:
-            userInfo?.full_name ??
-            userInfo?.username ??
-            verification.customer.email,
-          email: verification.customer.email,
+          full_name: userInfo?.full_name ?? userInfo?.username ?? payerEmail,
+          email: payerEmail,
           reason,
-          amount: fromPesewas(expectedAmountPesewas),
+          // `amount` is always the cash collected; credit is its own column.
+          amount: fromPesewas(cashPesewas),
+          credit_amount: creditAmount,
           currency: primary.currency,
           status: "successful",
-          payment_method: "paystack",
-          payment_gateway_response: verification as unknown as Json,
-          paystack_reference: primary.provider_reference,
+          payment_method: creditOnly
+            ? CREDIT_PROVIDER
+            : creditAmount > 0
+              ? "paystack+credit"
+              : "paystack",
+          payment_gateway_response: gatewayResponse,
+          paystack_reference: primary.provider_reference as string,
         })
         .select("id")
         .maybeSingle();
@@ -344,6 +588,9 @@ export async function finalizePaystackPayment(
       await markGroup("failed", {
         failure_reason: "Failed to record transaction",
       });
+      if (reservation) {
+        await releaseReservation(reservation.id, "transaction_not_recorded");
+      }
       return {
         status: "failed",
         message:
@@ -352,6 +599,13 @@ export async function finalizePaystackPayment(
     }
 
     transactionRow = insertedTransaction;
+  } else if (reservation) {
+    // A retry reuses the recorded transaction; keep its credit figure in
+    // step with what is actually being captured this time.
+    await supabase
+      .from("transaction")
+      .update({ credit_amount: creditAmount })
+      .eq("id", transactionRow.id);
   }
 
   await supabase
@@ -364,6 +618,35 @@ export async function finalizePaystackPayment(
       "id",
       groupMembers.map((m) => m.id),
     );
+
+  // Spend the reserved credit before fulfilling, so nothing is ever
+  // activated without its credit. Idempotent on retries.
+  if (captureCredit && reservation) {
+    const captured = await captureReservation(
+      reservation.id,
+      transactionRow.id,
+    );
+    if (!captured.ok) {
+      await supabase
+        .from("payment_attempt")
+        .update({
+          status: "fulfillment_failed",
+          failure_reason: captured.message,
+          updated_at: new Date().toISOString(),
+        })
+        .in(
+          "id",
+          groupMembers.map((m) => m.id),
+        );
+      return {
+        status: "fulfillment_failed",
+        message: creditOnly
+          ? "We couldn't apply your credit to this order. Tap Retry, or contact support if it keeps failing."
+          : "Your payment was successful, but we couldn't apply your credit yet. Tap Retry to finish — you won't be charged again.",
+        paymentAttemptId: primary.id,
+      };
+    }
+  }
 
   // Verified — issue tickets / activate the promotion per group member,
   // reusing the existing, unmodified ticket-generation and promotion-
@@ -390,7 +673,7 @@ export async function finalizePaystackPayment(
     const authOverride = {
       supabase,
       userId: primary.user_id,
-      userEmail: verification.customer.email,
+      userEmail: payerEmail,
     };
 
     if (member.checkout_session_id) {
@@ -514,7 +797,7 @@ export async function finalizePaystackPayment(
   // complete ticket_revenue for the transaction.
   if (primary.checkout_session_id) {
     const processingCost =
-      verification.fees != null ? fromPesewas(verification.fees) : null;
+      processingCostPesewas != null ? fromPesewas(processingCostPesewas) : null;
 
     // Service-role, not the caller's client: record_platform_fee writes the
     // RLS-less platform_fee_entry table and is EXECUTE-revoked from

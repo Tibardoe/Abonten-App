@@ -1,21 +1,87 @@
 import { useCreatePromotionAttempt } from "@/features/organizer/useEventPromotion";
 import { useCreatePlacePromotionAttempt } from "@/features/organizer/usePlacePromotion";
+import {
+  useInvalidateCredit,
+  usePromotionCreditQuote,
+} from "@/features/rewards/useRewards";
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
+import { formatCredit } from "@abonten/core/rewards/creditAmount";
+import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, View } from "react-native";
+import { ActivityIndicator, Pressable, Switch, View } from "react-native";
 
 // Method picker + "Pay" for a promotion checkout. Like the ticket
 // PaymentSection, it starts the attempt then hands off to
-// <PaymentVerificationScreen>; it never renders payment status itself.
+// <PaymentVerificationScreen>; it never renders payment status itself. When
+// the user has Abonten Credit, a "Use credit" switch (on by default) applies
+// the server-quoted amount; if it covers everything there's nothing to pick
+// and the same verification screen simply confirms the result.
 
 function methodLabel(m: PaymentMethodRow): string {
   const d = m.details as Record<string, string>;
   return m.method_type === "momo"
     ? `${d.networkName ?? "Mobile money"} · ${d.phone ?? ""}`
     : `${d.brand ?? "Card"} ···· ${d.last4 ?? ""}`;
+}
+
+function CreditSwitch({
+  quote,
+  value,
+  onChange,
+  disabled,
+}: {
+  quote: CreditQuote;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled: boolean;
+}) {
+  return (
+    <View className="gap-2 rounded-xl border border-border bg-card p-3">
+      <View className="flex-row items-center justify-between gap-3">
+        <View className="flex-1 gap-0.5">
+          <AppText className="text-sm font-semibold text-foreground">
+            Use {formatCredit(quote.creditMinor)} Abonten Credit
+          </AppText>
+          <AppText variant="meta">
+            {quote.creditOnly
+              ? "Your credit covers this. Nothing else is charged."
+              : `You have ${formatCredit(quote.spendableMinor)} you can use here.`}
+          </AppText>
+        </View>
+        <Switch
+          value={value}
+          onValueChange={onChange}
+          disabled={disabled}
+          accessibilityLabel="Use Abonten Credit"
+        />
+      </View>
+      {value ? (
+        <View className="gap-1 border-t border-border pt-2">
+          <View className="flex-row justify-between">
+            <AppText variant="meta">Total</AppText>
+            <AppText variant="meta" className="tabular-nums">
+              {formatCredit(quote.orderTotalMinor)}
+            </AppText>
+          </View>
+          <View className="flex-row justify-between">
+            <AppText variant="meta">Credit</AppText>
+            <AppText variant="meta" className="tabular-nums">
+              −{formatCredit(quote.creditMinor)}
+            </AppText>
+          </View>
+          <View className="flex-row justify-between">
+            <AppText variant="metaStrong">You pay</AppText>
+            <AppText variant="metaStrong" className="tabular-nums">
+              {formatCredit(quote.cashMinor)}
+            </AppText>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
 }
 
 export function PromotionPaymentSection({
@@ -38,6 +104,16 @@ export function PromotionPaymentSection({
   const { data: methodsRes } = usePaymentMethods();
   const methods = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
 
+  const { data: quote, refetch: refetchQuote } = usePromotionCreditQuote(
+    kind,
+    checkoutId,
+  );
+  const invalidateCredit = useInvalidateCredit();
+  const [useCreditChoice, setUseCreditChoice] = useState<boolean | null>(null);
+  const useCredit = !!quote && (useCreditChoice ?? true);
+  const creditCoversAll = useCredit && !!quote?.creditOnly;
+  const payAmount = useCredit && quote ? quote.cashMinor / 100 : amount;
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,20 +123,24 @@ export function PromotionPaymentSection({
     createEventAttempt.isPending || createPlaceAttempt.isPending;
 
   const chosenId = selectedId ?? methods.find((m) => m.is_default)?.id ?? null;
+  const canPay = creditCoversAll || !!chosenId;
 
   async function onPay() {
-    if (!chosenId || creatingAttempt) return;
+    if (!canPay || creatingAttempt) return;
     setError(null);
 
+    const paymentMethodId = creditCoversAll ? null : chosenId;
     const res =
       kind === "place"
         ? await createPlaceAttempt.mutateAsync({
             placePromotionCheckoutId: checkoutId,
-            paymentMethodId: chosenId,
+            paymentMethodId,
+            useCredit,
           })
         : await createEventAttempt.mutateAsync({
             eventPromotionCheckoutId: checkoutId,
-            paymentMethodId: chosenId,
+            paymentMethodId,
+            useCredit,
           });
 
     if (res.status !== 200) {
@@ -69,6 +149,25 @@ export function PromotionPaymentSection({
           ? "This checkout expired. Go back and start again."
           : (res.message ?? "Couldn't start the payment."),
       );
+      if (res.status === 409) refetchQuote();
+      return;
+    }
+
+    const ps = res.data.paystack;
+    const verification = res.data.verification;
+    if (useCredit) invalidateCredit();
+
+    // A credit-only order that was refused (e.g. the checkout lapsed) has
+    // nothing to wait for: say so here instead of on a status screen.
+    if (
+      ps === null &&
+      verification &&
+      verification.status !== 200 &&
+      verification.status !== 202 &&
+      verification.status !== 207
+    ) {
+      setError(verification.message ?? "Couldn't complete the payment.");
+      refetchQuote();
       return;
     }
 
@@ -76,7 +175,6 @@ export function PromotionPaymentSection({
     onFeatured();
 
     const attemptId = res.data.attempt.id;
-    const ps = res.data.paystack;
     const successHref =
       kind === "place"
         ? `/(app)/organizer/places/${entityId}`
@@ -87,44 +185,107 @@ export function PromotionPaymentSection({
       params: {
         attemptId,
         kind: kind === "place" ? "place_promotion" : "event_promotion",
-        mode: ps.mode,
+        // Credit-only: already finalized server-side, so the verification
+        // screen confirms it on its first check instead of waiting on a
+        // charge.
+        mode: ps ? ps.mode : "direct",
         deepLink: `abonten://promotion/${checkoutId}`,
         contextTitle: `Feature this ${kind}`,
-        amountLabel: `${currency} ${amount.toFixed(2)}`,
+        amountLabel: ps
+          ? `${currency} ${payAmount.toFixed(2)}`
+          : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0)} credit`,
         successHref,
         successCtaLabel: `View ${kind}`,
-        ...(ps.mode === "popup"
-          ? { authorizationUrl: ps.authorizationUrl }
-          : {
-              chargeStatus: ps.chargeStatus,
-              displayMessage: ps.displayMessage,
-            }),
+        ...(ps === null
+          ? {
+              chargeStatus: "success",
+              displayMessage: "Confirming your credit payment…",
+            }
+          : ps.mode === "popup"
+            ? { authorizationUrl: ps.authorizationUrl }
+            : {
+                chargeStatus: ps.chargeStatus,
+                displayMessage: ps.displayMessage,
+              }),
       },
     });
   }
 
+  const payButton = (
+    <Pressable
+      disabled={!canPay || creatingAttempt}
+      onPress={onPay}
+      className={`items-center rounded-xl px-4 py-3 ${
+        !canPay || creatingAttempt ? "bg-muted" : "bg-primary"
+      }`}
+    >
+      {creatingAttempt ? (
+        <ActivityIndicator color="#fff" />
+      ) : (
+        <AppText
+          className={`text-sm font-semibold ${
+            !canPay ? "text-muted-foreground" : "text-primary-foreground"
+          }`}
+        >
+          {creditCoversAll
+            ? "Confirm and pay with credit"
+            : `Pay ${currency} ${payAmount.toFixed(2)}`}
+        </AppText>
+      )}
+    </Pressable>
+  );
+
+  const errorBox = error ? (
+    <View className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
+      <AppText className="text-sm text-destructive">{error}</AppText>
+    </View>
+  ) : null;
+
+  const creditSwitch = quote ? (
+    <CreditSwitch
+      quote={quote}
+      value={useCredit}
+      onChange={setUseCreditChoice}
+      disabled={creatingAttempt}
+    />
+  ) : null;
+
+  if (creditCoversAll) {
+    return (
+      <View className="gap-3">
+        {creditSwitch}
+        {errorBox}
+        {payButton}
+      </View>
+    );
+  }
+
   if (methods.length === 0) {
     return (
-      <View className="gap-3 rounded-xl border border-border bg-card p-4">
-        <AppText className="text-sm text-muted-foreground">
-          Add a payment method to pay for a promotion.
-        </AppText>
-        <Pressable
-          onPress={() => router.push("/(app)/wallet")}
-          className="items-center rounded-lg bg-primary px-4 py-2.5"
-        >
-          <AppText className="text-sm font-semibold text-primary-foreground">
-            Add payment method
+      <View className="gap-3">
+        {creditSwitch}
+        <View className="gap-3 rounded-xl border border-border bg-card p-4">
+          <AppText className="text-sm text-muted-foreground">
+            Add a payment method to pay for a promotion.
           </AppText>
-        </Pressable>
+          <Pressable
+            onPress={() => router.push("/(app)/wallet")}
+            className="items-center rounded-lg bg-primary px-4 py-2.5"
+          >
+            <AppText className="text-sm font-semibold text-primary-foreground">
+              Add payment method
+            </AppText>
+          </Pressable>
+        </View>
       </View>
     );
   }
 
   return (
     <View className="gap-3">
+      {creditSwitch}
       <AppText className="text-sm font-semibold text-foreground">
-        Pay with
+        {useCredit ? "Pay the rest with" : "Pay with"}
       </AppText>
       {methods.map((m) => {
         const selected = m.id === chosenId;
@@ -148,31 +309,8 @@ export function PromotionPaymentSection({
         );
       })}
 
-      {error ? (
-        <View className="rounded-lg border border-destructive/40 bg-destructive/10 p-3">
-          <AppText className="text-sm text-destructive">{error}</AppText>
-        </View>
-      ) : null}
-
-      <Pressable
-        disabled={!chosenId || creatingAttempt}
-        onPress={onPay}
-        className={`items-center rounded-xl px-4 py-3 ${
-          !chosenId || creatingAttempt ? "bg-muted" : "bg-primary"
-        }`}
-      >
-        {creatingAttempt ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <AppText
-            className={`text-sm font-semibold ${
-              !chosenId ? "text-muted-foreground" : "text-primary-foreground"
-            }`}
-          >
-            Pay {currency} {amount.toFixed(2)}
-          </AppText>
-        )}
-      </Pressable>
+      {errorBox}
+      {payButton}
     </View>
   );
 }

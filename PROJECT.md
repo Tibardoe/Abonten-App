@@ -1745,10 +1745,83 @@ staff account through email OTP). Two defects found in that pass and fixed:
 input widths in the admin forms, and a reversed reward shown without
 strikethrough on mobile.
 
-**Not yet built (later phases):** spending credit (promotions P2, tickets P3),
+**Not yet built (later phases):** spending credit on tickets (P3),
 referral capture + reward engine (P4, shadow mode first), friend referral
 (P5), organizer/venue rebate (P6). Withdrawals are out of scope for
 version 1. Production is unchanged for users: the program is off.
+
+### 27.1 Phase 2 — paying for promotions with credit (2026-09-10)
+
+Migration `20260910215010_credit_reservations.sql` (applied to production via
+MCP; function hashes identical to a from-scratch replay):
+
+- **`credit_reservation`** — credit held for one checkout: `reserved` →
+  `captured` (spent) or `released` (given back). Holds sit on lots
+  (`credit_lot.held_minor`) and in the user's `reserved` bucket. One open
+  reservation per checkout; one per payment attempt. Owner SELECT only.
+- **Functions (service_role only):** `credit_spendable(user, scope)` (the
+  single rule for what may be spent: program + `redeem_*_enabled` switches,
+  account active, not in debt, scope, unexpired lots), `credit_reserve`,
+  `credit_capture_reservation` (idempotent; if the hold had lapsed it takes the
+  credit again from the current balance or refuses with `23514`),
+  `credit_release_reservation`, `credit_release_stale_reservations` (pg_cron
+  every 5 min: releases holds whose payment failed/was replaced, or that are
+  past expiry — never while a payment is `processing` or `succeeded`).
+  `credit_close_account` now releases holds first. Reconciliation gains
+  "stuck reservation" and "captured ≠ transaction.credit_amount" checks.
+- **Columns:** `payment_attempt.credit_amount`, `credit_reservation_id`;
+  `transaction.credit_amount`. `amount` keeps meaning **cash**, so the
+  Paystack amount check and every existing cash total are unchanged.
+  `transaction.payment_method` is `paystack`, `paystack+credit` or
+  `abonten_credit`.
+- **Replay fix:** `payment_attempt_target_check` restored to production's
+  definition (a replay had re-created it without `event_promotion_checkout_id`,
+  so event-promotion payments failed in any freshly built database).
+
+Code: `@abonten/core/rewards/creditAllocation` (how much credit an order can
+use: whole order, or leave the GH₵ 1 minimum cash charge);
+`@abonten/services/rewards/creditRedemptionCore` (quote, reserve, release,
+capture — prices come from the promotion **tier**, not the owner-writable
+`*_promotion_checkout.total_price`); `createPromotionPaymentAttemptCore` gains
+`useCredit` (part-credit = Paystack charges the cash part; credit-only =
+provider `abonten_credit`, amount 0, finalized immediately);
+`finalizePaystackPayment` trusts the credit reservation (never the
+user-writable attempt row), refuses forged credit-only attempts, compares
+Paystack's amount with the reservation's cash part, captures before
+activating, and gives the credit back when the checkout lapsed. Web: new
+`createPromotionPaymentAttempt` + `getPromotionCreditQuote` actions and a
+`UseCreditToggle` in `PaymentMethodSelector` (the old `createPaymentAttempt`
+promotion branches are no longer called). Mobile: `GET
+/api/mobile/checkout/promotion-credit-quote`, `useCredit` on both
+promotion-attempt routes, the switch in `PromotionPaymentSection`. Admin:
+"Featuring events and places" switch in Rewards › Program settings;
+`updateRewardsSettingsCore` refuses switches for unshipped features.
+
+**Verified:** 7 new unit tests; `credits-redemption.integration.test.ts`
+(9 tests: privileges, quote/reserve/overdraw, switches + frozen account,
+3-way race, credit-only purchase end to end, a forged credit-only attempt,
+part-credit with Paystack's amount checked both ways, the sweep, account
+closure) with Paystack's HTTP call mocked; full suite **140/140**; typecheck
+11/11; parity 108 routes. Driven for real on the local stack: web checkout
+(part-credit amounts, switch off/on, a credit-only feature activated and shown
+as "Used on a feature for …" on /rewards), the admin switch, and the Android
+app (part-credit display, then a credit-only feature → "Payment successful").
+Not verified against live Paystack: a part-credit order's real charge.
+
+**Found while building this, NOT fixed (needs an owner decision — RLS
+change):** the promotion and transaction tables are writable by any signed-in
+user through RLS. `event_promotion_checkout` / `place_promotion_checkout` allow
+the owner to INSERT (for **any** event/place — no organizer check) and UPDATE
+every column (including `total_price` and `status`); `event_promotion` /
+`place_promotion` allow INSERT whenever the caller owns the referenced
+checkout; `transaction` allows the owner to INSERT/UPDATE rows. So a user can
+feature any event or place for free straight from the REST API, lower a
+checkout's price before paying, and write fake "successful" transactions. The
+credit path does not depend on any of these (it prices from the tier and trusts
+only `credit_reservation`), but the cash path does. Recommended fix: revoke
+client INSERT/UPDATE on those five tables and move the writes
+(`insert*PromotionCheckoutCore`, `activate*Promotion`, the `transaction` insert
+in `finalizePaystackPayment`) to the service-role client.
 
 ---
 

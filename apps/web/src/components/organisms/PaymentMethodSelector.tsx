@@ -1,12 +1,14 @@
 "use client";
 
 import createMultiCheckoutPaymentAttempt from "@/actions/createMultiCheckoutPaymentAttempt";
-import createPaymentAttempt from "@/actions/createPaymentAttempt";
+import { createPromotionPaymentAttempt } from "@/actions/createPromotionPaymentAttempt";
+import { getPromotionCreditQuote } from "@/actions/getPromotionCreditQuote";
 import getUserPaymentMethods from "@/actions/getUserPaymentMethods";
 import prepareMultiCheckoutPayment from "@/actions/prepareMultiCheckoutPayment";
 import retryPaymentFulfillment from "@/actions/retryPaymentFulfillment";
 import submitPaystackChargeOtp from "@/actions/submitPaystackChargeOtp";
 import verifyPaystackPayment from "@/actions/verifyPaystackPayment";
+import UseCreditToggle from "@/components/molecules/UseCreditToggle";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -27,6 +29,7 @@ import AddWalletButton from "@/wallet/organisms/AddWalletButton";
 import { PAYMENT_METHODS_QUERY_KEY } from "@/wallet/organisms/WalletManager";
 import { getFulfillmentMessage } from "@abonten/core/paymentStatusCopy";
 import { PENDING_CHECKOUTS_QUERY_KEY } from "@abonten/core/queryKeys";
+import { creditMinorToCedis } from "@abonten/core/rewards/creditAmount";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -158,9 +161,41 @@ export default function PaymentMethodSelector(
     }
   }, [prepared]);
 
+  // Abonten Credit on promotions: the server quotes how much applies; the
+  // switch starts ON whenever there is credit to use (it expires otherwise).
+  const promotionTarget =
+    props.kind === "promotion"
+      ? { kind: "place" as const, checkoutId: props.placePromotionCheckoutId }
+      : props.kind === "event-promotion"
+        ? { kind: "event" as const, checkoutId: props.eventPromotionCheckoutId }
+        : null;
+  const { data: creditQuoteResponse, refetch: refetchCreditQuote } = useQuery({
+    queryKey: [
+      "promotion-credit-quote",
+      promotionTarget?.kind,
+      promotionTarget?.checkoutId,
+    ],
+    queryFn: () =>
+      promotionTarget
+        ? getPromotionCreditQuote(promotionTarget)
+        : Promise.resolve(null),
+    enabled: !!promotionTarget,
+  });
+  const creditQuote =
+    creditQuoteResponse?.status === 200 &&
+    creditQuoteResponse.data.offered &&
+    creditQuoteResponse.data.creditMinor > 0
+      ? creditQuoteResponse.data
+      : null;
+  const [useCreditChoice, setUseCreditChoice] = useState<boolean | null>(null);
+  const useCredit = !!creditQuote && (useCreditChoice ?? true);
+  const creditCoversAll = useCredit && !!creditQuote?.creditOnly;
+
   const amount =
     props.kind === "promotion" || props.kind === "event-promotion"
-      ? props.amount
+      ? useCredit && creditQuote
+        ? creditMinorToCedis(creditQuote.cashMinor)
+        : props.amount
       : prepared?.status === 200
         ? prepared.grandTotal
         : 0;
@@ -258,48 +293,36 @@ export default function PaymentMethodSelector(
     onError: () => toast.error("Failed to start payment. Please try again."),
   });
 
+  // Event and place promotions share one service (and one mutation). With
+  // credit covering everything there's no Paystack step: the promotion is
+  // activated before the call returns and `verification` carries the result.
   const promotionPayMutation = useMutation({
-    mutationFn: (paymentMethodId: string) =>
-      createPaymentAttempt({
-        placePromotionCheckoutId:
-          props.kind === "promotion" ? props.placePromotionCheckoutId : "",
+    mutationFn: (paymentMethodId: string | null) =>
+      createPromotionPaymentAttempt({
+        kind: promotionTarget?.kind ?? "event",
+        checkoutId: promotionTarget?.checkoutId ?? "",
         paymentMethodId,
+        useCredit,
       }),
     onSuccess: (response) => {
       if (response.status !== 200) {
         toast.error(response.message);
+        if (response.status === 409) refetchCreditQuote();
         return;
       }
-      handlePaystackInfo(response.data.id, response.data.paystack);
-    },
-    onError: () => toast.error("Failed to start payment. Please try again."),
-  });
-
-  const eventPromotionPayMutation = useMutation({
-    mutationFn: (paymentMethodId: string) =>
-      createPaymentAttempt({
-        eventPromotionCheckoutId:
-          props.kind === "event-promotion"
-            ? props.eventPromotionCheckoutId
-            : "",
-        paymentMethodId,
-      }),
-    onSuccess: (response) => {
-      if (response.status !== 200) {
-        toast.error(response.message);
+      if (response.data.paystack) {
+        handlePaystackInfo(response.data.attempt.id, response.data.paystack);
         return;
       }
-      handlePaystackInfo(response.data.id, response.data.paystack);
+      if (response.data.verification) {
+        applyVerification(response.data.verification, response.data.attempt.id);
+      }
     },
     onError: () => toast.error("Failed to start payment. Please try again."),
   });
 
   const payMutation =
-    props.kind === "ticket"
-      ? ticketPayMutation
-      : props.kind === "promotion"
-        ? promotionPayMutation
-        : eventPromotionPayMutation;
+    props.kind === "ticket" ? ticketPayMutation : promotionPayMutation;
 
   // Invalidates the cache families a successful purchase can affect, scoped
   // to what this payment actually was — kept in one place so both the
@@ -326,47 +349,58 @@ export default function PaymentMethodSelector(
     } else if (props.kind === "promotion") {
       invalidatePlaceListQueries(queryClient);
     }
+    if (promotionTarget) {
+      queryClient.invalidateQueries({ queryKey: ["promotion-credit-quote"] });
+    }
+  };
+
+  // One place that turns a verification outcome into UI state — used by the
+  // verify call after Paystack, and by a credit-only promotion, which is
+  // finalized as part of starting it.
+  const applyVerification = (
+    response: Awaited<ReturnType<typeof verifyPaystackPayment>>,
+    primaryAttemptId: string,
+  ) => {
+    if (response.status === 200) {
+      setUiState({ phase: "succeeded" });
+      invalidateAfterSuccess();
+      props.onPurchaseSucceeded?.();
+      // Re-runs this checkout page's server fetch so the already-correct,
+      // per-kind "purchase complete" state (and the removal of the Pay
+      // button/order summary) takes over immediately instead of waiting
+      // for a manual reload.
+      router.refresh();
+      return;
+    }
+    if (response.status === 202) {
+      setUiState({
+        phase: "pending",
+        primaryAttemptId,
+        message:
+          response.data.finalized === "pending"
+            ? "Your mobile money payment is still awaiting authorization."
+            : "We're finishing up your payment.",
+      });
+      return;
+    }
+    if (response.status === 207) {
+      setUiState({
+        phase: "fulfillment-failed",
+        paymentAttemptId: response.data.paymentAttemptId,
+        message: response.message,
+      });
+      return;
+    }
+    setUiState({
+      phase: "failed",
+      message: response.message ?? "Your payment could not be verified.",
+    });
   };
 
   const verifyMutation = useMutation({
     mutationFn: (primaryAttemptId: string) =>
       verifyPaystackPayment(primaryAttemptId),
-    onSuccess: (response, primaryAttemptId) => {
-      if (response.status === 200) {
-        setUiState({ phase: "succeeded" });
-        invalidateAfterSuccess();
-        props.onPurchaseSucceeded?.();
-        // Re-runs this checkout page's server fetch so the already-correct,
-        // per-kind "purchase complete" state (and the removal of the Pay
-        // button/order summary) takes over immediately instead of waiting
-        // for a manual reload.
-        router.refresh();
-        return;
-      }
-      if (response.status === 202) {
-        setUiState({
-          phase: "pending",
-          primaryAttemptId,
-          message:
-            response.data.finalized === "pending"
-              ? "Your mobile money payment is still awaiting authorization."
-              : "We're finishing up your payment.",
-        });
-        return;
-      }
-      if (response.status === 207) {
-        setUiState({
-          phase: "fulfillment-failed",
-          paymentAttemptId: response.data.paymentAttemptId,
-          message: response.message,
-        });
-        return;
-      }
-      setUiState({
-        phase: "failed",
-        message: response.message ?? "Your payment could not be verified.",
-      });
-    },
+    onSuccess: applyVerification,
     onError: () =>
       setUiState({
         phase: "failed",
@@ -647,6 +681,7 @@ export default function PaymentMethodSelector(
                 });
               } else {
                 setUiState({ phase: "selecting" });
+                if (promotionTarget) refetchCreditQuote();
               }
             }}
             className="underline font-medium"
@@ -661,43 +696,69 @@ export default function PaymentMethodSelector(
   return (
     <div className="space-y-3">
       {paystackScript}
-      <p className="font-semibold text-sm">Payment method</p>
 
-      {methods.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          {NO_PAYMENT_METHODS_MESSAGE}
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {methods.map((method) => (
-            <PaymentMethodCard
-              key={method.id}
-              method={method}
-              selected={selectedId === method.id}
-              onSelect={() => setSelectedId(method.id)}
-            />
-          ))}
-        </div>
+      {creditQuote ? (
+        <UseCreditToggle
+          quote={creditQuote}
+          checked={useCredit}
+          onChange={setUseCreditChoice}
+          disabled={payMutation.isPending}
+        />
+      ) : null}
+
+      {creditCoversAll ? null : (
+        <>
+          <p className="font-semibold text-sm">
+            {useCredit ? "Pay the rest with" : "Payment method"}
+          </p>
+
+          {methods.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {NO_PAYMENT_METHODS_MESSAGE}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {methods.map((method) => (
+                <PaymentMethodCard
+                  key={method.id}
+                  method={method}
+                  selected={selectedId === method.id}
+                  onSelect={() => setSelectedId(method.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          <AddWalletButton
+            onAdded={(method) => {
+              queryClient.invalidateQueries({
+                queryKey: PAYMENT_METHODS_QUERY_KEY,
+              });
+              setSelectedId(method.id);
+            }}
+          />
+        </>
       )}
-
-      <AddWalletButton
-        onAdded={(method) => {
-          queryClient.invalidateQueries({
-            queryKey: PAYMENT_METHODS_QUERY_KEY,
-          });
-          setSelectedId(method.id);
-        }}
-      />
 
       <button
         type="button"
-        disabled={!selectedId || payMutation.isPending}
-        onClick={() => selectedId && payMutation.mutate(selectedId)}
+        disabled={(!creditCoversAll && !selectedId) || payMutation.isPending}
+        onClick={() => {
+          if (creditCoversAll) {
+            promotionPayMutation.mutate(null);
+          } else if (selectedId) {
+            payMutation.mutate(selectedId);
+          }
+        }}
         className="w-full rounded-md p-4 font-bold text-primary-foreground bg-primary text-center mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {payMutation.isPending
-          ? "Starting payment…"
-          : `Pay ${currency} ${amount.toFixed(2)}`}
+          ? creditCoversAll
+            ? "Confirming…"
+            : "Starting payment…"
+          : creditCoversAll
+            ? "Confirm and pay with credit"
+            : `Pay ${currency} ${amount.toFixed(2)}`}
       </button>
     </div>
   );

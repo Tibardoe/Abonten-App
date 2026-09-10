@@ -1,6 +1,10 @@
 import { api } from "@/lib/api";
 import type { CreditActivityItem } from "@abonten/types/rewards";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 // Abonten Rewards reads. Every number comes from the server (the ledger is
 // the source of truth); the app only formats it.
@@ -44,6 +48,37 @@ export function useCreditActivity(options?: { enabled?: boolean }) {
     getNextPageParam: (last) => (last.hasNextPage ? last.nextCursor : null),
     staleTime: 30_000,
   });
+}
+
+/**
+ * What the "Use credit" switch can apply to a pending promotion checkout.
+ * Null when Rewards or spending on promotions is off, or there's no credit.
+ */
+export function usePromotionCreditQuote(
+  kind: "event" | "place",
+  checkoutId: string | null,
+) {
+  return useQuery({
+    queryKey: ["mobile", "rewards", "promotion-quote", kind, checkoutId],
+    enabled: !!checkoutId,
+    queryFn: async () => {
+      const res = await api.checkout.promotionCreditQuote({
+        kind,
+        checkoutId: checkoutId as string,
+      });
+      const quote = res.status === 200 ? res.data : undefined;
+      return quote?.offered && quote.creditMinor > 0 ? quote : null;
+    },
+    staleTime: 0,
+  });
+}
+
+/** Balances and activity change after spending credit. */
+export function useInvalidateCredit() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: ["mobile", "rewards"] });
+  };
 }
 
 export function flattenCreditActivity(

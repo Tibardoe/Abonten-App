@@ -18,11 +18,6 @@ const LOCKED: {
   value: (s: RewardsProgramSettings) => boolean;
 }[] = [
   {
-    label: "Spend credit on promotions",
-    phase: "Phase 2",
-    value: (s) => s.redeemPromotionsEnabled,
-  },
-  {
     label: "Spend credit on tickets",
     phase: "Phase 3",
     value: (s) => s.redeemTicketsEnabled,
@@ -67,6 +62,9 @@ export function SettingsForm({
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(settings.rewardsEnabled);
+  const [redeemPromotions, setRedeemPromotions] = useState(
+    settings.redeemPromotionsEnabled,
+  );
   const [audience, setAudience] = useState(settings.audience);
   const [beta, setBeta] = useState(settings.betaUserIds.join("\n"));
   const [minCash, setMinCash] = useState(cedis(settings.minCashChargeMinor));
@@ -104,6 +102,7 @@ export function SettingsForm({
         reason: reason.trim(),
         patch: {
           rewardsEnabled: enabled,
+          redeemPromotionsEnabled: redeemPromotions,
           audience,
           betaUserIds,
           minCashChargeMinor: toMinor(minCash),
@@ -199,6 +198,26 @@ export function SettingsForm({
             />
           </label>
         ) : null}
+      </Card>
+
+      <Card className="space-y-3 p-4">
+        <p className="text-sm font-semibold">Where credit can be spent</p>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={redeemPromotions}
+            disabled={!editable}
+            onChange={(e) => setRedeemPromotions(e.target.checked)}
+          />
+          <span>
+            <span className="block">Featuring events and places</span>
+            <span className="block text-xs text-muted-foreground">
+              Shows a “Use credit” switch on promotion checkout. Credit can pay
+              part of a promotion, or all of it.
+            </span>
+          </span>
+        </label>
       </Card>
 
       <Card className="space-y-3 p-4">
