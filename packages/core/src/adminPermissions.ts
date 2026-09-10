@@ -67,6 +67,12 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "admins.manage",
   "support.view",
   "support.respond",
+  "rewards.view",
+  "rewards.review",
+  "rewards.freeze",
+  "rewards.goodwill",
+  "rewards.configure",
+  "rewards.withdrawals",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -108,6 +114,12 @@ const FINANCE_ADMIN: AdminPermissionKey[] = [
   "analytics.view",
   "audit.view",
   "monitoring.view",
+  "rewards.view",
+  "rewards.review",
+  "rewards.freeze",
+  "rewards.goodwill",
+  "rewards.configure",
+  "rewards.withdrawals",
 ];
 
 const SUPPORT_ADMIN: AdminPermissionKey[] = [
@@ -126,6 +138,8 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "monitoring.view",
   "support.view",
   "support.respond",
+  "rewards.view",
+  "rewards.goodwill",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -144,6 +158,7 @@ const ANALYST: AdminPermissionKey[] = [
   "analytics.view",
   "monitoring.view",
   "audit.view",
+  "rewards.view",
 ];
 
 // operations = everything except financial mutations / admin management /
@@ -155,6 +170,8 @@ const OPERATIONS_EXCLUDED = new Set<AdminPermissionKey>([
   "notifications.broadcast",
   "admins.manage",
   "settings.manage",
+  "rewards.configure",
+  "rewards.withdrawals",
 ]);
 const OPERATIONS: AdminPermissionKey[] = ADMIN_PERMISSION_KEYS.filter(
   (p) => !OPERATIONS_EXCLUDED.has(p),
@@ -230,6 +247,8 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "notifications.broadcast",
   "admins.manage",
   "settings.manage",
+  "rewards.configure",
+  "rewards.withdrawals",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

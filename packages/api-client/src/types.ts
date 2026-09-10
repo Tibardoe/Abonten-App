@@ -33,6 +33,11 @@ import type {
   EventPromotionTier,
   UserPostType,
 } from "@abonten/types/postsType";
+import type {
+  CreditActivityItem,
+  CreditSummary,
+  RewardsProgram,
+} from "@abonten/types/rewards";
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
@@ -50,6 +55,8 @@ export type {
   ConversationListQuery,
   ConversationRoleScope,
   ConversationType,
+  CreditActivityItem,
+  CreditSummary,
   EventPromotionTier,
   MessageRow,
   NotificationType,
@@ -61,9 +68,16 @@ export type {
   PayoutAccountRow,
   PayoutAccountType,
   PayoutStatus,
+  RewardsProgram,
   SendMessageInput,
   UserPostType,
 };
+
+// ---- rewards ------------------------------------------------------------
+
+export type CreditSummaryResult = ApiEnvelope<CreditSummary>;
+export type CreditActivityResult = PaginatedResult<CreditActivityItem>;
+export type RewardsProgramResult = ApiEnvelope<RewardsProgram>;
 
 // ---- messaging ---------------------------------------------------------
 

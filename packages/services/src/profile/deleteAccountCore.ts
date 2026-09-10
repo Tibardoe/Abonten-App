@@ -15,6 +15,20 @@ export async function deleteAccountCore(
 ): Promise<{ status: 200 | 500; message: string }> {
   const serviceClient = getSupabaseServiceClient();
 
+  // Close the Abonten Credit account first: pending rewards are voided and
+  // any balance is forfeited in the ledger, which (deliberately) outlives
+  // the auth user. Non-fatal -- the user asked to leave, and a failure here
+  // shows up in the credit reconciliation checks instead of blocking them.
+  const { error: creditError } = await serviceClient.rpc(
+    "credit_close_account",
+    { p_user_id: userId, p_actor_type: "user", p_actor_id: userId },
+  );
+  if (creditError) {
+    logger.error(
+      `deleteAccountCore: credit_close_account failed for ${userId}: ${creditError.message}`,
+    );
+  }
+
   const { error } = await serviceClient.auth.admin.deleteUser(userId);
 
   if (error) {
