@@ -6570,7 +6570,9 @@ export type Database = {
               location: unknown;
               min_price: number;
               occurrences: Json;
+              organizer_avg_rating: number;
               organizer_id: string;
+              organizer_rating_count: number;
               slug: string;
               starts_at: string;
               status: string;

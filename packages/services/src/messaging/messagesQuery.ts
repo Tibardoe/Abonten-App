@@ -101,6 +101,35 @@ export async function fetchMessagesPage(
   }
 
   const rows = (data ?? []) as RawMessage[];
+
+  // RLS hides every row of a conversation the caller isn't in, which is
+  // indistinguishable from a thread that is simply empty. The detail
+  // endpoint answers 404 for a non-participant; this one used to answer
+  // 200 + [] and the client rendered an empty thread. Only an empty first
+  // page can be ambiguous, so the membership check runs only then — the
+  // common path costs nothing extra.
+  if (rows.length === 0 && !cursor) {
+    const callerForCheck =
+      options?.callerId ??
+      (await supabase.auth.getUser()).data.user?.id ??
+      null;
+    const { data: isParticipant } = callerForCheck
+      ? await supabase.rpc("is_conversation_participant", {
+          p_conversation_id: conversationId,
+          p_user_id: callerForCheck,
+        })
+      : { data: false };
+    if (!isParticipant) {
+      return {
+        status: 404,
+        data: [],
+        nextCursor: null,
+        hasNextPage: false,
+        message: "Conversation not found.",
+      };
+    }
+  }
+
   const { page, hasNextPage } = splitPage(rows, pageSize);
 
   const messageIds = page.map((m) => m.id);

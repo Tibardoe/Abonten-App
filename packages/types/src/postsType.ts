@@ -125,6 +125,11 @@ export type UserPostType = {
   minTicket?: { price: number; currency: string };
   attendanceCount?: number | null;
   attendance_count?: number | null;
+  // Organizer's rating across their visible reviews (`review.reviewed_id`,
+  // the same predicate get_user_rating uses). Only get_nearby_events
+  // returns these; the "Top-rated organizers" slider ranks by them.
+  organizer_avg_rating?: number | null;
+  organizer_rating_count?: number | null;
   ticket_price?: number | undefined;
   ticket_currency?: string;
   status?: string;

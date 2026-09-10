@@ -83,12 +83,49 @@ export function filterEventsByWindow(
         ),
       );
 
+    case "top-rated-organizers":
+      return rankByOrganizerRating(events);
+
     // "around-you" is a radius filter (handled by the caller's fetch, not a
-    // date window) and "top-rated-organizers"/"category" aren't implemented
-    // as date filters — both fall through unchanged, matching existing
-    // behavior. (Pre-existing gap, not introduced by this refactor — see
-    // PROJECT.md/audit notes on "top-rated-organizers" not being sorted.)
+    // date window) and "category" isn't a date filter — both fall through
+    // unchanged.
     default:
       return events;
   }
+}
+
+function num(value: unknown): number {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+/**
+ * "Top-rated organizers": the nearby events whose organizer has at least one
+ * visible review, best-rated first, ties broken by how many people rated
+ * them (a 4.5 from twelve reviewers outranks a 4.5 from two). The figures
+ * come from get_nearby_events' `organizer_avg_rating` /
+ * `organizer_rating_count` columns (migration 20260910165605), which use
+ * the same visibility predicate as get_user_rating.
+ *
+ * Rows that carry no rating fields at all — a producer that predates those
+ * columns — are returned unchanged so the slider never blanks out on stale
+ * data; that was the previous behaviour for every row.
+ */
+function rankByOrganizerRating(events: UserPostType[]): UserPostType[] {
+  const carriesRating = events.some(
+    (e) => e.organizer_rating_count !== undefined,
+  );
+  if (!carriesRating) return events;
+
+  return events
+    .filter((e) => num(e.organizer_rating_count) > 0)
+    .sort(
+      (a, b) =>
+        num(b.organizer_avg_rating) - num(a.organizer_avg_rating) ||
+        num(b.organizer_rating_count) - num(a.organizer_rating_count),
+    );
 }

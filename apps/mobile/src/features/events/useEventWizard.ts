@@ -184,6 +184,15 @@ export function useEventWizard(resumeDraftId?: string) {
     setTypes((prev) => prev.filter((t) => allowed.has(t)));
   }
 
+  function clearTextError(key: keyof EventWizardTextErrors) {
+    setTextErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }
+
   function validateText(): boolean {
     const capNum = capacity.trim() === "" ? undefined : Number(capacity.trim());
     const result = eventSchema.safeParse({
@@ -764,15 +773,29 @@ export function useEventWizard(resumeDraftId?: string) {
     step,
     setStep,
     canAdvance,
-    // basics
+    // basics. Each text setter also clears that field's own error, so a red
+    // field turns back to normal the moment the user starts correcting it
+    // instead of staying red until the next Next press re-validates.
     title,
-    setTitle,
+    setTitle: (v: string) => {
+      setTitle(v);
+      clearTextError("title");
+    },
     description,
-    setDescription,
+    setDescription: (v: string) => {
+      setDescription(v);
+      clearTextError("description");
+    },
     website,
-    setWebsite,
+    setWebsite: (v: string) => {
+      setWebsite(v);
+      clearTextError("website_url");
+    },
     capacity,
-    setCapacity,
+    setCapacity: (v: string) => {
+      setCapacity(v);
+      clearTextError("capacity");
+    },
     category,
     selectCategory,
     categories: eventCategoriesAndTypes.map((c) => c.category),

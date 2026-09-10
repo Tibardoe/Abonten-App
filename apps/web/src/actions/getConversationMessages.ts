@@ -6,7 +6,9 @@ import { fetchMessagesPage } from "@abonten/services/messaging/messagesQuery";
 /**
  * Newest-first, keyset-paginated page of one conversation's messages (scroll
  * up to load older). RLS restricts this to conversations the caller belongs
- * to, so a non-participant gets an empty page. Soft-deleted messages come
+ * to; a non-participant gets a 404 envelope, matching the detail read
+ * (fetchMessagesPage checks membership when a first page comes back empty).
+ * Soft-deleted messages come
  * back with content/attachments stripped. Shares its body with
  * GET /api/mobile/messages/:id/messages.
  */
