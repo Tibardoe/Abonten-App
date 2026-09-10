@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import type { Database } from "@abonten/types/database.types";
 import {
   type AddPaymentMethodInput,
@@ -89,7 +90,48 @@ export async function addPaymentMethodCore(
     return { status: 500, message: "Something went wrong!" };
   }
 
-  const { type, ...details } = parsed.data;
+  const parsedInput = parsed.data;
+  const type = parsedInput.type;
+  let details: MomoPaymentMethodDetails | CardPaymentMethodDetails;
+
+  if (parsedInput.type === "momo") {
+    const { type: _momo, ...momo } = parsedInput;
+    // Store one canonical form. The web PhoneInput already composes E.164;
+    // the mobile wallet form sends whatever was typed, so the same wallet
+    // could land as "0241234567" on one row and "+233241234987" on another
+    // (both were in production). The Paystack charge path normalises again
+    // at charge time, so this only fixes storage and display.
+    const normalized = normalizePhoneNumber("+233", momo.phone);
+    if (!normalized.ok) {
+      return { status: 400, message: normalized.error };
+    }
+    details = { ...momo, phone: normalized.e164 };
+  } else {
+    const { type: _card, ...card } = parsedInput;
+    // A card is added by re-running Paystack's GHS 1 verification, and a
+    // second verification of the same card yields a new authorization_code.
+    // Without this, every re-verification saved another identical row --
+    // production held two "visa 4081" cards with the same expiry and bank.
+    // Treat a matching active card as already saved and hand it back.
+    const { data: existing } = await supabase
+      .from("payment_method")
+      .select("id, method_type, details, is_default, created_at")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .eq("method_type", "card")
+      .contains("details", {
+        brand: card.brand,
+        last4: card.last4,
+        expiryMonth: card.expiryMonth,
+        expiryYear: card.expiryYear,
+      })
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      return { status: 200, data: existing as unknown as PaymentMethodRow };
+    }
+    details = card;
+  }
 
   const { data, error } = await supabase
     .from("payment_method")

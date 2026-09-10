@@ -1606,6 +1606,64 @@ suite green) plus code:
 
 Unit **164/164** (+5), integration **112/112** (+1), typecheck 11/11.
 
+### 26.2 The audit's untested flows — driven on device (2026-09-10)
+
+Every flow the audit had marked *Partial* or *Not tested* was driven end to
+end on the Android emulator against production, with server-side
+verification after each step and zero JavaScript errors across the pass.
+Defects found were fixed in the same pass.
+
+- **Event drafts (save → resume → publish).** Save wrote flyer + basics;
+  the drafts list showed both drafts with relative times; delete used the
+  confirm dialog; resume restored flyer/title/description/category; the
+  wizard then went through calendar (past days disabled), Places
+  autocomplete, tickets and review to a live event that appeared in both
+  discovery RPCs with `attendance_count` and `ticket_types` inline and
+  rendered "0 going · 5 spots left" on the card. **Two defects:** (1) the
+  draft was **left behind after publishing** — the web action sent
+  `draftId` to `postEventCore` but the mobile path dropped it at all three
+  hand-offs (wizard `submit`, `EventCreateBody`, the route); wired through.
+  (2) "Save as draft" saved a **completely empty draft** (one sat in
+  production as "Untitled draft"); the wizard now exposes `hasDraftContent`
+  and the button stays disabled until something has been entered.
+- **Wallet (add / set default / remove).** Mobile-money add, "Make default"
+  moving the DEFAULT badge, and "Remove" via confirm all verified against
+  `payment_method`. **Two defects:** momo numbers were stored as typed
+  (`0241234567`) on mobile but as E.164 on web — `addPaymentMethodCore` now
+  normalises through `normalizePhoneNumber`; and re-verifying the same card
+  saved an identical row each time (production held two "visa ···· 4081"
+  rows) — the core now returns the existing active card instead. 4 unit
+  tests (`paymentMethodCore.test.ts`).
+- **Payout accounts + withdrawal.** Added a mobile-money payout account,
+  requested a GHS 1 withdrawal to it: `payout` row `processing`,
+  `payout_hold −1.00`, available 484 → 483, `transfer_code` null (the
+  transfers flag is off, so no Paystack call), history lists it. The same
+  E.164 normalisation was applied to `payoutAccountCore`.
+- **Card verification.** "Start card verification" opens Paystack Checkout
+  ("Pay GHS 1", test mode) in a Custom Tab; abandoning it returns to the
+  app with "Couldn't verify your card. Please try again." — correct.
+- **Highlights.** Two gallery photos posted from the profile composer →
+  two `highlight` rows in one group under the owner's Cloudinary folder.
+- **Place creation.** Five-step wizard (cover, gallery, basics with
+  autocomplete, hours, review) → published place present in both place
+  RPCs, 7 opening-hours rows, correct "Closed" state at 5:58 PM against
+  9–5 hours.
+- **Place claiming.** Deep-linked to another user's place, submitted a
+  claim with a reason and a photo → `place_claim_request` pending with the
+  note, `place_claim_document` row, object present in the **private**
+  bucket under `<user>/<claim>/`, detail shows "awaiting review".
+- **Failed-message persistence** (§26.1 item 2) proven: two offline sends
+  survived leaving and reopening the thread, retried once online, and the
+  on-device file was cleared. **It exposed a scroll defect:** the sender's
+  own message could land just below the viewport (`followOwnMessage`
+  scrolled before the optimistic row was laid out, and
+  `maintainVisibleContentPosition` held the old position). `useChatScroll`
+  now pins to the bottom on content growth *only when already at the
+  bottom*; verified online and offline.
+
+Still not device-verified: completing a phone-OTP sign-in (needs a
+handset), completing Google sign-in (needs real credentials), iOS.
+
 ---
 
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*
