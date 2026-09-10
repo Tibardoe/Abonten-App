@@ -13,7 +13,6 @@ import type {
   PaginatedResult,
 } from "@abonten/types/pagination";
 import type { UserPostType } from "@abonten/types/postsType";
-import { getEventAttendanceCounts } from "./getAttendace";
 
 export async function getNearByEvents(
   lat: number,
@@ -45,15 +44,11 @@ export async function getNearByEvents(
     pageSize,
   );
 
-  // Attach attendance counts for this page only, via a single grouped
-  // query instead of one round trip per event.
-  const attendanceCounts = await getEventAttendanceCounts(
-    page.map((event: UserPostType) => event.id),
-  );
-
+  // get_nearby_events returns attendance_count inline (migration
+  // 20260910163552) — this used to be a second round trip per page.
   const eventsWithAttendance = page.map((event: UserPostType) => ({
     ...event,
-    attendanceCount: attendanceCounts[event.id] ?? 0,
+    attendanceCount: Number(event.attendance_count ?? 0) || 0,
   }));
 
   const last = page[page.length - 1] as

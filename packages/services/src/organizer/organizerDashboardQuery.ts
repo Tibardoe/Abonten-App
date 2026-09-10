@@ -140,6 +140,84 @@ export type OrganizerDashboardWidgetsResult =
   | Failed
   | { status: 200; data: OrganizerDashboardWidgets };
 
+export type OrganizerDashboardOverview = {
+  current: Row[];
+  previous: Row[] | null;
+};
+
+export type OrganizerDashboardResult =
+  | Failed
+  | {
+      status: 200;
+      data: OrganizerDashboardWidgets & {
+        overview: OrganizerDashboardOverview;
+      };
+    };
+
+type DashboardDocument = {
+  overview_current?: unknown;
+  overview_previous?: unknown;
+  timeline?: unknown;
+  performance?: unknown;
+  upcoming?: unknown;
+  attention?: unknown;
+  activity?: unknown;
+};
+
+function rows(value: unknown): Row[] {
+  return Array.isArray(value) ? (value as Row[]) : [];
+}
+
+/**
+ * The whole mobile Dashboard screen — KPI overview (current + comparison
+ * window) and every widget section — from ONE database round trip.
+ *
+ * Measured before this existed: the screen made two HTTP calls that fanned
+ * out to seven RPCs, and every RPC paid its own PostgREST + pooler hop.
+ * get_organizer_dashboard (migration 20260910163552) runs the same seven
+ * functions inside a single SQL call and hands back one jsonb document;
+ * the period maths stays here in getDashboardPeriodRange so the "today vs
+ * same elapsed time yesterday" rule has exactly one definition.
+ */
+export async function fetchOrganizerDashboard(
+  supabase: SupabaseClient<Database>,
+  period: DashboardPeriod,
+): Promise<OrganizerDashboardResult> {
+  const { start, end, prevStart, prevEnd, bucket } =
+    getDashboardPeriodRange(period);
+
+  const { data, error } = await supabase.rpc("get_organizer_dashboard", {
+    p_start: start ? start.toISOString() : null,
+    p_end: end ? end.toISOString() : null,
+    p_prev_start: prevStart ? prevStart.toISOString() : null,
+    p_prev_end: prevEnd ? prevEnd.toISOString() : null,
+    p_bucket: bucket,
+  });
+
+  if (error) {
+    logger.error(`get_organizer_dashboard: ${error.message}`);
+    return FAILED;
+  }
+
+  const doc = (data ?? {}) as DashboardDocument;
+
+  return {
+    status: 200,
+    data: {
+      overview: {
+        current: rows(doc.overview_current),
+        previous:
+          doc.overview_previous == null ? null : rows(doc.overview_previous),
+      },
+      timeline: { rows: rows(doc.timeline), bucket },
+      performance: rows(doc.performance),
+      upcoming: rows(doc.upcoming),
+      attention: rows(doc.attention),
+      activity: rows(doc.activity),
+    },
+  };
+}
+
 /**
  * Every Dashboard widget section in one call — the mobile Dashboard reads
  * this instead of five round-trips, same aggregate arrangement

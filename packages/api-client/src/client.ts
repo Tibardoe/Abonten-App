@@ -842,9 +842,10 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       /**
-       * Every Dashboard widget section (sales timeline, event performance,
-       * upcoming events, needs attention, recent activity) for the period,
-       * in one call — the counterpart to overview()'s KPI cards.
+       * The whole Dashboard screen for the period in one call: every widget
+       * section (sales timeline, event performance, upcoming events, needs
+       * attention, recent activity) plus, on current deploys, the KPI
+       * `overview` overview() used to be a separate call for.
        */
       dashboardWidgets(period: OrganizerDashboardPeriod = "30d") {
         return request<OrganizerDashboardWidgetsResult>(

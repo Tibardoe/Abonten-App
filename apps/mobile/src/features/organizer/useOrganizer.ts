@@ -12,11 +12,15 @@ const KEY = ["mobile", "organizer"] as const;
 // a short staleTime keeps the read-only surfaces cheap without feeling stale.
 const STALE_TIME = 20_000;
 
-export function useOrganizerOverview(period: OrganizerDashboardPeriod) {
+export function useOrganizerOverview(
+  period: OrganizerDashboardPeriod,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: [...KEY, "overview", period],
     queryFn: () => api.organizer.overview(period),
     staleTime: STALE_TIME,
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -28,15 +32,19 @@ export function useOrganizerFinance() {
   });
 }
 
-// The Dashboard widget sections below the KPI cards (sales timeline, event
-// performance, upcoming events, needs attention, recent activity) — one
-// aggregate call, mirroring the web OrganizerDashboard's five section
-// queries.
+// The whole Dashboard screen — KPI overview plus every widget section
+// (sales timeline, event performance, upcoming events, needs attention,
+// recent activity) — in one request, which the API serves from one
+// database round trip. The screen used to issue this AND useOrganizerOverview
+// for the same period; the KPIs now ride along as `data.overview`.
 export function useOrganizerDashboardWidgets(period: OrganizerDashboardPeriod) {
   return useQuery({
     queryKey: [...KEY, "dashboard-widgets", period],
     queryFn: () => api.organizer.dashboardWidgets(period),
     staleTime: STALE_TIME,
+    // Switching period should keep the previous numbers on screen rather
+    // than flash the skeleton — the cards animate to the new values.
+    placeholderData: (prev) => prev,
   });
 }
 

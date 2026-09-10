@@ -1476,4 +1476,90 @@ confirmed with zero ExoPlayer errors.
 
 ---
 
+## 26. API Latency Pass (2026-09-10)
+
+Follow-up to the production-readiness audit's performance table (Profile
+median 1,375 ms, Organizer dashboard 1,113 ms, Messages inbox 1,083 ms).
+Every figure below was measured, not estimated.
+
+**Where the time actually went.** Not the database. Every query behind the
+"slow" endpoints executes in under 25 ms warm (`user_profile_details` 0.3 ms,
+`list_conversations` 16 ms, the five dashboard RPCs ~76 ms combined). The cost
+was geography: Supabase runs in **`eu-west-3` (Paris)** and the Vercel
+functions ran in **`iad1` (Virginia)** — confirmed from the deployment's
+`regions` and the `x-vercel-id` header — so every request paid a transatlantic
+round trip for `auth.getUser()` and again for the handler's query, on top of
+the edge hop from `cpt1` (Cape Town) to Virginia.
+
+**Changes**
+
+1. **Function region pinned to Paris.** `apps/web/vercel.json` and
+   `apps/admin/vercel.json` set `"regions": ["cdg1"]`, the Vercel region in
+   the same city as the database. Both Server Actions and the `/api/mobile`
+   routes benefit. Hobby plan permits one region.
+
+2. **Discovery RPCs re-plan ~3× cheaper.** `get_filtered_events` showed
+   min 0.1 ms / mean 165 ms / max 2.5 s over 510 production calls on a table
+   of 19 events — a plan-cache-miss profile under Supavisor's transaction
+   pooling. The plan was expensive because the functions ran as the caller,
+   so the planner inlined the RLS policy of every joined table; the
+   public-read policies on `event_occurrence`, `ticket_type`, `event_review`
+   and `attendance` all re-check "parent event is published", and the
+   `get_filtered_events` plan carried ~85 sub-plans, mostly that lookup
+   repeated. Migration **`20260910163552_discovery_plan_cost_and_dashboard_aggregate`**
+   makes `get_filtered_events`, `get_nearby_events`, `get_nearby_places`,
+   `get_filtered_places`, `get_active_place_promotions`,
+   `get_events_in_window` and `get_similar_events` `SECURITY DEFINER`
+   (`search_path` pinned; none read `auth.uid()`; each already restricts its
+   top-level rows to published/non-archived/non-hidden, which is exactly the
+   condition the child policies re-derived — no row RLS would hide is
+   exposed) and collapses `get_filtered_events` to one lateral per table
+   instead of four scans of `event_occurrence`. Measured with `DISCARD PLANS`
+   before every call on the local stack (identical hardware, same data):
+   `get_filtered_events` 5.3 → 1.9 ms per re-plan, `get_nearby_places`
+   2.1 → 0.7, `get_similar_events` 2.2 → 0.6; warm execution on production
+   5.6 → 1.0 ms. The security advisor now lists these under "anon can
+   execute SECURITY DEFINER function" — expected: they are the public
+   discovery endpoints and `anon` was already granted.
+   **`get_similar_events` was also still returning archived events** (missed
+   by `20260909130000`); fixed in the same migration and covered by a new
+   integration test.
+
+3. **`get_nearby_events` returns availability inline.** Two appended columns,
+   `attendance_count bigint` and `ticket_types json` (`[{price, currency,
+   quantity}]`, `quantity` = remaining stock, null = unlimited). The mobile
+   Explore screen was making a second serial round trip
+   (`get_event_attendance_counts` + a `ticket_type` read) for exactly this
+   after every nearby fetch; `withEventAvailability` now uses the inline
+   figures and only fetches for rows that lack them. The web `getNearByEvents`
+   action dropped its extra attendance query the same way.
+
+4. **Organizer dashboard: one round trip.** New `get_organizer_dashboard(
+   p_start, p_end, p_prev_start, p_prev_end, p_bucket) → jsonb` runs the
+   seven existing RPCs (overview ×2, timeline, performance, upcoming,
+   attention, activity) inside one SQL call; `authenticated` only, `anon`
+   revoked (verified: `42501`). `fetchOrganizerDashboard` in
+   `organizerDashboardQuery.ts` backs `GET /api/mobile/organizer/dashboard`,
+   whose payload gains `overview` (additive — `OrganizerDashboardWidgets.overview?`).
+   The mobile screen reads it from the single query and falls back to the
+   separate `overview()` request only when talking to an older deploy.
+   `GET /api/mobile/organizer/overview` and the seven web actions are
+   unchanged. 30–40 ms warm for all seven sections.
+
+**Not changed, on purpose.** The JWT is HS256 (symmetric), so
+`supabase.auth.getUser()` must stay a network call. Migrating the project to
+asymmetric signing keys would let `getClaims()` verify locally and remove
+one round trip from every authenticated request — but it would also mean a
+revoked session's access token stays valid until it expires (up to an
+hour), which today's `getUser()` catches immediately (verified: sign-out
+takes 5 sessions → 0 and the next call 401s). That is the owner's trade to
+make, not this pass's.
+
+**Also verified.** `app_request_metric` was empty for 14 days because the
+mobile client samples 0% in `__DEV__` and no production build has run yet —
+a test beacon ingested fine (`202`, row landed). Verification: typecheck
+11/11, web + admin builds clean, integration **111/111** (+4), Biome clean.
+
+---
+
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*

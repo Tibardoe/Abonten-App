@@ -101,26 +101,69 @@ export async function withEventAttendanceCounts<T extends { id: string }>(
   return rows.map((r) => ({ ...r, attendanceCount: counts[r.id] ?? 0 }));
 }
 
+type AvailabilityRow = {
+  id: string;
+  ticket_type?: unknown;
+  // get_nearby_events returns both of these inline (migration
+  // 20260910163552) so the Explore screen no longer needs a second trip.
+  attendance_count?: number | string | null;
+  ticket_types?: unknown;
+};
+
+function inlineTicketTypes(value: unknown): TicketTypeRow[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.map((t) => {
+    const row = (t ?? {}) as Record<string, unknown>;
+    return {
+      price: Number(row.price ?? 0),
+      currency: typeof row.currency === "string" ? row.currency : "GHS",
+      quantity: row.quantity == null ? null : Number(row.quantity),
+    };
+  });
+}
+
 /**
- * Attendance + remaining ticket stock in two parallel round trips, merged onto
- * `rows`. Use this wherever EventCards are rendered from a discovery RPC —
- * both numbers are needed before "spots left" and "Sold out" can be honest.
- * An event that already carries `ticket_type` (a detail read) keeps its own.
+ * Attendance + remaining ticket stock merged onto `rows`. Use this wherever
+ * EventCards are rendered from a discovery RPC — both numbers are needed
+ * before "spots left" and "Sold out" can be honest.
+ *
+ * Rows that already carry the figures (get_nearby_events returns
+ * `attendance_count` and `ticket_types` inline; a detail read carries
+ * `ticket_type`) are used as-is. Only rows missing one of them cost a
+ * round trip, and those go out in parallel.
  */
-export async function withEventAvailability<
-  T extends { id: string; ticket_type?: unknown },
->(rows: T[]): Promise<(T & { attendanceCount: number })[]> {
+export async function withEventAvailability<T extends AvailabilityRow>(
+  rows: T[],
+): Promise<(T & { attendanceCount: number })[]> {
   if (rows.length === 0) return [];
-  const ids = rows.map((r) => r.id);
+
+  const needAttendance = rows
+    .filter((r) => r.attendance_count == null)
+    .map((r) => r.id);
+  const needTickets = rows
+    .filter(
+      (r) => !Array.isArray(r.ticket_type) && !Array.isArray(r.ticket_types),
+    )
+    .map((r) => r.id);
+
+  const none: Record<string, never> = {};
   const [counts, ticketTypes] = await Promise.all([
-    fetchEventAttendanceCounts(ids),
-    fetchEventTicketTypes(ids),
+    needAttendance.length
+      ? fetchEventAttendanceCounts(needAttendance)
+      : Promise.resolve<Record<string, number>>(none),
+    needTickets.length
+      ? fetchEventTicketTypes(needTickets)
+      : Promise.resolve<Record<string, TicketTypeRow[]>>(none),
   ]);
+
   return rows.map((r) => ({
     ...r,
-    attendanceCount: counts[r.id] ?? 0,
+    attendanceCount:
+      r.attendance_count != null
+        ? Number(r.attendance_count) || 0
+        : (counts[r.id] ?? 0),
     ticket_type: Array.isArray(r.ticket_type)
       ? r.ticket_type
-      : (ticketTypes[r.id] ?? undefined),
+      : (inlineTicketTypes(r.ticket_types) ?? ticketTypes[r.id] ?? undefined),
   }));
 }

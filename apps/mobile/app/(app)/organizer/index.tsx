@@ -8,6 +8,7 @@ import {
 import { usePlaceDrafts } from "@/features/places/usePlaceDrafts";
 import type {
   OrganizerDashboardPeriod,
+  OrganizerOverviewResult,
   OrganizerOverviewRow,
 } from "@abonten/api-client";
 import {
@@ -153,8 +154,41 @@ function NavRow({ href, label }: { href: string; label: string }) {
 
 export default function OrganizerDashboard() {
   const [period, setPeriod] = useState<OrganizerDashboardPeriod>("30d");
-  const q = useOrganizerOverview(period);
   const widgetsQuery = useOrganizerDashboardWidgets(period);
+  // The KPI rows arrive in the same payload as the widgets (one API call,
+  // one database round trip). An older deploy without `overview` falls back
+  // to the separate overview() request so the cards never go blank.
+  const inlineOverview =
+    widgetsQuery.data?.status === 200 ? widgetsQuery.data.data.overview : null;
+  const fallbackOverview = useOrganizerOverview(period, {
+    enabled: widgetsQuery.data?.status === 200 && !inlineOverview,
+  });
+  // One shape for the KPI section whichever path fed it.
+  const q: {
+    data: OrganizerOverviewResult | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    isRefetching: boolean;
+    refetch: () => unknown;
+  } = inlineOverview
+    ? {
+        data: { status: 200, data: inlineOverview },
+        isLoading: false,
+        isError: false,
+        isRefetching: widgetsQuery.isRefetching,
+        refetch: widgetsQuery.refetch,
+      }
+    : widgetsQuery.data?.status === 200
+      ? fallbackOverview
+      : {
+          // The single dashboard request carries the KPIs; until it settles
+          // (or if it fails) the KPI section mirrors its state.
+          data: widgetsQuery.data ?? undefined,
+          isLoading: widgetsQuery.isLoading,
+          isError: widgetsQuery.isError,
+          isRefetching: widgetsQuery.isRefetching,
+          refetch: widgetsQuery.refetch,
+        };
   const draftsQuery = useEventDrafts();
   const draftCount =
     draftsQuery.data?.status === 200 ? draftsQuery.data.data.length : 0;
