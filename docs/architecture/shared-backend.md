@@ -149,6 +149,17 @@ never imported by a client component.
   `generateTicket` moved to `apps/web/src/utils/generateTicket.ts`, dropped
   its `"use server"` directive — it is a server-only module function now,
   imported only by `issueFreeCheckoutTickets` and `paymentFulfillmentDeps`.
+- **Money-path lockdown (2026-09-10, PROJECT.md §27.2):** the checkout,
+  payment-attempt, transaction and promotion tables had owner INSERT/UPDATE
+  policies, so a signed-in client could write them directly (free featuring,
+  re-priced checkouts, free tickets, fake transactions). Migration
+  `lock_money_path_client_writes` dropped those policies, revoked the write
+  grants from `anon`/`authenticated`, made `ticket` UPDATE organizer-only and
+  `create_ticket_checkout` / `issue_tickets_for_checkout` `service_role`-only.
+  Those writes are now class C: the service checks ownership and prices the
+  order, then writes with the service-role client. `activate{Event,Place}Promotion`
+  followed `generateTicket` out of `src/actions/` into `src/utils/` (no
+  longer public Server Action endpoints) and require a verified payment.
 
 ## Known residual items
 
