@@ -13,6 +13,7 @@ import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // A checkout retried right as its reservation expires re-runs this whole
 // function (event lookup, promo lookup, create_ticket_checkout) each time,
@@ -336,28 +337,34 @@ export async function validateCheckoutCore(
   // INV-001, INV-002). The RPC also re-checks "no other pending checkout for
   // this event" under the same transaction as a backstop against the same
   // race this function already checked for above.
-  const { data: checkoutSessionId, error: createError } = await supabase.rpc(
-    "create_ticket_checkout",
-    // Same generated-type gap as get_filtered_events/create_event: the SQL
-    // signature has no DEFAULT on these params even though it genuinely
-    // accepts null for "no occurrence"/"no promo".
-    {
-      p_user_id: userId,
-      p_event_id: eventId,
-      p_occurrence_id: occurrenceId ?? null,
-      p_promo_code_id: promoCodeId,
-      p_promo_code_text: promoCode ?? null,
-      p_expires_at: expiresAt.toISOString(),
-      p_lines: rows.map((row) => ({
-        ticket_type_id: row.ticketTypeId,
-        quantity: row.quantity,
-        unit_price: row.unitPrice,
-        discount: row.discount,
-        discounted_units: row.discountedUnits,
-        amount: row.amount,
-      })),
-    } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
-  );
+  //
+  // Service role: the RPC stores the line amounts it is given, so only the
+  // server -- which just priced every line above from ticket_type and the
+  // promo code -- may call it (EXECUTE revoked from clients in migration
+  // lock_money_path_client_writes).
+  const { data: checkoutSessionId, error: createError } =
+    await getSupabaseServiceClient().rpc(
+      "create_ticket_checkout",
+      // Same generated-type gap as get_filtered_events/create_event: the SQL
+      // signature has no DEFAULT on these params even though it genuinely
+      // accepts null for "no occurrence"/"no promo".
+      {
+        p_user_id: userId,
+        p_event_id: eventId,
+        p_occurrence_id: occurrenceId ?? null,
+        p_promo_code_id: promoCodeId,
+        p_promo_code_text: promoCode ?? null,
+        p_expires_at: expiresAt.toISOString(),
+        p_lines: rows.map((row) => ({
+          ticket_type_id: row.ticketTypeId,
+          quantity: row.quantity,
+          unit_price: row.unitPrice,
+          discount: row.discount,
+          discounted_units: row.discountedUnits,
+          amount: row.amount,
+        })),
+      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
+    );
 
   if (createError || !checkoutSessionId) {
     logger.error(

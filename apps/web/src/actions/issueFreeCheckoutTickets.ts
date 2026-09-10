@@ -8,7 +8,7 @@ import { logger } from "@abonten/core/logger";
  * Client-facing entry point for issuing tickets on a **free** pending
  * checkout session from the basket (PendingCheckoutsBasket "Proceed" on
  * zero-price selections). Paid sessions never reach ticket issuance from the
- * client — they go validateCheckout -> createPaymentAttempt ->
+ * client — they go validateCheckout -> createMultiCheckoutPaymentAttempt ->
  * verifyPaystackPayment -> finalizePaystackPayment, all server-side.
  *
  * This wrapper exists so `generateTicket` (which trusts its

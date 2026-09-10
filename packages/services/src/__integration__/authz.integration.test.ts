@@ -3,9 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // Requires a local Supabase stack (npm run test:db:up at the repo root).
 // Two layers of access control, tested against the real database rather
 // than by reading the SQL:
-//  1. create_ticket_checkout's own explicit check (`v_caller <> p_user_id`
-//     raises 42501) -- a signed-in user can't buy a ticket "as" someone
-//     else by passing a different p_user_id.
+//  1. create_ticket_checkout / issue_tickets_for_checkout are backend-only
+//     (EXECUTE revoked from clients in lock_money_path_client_writes) -- a
+//     signed-in user can't call them at all, so they can't buy "as" someone
+//     else or pick their own price. money-path-lockdown.integration.test.ts
+//     covers the rest of that migration.
 //  2. RLS on ticket_checkout (enable_rls_ticketing_batch1) -- a signed-in
 //     user's own client can only SELECT their own checkout rows, even
 //     though the row exists and they know its event.
@@ -48,7 +50,7 @@ describe("authz: create_ticket_checkout and RLS", () => {
     await deleteTestUser(service, organizer.id);
   });
 
-  it("rejects a signed-in user buying a ticket on another user's behalf", async () => {
+  it("rejects a signed-in user calling create_ticket_checkout directly", async () => {
     const { error } = await userA.client.rpc("create_ticket_checkout", {
       p_user_id: userB.id,
       p_event_id: eventId,
@@ -69,13 +71,13 @@ describe("authz: create_ticket_checkout and RLS", () => {
       // Same generated-type gap create_event's fixture helper documents.
     } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"]);
 
-    expect(error).not.toBeNull();
-    expect(error?.message).toMatch(/not authorized/i);
+    expect(error?.code).toBe("42501");
   });
 
   it("hides another buyer's checkout row under RLS even when the event id is known", async () => {
-    const { data: checkoutSessionId, error: createError } =
-      await userA.client.rpc("create_ticket_checkout", {
+    const { data: checkoutSessionId, error: createError } = await service.rpc(
+      "create_ticket_checkout",
+      {
         p_user_id: userA.id,
         p_event_id: eventId,
         p_occurrence_id: null,
@@ -93,7 +95,8 @@ describe("authz: create_ticket_checkout and RLS", () => {
           },
         ],
         // Same generated-type gap create_event's fixture helper documents.
-      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"]);
+      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
+    );
     expect(createError).toBeNull();
     expect(checkoutSessionId).toBeTruthy();
 
@@ -119,8 +122,9 @@ describe("authz: create_ticket_checkout and RLS", () => {
   });
 
   it("rejects a signed-in user issuing tickets on another user's behalf (issue_tickets_for_checkout)", async () => {
-    const { data: checkoutSessionId, error: createError } =
-      await userA.client.rpc("create_ticket_checkout", {
+    const { data: checkoutSessionId, error: createError } = await service.rpc(
+      "create_ticket_checkout",
+      {
         p_user_id: userA.id,
         p_event_id: eventId,
         p_occurrence_id: null,
@@ -138,7 +142,8 @@ describe("authz: create_ticket_checkout and RLS", () => {
           },
         ],
         // Same generated-type gap create_event's fixture helper documents.
-      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"]);
+      } as unknown as Database["public"]["Functions"]["create_ticket_checkout"]["Args"],
+    );
     expect(createError).toBeNull();
     expect(checkoutSessionId).toBeTruthy();
 
@@ -152,7 +157,6 @@ describe("authz: create_ticket_checkout and RLS", () => {
       // Same generated-type gap create_event's fixture helper documents.
     } as unknown as Database["public"]["Functions"]["issue_tickets_for_checkout"]["Args"]);
 
-    expect(error).not.toBeNull();
-    expect(error?.message).toMatch(/not authorized/i);
+    expect(error?.code).toBe("42501");
   });
 });

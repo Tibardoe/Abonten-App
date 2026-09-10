@@ -11,19 +11,19 @@ import type { AuthOverride } from "@abonten/types/authOverrideType";
 type FulfilmentResult = { status: number; message?: string };
 
 export type PaymentFulfillmentDeps = {
-  /** src/actions/generateTicket.ts — issue tickets for a paid checkout session. */
+  /** apps/web src/utils/generateTicket.ts — issue tickets for a paid checkout session. */
   issueTickets: (
     checkoutSessionId: string,
     transactionId: string,
     transactionMetadata: string,
     authOverride: AuthOverride,
   ) => Promise<FulfilmentResult>;
-  /** src/actions/activatePlacePromotion.ts */
+  /** apps/web src/utils/activatePlacePromotion.ts */
   activatePlacePromotion: (
     checkoutId: string,
     authOverride: AuthOverride,
   ) => Promise<FulfilmentResult>;
-  /** src/actions/activateEventPromotion.ts */
+  /** apps/web src/utils/activateEventPromotion.ts */
   activateEventPromotion: (
     checkoutId: string,
     authOverride: AuthOverride,

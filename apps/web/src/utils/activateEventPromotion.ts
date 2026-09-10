@@ -1,44 +1,31 @@
-"use server";
-
 import createNotification from "@/actions/createNotification";
-import { createClient } from "@/config/supabase/server";
+import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
 import type { AuthOverride } from "@abonten/types/authOverrideType";
 import { revalidatePath } from "next/cache";
+import { hasVerifiedPromotionPayment } from "./promotionPaymentProof";
 
 /**
  * Commit step for an Event Promotion purchase — mirrors
- * activatePlacePromotion.ts exactly. Called only by
- * src/utils/finalizePaystackPayment.ts once it has independently verified
- * payment for the given checkout. Never trusts a client-supplied
- * duration/price — everything comes from the already-priced
- * event_promotion_checkout row and the tier it references.
+ * activatePlacePromotion.ts exactly. Called only by finalizePaystackPayment
+ * (injected as a paymentFulfillmentDeps step) once it has verified payment
+ * for the given checkout. Never trusts a client-supplied duration/price —
+ * everything comes from the already-priced event_promotion_checkout row and
+ * the tier it references.
  *
- * `authOverride` lets the Paystack webhook (no cookies/session) call this
- * without a browser session — see src/types/authOverrideType.ts.
+ * **Server-only module function, not a Server Action** (same as
+ * generateTicket.ts): a "use server" export is a directly POST-able endpoint,
+ * and this one activates a promotion. It writes with the service-role client
+ * (clients can't write the promotion tables — migration
+ * lock_money_path_client_writes) and refuses unless a verified payment for
+ * this checkout exists.
  */
 export default async function activateEventPromotion(
   checkoutId: string,
-  authOverride?: AuthOverride,
+  authOverride: AuthOverride,
 ) {
-  const supabase = authOverride?.supabase ?? (await createClient());
-
-  let userId: string;
-
-  if (authOverride) {
-    userId = authOverride.userId;
-  } else {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return { status: 401, message: "User not logged in" };
-    }
-
-    userId = user.id;
-  }
+  const supabase = getSupabaseServiceClient();
+  const userId = authOverride.userId;
 
   // Distinguish "never existed / wrong user" (404) from "existed but timed
   // out" (410) by checking existence BEFORE running the expiry sweep below —
@@ -60,6 +47,19 @@ export default async function activateEventPromotion(
 
   if (!existingCheckout) {
     return { status: 404, message: "Checkout not found" };
+  }
+
+  if (
+    !(await hasVerifiedPromotionPayment(
+      "event_promotion_checkout_id",
+      checkoutId,
+      userId,
+    ))
+  ) {
+    logger.error(
+      `activateEventPromotion: no verified payment for checkout ${checkoutId}`,
+    );
+    return { status: 402, message: "Payment not verified for this checkout" };
   }
 
   await supabase.rpc("expire_stale_event_promotion_checkouts");
@@ -153,7 +153,7 @@ export default async function activateEventPromotion(
     supabase,
   );
 
-  // Every other payment-completion action (generateTicket.ts,
+  // Every other payment-completion step (generateTicket.ts,
   // registerForFreeEvent.ts, updateEvent.ts) revalidates its own affected
   // routes right after success -- this one didn't, so the organizer's own
   // /manage/events/[eventId] promotion tab (server-rendered, not a client

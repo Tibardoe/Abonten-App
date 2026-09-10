@@ -2,12 +2,16 @@ import { getCheckoutExpiryTimestamp } from "@abonten/core/checkoutExpiry";
 import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of insertEventPromotionCheckout, lifted so the mobile
 // POST /api/mobile/organizer/events/:id/promote route runs the exact same
 // reserve step as the web action. Never trusts a client-supplied price —
 // the unit/total price always comes from the seeded event_promotion_tier
-// row. Deliberately NOT a "use server" file.
+// row. Clients can't write promotion checkouts (migration
+// lock_money_path_client_writes), so the insert runs on the service-role
+// client after the organizer check below. Deliberately NOT a "use server"
+// file.
 
 export type InsertEventPromotionCheckoutResult =
   | { status: 403 | 404 | 500; message: string }
@@ -50,20 +54,21 @@ export async function insertEventPromotionCheckoutCore(
     return { status: 404, message: "Promotion tier not found" };
   }
 
-  const { data: checkout, error: insertError } = await supabase
-    .from("event_promotion_checkout")
-    .insert({
-      event_id: eventId,
-      owner_id: userId,
-      tier_id: tier.id,
-      unit_price: tier.price,
-      total_price: tier.price,
-      currency: tier.currency,
-      status: "pending",
-      expires_at: getCheckoutExpiryTimestamp().toISOString(),
-    })
-    .select("id")
-    .single();
+  const { data: checkout, error: insertError } =
+    await getSupabaseServiceClient()
+      .from("event_promotion_checkout")
+      .insert({
+        event_id: eventId,
+        owner_id: userId,
+        tier_id: tier.id,
+        unit_price: tier.price,
+        total_price: tier.price,
+        currency: tier.currency,
+        status: "pending",
+        expires_at: getCheckoutExpiryTimestamp().toISOString(),
+      })
+      .select("id")
+      .single();
 
   if (insertError || !checkout) {
     logger.error(

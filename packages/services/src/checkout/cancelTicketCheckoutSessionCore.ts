@@ -4,10 +4,13 @@ import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventor
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth body of cancelTicketCheckoutSession — shared with
 // `/api/mobile/checkout/cancel`. See cancelTicketCheckoutSession.ts for the
-// "safe to fully release promo usage here" reasoning.
+// "safe to fully release promo usage here" reasoning. The status change runs
+// on the service-role client (clients can't write ticket_checkout), scoped
+// to the caller's own rows.
 
 type PendingRow = {
   id: string;
@@ -63,7 +66,7 @@ export async function cancelTicketCheckoutSessionCore(
     };
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await getSupabaseServiceClient()
     .from("ticket_checkout")
     .update({ status: "cancelled" })
     .eq("checkout_session_id", checkoutSessionId)

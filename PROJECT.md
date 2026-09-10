@@ -1808,20 +1808,72 @@ as "Used on a feature for …" on /rewards), the admin switch, and the Android
 app (part-credit display, then a credit-only feature → "Payment successful").
 Not verified against live Paystack: a part-credit order's real charge.
 
-**Found while building this, NOT fixed (needs an owner decision — RLS
-change):** the promotion and transaction tables are writable by any signed-in
-user through RLS. `event_promotion_checkout` / `place_promotion_checkout` allow
-the owner to INSERT (for **any** event/place — no organizer check) and UPDATE
-every column (including `total_price` and `status`); `event_promotion` /
-`place_promotion` allow INSERT whenever the caller owns the referenced
-checkout; `transaction` allows the owner to INSERT/UPDATE rows. So a user can
-feature any event or place for free straight from the REST API, lower a
-checkout's price before paying, and write fake "successful" transactions. The
-credit path does not depend on any of these (it prices from the tier and trusts
-only `credit_reservation`), but the cash path does. Recommended fix: revoke
-client INSERT/UPDATE on those five tables and move the writes
-(`insert*PromotionCheckoutCore`, `activate*Promotion`, the `transaction` insert
-in `finalizePaystackPayment`) to the service-role client.
+**Found while building this:** the promotion and transaction tables were
+writable by any signed-in user through RLS — fixed in §27.2 (owner-approved).
+
+### 27.2 Money-path lockdown: clients can no longer write payments (2026-09-10)
+
+Owner-approved security fix. Before it, any signed-in user could — straight
+from the REST API with the public anon key and their own session — create a
+promotion checkout for **any** event/place and rewrite its price/status,
+insert the promotion row itself (free featuring), insert/edit "successful"
+`transaction` rows, insert/edit `payment_attempt` rows, rewrite their pending
+`ticket_checkout` price and then issue the tickets as "free" through
+`issue_tickets_for_checkout` (or open a checkout at a price of their choosing
+through `create_ticket_checkout`, which stored the caller's line amounts),
+and edit their own `ticket` (e.g. set a refunded ticket back to `active`).
+Reproduced on a local replay before the fix: two GH₵ 50 tickets issued for
+nothing, and a fake successful transaction.
+
+Migration `lock_money_path_client_writes`:
+- Drops the owner INSERT/UPDATE policies and **revokes INSERT/UPDATE/DELETE/
+  TRUNCATE from `anon`/`authenticated`** on `event_promotion_checkout`,
+  `place_promotion_checkout`, `event_promotion`, `place_promotion`,
+  `transaction`, `payment_attempt`, `ticket_checkout`. SELECT is unchanged.
+- `ticket` UPDATE is organizer-only (`ticket_organizer_update`, check-in);
+  buyers no longer edit tickets.
+- `create_ticket_checkout` / `issue_tickets_for_checkout`: EXECUTE for
+  `service_role` only.
+- `expire_stale_{ticket,event_promotion,place_promotion}_checkouts` are now
+  `SECURITY DEFINER` (authenticated + service_role). Side fix: as invoker, a
+  buyer-triggered sweep expired their own stale checkout but silently skipped
+  the `ticket_type` / `promo_code` restock (organizer-only rows under RLS), so
+  those units were lost.
+
+Code: every write to those tables now runs on the service-role client after
+the service has checked ownership and priced the order itself —
+`insert{Event,Place}PromotionCheckoutCore`, `upsertPaymentAttemptForSession`,
+`paystackInit` (no client parameter any more), both attempt cores,
+`finalizePaystackPayment` (takes only the attempt id; verify/retry keep their
+ownership check before calling it), `issueRefundCore`, `cancelUserTicketCore`,
+`cancelTicketCheckoutSessionCore`, `validateCheckoutCore` (RPC), web
+`generateTicket` (RPC), `deleteTicketSummaryCheckout`,
+`updateTicketCheckoutQuantity`. The cash promotion path now prices from the
+tier like the credit path. `activate{Event,Place}Promotion` moved from
+`src/actions/` (public Server Action endpoints) to `src/utils/`, and refuse to
+run without a verified payment (`promotionPaymentProof.ts`). The unused
+`createPaymentAttempt` action (its promotion branches had been replaced in
+§27.1; nothing called its ticket branch) is deleted. Also fixed while
+verifying: the free-RSVP confirmation email never sent (web and mobile passed
+no email to the helper, whose admin-API fallback needs the service role).
+
+Verified: `money-path-lockdown.integration.test.ts` (5 tests: every table
+refuses client inserts with 42501, the free-ticket route is closed at each
+step, a buyer can't revive a ticket while the organizer can still check it
+in, a buyer-triggered sweep restocks, the server still opens a correctly
+priced checkout); existing tests moved to the service role where they used to
+write as the user; full suite **145/145**. Driven on the local stack: paid
+ticket checkout → quantity change → a **real Paystack test-mode MoMo charge**
+→ tickets issued, organizer earning + platform fee recorded; checkout removal
+restocks; free RSVP + cancel; a credit-only promotion; and a part-credit
+promotion paid through a real Paystack test charge (GH₵ 281.21 cash + GH₵
+18.79 credit — the part-credit path §27.1 could only test with a mock).
+
+Still client-writable, out of scope, flagged: `subscription_checkout` (no
+paid subscription flow exists), and `promo_code_usage` (owner INSERT/DELETE:
+a buyer can delete their own usage row and apply a once-per-person promo code
+again — low impact, since `promo_code.times_used` / `max_uses` still caps the
+code overall).
 
 ---
 

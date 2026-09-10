@@ -318,7 +318,6 @@ export async function POST(req: Request) {
     }
 
     const result = await finalizePaystackPayment(
-      supabase,
       attempt.id,
       paymentFulfillmentDeps,
     );

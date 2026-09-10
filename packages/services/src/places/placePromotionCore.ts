@@ -3,6 +3,7 @@ import { logger } from "@abonten/core/logger";
 import type { Database } from "@abonten/types/database.types";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Post-auth bodies for the per-place Promotion tab (paid "Feature this
 // Place"), lifted so the mobile routes run the same logic as the web
@@ -113,6 +114,8 @@ export type InsertPlacePromotionCheckoutResult =
 /**
  * Post-auth body of insertPlacePromotionCheckout — creates a pending
  * place_promotion_checkout priced from the seeded tier (never the client).
+ * Clients can't write promotion checkouts, so the insert runs on the
+ * service-role client after the owner check.
  */
 export async function insertPlacePromotionCheckoutCore(
   supabase: SupabaseClient<Database>,
@@ -144,20 +147,21 @@ export async function insertPlacePromotionCheckoutCore(
     return { status: 404, message: "Promotion tier not found" };
   }
 
-  const { data: checkout, error: insertError } = await supabase
-    .from("place_promotion_checkout")
-    .insert({
-      place_id: placeId,
-      owner_id: userId,
-      tier_id: tier.id,
-      unit_price: tier.price,
-      total_price: tier.price,
-      currency: tier.currency,
-      status: "pending",
-      expires_at: getCheckoutExpiryTimestamp().toISOString(),
-    })
-    .select("id")
-    .single();
+  const { data: checkout, error: insertError } =
+    await getSupabaseServiceClient()
+      .from("place_promotion_checkout")
+      .insert({
+        place_id: placeId,
+        owner_id: userId,
+        tier_id: tier.id,
+        unit_price: tier.price,
+        total_price: tier.price,
+        currency: tier.currency,
+        status: "pending",
+        expires_at: getCheckoutExpiryTimestamp().toISOString(),
+      })
+      .select("id")
+      .single();
 
   if (insertError || !checkout) {
     logger.error(
