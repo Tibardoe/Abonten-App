@@ -25,7 +25,8 @@ export function useCreatePromotionAttempt() {
   return useMutation({
     mutationFn: (v: {
       eventPromotionCheckoutId: string;
-      paymentMethodId: string;
+      paymentMethodId: string | null;
+      useCredit: boolean;
     }) => api.checkout.promotionAttempt(v),
   });
 }

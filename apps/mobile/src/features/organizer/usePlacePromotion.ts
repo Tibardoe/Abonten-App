@@ -26,7 +26,8 @@ export function useCreatePlacePromotionAttempt() {
   return useMutation({
     mutationFn: (v: {
       placePromotionCheckoutId: string;
-      paymentMethodId: string;
+      paymentMethodId: string | null;
+      useCredit: boolean;
     }) => api.checkout.placePromotionAttempt(v),
   });
 }
