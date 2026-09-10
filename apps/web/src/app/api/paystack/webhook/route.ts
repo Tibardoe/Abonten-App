@@ -4,7 +4,9 @@ import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import { logger } from "@abonten/core/logger";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { finalizePaystackPayment } from "@abonten/services/payments/finalizePaystackPayment";
+import type { Database, Json } from "@abonten/types/database.types";
 import type {
+  PaystackDisputeWebhookData,
   PaystackRefundWebhookData,
   PaystackWebhookEvent,
 } from "@abonten/types/paystackType";
@@ -235,6 +237,54 @@ export async function POST(req: Request) {
         }
       }
 
+      return NextResponse.json({ received: true }, { status: 200 });
+    }
+
+    // Chargebacks. Recorded (and one staff incident opened per new dispute)
+    // so disputed sales can be followed up and never pay out a referral
+    // reward; no money moves here -- Paystack itself holds the disputed
+    // amount. record_payment_dispute upserts by dispute id, so redelivered
+    // events just update the same row.
+    if (event.event.startsWith("charge.dispute.")) {
+      const dispute = event.data as unknown as PaystackDisputeWebhookData;
+      const disputeId = dispute.id != null ? String(dispute.id) : null;
+
+      if (!disputeId) {
+        logger.warn(`Paystack webhook: ${event.event} had no dispute id`);
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+
+      const reference =
+        dispute.transaction?.reference ?? dispute.transaction_reference ?? null;
+      const amount =
+        dispute.refund_amount ?? dispute.transaction?.amount ?? null;
+
+      // The SQL params are nullable but have no DEFAULT, so the generated
+      // Args type marks them required non-null -- same generated-type gap
+      // validateCheckoutCore.ts documents. Pass real nulls.
+      const { error: disputeError } = await getSupabaseServiceClient().rpc(
+        "record_payment_dispute",
+        {
+          p_provider_dispute_id: disputeId,
+          p_provider_reference: reference,
+          p_event: event.event,
+          p_status: dispute.status ?? null,
+          p_resolution: dispute.resolution ?? null,
+          p_amount_minor: typeof amount === "number" ? amount : null,
+          p_currency: dispute.currency ?? dispute.transaction?.currency ?? null,
+          p_raw: dispute as unknown as Json,
+        } as unknown as Database["public"]["Functions"]["record_payment_dispute"]["Args"],
+      );
+
+      if (disputeError) {
+        // Non-2xx so Paystack redelivers -- a dispute must not be lost.
+        logger.error(
+          `Paystack webhook: failed recording ${event.event} ${disputeId}: ${disputeError.message}`,
+        );
+        return NextResponse.json({ error: "Server error" }, { status: 500 });
+      }
+
+      logger.info(`Paystack webhook: recorded ${event.event} ${disputeId}`);
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
