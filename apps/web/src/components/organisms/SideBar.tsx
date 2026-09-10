@@ -11,6 +11,7 @@ import { useImageSelection } from "@/hooks/useImageSelection";
 import { useToast } from "@/hooks/useToast";
 import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
+import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
 import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
@@ -122,6 +123,8 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
               onNavigate={onNavigate}
               triggerClassName="hover:text-primary transition-colors"
             />
+
+            <RewardsNavLink onNavigate={onNavigate} />
 
             <input
               type="file"
