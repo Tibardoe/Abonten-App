@@ -713,6 +713,11 @@ export function useEventWizard(resumeDraftId?: string) {
     else uploadProgress.setPhase("saving");
     try {
       return await create.mutateAsync({
+        // The draft this publish came from, so postEventCore can delete it
+        // once create_event succeeds. The web action always sent this; the
+        // mobile path dropped it and left every published-from-draft event's
+        // draft behind in the list.
+        draftId: currentDraftId ?? null,
         onUploadProgress: uploadProgress.onProgress,
         onUploadComplete: uploadProgress.finishUpload,
         title: title.trim(),
@@ -863,6 +868,25 @@ export function useEventWizard(resumeDraftId?: string) {
     // draft
     saveDraft,
     isSavingDraft: saveDraftMutation.isPending,
+    // "Save as draft" is only offered once there is something to save. An
+    // untouched wizard used to save a completely empty draft row (found in
+    // production: a draft with no flyer, no title, nothing) which then sat
+    // in the Event drafts list as "(untitled)" until it expired.
+    hasDraftContent:
+      !!flyerUri ||
+      title.trim() !== "" ||
+      description.trim() !== "" ||
+      website.trim() !== "" ||
+      capacity.trim() !== "" ||
+      !!category ||
+      types.length > 0 ||
+      !!rangeStart ||
+      occurrences.length > 0 ||
+      address.trim() !== "" ||
+      ticketPrice.trim() !== "" ||
+      ticketQuantity.trim() !== "" ||
+      tiers.length > 0 ||
+      promos.length > 0,
     currentDraftId,
     isHydratingDraft: !!resumeDraftId && draftQuery.isLoading,
     draftLoadError:

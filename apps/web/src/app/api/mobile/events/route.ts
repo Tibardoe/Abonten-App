@@ -113,6 +113,7 @@ export async function POST(req: Request) {
       flyerVersion,
       clientRequestId,
       placeId: str(body.placeId),
+      draftId: str(body.draftId),
     };
 
     const result = await postEventCore(auth.supabase, auth.user.id, input);

@@ -158,7 +158,7 @@ export default function CreateEventScreen() {
             <StepDots step={w.step} total={STEPS.length} />
             <Pressable
               onPress={onSaveDraft}
-              disabled={w.isSavingDraft}
+              disabled={w.isSavingDraft || !w.hasDraftContent}
               hitSlop={8}
               className="active:opacity-60 disabled:opacity-50"
             >

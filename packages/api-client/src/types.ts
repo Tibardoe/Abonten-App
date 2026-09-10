@@ -348,6 +348,8 @@ export type EventCreateBody = {
       }[]
     | null;
   placeId?: string | null;
+  // The draft being published, deleted server-side after create_event succeeds.
+  draftId?: string | null;
 };
 
 export type EventCreateResult =

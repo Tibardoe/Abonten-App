@@ -51,6 +51,22 @@ export function useChatScroll<T>() {
     setUnseenCount(0);
   }, []);
 
+  /**
+   * Content grew (a row was added or resized) while the user was already at
+   * the bottom — stay there. `maintainVisibleContentPosition` deliberately
+   * holds the old position when a row is prepended, and followOwnMessage's
+   * one-frame scroll can fire before the optimistic row is laid out, which
+   * left the sender's own message just below the viewport (seen on device
+   * 2026-09-10: two offline sends, neither visible until a manual scroll).
+   * Reading history is unaffected: older pages arrive while atBottomRef is
+   * false, so nothing moves.
+   */
+  const onContentSizeChange = useCallback(() => {
+    if (atBottomRef.current) {
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    }
+  }, []);
+
   /** The current user sent something — always follow it down. */
   const followOwnMessage = useCallback(() => {
     // A frame's grace so the optimistic row is laid out before we scroll.
@@ -77,6 +93,7 @@ export function useChatScroll<T>() {
     atBottomRef,
     unseenCount,
     onScroll,
+    onContentSizeChange,
     scrollToBottom,
     followOwnMessage,
     noteIncoming,

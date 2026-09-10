@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import type { Database } from "@abonten/types/database.types";
 import type {
   OrganizerPayoutRow,
@@ -82,8 +83,20 @@ export async function addPayoutAccountCore(
   const data = parsed.data;
   const provider =
     data.accountType === "mobile_money" ? data.networkName : data.bankName;
+  // Mobile-money numbers are stored in one canonical E.164 form whichever
+  // transport sent them (the web form composes "+233…", the mobile form
+  // sends the digits as typed — both shapes were in production).
+  const momoNumber =
+    data.accountType === "mobile_money"
+      ? normalizePhoneNumber("+233", data.phone)
+      : null;
+  if (momoNumber && !momoNumber.ok) {
+    return { status: 400, message: momoNumber.error };
+  }
   const accountNumber =
-    data.accountType === "mobile_money" ? data.phone : data.accountNumber;
+    data.accountType === "mobile_money"
+      ? (momoNumber as { ok: true; e164: string }).e164
+      : data.accountNumber;
 
   const { data: inserted, error } = await supabase
     .from("payout_account")

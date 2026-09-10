@@ -452,6 +452,7 @@ export default function ConversationScreen() {
               keyboardShouldPersistTaps="handled"
               maintainVisibleContentPosition={{ minIndexForVisible: 0 }}
               onScroll={chat.onScroll}
+              onContentSizeChange={chat.onContentSizeChange}
               scrollEventThrottle={16}
               contentContainerClassName="py-3"
               onEndReached={onEndReached}
