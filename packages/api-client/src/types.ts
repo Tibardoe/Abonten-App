@@ -35,6 +35,7 @@ import type {
 } from "@abonten/types/postsType";
 import type {
   CreditActivityItem,
+  CreditQuote,
   CreditSummary,
   RewardsProgram,
 } from "@abonten/types/rewards";
@@ -56,6 +57,7 @@ export type {
   ConversationRoleScope,
   ConversationType,
   CreditActivityItem,
+  CreditQuote,
   CreditSummary,
   EventPromotionTier,
   MessageRow,
@@ -78,6 +80,7 @@ export type {
 export type CreditSummaryResult = ApiEnvelope<CreditSummary>;
 export type CreditActivityResult = PaginatedResult<CreditActivityItem>;
 export type RewardsProgramResult = ApiEnvelope<RewardsProgram>;
+export type CreditQuoteResult = ApiEnvelope<CreditQuote>;
 
 // ---- messaging ---------------------------------------------------------
 
@@ -1027,6 +1030,7 @@ export type PromotionPaymentAttemptResult =
           amount: number;
           currency: string;
         };
+        /** null when Abonten Credit paid for everything. */
         paystack:
           | {
               mode: "popup";
@@ -1039,10 +1043,14 @@ export type PromotionPaymentAttemptResult =
               reference: string;
               chargeStatus: string;
               displayMessage?: string;
-            };
+            }
+          | null;
+        credit: { appliedMinor: number; cashMinor: number } | null;
+        /** Set for credit-only orders, which are finalized immediately. */
+        verification: VerifyPaymentResult | null;
       };
     }
-  | { status: 400 | 401 | 404 | 410 | 500; message: string };
+  | { status: 400 | 401 | 404 | 409 | 410 | 500; message: string };
 
 // ---- per-event attendee list + check-in ----------------------------
 

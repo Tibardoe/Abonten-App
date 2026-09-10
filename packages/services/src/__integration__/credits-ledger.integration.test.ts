@@ -34,6 +34,8 @@ async function expectLedgerHealthy(service: SupabaseClient<Database>) {
     credit_balance_cache_drift: 0,
     credit_lot_bucket_drift: 0,
     credit_lot_invalid_state: 0,
+    credit_reservation_stuck: 0,
+    credit_capture_mismatch: 0,
   });
 }
 

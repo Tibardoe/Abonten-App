@@ -125,6 +125,33 @@ export type RewardsProgram = {
   withdrawals: { enabled: boolean; minMinor: number };
 };
 
+/** Why credit can't be used on an order right now (null when it can). */
+export type CreditBlockedReason =
+  | "program_off"
+  | "redemption_off"
+  | "no_credit"
+  | "account_frozen"
+  | "account_closed"
+  | "in_debt"
+  | "order_too_small";
+
+/**
+ * What the checkout "Use credit" switch offers for one order. `creditMinor`
+ * is exactly what a payment attempt with useCredit=true will reserve.
+ */
+export type CreditQuote = {
+  /** Show the switch at all (the program and this kind of spending are on). */
+  offered: boolean;
+  blockedReason: CreditBlockedReason | null;
+  orderTotalMinor: number;
+  spendableMinor: number;
+  creditMinor: number;
+  cashMinor: number;
+  /** Credit covers the whole order: no card or wallet is charged. */
+  creditOnly: boolean;
+  currency: string;
+};
+
 // ─────────────────────────────────────────────────────────────
 // Admin console (apps/admin › Rewards)
 // ─────────────────────────────────────────────────────────────

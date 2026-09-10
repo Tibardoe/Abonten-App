@@ -26,6 +26,7 @@ import type {
   ConversationType,
   ConversationsListResult,
   CreditActivityResult,
+  CreditQuoteResult,
   CreditSummaryResult,
   DeleteEventDraftResult,
   DeleteHighlightResult,
@@ -611,12 +612,16 @@ export function createApiClient(options: ApiClientOptions) {
         });
       },
       /**
-       * Start the Paystack charge for a pending event-promotion checkout.
-       * Completion is the shared payments.verify path.
+       * Start paying for a pending event-promotion checkout. Completion is
+       * the shared payments.verify path. With `useCredit` the quoted Abonten
+       * Credit is applied; if it covers everything, no paymentMethodId is
+       * needed, `data.paystack` is null and `data.verification` holds the
+       * outcome.
        */
       promotionAttempt(body: {
         eventPromotionCheckoutId: string;
-        paymentMethodId: string;
+        paymentMethodId?: string | null;
+        useCredit?: boolean;
       }) {
         return request<PromotionPaymentAttemptResult>(
           "/api/mobile/checkout/promotion-attempt",
@@ -624,17 +629,28 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       /**
-       * The place sibling of promotionAttempt — start the Paystack charge
-       * for a pending place-promotion checkout. Completion is the same
-       * shared payments.verify path.
+       * The place sibling of promotionAttempt — same body semantics for a
+       * pending place-promotion checkout.
        */
       placePromotionAttempt(body: {
         placePromotionCheckoutId: string;
-        paymentMethodId: string;
+        paymentMethodId?: string | null;
+        useCredit?: boolean;
       }) {
         return request<PromotionPaymentAttemptResult>(
           "/api/mobile/checkout/place-promotion-attempt",
           { method: "POST", body, auth: true },
+        );
+      },
+      /** What the "Use credit" switch can apply to a promotion checkout. */
+      promotionCreditQuote(params: {
+        kind: "event" | "place";
+        checkoutId: string;
+      }) {
+        const query = new URLSearchParams(params);
+        return request<CreditQuoteResult>(
+          `/api/mobile/checkout/promotion-credit-quote?${query.toString()}`,
+          { method: "GET", auth: true },
         );
       },
     },

@@ -934,6 +934,17 @@ const SETTINGS_COLUMN: Record<keyof RewardsSettingsPatch, string> = {
   creditSharePayoutHoldBps: "credit_share_payout_hold_bps",
 };
 
+// Switches for behaviour that isn't built yet. The console shows them
+// locked; this refuses them server-side too, so nobody can switch on a
+// half-built feature with a crafted request. Remove a key when its phase
+// ships (tickets: Phase 3, referral capture + shadow mode: Phase 4).
+const UNSHIPPED_SETTINGS = new Set<keyof RewardsSettingsPatch>([
+  "redeemTicketsEnabled",
+  "allowFullCreditTicketOrders",
+  "referralCaptureEnabled",
+  "shadowMode",
+]);
+
 export async function updateRewardsSettingsCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
@@ -967,6 +978,15 @@ export async function updateRewardsSettingsCore(
   }
   if (changed.length === 0) {
     return { status: 400, message: "Nothing changed." };
+  }
+  const unshipped = changed.filter((key) =>
+    UNSHIPPED_SETTINGS.has(key as keyof RewardsSettingsPatch),
+  );
+  if (unshipped.length > 0) {
+    return {
+      status: 409,
+      message: `These switches control features that haven't shipped yet: ${unshipped.join(", ")}.`,
+    };
   }
   update.updated_at = new Date().toISOString();
   update.updated_by = ctx.userId;
