@@ -1869,11 +1869,8 @@ restocks; free RSVP + cancel; a credit-only promotion; and a part-credit
 promotion paid through a real Paystack test charge (GH₵ 281.21 cash + GH₵
 18.79 credit — the part-credit path §27.1 could only test with a mock).
 
-Still client-writable, out of scope, flagged: `subscription_checkout` (no
-paid subscription flow exists), and `promo_code_usage` (owner INSERT/DELETE:
-a buyer can delete their own usage row and apply a once-per-person promo code
-again — low impact, since `promo_code.times_used` / `max_uses` still caps the
-code overall).
+Still client-writable at the time, flagged: `subscription_checkout` and
+`promo_code_usage` — both locked in §27.4.
 
 ### 27.3 Phase 3 — paying for tickets with credit (2026-09-11)
 
@@ -1944,10 +1941,148 @@ Paystack test MoMo charge, transactions list with credit lines and a
 "Refund issued" credit refund.
 
 **Not verified / known limits:** iOS; a live (not test-mode) Paystack
-charge; the first-order/welcome credit scope (Phase 5). If a mixed order's
-Paystack refund later fails (`refund.failed`), the organizer hold is released
-as before while the credit share stays refunded — an admin re-running the
-refund converges (cash re-requested, credit step idempotent).
+charge; the first-order/welcome credit scope (Phase 5). The `refund.failed`
+case for mixed orders is fixed in §27.4.
+
+### 27.4 Security follow-ups (2026-09-11)
+
+Three items flagged at the end of §27.2 / §27.3, all fixed:
+
+- **Admin "confirm your identity" stamp was forgeable.** `admin_stepup_at`
+  held a bare timestamp, so anyone holding an admin's session cookies could
+  write a fresh one and skip the step-up check for bans, refunds, payouts and
+  settings. It is now `<ms>.<HMAC(user id, ms)>`
+  (`@abonten/services/admin/stepUpToken.ts`, key derived from the
+  service-role key by `security/signing.ts`, so no new env var; rotating that
+  key just means admins confirm again). The OAuth callback signs it for the
+  user the code exchange proved, `requireAdmin()` only accepts one signed for
+  the current user, and the Confirm identity button always shows Google's
+  account chooser. Existing unsigned cookies simply read as "not confirmed".
+- **Promo codes and subscriptions were client-writable** (migration
+  `20260911005153_lock_promo_subscription_writes_and_partial_refund_release`):
+  `promo_code` UPDATE is organizer-only (any signed-in user could reset a
+  code's `times_used` to 0 and use it past `max_uses`, or max it out);
+  `promo_code_usage`, `subscription`, `subscription_checkout` and
+  `subscription_plan` lose client INSERT/UPDATE/DELETE (a buyer could delete
+  their own "already used" row and apply a once-per-customer code again);
+  `expire_stale_subscription_checkouts` is cron-only. `promoUsage.ts` now
+  writes with the service role (dead `claimPromoUsage` removed) and the basket
+  actions look promo codes up per event (a code shared by two events made the
+  lookup fail and the usage was never released).
+- **A mixed (cash + credit) refund whose cash part Paystack later fails:**
+  `record_refund_release` now gives back only the cash share of the organizer
+  hold when credit was already returned, and `record_refund_hold` tops the
+  hold up to the full amount on a retry instead of adding a second full hold.
+  Both work from the net outstanding hold, which also fixes an older bug: a
+  refund that failed twice released both earlier holds and over-credited the
+  organizer by one refund. The `refund.failed` notification says when credit
+  was already returned; a retried refund doesn't repeat the credit message;
+  the admin refund panel says the credit share went back on an earlier
+  attempt.
+
+Deployed code first (the service-role promo writes work either way), then
+the migration; production function bodies match a from-scratch replay.
+Verified: step-up unit tests (7), a local admin server honouring a signed
+stamp and rejecting a bare timestamp and a stamp signed for another user;
+`promo-subscription-lockdown.integration.test.ts` (3) and the mixed refund
+failure → retry → second failure path in `credits-ticket-redemption`
+(organizer hold net −28.57 → −100 → −28.57, credit returned once).
+
+### 27.5 Phase 4 — event referrals (2026-09-11)
+
+Share an event → a friend buys through the link → after the event the sharer
+earns 1% of the ticket price in credit (capped at 35% of that sale's net
+revenue). **Ships switched off, in shadow mode.** Full design:
+`docs/architecture/rewards-ledger.md` › Event referrals.
+
+Migrations (applied to production before the code — additive; function hashes
+identical to a replay; advisors: only the expected "RLS, no policy" INFO on the
+new service-only tables):
+
+- `20260911015208_referral_capture`: `referral_code` (one 7-character code per
+  user, no look-alike characters; owner can read their own), `referral_touch`
+  (click log with salted IP/UA hashes, 90-day purge job — a plain table, not
+  partitions, at today's volume), `referral_attribution` (a signed-in
+  visitor's latest touch per event), `device_install` (install/browser ids per
+  user, a fraud signal only), `event_share.channel/referral_code`,
+  `ticket_checkout.referrer_user_id/referral_code/referral_touched_at/
+  referral_source` (immutable once stamped, by trigger),
+  `reward_program_setting.referral_attribution_window_days` (7). Functions
+  (service role only): `referral_ensure_code`, `referral_record_touch`,
+  `stamp_checkout_referral` (re-checks everything: capture on, real code, not
+  the buyer's own, not the organizer's, inside the window, referrer in good
+  standing), `record_device_install`, `referral_purge_old_touches`.
+- `20260911015504_rewards_engine`: `reward_event` (one decision record per
+  referred checkout: amount, calculation, risk score and flags, status),
+  `reward_outbox`, `risk_signal`; AFTER triggers on `ticket_checkout`,
+  `ticket`, `transaction`, `event`, `payment_dispute` that queue an outbox row
+  (only for referred sales); `rewards_process_outbox` (every minute, SKIP
+  LOCKED, back-off, dead-letter after 8 tries + critical incident),
+  `rewards_settle_due` (every 15 minutes: releases pro rata to the tickets
+  still valid once the event has settled, voids refunded/cancelled sales,
+  holds disputed/moderated ones), `rewards_notify_pending` (daily digest),
+  `reward_review_decision`, `reward_rule_set_active`, `rewards_health`;
+  `reward_program_setting.risk_weights`.
+- `20260911015614_reward_event_rule_index`: covering index.
+
+Engine rules: the `event_referral` rule must have a live version (none by
+default); monthly budget ceiling enforced at accrual (over budget → deferred
+to a later month, never dropped); caps per buyer per event, per referrer per
+event and per month; deterministic risk score (blocking: self, organizer,
+same email/phone/card or wallet; weighted: same device, new buyer account,
+referrer refund rate, event concentration, velocity, open dispute; a
+check-in lowers it) → pass / hold for review / reject; live credit only
+unlocks for a referrer with a verified phone. **Shadow:** while
+`shadow_mode` is on (default), or the referrer isn't in the program's
+audience, every decision is recorded but no credit is posted and nobody is
+notified. Orders paid entirely with credit earn no referral reward (no cash
+revenue; the fee entry has no net revenue).
+
+Code: `@abonten/core/rewards/referralCode`, `referralAttribution` (last touch
+wins, window, the capped keyed store shared by cookie and app), `riskScore`
+(+ 15 tests); `@abonten/services/rewards/referralCookie` (signed `abn_ref`
+cookie, + tests), `referralCore` (link/code, touch logging, checkout
+stamping, event-share logging, device sightings — honours
+`REWARDS_KILL_SWITCH`); `validateCheckoutCore` stamps the winning touch after
+opening a checkout (never blocks it); admin `referralAdminCore` (decision
+list, shadow projection, held-reward decisions, rule versions with the
+second-admin rule for cost increases; unbuilt rules can't be made live);
+health check `rewards`. Web: `proxy.ts` stores `?ref=` in the signed httpOnly
+`abn_ref` cookie and sets a random `abn_did` browser id (no database work);
+`ReferralTouchLogger` logs the visit; the validate action reads only its own
+signed cookie; share buttons add `?ref=` for signed-in users and log
+`event_share`; /rewards shows the code. Mobile: `+native-intent` captures
+`?ref=` into SecureStore (30 days) and logs the touch (signed out too); the
+checkout sends the stored hint; an install id header on every API call;
+share links carry the code; the Rewards screen shows it. Admin: Referrals
+(projection, flags, top referrers, decision list), Review queue, Reward rules
+(versions, make live / switch off, publish a new version), and the capture /
+shadow / window settings are unlocked.
+
+**Verified:** full integration suite **163/163** on a fresh replay (new:
+`rewards-event-referral` 9 — stamping, accrual → settlement → release, refund
+void, own/organizer/stale links refused, held → approved → released, same
+card rejected, shadow posts nothing, rule off does nothing, clients locked
+out); typecheck 11/11; parity 110; unit tests core 214 + services 35. Local
+stack, real UI: admin made the rule live through the Rules page (a
+self-published 2% version was refused activation by the same admin); web
+share link carried `?ref=`; a second account opened it (signed cookie +
+touch + attribution recorded), paid through a **real Paystack test-mode MoMo
+charge**, the pg_cron job evaluated the sale within a minute (live pending
+GH₵ 1.00), settlement released it, the referrer's /rewards and in-app
+notification updated; Android: `https://abontenhub.com/events/…?ref=` opened
+in the app signed out (touch logged with the install id), sign-in, checkout
+stamped from the device-stored hint, event share sheet carried the user's
+code and logged the share.
+
+**Not verified / known limits:** iOS (universal links still wait on the Apple
+Team ID); the real production cron run (the schedule is live but nothing is
+stamped while capture is off); push for reward notifications (they are
+in-app only, written by the engine in SQL, like the review-posted ones);
+the daily stats rollup from the blueprint isn't built (the Referrals page
+aggregates on the fly). Friend referrals, invite links and the Android
+install referrer are Phase 5.
+
 
 ---
 
