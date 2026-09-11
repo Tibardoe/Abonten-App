@@ -1,16 +1,23 @@
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { handleShare } from "@/utils/handleShare";
+import { useEventShare } from "@/hooks/useEventShare";
 import { IoShareSocialOutline } from "react-icons/io5";
 
 type ShareBtnProps = {
   title: string;
   url: string;
+  /** Logs the share and lets the link carry the sharer's referral code. */
+  eventId?: string;
   /** Renders as a DropdownMenuItem (event card menu) instead of a plain button. */
   asMenuItem?: boolean;
 };
 
-export default function ShareButton({ title, url, asMenuItem }: ShareBtnProps) {
-  const onClick = () => handleShare({ title, url });
+export default function ShareButton({
+  title,
+  url,
+  eventId,
+  asMenuItem,
+}: ShareBtnProps) {
+  const onClick = useEventShare({ eventId, title, url });
 
   if (asMenuItem) {
     return (

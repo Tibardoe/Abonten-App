@@ -1,3 +1,9 @@
+import {
+  DEVICE_COOKIE_NAME,
+  REFERRAL_COOKIE_MAX_AGE_SECONDS,
+  REFERRAL_COOKIE_NAME,
+  addTouchToCookie,
+} from "@abonten/services/rewards/referralCookie";
 import type { NextRequest } from "next/server";
 import { updateSession } from "./config/supabase/middleware";
 import { LOCALE_COOKIE_MAX_AGE, LOCALE_COOKIE_NAME } from "./i18n/config";
@@ -40,6 +46,44 @@ export async function proxy(request: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: LOCALE_COOKIE_MAX_AGE,
+    });
+  }
+
+  // Abonten Rewards: remember a referral link (?ref=CODE) in a signed,
+  // httpOnly cookie so the checkout can credit it. No database work here --
+  // the code is validated when it's used. Never allowed to break a page.
+  const ref = request.nextUrl.searchParams.get("ref");
+  if (ref) {
+    try {
+      const next = addTouchToCookie(
+        request.cookies.get(REFERRAL_COOKIE_NAME)?.value,
+        request.nextUrl.pathname,
+        ref,
+        Date.now(),
+      );
+      if (next) {
+        response.cookies.set(REFERRAL_COOKIE_NAME, next, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
+        });
+      }
+    } catch {
+      // signing key unavailable -- skip capture
+    }
+  }
+
+  // A random per-browser id, used only as a Rewards fraud signal (the same
+  // browser on a referrer's and a buyer's account).
+  if (!request.cookies.get(DEVICE_COOKIE_NAME)) {
+    response.cookies.set(DEVICE_COOKIE_NAME, crypto.randomUUID(), {
+      path: "/",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 365 * 86_400,
     });
   }
 

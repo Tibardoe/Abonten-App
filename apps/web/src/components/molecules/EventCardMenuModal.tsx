@@ -51,7 +51,12 @@ export default function EventCardMenuModal({
     <DropdownMenuContent align="end" className="w-60 font-medium">
       <AddToFavoriteButton eventId={eventId} asMenuItem />
 
-      <ShareButton title={eventTitle} url={shareUrl} asMenuItem />
+      <ShareButton
+        title={eventTitle}
+        url={shareUrl}
+        eventId={eventId}
+        asMenuItem
+      />
 
       {isOrganizer && (
         <>

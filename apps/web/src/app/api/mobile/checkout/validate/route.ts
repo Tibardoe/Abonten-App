@@ -2,10 +2,12 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { validateCheckoutCore } from "@abonten/services/checkout/validateCheckoutCore";
+import type { ReferralHint } from "@abonten/types/rewards";
 
 // POST /api/mobile/checkout/validate
 //   { eventId: string, quantities: { [ticketTypeId]: number },
-//     occurrenceId?: string, promoCode?: string }
+//     occurrenceId?: string, promoCode?: string,
+//     referral?: { code, touchedAt, source? } }
 //
 // Reserves inventory and creates a pending checkout session — the same
 // validateCheckoutCore the web action runs. Promo codes are honoured: the
@@ -23,6 +25,7 @@ export async function POST(req: Request) {
       quantities?: unknown;
       occurrenceId?: unknown;
       promoCode?: unknown;
+      referral?: unknown;
     } | null;
 
     if (typeof body?.eventId !== "string" || body.eventId.length === 0) {
@@ -59,11 +62,37 @@ export async function POST(req: Request) {
     const occurrenceId =
       typeof body.occurrenceId === "string" ? body.occurrenceId : null;
 
+    // The referral link the app captured for this event: a hint only,
+    // re-validated server-side before anything is stamped.
+    const referral = body.referral as {
+      code?: unknown;
+      touchedAt?: unknown;
+      source?: unknown;
+    } | null;
+    const referralHints: ReferralHint[] | null =
+      referral &&
+      typeof referral.code === "string" &&
+      typeof referral.touchedAt === "string"
+        ? [
+            {
+              code: referral.code,
+              touchedAt: referral.touchedAt,
+              eventId: body.eventId,
+              source:
+                referral.source === "qr" ||
+                referral.source === "install_referrer"
+                  ? referral.source
+                  : "link",
+            },
+          ]
+        : null;
+
     const result = await validateCheckoutCore(auth.supabase, auth.user.id, {
       eventId: body.eventId,
       quantities,
       promoCode,
       occurrenceId,
+      referralHints,
     });
 
     return apiJson(result);

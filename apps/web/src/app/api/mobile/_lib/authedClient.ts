@@ -1,6 +1,7 @@
+import { recordDeviceInstallCore } from "@abonten/services/rewards/referralCore";
 import type { Database } from "@abonten/types/database.types";
 import { type SupabaseClient, createClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 
 // Request-scoped Supabase client for the mobile HTTP API.
 //
@@ -189,6 +190,16 @@ export async function getMobileAuth(req: Request): Promise<MobileAuth> {
         { status: 403 },
       ),
     };
+  }
+
+  // Which app install this account uses (Rewards fraud signal: the same
+  // install on a referrer's and a buyer's account). After the response,
+  // throttled, never blocking.
+  const installId = req.headers.get("x-abonten-install-id");
+  if (installId) {
+    const platform =
+      req.headers.get("x-abonten-platform") === "ios" ? "ios" : "android";
+    after(() => recordDeviceInstallCore(installId, user.id, platform));
   }
 
   return {
