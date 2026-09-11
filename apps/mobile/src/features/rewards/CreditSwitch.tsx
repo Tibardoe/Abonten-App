@@ -26,9 +26,11 @@ export function CreditSwitch({
             Use {formatCredit(quote.creditMinor)} Abonten Credit
           </AppText>
           <AppText variant="meta">
-            {quote.creditOnly
-              ? "Your credit covers this. Nothing else is charged."
-              : `You have ${formatCredit(quote.spendableMinor)} you can use here.`}
+            {!quote.creditOnly
+              ? `You have ${formatCredit(quote.spendableMinor)} you can use here.`
+              : value
+                ? "Your credit covers this. Nothing else is charged."
+                : "Your credit can cover all of this. Turn it on to use it."}
           </AppText>
         </View>
         <Switch
