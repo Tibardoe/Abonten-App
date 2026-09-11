@@ -5,6 +5,7 @@ import requestPhoneVerification from "@/actions/requestPhoneVerification";
 import verifyEmailSignIn from "@/actions/verifyEmailSignIn";
 import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
+import InviteCodeField from "@/rewards/molecules/InviteCodeField";
 import {
   EMAIL_OTP_CODE_LENGTH,
   isLikelyEmail,
@@ -29,6 +30,8 @@ type PopupProp = {
   callingCode?: string;
   next?: string | null;
   authError?: string | null;
+  /** Friend invites (Abonten Rewards): shown while invites are live. */
+  invite?: { enabled: boolean; code: string | null };
 };
 
 // choose  -> method picker (Google / phone / email)
@@ -37,7 +40,12 @@ type PopupProp = {
 // email-otp    -> 6-digit Supabase code entry
 type View = "choose" | "phone-otp" | "email-entry" | "email-otp";
 
-export default function AuthModal({ callingCode, next, authError }: PopupProp) {
+export default function AuthModal({
+  callingCode,
+  next,
+  authError,
+  invite,
+}: PopupProp) {
   const t = useTranslations("auth");
 
   const location = useGetUserLocation();
@@ -289,6 +297,10 @@ export default function AuthModal({ callingCode, next, authError }: PopupProp) {
                 {t("newToAbonten")}
               </p>
             </form>
+
+            {invite?.enabled ? (
+              <InviteCodeField initialCode={invite.code} />
+            ) : null}
           </div>
         </div>
       </div>

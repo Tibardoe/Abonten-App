@@ -181,6 +181,77 @@ export type ReferralHint = {
 };
 
 // ─────────────────────────────────────────────────────────────
+// Friend invites (Phase 5)
+// ─────────────────────────────────────────────────────────────
+
+/** What referral_bind answered (plus transport-level answers). */
+export type ReferralBindResult =
+  | "bound"
+  | "already_bound"
+  | "capture_off"
+  | "program_off"
+  | "unknown_code"
+  | "own_code"
+  | "too_late"
+  | "not_new"
+  | "circular"
+  | "referrer_restricted"
+  | "not_found"
+  | "invalid"
+  | "rate_limited"
+  | "error";
+
+export type ReferralBindOutcome = {
+  result: ReferralBindResult;
+  /** The inviter as the friend sees them: "Ama K." */
+  referrerName: string | null;
+  /** granted: welcome credit is in the account; needs_phone: it will be once their phone is verified. */
+  welcome: "granted" | "needs_phone" | "none";
+  welcomeMinor: number | null;
+};
+
+/** The caller's invite page: their link, the offer and how it's going. */
+export type ReferralInvite = {
+  /** Invites are live (referral capture on and the friend rule live). */
+  enabled: boolean;
+  code: string | null;
+  inviteUrl: string | null;
+  /** What the inviter gets when a friend qualifies. */
+  referrerMinor: number | null;
+  /** The friend's welcome credit. */
+  refereeMinor: number | null;
+  /** The friend's first ticket order must be at least this. */
+  minOrderMinor: number | null;
+  stats: {
+    joined: number;
+    qualified: number;
+    rewarded: number;
+    earnedMinor: number;
+    pendingMinor: number;
+  };
+  /** Most recent friends first; first name and last initial only. */
+  recent: {
+    name: string;
+    status: "joined" | "qualified" | "rewarded" | "expired";
+    at: string;
+  }[];
+  invitedBy: { name: string; boundAt: string } | null;
+  /** The caller can still enter a friend's invite code. */
+  canBind: boolean;
+};
+
+/** What the public invite page shows for a code. */
+export type ReferralCodeInfo = {
+  valid: boolean;
+  code: string | null;
+  programOn: boolean;
+  referrerName: string | null;
+  referrerAvatar: { publicId: string; version: string | null } | null;
+  welcomeMinor: number | null;
+  minOrderMinor: number | null;
+};
+
+// ─────────────────────────────────────────────────────────────
 // Admin console (apps/admin › Rewards)
 // ─────────────────────────────────────────────────────────────
 
@@ -366,6 +437,28 @@ export type AdminCreditAccountDetail = {
   goodwillMonthlyCapMinor: number;
   /** Adjustments at or above this need a second approver. */
   dualApprovalThresholdMinor: number;
+  /** Friend invites: their code, who invited them, whom they invited. */
+  referrals: {
+    code: {
+      code: string;
+      disabledAt: string | null;
+      disabledReason: string | null;
+    } | null;
+    invitedBy: {
+      userId: string;
+      name: string | null;
+      status: string;
+      source: string;
+      boundAt: string;
+    } | null;
+    invited: {
+      userId: string;
+      name: string | null;
+      status: string;
+      boundAt: string;
+    }[];
+    invitedCount: number;
+  };
 };
 
 export type RewardEventStatus =
@@ -424,5 +517,18 @@ export type AdminReferralSummary = {
     outboxLagSeconds: number;
     deadLetters: number;
     settlementBacklog: number;
+  };
+  /** Friend invites (Phase 5) over the same period. */
+  friend: {
+    joined: number;
+    /** The inviters' rewards, by status. */
+    byStatus: Partial<
+      Record<RewardEventStatus, { count: number; amountMinor: number }>
+    >;
+    /** How friends qualified (first order / own event's sales / place claim). */
+    byPath: Partial<
+      Record<"first_order" | "organizer_sales" | "place_claim", number>
+    >;
+    welcome: { granted: number; amountMinor: number; rejected: number };
   };
 };

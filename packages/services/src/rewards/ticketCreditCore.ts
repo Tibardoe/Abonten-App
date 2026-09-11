@@ -118,7 +118,11 @@ export async function quoteTicketCredit(
   prepared: PreparedCheckoutPayment,
 ): Promise<{ quote: CreditQuote; order: TicketOrder }> {
   const order = await loadTicketOrder(supabase, userId, prepared);
-  const spendable = await getSpendableCredit(userId, "tickets");
+  const spendable = await getSpendableCredit(
+    userId,
+    "tickets",
+    order.orderTotalMinor,
+  );
   return {
     quote: quoteCredit(order, spendable, order.ownEvent ? "own_event" : null),
     order,

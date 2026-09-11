@@ -56,7 +56,12 @@ export function pickReferralTouch(
   return best;
 }
 
-export type StoredTouch = { c: string; t: number; s?: ReferralTouchSource };
+// `s: "typed"` marks a friend-invite code typed in by hand (Phase 5).
+export type StoredTouch = {
+  c: string;
+  t: number;
+  s?: ReferralTouchSource | "typed";
+};
 export type StoredTouchMap = Record<string, StoredTouch>;
 
 /**
@@ -91,6 +96,6 @@ export function storedToTouch(
   return {
     code: stored.c,
     touchedAt: new Date(stored.t).toISOString(),
-    source: stored.s ?? "link",
+    source: stored.s === "typed" || !stored.s ? "link" : stored.s,
   };
 }

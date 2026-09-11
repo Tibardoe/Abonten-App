@@ -206,7 +206,7 @@ export async function getReferralSummaryCore(
   }
 
   const since = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
-  const [touches, checkouts, events, health] = await Promise.all([
+  const [touches, checkouts, events, health, binds] = await Promise.all([
     supabase
       .from("referral_touch")
       .select("id", { count: "exact", head: true })
@@ -220,11 +220,15 @@ export async function getReferralSummaryCore(
     supabase
       .from("reward_event")
       .select(
-        "status, amount_minor, released_minor, risk_flags, basis, beneficiary_user_id",
+        "rule_key, status, amount_minor, released_minor, risk_flags, basis, beneficiary_user_id",
       )
       .gte("created_at", since)
       .limit(10_000),
     supabase.rpc("rewards_health"),
+    supabase
+      .from("user_referral")
+      .select("referee_user_id", { count: "exact", head: true })
+      .gte("bound_at", since),
   ]);
 
   if (events.error || health.error) {
@@ -235,6 +239,12 @@ export async function getReferralSummaryCore(
   }
 
   const byStatus: AdminReferralSummary["byStatus"] = {};
+  const friend: AdminReferralSummary["friend"] = {
+    joined: binds.count ?? 0,
+    byStatus: {},
+    byPath: {},
+    welcome: { granted: 0, amountMinor: 0, rejected: 0 },
+  };
   const flagCounts = new Map<string, number>();
   const referrers = new Map<string, { rewards: number; amountMinor: number }>();
   let revenue = 0;
@@ -245,6 +255,37 @@ export async function getReferralSummaryCore(
     const status = row.status as RewardEventStatus;
     const amount =
       status === "released" ? num(row.released_minor) : num(row.amount_minor);
+    for (const flag of (row.risk_flags as string[] | null) ?? []) {
+      flagCounts.set(flag, (flagCounts.get(flag) ?? 0) + 1);
+    }
+
+    if (row.rule_key === "friend_referral_referee") {
+      if (status === "released") {
+        friend.welcome.granted += 1;
+        friend.welcome.amountMinor += amount;
+      } else if (status === "rejected") {
+        friend.welcome.rejected += 1;
+      }
+      continue;
+    }
+    if (row.rule_key === "friend_referral_referrer") {
+      const bucket = friend.byStatus[status] ?? { count: 0, amountMinor: 0 };
+      bucket.count += 1;
+      bucket.amountMinor += amount;
+      friend.byStatus[status] = bucket;
+      const path = (row.basis as Record<string, unknown> | null)?.path;
+      if (
+        status !== "rejected" &&
+        (path === "first_order" ||
+          path === "organizer_sales" ||
+          path === "place_claim")
+      ) {
+        friend.byPath[path] = (friend.byPath[path] ?? 0) + 1;
+      }
+      continue;
+    }
+    if (row.rule_key !== "event_referral") continue;
+
     const bucket = byStatus[status] ?? { count: 0, amountMinor: 0 };
     bucket.count += 1;
     bucket.amountMinor += amount;
@@ -264,9 +305,6 @@ export async function getReferralSummaryCore(
       r.rewards += 1;
       r.amountMinor += amount;
       referrers.set(row.beneficiary_user_id, r);
-    }
-    for (const flag of (row.risk_flags as string[] | null) ?? []) {
-      flagCounts.set(flag, (flagCounts.get(flag) ?? 0) + 1);
     }
   }
 
@@ -304,6 +342,7 @@ export async function getReferralSummaryCore(
         deadLetters: num(h.outbox_dead_letters),
         settlementBacklog: num(h.settlement_backlog),
       },
+      friend,
     },
   };
 }
@@ -355,7 +394,7 @@ export async function decideHeldRewardCore(
   return {
     status: 200,
     message: input.approve
-      ? "Approved. It unlocks once the event has settled."
+      ? "Approved. It unlocks when it's due (after the event, or two weeks after a place claim)."
       : "Rejected. Nothing will be paid for it.",
     data: { status: String(data) },
   };
@@ -512,8 +551,12 @@ export function ruleRaisesCost(
  */
 // Mechanisms whose engine exists. Making any other rule live would do
 // nothing except advertise it in "How to earn", so it's refused until its
-// phase ships (friend referral: Phase 5, rebates: Phase 6).
-const SHIPPED_RULES = new Set(["event_referral"]);
+// phase ships (rebates: Phase 6).
+const SHIPPED_RULES = new Set([
+  "event_referral",
+  "friend_referral_referrer",
+  "friend_referral_referee",
+]);
 
 export async function setRewardRuleActiveCore(
   supabase: ServiceRoleClient,

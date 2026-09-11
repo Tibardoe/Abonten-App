@@ -1,5 +1,6 @@
 import { getCreditActivity } from "@/actions/getCreditActivity";
 import { getCreditSummary } from "@/actions/getCreditSummary";
+import { getReferralInvite } from "@/actions/getReferralInvite";
 import { getReferralLink } from "@/actions/getReferralLink";
 import { getRewardsProgram } from "@/actions/getRewardsProgram";
 import {
@@ -10,6 +11,7 @@ import {
 import CreditBalanceCard from "@/rewards/molecules/CreditBalanceCard";
 import ReferralCodeCard from "@/rewards/molecules/ReferralCodeCard";
 import CreditActivityList from "@/rewards/organisms/CreditActivityList";
+import InvitePanel from "@/rewards/organisms/InvitePanel";
 import RewardsHowItWorks from "@/rewards/organisms/RewardsHowItWorks";
 import { notFound } from "next/navigation";
 
@@ -25,12 +27,14 @@ export default async function RewardsPage() {
     notFound();
   }
 
-  const [summary, firstPage, referral] = await Promise.all([
+  const [summary, firstPage, referral, invite] = await Promise.all([
     getCreditSummary(),
     getCreditActivity(),
     getReferralLink(),
+    getReferralInvite(),
   ]);
   const referralCode = referral.data?.code ?? null;
+  const inviteData = invite.status === 200 ? invite.data : undefined;
 
   async function fetchPage(cursor: string | null) {
     "use server";
@@ -47,7 +51,14 @@ export default async function RewardsPage() {
       </div>
 
       {summary.status === 200 && summary.data ? (
-        <CreditBalanceCard summary={summary.data} />
+        <CreditBalanceCard
+          summary={summary.data}
+          welcomeMinOrderMinor={
+            program.data.friendReferral?.minOrderMinor ??
+            inviteData?.minOrderMinor ??
+            null
+          }
+        />
       ) : (
         <p className="text-sm text-muted-foreground">
           We couldn&apos;t load your balance right now. Try again in a moment.
@@ -60,6 +71,10 @@ export default async function RewardsPage() {
           rateBps={program.data.eventReferral.rateBps}
           windowDays={referral.data?.attributionWindowDays ?? 7}
         />
+      ) : null}
+
+      {inviteData && (inviteData.enabled || inviteData.invitedBy) ? (
+        <InvitePanel invite={inviteData} />
       ) : null}
 
       <RewardsHowItWorks program={program.data} />

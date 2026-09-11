@@ -1,3 +1,4 @@
+import { captureInvite } from "@/features/rewards/inviteCapture";
 import { captureReferral } from "@/features/rewards/referralCapture";
 import { supabase } from "@/lib/supabase";
 
@@ -40,11 +41,21 @@ export async function redirectSystemPath({
       path,
       path.startsWith("http") ? undefined : "https://abontenhub.com",
     );
-    const parts = url.pathname.split("/").filter(Boolean);
+    // abonten://invite/CODE parses "invite" as the host.
+    const parts = [
+      ...(url.protocol === "abonten:" && url.host ? [url.host] : []),
+      ...url.pathname.split("/").filter(Boolean),
+    ];
     // A shared link can carry the sharer's referral code (?ref=). Remembered
     // for this event's checkout; never delays the navigation.
     const ref = url.searchParams.get("ref");
 
+    // A friend's invite (abontenhub.com/invite/CODE): kept on the device
+    // until the person is signed in, then applied (useInviteBinding).
+    if (parts[0] === "invite" && parts[1]) {
+      const code = await captureInvite(decodeURIComponent(parts[1]), "link");
+      return code ? `/(app)/invite/${code}` : "/(app)/(tabs)";
+    }
     if (parts[0] === "events" && parts[1]) {
       const id = await resolveEvent(decodeURIComponent(parts[1]));
       if (id && ref) void captureReferral(ref, { eventId: id });

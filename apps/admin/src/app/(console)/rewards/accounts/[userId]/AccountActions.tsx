@@ -6,6 +6,7 @@ import {
   grantGoodwillCredit,
   requestCreditAdjustment,
   setCreditAccountStatus,
+  setReferralCodeDisabled,
 } from "@/server/actions";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { useRouter } from "next/navigation";
@@ -288,5 +289,59 @@ export function AdjustmentPanel({
       )}
       <Result msg={msg} />
     </Card>
+  );
+}
+
+// A disabled referral code records no clicks, stamps no checkouts and binds
+// no new friends. Rewards already decided stay as they are.
+export function ReferralCodePanel({
+  userId,
+  code,
+  disabled,
+  canChange,
+}: {
+  userId: string;
+  code: string;
+  disabled: boolean;
+  canChange: boolean;
+}) {
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [reason, setReason] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  if (!canChange) return null;
+  return (
+    <div className="mt-3 space-y-2 border-t border-border pt-3">
+      <input
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="Reason (required, audited)"
+        className={inputClass}
+      />
+      <Button
+        size="sm"
+        variant={disabled ? "outline" : "danger"}
+        disabled={pending || reason.trim().length < 3}
+        onClick={() =>
+          start(async () => {
+            setMsg(null);
+            const res = await setReferralCodeDisabled({
+              userId,
+              disabled: !disabled,
+              reason: reason.trim(),
+            });
+            setMsg(res.message ?? null);
+            if (res.status === 200) {
+              setReason("");
+              router.refresh();
+            }
+          })
+        }
+      >
+        {disabled ? `Enable ${code}` : `Disable ${code}`}
+      </Button>
+      <Result msg={msg} />
+    </div>
   );
 }

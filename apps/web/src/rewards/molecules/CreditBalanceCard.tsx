@@ -8,10 +8,14 @@ import type { CreditSummary } from "@abonten/types/rewards";
 // plain words underneath rather than as competing figures.
 export default function CreditBalanceCard({
   summary,
+  welcomeMinOrderMinor = null,
 }: {
   summary: CreditSummary;
+  /** Welcome credit only pays for a first ticket order of at least this. */
+  welcomeMinOrderMinor?: number | null;
 }) {
   const frozen = summary.status === "frozen";
+  const welcomeMinor = summary.bySpendScope.first_order ?? 0;
 
   return (
     <section
@@ -48,6 +52,18 @@ export default function CreditBalanceCard({
               {formatCredit(summary.onHoldMinor)}
             </span>{" "}
             on hold for a checkout in progress
+          </p>
+        ) : null}
+        {welcomeMinor > 0 ? (
+          <p className="text-muted-foreground">
+            <span className="font-medium tabular-nums text-foreground">
+              {formatCredit(welcomeMinor)}
+            </span>{" "}
+            is welcome credit for your first ticket order
+            {welcomeMinOrderMinor
+              ? ` of ${formatCredit(welcomeMinOrderMinor)} or more`
+              : ""}
+            .
           </p>
         ) : null}
         {summary.expiringSoon ? (

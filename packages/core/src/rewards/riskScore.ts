@@ -22,6 +22,8 @@ export const DEFAULT_RISK_WEIGHTS = {
   velocity: 30,
   open_dispute: 80,
   checked_in: -15,
+  bind_burst: 30,
+  referrer_lifetime_review: 30,
   review_threshold: 30,
   reject_threshold: 70,
 } as const;
@@ -79,6 +81,8 @@ const LABELS: Record<string, string> = {
   velocity: "Unusually many referred sales in a day",
   open_dispute: "Chargeback open on the sale",
   checked_in: "Ticket was checked in (lowers risk)",
+  bind_burst: "Many friends joined with this invite within an hour",
+  referrer_lifetime_review: "Inviter has passed the lifetime review threshold",
 };
 
 /** Admin-facing explanation of a flag. */

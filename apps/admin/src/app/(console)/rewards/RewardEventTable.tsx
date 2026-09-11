@@ -41,8 +41,38 @@ const REASONS: Record<string, string> = {
   no_net_revenue: "no cash revenue (e.g. paid with credit)",
   no_payment: "not a paid order",
   phone_not_verified: "referrer phone not verified",
+  friend_phone_not_verified: "friend's phone not verified",
   rejected_by_review: "rejected in review",
+  not_first_order: "friend had already bought a ticket",
+  not_enough_buyers: "event lost its qualifying buyers",
+  claim_revoked: "place claim no longer approved",
+  place_removed: "place removed",
+  place_hidden: "place hidden",
 };
+
+const RULE_LABELS: Record<string, string> = {
+  event_referral: "Event referral",
+  friend_referral_referrer: "Friend invite",
+  friend_referral_referee: "Welcome credit",
+};
+
+const PATH_LABELS: Record<string, string> = {
+  first_order: "friend's first ticket order",
+  organizer_sales: "friend's event sold to enough buyers",
+  place_claim: "friend's place claim approved",
+};
+
+// What earned the reward, in one line (the "sale" column).
+function sourceLine(e: AdminRewardEvent): string {
+  if (e.ruleKey === "friend_referral_referee") {
+    return "Joined with an invite";
+  }
+  if (e.ruleKey === "friend_referral_referrer") {
+    const path = typeof e.basis.path === "string" ? e.basis.path : "";
+    return PATH_LABELS[path] ?? "Friend qualified";
+  }
+  return e.event.title ?? "Event removed";
+}
 
 export function statusReason(
   reason: string | null,
@@ -71,8 +101,8 @@ export function RewardEventTable({
       <thead>
         <tr>
           <Th>When</Th>
-          <Th>Referrer</Th>
-          <Th>Referred sale</Th>
+          <Th>Earned by</Th>
+          <Th>What earned it</Th>
           <Th className="text-right">Reward</Th>
           <Th>Status</Th>
           <Th>Risk</Th>
@@ -92,15 +122,26 @@ export function RewardEventTable({
               >
                 {e.beneficiary.name ?? `${e.beneficiary.id.slice(0, 8)}…`}
               </Link>
+              <div className="text-xs text-muted-foreground">
+                {RULE_LABELS[e.ruleKey] ?? e.ruleKey}
+              </div>
             </Td>
             <Td>
-              <div>{e.event.title ?? "Event removed"}</div>
-              <div className="text-xs text-muted-foreground">
-                Buyer: {e.buyer.name ?? "unknown"}
-                {typeof e.basis.ticket_revenue_minor === "number"
-                  ? ` · ${formatCredit(e.basis.ticket_revenue_minor)} of tickets`
-                  : ""}
-              </div>
+              <div>{sourceLine(e)}</div>
+              {e.ruleKey === "friend_referral_referee" ? null : (
+                <div className="text-xs text-muted-foreground">
+                  {e.ruleKey === "friend_referral_referrer"
+                    ? "Friend"
+                    : "Buyer"}
+                  : {e.buyer.name ?? "unknown"}
+                  {e.ruleKey === "friend_referral_referrer" && e.event.title
+                    ? ` · ${e.event.title}`
+                    : ""}
+                  {typeof e.basis.ticket_revenue_minor === "number"
+                    ? ` · ${formatCredit(e.basis.ticket_revenue_minor)} of tickets`
+                    : ""}
+                </div>
+              )}
               {e.transactionId ? (
                 <Link
                   href={`/finance/transactions/${e.transactionId}`}

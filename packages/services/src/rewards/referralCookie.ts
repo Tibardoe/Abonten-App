@@ -1,4 +1,11 @@
 import {
+  INVITE_FLAG_COOKIE_NAME,
+  INVITE_KEY,
+  type InviteSource,
+  pickInvite,
+  withoutInvites,
+} from "@abonten/core/rewards/invite";
+import {
   type StoredTouch,
   type StoredTouchMap,
   rememberTouch,
@@ -14,7 +21,8 @@ import {
 // opened recently, keyed by what the link pointed at. Written by proxy.ts
 // (no database work on that hot path), read back at checkout.
 //
-// Keys: `e:<event slug>`, `p:<place slug>`, `u` for any other page. The
+// Keys: `e:<event slug>`, `p:<place slug>`, `u` for any other page, `i` for
+// a friend invite (/invite/CODE or a code typed at sign-in). The
 // proxy only knows the URL, not the event id, so events are keyed by the
 // slug in their link and matched against the event at checkout.
 //
@@ -24,6 +32,7 @@ import {
 export const REFERRAL_COOKIE_NAME = "abn_ref";
 export const DEVICE_COOKIE_NAME = "abn_did";
 export const REFERRAL_COOKIE_MAX_AGE_SECONDS = 30 * 86_400;
+export { INVITE_FLAG_COOKIE_NAME };
 
 const PURPOSE = "referral-cookie:v1";
 
@@ -34,7 +43,8 @@ function isStoredTouch(value: unknown): value is StoredTouch {
     typeof v.c === "string" &&
     normalizeReferralCode(v.c) === v.c &&
     typeof v.t === "number" &&
-    Number.isFinite(v.t)
+    Number.isFinite(v.t) &&
+    (v.s === undefined || typeof v.s === "string")
   );
 }
 
@@ -110,4 +120,48 @@ export function addTouchToCookie(
     { now },
   );
   return encodeReferralCookie(next, signingKey);
+}
+
+/** The cookie value after opening a friend's invite (or typing its code). */
+export function addInviteToCookie(
+  currentValue: string | null | undefined,
+  rawCode: string,
+  now: number,
+  source: InviteSource = "link",
+  key?: Buffer,
+): string | null {
+  const code = normalizeReferralCode(rawCode);
+  if (!code) return null;
+  const signingKey = key ?? deriveSigningKey(PURPOSE);
+  const next = rememberTouch(
+    decodeReferralCookie(currentValue, signingKey),
+    INVITE_KEY,
+    source === "link" ? { c: code, t: now } : { c: code, t: now, s: source },
+    { now },
+  );
+  return encodeReferralCookie(next, signingKey);
+}
+
+/** The friend invite a browser holds (an invite link or typed code first). */
+export function inviteFromCookie(
+  value: string | null | undefined,
+  now: number,
+  key?: Buffer,
+) {
+  return pickInvite(decodeReferralCookie(value, key), now);
+}
+
+/**
+ * The cookie value without its invite entries, or null when nothing else is
+ * left (the caller deletes the cookie).
+ */
+export function removeInvitesFromCookie(
+  value: string | null | undefined,
+  key?: Buffer,
+): string | null {
+  const signingKey = key ?? deriveSigningKey(PURPOSE);
+  const rest = withoutInvites(decodeReferralCookie(value, signingKey));
+  return Object.keys(rest).length > 0
+    ? encodeReferralCookie(rest, signingKey)
+    : null;
 }
