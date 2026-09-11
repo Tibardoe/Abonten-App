@@ -2563,4 +2563,88 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
+## 28. Field Ops — regional promotion & field operations programme, Phase 0 (2026-09-11)
+
+A modular, switchable programme: a ~12-person regional team (team lead,
+content creator, offline + online members) is assigned to the towns of one
+region, onboards businesses and organizers, and earns a configurable
+commission per successful onboarding (GH₵ 5 at launch). Design reference and
+runbook: [docs/architecture/field-ops.md](docs/architecture/field-ops.md);
+the approved 23-section plan (9 phases) lives with the owner. Owner
+decisions 2026-09-11: workers/leads use the **web app** (`/field`, Phase 1;
+Expo section optional later); ownership is proven by an **OTP the business
+owner enters** (Phase 2); a commission needs the **team lead's review + a
+7-day holding period re-checked by a sweep** (Phase 3); payouts are **weekly
+manual MoMo batches** approved by a second admin (Phase 4).
+
+**Naming:** everything is prefixed `fieldops` (`fieldops_*` tables and
+functions, `fieldops.*` permissions, role `field_ops_manager`, `/field-ops`
+in the console, `fieldOps/` folders, `FIELD_OPS_KILL_SWITCH`) so the module
+can be found, switched off and removed as one unit; "promotion", "campaign"
+and "commission" already mean paid featuring, `reward_campaign` and
+`event_promoter_commission`.
+
+**Phase 0 (migration `20260911174652_fieldops_core`, applied to production
+via MCP, replays cleanly locally; ships OFF — `program_enabled = false`, 8
+seeded rule versions all inactive, no campaign):**
+- `fieldops_program_setting` (singleton: master switch, verification
+  defaults, duplicate-detection thresholds, housekeeping, push switch; the
+  worker-UI / commission-generation / payout switches exist but are refused
+  by the service until their phases ship), `fieldops_region`,
+  `fieldops_territory` (PostGIS point + radius, optional polygon that wins;
+  generated `centre_lat/lng` + `boundary_geojson` so PostgREST reads plain
+  values; `fieldops_territory_contains` is the one containment rule),
+  `fieldops_campaign` (draft → active → paused → winding_down → completed →
+  archived via `fieldops_set_campaign_status`; one live campaign per region;
+  activation needs an active territory + an active team lead),
+  `fieldops_team` + `fieldops_team_member` (roles team_lead /
+  content_creator / offline_member / online_member; invited / active /
+  suspended / left; phone invitations bind through
+  `fieldops_bind_invited_memberships`; payout MoMo columns column-level
+  revoked from clients), `fieldops_commission_rule` (versioned, immutable
+  by trigger, programme default or per-campaign override, one live per key
+  via `fieldops_commission_rule_set_active`).
+- **Access:** team leads and workers are ordinary accounts — never
+  `admin_user` rows (`addTeamMemberCore` refuses admins, because an
+  `admin_user` row flips `user_info.is_admin` and the staff bypasses with
+  it). Clients have SELECT only, scoped by the self-only helpers
+  `fieldops_is_member` / `fieldops_is_lead_of_team`; no client
+  INSERT/UPDATE/DELETE on any `fieldops_` table. Admin permissions
+  `fieldops.view / manage / rules / verify / commissions.approve /
+  commissions.pay` (manage, rules, approve, pay need step-up); role
+  `field_ops_manager`; `operations` gets view/manage/verify, `finance_admin`
+  view/approve/pay, `analyst` view. A costlier self-published rule version
+  needs another admin to activate it; nothing can be made live until the
+  phase that pays it ships (`SHIPPED_ACTIVITIES`).
+- **Code:** `@abonten/types/fieldOps`, `@abonten/core/fieldOps/
+  {campaignLifecycle,territory}` (pure, unit-tested),
+  `@abonten/validation/fieldOpsSchemas`, `@abonten/services/fieldOps/shared/
+  {fieldOpsContext,killSwitch}` (`resolveFieldOpsContext` = the member/lead
+  authorization primitive, mirrors `resolveAdminContext`),
+  `@abonten/services/admin/fieldOps/*` (settings, regions/territories +
+  optional Google geocoding, campaigns, team, rules, overview — every fn
+  re-checks its permission and audits), Admin › **Field Ops** (Overview,
+  Campaigns + detail with status controls and team management, Regions &
+  territories, Commission rules, Settings), 11 server actions.
+- **Verified:** core unit tests 18; integration `fieldops-rbac` (10: every
+  client write refused with 42501, scoped reads, payout columns and
+  rules/settings unreadable, stranger sees nothing, self-only helpers,
+  permission checks, admin-as-member refused, one lead per team, immutable
+  rules + one live per key + second-approver rule) and `fieldops-lifecycle`
+  (4: activation guards, full state walk incl. invalid moves refused by TS
+  and SQL, one live campaign per region, polygon-over-radius containment,
+  phone invitation binding) — all green on a fresh local replay; services +
+  admin typecheck; admin production build; `get_advisors` shows only the
+  expected authenticated-executable WARNs for the four self-only helpers
+  (same class as `is_staff`). CI gained a `unit-tests` job (core + services
+  vitest + `check:api-parity`), which were not in CI before.
+- **Not yet built:** everything that moves work or money — assignments and
+  the `/field` area (P1), the onboarding wizard with owner OTP + duplicate
+  search + lead review (P2), the commission ledger and sweep (P3), payouts
+  (P4), events / claim assistance (P5), content creator (P6), analytics
+  (P7), Playwright + pilot readiness (P8). The admin UI is not yet exercised
+  in a browser (typecheck + build only).
+
+---
+
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*

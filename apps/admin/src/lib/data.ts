@@ -25,6 +25,19 @@ import {
 } from "@abonten/services/admin/content/contentBrowseCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
 import {
+  type ListCampaignsFilters,
+  getCampaignDetailCore,
+  listCampaignsCore,
+} from "@abonten/services/admin/fieldOps/campaignsAdminCore";
+import { getFieldOpsOverviewCore } from "@abonten/services/admin/fieldOps/overviewAdminCore";
+import {
+  getRegionDetailCore,
+  listRegionsCore,
+} from "@abonten/services/admin/fieldOps/regionsAdminCore";
+import { listCommissionRulesCore } from "@abonten/services/admin/fieldOps/rulesAdminCore";
+import { getFieldOpsSettingsCore } from "@abonten/services/admin/fieldOps/settingsAdminCore";
+import { listTeamMembersCore } from "@abonten/services/admin/fieldOps/teamAdminCore";
+import {
   type ListTransactionsFilters,
   getFinanceOverviewCore,
   getOrganizerFinanceCore,
@@ -410,6 +423,59 @@ export async function loadRewardRules() {
   const ctx = await requireAdmin();
   const rules = await listRewardRulesCore(getServiceClient(), ctx);
   return { ctx, rules };
+}
+
+// ── Field Ops (regional promotion programme) ────────────────
+
+export async function loadFieldOpsOverview() {
+  const ctx = await requireAdmin();
+  const overview = await getFieldOpsOverviewCore(getServiceClient(), ctx);
+  return { ctx, overview };
+}
+
+export async function loadFieldOpsCampaigns(filters: ListCampaignsFilters) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [campaigns, regions] = await Promise.all([
+    listCampaignsCore(svc, ctx, filters),
+    listRegionsCore(svc, ctx),
+  ]);
+  return { ctx, campaigns, regions };
+}
+
+export async function loadFieldOpsCampaign(campaignId: string) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [detail, members, rules] = await Promise.all([
+    getCampaignDetailCore(svc, ctx, campaignId),
+    listTeamMembersCore(svc, ctx, campaignId),
+    listCommissionRulesCore(svc, ctx, campaignId),
+  ]);
+  return { ctx, detail, members, rules };
+}
+
+export async function loadFieldOpsRegions() {
+  const ctx = await requireAdmin();
+  const regions = await listRegionsCore(getServiceClient(), ctx);
+  return { ctx, regions };
+}
+
+export async function loadFieldOpsRegion(regionId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getRegionDetailCore(getServiceClient(), ctx, regionId);
+  return { ctx, detail };
+}
+
+export async function loadFieldOpsRules() {
+  const ctx = await requireAdmin();
+  const rules = await listCommissionRulesCore(getServiceClient(), ctx, null);
+  return { ctx, rules };
+}
+
+export async function loadFieldOpsSettings() {
+  const ctx = await requireAdmin();
+  const settings = await getFieldOpsSettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
 }
 
 export async function loadCreditAccountDetail(userId: string) {

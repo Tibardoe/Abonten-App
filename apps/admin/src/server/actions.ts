@@ -12,6 +12,25 @@ import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
 import {
+  setCampaignStatusCore,
+  upsertCampaignCore,
+} from "@abonten/services/admin/fieldOps/campaignsAdminCore";
+import {
+  geocodeQueryCore,
+  upsertRegionCore,
+  upsertTerritoryCore,
+} from "@abonten/services/admin/fieldOps/regionsAdminCore";
+import {
+  publishCommissionRuleVersionCore,
+  setCommissionRuleActiveCore,
+} from "@abonten/services/admin/fieldOps/rulesAdminCore";
+import { updateFieldOpsSettingsCore } from "@abonten/services/admin/fieldOps/settingsAdminCore";
+import {
+  addTeamMemberCore,
+  setTeamMemberRoleCore,
+  setTeamMemberStatusCore,
+} from "@abonten/services/admin/fieldOps/teamAdminCore";
+import {
   clearPayoutReviewAdminCore,
   createPayoutAdminCore,
   refundTransactionAdminCore,
@@ -101,6 +120,19 @@ import {
   supportReplySchema,
   supportStatusSchema,
 } from "@abonten/validation/adminSchemas";
+import {
+  fieldOpsAddMemberSchema,
+  fieldOpsCampaignSchema,
+  fieldOpsCampaignStatusChangeSchema,
+  fieldOpsGeocodeSchema,
+  fieldOpsMemberRoleChangeSchema,
+  fieldOpsMemberStatusSchema,
+  fieldOpsRegionSchema,
+  fieldOpsRuleActivationSchema,
+  fieldOpsRuleVersionSchema,
+  fieldOpsSettingsSchema,
+  fieldOpsTerritorySchema,
+} from "@abonten/validation/fieldOpsSchemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -1015,5 +1047,238 @@ export async function updateRewardsSettings(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "updateRewardsSettings");
+  }
+}
+
+// ── Field Ops (regional promotion programme) ────────────────
+// fieldops.manage / fieldops.rules are in STEP_UP_PERMISSIONS: every
+// configuration change below asserts a fresh identity check.
+
+export async function updateFieldOpsSettings(input: unknown) {
+  const parsed = fieldOpsSettingsSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await updateFieldOpsSettingsCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops");
+      revalidatePath("/field-ops/settings");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "updateFieldOpsSettings");
+  }
+}
+
+export async function upsertFieldOpsRegion(input: unknown) {
+  const parsed = fieldOpsRegionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await upsertRegionCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/regions");
+      if (res.data) revalidatePath(`/field-ops/regions/${res.data.id}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "upsertFieldOpsRegion");
+  }
+}
+
+export async function upsertFieldOpsTerritory(input: unknown) {
+  const parsed = fieldOpsTerritorySchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await upsertTerritoryCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/regions");
+      revalidatePath(`/field-ops/regions/${parsed.data.regionId}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "upsertFieldOpsTerritory");
+  }
+}
+
+// Read-only helper for the territory form (Google Geocoding when a key is
+// configured). fieldops.manage, no step-up: it changes nothing.
+export async function geocodeFieldOpsQuery(input: unknown) {
+  const parsed = fieldOpsGeocodeSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    return await geocodeQueryCore(ctx, parsed.data.query);
+  } catch (e) {
+    return adminError(e, "geocodeFieldOpsQuery");
+  }
+}
+
+export async function upsertFieldOpsCampaign(input: unknown) {
+  const parsed = fieldOpsCampaignSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await upsertCampaignCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops");
+      revalidatePath("/field-ops/campaigns");
+      if (res.data) revalidatePath(`/field-ops/campaigns/${res.data.id}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "upsertFieldOpsCampaign");
+  }
+}
+
+export async function setFieldOpsCampaignStatus(input: unknown) {
+  const parsed = fieldOpsCampaignStatusChangeSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await setCampaignStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops");
+      revalidatePath("/field-ops/campaigns");
+      revalidatePath(`/field-ops/campaigns/${parsed.data.campaignId}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "setFieldOpsCampaignStatus");
+  }
+}
+
+export async function addFieldOpsTeamMember(input: unknown) {
+  const parsed = fieldOpsAddMemberSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await addTeamMemberCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/field-ops/campaigns/${parsed.data.campaignId}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "addFieldOpsTeamMember");
+  }
+}
+
+export async function setFieldOpsTeamMemberStatus(input: unknown) {
+  const parsed = fieldOpsMemberStatusSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await setTeamMemberStatusCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/field-ops/campaigns", "layout");
+    return res;
+  } catch (e) {
+    return adminError(e, "setFieldOpsTeamMemberStatus");
+  }
+}
+
+export async function setFieldOpsTeamMemberRole(input: unknown) {
+  const parsed = fieldOpsMemberRoleChangeSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await setTeamMemberRoleCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/field-ops/campaigns", "layout");
+    return res;
+  } catch (e) {
+    return adminError(e, "setFieldOpsTeamMemberRole");
+  }
+}
+
+export async function publishFieldOpsRuleVersion(input: unknown) {
+  const parsed = fieldOpsRuleVersionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await publishCommissionRuleVersionCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/rules");
+      revalidatePath("/field-ops/campaigns", "layout");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "publishFieldOpsRuleVersion");
+  }
+}
+
+export async function setFieldOpsRuleActive(input: unknown) {
+  const parsed = fieldOpsRuleActivationSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await setCommissionRuleActiveCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/rules");
+      revalidatePath("/field-ops");
+      revalidatePath("/field-ops/campaigns", "layout");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "setFieldOpsRuleActive");
   }
 }

@@ -21,6 +21,7 @@ export const ADMIN_ROLE_KEYS: AdminRoleKey[] = [
   "finance_admin",
   "support_admin",
   "analyst",
+  "field_ops_manager",
 ];
 
 export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
@@ -73,6 +74,12 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "rewards.goodwill",
   "rewards.configure",
   "rewards.withdrawals",
+  "fieldops.view",
+  "fieldops.manage",
+  "fieldops.rules",
+  "fieldops.verify",
+  "fieldops.commissions.approve",
+  "fieldops.commissions.pay",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -120,6 +127,9 @@ const FINANCE_ADMIN: AdminPermissionKey[] = [
   "rewards.goodwill",
   "rewards.configure",
   "rewards.withdrawals",
+  "fieldops.view",
+  "fieldops.commissions.approve",
+  "fieldops.commissions.pay",
 ];
 
 const SUPPORT_ADMIN: AdminPermissionKey[] = [
@@ -159,6 +169,25 @@ const ANALYST: AdminPermissionKey[] = [
   "monitoring.view",
   "audit.view",
   "rewards.view",
+  "fieldops.view",
+];
+
+// Runs the regional promotion programme (Field Ops): campaigns, teams,
+// verification, commissions and payouts, plus read access to the people and
+// listings the programme touches. Never finance.* or settings.*.
+const FIELD_OPS_MANAGER: AdminPermissionKey[] = [
+  "dashboard.view",
+  "fieldops.view",
+  "fieldops.manage",
+  "fieldops.rules",
+  "fieldops.verify",
+  "fieldops.commissions.approve",
+  "fieldops.commissions.pay",
+  "users.view",
+  "places.view",
+  "events.view",
+  "organizers.view",
+  "audit.view",
 ];
 
 // operations = everything except financial mutations / admin management /
@@ -172,6 +201,9 @@ const OPERATIONS_EXCLUDED = new Set<AdminPermissionKey>([
   "settings.manage",
   "rewards.configure",
   "rewards.withdrawals",
+  "fieldops.rules",
+  "fieldops.commissions.approve",
+  "fieldops.commissions.pay",
 ]);
 const OPERATIONS: AdminPermissionKey[] = ADMIN_PERMISSION_KEYS.filter(
   (p) => !OPERATIONS_EXCLUDED.has(p),
@@ -184,6 +216,7 @@ export const ROLE_PERMISSIONS: Record<AdminRoleKey, AdminPermissionKey[]> = {
   finance_admin: FINANCE_ADMIN,
   support_admin: SUPPORT_ADMIN,
   analyst: ANALYST,
+  field_ops_manager: FIELD_OPS_MANAGER,
 };
 
 export function effectivePermissions(
@@ -249,6 +282,10 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "settings.manage",
   "rewards.configure",
   "rewards.withdrawals",
+  "fieldops.manage",
+  "fieldops.rules",
+  "fieldops.commissions.approve",
+  "fieldops.commissions.pay",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
