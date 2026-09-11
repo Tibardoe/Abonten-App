@@ -375,6 +375,12 @@ export const rewardRuleActivationSchema = z.object({
   reason: creditReason,
 });
 
+// Run the monthly rebates for one month by hand (the first of the month).
+export const rebateRunSchema = z.object({
+  periodStart: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-01$/, "Pick a month"),
+  reason: creditReason,
+});
+
 export type ReportResolveInput = z.infer<typeof reportResolveSchema>;
 export type ModerationActionInput = z.infer<typeof moderationActionSchema>;
 export type SetUserStatusInput = z.infer<typeof setUserStatusSchema>;

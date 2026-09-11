@@ -131,6 +131,7 @@ export async function listRewardEventsCore(
     status?: RewardEventStatus;
     mode?: "shadow" | "live";
     beneficiaryId?: string;
+    ruleKeys?: string[];
     cursor?: string | null;
     pageSize?: number;
   } = {},
@@ -161,6 +162,9 @@ export async function listRewardEventsCore(
   if (filters.mode) query = query.eq("is_shadow", filters.mode === "shadow");
   if (filters.beneficiaryId) {
     query = query.eq("beneficiary_user_id", filters.beneficiaryId);
+  }
+  if (filters.ruleKeys && filters.ruleKeys.length > 0) {
+    query = query.in("rule_key", filters.ruleKeys);
   }
   if (cursor) query = query.or(keysetOlderThan("created_at", "id", cursor));
 
@@ -550,12 +554,14 @@ export function ruleRaisesCost(
  * permission.
  */
 // Mechanisms whose engine exists. Making any other rule live would do
-// nothing except advertise it in "How to earn", so it's refused until its
-// phase ships (rebates: Phase 6).
+// nothing except advertise it in "How to earn", so it's refused.
 const SHIPPED_RULES = new Set([
   "event_referral",
   "friend_referral_referrer",
   "friend_referral_referee",
+  "organizer_rebate",
+  "venue_rebate",
+  "organizer_milestone",
 ]);
 
 export async function setRewardRuleActiveCore(

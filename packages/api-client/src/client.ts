@@ -89,6 +89,7 @@ import type {
   PromoPreviewResult,
   PromoteEventResult,
   PromotePlaceResult,
+  PromotionCreditResult,
   PromotionPaymentAttemptResult,
   ReferralBindBody,
   ReferralBindResultEnvelope,
@@ -1493,6 +1494,16 @@ export function createApiClient(options: ApiClientOptions) {
           method: "GET",
           auth: true,
         });
+      },
+      /**
+       * The caller's promotion credit (what they can spend on featuring) and
+       * the monthly organizer / venue rebates it came from.
+       */
+      promotionCredit() {
+        return request<PromotionCreditResult>(
+          "/api/mobile/rewards/promotion-credit",
+          { method: "GET", auth: true },
+        );
       },
       /**
        * Join a friend's invite. The server decides (new accounts only,

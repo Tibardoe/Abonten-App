@@ -27,6 +27,11 @@ type ProgramJson = {
     expiry_days: number | null;
   } | null;
   venue_rebate?: { net_share_bps: number; expiry_days: number | null } | null;
+  organizer_milestone?: {
+    amount_minor: number;
+    unique_buyers: number;
+    expiry_days: number | null;
+  } | null;
   redemption?: {
     tickets: boolean;
     promotions: boolean;
@@ -42,6 +47,7 @@ export const DISABLED_REWARDS_PROGRAM: RewardsProgram = {
   friendReferral: null,
   organizerRebate: null,
   venueRebate: null,
+  organizerMilestone: null,
   redemption: {
     tickets: false,
     promotions: false,
@@ -80,6 +86,13 @@ export function mapRewardsProgram(json: ProgramJson | null): RewardsProgram {
       ? {
           netShareBps: json.venue_rebate.net_share_bps,
           expiryDays: json.venue_rebate.expiry_days,
+        }
+      : null,
+    organizerMilestone: json.organizer_milestone
+      ? {
+          amountMinor: json.organizer_milestone.amount_minor,
+          uniqueBuyers: json.organizer_milestone.unique_buyers,
+          expiryDays: json.organizer_milestone.expiry_days,
         }
       : null,
     redemption: {

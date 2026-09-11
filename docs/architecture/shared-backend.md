@@ -94,7 +94,9 @@ promotion checkout "Use credit" quote; `rewards/referralCore` — the caller's
 referral code and referral-link touch logging, `/api/mobile/rewards/referral`
 and `/rewards/touch`, the touch route also accepting signed-out calls;
 `rewards/inviteCore` — friend invites: `/api/mobile/rewards/invite`,
-`/rewards/referral/bind` and the public `/rewards/referral/resolve`).
+`/rewards/referral/bind` and the public `/rewards/referral/resolve`;
+`rewards/promotionCreditCore` — promotion credit and monthly rebates,
+`/api/mobile/rewards/promotion-credit`).
 Logging an event share is class A on mobile (`event_share` owner-insert
 under RLS) and a Server Action on web. The two credit reads call
 `auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their

@@ -296,6 +296,43 @@ admin.
 **Switching it on:** with capture on, Reward rules → Friend invite (welcome
 credit) → Make live, then Friend invite (inviter's reward) → Make live.
 
+## Organizer and venue rebates (Phase 6)
+
+`rewards_run_monthly_rebates(period)` — pg_cron `rewards-monthly-rebates`
+at 03:00 on the 3rd for the previous month; Admin › Rewards › Rebates ›
+Run a month now for any month (audited, step-up). For each event that
+settled in the month (`_event_settles_at`: last end + 48 h), one decision
+per rule (idempotency key `organizer_rebate:<event>` / `venue_rebate:<event>`
+/ `organizer_milestone:<organizer>:<threshold>`, `:shadow` suffix in shadow):
+
+1. **Basis** (`_reward_event_rebate_basis`): standing paid checkouts (not
+   refunded, tickets still valid, no open dispute); each one's share of the
+   transaction's `platform_fee_entry.net_revenue`, pro rata to valid tickets
+   and to the cash part of the payment. Buyers who are an owner or share an
+   owner's email, phone, device or card are excluded. Also the event's
+   refund rate over all paid tickets.
+2. **Organizer rebate** = floor(net × `net_share_cap_bps`) to the organizer.
+   **Venue rebate** = the same at the venue rate to the owner of a
+   `verified` place (`event.place_id`), only when the organizer is someone
+   else. **Milestone** = `flat_minor` once, when
+   `_reward_event_unique_buyers` (verified phones, unlinked) reaches
+   `caps.unique_paid_attendees`.
+3. **Gates** → `rejected`: event cancelled/removed, place removed, refund
+   rate ≥ `max_event_refund_rate_bps`, account younger than
+   `min_account_age_days` at settlement, nothing to pay. **Held**: at or
+   above `dual_approval_threshold_minor` (`large_rebate`), or venue owner on
+   the organizer's device.
+4. **Credit**: budget-gated `promotion` lot, scope `promotions`, 180 days;
+   released in the same run when the beneficiary's phone is verified (else
+   `rewards_settle_due` checks daily, voids after 90 days). A venue rebate is
+   voided if the place is no longer verified or changed hands before release.
+5. One in-app notification per person per run; a run row in
+   `reward_rebate_run` with the counts.
+
+**Switching it on:** Reward rules → Organizer rebate / Venue rebate /
+Organizer milestone → Make live. With shadow mode on, run the last month
+from Rebates to see the projected cost first.
+
 ## Disputes
 
 `payment_dispute` records every Paystack `charge.dispute.*` webhook event
@@ -315,5 +352,7 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **Rewards health check down:** `select rewards_health()` — outbox lag, overdue settlements, dead letters, released rewards without a journal. Check the `rewards-process-outbox` / `rewards-settle-due` cron jobs are active.
 - **A referrer abusing links or invites:** Admin › Rewards › account › Referrals › Disable code (`rewards.freeze`, audited); new touches, stamps and friend binds with it are refused and its invite page shows "not valid". Reject their held rewards in the Review queue.
 - **A friend says they didn't get welcome credit:** `select * from user_referral where referee_user_id = …` and the `friend_referral_referee` reward_event for them. No row = the invite never bound (too late, not a new account, own code…). No reward_event = their phone isn't verified yet. `rejected` = they had already bought, or shared the inviter's device/email.
+- **"Monthly rebates: some events failed" incident:** the run log (`select * from reward_rebate_run order by started_at desc limit 5`) has the last error. Fix the cause, then Admin › Rewards › Rebates › Run a month now for that month — decided events are skipped.
+- **An organizer asks why an event earned no rebate:** Admin › Rewards › Rebates › Decisions (or `select status, status_reason, basis from reward_event where event_id = … and rule_key = 'organizer_rebate'`). No row = the event hadn't settled by the run, or no rebate rule was live.
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) and `rewards-friend-referral.integration.test.ts` (friend invites).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards).

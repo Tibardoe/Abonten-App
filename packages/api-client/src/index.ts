@@ -148,6 +148,7 @@ export type {
   SavePlaceDraftResult,
   PromoteEventResult,
   PromotePlaceResult,
+  PromotionCreditResult,
   PromotionPaymentAttemptResult,
   AddPlacePhotoBody,
   AddPlaceServiceBody,

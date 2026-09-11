@@ -37,6 +37,7 @@ import type {
   CreditActivityItem,
   CreditQuote,
   CreditSummary,
+  PromotionCredit,
   ReferralBindOutcome,
   ReferralCodeInfo,
   ReferralInvite,
@@ -94,6 +95,7 @@ export type ReferralTouchBody = {
 };
 export type ReferralTouchResult = { status: number; message?: string };
 export type ReferralInviteResult = ApiEnvelope<ReferralInvite>;
+export type PromotionCreditResult = ApiEnvelope<PromotionCredit>;
 export type ReferralBindBody = {
   code: string;
   source?: "link" | "typed" | "install_referrer";

@@ -17,16 +17,22 @@ const RULE_LABELS: Record<string, { title: string; shipped: boolean }> = {
     title: "Friend invite (welcome credit)",
     shipped: true,
   },
-  organizer_rebate: { title: "Organizer rebate", shipped: false },
-  venue_rebate: { title: "Venue rebate", shipped: false },
-  organizer_milestone: { title: "Organizer milestone", shipped: false },
+  organizer_rebate: { title: "Organizer rebate", shipped: true },
+  venue_rebate: { title: "Venue rebate", shipped: true },
+  organizer_milestone: { title: "Organizer milestone", shipped: true },
 };
+
+const REBATES = new Set(["organizer_rebate", "venue_rebate"]);
 
 function terms(r: RewardRuleSummary): string {
   const parts: string[] = [];
   if (r.rateBps !== null) parts.push(`${r.rateBps / 100}% of ticket revenue`);
   if (r.netShareCapBps !== null)
-    parts.push(`max ${r.netShareCapBps / 100}% of net revenue`);
+    parts.push(
+      REBATES.has(r.ruleKey)
+        ? `${r.netShareCapBps / 100}% of cash net revenue, monthly`
+        : `max ${r.netShareCapBps / 100}% of net revenue`,
+    );
   if (r.flatMinor !== null) parts.push(formatCredit(r.flatMinor));
   if (r.minBasisMinor > 0)
     parts.push(`min order ${formatCredit(r.minBasisMinor)}`);

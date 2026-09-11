@@ -55,6 +55,7 @@ import {
   listReportGroupsCore,
   listReportsCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
+import { getRebateSummaryCore } from "@abonten/services/admin/rewards/rebateAdminCore";
 import {
   getReferralSummaryCore,
   listRewardEventsCore,
@@ -340,7 +341,30 @@ export async function loadReferrals(
   const svc = getServiceClient();
   const [summary, events] = await Promise.all([
     getReferralSummaryCore(svc, ctx, sinceDays),
-    listRewardEventsCore(svc, ctx, filters),
+    listRewardEventsCore(svc, ctx, {
+      ...filters,
+      ruleKeys: [
+        "event_referral",
+        "friend_referral_referrer",
+        "friend_referral_referee",
+      ],
+    }),
+  ]);
+  return { ctx, summary, events };
+}
+
+export async function loadRebates(
+  filters: Parameters<typeof listRewardEventsCore>[2],
+  sinceDays = 90,
+) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [summary, events] = await Promise.all([
+    getRebateSummaryCore(svc, ctx, sinceDays),
+    listRewardEventsCore(svc, ctx, {
+      ...filters,
+      ruleKeys: ["organizer_rebate", "venue_rebate", "organizer_milestone"],
+    }),
   ]);
   return { ctx, summary, events };
 }
