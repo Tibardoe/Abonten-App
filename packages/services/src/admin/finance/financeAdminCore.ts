@@ -14,6 +14,7 @@ import type {
   LedgerEntryView,
   OrganizerFinanceSummary,
   PayoutListItem,
+  PayoutReviewEvent,
   RefundListItem,
   TransactionDetail,
   TransactionListItem,
@@ -427,6 +428,8 @@ export async function getTransactionDetailCore(
       id: t.id,
       status: t.status,
       amount: num(t.amount),
+      creditAmount: num(t.credit_amount),
+      creditRefundedAmount: num(t.credit_refunded_amount),
       currency: t.currency ?? "GHS",
       reason: t.reason ?? null,
       payerName: t.full_name ?? null,
@@ -603,6 +606,21 @@ function accountLabel(a: {
   return [bits || null, masked].filter(Boolean).join(" · ") || null;
 }
 
+function reviewEventsOf(details: unknown): PayoutReviewEvent[] {
+  const events = (details as { events?: unknown[] } | null)?.events;
+  if (!Array.isArray(events)) return [];
+  return events.map((e) => {
+    const ev = e as Record<string, unknown>;
+    return {
+      eventId: String(ev.event_id ?? ""),
+      title: String(ev.title ?? ""),
+      revenue: num(ev.revenue),
+      creditRevenue: num(ev.credit_revenue),
+      shareBps: num(ev.share_bps),
+    };
+  });
+}
+
 export async function listPayoutsCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
@@ -626,7 +644,7 @@ export async function listPayoutsCore(
   let query = supabase
     .from("payout")
     .select(
-      "id, organizer_id, payout_account_id, amount, currency, status, reference, failure_reason, requested_at, processed_at, created_at, payout_account(account_type, provider, account_number)",
+      "id, organizer_id, payout_account_id, amount, currency, status, reference, failure_reason, requested_at, processed_at, created_at, review_status, review_details, payout_account(account_type, provider, account_number)",
     )
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
@@ -676,6 +694,9 @@ export async function listPayoutsCore(
       requestedAt: (r.requested_at as string) ?? null,
       processedAt: (r.processed_at as string) ?? null,
       createdAt: r.created_at as string,
+      reviewStatus:
+        (r.review_status as PayoutListItem["reviewStatus"]) ?? "none",
+      reviewEvents: reviewEventsOf(r.review_details),
     };
   });
 
@@ -725,7 +746,7 @@ export async function getOrganizerFinanceCore(
       supabase
         .from("payout")
         .select(
-          "id, organizer_id, payout_account_id, amount, currency, status, reference, failure_reason, requested_at, processed_at, created_at, payout_account(account_type, provider, account_number)",
+          "id, organizer_id, payout_account_id, amount, currency, status, reference, failure_reason, requested_at, processed_at, created_at, review_status, review_details, payout_account(account_type, provider, account_number)",
         )
         .eq("organizer_id", organizerId)
         .order("created_at", { ascending: false })
@@ -799,6 +820,9 @@ export async function getOrganizerFinanceCore(
       requestedAt: (r.requested_at as string) ?? null,
       processedAt: (r.processed_at as string) ?? null,
       createdAt: r.created_at as string,
+      reviewStatus:
+        (r.review_status as PayoutListItem["reviewStatus"]) ?? "none",
+      reviewEvents: reviewEventsOf(r.review_details),
     };
   });
 

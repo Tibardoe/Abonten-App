@@ -85,6 +85,11 @@ type Verification = Awaited<ReturnType<typeof verifyTransaction>>;
 function reservationTarget(
   attempt: PaymentAttemptFullRow,
 ): { type: string; id: string } | null {
+  // Ticket credit is reserved for the whole payment group (one Paystack
+  // charge can cover several checkout sessions).
+  if (attempt.checkout_session_id && attempt.payment_group_id) {
+    return { type: "ticket_payment_group", id: attempt.payment_group_id };
+  }
   if (attempt.event_promotion_checkout_id) {
     return {
       type: "event_promotion_checkout",
@@ -119,10 +124,29 @@ function reservationMatches(
   );
 }
 
-/** Has the promotion checkout this credit was reserved for lapsed? */
+/** Has the checkout this credit was reserved for lapsed? */
 async function reservedCheckoutLapsed(
   reservation: CreditReservationRow,
+  groupMembers: PaymentAttemptFullRow[],
 ): Promise<boolean> {
+  if (reservation.target_type === "ticket_payment_group") {
+    // A ticket session that was expired or cancelled can't be issued
+    // (issue_tickets_for_checkout refuses it). One still 'pending' past its
+    // expiry is fine: the sweep never expires a session whose payment is
+    // in flight.
+    const sessions = groupMembers
+      .map((m) => m.checkout_session_id)
+      .filter((id): id is string => !!id);
+    const { data } = await getSupabaseServiceClient()
+      .from("ticket_checkout")
+      .select("status")
+      .in("checkout_session_id", sessions.length > 0 ? sessions : [""]);
+    return (
+      !data ||
+      data.length === 0 ||
+      data.some((r) => r.status !== "pending" && r.status !== "paid")
+    );
+  }
   const table =
     reservation.target_type === "event_promotion_checkout"
       ? "event_promotion_checkout"
@@ -277,8 +301,8 @@ export async function finalizePaystackPayment(
       );
   };
 
-  // Credit applied to this payment, if any (promotions only in Phase 2, so
-  // never part of a multi-checkout group).
+  // Credit applied to this payment, if any -- reserved against the primary
+  // attempt (for a ticket group, on behalf of the whole group).
   let reservation: CreditReservationRow | null = null;
   try {
     reservation = await getReservationForAttempt(primary.id);
@@ -297,7 +321,14 @@ export async function finalizePaystackPayment(
   }
 
   if (primary.provider === CREDIT_PROVIDER) {
-    return finalizeCreditOnly(supabase, primary, reservation, deps, markGroup);
+    return finalizeCreditOnly(
+      supabase,
+      primary,
+      groupMembers,
+      reservation,
+      deps,
+      markGroup,
+    );
   }
 
   if (reservation && !reservationMatches(primary, reservation)) {
@@ -419,6 +450,7 @@ type MarkGroup = (
 async function finalizeCreditOnly(
   supabase: SupabaseClient<Database>,
   primary: PaymentAttemptFullRow,
+  groupMembers: PaymentAttemptFullRow[],
   reservation: CreditReservationRow | null,
   deps: PaymentFulfillmentDeps,
   markGroup: MarkGroup,
@@ -427,8 +459,10 @@ async function finalizeCreditOnly(
     !reservation ||
     !reservationMatches(primary, reservation) ||
     reservation.cash_minor !== 0 ||
-    toPesewas(primary.amount) !== 0 ||
-    primary.payment_group_id
+    groupMembers.some((m) => toPesewas(m.amount) !== 0) ||
+    // Promotions are never grouped; a ticket group's credit is reserved
+    // for the group itself.
+    (!primary.checkout_session_id && !!primary.payment_group_id)
   ) {
     logger.error(
       `finalizePaystackPayment: credit-only attempt ${primary.id} has no matching full-credit reservation`,
@@ -446,7 +480,7 @@ async function finalizeCreditOnly(
   return completeVerifiedPayment({
     supabase,
     primary,
-    groupMembers: [primary],
+    groupMembers,
     deps,
     markGroup,
     reservation,
@@ -503,7 +537,7 @@ async function completeVerifiedPayment({
     // (a failed activation lands in "fulfillment_failed" for support).
     if (
       reservation.status !== "captured" &&
-      (await reservedCheckoutLapsed(reservation))
+      (await reservedCheckoutLapsed(reservation, groupMembers))
     ) {
       await releaseReservation(reservation.id, "checkout_lapsed");
       if (creditOnly) {
@@ -683,7 +717,7 @@ async function completeVerifiedPayment({
         member.checkout_session_id,
         transactionRow.id,
         JSON.stringify({
-          provider: "paystack",
+          provider: primary.provider,
           reference: primary.provider_reference,
           paymentAttemptId: member.id,
         }),

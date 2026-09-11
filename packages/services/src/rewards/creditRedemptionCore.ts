@@ -103,21 +103,31 @@ type SpendableJson = {
   spendable_minor?: number;
   blocked_reason?: string | null;
   min_cash_charge_minor?: number;
+  max_share_bps?: number;
+  allow_full_credit?: boolean;
+};
+
+export type SpendableCredit = {
+  spendableMinor: number;
+  blockedReason: CreditBlockedReason | null;
+  minCashChargeMinor: number;
+  /** Largest share of one order credit may pay (basis points). */
+  maxShareBps: number;
+  /** Whether credit may pay for a whole order. */
+  allowFullCredit: boolean;
 };
 
 export async function getSpendableCredit(
   userId: string,
   scope: "promotions" | "tickets",
-): Promise<{
-  spendableMinor: number;
-  blockedReason: CreditBlockedReason | null;
-  minCashChargeMinor: number;
-}> {
+): Promise<SpendableCredit> {
   if (rewardsKillSwitchOn()) {
     return {
       spendableMinor: 0,
       blockedReason: "program_off",
       minCashChargeMinor: 100,
+      maxShareBps: 10000,
+      allowFullCredit: false,
     };
   }
   const { data, error } = await getSupabaseServiceClient().rpc(
@@ -133,29 +143,41 @@ export async function getSpendableCredit(
     spendableMinor: Number(json.spendable_minor ?? 0),
     blockedReason: (json.blocked_reason as CreditBlockedReason | null) ?? null,
     minCashChargeMinor: Number(json.min_cash_charge_minor ?? 100),
+    maxShareBps: Number(json.max_share_bps ?? 10000),
+    allowFullCredit: json.allow_full_credit ?? scope === "promotions",
   };
 }
 
-function quoteFor(
-  order: PromotionOrder,
-  spendable: Awaited<ReturnType<typeof getSpendableCredit>>,
+/**
+ * The single rule for what the "Use credit" switch offers on an order --
+ * used by the quote and again by the payment attempt, so the amount the
+ * user agreed to is the amount reserved. `blockedReason` overrides (e.g.
+ * own_event) keep the switch visible-but-off.
+ */
+export function quoteCredit(
+  order: { orderTotalMinor: number; currency: string },
+  spendable: SpendableCredit,
+  blockedOverride: CreditBlockedReason | null = null,
 ): CreditQuote {
   const offered =
     spendable.blockedReason !== "program_off" &&
     spendable.blockedReason !== "redemption_off";
-  const allocation = offered
-    ? allocateCredit({
-        orderTotalMinor: order.orderTotalMinor,
-        spendableMinor: spendable.spendableMinor,
-        minCashChargeMinor: spendable.minCashChargeMinor,
-        allowFullCredit: true,
-      })
-    : { creditMinor: 0, cashMinor: order.orderTotalMinor, creditOnly: false };
+  const allocation =
+    offered && !blockedOverride
+      ? allocateCredit({
+          orderTotalMinor: order.orderTotalMinor,
+          spendableMinor: spendable.spendableMinor,
+          minCashChargeMinor: spendable.minCashChargeMinor,
+          allowFullCredit: spendable.allowFullCredit,
+          maxShareBps: spendable.maxShareBps,
+        })
+      : { creditMinor: 0, cashMinor: order.orderTotalMinor, creditOnly: false };
 
   return {
     offered,
     blockedReason:
       spendable.blockedReason ??
+      blockedOverride ??
       (allocation.creditMinor === 0 ? "order_too_small" : null),
     orderTotalMinor: order.orderTotalMinor,
     spendableMinor: spendable.spendableMinor,
@@ -191,7 +213,7 @@ export async function getPromotionCreditQuoteCore(
       };
     }
     const spendable = await getSpendableCredit(userId, "promotions");
-    return { status: 200, data: quoteFor(order, spendable) };
+    return { status: 200, data: quoteCredit(order, spendable) };
   } catch {
     return { status: 500, message: "Something went wrong!" };
   }
@@ -201,7 +223,7 @@ export async function computePromotionCredit(
   order: PromotionOrder,
   userId: string,
 ): Promise<CreditQuote> {
-  return quoteFor(order, await getSpendableCredit(userId, "promotions"));
+  return quoteCredit(order, await getSpendableCredit(userId, "promotions"));
 }
 
 // ── Reservation lifecycle (service role) ────────────────────────────

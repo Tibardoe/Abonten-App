@@ -939,8 +939,6 @@ const SETTINGS_COLUMN: Record<keyof RewardsSettingsPatch, string> = {
 // half-built feature with a crafted request. Remove a key when its phase
 // ships (tickets: Phase 3, referral capture + shadow mode: Phase 4).
 const UNSHIPPED_SETTINGS = new Set<keyof RewardsSettingsPatch>([
-  "redeemTicketsEnabled",
-  "allowFullCreditTicketOrders",
   "referralCaptureEnabled",
   "shadowMode",
 ]);

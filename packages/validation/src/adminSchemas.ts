@@ -179,6 +179,15 @@ export const sendPayoutSchema = z.object({
   reason: z.string().trim().min(1, "A reason is required").max(2000),
 });
 
+export const clearPayoutReviewSchema = z.object({
+  payoutId: z.string().uuid(),
+  reason: z
+    .string()
+    .trim()
+    .min(10, "Say what you checked (at least 10 characters)")
+    .max(2000),
+});
+
 export const resendNotificationSchema = z.object({
   id: z.string().uuid(),
 });

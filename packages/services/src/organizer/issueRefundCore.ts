@@ -13,7 +13,8 @@ import type { Database } from "@abonten/types/database.types";
 // Not a "use server" file — it takes an already-constructed Supabase client.
 
 import { logger } from "@abonten/core/logger";
-import { toPesewas } from "@abonten/core/paystackAmount";
+import { fromPesewas, toPesewas } from "@abonten/core/paystackAmount";
+import { splitRefundTender } from "@abonten/core/rewards/refundTenderSplit";
 import { createNotificationCore } from "@abonten/services/notifications/createNotification";
 import { refundTransaction } from "@abonten/services/payments/gateway/paystackService";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -24,11 +25,67 @@ export type IssueRefundResult = {
   message: string;
 };
 
+type RefundTransactionRow = {
+  id: string;
+  status: string;
+  paystack_reference: string | null;
+  user_id: string;
+  amount: number;
+  credit_amount: number;
+  credit_refunded_amount: number;
+};
+
+/**
+ * Gives back the Abonten Credit share of a refund (orders paid partly or
+ * wholly with credit). Idempotent in the database, so it's safe to call on
+ * every retry: it's what finishes a refund whose credit step failed after
+ * the transaction had already moved to refund_pending.
+ */
+async function returnCreditShare(
+  transaction: RefundTransactionRow,
+  creditBackMinor: number,
+): Promise<boolean> {
+  if (creditBackMinor <= 0) return true;
+  const { error } = await getSupabaseServiceClient().rpc(
+    "credit_refund_redemption",
+    { p_transaction_id: transaction.id, p_amount_minor: creditBackMinor },
+  );
+  if (error) {
+    logger.error(
+      `Failed returning ${creditBackMinor} pesewas of credit for transaction ${transaction.id}: ${error.message}`,
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
+ * How the refundable ticket revenue splits between credit and cash, pro rata
+ * to how the order was paid. `refundableMinor` of 0 with linked tickets is
+ * an accounting gap: then everything paid is returned.
+ */
+function tenderSplit(
+  transaction: RefundTransactionRow,
+  refundableMinor: number,
+) {
+  const cashMinor = toPesewas(Number(transaction.amount ?? 0));
+  const creditMinor = toPesewas(Number(transaction.credit_amount ?? 0));
+  return splitRefundTender({
+    refundMinor:
+      refundableMinor > 0 ? refundableMinor : cashMinor + creditMinor,
+    cashMinor,
+    creditMinor,
+  });
+}
+
 /**
  * Requests a partial Paystack refund of the ticket revenue only (the
  * customer-paid Abonten service fee is retained) and records the organizer-
- * ledger hold + fee audit row. Idempotent: re-checks transaction.status
- * before doing anything, so a retry never double-refunds.
+ * ledger hold + fee audit row. An order paid with Abonten Credit gets the
+ * credit share back as credit and only the cash share through Paystack; one
+ * paid entirely with credit never touches Paystack and is refunded at once.
+ * Idempotent: re-checks transaction.status before doing anything, so a
+ * retry never double-refunds.
  */
 export async function issueRefundCore(
   supabase: SupabaseClient<Database>,
@@ -37,7 +94,9 @@ export async function issueRefundCore(
 ): Promise<IssueRefundResult> {
   let query = supabase
     .from("transaction")
-    .select("id, status, paystack_reference, user_id")
+    .select(
+      "id, status, paystack_reference, user_id, amount, credit_amount, credit_refunded_amount",
+    )
     .eq("id", transactionId);
 
   if (opts?.expectedUserId) {
@@ -45,12 +104,7 @@ export async function issueRefundCore(
   }
 
   const { data: transaction, error: transactionError } =
-    await query.maybeSingle<{
-      id: string;
-      status: string;
-      paystack_reference: string | null;
-      user_id: string;
-    }>();
+    await query.maybeSingle<RefundTransactionRow>();
 
   if (transactionError || !transaction) {
     logger.error(
@@ -59,15 +113,36 @@ export async function issueRefundCore(
     return { status: 404, message: "Transaction not found" };
   }
 
-  if (transaction.status === "refunded") {
-    return { status: 200, message: "This payment was already refunded" };
-  }
+  const hasCredit = Number(transaction.credit_amount ?? 0) > 0;
 
-  if (transaction.status === "refund_pending") {
-    return {
-      status: 200,
-      message: "Your refund is already being processed by Paystack",
-    };
+  if (
+    transaction.status === "refunded" ||
+    transaction.status === "refund_pending"
+  ) {
+    // A retry after the credit step failed: finish it (idempotent).
+    if (hasCredit && Number(transaction.credit_refunded_amount ?? 0) === 0) {
+      const { data: refundableAgain } = await supabase.rpc(
+        "get_transaction_refundable_amount",
+        { p_transaction_id: transaction.id },
+      );
+      const again = tenderSplit(
+        transaction,
+        toPesewas(Number(refundableAgain ?? 0)),
+      );
+      if (!(await returnCreditShare(transaction, again.creditBackMinor))) {
+        return {
+          status: 500,
+          message:
+            "Your refund is in progress, but we couldn't return your credit yet. Please try again or contact support.",
+        };
+      }
+    }
+    return transaction.status === "refunded"
+      ? { status: 200, message: "This payment was already refunded" }
+      : {
+          status: 200,
+          message: "Your refund is already being processed by Paystack",
+        };
   }
 
   if (transaction.status !== "successful") {
@@ -92,10 +167,10 @@ export async function issueRefundCore(
   }
 
   const refundable = Number(refundableAmount ?? 0);
-  let refundAmountPesewas: number | undefined;
+  let refundableMinor = 0;
 
   if (Number.isFinite(refundable) && refundable > 0) {
-    refundAmountPesewas = toPesewas(refundable);
+    refundableMinor = toPesewas(refundable);
   } else {
     // refundable resolved to 0. Distinguish a genuine accounting gap (a
     // real ticket-backed purchase whose earning rows are missing) from an
@@ -122,31 +197,39 @@ export async function issueRefundCore(
     );
   }
 
-  try {
-    await refundTransaction(
-      transaction.paystack_reference,
-      refundAmountPesewas,
-    );
-  } catch (error) {
-    logger.error(`Refund failed for transaction ${transaction.id}: ${error}`);
+  const split = tenderSplit(transaction, refundableMinor);
 
-    // Still record that a request was actually made — refund_requested_at
-    // is what lets the UI tell "attempted and failed" apart from "not
-    // requested yet" for a transaction stuck at status=successful. Service
-    // role: clients can't write `transaction`.
-    await getSupabaseServiceClient()
-      .from("transaction")
-      .update({
-        refund_requested_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", transaction.id)
-      .is("refund_requested_at", null);
+  // Cash goes back through Paystack -- only the cash share of an order paid
+  // partly with credit, and nothing at all for one paid entirely with
+  // credit. A cash-only order with no computable refundable amount keeps the
+  // old full-refund fallback (amount omitted).
+  if (split.cashBackMinor > 0) {
+    try {
+      await refundTransaction(
+        transaction.paystack_reference,
+        hasCredit || refundableMinor > 0 ? split.cashBackMinor : undefined,
+      );
+    } catch (error) {
+      logger.error(`Refund failed for transaction ${transaction.id}: ${error}`);
 
-    return {
-      status: 500,
-      message: "Refund could not be processed. Please contact support.",
-    };
+      // Still record that a request was actually made — refund_requested_at
+      // is what lets the UI tell "attempted and failed" apart from "not
+      // requested yet" for a transaction stuck at status=successful. Service
+      // role: clients can't write `transaction`.
+      await getSupabaseServiceClient()
+        .from("transaction")
+        .update({
+          refund_requested_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", transaction.id)
+        .is("refund_requested_at", null);
+
+      return {
+        status: 500,
+        message: "Refund could not be processed. Please contact support.",
+      };
+    }
   }
 
   // Paystack accepting the refund request doesn't mean the refund is
@@ -180,6 +263,23 @@ export async function issueRefundCore(
     };
   }
 
+  // The credit share comes back straight away. A failure here is retried by
+  // calling this again (see the refund_pending branch above).
+  const creditReturned = await returnCreditShare(
+    transaction,
+    split.creditBackMinor,
+  );
+
+  // Nothing went to Paystack, so no refund.processed webhook will arrive:
+  // the refund is complete now.
+  if (split.cashBackMinor === 0 && creditReturned) {
+    await privileged
+      .from("transaction")
+      .update({ status: "refunded", updated_at: new Date().toISOString() })
+      .eq("id", transaction.id)
+      .eq("status", "refund_pending");
+  }
+
   // Audit-only row: records that the ticket revenue was returned and the
   // Abonten service fee was retained. Best-effort — the money movement and
   // the organizer-ledger hold already happened.
@@ -197,11 +297,20 @@ export async function issueRefundCore(
   // Best-effort — the hold above is already the source of truth; a failed
   // notification never undoes a real refund request. Completion/failure is
   // notified separately by the webhook once Paystack actually confirms it.
+  const creditText =
+    split.creditBackMinor > 0
+      ? `GH₵ ${fromPesewas(split.creditBackMinor).toFixed(2)} is back in your Abonten Credit`
+      : null;
+  const completed = split.cashBackMinor === 0;
   await createNotificationCore(privileged, {
     userId: transaction.user_id,
-    type: "refund_requested",
-    title: "Refund requested",
-    body: "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
+    type: completed ? "refund_completed" : "refund_requested",
+    title: completed ? "Refund completed" : "Refund requested",
+    body: completed
+      ? `${creditText ?? "Your refund is complete"}.`
+      : creditText
+        ? `${creditText}. We've requested the rest back to your payment method — you'll be notified once it's completed.`
+        : "We've requested a refund for your cancelled ticket. You'll be notified once it's completed.",
     link: "/transactions",
     data: { kind: "ticket" },
   }).catch((error) => {
@@ -210,8 +319,18 @@ export async function issueRefundCore(
     );
   });
 
+  if (!creditReturned) {
+    return {
+      status: 500,
+      message:
+        "Your refund was started, but we couldn't return your credit yet. Please try again or contact support.",
+    };
+  }
+
   return {
     status: 200,
-    message: "Refund requested — Paystack will confirm once it's processed",
+    message: completed
+      ? "Refunded to your Abonten Credit"
+      : "Refund requested — Paystack will confirm once it's processed",
   };
 }

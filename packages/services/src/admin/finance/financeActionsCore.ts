@@ -84,7 +84,8 @@ export async function settlePayoutAdminCore(
 
   if (error) {
     logger.error(`settlePayoutAdminCore failed: ${error.message}`);
-    if (/already/i.test(error.message)) {
+    // 55000: held for a credit-share review (payout_guard_review trigger).
+    if (/already/i.test(error.message) || error.code === "55000") {
       return { status: 409, message: error.message };
     }
     if (/not found/i.test(error.message)) {
@@ -214,7 +215,7 @@ export async function sendPayoutAdminCore(
   const { data: payout, error: payoutError } = await supabase
     .from("payout")
     .select(
-      "id, organizer_id, payout_account_id, amount, currency, status, reference, transfer_status, payout_account:payout_account_id(account_type, account_holder_name, provider, account_number)",
+      "id, organizer_id, payout_account_id, amount, currency, status, reference, transfer_status, review_status, payout_account:payout_account_id(account_type, account_holder_name, provider, account_number)",
     )
     .eq("id", input.payoutId)
     .maybeSingle();
@@ -237,6 +238,15 @@ export async function sendPayoutAdminCore(
     return {
       status: 409,
       message: `A transfer is already ${payout.transfer_status} for this payout.`,
+    };
+  }
+  // Money must not leave before the credit-share review is cleared (the
+  // payout couldn't be completed afterwards anyway).
+  if (payout.review_status === "required") {
+    return {
+      status: 409,
+      message:
+        "This payout is held for review: a large share of the event's sales was paid with Abonten Credit. Clear the review first.",
     };
   }
 
@@ -318,4 +328,60 @@ export async function sendPayoutAdminCore(
     logger.error("sendPayoutAdminCore failed", e);
     return { status: 500, message: "Couldn't initiate the transfer." };
   }
+}
+
+// ── Payout review (credit-funded sales) ─────────────────────
+
+/**
+ * Clears the credit-share review on a held payout (see the
+ * payout_credit_review trigger): a person has checked that the event's
+ * credit-funded sales are genuine. The payout can then be sent/completed
+ * as usual, and the events cleared here aren't flagged again.
+ */
+export async function clearPayoutReviewAdminCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: { payoutId: string; reason: string },
+  requestMeta?: Record<string, unknown>,
+): Promise<AdminEnvelope<{ reviewStatus: string }>> {
+  try {
+    assertPermission(ctx, "finance.payout");
+  } catch (e) {
+    return { status: 403, message: (e as Error).message };
+  }
+
+  const { error } = await supabase.rpc("admin_clear_payout_review", {
+    p_payout_id: input.payoutId,
+    p_admin_id: ctx.userId,
+    p_note: input.reason,
+  });
+
+  if (error) {
+    logger.error(`clearPayoutReviewAdminCore failed: ${error.message}`);
+    if (error.code === "P0002") {
+      return { status: 404, message: "Payout not found" };
+    }
+    if (error.code === "55000") {
+      return { status: 409, message: error.message };
+    }
+    return { status: 400, message: error.message };
+  }
+
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: "finance.payout.review_clear",
+    targetType: "payout",
+    targetId: input.payoutId,
+    summary: "Cleared the credit-share review on a held payout",
+    reason: input.reason,
+    after: { reviewStatus: "cleared" },
+    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+  });
+
+  return {
+    status: 200,
+    message: "Review cleared. The payout can now be completed.",
+    data: { reviewStatus: "cleared" },
+  };
 }

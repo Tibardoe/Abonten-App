@@ -54,3 +54,42 @@ export function allocateCredit(input: CreditAllocationInput): CreditAllocation {
   const credit = Math.max(0, Math.min(spendable, byShare, total - minCash));
   return { creditMinor: credit, cashMinor: total - credit, creditOnly: false };
 }
+
+/**
+ * Spreads an order's credit over its parts (the checkout sessions paid
+ * together in one ticket payment) in proportion to each part's total, so
+ * every payment_attempt row records its own cash and credit. Pro rata,
+ * rounded down; the rounding goes to the largest part. Never gives a part
+ * more credit than its own total.
+ */
+export function apportionCredit(
+  creditMinor: number,
+  partTotalsMinor: number[],
+): number[] {
+  const credit = wholeNonNegative(creditMinor);
+  const totals = partTotalsMinor.map(wholeNonNegative);
+  const sum = totals.reduce((a, b) => a + b, 0);
+  if (credit === 0 || sum === 0) return totals.map(() => 0);
+
+  const capped = Math.min(credit, sum);
+  const shares = totals.map((t) => Math.floor((capped * t) / sum));
+  let left = capped - shares.reduce((a, b) => a + b, 0);
+
+  // Hand the leftover pesewas to the largest parts first, within their room.
+  const order = totals
+    .map((t, i) => ({ t, i }))
+    .sort((a, b) => b.t - a.t || a.i - b.i);
+  while (left > 0) {
+    let moved = false;
+    for (const { i } of order) {
+      if (left === 0) break;
+      if (shares[i] < totals[i]) {
+        shares[i] += 1;
+        left -= 1;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  return shares;
+}

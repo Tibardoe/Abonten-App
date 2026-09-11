@@ -55,4 +55,7 @@ export interface UserTransactionRow {
   // transaction.
   service_fee: number;
   total_paid: number;
+  // How much of `total_paid` was Abonten Credit rather than cash (0 when
+  // none). Optional: rows from before migration credit_ticket_redemption.
+  credit_used?: number | null;
 }
