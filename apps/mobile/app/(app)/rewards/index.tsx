@@ -4,6 +4,7 @@ import {
   flattenCreditActivity,
   useCreditActivity,
   useCreditSummary,
+  useLoyaltyProgress,
   useReferralInvite,
   useRewardsProgram,
 } from "@/features/rewards/useRewards";
@@ -12,10 +13,15 @@ import {
   formatCredit,
   formatCreditDelta,
 } from "@abonten/core/rewards/creditAmount";
+import {
+  loyaltyProgressCopy,
+  rewardsEarnLines,
+} from "@abonten/core/rewards/earnCopy";
 import type {
   CreditActivityItem,
   CreditActivityState,
   CreditSummary,
+  LoyaltyProgress,
   ReferralInvite,
   RewardsProgram,
 } from "@abonten/types/rewards";
@@ -169,33 +175,44 @@ function InviteCard({ invite }: { invite: ReferralInvite }) {
   );
 }
 
+// Invites have their own screen; this is the rest of "how to earn", from
+// the same shared wording as web (@abonten/core/rewards/earnCopy).
+function LoyaltyCard({ progress }: { progress: LoyaltyProgress }) {
+  const copy = loyaltyProgressCopy(progress);
+  return (
+    <Card className="gap-2">
+      <View className="flex-row items-baseline justify-between">
+        <AppText variant="cardTitle">Service fee back</AppText>
+        <AppText variant="metaStrong" className="tabular-nums">
+          {copy.headline}
+        </AppText>
+      </View>
+      <View className="flex-row gap-2">
+        {Array.from({ length: progress.ordersRequired }, (_, i) => (
+          <View
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length progress dots
+            key={i}
+            className={`h-2.5 flex-1 rounded-full ${
+              i < progress.ordersCounted ? "bg-primary" : "bg-muted"
+            }`}
+          />
+        ))}
+      </View>
+      <AppText variant="small" tone="muted">
+        {copy.detail}
+      </AppText>
+      {progress.pendingMinor > 0 ? (
+        <AppText variant="small">
+          {formatCredit(progress.pendingMinor)} of service fees is on its way
+          back to you.
+        </AppText>
+      ) : null}
+    </Card>
+  );
+}
+
 function HowItWorks({ program }: { program: RewardsProgram }) {
-  const earn: string[] = [];
-  if (program.eventReferral) {
-    earn.push(
-      `Share an event. When someone buys with your link, you earn ${(program.eventReferral.rateBps / 100).toFixed(0)}% of the ticket price after the event.`,
-    );
-  }
-  if (program.friendReferral?.referrerMinor) {
-    earn.push(
-      `Invite a friend. When they buy their first ticket, you get ${formatCredit(program.friendReferral.referrerMinor)}.`,
-    );
-  }
-  if (program.organizerRebate) {
-    earn.push(
-      `Organize events. Each month you get ${program.organizerRebate.netShareBps / 100}% of what Abonten earned on your events that ended the month before, as promotion credit.`,
-    );
-  }
-  if (program.venueRebate) {
-    earn.push(
-      `Own a verified place? When other organizers hold ticketed events there, you get ${program.venueRebate.netShareBps / 100}% of what Abonten earned on them, as promotion credit.`,
-    );
-  }
-  if (program.organizerMilestone) {
-    earn.push(
-      `The first time one of your events sells to ${program.organizerMilestone.uniqueBuyers} different people, you get ${formatCredit(program.organizerMilestone.amountMinor)} of promotion credit.`,
-    );
-  }
+  const earn = rewardsEarnLines(program);
   const use: string[] = [];
   if (program.redemption.promotions)
     use.push("Feature your events and places.");
@@ -291,6 +308,7 @@ export default function Rewards() {
   const activity = useCreditActivity({ enabled });
   const referralCode = useReferralCode();
   const invite = useReferralInvite({ enabled });
+  const loyalty = useLoyaltyProgress({ enabled });
   const items = flattenCreditActivity(activity.data?.pages);
 
   const onEndReached = useCallback(() => {
@@ -304,7 +322,8 @@ export default function Rewards() {
     summary.refetch();
     activity.refetch();
     invite.refetch();
-  }, [program, summary, activity, invite]);
+    loyalty.refetch();
+  }, [program, summary, activity, invite, loyalty]);
 
   if (program.isLoading) {
     return (
@@ -368,6 +387,7 @@ export default function Rewards() {
             ) : (
               <Skeleton height={144} radius={16} />
             )}
+            {loyalty.data ? <LoyaltyCard progress={loyalty.data} /> : null}
             {referralCode && program.data.eventReferral ? (
               <ReferralCodeCard
                 code={referralCode}

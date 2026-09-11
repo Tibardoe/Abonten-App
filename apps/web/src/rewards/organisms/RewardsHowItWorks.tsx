@@ -1,5 +1,5 @@
 import { CardTitle } from "@/components/ui/typography";
-import { formatCredit } from "@abonten/core/rewards/creditAmount";
+import { rewardsEarnLines } from "@abonten/core/rewards/earnCopy";
 import type { RewardsProgram } from "@abonten/types/rewards";
 
 // "How to earn" / "How to use" copy built from the ACTIVE program terms, so
@@ -10,36 +10,7 @@ export default function RewardsHowItWorks({
 }: {
   program: RewardsProgram;
 }) {
-  const earn: string[] = [];
-  if (program.eventReferral) {
-    earn.push(
-      `Share an event. When someone buys a ticket with your link, you earn ${(program.eventReferral.rateBps / 100).toFixed(0)}% of the ticket price in credit after the event.`,
-    );
-  }
-  if (program.friendReferral?.referrerMinor) {
-    earn.push(
-      `Invite a friend. When they buy their first ticket, you get ${formatCredit(program.friendReferral.referrerMinor)}${
-        program.friendReferral.refereeMinor
-          ? ` and they get ${formatCredit(program.friendReferral.refereeMinor)} off`
-          : ""
-      }.`,
-    );
-  }
-  if (program.organizerRebate) {
-    earn.push(
-      `Organize events. Each month you get ${program.organizerRebate.netShareBps / 100}% of what Abonten earned on your events that ended the month before, as promotion credit to feature your next one.`,
-    );
-  }
-  if (program.venueRebate) {
-    earn.push(
-      `Own a verified place? When other organizers hold ticketed events there, you get ${program.venueRebate.netShareBps / 100}% of what Abonten earned on them, as promotion credit.`,
-    );
-  }
-  if (program.organizerMilestone) {
-    earn.push(
-      `The first time one of your events sells to ${program.organizerMilestone.uniqueBuyers} different people, you get ${formatCredit(program.organizerMilestone.amountMinor)} of promotion credit.`,
-    );
-  }
+  const earn = rewardsEarnLines(program);
 
   const use: string[] = [];
   if (program.redemption.promotions) {

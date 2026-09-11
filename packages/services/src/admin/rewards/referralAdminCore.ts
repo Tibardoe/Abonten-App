@@ -562,6 +562,9 @@ const SHIPPED_RULES = new Set([
   "organizer_rebate",
   "venue_rebate",
   "organizer_milestone",
+  "loyalty_fee_rebate",
+  "promoter_commission",
+  "place_visits",
 ]);
 
 export async function setRewardRuleActiveCore(

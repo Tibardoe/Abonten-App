@@ -43,6 +43,8 @@ const LINE_LABEL: Record<OrganizerLedgerTransactionRow["line"], string> = {
   refund_release: "Refund released",
   payout: "Payout",
   payout_release: "Payout released",
+  promoter_commission: "Promoter commission",
+  promoter_commission_reversal: "Promoter commission returned",
 };
 
 type LedgerFilter = "all" | "sales" | "fees" | "refunds" | "payouts";
@@ -59,7 +61,7 @@ const FILTER_LINES: Record<
 > = {
   all: null,
   sales: ["ticket_sale"],
-  fees: ["platform_fee"],
+  fees: ["platform_fee", "promoter_commission", "promoter_commission_reversal"],
   refunds: ["refund", "refund_release"],
   payouts: ["payout", "payout_release"],
 };

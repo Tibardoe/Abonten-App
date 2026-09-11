@@ -1,5 +1,6 @@
 "use client";
 
+import PromoterEarnHint from "@/events/atoms/PromoterEarnHint";
 import { useEventShare } from "@/hooks/useEventShare";
 import { getEventShareUrl } from "@abonten/core/shareUrl";
 import React from "react";
@@ -22,14 +23,17 @@ export default function OutlinedShareBtn({
   const share = useEventShare({ eventId, title, url });
 
   return (
-    <button
-      type="button"
-      onClick={share}
-      // className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
-      className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90 transition-colors"
-    >
-      <FiShare2 className="md:text-lg" />
-      Share
-    </button>
+    <div className="w-full">
+      <button
+        type="button"
+        onClick={share}
+        // className="rounded-full text-lg p-5 md:p-6 border border-black flex items-center gap-3"
+        className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-3 rounded-lg text-sm hover:bg-primary/90 transition-colors"
+      >
+        <FiShare2 className="md:text-lg" />
+        Share
+      </button>
+      {eventId ? <PromoterEarnHint eventId={eventId} /> : null}
+    </div>
   );
 }

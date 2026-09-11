@@ -2293,6 +2293,110 @@ ticket value; disputes open at run time are excluded); rebates go to the
 place's owner at run time; push/email for the new notifications (in-app
 only); iOS.
 
+### 27.9 Phase 8 — loyalty, promoter commissions, place visits (2026-09-11)
+
+Phase 7 (cash withdrawals) is skipped: the owner ruled cash out of version 1.
+Owner decisions for Phase 8 (2026-09-11): promoters are paid their
+organizer-funded commission in **Abonten Credit**, not cash; **anyone who
+shares** can earn it (the existing `?ref` links, the organizer only sets the
+rate); the loyalty reward is the **service fee back as credit**, not a fee
+waiver at checkout. Migration `20260911104206_rewards_p8_loyalty_promoters_visits`
+(all 26 new/replaced function hashes and grants identical to a fresh replay;
+advisors: only INFO items — `place_visit_key` has RLS and no policy by
+design, `event_promoter_commission.updated_by` has no index). All three
+rules ship **inactive**; everything respects shadow mode.
+
+- **Loyalty fee rebate** (`loyalty_fee_rebate`, Abonten-funded, budget-gated):
+  every 5th paid ticket order of GH₵ 20+ on a **different** event within 90
+  days gets the service fee it paid **in cash** back as reward credit
+  (100%, max GH₵ 10), pending until that event settles; tickets to your own
+  events don't count; a reward starts a new count; refunded / cancelled
+  orders drop out (the reward is voided and the next order can earn it).
+  Evaluated on `checkout_paid` (`_reward_loyalty_evaluate`; the outbox
+  trigger now emits every paid order while the rule is live). Progress:
+  `loyalty_progress(user)` → `getLoyaltyProgressCore`, web action
+  `getLoyaltyProgress`, `GET /api/mobile/rewards/loyalty`; a "Service fee
+  back" card on both Rewards pages.
+- **Promoter commission** (`promoter_commission`, **organizer-funded**,
+  outside the reward budget): the organizer offers 1–30% on an event
+  (`event_promoter_commission`, public read, service-only write via
+  `setEventPromoterCommissionCore`); a paid checkout stamped with someone's
+  referral code earns that promoter rate × ticket price as reward credit
+  after the event. The same amount is **charged to the organizer at once** as
+  a negative `organizer_ledger_entry` of type `promoter_commission` (so it is
+  pending with the event's earnings and can never be paid out first) and
+  given back as `promoter_commission_reversal` when the sale is refunded,
+  cancelled, rejected in review or charged back, pro rata for cancelled
+  tickets. Same risk checks as event referrals (self / organizer / same
+  email, phone, card rejected; shared device held). Stacks with the 1% event
+  referral (different payer). The four organizer balance functions
+  (`get_organizer_finance_overview`, `get_organizer_pending_earnings`,
+  `request_organizer_payout`, `admin_create_payout`) and
+  `get_organizer_ledger_transactions` include the new types; admin finance
+  and the event finance summary show "Promoter commissions". Offered only
+  while referral capture is on. UI: web Manage event › Promotion tab and the
+  app's Event Insights ("Promoter commission" card: rate, stop, sales and
+  commission figures); "share and earn X%" under an event's share button
+  (web) / on the event screen (app) for signed-in sharers.
+- **Place visits** (`place_visits`, Abonten-funded, monthly): the owner shows
+  a QR code that **changes every 30 seconds** (`place_visit_code`, HMAC of
+  the place and the 30-second window with a per-place secret in
+  `place_visit_key`; the previous code is still accepted). It opens
+  `/places/<slug>?visit=CODE`; the visitor checks in on the web (browser
+  location) or in the app (App Link, or the in-app scanner) —
+  `place_visit_record` accepts it within 150 m (+ up to 100 m of reported GPS
+  accuracy), not for the owner, not from a mocked location (Android), once
+  per person per place per day (`place_visit`). Once a month is over, the
+  monthly run pays the owner of a **verified** place GH₵ 0.50 promotion
+  credit per different visitor with a verified phone, older than a day, not
+  looking like the owner (max 40 a month). Owner panel: web Manage place ›
+  Insights (QR, "Show on a screen", today / this month / last month /
+  credit) and the app's Place insights › Visitor check-in code. Admin:
+  decided on Rewards › Rebates with the other monthly rewards.
+
+Admin: the three rules on Reward rules; new Rewards › **Promoters &
+loyalty** page (live rules, events offering a commission, promoter sales,
+commission charged to organizers, loyalty rebates, shadow projections, top
+promoters, decisions); place visits on Rebates.
+
+**Verified:** integration suite **187/187** on a fresh replay (new
+`rewards-p8` 7: loyalty on the 5th different event only, own events and
+repeat orders don't count, reset after a reward, released after the event,
+voided on refund; commission charged to the organizer at once (pending
+balance 90 of 100), half released and half returned for a cancelled ticket,
+full return on refund, nothing charged in shadow, no stamp for the
+promoter's own purchase, stop = later sales earn nothing, only the organizer
+can set it and only within the bounds; check-in accepted only with the
+current code, at the place, not mocked, once a day, not the owner; monthly
+visits reward 3 of 5 visitors counted (no phone / owner's device left out),
+shadow then live, current month not decided; clients can't read the new
+figures, write the tables or call the functions). Unit tests core 223 +
+services 36; typecheck 11/11; parity 118; web + admin production builds.
+Local stack, real UI: admin made the rules live; organizer offered 10% on
+web; the sharer saw "the organizer pays promoters 10%"; a sale through the
+link → organizer Finances pending GHS 390 = sales − GHS 10 commission, a
+"Promoter commission −GHS 10, pending" ledger line and the Promotion-tab
+figures; the promoter's Rewards activity showed GH₵ 10 pending; the loyalty
+buyer's 5th order → GH₵ 5 pending, count back to 0; owner's rotating QR (new
+image every 30 s, full-screen view); web check-in refused when 4 km away,
+accepted at the place, "already checked in" on a repeat; admin ran last
+month from Rebates → Osu Courtyard GH₵ 1.50 (3 of 3 visitors). Android:
+Event Insights commission card (changed to 12%), finance summary and ledger
+lines, check-in from the `?visit=` link at the place (recorded, 35 m),
+in-app scanner sheet opened, owner's check-in QR screen (today 2, last
+month 3, GH₵ 1.50), Rewards loyalty card and "how to earn", "share this
+event and earn 12%" on the event screen.
+
+**Not verified / known limits:** scanning a real QR with a phone camera (the
+link it opens and the in-app sheet were tested separately); a live cron run
+in production; iOS; push/email for the new notifications (in-app only). A
+refund an admin makes **after** an event settled doesn't take back a
+commission already paid (only chargebacks do) — the organizer keeps the
+deduction for that sale. A commission held for review or waiting for the
+promoter's phone keeps the organizer's deduction until it's released or
+voided (at most 90 days). Test-card purchases never earn (shared card
+fingerprint), same as Phase 6.
+
 
 ---
 

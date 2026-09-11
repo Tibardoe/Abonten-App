@@ -33,6 +33,8 @@ export type EventFinanceSummary = {
   pendingRefunds: number;
   completedRefunds: number;
   refundRequestCount: number;
+  /** Promoter commissions net of reversals (Rewards Phase 8), ≤ 0. */
+  promoterCommissions: number;
   organizerEarnings: number;
   settled: boolean;
 };
@@ -236,6 +238,8 @@ async function runFinance(
       "refund_adjustment",
       "refund_hold",
       "refund_release",
+      "promoter_commission",
+      "promoter_commission_reversal",
     ]);
 
   if (startDate) ledgerQuery = ledgerQuery.gte("created_at", startDate);
@@ -253,7 +257,9 @@ async function runFinance(
       | "earning"
       | "refund_adjustment"
       | "refund_hold"
-      | "refund_release";
+      | "refund_release"
+      | "promoter_commission"
+      | "promoter_commission_reversal";
     amount: number;
     gross_amount: number | null;
     fee_amount: number | null;
@@ -270,13 +276,24 @@ async function runFinance(
       if (row.entry_type === "earning") {
         acc.ticketSales += row.gross_amount ?? 0;
         acc.platformFee += row.fee_amount ?? 0;
+      } else if (
+        row.entry_type === "promoter_commission" ||
+        row.entry_type === "promoter_commission_reversal"
+      ) {
+        acc.promoterCommissions += row.amount;
       } else {
         acc.refunds += row.amount;
       }
       acc.organizerEarnings += row.amount;
       return acc;
     },
-    { ticketSales: 0, platformFee: 0, refunds: 0, organizerEarnings: 0 },
+    {
+      ticketSales: 0,
+      platformFee: 0,
+      refunds: 0,
+      promoterCommissions: 0,
+      organizerEarnings: 0,
+    },
   );
 
   // A ledger row alone can't say whether a refund is still pending or

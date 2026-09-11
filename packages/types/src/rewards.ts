@@ -121,6 +121,31 @@ export type RewardsProgram = {
     uniqueBuyers: number;
     expiryDays: number | null;
   } | null;
+  /** Every Nth ticket order gets its service fee back (Phase 8). */
+  loyaltyFeeRebate: {
+    ordersRequired: number;
+    windowDays: number;
+    maxMinor: number;
+    feeShareBps: number;
+    minOrderMinor: number;
+    expiryDays: number | null;
+  } | null;
+  /**
+   * Organizers can offer promoters a commission (Phase 8). Only set while
+   * referral links are being captured, since commissions ride on them.
+   */
+  promoterCommission: {
+    minRateBps: number;
+    maxRateBps: number;
+    expiryDays: number | null;
+  } | null;
+  /** Verified place visits earn the owner promotion credit (Phase 8). */
+  placeVisits: {
+    perVisitorMinor: number;
+    maxVisitors: number;
+    radiusM: number;
+    expiryDays: number | null;
+  } | null;
   redemption: {
     tickets: boolean;
     promotions: boolean;
@@ -256,7 +281,81 @@ export type ReferralCodeInfo = {
   minOrderMinor: number | null;
 };
 
-export type RebateKind = "organizer" | "venue" | "milestone";
+export type RebateKind = "organizer" | "venue" | "milestone" | "visits";
+
+/** The caller's count towards the next loyalty fee rebate (Phase 8). */
+export type LoyaltyProgress = {
+  ordersRequired: number;
+  windowDays: number;
+  minOrderMinor: number;
+  feeShareBps: number;
+  maxPerRewardMinor: number;
+  /** Orders (one per event) counted so far, 0..ordersRequired. */
+  ordersCounted: number;
+  /** When the oldest counted order stops counting (it's 90 days old). */
+  oldestCountsUntil: string | null;
+  pendingMinor: number;
+  earnedMinor: number;
+};
+
+/** An organizer's promoter commission on one event (Phase 8). */
+export type EventPromoterCommission = {
+  /** Commissions are switched on for this organizer and link capture is on. */
+  available: boolean;
+  /** The rate on offer now; null when the organizer hasn't offered one. */
+  rateBps: number | null;
+  minRateBps: number;
+  maxRateBps: number;
+  stats: {
+    /** Ticket orders sold through promoters' links. */
+    sales: number;
+    promoters: number;
+    revenueMinor: number;
+    /** Charged to the organizer, paid to promoters after the event. */
+    pendingMinor: number;
+    paidMinor: number;
+  };
+};
+
+/** What a place owner sees to let visitors check in (Phase 8). */
+export type PlaceVisitPanel = {
+  /** The visits reward is live and switched on for this owner. */
+  available: boolean;
+  /** Only verified places earn promotion credit from visits. */
+  verified: boolean;
+  code: string | null;
+  /** What the QR code opens: the place page with the code. */
+  url: string | null;
+  expiresAt: string | null;
+  periodSeconds: number;
+  perVisitorMinor: number;
+  maxVisitors: number;
+  stats: {
+    today: number;
+    thisMonthVisits: number;
+    thisMonthVisitors: number;
+    lastMonthVisitors: number;
+    earnedMinor: number;
+  };
+};
+
+export type PlaceVisitOutcome =
+  | "recorded"
+  | "already_today"
+  | "invalid_code"
+  | "too_far"
+  | "own_place"
+  | "place_unavailable"
+  | "mocked_location"
+  | "no_location"
+  | "poor_location"
+  | "off";
+
+export type PlaceVisitResult = {
+  outcome: PlaceVisitOutcome;
+  placeName: string | null;
+  distanceM: number | null;
+};
 
 /**
  * Promotion credit for organizers and venue owners (Phase 6): what they can
@@ -287,6 +386,8 @@ export type PromotionCredit = {
     organizerShareBps: number | null;
     venueShareBps: number | null;
     milestone: { uniqueBuyers: number; amountMinor: number } | null;
+    /** Verified place visits (Phase 8). */
+    visits: { perVisitorMinor: number; maxVisitors: number } | null;
     expiryDays: number | null;
   };
 };
@@ -573,6 +674,13 @@ export type AdminReferralSummary = {
   };
 };
 
+/** The rules the monthly run decides (Phases 6 and 8). */
+export type MonthlyRewardRuleKey =
+  | "organizer_rebate"
+  | "venue_rebate"
+  | "organizer_milestone"
+  | "place_visits";
+
 /** One monthly rebate run (Phase 6). */
 export type AdminRebateRun = {
   id: string;
@@ -582,12 +690,14 @@ export type AdminRebateRun = {
   startedAt: string;
   finishedAt: string | null;
   events: number;
+  /** Places with visits looked at (only once the month is over). */
+  places: number;
   errors: number;
   skipped: string | null;
   lastError: string | null;
   byRule: Partial<
     Record<
-      "organizer_rebate" | "venue_rebate" | "organizer_milestone",
+      MonthlyRewardRuleKey,
       {
         decided: number;
         released: number;
@@ -604,11 +714,11 @@ export type AdminRebateRun = {
 export type AdminRebateSummary = {
   sinceDays: number;
   shadowMode: boolean;
-  liveRules: ("organizer_rebate" | "venue_rebate" | "organizer_milestone")[];
+  liveRules: MonthlyRewardRuleKey[];
   runs: AdminRebateRun[];
   byRule: Partial<
     Record<
-      "organizer_rebate" | "venue_rebate" | "organizer_milestone",
+      MonthlyRewardRuleKey,
       {
         count: number;
         amountMinor: number;
@@ -623,8 +733,40 @@ export type AdminRebateSummary = {
   top: {
     userId: string;
     name: string | null;
-    kind: "organizer" | "venue";
+    kind: "organizer" | "venue" | "visits";
     amountMinor: number;
     events: number;
+  }[];
+};
+
+/** Admin › Rewards › Promoters & loyalty (Phase 8). */
+export type AdminPromoterLoyaltySummary = {
+  sinceDays: number;
+  shadowMode: boolean;
+  liveRules: ("promoter_commission" | "loyalty_fee_rebate")[];
+  /** Events with a commission on offer right now. */
+  activeOffers: number;
+  commission: {
+    /** Live decisions only; shadow-mode projections are in `shadow`. */
+    byStatus: Partial<
+      Record<RewardEventStatus, { count: number; amountMinor: number }>
+    >;
+    shadow: { count: number; amountMinor: number };
+    /** Ticket sales promoters made (live, not rejected). */
+    revenueMinor: number;
+    /** Charged to organizers now, net of what was given back (live). */
+    organizerChargedMinor: number;
+  };
+  loyalty: {
+    byStatus: Partial<
+      Record<RewardEventStatus, { count: number; amountMinor: number }>
+    >;
+    shadow: { count: number; amountMinor: number };
+  };
+  topPromoters: {
+    userId: string;
+    name: string | null;
+    sales: number;
+    amountMinor: number;
   }[];
 };

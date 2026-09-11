@@ -23,6 +23,7 @@ const RULE_TITLES = {
   organizer_rebate: "Organizer rebate",
   venue_rebate: "Venue rebate",
   organizer_milestone: "Milestone",
+  place_visits: "Place visits",
 } as const;
 
 const monthLabel = (period: string) =>
@@ -78,7 +79,7 @@ export default async function RebatesPage({
     <div>
       <PageHeader
         title="Rebates"
-        description="Each month (the 3rd, 03:00) organizers get promotion credit for events that ended the month before, venue owners for other organizers' events at their verified place, and organizers a one-off milestone bonus. Priced from the cash Abonten kept on each event's sales."
+        description="Each month (the 3rd, 03:00) organizers get promotion credit for events that ended the month before, venue owners for other organizers' events at their verified place, organizers a one-off milestone bonus, and verified places credit for the different people who checked in there (decided once the month is over). Event rebates are priced from the cash Abonten kept on each event's sales."
       />
       <RewardsTabs active="/rewards/rebates" />
 
@@ -180,9 +181,15 @@ export default async function RebatesPage({
                         {t.name ?? `${t.userId.slice(0, 8)}…`}
                       </Link>
                       <span className="whitespace-nowrap tabular-nums">
-                        {t.kind === "venue" ? "venue" : "organizer"} ·{" "}
-                        {t.events} event{t.events === 1 ? "" : "s"} ·{" "}
-                        {formatCredit(t.amountMinor)}
+                        {t.kind} · {t.events}{" "}
+                        {t.kind === "visits"
+                          ? t.events === 1
+                            ? "month"
+                            : "months"
+                          : t.events === 1
+                            ? "event"
+                            : "events"}{" "}
+                        · {formatCredit(t.amountMinor)}
                       </span>
                     </li>
                   ))}
@@ -239,6 +246,11 @@ export default async function RebatesPage({
                       </Td>
                       <Td className="tabular-nums">
                         {run.events}
+                        {run.places > 0 ? (
+                          <div className="text-xs text-muted-foreground">
+                            + {run.places} place{run.places === 1 ? "" : "s"}
+                          </div>
+                        ) : null}
                         {run.errors > 0 ? (
                           <div className="text-xs text-destructive">
                             {run.errors} failed: {run.lastError}

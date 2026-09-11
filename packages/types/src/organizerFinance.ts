@@ -25,7 +25,11 @@ export type OrganizerLedgerTransactionLine =
   | "refund"
   | "refund_release"
   | "payout"
-  | "payout_release";
+  | "payout_release"
+  /** Paid to a promoter out of this sale (Rewards Phase 8), negative. */
+  | "promoter_commission"
+  /** A promoter commission given back (refund, cancellation, review). */
+  | "promoter_commission_reversal";
 
 export type OrganizerLedgerTransactionRow = {
   entry_id: string;

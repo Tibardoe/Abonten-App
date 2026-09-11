@@ -30,6 +30,9 @@ import {
   useDeletePlaceReview,
   usePlaceReviewEligibility,
 } from "@/features/reviews/usePlaceReviews";
+import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
+import { useCheckIn } from "@/features/rewards/usePlaceVisits";
+import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -168,7 +171,8 @@ function PlaceReviewCard({
 
 export default function PlaceDetailScreen() {
   const toast = useToast();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `visit`: opened from a place's check-in QR code (Rewards Phase 8).
+  const { id, visit } = useLocalSearchParams<{ id: string; visit?: string }>();
   const router = useRouter();
   const carouselCardWidth = useCarouselCardWidth();
   const {
@@ -188,6 +192,31 @@ export default function PlaceDetailScreen() {
   } | null>(null);
   const { session } = useSession();
   const messagePlace = useOpenConversation();
+  const program = useRewardsProgram();
+  const checkIn = useCheckIn();
+  const [scanOpen, setScanOpen] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
+  const runCheckIn = (input: {
+    placeId?: string;
+    placeSlug?: string;
+    code: string;
+  }) =>
+    checkIn.mutate(input, {
+      onSuccess: (outcome) => {
+        if (outcome.ok) {
+          setCheckedIn(true);
+          toast.success(outcome.message);
+        } else {
+          toast.error("Couldn't check you in", {
+            description: outcome.message,
+          });
+        }
+      },
+      onError: () =>
+        toast.error("Couldn't check you in", {
+          description: "Please try again.",
+        }),
+    });
 
   const placeSlug = place?.slug;
   const header = (
@@ -292,6 +321,8 @@ export default function PlaceDetailScreen() {
   // — same gating as web's RequestBookingButton. The service picker inside
   // the sheet is optional and only appears when the place lists services.
   const canBook = !!session && place.owner_id !== session.user.id;
+  const isVisitor = !session || place.owner_id !== session.user.id;
+  const visitsOn = !!program.data?.placeVisits;
 
   return (
     <View className="flex-1 bg-background">
@@ -386,6 +417,35 @@ export default function PlaceDetailScreen() {
             />
           ) : null}
 
+          {visit && isVisitor && !checkedIn ? (
+            <View className="gap-3 rounded-xl border border-primary bg-card p-4">
+              <View className="flex-row items-center gap-2">
+                <Icon name="location" size={18} tone="primary" />
+                <AppText variant="bodyStrong" className="flex-1">
+                  Check in at {place.name}
+                </AppText>
+              </View>
+              <AppText variant="small" tone="muted">
+                {session
+                  ? "We'll use your location once to confirm you're here."
+                  : "Sign in to check in."}
+              </AppText>
+              {session ? (
+                <Button
+                  title="Check in"
+                  leftIcon="checkmark-circle-outline"
+                  loading={checkIn.isPending}
+                  onPress={() => runCheckIn({ placeId: place.id, code: visit })}
+                />
+              ) : (
+                <Button
+                  title="Sign in"
+                  onPress={() => router.push("/(auth)/sign-in")}
+                />
+              )}
+            </View>
+          ) : null}
+
           {session && place.owner_id !== session.user.id ? (
             <Button
               title="Message this place"
@@ -424,6 +484,17 @@ export default function PlaceDetailScreen() {
               className="flex-1"
               onPress={openDirections}
             />
+            {session && isVisitor && visitsOn ? (
+              <Button
+                title="Check in"
+                variant="outline"
+                size="sm"
+                leftIcon="qr-code-outline"
+                className="flex-1"
+                loading={checkIn.isPending}
+                onPress={() => setScanOpen(true)}
+              />
+            ) : null}
             {place.phone ? (
               <Button
                 title="Call"
@@ -841,6 +912,15 @@ export default function PlaceDetailScreen() {
             </Pressable>
           ) : null}
         </View>
+
+        <PlaceCheckInSheet
+          open={scanOpen}
+          onClose={() => setScanOpen(false)}
+          onScanned={(scanned) => {
+            setScanOpen(false);
+            runCheckIn({ placeSlug: scanned.slug, code: scanned.code });
+          }}
+        />
 
         <ClaimPlaceSheet
           open={claimOpen}

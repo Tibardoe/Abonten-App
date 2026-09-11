@@ -64,6 +64,12 @@ export async function redirectSystemPath({
     if (parts[0] === "places" && parts[1]) {
       const id = await resolvePlace(decodeURIComponent(parts[1]));
       if (id && ref) void captureReferral(ref, { placeId: id });
+      // A place's check-in QR code (?visit=CODE): the place screen offers
+      // to check in.
+      const visit = url.searchParams.get("visit");
+      if (id && visit && /^[0-9A-Fa-f]{10}$/.test(visit)) {
+        return `/(app)/place/${id}?visit=${visit.toUpperCase()}`;
+      }
       return id ? `/(app)/place/${id}` : "/(app)/(tabs)";
     }
     // Conversation deep links (notification tap / cross-device). The segment

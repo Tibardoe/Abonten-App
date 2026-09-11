@@ -15,7 +15,10 @@ type RuleKey =
   | "friend_referral_referee"
   | "organizer_rebate"
   | "venue_rebate"
-  | "organizer_milestone";
+  | "organizer_milestone"
+  | "loyalty_fee_rebate"
+  | "promoter_commission"
+  | "place_visits";
 
 const input =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm";
@@ -196,7 +199,14 @@ export function NewRuleVersionForm({
         Starts from v{latest.version}. Leave a field empty for “not used”.
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
-        {field("Rate", rate, setRate, "% of ticket revenue")}
+        {field(
+          "Rate",
+          rate,
+          setRate,
+          latest.ruleKey === "loyalty_fee_rebate"
+            ? "% of the service fee"
+            : "% of ticket revenue",
+        )}
         {field(
           latest.ruleKey === "organizer_rebate" ||
             latest.ruleKey === "venue_rebate"
@@ -206,7 +216,12 @@ export function NewRuleVersionForm({
           setNetCap,
           "% of net revenue",
         )}
-        {field("Flat amount", flat, setFlat, "GH₵")}
+        {field(
+          "Flat amount",
+          flat,
+          setFlat,
+          latest.ruleKey === "place_visits" ? "GH₵ per visitor" : "GH₵",
+        )}
         {field("Minimum order", minBasis, setMinBasis, "GH₵")}
         {field("Credit expires after", expiry, setExpiry, "days")}
       </div>

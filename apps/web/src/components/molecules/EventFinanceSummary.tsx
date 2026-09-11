@@ -108,6 +108,12 @@ export default function EventFinanceSummary({
           label="Net sales"
           value={`${summary.currency} ${summary.netSales.toLocaleString()}`}
         />
+        {summary.promoterCommissions !== 0 && (
+          <Row
+            label="Promoter commissions"
+            value={`-${summary.currency} ${Math.abs(summary.promoterCommissions).toLocaleString()}`}
+          />
+        )}
         <hr className="border-border" />
         <Row
           label="Organizer earnings"

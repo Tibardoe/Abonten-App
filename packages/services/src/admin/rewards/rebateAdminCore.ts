@@ -3,6 +3,7 @@ import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
   AdminRebateRun,
   AdminRebateSummary,
+  MonthlyRewardRuleKey,
 } from "@abonten/types/rewards";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
@@ -13,7 +14,8 @@ import {
 } from "../adminContext";
 import { dbError, displayName, namesFor } from "./rewardsAdminCore";
 
-// Admin side of the monthly rebates (Abonten Rewards Phase 6): the run log,
+// Admin side of the monthly rebates (Abonten Rewards Phase 6, + place visits
+// in Phase 8): the run log,
 // what the rebates cost, who earned most, and running a month by hand. Same
 // contract as the other Rewards admin cores: service-role client + a
 // resolved AdminContext, permission re-checked here, changes audited.
@@ -28,12 +30,19 @@ const denied = (e: unknown): AdminEnvelope<never> =>
 
 type RequestMeta = Record<string, unknown> | undefined;
 
-type RuleKey = "organizer_rebate" | "venue_rebate" | "organizer_milestone";
+type RuleKey = MonthlyRewardRuleKey;
 const RULE_KEYS: RuleKey[] = [
   "organizer_rebate",
   "venue_rebate",
   "organizer_milestone",
+  "place_visits",
 ];
+
+const TOP_KIND: Partial<Record<RuleKey, "organizer" | "venue" | "visits">> = {
+  organizer_rebate: "organizer",
+  venue_rebate: "venue",
+  place_visits: "visits",
+};
 
 type RunRow = {
   id: string;
@@ -44,6 +53,7 @@ type RunRow = {
   finished_at: string | null;
   stats: {
     events?: number;
+    places?: number;
     errors?: number;
     skipped?: string;
     last_error?: string;
@@ -79,6 +89,7 @@ function mapRun(
     startedAt: row.started_at,
     finishedAt: row.finished_at,
     events: num(stats.events),
+    places: num(stats.places),
     errors: num(stats.errors),
     skipped: stats.skipped ?? null,
     lastError: stats.last_error ?? null,
@@ -136,7 +147,11 @@ export async function getRebateSummaryCore(
   const reasons = new Map<string, number>();
   const top = new Map<
     string,
-    { kind: "organizer" | "venue"; amountMinor: number; events: number }
+    {
+      kind: "organizer" | "venue" | "visits";
+      amountMinor: number;
+      events: number;
+    }
   >();
   let net = 0;
 
@@ -164,9 +179,10 @@ export async function getRebateSummaryCore(
       bucket.count += 1;
       if (row.is_shadow) bucket.shadowAmountMinor += amount;
       else bucket.amountMinor += amount;
-      if (key !== "organizer_milestone") {
+      const kind = TOP_KIND[key];
+      if (kind) {
         const t = top.get(`${row.beneficiary_user_id}:${key}`) ?? {
-          kind: key === "venue_rebate" ? "venue" : "organizer",
+          kind,
           amountMinor: 0,
           events: 0,
         };
@@ -279,7 +295,11 @@ export async function runMonthlyRebatesCore(
     status: 200,
     message: run.skipped
       ? "No rebate rule is live, so nothing was decided."
-      : `Checked ${run.events} event${run.events === 1 ? "" : "s"}; ${decided} new decision${decided === 1 ? "" : "s"}${
+      : `Checked ${run.events} event${run.events === 1 ? "" : "s"}${
+          run.places > 0
+            ? ` and ${run.places} place${run.places === 1 ? "" : "s"} with visits`
+            : ""
+        }; ${decided} new decision${decided === 1 ? "" : "s"}${
           run.errors > 0 ? `, ${run.errors} failed (see Monitoring)` : ""
         }.`,
     data: run,

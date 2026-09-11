@@ -84,6 +84,10 @@ export default function OrganizerLayout() {
         name="places/[placeId]/promote"
         options={{ title: "Feature this place" }}
       />
+      <Stack.Screen
+        name="places/[placeId]/check-in"
+        options={{ title: "Visitor check-in" }}
+      />
     </Stack>
   );
 }

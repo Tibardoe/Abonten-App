@@ -10,6 +10,7 @@ import ManagePlacePhotosSection from "@/places/organisms/ManagePlacePhotosSectio
 import ManagePlacePromotionSection from "@/places/organisms/ManagePlacePromotionSection";
 import ManagePlaceReviewsSection from "@/places/organisms/ManagePlaceReviewsSection";
 import ManagePlaceServicesSection from "@/places/organisms/ManagePlaceServicesSection";
+import PlaceVisitQrCard from "@/places/organisms/PlaceVisitQrCard";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
@@ -214,11 +215,14 @@ export default function ManagePlaceView({
         )}
 
         {activeTab === "insights" && (
-          <ManagePlaceInsightsSection
-            insights={insights}
-            isError={insightsError}
-            onRetry={refresh}
-          />
+          <>
+            <PlaceVisitQrCard placeId={place.id} placeName={place.name} />
+            <ManagePlaceInsightsSection
+              insights={insights}
+              isError={insightsError}
+              onRetry={refresh}
+            />
+          </>
         )}
 
         {activeTab === "promotion" && (

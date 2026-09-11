@@ -51,6 +51,10 @@ const REASONS: Record<string, string> = {
   account_too_new: "account too new when the event ended",
   refund_rate: "too many refunds on the event",
   venue_changed: "venue no longer verified or changed hands",
+  no_cash_fee: "no service fee paid in cash",
+  no_commission: "commission rounds to nothing",
+  currency: "not a cedi sale",
+  no_qualifying_visits: "no visitor counted (phone, look-alike or new account)",
 };
 
 const RULE_LABELS: Record<string, string> = {
@@ -60,12 +64,16 @@ const RULE_LABELS: Record<string, string> = {
   organizer_rebate: "Organizer rebate",
   venue_rebate: "Venue rebate",
   organizer_milestone: "Organizer milestone",
+  loyalty_fee_rebate: "Loyalty fee rebate",
+  promoter_commission: "Promoter commission",
+  place_visits: "Place visits",
 };
 
 const REBATE_RULES = new Set([
   "organizer_rebate",
   "venue_rebate",
   "organizer_milestone",
+  "place_visits",
 ]);
 
 const monthOf = (period: unknown) =>
@@ -87,7 +95,11 @@ function rebateDetail(e: AdminRewardEvent): string {
   if (e.ruleKey === "venue_rebate" && typeof b.place_name === "string") {
     parts.push(`at ${b.place_name}`);
   }
-  if (e.ruleKey === "organizer_milestone") {
+  if (e.ruleKey === "place_visits") {
+    parts.push(
+      `${b.counted_visitors ?? 0} of ${b.visitors ?? 0} visitors counted`,
+    );
+  } else if (e.ruleKey === "organizer_milestone") {
     parts.push(`${b.unique_buyers ?? "?"} unique buyers`);
   } else {
     if (typeof b.net_cash_minor === "number") {
@@ -120,6 +132,11 @@ function sourceLine(e: AdminRewardEvent): string {
   if (e.ruleKey === "friend_referral_referrer") {
     const path = typeof e.basis.path === "string" ? e.basis.path : "";
     return PATH_LABELS[path] ?? "Friend qualified";
+  }
+  if (e.ruleKey === "place_visits") {
+    return typeof e.basis.place_name === "string"
+      ? e.basis.place_name
+      : "A place";
   }
   if (REBATE_RULES.has(e.ruleKey) && e.event.title) {
     return e.event.title;
@@ -196,6 +213,13 @@ export function RewardEventTable({
                     : ""}
                   {typeof e.basis.ticket_revenue_minor === "number"
                     ? ` · ${formatCredit(e.basis.ticket_revenue_minor)} of tickets`
+                    : ""}
+                  {e.ruleKey === "promoter_commission" &&
+                  typeof e.basis.rate_bps === "number"
+                    ? ` · ${e.basis.rate_bps / 100}%, paid by the organizer`
+                    : ""}
+                  {e.ruleKey === "loyalty_fee_rebate"
+                    ? ` · order ${String(e.basis.orders_counted ?? "?")} of ${String(e.basis.orders_required ?? "?")}`
                     : ""}
                 </div>
               )}
