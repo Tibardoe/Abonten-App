@@ -447,8 +447,21 @@ export type RewardsProgramSettings = {
   creditSharePayoutHoldBps: number;
   withdrawalMinMinor: number;
   referralAttributionWindowDays: number;
+  /** Reward notices also go out as a mobile push. */
+  notifyPushEnabled: boolean;
+  /** Notices about credit someone can use now also go out by email. */
+  notifyEmailEnabled: boolean;
   updatedAt: string;
   updatedBy: string | null;
+};
+
+/** Admin: how reward pushes and emails went over the last few days. */
+export type AdminNotificationDeliveryStats = {
+  sinceDays: number;
+  dispatchConfigured: boolean;
+  lastDispatchedAt: string | null;
+  push: Record<"queued" | "sent" | "skipped" | "failed", number>;
+  email: Record<"queued" | "sent" | "skipped" | "failed", number>;
 };
 
 export type RewardRuleSummary = {

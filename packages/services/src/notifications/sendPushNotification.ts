@@ -17,10 +17,13 @@ type PushPayload = {
   data?: Record<string, unknown>;
 };
 
+/** What happened: at least one device accepted it, none registered, or it failed. */
+export type PushResult = "sent" | "no_devices" | "failed";
+
 export async function sendPushToUser(
   userId: string,
   payload: PushPayload,
-): Promise<void> {
+): Promise<PushResult> {
   const supabase = getSupabaseServiceClient();
 
   const { data: tokens, error } = await supabase
@@ -30,9 +33,9 @@ export async function sendPushToUser(
 
   if (error) {
     logger.error(`Push: failed reading device tokens: ${error.message}`);
-    return;
+    return "failed";
   }
-  if (!tokens || tokens.length === 0) return;
+  if (!tokens || tokens.length === 0) return "no_devices";
 
   const messages = tokens.map((row: { token: string }) => ({
     to: row.token,
@@ -57,7 +60,7 @@ export async function sendPushToUser(
 
     if (!res.ok) {
       logger.error(`Push: Expo responded ${res.status}`);
-      return;
+      return "failed";
     }
 
     // Expo returns a per-message ticket; a `DeviceNotRegistered` error means
@@ -79,7 +82,11 @@ export async function sendPushToUser(
     if (dead.length > 0) {
       await supabase.from("device_token").delete().in("token", dead);
     }
+    const accepted = json.data?.some((ticket) => ticket.status === "ok");
+    if (accepted) return "sent";
+    return dead.length === messages.length ? "no_devices" : "failed";
   } catch (err) {
     logger.error(`Push: send failed: ${err}`);
+    return "failed";
   }
 }

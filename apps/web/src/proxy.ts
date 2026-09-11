@@ -130,10 +130,12 @@ export const config = {
      *   ever sent was silently 307'd to /auth/signin before reaching the
      *   route handler, which is why refund confirmations never worked
      *   even after a webhook URL was configured in the Paystack dashboard)
+     * - api/notifications (the notification-delivery pg_cron job calling
+     *   /api/notifications/deliver with its token, no cookie either)
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|favicon.ico|api/mobile|api/observability|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/mobile|api/observability|api/notifications|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

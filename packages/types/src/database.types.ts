@@ -2773,6 +2773,91 @@ export type Database = {
           },
         ];
       };
+      notification_delivery: {
+        Row: {
+          attempts: number;
+          channel: string;
+          claimed_at: string | null;
+          created_at: string;
+          detail: string | null;
+          finished_at: string | null;
+          id: number;
+          notification_id: string;
+          status: string;
+          user_id: string;
+        };
+        Insert: {
+          attempts?: number;
+          channel: string;
+          claimed_at?: string | null;
+          created_at?: string;
+          detail?: string | null;
+          finished_at?: string | null;
+          id?: never;
+          notification_id: string;
+          status?: string;
+          user_id: string;
+        };
+        Update: {
+          attempts?: number;
+          channel?: string;
+          claimed_at?: string | null;
+          created_at?: string;
+          detail?: string | null;
+          finished_at?: string | null;
+          id?: never;
+          notification_id?: string;
+          status?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_delivery_notification_id_fkey";
+            columns: ["notification_id"];
+            isOneToOne: false;
+            referencedRelation: "notification";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_delivery_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_delivery_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      notification_delivery_config: {
+        Row: {
+          dispatch_url: string | null;
+          id: boolean;
+          last_dispatched_at: string | null;
+          token: string;
+          updated_at: string;
+        };
+        Insert: {
+          dispatch_url?: string | null;
+          id?: boolean;
+          last_dispatched_at?: string | null;
+          token?: string;
+          updated_at?: string;
+        };
+        Update: {
+          dispatch_url?: string | null;
+          id?: boolean;
+          last_dispatched_at?: string | null;
+          token?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       observability_config: {
         Row: {
           health_url: string | null;
@@ -6196,6 +6281,8 @@ export type Database = {
           id: number;
           max_credit_share_of_ticket_order_bps: number;
           min_cash_charge_minor: number;
+          notify_email_enabled: boolean;
+          notify_push_enabled: boolean;
           redeem_promotions_enabled: boolean;
           redeem_tickets_enabled: boolean;
           referral_attribution_window_days: number;
@@ -6220,6 +6307,8 @@ export type Database = {
           id?: number;
           max_credit_share_of_ticket_order_bps?: number;
           min_cash_charge_minor?: number;
+          notify_email_enabled?: boolean;
+          notify_push_enabled?: boolean;
           redeem_promotions_enabled?: boolean;
           redeem_tickets_enabled?: boolean;
           referral_attribution_window_days?: number;
@@ -6244,6 +6333,8 @@ export type Database = {
           id?: number;
           max_credit_share_of_ticket_order_bps?: number;
           min_cash_charge_minor?: number;
+          notify_email_enabled?: boolean;
+          notify_push_enabled?: boolean;
           redeem_promotions_enabled?: boolean;
           redeem_tickets_enabled?: boolean;
           referral_attribution_window_days?: number;
@@ -7570,6 +7661,10 @@ export type Database = {
       };
       _event_settles_at: { Args: { p_event_id: string }; Returns: string };
       _normalized_email: { Args: { p_email: string }; Returns: string };
+      _notification_delivery_due: {
+        Args: { p_limit: number };
+        Returns: number[];
+      };
       _payment_fingerprint: { Args: { p_response: Json }; Returns: string };
       _payout_credit_review: {
         Args: { p_currency: string; p_organizer_id: string };
@@ -8894,6 +8989,25 @@ export type Database = {
         Args: { p_conversation_id: string };
         Returns: undefined;
       };
+      notification_delivery_claim: {
+        Args: { p_limit?: number };
+        Returns: {
+          body: string;
+          channel: string;
+          created_at: string;
+          data: Json;
+          delivery_id: number;
+          link: string;
+          notification_id: string;
+          title: string;
+          type: string;
+          user_id: string;
+        }[];
+      };
+      notification_delivery_finish: {
+        Args: { p_detail?: string; p_ids: number[]; p_status: string };
+        Returns: number;
+      };
       open_conversation: {
         Args: { p_event_id?: string; p_place_id?: string; p_type: string };
         Returns: string;
@@ -9051,6 +9165,7 @@ export type Database = {
       };
       rewards_settle_due: { Args: { p_limit?: number }; Returns: Json };
       run_financial_reconciliation: { Args: never; Returns: Json };
+      run_notification_delivery: { Args: never; Returns: undefined };
       run_scheduled_health_check: { Args: never; Returns: undefined };
       send_message: {
         Args: {

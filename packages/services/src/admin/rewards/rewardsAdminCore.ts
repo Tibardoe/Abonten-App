@@ -94,6 +94,8 @@ type SettingsRow = {
   credit_share_payout_hold_bps: number;
   withdrawal_min_minor: number;
   referral_attribution_window_days: number;
+  notify_push_enabled: boolean;
+  notify_email_enabled: boolean;
   updated_at: string;
   updated_by: string | null;
 };
@@ -118,6 +120,8 @@ function mapSettings(row: SettingsRow): RewardsProgramSettings {
     creditSharePayoutHoldBps: row.credit_share_payout_hold_bps,
     withdrawalMinMinor: num(row.withdrawal_min_minor),
     referralAttributionWindowDays: num(row.referral_attribution_window_days),
+    notifyPushEnabled: row.notify_push_enabled !== false,
+    notifyEmailEnabled: row.notify_email_enabled !== false,
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
   };
@@ -1060,6 +1064,8 @@ const SETTINGS_COLUMN: Record<keyof RewardsSettingsPatch, string> = {
   supportGoodwillMonthlyCapMinor: "support_goodwill_monthly_cap_minor",
   creditSharePayoutHoldBps: "credit_share_payout_hold_bps",
   referralAttributionWindowDays: "referral_attribution_window_days",
+  notifyPushEnabled: "notify_push_enabled",
+  notifyEmailEnabled: "notify_email_enabled",
 };
 
 // Switches for behaviour that isn't built yet. The console shows them

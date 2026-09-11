@@ -369,6 +369,22 @@ from Rebates to see the projected cost first.
 commission / Place visits → Make live. Promoter commissions also need
 Program settings → Capture referral links.
 
+## Push and email for reward notices
+
+`_reward_notify` writes the in-app notification **and** queues
+`notification_delivery` rows: `push` for every notice, `email` for
+`reward_available`, `welcome_credit` and `promotion_credit_earned`. The
+`notification-delivery` cron job (`run_notification_delivery`, every
+minute) posts to `POST /api/notifications/deliver` with the token from
+`notification_delivery_config` when something is due; the route
+(`@abonten/services/notifications/deliveryCore`) claims rows
+(`notification_delivery_claim`), sends one Expo push / one Resend email per
+person and records the outcome (`notification_delivery_finish`). Pushes wait
+for 08:00–21:00 Accra; one reward email per person per 12 hours; stale
+rows (push 1 day, email 7 days) are dropped; 5 failed tries = `failed`.
+Switches: Program settings → Notifications (`notify_push_enabled`,
+`notify_email_enabled`).
+
 ## Disputes
 
 `payment_dispute` records every Paystack `charge.dispute.*` webhook event
@@ -392,5 +408,6 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **An organizer asks why an event earned no rebate:** Admin › Rewards › Rebates › Decisions (or `select status, status_reason, basis from reward_event where event_id = … and rule_key = 'organizer_rebate'`). No row = the event hadn't settled by the run, or no rebate rule was live.
 - **An organizer asks about a promoter commission on their payout:** `select entry_type, amount, created_at from organizer_ledger_entry where ticket_checkout_id = … and entry_type like 'promoter_commission%'` and the `promoter_commission` reward_event for that checkout (Admin › Rewards › Promoters & loyalty). A deduction without a released reward is waiting (event not settled, held for review, or the promoter's phone isn't verified); a voided reward always has a matching reversal.
 - **A place owner says visitors can't check in:** the code changes every 30 s — the visitor must scan the live screen, be within ~150 m with location on, and not already have checked in today (`select * from place_visit where place_id = … order by created_at desc limit 20`). The rule must be live.
+- **Reward pushes or emails aren't going out:** Admin › Rewards › Program settings shows the last 7 days (sent / waiting / skipped / failed). Then `select channel, status, detail, count(*) from notification_delivery where created_at > now() - interval '1 day' group by 1, 2, 3`, `select dispatch_url, last_dispatched_at from notification_delivery_config`, and the last `net._http_response` rows. `waiting` at night is normal for pushes; `no_device` = no app install registered; `no_email` = a phone-only account; a 401 from the route means the token in the header doesn't match the config row (never copy it anywhere else). Failed rows can be retried with `update notification_delivery set status = 'queued', attempts = 0 where status = 'failed' and …`.
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards) and `rewards-p8.integration.test.ts` (loyalty, promoter commissions, place visits).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards) and `rewards-p8.integration.test.ts` (loyalty, promoter commissions, place visits) and `rewards-notification-delivery.integration.test.ts` (reward pushes and emails).
