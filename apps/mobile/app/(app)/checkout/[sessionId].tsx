@@ -130,7 +130,8 @@ export default function CheckoutReviewScreen() {
     );
   }
 
-  const { validSessions, invalidSessionIds, grandTotal, currency } = data.data;
+  const { validSessions, invalidSessionIds, grandTotal, currency, credit } =
+    data.data;
   const expired = invalidSessionIds.includes(sessionId ?? "");
   const session = validSessions.find((s) => s.checkoutSessionId === sessionId);
 
@@ -222,6 +223,8 @@ export default function CheckoutReviewScreen() {
           currency={currency}
           total={session.total}
           eventTitle={session.eventTitle}
+          creditQuote={credit}
+          onCreditRefused={() => refetch()}
         />
 
         <Pressable

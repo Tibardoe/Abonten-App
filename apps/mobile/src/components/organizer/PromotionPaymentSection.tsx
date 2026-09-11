@@ -1,5 +1,6 @@
 import { useCreatePromotionAttempt } from "@/features/organizer/useEventPromotion";
 import { useCreatePlacePromotionAttempt } from "@/features/organizer/usePlacePromotion";
+import { CreditSwitch } from "@/features/rewards/CreditSwitch";
 import {
   useInvalidateCredit,
   usePromotionCreditQuote,
@@ -7,11 +8,10 @@ import {
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
-import type { CreditQuote } from "@abonten/types/rewards";
 import { AppText } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Switch, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 
 // Method picker + "Pay" for a promotion checkout. Like the ticket
 // PaymentSection, it starts the attempt then hands off to
@@ -25,63 +25,6 @@ function methodLabel(m: PaymentMethodRow): string {
   return m.method_type === "momo"
     ? `${d.networkName ?? "Mobile money"} · ${d.phone ?? ""}`
     : `${d.brand ?? "Card"} ···· ${d.last4 ?? ""}`;
-}
-
-function CreditSwitch({
-  quote,
-  value,
-  onChange,
-  disabled,
-}: {
-  quote: CreditQuote;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  disabled: boolean;
-}) {
-  return (
-    <View className="gap-2 rounded-xl border border-border bg-card p-3">
-      <View className="flex-row items-center justify-between gap-3">
-        <View className="flex-1 gap-0.5">
-          <AppText className="text-sm font-semibold text-foreground">
-            Use {formatCredit(quote.creditMinor)} Abonten Credit
-          </AppText>
-          <AppText variant="meta">
-            {quote.creditOnly
-              ? "Your credit covers this. Nothing else is charged."
-              : `You have ${formatCredit(quote.spendableMinor)} you can use here.`}
-          </AppText>
-        </View>
-        <Switch
-          value={value}
-          onValueChange={onChange}
-          disabled={disabled}
-          accessibilityLabel="Use Abonten Credit"
-        />
-      </View>
-      {value ? (
-        <View className="gap-1 border-t border-border pt-2">
-          <View className="flex-row justify-between">
-            <AppText variant="meta">Total</AppText>
-            <AppText variant="meta" className="tabular-nums">
-              {formatCredit(quote.orderTotalMinor)}
-            </AppText>
-          </View>
-          <View className="flex-row justify-between">
-            <AppText variant="meta">Credit</AppText>
-            <AppText variant="meta" className="tabular-nums">
-              −{formatCredit(quote.creditMinor)}
-            </AppText>
-          </View>
-          <View className="flex-row justify-between">
-            <AppText variant="metaStrong">You pay</AppText>
-            <AppText variant="metaStrong" className="tabular-nums">
-              {formatCredit(quote.cashMinor)}
-            </AppText>
-          </View>
-        </View>
-      ) : null}
-    </View>
-  );
 }
 
 export function PromotionPaymentSection({

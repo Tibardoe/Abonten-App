@@ -106,12 +106,20 @@ export default function TransactionsHistoryList({
             </div>
 
             <div className="flex items-center gap-2 md:gap-3 font-bold">
-              <p>
-                {/* What the customer actually paid — ticket price + service
-                    fee. `total_paid` falls back to `amount` for free/legacy
-                    rows where no fee applies. */}
-                {item.currency} {item.total_paid ?? item.amount}
-              </p>
+              <div className="text-right">
+                <p>
+                  {/* What the customer actually paid — ticket price + service
+                      fee. `total_paid` falls back to `amount` for free/legacy
+                      rows where no fee applies. */}
+                  {item.currency} {item.total_paid ?? item.amount}
+                </p>
+                {item.credit_used ? (
+                  <p className="text-xs font-normal text-muted-foreground">
+                    incl. {item.currency} {Number(item.credit_used).toFixed(2)}{" "}
+                    credit
+                  </p>
+                ) : null}
+              </div>
               <span className="sr-only">{statusLabel}</span>
               <TransactionStatusIcon status={item.status} />
             </div>
