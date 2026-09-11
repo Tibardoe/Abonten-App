@@ -55,6 +55,7 @@ import {
   listReportGroupsCore,
   listReportsCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
+import { getNotificationDeliveryStatsCore } from "@abonten/services/admin/rewards/notificationDeliveryAdminCore";
 import { getPromoterLoyaltySummaryCore } from "@abonten/services/admin/rewards/promoterLoyaltyAdminCore";
 import { getRebateSummaryCore } from "@abonten/services/admin/rewards/rebateAdminCore";
 import {
@@ -325,6 +326,11 @@ export async function loadRewardsOverview(range: { from: string; to: string }) {
     listPendingCreditAdjustmentsCore(svc, ctx),
   ]);
   return { ctx, overview, pending };
+}
+
+export async function loadNotificationDelivery(sinceDays = 7) {
+  const ctx = await requireAdmin();
+  return getNotificationDeliveryStatsCore(getServiceClient(), ctx, sinceDays);
 }
 
 export async function loadCreditAccounts(

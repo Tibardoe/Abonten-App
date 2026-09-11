@@ -330,6 +330,8 @@ export const rewardsSettingsSchema = z.object({
       supportGoodwillMonthlyCapMinor: z.number().int().min(0).max(1000000),
       creditSharePayoutHoldBps: z.number().int().min(0).max(10000),
       referralAttributionWindowDays: z.number().int().min(1).max(90),
+      notifyPushEnabled: z.boolean(),
+      notifyEmailEnabled: z.boolean(),
     })
     .strict()
     .partial(),

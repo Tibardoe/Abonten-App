@@ -3,7 +3,10 @@
 import { StepUpButton } from "@/components/StepUpButton";
 import { Button, Card, cn } from "@/components/ui";
 import { updateRewardsSettings } from "@/server/actions";
-import type { RewardsProgramSettings } from "@abonten/types/rewards";
+import type {
+  AdminNotificationDeliveryStats,
+  RewardsProgramSettings,
+} from "@abonten/types/rewards";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -33,10 +36,12 @@ export function SettingsForm({
   settings,
   canConfigure,
   stepUpFresh,
+  delivery,
 }: {
   settings: RewardsProgramSettings;
   canConfigure: boolean;
   stepUpFresh: boolean;
+  delivery: AdminNotificationDeliveryStats | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -74,6 +79,8 @@ export function SettingsForm({
   );
   const [capture, setCapture] = useState(settings.referralCaptureEnabled);
   const [shadow, setShadow] = useState(settings.shadowMode);
+  const [notifyPush, setNotifyPush] = useState(settings.notifyPushEnabled);
+  const [notifyEmail, setNotifyEmail] = useState(settings.notifyEmailEnabled);
   const [windowDays, setWindowDays] = useState(
     String(settings.referralAttributionWindowDays),
   );
@@ -108,6 +115,8 @@ export function SettingsForm({
           referralCaptureEnabled: capture,
           shadowMode: shadow,
           referralAttributionWindowDays: Math.round(Number(windowDays)),
+          notifyPushEnabled: notifyPush,
+          notifyEmailEnabled: notifyEmail,
         },
       });
       setMsg(res.message ?? null);
@@ -301,6 +310,64 @@ export function SettingsForm({
           setWindowDays,
           "days",
         )}
+      </Card>
+
+      <Card className="space-y-3 p-4">
+        <p className="text-sm font-semibold">Notifications</p>
+        <p className="text-xs text-muted-foreground">
+          Every reward notice shows in the app&apos;s notifications. These
+          switches decide whether it also goes further. Nothing is sent in
+          shadow mode.
+        </p>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={notifyPush}
+            disabled={!editable}
+            onChange={(e) => setNotifyPush(e.target.checked)}
+          />
+          <span>
+            <span className="block">Send push notifications</span>
+            <span className="block text-xs text-muted-foreground">
+              To the Abonten app on the person&apos;s phone. Pushes wait until
+              08:00 if a notice comes in at night (Accra time), and several
+              notices at once go as one push.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={notifyEmail}
+            disabled={!editable}
+            onChange={(e) => setNotifyEmail(e.target.checked)}
+          />
+          <span>
+            <span className="block">Send emails</span>
+            <span className="block text-xs text-muted-foreground">
+              Only for credit someone can use now: credit ready, welcome credit
+              and promotion credit. At most one email per person every 12 hours;
+              later notices go in the next one. Accounts with no email address
+              (phone sign-in) get the push only.
+            </span>
+          </span>
+        </label>
+        {delivery ? (
+          <p className="text-xs text-muted-foreground">
+            Last {delivery.sinceDays} days: {delivery.push.sent}{" "}
+            {delivery.push.sent === 1 ? "notice" : "notices"} sent by push and{" "}
+            {delivery.email.sent} by email (one message can carry several),{" "}
+            {delivery.push.queued + delivery.email.queued} waiting,{" "}
+            {delivery.push.skipped + delivery.email.skipped} skipped (no app or
+            email address, or switched off),{" "}
+            {delivery.push.failed + delivery.email.failed} failed.
+            {delivery.dispatchConfigured
+              ? ""
+              : " Sending isn't set up on this server yet (no delivery address)."}
+          </p>
+        ) : null}
       </Card>
 
       <Card className="space-y-3 p-4">

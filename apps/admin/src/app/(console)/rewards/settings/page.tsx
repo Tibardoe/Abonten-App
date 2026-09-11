@@ -1,12 +1,15 @@
 import { EmptyState, PageHeader, timeAgo } from "@/components/ui";
-import { loadRewardsOverview } from "@/lib/data";
+import { loadNotificationDelivery, loadRewardsOverview } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { RewardsTabs } from "../RewardsTabs";
 import { SettingsForm } from "./SettingsForm";
 
 export default async function RewardsSettingsPage() {
   const now = new Date().toISOString();
-  const { ctx, overview } = await loadRewardsOverview({ from: now, to: now });
+  const [{ ctx, overview }, delivery] = await Promise.all([
+    loadRewardsOverview({ from: now, to: now }),
+    loadNotificationDelivery(),
+  ]);
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
     Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
@@ -31,6 +34,7 @@ export default async function RewardsSettingsPage() {
           settings={overview.data.settings}
           canConfigure={ctx.permissions.includes("rewards.configure")}
           stepUpFresh={stepUpFresh}
+          delivery={delivery.status === 200 ? (delivery.data ?? null) : null}
         />
       )}
     </div>

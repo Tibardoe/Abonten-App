@@ -101,6 +101,10 @@ and `/rewards/touch`, the touch route also accepting signed-out calls;
 `/api/mobile/organizer/events/[eventId]/promoter-commission` (GET/PUT);
 `places/placeVisitCore` — `/api/mobile/organizer/places/[placeId]/visit-code`
 and `POST /api/mobile/places/visits`).
+`notifications/deliveryCore` (reward pushes and emails) has no mobile or
+Server Action twin: its only caller is `POST /api/notifications/deliver`,
+hit by the `notification-delivery` pg_cron job with a token, which injects
+the web app's React-email sender.
 Logging an event share is class A on mobile (`event_share` owner-insert
 under RLS) and a Server Action on web. The two credit reads call
 `auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their

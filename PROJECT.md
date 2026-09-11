@@ -112,6 +112,7 @@ This document describes the current, verified state of the codebase for future d
   - [src/app/api/geocode/route.ts](src/app/api/geocode/route.ts)
   - [src/app/api/upload-profile-picture/route.ts](src/app/api/upload-profile-picture/route.ts)
   - [src/app/api/user-profile/route.tsx](src/app/api/user-profile/route.tsx)
+  - `apps/web/src/app/api/notifications/deliver/route.ts` — called only by the `notification-delivery` pg_cron job (token check) to send reward pushes and emails (§27.10).
 - Auth/session refresh + coarse route protection happens in [src/proxy.ts](src/proxy.ts) (Next.js 16's renamed `middleware.ts` — confirmed via `git show` of the "Project upgrade from next js 15 to 16" commit, which did a literal `middleware.ts → proxy.ts` rename).
 - Every sensitive Server Action re-verifies `supabase.auth.getUser()` itself, in addition to the proxy-level check (defense in depth).
 - Supabase is accessed through three separate client factories, each for its execution context:
@@ -2396,6 +2397,80 @@ deduction for that sale. A commission held for review or waiting for the
 promoter's phone keeps the organizer's deduction until it's released or
 voided (at most 90 days). Test-card purchases never earn (shared card
 fingerprint), same as Phase 6.
+
+### 27.10 Push and email for reward notices; shadow data switched on (2026-09-11)
+
+Every reward notice is written in SQL by `_reward_notify`, so until now none
+of them reached a phone or an inbox (in-app only — createNotificationCore's
+push never ran for them). Migration
+`20260911152213_reward_notification_delivery` adds a delivery queue:
+
+- `_reward_notify` also inserts `notification_delivery` rows: a **push** for
+  every reward notice, and an **email** for the three about credit someone
+  can use now (`reward_available`, `welcome_credit`,
+  `promotion_credit_earned`). Pending / reversed / "friend joined" notices
+  are push-only.
+- The `notification-delivery` pg_cron job (every minute,
+  `run_notification_delivery`) re-queues claims older than 5 minutes, drops
+  stale rows (push > 1 day, email > 7 days) and — only when something is
+  due and `notification_delivery_config.dispatch_url` is set — makes one
+  `net.http_post` to `POST /api/notifications/deliver` with the config
+  row's random token in `x-delivery-token` (no env var needed; the route
+  reads the row with the service role and compares in constant time).
+- The route runs `@abonten/services/notifications/deliveryCore`:
+  `notification_delivery_claim` (skip-locked), one Expo push per person
+  (several notices → "N Abonten Rewards updates"), one email per person
+  (React email `RewardUpdateEmailTemplate`, sent by
+  `apps/web/src/utils/sendRewardUpdateEmail.ts` from
+  `rewards@abontenhub.com`), then `notification_delivery_finish`
+  (sent / skipped no_device, no_email, channel_off / back in the queue,
+  failed after 5 tries). `sendPushToUser` now returns what happened
+  (`sent` / `no_devices` / `failed`); its other callers ignore it.
+- **When:** pushes wait out the night (21:00–08:00 Accra); at most one
+  reward email per person per 12 hours (later notices go in the next one).
+  Phone-only accounts have no email and get the push only.
+- **Switches:** `reward_program_setting.notify_push_enabled` /
+  `notify_email_enabled` (both on), Admin › Rewards › Program settings ›
+  Notifications, which also shows the last 7 days' sent / waiting / skipped
+  / failed counts. Nothing is sent in shadow mode (no notices are written).
+- `proxy.ts` excludes `api/notifications` (the cron call carries no cookie).
+- Production `dispatch_url` = `https://www.abontenhub.com/api/notifications/deliver`
+  (set after the deploy; NULL in the migration so a local replay never
+  calls production).
+
+**Shadow data switched on in production (owner's request, 2026-09-11):**
+Referral capture on and all nine v1 rules live, shadow mode still on,
+program visibility unchanged (off, staff) — decisions are recorded, no
+credit is posted, nobody is notified. Done in SQL with ten
+`admin_audit_log` rows (actor NULL, `request_meta.source = claude-code`).
+August 2026 was run in shadow at once: 2 events decided, both rejected (a
+50% refund rate; the only buyer was linked to the organizer), cost GH₵ 0 —
+production has had almost no real ticket sales yet. Side effect: the
+sign-in screen's "Have an invite code?" field now shows for everyone
+(invites are "live" = capture on + inviter rule live); only staff can see
+their own code, and a bound friend's welcome credit is recorded in shadow,
+not paid.
+
+**Verified:** integration suite **192/192** on a fresh replay (new
+`rewards-notification-delivery` 5: welcome credit queues push + email and
+the inviter's notice is push-only; delivered once with the notice's text
+and the person's name; no device → skipped; failed email retried and failed
+for good after 5 tries; switched-off channels skipped; only the config
+token accepted; clients can't read the queue or call the functions). psql
+checks on the local stack: the 12-hour email wait, stale push dropped,
+expired claim re-queued, one HTTP call queued only when something is due.
+End to end on the local stack: pg_cron → pg_net → the local web route → a
+real Expo push on the Android emulator ("Your credit is ready"; tapping it
+opened Rewards) and two real Resend emails to Resend's test inboxes (one
+carrying two notices, subject "Abonten Rewards: 2 updates"). Admin switch
+saved and audited. All 5 function hashes and grants identical in
+production; advisors: only INFO (the two new tables have RLS and no
+policy by design; new index unused yet). Types regenerated from production.
+
+**Not verified:** a production delivery (no reward is paid live yet); iOS
+push; email in real inboxes (Gmail/Outlook rendering). No per-person opt-out
+for reward emails (they are account notices about credit); the other
+SQL-written notifications (review posted, event cancelled) still don't push.
 
 
 ---
