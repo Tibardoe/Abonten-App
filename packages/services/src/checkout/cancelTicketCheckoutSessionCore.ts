@@ -116,7 +116,6 @@ export async function cancelTicketCheckoutSessionCore(
         userId,
         eventId,
         totalDiscountedUnits,
-        supabase,
       );
     }
   }

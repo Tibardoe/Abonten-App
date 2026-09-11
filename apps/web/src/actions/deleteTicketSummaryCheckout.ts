@@ -3,7 +3,10 @@
 import { createClient } from "@/config/supabase/server";
 import { getSupabaseServiceClient } from "@/config/supabase/serviceClient";
 import { logger } from "@abonten/core/logger";
-import { adjustPromoUsageUnits } from "@abonten/services/checkout/promoUsage";
+import {
+  adjustPromoUsageUnits,
+  forgetPromoUsage,
+} from "@abonten/services/checkout/promoUsage";
 import { releaseTicketQuantity } from "@abonten/services/checkout/ticketInventory";
 import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt";
 
@@ -16,8 +19,9 @@ import { hasOpenPaymentAttempt } from "@abonten/services/payments/paymentAttempt
  * gone for good. Releasing here, and cancelling instead of deleting, keeps
  * this consistent with every other place a checkout/ticket is given up.
  *
- * The status change runs on the service-role client (clients can't write
- * ticket_checkout), scoped to the row the caller's own session just read.
+ * The status change and the promo-usage release run on the service-role
+ * client (clients can't write ticket_checkout or promo usage), scoped to the
+ * row the caller's own session just read.
  */
 export default async function deleteTicketSummaryCheckout(checkoutId: string) {
   const supabase = await createClient();
@@ -89,9 +93,14 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
   await releaseTicketQuantity(checkout.ticket_type_id, checkout.quantity);
 
   if (checkout.promo_code && checkout.discounted_units > 0) {
+    // Codes are unique per event, not globally (see
+    // cancelTicketCheckoutSessionCore.ts): without the event scope two
+    // events using the same code made maybeSingle() error, and the usage was
+    // silently never released.
     const { data: promoCode } = await supabase
       .from("promo_code")
       .select("id")
+      .eq("event_id", checkout.event_id)
       .eq("promo_code", checkout.promo_code)
       .maybeSingle();
 
@@ -102,11 +111,7 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
       // is per user+event+promo, not per line). Deleting the usage row here
       // unconditionally used to let the user reapply the code to a fresh
       // checkout while a sibling line's discount was still live.
-      await adjustPromoUsageUnits(
-        supabase,
-        promoCode.id,
-        -checkout.discounted_units,
-      );
+      await adjustPromoUsageUnits(promoCode.id, -checkout.discounted_units);
 
       const { data: siblingDiscountedRows } = await supabase
         .from("ticket_checkout")
@@ -120,12 +125,11 @@ export default async function deleteTicketSummaryCheckout(checkoutId: string) {
         .limit(1);
 
       if (!siblingDiscountedRows || siblingDiscountedRows.length === 0) {
-        await supabase
-          .from("promo_code_usage")
-          .delete()
-          .eq("promo_code_id", promoCode.id)
-          .eq("user_id", userData.user.id)
-          .eq("event_id", checkout.event_id);
+        await forgetPromoUsage(
+          promoCode.id,
+          userData.user.id,
+          checkout.event_id,
+        );
       }
     }
   }
