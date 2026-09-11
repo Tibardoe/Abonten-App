@@ -56,10 +56,9 @@ const SETTINGS_COLUMN: Record<keyof FieldOpsSettingsPatch, string> = {
 
 // Switches whose behaviour hasn't shipped yet are refused server-side so a
 // crafted request can't turn on half-built behaviour. Remove a key when its
-// phase ships: worker UI (Phase 1), commission generation (Phase 3),
-// payouts (Phase 4).
+// phase ships: commission generation (Phase 3), payouts (Phase 4). The
+// worker UI switch shipped with Phase 1 (/field honours it).
 const UNSHIPPED_SETTINGS = new Set<keyof FieldOpsSettingsPatch>([
-  "workerUiEnabled",
   "commissionGenerationEnabled",
   "payoutsEnabled",
 ]);

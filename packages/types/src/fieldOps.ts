@@ -193,3 +193,174 @@ export type FieldOpsAdminOverview = {
   territoryCount: number;
   liveRuleCount: number;
 };
+
+// ── Phase 1: assignments, prospects, the /field shell ───────
+
+export type FieldOpsAssignmentMode = "offline" | "online";
+
+export type FieldOpsAssignmentStatus =
+  | "assigned"
+  | "started"
+  | "completed"
+  | "cancelled";
+
+/** One member working one territory over a date range (fieldops_assignment). */
+export type FieldOpsAssignment = {
+  id: string;
+  campaignId: string;
+  teamId: string;
+  memberId: string;
+  memberUserId: string;
+  memberName: string | null;
+  memberRole: FieldOpsMemberRole;
+  territoryId: string;
+  territoryName: string;
+  territoryKind: FieldOpsTerritoryKind;
+  mode: FieldOpsAssignmentMode;
+  /** YYYY-MM-DD, inclusive. */
+  startsOn: string;
+  endsOn: string;
+  status: FieldOpsAssignmentStatus;
+  startedAt: string | null;
+  startLocation: { lat: number; lng: number } | null;
+  startAccuracyM: number | null;
+  /** Metres from the territory centre at check-in (offline mode). */
+  startDistanceM: number | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  assignedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FieldOpsProspectKind = "place" | "event" | "organizer";
+
+export type FieldOpsProspectStatus =
+  | "identified"
+  | "contacted"
+  | "interested"
+  | "declined"
+  | "converted";
+
+export type FieldOpsContactChannel =
+  | "in_person"
+  | "phone"
+  | "whatsapp"
+  | "social"
+  | "email";
+
+export type FieldOpsContactOutcome =
+  | "no_answer"
+  | "call_back"
+  | "interested"
+  | "declined"
+  | "other";
+
+export type FieldOpsContactAttempt = {
+  at: string;
+  channel: FieldOpsContactChannel;
+  outcome: FieldOpsContactOutcome;
+  note: string | null;
+};
+
+/** A business or organizer a member identified in a territory (fieldops_prospect). */
+export type FieldOpsProspect = {
+  id: string;
+  campaignId: string;
+  teamId: string;
+  territoryId: string;
+  memberId: string;
+  memberUserId: string;
+  memberName: string | null;
+  kind: FieldOpsProspectKind;
+  name: string;
+  contactName: string | null;
+  /** Masked for everyone but the member who logged it. */
+  contactPhoneMasked: string | null;
+  contactChannel: FieldOpsContactChannel | null;
+  status: FieldOpsProspectStatus;
+  contactAttempts: FieldOpsContactAttempt[];
+  matchedPlaceId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** The campaign as a member sees it: no budget, no rules, no team internals. */
+export type FieldOpsCampaignSummary = {
+  id: string;
+  name: string;
+  status: FieldOpsCampaignStatus;
+  currency: string;
+  regionId: string;
+  regionName: string;
+  startsOn: string | null;
+  endsOn: string | null;
+};
+
+/** Everything the /field "Today" screen needs, in one call. */
+export type FieldOpsMe = {
+  /** Programme switch + kill switch. False = /field does not exist. */
+  programEnabled: boolean;
+  memberships: FieldOpsMembership[];
+  /** The membership /field shows (live campaign first, then draft, then the latest). */
+  current: {
+    membership: FieldOpsMembership;
+    campaign: FieldOpsCampaignSummary;
+    isLead: boolean;
+    /** Assignments covering today (UTC), open ones first. */
+    todayAssignments: FieldOpsAssignment[];
+    stats: {
+      openAssignments: number;
+      completedAssignments: number;
+      prospects: number;
+      prospectsContacted: number;
+    };
+    /** Server's idea of today, YYYY-MM-DD (UTC). */
+    today: string;
+  } | null;
+};
+
+export type FieldOpsTerritoryCoverage = "covered" | "completed" | "uncovered";
+
+/** A territory with who is on it, for the lead's coverage board. */
+export type FieldOpsTerritoryBoardRow = FieldOpsTerritory & {
+  coverage: FieldOpsTerritoryCoverage;
+  openAssignments: {
+    id: string;
+    memberId: string;
+    memberName: string | null;
+    mode: FieldOpsAssignmentMode;
+    status: FieldOpsAssignmentStatus;
+    startsOn: string;
+    endsOn: string;
+  }[];
+  prospectCount: number;
+};
+
+export type FieldOpsLeadDashboard = {
+  campaign: FieldOpsCampaignSummary;
+  today: string;
+  territories: FieldOpsTerritoryBoardRow[];
+  coveragePct: number;
+  todayAssignments: FieldOpsAssignment[];
+  team: { active: number; invited: number; suspended: number };
+  /** Members who can take assignments (active offline/online members). */
+  assignableMembers: {
+    id: string;
+    name: string | null;
+    role: FieldOpsMemberRole;
+  }[];
+};
+
+/** A territory as a member sees it, with their own assignments and prospects there. */
+export type FieldOpsTerritoryView = {
+  territory: FieldOpsTerritory;
+  campaign: FieldOpsCampaignSummary;
+  myAssignments: FieldOpsAssignment[];
+  prospects: FieldOpsProspect[];
+  /** Whether the caller may add prospects here right now. */
+  canAddProspects: boolean;
+};

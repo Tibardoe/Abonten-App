@@ -46,6 +46,27 @@ import type {
   EventPromoCodesResult,
   EventPromoterCommissionResult,
   EventPromotionContextResult,
+  FieldOpsAnnouncementBody,
+  FieldOpsAnnouncementResult,
+  FieldOpsAssignmentCreateBody,
+  FieldOpsAssignmentResult,
+  FieldOpsAssignmentStartBody,
+  FieldOpsAssignmentStatus,
+  FieldOpsAssignmentsResult,
+  FieldOpsLeadDashboardResult,
+  FieldOpsLeadInviteBody,
+  FieldOpsLeadMemberStatusBody,
+  FieldOpsLeadTerritoryBody,
+  FieldOpsMeResult,
+  FieldOpsMemberStatusResult,
+  FieldOpsProspectCreateBody,
+  FieldOpsProspectResult,
+  FieldOpsProspectUpdateBody,
+  FieldOpsTeamMemberResult,
+  FieldOpsTeamResult,
+  FieldOpsTerritoriesResult,
+  FieldOpsTerritoryResult,
+  FieldOpsTerritoryViewResult,
   FreeRsvpBody,
   FreeRsvpResult,
   HighlightPlaybackBody,
@@ -1598,6 +1619,152 @@ export function createApiClient(options: ApiClientOptions) {
           }`,
           { method: "GET", auth: false },
         );
+      },
+    },
+
+    fieldOps: {
+      /**
+       * Whether the Field Ops programme is on for the caller, their
+       * memberships and the campaign to show (today's assignments + stats).
+       * `data.current` is null for someone who isn't on a team.
+       */
+      me() {
+        return request<FieldOpsMeResult>("/api/mobile/field-ops/me", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /** The caller's own assignments in a campaign. */
+      assignments(params: {
+        campaignId: string;
+        status?: FieldOpsAssignmentStatus;
+      }) {
+        const query = new URLSearchParams({ campaignId: params.campaignId });
+        if (params.status) query.set("status", params.status);
+        return request<FieldOpsAssignmentsResult>(
+          `/api/mobile/field-ops/assignments?${query.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Start an assignment; offline members send their GPS position. */
+      startAssignment(assignmentId: string, body: FieldOpsAssignmentStartBody) {
+        return request<FieldOpsAssignmentResult>(
+          `/api/mobile/field-ops/assignments/${encodeURIComponent(assignmentId)}/start`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      completeAssignment(assignmentId: string, campaignId: string) {
+        return request<FieldOpsAssignmentResult>(
+          `/api/mobile/field-ops/assignments/${encodeURIComponent(assignmentId)}/complete`,
+          { method: "POST", body: { campaignId }, auth: true },
+        );
+      },
+      /** A territory with the caller's assignments and prospects there. */
+      territory(territoryId: string, campaignId: string) {
+        return request<FieldOpsTerritoryViewResult>(
+          `/api/mobile/field-ops/territories/${encodeURIComponent(territoryId)}?campaignId=${encodeURIComponent(campaignId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Log a business found in an assigned territory. */
+      createProspect(body: FieldOpsProspectCreateBody) {
+        return request<FieldOpsProspectResult>(
+          "/api/mobile/field-ops/prospects",
+          {
+            method: "POST",
+            body,
+            auth: true,
+          },
+        );
+      },
+      updateProspect(prospectId: string, body: FieldOpsProspectUpdateBody) {
+        return request<FieldOpsProspectResult>(
+          `/api/mobile/field-ops/prospects/${encodeURIComponent(prospectId)}`,
+          { method: "PATCH", body, auth: true },
+        );
+      },
+      lead: {
+        /** Coverage board, today's assignments, team headcount (team lead only). */
+        dashboard(campaignId: string) {
+          return request<FieldOpsLeadDashboardResult>(
+            `/api/mobile/field-ops/lead/dashboard?campaignId=${encodeURIComponent(campaignId)}`,
+            { method: "GET", auth: true },
+          );
+        },
+        territories(campaignId: string) {
+          return request<FieldOpsTerritoriesResult>(
+            `/api/mobile/field-ops/lead/territories?campaignId=${encodeURIComponent(campaignId)}`,
+            { method: "GET", auth: true },
+          );
+        },
+        /** Add (no id) or edit (id) a town/area in the campaign's region. */
+        upsertTerritory(body: FieldOpsLeadTerritoryBody) {
+          return request<FieldOpsTerritoryResult>(
+            "/api/mobile/field-ops/lead/territories",
+            { method: "POST", body, auth: true },
+          );
+        },
+        setTerritoryStatus(
+          territoryId: string,
+          body: { campaignId: string; status: "active" | "completed" },
+        ) {
+          return request<FieldOpsTerritoryResult>(
+            `/api/mobile/field-ops/lead/territories/${encodeURIComponent(territoryId)}`,
+            { method: "PATCH", body, auth: true },
+          );
+        },
+        assignments(params: {
+          campaignId: string;
+          date?: string;
+          status?: FieldOpsAssignmentStatus;
+        }) {
+          const query = new URLSearchParams({ campaignId: params.campaignId });
+          if (params.date) query.set("date", params.date);
+          if (params.status) query.set("status", params.status);
+          return request<FieldOpsAssignmentsResult>(
+            `/api/mobile/field-ops/lead/assignments?${query.toString()}`,
+            { method: "GET", auth: true },
+          );
+        },
+        createAssignment(body: FieldOpsAssignmentCreateBody) {
+          return request<FieldOpsAssignmentResult>(
+            "/api/mobile/field-ops/lead/assignments",
+            { method: "POST", body, auth: true },
+          );
+        },
+        cancelAssignment(
+          assignmentId: string,
+          body: { campaignId: string; reason: string },
+        ) {
+          return request<FieldOpsAssignmentResult>(
+            `/api/mobile/field-ops/lead/assignments/${encodeURIComponent(assignmentId)}/cancel`,
+            { method: "POST", body, auth: true },
+          );
+        },
+        team(campaignId: string) {
+          return request<FieldOpsTeamResult>(
+            `/api/mobile/field-ops/lead/team?campaignId=${encodeURIComponent(campaignId)}`,
+            { method: "GET", auth: true },
+          );
+        },
+        invite(body: FieldOpsLeadInviteBody) {
+          return request<FieldOpsTeamMemberResult>(
+            "/api/mobile/field-ops/lead/team",
+            { method: "POST", body, auth: true },
+          );
+        },
+        setMemberStatus(memberId: string, body: FieldOpsLeadMemberStatusBody) {
+          return request<FieldOpsMemberStatusResult>(
+            `/api/mobile/field-ops/lead/team/${encodeURIComponent(memberId)}`,
+            { method: "PATCH", body, auth: true },
+          );
+        },
+        announce(body: FieldOpsAnnouncementBody) {
+          return request<FieldOpsAnnouncementResult>(
+            "/api/mobile/field-ops/lead/announce",
+            { method: "POST", body, auth: true },
+          );
+        },
       },
     },
 

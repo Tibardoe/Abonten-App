@@ -11,8 +11,6 @@ import type {
   FieldOpsProgramSettings,
   FieldOpsRegion,
   FieldOpsTeamMember,
-  FieldOpsTerritory,
-  GeoJsonPolygon,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, adminError } from "../adminContext";
@@ -50,17 +48,16 @@ export function dbError(
   return { status, message: `${friendly}: ${error.message}` };
 }
 
-/** `POINT(lng lat)` WKT for a geography column write. */
-export const pointWkt = (p: { lat: number; lng: number }) =>
-  `SRID=4326;POINT(${p.lng} ${p.lat})`;
-
-/** WKT polygon for a geography write, from a GeoJSON polygon. */
-export function polygonWkt(polygon: GeoJsonPolygon): string {
-  const rings = polygon.coordinates
-    .map((ring) => `(${ring.map(([lng, lat]) => `${lng} ${lat}`).join(", ")})`)
-    .join(", ");
-  return `SRID=4326;POLYGON(${rings})`;
-}
+// Geometry writes + territory rows are shared with the member/lead services
+// (Phase 1) and live in fieldOps/shared/fieldOpsRows; re-exported here so the
+// admin cores keep one import.
+export {
+  TERRITORY_COLUMNS,
+  type TerritoryRow,
+  mapTerritory,
+  pointWkt,
+  polygonWkt,
+} from "../../fieldOps/shared/fieldOpsRows";
 
 // ── Settings ────────────────────────────────────────────────
 
@@ -153,48 +150,6 @@ export function mapRegion(
     updatedAt: row.updated_at,
     territoryCount: extra.territoryCount,
     liveCampaignId: extra.liveCampaignId,
-  };
-}
-
-export type TerritoryRow = {
-  id: string;
-  region_id: string;
-  parent_territory_id: string | null;
-  name: string;
-  kind: string;
-  centre_lat: number | null;
-  centre_lng: number | null;
-  radius_m: number;
-  boundary_geojson: unknown;
-  status: string;
-  priority: number;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export const TERRITORY_COLUMNS =
-  "id, region_id, parent_territory_id, name, kind, centre_lat, centre_lng, radius_m, boundary_geojson, status, priority, notes, created_at, updated_at";
-
-export function mapTerritory(row: TerritoryRow): FieldOpsTerritory {
-  const boundary = row.boundary_geojson as GeoJsonPolygon | null;
-  return {
-    id: row.id,
-    regionId: row.region_id,
-    parentTerritoryId: row.parent_territory_id,
-    name: row.name,
-    kind: row.kind as FieldOpsTerritory["kind"],
-    centre: { lat: row.centre_lat ?? 0, lng: row.centre_lng ?? 0 },
-    radiusM: num(row.radius_m),
-    boundary:
-      boundary && boundary.type === "Polygon"
-        ? { type: "Polygon", coordinates: boundary.coordinates }
-        : null,
-    status: row.status as FieldOpsTerritory["status"],
-    priority: num(row.priority),
-    notes: row.notes,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   };
 }
 

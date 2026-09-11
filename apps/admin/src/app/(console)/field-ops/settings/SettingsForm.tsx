@@ -18,11 +18,6 @@ const LOCKED: {
   value: (s: FieldOpsProgramSettings) => boolean;
 }[] = [
   {
-    label: "Worker web area (/field)",
-    phase: "Phase 1",
-    value: (s) => s.workerUiEnabled,
-  },
-  {
     label: "Commission generation (eligibility sweep)",
     phase: "Phase 3",
     value: (s) => s.commissionGenerationEnabled,
@@ -43,6 +38,7 @@ export function SettingsForm({
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(settings.programEnabled);
+  const [workerUi, setWorkerUi] = useState(settings.workerUiEnabled);
   const [requirePhone, setRequirePhone] = useState(
     settings.requireMemberPhoneVerified,
   );
@@ -71,6 +67,7 @@ export function SettingsForm({
         reason: reason.trim(),
         patch: {
           programEnabled: enabled,
+          workerUiEnabled: workerUi,
           requireMemberPhoneVerified: requirePhone,
           defaultHoldingDays: Math.round(Number(holding)),
           duplicateRadiusM: Math.round(Number(dupRadius)),
@@ -145,6 +142,23 @@ export function SettingsForm({
               submitted, no commissions are generated. Admin pages stay
               readable. The deployment flag FIELD_OPS_KILL_SWITCH overrides
               this.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={workerUi}
+            disabled={!editable}
+            onChange={(e) => setWorkerUi(e.target.checked)}
+          />
+          <span>
+            <span className="block">Worker web area (/field) switched on</span>
+            <span className="block text-xs text-muted-foreground">
+              Off: team leads and members can&apos;t open /field (it 404s and
+              the “Field work” link disappears) while the rest of the programme
+              keeps running.
             </span>
           </span>
         </label>

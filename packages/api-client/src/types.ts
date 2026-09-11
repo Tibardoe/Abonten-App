@@ -1,4 +1,13 @@
 import type {
+  FieldOpsAssignment,
+  FieldOpsLeadDashboard,
+  FieldOpsMe,
+  FieldOpsProspect,
+  FieldOpsTeamMember,
+  FieldOpsTerritory,
+  FieldOpsTerritoryView,
+} from "@abonten/types/fieldOps";
+import type {
   ConversationContext,
   ConversationCustomFilter,
   ConversationFilter,
@@ -1554,3 +1563,99 @@ export type SubmitReportBody = {
 export type SubmitReportResult =
   | { status: 200; message: string; data: { reportId: string } }
   | { status: 400 | 401 | 404 | 409 | 429 | 500; message: string };
+
+// ---- field ops (regional promotion programme) -------------------------
+
+export type {
+  FieldOpsAssignment,
+  FieldOpsAssignmentStatus,
+  FieldOpsLeadDashboard,
+  FieldOpsMe,
+  FieldOpsProspect,
+  FieldOpsTeamMember,
+  FieldOpsTerritory,
+  FieldOpsTerritoryView,
+} from "@abonten/types/fieldOps";
+
+export type FieldOpsMeResult = ApiEnvelope<FieldOpsMe>;
+export type FieldOpsAssignmentsResult = ApiEnvelope<FieldOpsAssignment[]>;
+export type FieldOpsAssignmentResult = ApiEnvelope<FieldOpsAssignment>;
+export type FieldOpsTerritoryViewResult = ApiEnvelope<FieldOpsTerritoryView>;
+export type FieldOpsProspectResult = ApiEnvelope<FieldOpsProspect>;
+export type FieldOpsLeadDashboardResult = ApiEnvelope<FieldOpsLeadDashboard>;
+export type FieldOpsTerritoriesResult = ApiEnvelope<FieldOpsTerritory[]>;
+export type FieldOpsTerritoryResult = ApiEnvelope<FieldOpsTerritory>;
+export type FieldOpsTeamResult = ApiEnvelope<FieldOpsTeamMember[]>;
+export type FieldOpsTeamMemberResult = ApiEnvelope<FieldOpsTeamMember>;
+export type FieldOpsMemberStatusResult = ApiEnvelope<{ status: string }>;
+export type FieldOpsAnnouncementResult = ApiEnvelope<{ recipients: number }>;
+
+export type FieldOpsAssignmentStartBody = {
+  campaignId: string;
+  location?: { lat: number; lng: number } | null;
+  accuracyM?: number | null;
+};
+export type FieldOpsProspectCreateBody = {
+  campaignId: string;
+  territoryId: string;
+  kind: "place" | "event" | "organizer";
+  name: string;
+  contactName?: string | null;
+  contactPhoneE164?: string | null;
+  contactChannel?:
+    | "in_person"
+    | "phone"
+    | "whatsapp"
+    | "social"
+    | "email"
+    | null;
+  notes?: string | null;
+};
+export type FieldOpsProspectUpdateBody = {
+  campaignId: string;
+  status?: "identified" | "contacted" | "interested" | "declined";
+  contactAttempt?: {
+    channel: "in_person" | "phone" | "whatsapp" | "social" | "email";
+    outcome: "no_answer" | "call_back" | "interested" | "declined" | "other";
+    note?: string | null;
+  };
+  contactName?: string | null;
+  contactPhoneE164?: string | null;
+  notes?: string | null;
+};
+export type FieldOpsLeadTerritoryBody = {
+  campaignId: string;
+  id?: string;
+  parentTerritoryId?: string | null;
+  name: string;
+  kind: "town" | "area";
+  centre: { lat: number; lng: number };
+  radiusM: number;
+  boundary?: { type: "Polygon"; coordinates: [number, number][][] } | null;
+  priority?: number;
+  notes?: string | null;
+};
+export type FieldOpsAssignmentCreateBody = {
+  campaignId: string;
+  memberId: string;
+  territoryId: string;
+  startsOn: string;
+  endsOn: string;
+  notes?: string | null;
+};
+export type FieldOpsLeadInviteBody = {
+  campaignId: string;
+  role: "content_creator" | "offline_member" | "online_member";
+  invitedPhoneE164: string;
+  fullName: string;
+};
+export type FieldOpsLeadMemberStatusBody = {
+  campaignId: string;
+  status: "active" | "suspended" | "left";
+  reason: string;
+};
+export type FieldOpsAnnouncementBody = {
+  campaignId: string;
+  title: string;
+  body: string;
+};

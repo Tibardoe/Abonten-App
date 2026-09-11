@@ -2,6 +2,7 @@
 
 import ManageMenu from "@/components/molecules/ManageMenu";
 import { Skeleton } from "@/components/ui/skeleton";
+import FieldOpsNavLink from "@/fieldOps/atoms/FieldOpsNavLink";
 import {
   useCurrentUserDetails,
   useIsOrganizer,
@@ -125,6 +126,8 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
             />
 
             <RewardsNavLink onNavigate={onNavigate} />
+
+            <FieldOpsNavLink onNavigate={onNavigate} />
 
             <input
               type="file"

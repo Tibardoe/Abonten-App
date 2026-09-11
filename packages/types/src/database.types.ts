@@ -2277,6 +2277,113 @@ export type Database = {
           },
         ];
       };
+      fieldops_assignment: {
+        Row: {
+          assigned_by: string | null;
+          campaign_id: string;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          ends_on: string;
+          id: string;
+          member_id: string;
+          member_user_id: string;
+          mode: string;
+          notes: string | null;
+          start_accuracy_m: number | null;
+          start_distance_m: number | null;
+          start_lat: number | null;
+          start_lng: number | null;
+          start_location: unknown;
+          started_at: string | null;
+          starts_on: string;
+          status: string;
+          team_id: string;
+          territory_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          assigned_by?: string | null;
+          campaign_id: string;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          ends_on: string;
+          id?: string;
+          member_id: string;
+          member_user_id: string;
+          mode: string;
+          notes?: string | null;
+          start_accuracy_m?: number | null;
+          start_distance_m?: number | null;
+          start_lat?: number | null;
+          start_lng?: number | null;
+          start_location?: unknown;
+          started_at?: string | null;
+          starts_on: string;
+          status?: string;
+          team_id: string;
+          territory_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          assigned_by?: string | null;
+          campaign_id?: string;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          ends_on?: string;
+          id?: string;
+          member_id?: string;
+          member_user_id?: string;
+          mode?: string;
+          notes?: string | null;
+          start_accuracy_m?: number | null;
+          start_distance_m?: number | null;
+          start_lat?: number | null;
+          start_lng?: number | null;
+          start_location?: unknown;
+          started_at?: string | null;
+          starts_on?: string;
+          status?: string;
+          team_id?: string;
+          territory_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_assignment_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_assignment_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_assignment_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_assignment_territory_id_fkey";
+            columns: ["territory_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_territory";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       fieldops_campaign: {
         Row: {
           activated_at: string | null;
@@ -2463,6 +2570,102 @@ export type Database = {
           worker_ui_enabled?: boolean;
         };
         Relationships: [];
+      };
+      fieldops_prospect: {
+        Row: {
+          campaign_id: string;
+          contact_attempts: Json;
+          contact_channel: string | null;
+          contact_name: string | null;
+          contact_phone_e164: string | null;
+          created_at: string;
+          id: string;
+          kind: string;
+          matched_place_id: string | null;
+          member_id: string;
+          member_user_id: string;
+          name: string;
+          notes: string | null;
+          status: string;
+          team_id: string;
+          territory_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          campaign_id: string;
+          contact_attempts?: Json;
+          contact_channel?: string | null;
+          contact_name?: string | null;
+          contact_phone_e164?: string | null;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          matched_place_id?: string | null;
+          member_id: string;
+          member_user_id: string;
+          name: string;
+          notes?: string | null;
+          status?: string;
+          team_id: string;
+          territory_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          campaign_id?: string;
+          contact_attempts?: Json;
+          contact_channel?: string | null;
+          contact_name?: string | null;
+          contact_phone_e164?: string | null;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          matched_place_id?: string | null;
+          member_id?: string;
+          member_user_id?: string;
+          name?: string;
+          notes?: string | null;
+          status?: string;
+          team_id?: string;
+          territory_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_prospect_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_prospect_matched_place_id_fkey";
+            columns: ["matched_place_id"];
+            isOneToOne: false;
+            referencedRelation: "place";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_prospect_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_prospect_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_prospect_territory_id_fkey";
+            columns: ["territory_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_territory";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       fieldops_region: {
         Row: {
