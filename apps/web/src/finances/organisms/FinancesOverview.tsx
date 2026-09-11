@@ -8,6 +8,7 @@ import type { OrganizerFinanceOverviewRow } from "@abonten/types/organizerFinanc
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import PendingEarningsList from "../molecules/PendingEarningsList";
+import PromotionCreditCard from "../molecules/PromotionCreditCard";
 import RefundSummary from "../molecules/RefundSummary";
 import WithdrawModal from "../molecules/WithdrawModal";
 
@@ -117,6 +118,7 @@ export default function FinancesOverview({
         )}
       </section>
 
+      <PromotionCreditCard />
       <PendingEarningsList />
       <RefundSummary />
 

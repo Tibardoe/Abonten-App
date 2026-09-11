@@ -36,6 +36,7 @@ import {
   resolveReportGroupCore,
   updateReportStatusCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
+import { runMonthlyRebatesCore } from "@abonten/services/admin/rewards/rebateAdminCore";
 import {
   decideHeldRewardCore,
   publishRewardRuleVersionCore,
@@ -77,6 +78,7 @@ import {
   grantAdminRoleSchema,
   incidentUpsertSchema,
   moderationActionSchema,
+  rebateRunSchema,
   referralCodeDisabledSchema,
   reportAssignSchema,
   reportRequestInfoSchema,
@@ -164,6 +166,27 @@ export async function setRewardRuleActive(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "setRewardRuleActive");
+  }
+}
+
+// Runs the monthly rebates for a month by hand. It can post credit (when
+// shadow mode is off), so rewards.configure + step-up, like rule changes.
+export async function runMonthlyRebates(input: unknown) {
+  const parsed = rebateRunSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await runMonthlyRebatesCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/rewards/rebates");
+    return res;
+  } catch (e) {
+    return adminError(e, "runMonthlyRebates");
   }
 }
 

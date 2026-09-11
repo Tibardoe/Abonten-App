@@ -3,6 +3,11 @@ import {
   useOrganizerFinance,
   useOrganizerLedger,
 } from "@/features/organizer/useOrganizer";
+import {
+  PromotionCreditCard,
+  showPromotionCredit,
+} from "@/features/rewards/PromotionCreditCard";
+import { usePromotionCredit } from "@/features/rewards/useRewards";
 import type {
   OrganizerFinanceOverviewRow,
   OrganizerLedgerTransactionRow,
@@ -149,6 +154,7 @@ function LedgerRow({ row }: { row: OrganizerLedgerTransactionRow }) {
 export default function OrganizerFinanceScreen() {
   const finance = useOrganizerFinance();
   const ledger = useOrganizerLedger();
+  const promotionCredit = usePromotionCredit();
   const [filter, setFilter] = useState<LedgerFilter>("all");
 
   const balances: OrganizerFinanceOverviewRow[] =
@@ -198,6 +204,10 @@ export default function OrganizerFinanceScreen() {
         balances.map((b) => <BalanceCard key={b.currency} row={b} />)
       )}
 
+      {showPromotionCredit(promotionCredit.data) ? (
+        <PromotionCreditCard credit={promotionCredit.data} />
+      ) : null}
+
       <View className="gap-2">
         <NavRow href="/(app)/organizer/withdraw" label="Withdraw" />
         <NavRow href="/(app)/organizer/payouts" label="Withdrawal history" />
@@ -240,6 +250,7 @@ export default function OrganizerFinanceScreen() {
           onRefresh={() => {
             finance.refetch();
             ledger.refetch();
+            promotionCredit.refetch();
           }}
         />
       }

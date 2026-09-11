@@ -6126,6 +6126,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      reward_rebate_run: {
+        Row: {
+          finished_at: string | null;
+          id: string;
+          period_start: string;
+          shadow_mode: boolean;
+          started_at: string;
+          stats: Json;
+          triggered_by: string | null;
+        };
+        Insert: {
+          finished_at?: string | null;
+          id?: string;
+          period_start: string;
+          shadow_mode: boolean;
+          started_at?: string;
+          stats?: Json;
+          triggered_by?: string | null;
+        };
+        Update: {
+          finished_at?: string | null;
+          id?: string;
+          period_start?: string;
+          shadow_mode?: boolean;
+          started_at?: string;
+          stats?: Json;
+          triggered_by?: string | null;
+        };
+        Relationships: [];
+      };
       reward_rule: {
         Row: {
           caps: Json;
@@ -7430,6 +7460,10 @@ export type Database = {
         Args: { p_checkout_id: string };
         Returns: string;
       };
+      _reward_event_rebate_basis: {
+        Args: { p_event_id: string; p_owners: string[] };
+        Returns: Json;
+      };
       _reward_event_unique_buyers: {
         Args: { p_event_id: string; p_organizer: string };
         Returns: number;
@@ -7460,6 +7494,10 @@ export type Database = {
         Returns: string;
       };
       _reward_grant_welcome: { Args: { p_referee: string }; Returns: string };
+      _reward_milestone_evaluate: {
+        Args: { p_event_id: string; p_period: string };
+        Returns: string;
+      };
       _reward_notify: {
         Args: {
           p_body: string;
@@ -7469,9 +7507,17 @@ export type Database = {
         };
         Returns: undefined;
       };
+      _reward_rebate_evaluate: {
+        Args: { p_event_id: string; p_period: string; p_rule_key: string };
+        Returns: string;
+      };
       _reward_risk_weight: {
         Args: { p_flag: string; p_weights: Json };
         Returns: number;
+      };
+      _reward_same_person_flags: {
+        Args: { p_a: string; p_b: string };
+        Returns: string[];
       };
       _reward_settle_one: {
         Args: { p_id: string; p_mode: string };
@@ -8699,6 +8745,7 @@ export type Database = {
         Args: { p_older_than?: string };
         Returns: number;
       };
+      rebate_stats: { Args: { p_user_id: string }; Returns: Json };
       record_device_install: {
         Args: { p_install_id: string; p_platform: string; p_user_id: string };
         Returns: undefined;
@@ -8808,6 +8855,10 @@ export type Database = {
       rewards_health: { Args: never; Returns: Json };
       rewards_notify_pending: { Args: never; Returns: number };
       rewards_process_outbox: { Args: { p_limit?: number }; Returns: number };
+      rewards_run_monthly_rebates: {
+        Args: { p_period_start?: string; p_triggered_by?: string };
+        Returns: Json;
+      };
       rewards_settle_due: { Args: { p_limit?: number }; Returns: Json };
       run_financial_reconciliation: { Args: never; Returns: Json };
       run_scheduled_health_check: { Args: never; Returns: undefined };

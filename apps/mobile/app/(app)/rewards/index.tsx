@@ -182,7 +182,19 @@ function HowItWorks({ program }: { program: RewardsProgram }) {
     );
   }
   if (program.organizerRebate) {
-    earn.push("Organize events. As tickets sell, you earn promotion credit.");
+    earn.push(
+      `Organize events. Each month you get ${program.organizerRebate.netShareBps / 100}% of what Abonten earned on your events that ended the month before, as promotion credit.`,
+    );
+  }
+  if (program.venueRebate) {
+    earn.push(
+      `Own a verified place? When other organizers hold ticketed events there, you get ${program.venueRebate.netShareBps / 100}% of what Abonten earned on them, as promotion credit.`,
+    );
+  }
+  if (program.organizerMilestone) {
+    earn.push(
+      `The first time one of your events sells to ${program.organizerMilestone.uniqueBuyers} different people, you get ${formatCredit(program.organizerMilestone.amountMinor)} of promotion credit.`,
+    );
   }
   const use: string[] = [];
   if (program.redemption.promotions)

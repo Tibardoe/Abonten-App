@@ -48,13 +48,63 @@ const REASONS: Record<string, string> = {
   claim_revoked: "place claim no longer approved",
   place_removed: "place removed",
   place_hidden: "place hidden",
+  account_too_new: "account too new when the event ended",
+  refund_rate: "too many refunds on the event",
+  venue_changed: "venue no longer verified or changed hands",
 };
 
 const RULE_LABELS: Record<string, string> = {
   event_referral: "Event referral",
   friend_referral_referrer: "Friend invite",
   friend_referral_referee: "Welcome credit",
+  organizer_rebate: "Organizer rebate",
+  venue_rebate: "Venue rebate",
+  organizer_milestone: "Organizer milestone",
 };
+
+const REBATE_RULES = new Set([
+  "organizer_rebate",
+  "venue_rebate",
+  "organizer_milestone",
+]);
+
+const monthOf = (period: unknown) =>
+  typeof period === "string"
+    ? new Date(`${period}T00:00:00Z`).toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      })
+    : null;
+
+// The second line under a monthly rebate: the month, the venue and what it
+// was priced from.
+function rebateDetail(e: AdminRewardEvent): string {
+  const b = e.basis;
+  const parts: string[] = [];
+  const month = monthOf(b.period_start);
+  if (month) parts.push(month);
+  if (e.ruleKey === "venue_rebate" && typeof b.place_name === "string") {
+    parts.push(`at ${b.place_name}`);
+  }
+  if (e.ruleKey === "organizer_milestone") {
+    parts.push(`${b.unique_buyers ?? "?"} unique buyers`);
+  } else {
+    if (typeof b.net_cash_minor === "number") {
+      parts.push(`${formatCredit(b.net_cash_minor)} cash net revenue`);
+    }
+    if (typeof b.unique_buyers === "number") {
+      parts.push(`${b.unique_buyers} buyer${b.unique_buyers === 1 ? "" : "s"}`);
+    }
+    if (
+      typeof b.linked_checkouts_excluded === "number" &&
+      b.linked_checkouts_excluded > 0
+    ) {
+      parts.push(`${b.linked_checkouts_excluded} linked orders left out`);
+    }
+  }
+  return parts.join(" · ");
+}
 
 const PATH_LABELS: Record<string, string> = {
   first_order: "friend's first ticket order",
@@ -70,6 +120,9 @@ function sourceLine(e: AdminRewardEvent): string {
   if (e.ruleKey === "friend_referral_referrer") {
     const path = typeof e.basis.path === "string" ? e.basis.path : "";
     return PATH_LABELS[path] ?? "Friend qualified";
+  }
+  if (REBATE_RULES.has(e.ruleKey) && e.event.title) {
+    return e.event.title;
   }
   return e.event.title ?? "Event removed";
 }
@@ -128,7 +181,11 @@ export function RewardEventTable({
             </Td>
             <Td>
               <div>{sourceLine(e)}</div>
-              {e.ruleKey === "friend_referral_referee" ? null : (
+              {REBATE_RULES.has(e.ruleKey) ? (
+                <div className="text-xs text-muted-foreground">
+                  {rebateDetail(e)}
+                </div>
+              ) : e.ruleKey === "friend_referral_referee" ? null : (
                 <div className="text-xs text-muted-foreground">
                   {e.ruleKey === "friend_referral_referrer"
                     ? "Friend"

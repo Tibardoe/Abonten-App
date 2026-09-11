@@ -13,6 +13,7 @@ const PROGRAM_KEY = ["mobile", "rewards", "program"] as const;
 const SUMMARY_KEY = ["mobile", "rewards", "summary"] as const;
 const ACTIVITY_KEY = ["mobile", "rewards", "activity"] as const;
 const INVITE_KEY = ["mobile", "rewards", "invite"] as const;
+const PROMOTION_CREDIT_KEY = ["mobile", "rewards", "promotion-credit"] as const;
 
 /** Whether Rewards is switched on for this user + the active terms. */
 export function useRewardsProgram(options?: { enabled?: boolean }) {
@@ -52,6 +53,21 @@ export function useReferralInvite(options?: { enabled?: boolean }) {
       return res.data;
     },
     staleTime: 30_000,
+  });
+}
+
+/** Promotion credit + the monthly organizer / venue rebates (organizer finance). */
+export function usePromotionCredit() {
+  return useQuery({
+    queryKey: PROMOTION_CREDIT_KEY,
+    queryFn: async () => {
+      const res = await api.rewards.promotionCredit();
+      if (res.status !== 200 || !res.data) {
+        throw new Error(res.message ?? "Couldn't load your promotion credit");
+      }
+      return res.data;
+    },
+    staleTime: 60_000,
   });
 }
 

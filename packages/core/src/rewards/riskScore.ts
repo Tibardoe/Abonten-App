@@ -24,6 +24,7 @@ export const DEFAULT_RISK_WEIGHTS = {
   checked_in: -15,
   bind_burst: 30,
   referrer_lifetime_review: 30,
+  large_rebate: 30,
   review_threshold: 30,
   reject_threshold: 70,
 } as const;
@@ -83,6 +84,7 @@ const LABELS: Record<string, string> = {
   checked_in: "Ticket was checked in (lowers risk)",
   bind_burst: "Many friends joined with this invite within an hour",
   referrer_lifetime_review: "Inviter has passed the lifetime review threshold",
+  large_rebate: "Rebate at or above the second-approver threshold",
 };
 
 /** Admin-facing explanation of a flag. */

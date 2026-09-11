@@ -2189,6 +2189,110 @@ needs a new build (the `/invite` intent filter is added in `app.json`); iOS
 (covered by the integration test with Paystack mocked); push for the new
 notifications (in-app only, like Phase 4).
 
+### 27.7 Security: staff-only columns (2026-09-11)
+
+Found while building Phase 6 and fixed straight away (migration
+`20260911080616_staff_managed_column_guards`, applied to production first):
+
+- **Any signed-in user could make themselves a platform admin** (or lift
+  their own suspension/ban). `protect_user_info_privileged_columns()`
+  (20260903231755) let a write through when `current_user` was `postgres`
+  -- but the function was `SECURITY DEFINER`, and inside a definer function
+  `current_user` is always the owner, so the guard passed for everyone.
+  Reproduced on the local stack (`update user_info set is_admin = true
+  where id = auth.uid()` succeeded as an ordinary user). Now `SECURITY
+  INVOKER`: a browser session is `authenticated` and refused; the service
+  role, migrations and `sync_is_admin_from_admin_user` still pass.
+  Production had no abuse: the only `is_admin` user is the owner (also an
+  active `admin_user`), nobody is suspended or banned.
+- **Owners could undo moderation and self-verify places.** The owner UPDATE
+  policies on `event` / `place` / `highlight` / `review` / `event_review` /
+  `place_review` only checked ownership and `authenticated` could update
+  every column, so an organizer could un-hide a removed event and a place
+  owner could set `verified` / `claimed` (also on INSERT). New trigger
+  `guard_staff_managed_columns()` refuses those changes from direct client
+  writes unless `is_admin()`; staff paths (service role, an admin's session
+  in `approve_place_claim`, `apply_moderation_action`) are unaffected.
+  Production: no place verified/claimed and nothing moderated yet, so
+  nothing to repair. Covered by `rewards-rebates.integration.test.ts`.
+
+### 27.8 Phase 6 — organizer and venue rebates (2026-09-11)
+
+Each month (pg_cron `rewards-monthly-rebates`, 03:00 on the 3rd, for the
+previous month) `rewards_run_monthly_rebates(period)` looks at every event
+that settled in the month (last end + 48 h) and decides, once per event:
+
+- **Organizer rebate** (`organizer_rebate`, launch rate 20%) — a share of the
+  **cash net revenue** Abonten kept on the event's standing sales: each paid
+  checkout's share of `platform_fee_entry.net_revenue` (service fee minus
+  Paystack), pro rata to tickets still valid and to the part paid in cash.
+  Buyers who are the organizer or look like the same person (email, phone,
+  device, the card they pay with) and disputed payments are left out.
+- **Venue rebate** (`venue_rebate`, 5%) — the same basis, to the owner of the
+  **verified** place the event was held at, only for other organizers'
+  events; a venue owner who shares a device with the organizer is held for
+  review, same email/phone rejected.
+- **Organizer milestone** (`organizer_milestone`, GH₵ 20, once per
+  organizer per threshold) — the first event that sells to 50 unique
+  verified, unlinked buyers.
+
+All three are **promotion credit** (lot kind `promotion`, scope
+`promotions`, 180 days): it pays for featuring events and places only —
+never tickets, never withdrawn. Gates (recorded as rejected): event
+cancelled or removed, refund rate ≥ 10% (`max_event_refund_rate_bps`),
+organizer account under 30 days old when the event settled
+(`min_account_age_days`), no net revenue. A rebate at or above the
+second-approver threshold (GH₵ 500) is held for review (`large_rebate`).
+Budget-gated like every reward; released in the same run once the
+beneficiary's phone is verified (otherwise `rewards_settle_due` releases it
+later). **Shadow mode** records under a separate `:shadow` key, so a month
+can be run in shadow and then again for real; a live decision is final and
+re-runs skip decided events. One notification per person per run
+(`promotion_credit_earned`, `milestone_reached`, in-app).
+
+Migration `20260911083155_monthly_rebates` (additive + replaces
+`_reward_settle_one` / `_reward_accrue` / `_reward_risk_weight` /
+`get_rewards_program_public`; all 10 function hashes and grants identical to
+a replay; advisors: only the expected "RLS, no policy" INFO for the new
+service-role table `reward_rebate_run`). Nothing runs until a rebate rule is
+live (all ship inactive).
+
+Code: `@abonten/services/rewards/promotionCreditCore`
+(`getPromotionCreditCore` — spendable-on-promotions, promotion-only
+balance, rebate history via `rebate_stats`, live terms), web action
+`getPromotionCredit` + `GET /api/mobile/rewards/promotion-credit`
+(`api.rewards.promotionCredit()`); admin `rebateAdminCore`
+(`getRebateSummaryCore`, `runMonthlyRebatesCore` — `rewards.configure` +
+step-up + audit). UI: web Finances › Promotion credit card ("Feature an
+event"), mobile Organizer › Finances card, "How to earn" copy on both Rewards
+pages; admin Rewards › Rebates (rule status, run a month, runs, cost, top
+earners, why events got nothing, decisions), the three rules can be made
+live on Reward rules, rebate labels in the decision table.
+
+**Verified:** integration suite **180/180** on a fresh replay (new
+`rewards-rebates` 6: nothing while rules are off; shadow first then live for
+the same month, 20% of cash net revenue with the organizer's own purchase —
+paid without a card fingerprint — left out, promotion lot, promotion-only
+spend, notifications, idempotent re-run, milestone once; young account and
+refund-rate gates; venue 5% on a verified place, nothing on an unverified
+one, held when the venue owner shares the organizer's device; waits for the
+organizer's phone then releases; clients can't run it, read it, self-verify
+a place, undo moderation or make themselves admin). Unit tests core 220 +
+services 36; typecheck 11/11; parity 114; web + admin production builds.
+Local stack, real UI: admin made the three rules live, ran the month in
+shadow, turned shadow off in Program settings and ran it again (organizer
+GH₵ 3.54 + milestone GH₵ 20, venue GH₵ 0.88, notifications, audit rows,
+reconciliation clean); web Finances card showed GH₵ 23.54 and "Feature an
+event" → featured a new event for 24 h paid fully with the promotion credit;
+Android Organizer › Finances card rendered and its button opened My Events.
+
+**Not verified / known limits:** a real month-end cron run in production
+(first one on the 3rd after a rule is made live); a chargeback on a counted
+sale after a rebate is released isn't clawed back (a rebate is ~0.6% of
+ticket value; disputes open at run time are excluded); rebates go to the
+place's owner at run time; push/email for the new notifications (in-app
+only); iOS.
+
 
 ---
 

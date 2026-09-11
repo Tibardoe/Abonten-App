@@ -111,7 +111,17 @@ export function NewRuleVersionForm({
   const [expiry, setExpiry] = useState(
     latest.expiryDays === null ? "" : String(latest.expiryDays),
   );
-  const [caps, setCaps] = useState(JSON.stringify(latest.caps, null, 2));
+  // Caps are whole numbers; older seed versions carried a flag the engine
+  // doesn't read (requires_verified_place), which a new version can't hold.
+  const [caps, setCaps] = useState(
+    JSON.stringify(
+      Object.fromEntries(
+        Object.entries(latest.caps).filter(([, v]) => typeof v === "number"),
+      ),
+      null,
+      2,
+    ),
+  );
   const [note, setNote] = useState("");
   const [reason, setReason] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
@@ -187,7 +197,15 @@ export function NewRuleVersionForm({
       </p>
       <div className="grid gap-2 sm:grid-cols-3">
         {field("Rate", rate, setRate, "% of ticket revenue")}
-        {field("Net revenue cap", netCap, setNetCap, "% of net revenue")}
+        {field(
+          latest.ruleKey === "organizer_rebate" ||
+            latest.ruleKey === "venue_rebate"
+            ? "Share"
+            : "Net revenue cap",
+          netCap,
+          setNetCap,
+          "% of net revenue",
+        )}
         {field("Flat amount", flat, setFlat, "GH₵")}
         {field("Minimum order", minBasis, setMinBasis, "GH₵")}
         {field("Credit expires after", expiry, setExpiry, "days")}

@@ -116,6 +116,11 @@ export type RewardsProgram = {
   } | null;
   organizerRebate: { netShareBps: number; expiryDays: number | null } | null;
   venueRebate: { netShareBps: number; expiryDays: number | null } | null;
+  organizerMilestone: {
+    amountMinor: number;
+    uniqueBuyers: number;
+    expiryDays: number | null;
+  } | null;
   redemption: {
     tickets: boolean;
     promotions: boolean;
@@ -249,6 +254,41 @@ export type ReferralCodeInfo = {
   referrerAvatar: { publicId: string; version: string | null } | null;
   welcomeMinor: number | null;
   minOrderMinor: number | null;
+};
+
+export type RebateKind = "organizer" | "venue" | "milestone";
+
+/**
+ * Promotion credit for organizers and venue owners (Phase 6): what they can
+ * spend on featuring now, what the monthly rebates earned them, and the live
+ * terms. Only live rebates are counted -- never shadow-mode decisions.
+ */
+export type PromotionCredit = {
+  /** Rewards is switched on for the caller. */
+  enabled: boolean;
+  /** Paying for promotions with credit is switched on. */
+  canRedeem: boolean;
+  /** What the caller can put towards a promotion right now. */
+  spendableMinor: number;
+  /** The part of their credit that only pays for promotions. */
+  promotionOnlyMinor: number;
+  pendingMinor: number;
+  earnedMinor: number;
+  last: { periodStart: string; amountMinor: number } | null;
+  recent: {
+    kind: RebateKind;
+    eventTitle: string | null;
+    amountMinor: number;
+    status: "pending" | "earned";
+    periodStart: string | null;
+    at: string;
+  }[];
+  rates: {
+    organizerShareBps: number | null;
+    venueShareBps: number | null;
+    milestone: { uniqueBuyers: number; amountMinor: number } | null;
+    expiryDays: number | null;
+  };
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -531,4 +571,60 @@ export type AdminReferralSummary = {
     >;
     welcome: { granted: number; amountMinor: number; rejected: number };
   };
+};
+
+/** One monthly rebate run (Phase 6). */
+export type AdminRebateRun = {
+  id: string;
+  periodStart: string;
+  triggeredBy: string | null;
+  shadowMode: boolean;
+  startedAt: string;
+  finishedAt: string | null;
+  events: number;
+  errors: number;
+  skipped: string | null;
+  lastError: string | null;
+  byRule: Partial<
+    Record<
+      "organizer_rebate" | "venue_rebate" | "organizer_milestone",
+      {
+        decided: number;
+        released: number;
+        held: number;
+        rejected: number;
+        shadow: number;
+        amountMinor: number;
+      }
+    >
+  >;
+};
+
+/** Admin › Rewards › Rebates. */
+export type AdminRebateSummary = {
+  sinceDays: number;
+  shadowMode: boolean;
+  liveRules: ("organizer_rebate" | "venue_rebate" | "organizer_milestone")[];
+  runs: AdminRebateRun[];
+  byRule: Partial<
+    Record<
+      "organizer_rebate" | "venue_rebate" | "organizer_milestone",
+      {
+        count: number;
+        amountMinor: number;
+        shadowAmountMinor: number;
+        rejected: number;
+      }
+    >
+  >;
+  /** Cash net revenue the rebates were priced from (live + shadow). */
+  netRevenueMinor: number;
+  rejectReasons: { reason: string; count: number }[];
+  top: {
+    userId: string;
+    name: string | null;
+    kind: "organizer" | "venue";
+    amountMinor: number;
+    events: number;
+  }[];
 };

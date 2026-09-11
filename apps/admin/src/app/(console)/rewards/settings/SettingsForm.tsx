@@ -285,10 +285,10 @@ export function SettingsForm({
               Shadow mode (evaluate rewards without paying)
             </span>
             <span className="block text-xs text-muted-foreground">
-              On: every referred sale is evaluated and shown under Referrals,
-              but no credit is posted and nobody is notified. Turn it off only
-              after reviewing the projected cost and risk flags — referrers then
-              start earning real credit.
+              On: every referred sale, invite and monthly rebate is evaluated
+              and shown under Referrals and Rebates, but no credit is posted and
+              nobody is notified. Turn it off only after reviewing the projected
+              cost and risk flags — people then start earning real credit.
             </span>
           </span>
         </label>
