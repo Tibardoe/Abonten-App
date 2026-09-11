@@ -44,11 +44,13 @@ import type {
   EventEditContextResult,
   EventInsightsResult,
   EventPromoCodesResult,
+  EventPromoterCommissionResult,
   EventPromotionContextResult,
   FreeRsvpBody,
   FreeRsvpResult,
   HighlightPlaybackBody,
   HighlightPlaybackResult,
+  LoyaltyProgressResult,
   MarkConversationReadBody,
   MarkConversationUnreadBody,
   MessagingActionResult,
@@ -84,6 +86,9 @@ import type {
   PlacePromotionContextResult,
   PlaceReviewRespondResult,
   PlaceServiceResult,
+  PlaceVisitBody,
+  PlaceVisitPanelResult,
+  PlaceVisitResultEnvelope,
   PreparedCheckoutPayment,
   ProfileData,
   PromoPreviewResult,
@@ -760,6 +765,16 @@ export function createApiClient(options: ApiClientOptions) {
         });
       },
 
+      /** Check in at a place with the code its owner shows (once a day).
+       *  The server checks the code and that the caller is at the place. */
+      recordVisit(body: PlaceVisitBody) {
+        return request<PlaceVisitResultEnvelope>("/api/mobile/places/visits", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+
       /** Request a reservation at a place (pending; the owner accepts or
        *  declines). Same rules as the web requestPlaceBooking action. */
       requestBooking(placeId: string, body: RequestPlaceBookingBody) {
@@ -1118,6 +1133,27 @@ export function createApiClient(options: ApiClientOptions) {
        * Reserve step: create a pending event-promotion checkout priced from
        * the seeded tier, and get its id + amount for the payment screen.
        */
+      /**
+       * The commission the organizer offers promoters on this event and how
+       * promoters' sales are going. 403 if the event isn't the caller's.
+       */
+      eventPromoterCommission(eventId: string) {
+        return request<EventPromoterCommissionResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promoter-commission`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Sets the promoter commission (basis points), or stops it (null). */
+      setEventPromoterCommission(eventId: string, rateBps: number | null) {
+        return request<EventPromoterCommissionResult>(
+          `/api/mobile/organizer/events/${encodeURIComponent(
+            eventId,
+          )}/promoter-commission`,
+          { method: "PUT", body: { rateBps }, auth: true },
+        );
+      },
       promoteEvent(eventId: string, tierId: number) {
         return request<PromoteEventResult>(
           `/api/mobile/organizer/events/${encodeURIComponent(eventId)}/promote`,
@@ -1428,6 +1464,18 @@ export function createApiClient(options: ApiClientOptions) {
        * Reserve step: create a pending place-promotion checkout priced from
        * the seeded tier, and get its id + amount for the payment screen.
        */
+      /**
+       * The place's check-in QR code right now (it changes every 30 seconds;
+       * call again at expiresAt) and its visit figures. Owner only.
+       */
+      placeVisitCode(placeId: string) {
+        return request<PlaceVisitPanelResult>(
+          `/api/mobile/organizer/places/${encodeURIComponent(
+            placeId,
+          )}/visit-code`,
+          { method: "GET", auth: true },
+        );
+      },
       promotePlace(placeId: string, tierId: number) {
         return request<PromotePlaceResult>(
           `/api/mobile/organizer/places/${encodeURIComponent(placeId)}/promote`,
@@ -1504,6 +1552,16 @@ export function createApiClient(options: ApiClientOptions) {
           "/api/mobile/rewards/promotion-credit",
           { method: "GET", auth: true },
         );
+      },
+      /**
+       * The caller's count towards the next loyalty fee rebate (null data
+       * while the reward isn't live).
+       */
+      loyalty() {
+        return request<LoyaltyProgressResult>("/api/mobile/rewards/loyalty", {
+          method: "GET",
+          auth: true,
+        });
       },
       /**
        * Join a friend's invite. The server decides (new accounts only,

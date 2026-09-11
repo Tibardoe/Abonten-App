@@ -1689,6 +1689,55 @@ export type Database = {
           },
         ];
       };
+      event_promoter_commission: {
+        Row: {
+          created_at: string;
+          event_id: string;
+          is_active: boolean;
+          rate_bps: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          event_id: string;
+          is_active?: boolean;
+          rate_bps: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          event_id?: string;
+          is_active?: boolean;
+          rate_bps?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_promoter_commission_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: true;
+            referencedRelation: "event";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_promoter_commission_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_promoter_commission_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       event_promotion: {
         Row: {
           created_at: string;
@@ -4144,6 +4193,90 @@ export type Database = {
             foreignKeyName: "place_service_place_id_fkey";
             columns: ["place_id"];
             isOneToOne: false;
+            referencedRelation: "place";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      place_visit: {
+        Row: {
+          accuracy_m: number | null;
+          created_at: string;
+          distance_m: number;
+          id: string;
+          install_id: string | null;
+          place_id: string;
+          platform: string;
+          user_id: string;
+          visited_on: string;
+        };
+        Insert: {
+          accuracy_m?: number | null;
+          created_at?: string;
+          distance_m: number;
+          id?: string;
+          install_id?: string | null;
+          place_id: string;
+          platform: string;
+          user_id: string;
+          visited_on: string;
+        };
+        Update: {
+          accuracy_m?: number | null;
+          created_at?: string;
+          distance_m?: number;
+          id?: string;
+          install_id?: string | null;
+          place_id?: string;
+          platform?: string;
+          user_id?: string;
+          visited_on?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "place_visit_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "place";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "place_visit_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "place_visit_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      place_visit_key: {
+        Row: {
+          created_at: string;
+          place_id: string;
+          secret: string;
+        };
+        Insert: {
+          created_at?: string;
+          place_id: string;
+          secret?: string;
+        };
+        Update: {
+          created_at?: string;
+          place_id?: string;
+          secret?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "place_visit_key_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: true;
             referencedRelation: "place";
             referencedColumns: ["id"];
           },
@@ -7442,6 +7575,14 @@ export type Database = {
         Args: { p_currency: string; p_organizer_id: string };
         Returns: Json;
       };
+      _place_visit_code_at: {
+        Args: { p_place_id: string; p_window: number };
+        Returns: string;
+      };
+      _promoter_commission_post: {
+        Args: { p_delta_minor: number; p_reward_event_id: string };
+        Returns: undefined;
+      };
       _referral_bind_block_reason: {
         Args: { p_bind_within_days: number; p_referee: string };
         Returns: string;
@@ -7457,6 +7598,10 @@ export type Database = {
         Returns: undefined;
       };
       _reward_evaluate_event_referral: {
+        Args: { p_checkout_id: string };
+        Returns: string;
+      };
+      _reward_evaluate_promoter_commission: {
         Args: { p_checkout_id: string };
         Returns: string;
       };
@@ -7494,6 +7639,26 @@ export type Database = {
         Returns: string;
       };
       _reward_grant_welcome: { Args: { p_referee: string }; Returns: string };
+      _reward_loyalty_cycle_start: {
+        Args: {
+          p_at: string;
+          p_shadow: boolean;
+          p_user_id: string;
+          p_window_days: number;
+        };
+        Returns: string;
+      };
+      _reward_loyalty_evaluate: {
+        Args: { p_checkout_id: string };
+        Returns: string;
+      };
+      _reward_loyalty_events: {
+        Args: { p_min_minor: number; p_since: string; p_user_id: string };
+        Returns: {
+          event_id: string;
+          first_paid_at: string;
+        }[];
+      };
       _reward_milestone_evaluate: {
         Args: { p_event_id: string; p_period: string };
         Returns: string;
@@ -7506,6 +7671,10 @@ export type Database = {
           p_user_id: string;
         };
         Returns: undefined;
+      };
+      _reward_place_visits_evaluate: {
+        Args: { p_period: string; p_place_id: string };
+        Returns: string;
       };
       _reward_rebate_evaluate: {
         Args: { p_event_id: string; p_period: string; p_rule_key: string };
@@ -8716,6 +8885,7 @@ export type Database = {
           unread_count: number;
         }[];
       };
+      loyalty_progress: { Args: { p_user_id: string }; Returns: Json };
       mark_conversation_read: {
         Args: { p_conversation_id: string; p_up_to?: string };
         Returns: undefined;
@@ -8740,6 +8910,26 @@ export type Database = {
       place_is_open_now: {
         Args: { p_now?: string; p_place_id: string };
         Returns: boolean;
+      };
+      place_visit_code: { Args: { p_place_id: string }; Returns: Json };
+      place_visit_record: {
+        Args: {
+          p_accuracy_m: number;
+          p_code: string;
+          p_install_id: string;
+          p_lat: number;
+          p_lng: number;
+          p_mocked: boolean;
+          p_place_id: string;
+          p_platform: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      place_visit_stats: { Args: { p_place_id: string }; Returns: Json };
+      promoter_commission_event_stats: {
+        Args: { p_event_id: string };
+        Returns: Json;
       };
       purge_reviewed_claim_documents: {
         Args: { p_older_than?: string };

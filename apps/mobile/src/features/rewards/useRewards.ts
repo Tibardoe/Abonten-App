@@ -71,6 +71,22 @@ export function usePromotionCredit() {
   });
 }
 
+/** The caller's count towards the next loyalty fee rebate (null when off). */
+export function useLoyaltyProgress(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ["mobile", "rewards", "loyalty"],
+    enabled: options?.enabled ?? true,
+    queryFn: async () => {
+      const res = await api.rewards.loyalty();
+      if (res.status !== 200) {
+        throw new Error(res.message ?? "Couldn't load your progress");
+      }
+      return res.data ?? null;
+    },
+    staleTime: 60_000,
+  });
+}
+
 /** Whether friend invites are live (works signed out). */
 export function useInvitesLive() {
   return useQuery({

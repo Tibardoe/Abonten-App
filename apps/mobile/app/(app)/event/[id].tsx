@@ -25,6 +25,7 @@ import {
   useEventRating,
   useEventReviewsList,
 } from "@/features/reviews/useEventReviewsList";
+import { PromoterEarnNote } from "@/features/rewards/PromoterEarnNote";
 import {
   logEventShare,
   useReferralCode,
@@ -429,6 +430,13 @@ export default function EventDetailScreen() {
                 <Icon name="chevron-forward" size={16} tone="muted" />
               </View>
             </Pressable>
+          ) : null}
+
+          {!canceled && !salesClosed ? (
+            <PromoterEarnNote
+              eventId={event.id}
+              organizerId={event.organizer_id}
+            />
           ) : null}
 
           {session && event.organizer_id !== session.user.id ? (

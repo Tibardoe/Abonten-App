@@ -1,4 +1,5 @@
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
+import { useRewardsProgram } from "@/features/rewards/useRewards";
 import { AppText, Overline, Refresher } from "@abonten/ui-native";
 import { Link, useLocalSearchParams } from "expo-router";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -29,6 +30,8 @@ export default function PlaceManageScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const id = placeId ?? "";
   const q = usePlaceInsights(id);
+  const program = useRewardsProgram();
+  const visitsOn = !!(program.data?.enabled && program.data.placeVisits);
 
   const result = q.data;
   const insights = result && result.status === 200 ? result.data : null;
@@ -102,6 +105,16 @@ export default function PlaceManageScreen() {
               <AppText className="text-muted-foreground">›</AppText>
             </Pressable>
           </Link>
+          {visitsOn ? (
+            <Link href={`/(app)/organizer/places/${id}/check-in`} asChild>
+              <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+                <AppText className="text-base text-foreground">
+                  Visitor check-in code
+                </AppText>
+                <AppText className="text-muted-foreground">›</AppText>
+              </Pressable>
+            </Link>
+          ) : null}
           <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base font-semibold text-primary">

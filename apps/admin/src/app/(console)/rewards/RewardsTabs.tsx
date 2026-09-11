@@ -6,6 +6,7 @@ const TABS = [
   { href: "/rewards/accounts", label: "Credit accounts" },
   { href: "/rewards/referrals", label: "Referrals" },
   { href: "/rewards/rebates", label: "Rebates" },
+  { href: "/rewards/promoters", label: "Promoters & loyalty" },
   { href: "/rewards/queue", label: "Review queue" },
   { href: "/rewards/rules", label: "Reward rules" },
   { href: "/rewards/settings", label: "Program settings" },

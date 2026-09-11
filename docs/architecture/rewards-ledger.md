@@ -333,6 +333,42 @@ per rule (idempotency key `organizer_rebate:<event>` / `venue_rebate:<event>`
 Organizer milestone → Make live. With shadow mode on, run the last month
 from Rebates to see the projected cost first.
 
+## Loyalty, promoter commissions, place visits (Phase 8)
+
+- **Loyalty fee rebate** (`loyalty_fee_rebate`): on `checkout_paid`,
+  `_reward_loyalty_evaluate` counts the buyer's standing paid orders
+  (GH₵ 20+, one per event, not their own events) since their last loyalty
+  reward and within 90 days; the Nth (5) gets `rate_bps` (100%) of the
+  service fee the order paid in cash, max `caps.max_per_reward_minor`, as a
+  budget-gated reward lot pending until the event settles
+  (key `loyalty_fee_rebate:<checkout>`). Released pro rata to valid tickets
+  like event referrals.
+- **Promoter commission** (`promoter_commission`): needs referral capture
+  and an active `event_promoter_commission` row. Amount = rate (clamped to
+  `caps.min_rate_bps`–`max_rate_bps`) × `ticket_checkout.total_price`.
+  **Not budget-gated** — the organizer pays: `_reward_accrue` grants the lot
+  and `_promoter_commission_post` inserts `promoter_commission` (negative)
+  on the organizer ledger; `_reward_void` / a partial release / a clawback
+  insert `promoter_commission_reversal` (never more than was charged). The
+  credit ledger itself is unchanged (the lot is an ordinary `reward` lot
+  funded from `reward_contingent`); tell organizer-funded credit apart by
+  `reward_event.rule_key`.
+- **Place visits** (`place_visits`): `place_visit_code(place)` →
+  HMAC-SHA256(secret, `place:window`) first 10 hex chars, window = 30 s; the
+  current and previous window are accepted. `place_visit_record` checks the
+  code, the distance (`st_distance` to `place.location` ≤ `caps.radius_m` +
+  min(accuracy, 100) m), mocked location, owner, and inserts once per
+  (place, user, Accra day). The monthly run (after the month is over) calls
+  `_reward_place_visits_evaluate` for each verified place with visits: key
+  `place_visits:<place>:<YYYY-MM>` (`:shadow` in shadow), amount =
+  min(counted visitors, `caps.max_visitors_per_month`) × `flat_minor`,
+  promotion lot released at once; voided if the place is no longer verified
+  or changed hands.
+
+**Switching them on:** Reward rules → Loyalty fee rebate / Promoter
+commission / Place visits → Make live. Promoter commissions also need
+Program settings → Capture referral links.
+
 ## Disputes
 
 `payment_dispute` records every Paystack `charge.dispute.*` webhook event
@@ -354,5 +390,7 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **A friend says they didn't get welcome credit:** `select * from user_referral where referee_user_id = …` and the `friend_referral_referee` reward_event for them. No row = the invite never bound (too late, not a new account, own code…). No reward_event = their phone isn't verified yet. `rejected` = they had already bought, or shared the inviter's device/email.
 - **"Monthly rebates: some events failed" incident:** the run log (`select * from reward_rebate_run order by started_at desc limit 5`) has the last error. Fix the cause, then Admin › Rewards › Rebates › Run a month now for that month — decided events are skipped.
 - **An organizer asks why an event earned no rebate:** Admin › Rewards › Rebates › Decisions (or `select status, status_reason, basis from reward_event where event_id = … and rule_key = 'organizer_rebate'`). No row = the event hadn't settled by the run, or no rebate rule was live.
+- **An organizer asks about a promoter commission on their payout:** `select entry_type, amount, created_at from organizer_ledger_entry where ticket_checkout_id = … and entry_type like 'promoter_commission%'` and the `promoter_commission` reward_event for that checkout (Admin › Rewards › Promoters & loyalty). A deduction without a released reward is waiting (event not settled, held for review, or the promoter's phone isn't verified); a voided reward always has a matching reversal.
+- **A place owner says visitors can't check in:** the code changes every 30 s — the visitor must scan the live screen, be within ~150 m with location on, and not already have checked in today (`select * from place_visit where place_id = … order by created_at desc limit 20`). The rule must be live.
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) `rewards-friend-referral.integration.test.ts` (friend invites) and `rewards-rebates.integration.test.ts` (monthly rebates + the staff-column guards) and `rewards-p8.integration.test.ts` (loyalty, promoter commissions, place visits).

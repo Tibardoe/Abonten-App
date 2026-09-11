@@ -96,7 +96,11 @@ and `/rewards/touch`, the touch route also accepting signed-out calls;
 `rewards/inviteCore` — friend invites: `/api/mobile/rewards/invite`,
 `/rewards/referral/bind` and the public `/rewards/referral/resolve`;
 `rewards/promotionCreditCore` — promotion credit and monthly rebates,
-`/api/mobile/rewards/promotion-credit`).
+`/api/mobile/rewards/promotion-credit`; `rewards/loyaltyCore` —
+`/api/mobile/rewards/loyalty`; `rewards/promoterCommissionCore` —
+`/api/mobile/organizer/events/[eventId]/promoter-commission` (GET/PUT);
+`places/placeVisitCore` — `/api/mobile/organizer/places/[placeId]/visit-code`
+and `POST /api/mobile/places/visits`).
 Logging an event share is class A on mobile (`event_share` owner-insert
 under RLS) and a Server Action on web. The two credit reads call
 `auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their

@@ -168,7 +168,14 @@ export async function getFinanceOverviewCore(
   let organizerEarningsPaidOut = 0;
   for (const l of earnRows ?? []) {
     const a = num(l.amount);
-    if (l.entry_type === "earning") {
+    if (
+      l.entry_type === "earning" ||
+      l.entry_type === "promoter_commission" ||
+      l.entry_type === "promoter_commission_reversal"
+    ) {
+      // A promoter commission (Rewards Phase 8) is stored NEGATIVE against
+      // the sale it was earned on, its reversal positive: both change what
+      // the organizer is owed.
       organizerEarningsBooked += a;
     } else if (
       l.entry_type === "refund_hold" ||
@@ -761,7 +768,13 @@ export async function getOrganizerFinanceCore(
   for (const l of ledger ?? []) {
     if (l.currency) currency = l.currency;
     const a = num(l.amount);
-    if (l.entry_type === "earning") {
+    if (
+      l.entry_type === "earning" ||
+      l.entry_type === "promoter_commission" ||
+      l.entry_type === "promoter_commission_reversal"
+    ) {
+      // Promoter commissions (negative) and their reversals change what the
+      // organizer earned net.
       earned += a;
     } else if (
       l.entry_type === "refund_hold" ||

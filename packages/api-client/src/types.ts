@@ -37,6 +37,10 @@ import type {
   CreditActivityItem,
   CreditQuote,
   CreditSummary,
+  EventPromoterCommission,
+  LoyaltyProgress,
+  PlaceVisitPanel,
+  PlaceVisitResult,
   PromotionCredit,
   ReferralBindOutcome,
   ReferralCodeInfo,
@@ -96,6 +100,21 @@ export type ReferralTouchBody = {
 export type ReferralTouchResult = { status: number; message?: string };
 export type ReferralInviteResult = ApiEnvelope<ReferralInvite>;
 export type PromotionCreditResult = ApiEnvelope<PromotionCredit>;
+export type LoyaltyProgressResult = ApiEnvelope<LoyaltyProgress | null>;
+export type EventPromoterCommissionResult =
+  ApiEnvelope<EventPromoterCommission>;
+export type PlaceVisitPanelResult = ApiEnvelope<PlaceVisitPanel>;
+export type PlaceVisitBody = {
+  placeId?: string | null;
+  placeSlug?: string | null;
+  code: string;
+  lat: number | null;
+  lng: number | null;
+  accuracyM?: number | null;
+  /** Android reports when a location comes from a mock-location app. */
+  mocked?: boolean;
+};
+export type PlaceVisitResultEnvelope = ApiEnvelope<PlaceVisitResult>;
 export type ReferralBindBody = {
   code: string;
   source?: "link" | "typed" | "install_referrer";
@@ -891,6 +910,8 @@ export type EventInsightsFinance = {
   pendingRefunds: number;
   completedRefunds: number;
   refundRequestCount: number;
+  /** Promoter commissions net of reversals (Rewards Phase 8), ≤ 0. */
+  promoterCommissions?: number;
   organizerEarnings: number;
   settled: boolean;
 };

@@ -31,7 +31,12 @@ const num = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const KINDS = new Set<RebateKind>(["organizer", "venue", "milestone"]);
+const KINDS = new Set<RebateKind>([
+  "organizer",
+  "venue",
+  "milestone",
+  "visits",
+]);
 
 export async function getPromotionCreditCore(
   supabase: SupabaseClient<Database>,
@@ -100,10 +105,17 @@ export async function getPromotionCreditCore(
               amountMinor: p.organizerMilestone.amountMinor,
             }
           : null,
+        visits: p.placeVisits
+          ? {
+              perVisitorMinor: p.placeVisits.perVisitorMinor,
+              maxVisitors: p.placeVisits.maxVisitors,
+            }
+          : null,
         expiryDays:
           p.organizerRebate?.expiryDays ??
           p.venueRebate?.expiryDays ??
           p.organizerMilestone?.expiryDays ??
+          p.placeVisits?.expiryDays ??
           null,
       },
     },

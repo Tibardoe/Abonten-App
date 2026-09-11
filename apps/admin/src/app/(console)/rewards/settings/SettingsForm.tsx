@@ -268,7 +268,9 @@ export function SettingsForm({
             <span className="block text-xs text-muted-foreground">
               Signed-in users&apos; share links carry their referral code, and a
               checkout opened through one records who referred it. Nothing is
-              paid by this alone: the “Event referral” rule must also be live.
+              paid by this alone: the “Event referral” rule (or, for
+              organizers&apos; own commissions, the “Promoter commission” rule)
+              must also be live.
             </span>
           </span>
         </label>

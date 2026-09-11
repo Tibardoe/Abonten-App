@@ -55,6 +55,7 @@ import {
   listReportGroupsCore,
   listReportsCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
+import { getPromoterLoyaltySummaryCore } from "@abonten/services/admin/rewards/promoterLoyaltyAdminCore";
 import { getRebateSummaryCore } from "@abonten/services/admin/rewards/rebateAdminCore";
 import {
   getReferralSummaryCore,
@@ -363,7 +364,28 @@ export async function loadRebates(
     getRebateSummaryCore(svc, ctx, sinceDays),
     listRewardEventsCore(svc, ctx, {
       ...filters,
-      ruleKeys: ["organizer_rebate", "venue_rebate", "organizer_milestone"],
+      ruleKeys: [
+        "organizer_rebate",
+        "venue_rebate",
+        "organizer_milestone",
+        "place_visits",
+      ],
+    }),
+  ]);
+  return { ctx, summary, events };
+}
+
+export async function loadPromoters(
+  filters: Parameters<typeof listRewardEventsCore>[2],
+  sinceDays = 30,
+) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [summary, events] = await Promise.all([
+    getPromoterLoyaltySummaryCore(svc, ctx, sinceDays),
+    listRewardEventsCore(svc, ctx, {
+      ...filters,
+      ruleKeys: ["promoter_commission", "loyalty_fee_rebate"],
     }),
   ]);
   return { ctx, summary, events };

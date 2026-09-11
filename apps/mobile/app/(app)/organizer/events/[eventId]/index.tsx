@@ -1,4 +1,5 @@
 import { useEventInsights } from "@/features/organizer/useEventInsights";
+import { PromoterCommissionSection } from "@/features/rewards/PromoterCommissionSection";
 import type {
   EventInsightsDateRow,
   EventInsightsFinance,
@@ -197,6 +198,14 @@ function FinanceSection({
             label="Net sales"
             value={`${finance.currency} ${n(finance.netSales).toLocaleString()}`}
           />
+          {n(finance.promoterCommissions) !== 0 ? (
+            <Row
+              label="Promoter commissions"
+              value={`-${finance.currency} ${Math.abs(
+                n(finance.promoterCommissions),
+              ).toLocaleString()}`}
+            />
+          ) : null}
           <View className="h-px bg-border" />
           <Row
             label="Organizer earnings"
@@ -487,6 +496,8 @@ export default function EventInsightsScreen() {
           </Link>
         </View>
       ) : null}
+
+      {eventId ? <PromoterCommissionSection eventId={eventId} /> : null}
 
       <View className="flex-row flex-wrap gap-2">
         {PERIODS.map((p) => (

@@ -32,6 +32,25 @@ type ProgramJson = {
     unique_buyers: number;
     expiry_days: number | null;
   } | null;
+  loyalty_fee_rebate?: {
+    orders_required: number;
+    window_days: number;
+    max_minor: number;
+    fee_share_bps: number;
+    min_order_minor: number;
+    expiry_days: number | null;
+  } | null;
+  promoter_commission?: {
+    min_rate_bps: number;
+    max_rate_bps: number;
+    expiry_days: number | null;
+  } | null;
+  place_visits?: {
+    per_visitor_minor: number;
+    max_visitors: number;
+    radius_m: number;
+    expiry_days: number | null;
+  } | null;
   redemption?: {
     tickets: boolean;
     promotions: boolean;
@@ -48,6 +67,9 @@ export const DISABLED_REWARDS_PROGRAM: RewardsProgram = {
   organizerRebate: null,
   venueRebate: null,
   organizerMilestone: null,
+  loyaltyFeeRebate: null,
+  promoterCommission: null,
+  placeVisits: null,
   redemption: {
     tickets: false,
     promotions: false,
@@ -93,6 +115,31 @@ export function mapRewardsProgram(json: ProgramJson | null): RewardsProgram {
           amountMinor: json.organizer_milestone.amount_minor,
           uniqueBuyers: json.organizer_milestone.unique_buyers,
           expiryDays: json.organizer_milestone.expiry_days,
+        }
+      : null,
+    loyaltyFeeRebate: json.loyalty_fee_rebate
+      ? {
+          ordersRequired: json.loyalty_fee_rebate.orders_required,
+          windowDays: json.loyalty_fee_rebate.window_days,
+          maxMinor: json.loyalty_fee_rebate.max_minor,
+          feeShareBps: json.loyalty_fee_rebate.fee_share_bps,
+          minOrderMinor: json.loyalty_fee_rebate.min_order_minor,
+          expiryDays: json.loyalty_fee_rebate.expiry_days,
+        }
+      : null,
+    promoterCommission: json.promoter_commission
+      ? {
+          minRateBps: json.promoter_commission.min_rate_bps,
+          maxRateBps: json.promoter_commission.max_rate_bps,
+          expiryDays: json.promoter_commission.expiry_days,
+        }
+      : null,
+    placeVisits: json.place_visits
+      ? {
+          perVisitorMinor: json.place_visits.per_visitor_minor,
+          maxVisitors: json.place_visits.max_visitors,
+          radiusM: json.place_visits.radius_m,
+          expiryDays: json.place_visits.expiry_days,
         }
       : null,
     redemption: {

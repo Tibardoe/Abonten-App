@@ -1,5 +1,6 @@
 import { getCreditActivity } from "@/actions/getCreditActivity";
 import { getCreditSummary } from "@/actions/getCreditSummary";
+import { getLoyaltyProgress } from "@/actions/getLoyaltyProgress";
 import { getReferralInvite } from "@/actions/getReferralInvite";
 import { getReferralLink } from "@/actions/getReferralLink";
 import { getRewardsProgram } from "@/actions/getRewardsProgram";
@@ -9,6 +10,7 @@ import {
   SupportingText,
 } from "@/components/ui/typography";
 import CreditBalanceCard from "@/rewards/molecules/CreditBalanceCard";
+import LoyaltyProgressCard from "@/rewards/molecules/LoyaltyProgressCard";
 import ReferralCodeCard from "@/rewards/molecules/ReferralCodeCard";
 import CreditActivityList from "@/rewards/organisms/CreditActivityList";
 import InvitePanel from "@/rewards/organisms/InvitePanel";
@@ -27,11 +29,12 @@ export default async function RewardsPage() {
     notFound();
   }
 
-  const [summary, firstPage, referral, invite] = await Promise.all([
+  const [summary, firstPage, referral, invite, loyalty] = await Promise.all([
     getCreditSummary(),
     getCreditActivity(),
     getReferralLink(),
     getReferralInvite(),
+    getLoyaltyProgress(),
   ]);
   const referralCode = referral.data?.code ?? null;
   const inviteData = invite.status === 200 ? invite.data : undefined;
@@ -64,6 +67,10 @@ export default async function RewardsPage() {
           We couldn&apos;t load your balance right now. Try again in a moment.
         </p>
       )}
+
+      {loyalty.status === 200 && loyalty.data ? (
+        <LoyaltyProgressCard progress={loyalty.data} />
+      ) : null}
 
       {referralCode && program.data.eventReferral ? (
         <ReferralCodeCard

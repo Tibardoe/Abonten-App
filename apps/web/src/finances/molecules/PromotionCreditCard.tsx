@@ -15,7 +15,7 @@ const monthOf = (period: string) =>
 
 function earnLines(credit: PromotionCredit): string[] {
   const lines: string[] = [];
-  const { organizerShareBps, venueShareBps, milestone } = credit.rates;
+  const { organizerShareBps, venueShareBps, milestone, visits } = credit.rates;
   if (organizerShareBps) {
     lines.push(
       `Each month you get ${organizerShareBps / 100}% of what Abonten earned on your events that ended the month before (the service fee, after payment costs).`,
@@ -24,6 +24,11 @@ function earnLines(credit: PromotionCredit): string[] {
   if (venueShareBps) {
     lines.push(
       `Own a verified place? You get ${venueShareBps / 100}% when other organizers hold ticketed events there.`,
+    );
+  }
+  if (visits) {
+    lines.push(
+      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor)} (up to ${visits.maxVisitors} a month).`,
     );
   }
   if (milestone) {

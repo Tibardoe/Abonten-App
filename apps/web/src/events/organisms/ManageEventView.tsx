@@ -1,5 +1,6 @@
 "use client";
 
+import PromoterCommissionCard from "@/events/molecules/PromoterCommissionCard";
 import ManageEventDetailsSection from "@/events/organisms/ManageEventDetailsSection";
 import ManageEventInsightsSection from "@/events/organisms/ManageEventInsightsSection";
 import ManageEventPromotionSection from "@/events/organisms/ManageEventPromotionSection";
@@ -97,14 +98,17 @@ export default function ManageEventView({
         )}
 
         {activeTab === "promotion" && (
-          <ManageEventPromotionSection
-            eventId={event.id}
-            tiers={promotionTiers}
-            currentPromotion={currentPromotion}
-            eventStatus={event.status}
-            derivedStatus={derivedStatus}
-            soldOut={soldOut}
-          />
+          <>
+            <ManageEventPromotionSection
+              eventId={event.id}
+              tiers={promotionTiers}
+              currentPromotion={currentPromotion}
+              eventStatus={event.status}
+              derivedStatus={derivedStatus}
+              soldOut={soldOut}
+            />
+            <PromoterCommissionCard eventId={event.id} />
+          </>
         )}
 
         {activeTab === "insights" && (

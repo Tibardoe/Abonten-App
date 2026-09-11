@@ -31,6 +31,11 @@ const STATUS_META: Record<
     colorClass: "text-muted-foreground",
     label: "Processing",
   },
+  pending: {
+    Icon: IoMdTime,
+    colorClass: "text-muted-foreground",
+    label: "Pending until the event settles",
+  },
   failed: { Icon: MdCancel, colorClass: "text-destructive", label: "Failed" },
   cancelled: {
     Icon: BsFillDashCircleFill,
@@ -50,6 +55,8 @@ export const LINE_LABELS: Record<OrganizerLedgerTransactionLine, string> = {
   refund_release: "Refund reversed",
   payout: "Organizer payout",
   payout_release: "Payout returned",
+  promoter_commission: "Promoter commission",
+  promoter_commission_reversal: "Promoter commission returned",
 };
 
 export default function FinanceLineIcon({

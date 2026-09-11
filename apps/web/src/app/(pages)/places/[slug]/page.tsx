@@ -10,6 +10,7 @@ import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
 import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
 import PlaceCard from "@/places/molecules/PlaceCard";
+import PlaceCheckIn from "@/places/molecules/PlaceCheckIn";
 import PlaceOpenStatusBadge from "@/places/molecules/PlaceOpenStatusBadge";
 import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
@@ -21,6 +22,7 @@ import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
 import type { Metadata } from "next";
 import Image from "next/image";
+import { Suspense } from "react";
 import { FiGlobe, FiMapPin, FiPhone } from "react-icons/fi";
 import { IoIosStar } from "react-icons/io";
 import { IoLocationOutline, IoLogoWhatsapp } from "react-icons/io5";
@@ -235,6 +237,15 @@ export default async function page({
       <div className="max-w-7xl mx-auto px-2 lg:px-8 py-8 md:py-12">
         <div className="md:grid lg:grid-cols-3 gap-6 md:gap-8 flex flex-col mb-5">
           <div className="lg:col-span-2 space-y-6 md:space-y-8">
+            {/* Opened from the place's check-in QR code (?visit=CODE). */}
+            <Suspense fallback={null}>
+              <PlaceCheckIn
+                placeId={place.id}
+                placeName={place.name}
+                ownerId={place.owner_id}
+              />
+            </Suspense>
+
             {/* Primary Actions */}
             <div className="bg-card text-card-foreground rounded-xl p-4 md:p-6 shadow-sm">
               <PlaceActionButtons

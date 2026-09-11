@@ -20,12 +20,44 @@ const RULE_LABELS: Record<string, { title: string; shipped: boolean }> = {
   organizer_rebate: { title: "Organizer rebate", shipped: true },
   venue_rebate: { title: "Venue rebate", shipped: true },
   organizer_milestone: { title: "Organizer milestone", shipped: true },
+  loyalty_fee_rebate: { title: "Loyalty fee rebate", shipped: true },
+  promoter_commission: {
+    title: "Promoter commission (paid by organizers)",
+    shipped: true,
+  },
+  place_visits: { title: "Place visits", shipped: true },
 };
 
 const REBATES = new Set(["organizer_rebate", "venue_rebate"]);
 
 function terms(r: RewardRuleSummary): string {
   const parts: string[] = [];
+  const caps = r.caps as Record<string, unknown>;
+  if (r.ruleKey === "loyalty_fee_rebate") {
+    parts.push(
+      `every ${caps.orders_required ?? 5}th order on a different event within ${caps.window_days ?? 90} days: ${(r.rateBps ?? 10000) / 100}% of the cash service fee back`,
+    );
+    if (typeof caps.max_per_reward_minor === "number")
+      parts.push(`max ${formatCredit(caps.max_per_reward_minor)}`);
+    if (r.minBasisMinor > 0)
+      parts.push(`orders of ${formatCredit(r.minBasisMinor)}+ count`);
+    if (r.expiryDays !== null) parts.push(`expires after ${r.expiryDays} days`);
+    return parts.join(" · ");
+  }
+  if (r.ruleKey === "promoter_commission") {
+    parts.push(
+      `organizers choose ${Number(caps.min_rate_bps ?? 100) / 100}–${Number(caps.max_rate_bps ?? 3000) / 100}% of the ticket price; paid by the organizer, outside the budget`,
+    );
+    if (r.expiryDays !== null) parts.push(`expires after ${r.expiryDays} days`);
+    return parts.join(" · ");
+  }
+  if (r.ruleKey === "place_visits") {
+    parts.push(
+      `${formatCredit(r.flatMinor ?? 0)} per different verified visitor a month, max ${caps.max_visitors_per_month ?? 40}, within ${caps.radius_m ?? 150} m`,
+    );
+    if (r.expiryDays !== null) parts.push(`expires after ${r.expiryDays} days`);
+    return parts.join(" · ");
+  }
   if (r.rateBps !== null) parts.push(`${r.rateBps / 100}% of ticket revenue`);
   if (r.netShareCapBps !== null)
     parts.push(

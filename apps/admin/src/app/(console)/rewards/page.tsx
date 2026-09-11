@@ -57,6 +57,9 @@ const RULE_LABEL: Record<string, string> = {
   organizer_rebate: "Organizer growth rebate",
   venue_rebate: "Venue rebate",
   organizer_milestone: "Organizer milestone",
+  loyalty_fee_rebate: "Loyalty fee rebate",
+  promoter_commission: "Promoter commission",
+  place_visits: "Place visits",
 };
 
 function ruleTerms(r: {

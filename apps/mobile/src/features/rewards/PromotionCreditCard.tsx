@@ -16,7 +16,7 @@ const monthOf = (period: string) =>
 // credit is never paid out as money.
 export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
   const router = useRouter();
-  const { organizerShareBps, venueShareBps, milestone, expiryDays } =
+  const { organizerShareBps, venueShareBps, milestone, visits, expiryDays } =
     credit.rates;
 
   const lines: string[] = [];
@@ -28,6 +28,11 @@ export function PromotionCreditCard({ credit }: { credit: PromotionCredit }) {
   if (venueShareBps) {
     lines.push(
       `Own a verified place? You get ${venueShareBps / 100}% when other organizers hold ticketed events there.`,
+    );
+  }
+  if (visits) {
+    lines.push(
+      `Own a verified place? Every different person who checks in with your place's code in a month earns you ${formatCredit(visits.perVisitorMinor)} (up to ${visits.maxVisitors} a month).`,
     );
   }
   if (milestone) {
@@ -108,6 +113,7 @@ export function showPromotionCredit(
     !!r.organizerShareBps ||
     !!r.venueShareBps ||
     !!r.milestone ||
+    !!r.visits ||
     credit.promotionOnlyMinor > 0 ||
     credit.pendingMinor > 0 ||
     credit.earnedMinor > 0
