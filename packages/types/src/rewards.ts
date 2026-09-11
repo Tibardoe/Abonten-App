@@ -455,6 +455,13 @@ export type RewardsProgramSettings = {
   updatedBy: string | null;
 };
 
+/** Whether someone gets Abonten Rewards emails, and where they'd go. */
+export type RewardEmailPreference = {
+  rewardEmails: boolean;
+  /** Null for phone-only accounts: they get the push only. */
+  email: string | null;
+};
+
 /** Admin: how reward pushes and emails went over the last few days. */
 export type AdminNotificationDeliveryStats = {
   sinceDays: number;

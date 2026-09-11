@@ -113,6 +113,7 @@ This document describes the current, verified state of the codebase for future d
   - [src/app/api/upload-profile-picture/route.ts](src/app/api/upload-profile-picture/route.ts)
   - [src/app/api/user-profile/route.tsx](src/app/api/user-profile/route.tsx)
   - `apps/web/src/app/api/notifications/deliver/route.ts` — called only by the `notification-delivery` pg_cron job (token check) to send reward pushes and emails (§27.10).
+  - `apps/web/src/app/api/notifications/unsubscribe/route.ts` — RFC 8058 one-click unsubscribe (POST only) from a reward email's `List-Unsubscribe` header (§27.11).
 - Auth/session refresh + coarse route protection happens in [src/proxy.ts](src/proxy.ts) (Next.js 16's renamed `middleware.ts` — confirmed via `git show` of the "Project upgrade from next js 15 to 16" commit, which did a literal `middleware.ts → proxy.ts` rename).
 - Every sensitive Server Action re-verifies `supabase.auth.getUser()` itself, in addition to the proxy-level check (defense in depth).
 - Supabase is accessed through three separate client factories, each for its execution context:
@@ -2471,6 +2472,76 @@ policy by design; new index unused yet). Types regenerated from production.
 push; email in real inboxes (Gmail/Outlook rendering). No per-person opt-out
 for reward emails (they are account notices about credit); the other
 SQL-written notifications (review posted, event cancelled) still don't push.
+(All three followed up in §27.11. Production delivery was confirmed the same
+day with a labelled test notice to the owner: push accepted by Expo, email
+delivered by Resend.)
+
+### 27.11 Reward email opt-out, review / cancellation pushes, email client check (2026-09-11)
+
+Migration `20260911163306_notification_preferences_and_app_push`:
+
+- **Stop reward emails, per person.** `notification_preference`
+  (`reward_emails`, default on; RLS on, no client grants — written by
+  `@abonten/services/notifications/rewardEmailPreferenceCore` with the
+  service role). Three ways: the "Email me when credit is ready" switch on
+  the Rewards page (web `getRewardEmailPreference` / `setRewardEmailPreference`;
+  app `RewardEmailCard` → `GET/PUT /api/mobile/notifications/reward-emails`),
+  the footer link in every reward email (`/unsubscribe/rewards?u=&t=`, public
+  page — added to the middleware's public routes — that asks before changing
+  anything and offers to turn them back on; `setRewardEmailsByLink`, web
+  only), and one-click `List-Unsubscribe` / `List-Unsubscribe-Post` headers
+  (`POST /api/notifications/unsubscribe`, POST only so link scanners can't
+  unsubscribe anyone). The link carries the user id and
+  `HMAC(deriveSigningKey("reward-email-unsubscribe:v1"), userId)` — no sign-in,
+  no expiry, no new env var; rotating the service-role key invalidates old
+  links. `notification_delivery_claim` skips a queued email for someone who
+  opted out (`opted_out`). Phone-only accounts see the switch off and
+  disabled (no address).
+- **"New review" and "Event cancelled" now push.** An AFTER INSERT trigger on
+  `notification` (`_notification_queue_app_push`, only for types
+  `review_received` / `event_cancelled` — both written in SQL, neither by
+  `createNotificationCore`, so nothing pushes twice) queues a push with
+  `source = 'app'`. A cancellation is `urgent` (no night wait); a review
+  waits for 08:00 like reward pushes. A BEFORE INSERT trigger gives the
+  cancellation `data = {kind: 'ticket', ticketsSection: 'refunds' |
+  'cancelled'}`, so a tap opens the app's Tickets tab on that section
+  (`tickets.tsx` reads `?section=`); it used to open nothing. Several of
+  these for one person are sent one by one (each opens its own screen); the
+  program's push/email switches and the admin counts cover reward notices
+  only (`source = 'rewards'`).
+- **Email clients.** `RewardUpdateEmailTemplate` rewritten for Gmail and
+  Outlook after a caniemail check (`@jsx-email/doiuse-email`, run outside the
+  repo): plain inline styles, a Helvetica/Arial font stack (Outlook for
+  Windows falls back to Times New Roman on `ui-sans-serif`), react-email
+  `<Button>` (Outlook ignores padding on a plain link), no `<style>` block,
+  class selectors or `display:none` logo swap (Gmail's mobile web client and
+  Outlook drop them — the old template would have shown two logos there),
+  and the logo on a white tile (`ABONTEN_LOGO_EMAIL_TILE_URL`) so it stays
+  readable when a mail app darkens the email. What's left in the report is
+  cosmetic: square button corners in Outlook for Windows, and react-email's
+  standard hidden preview text. The ticket and cancellation emails still
+  use the old pattern (not changed here).
+
+**Verified:** integration suite on a fresh replay (3 new tests in
+`rewards-notification-delivery`: opted-out email skipped while the push
+still goes; the signed link works without sign-in and refuses another
+person's / a tampered token; a review and a cancellation each queue their
+own push, the cancellation urgent and routed to Tickets › Cancelled,
+unaffected by the reward switches; clients can't read or write
+`notification_preference`). Local stack, real UI: web Rewards page switch
+(saved, toast); signed-out unsubscribe page (Unsubscribe → "You're
+unsubscribed" → Turn them back on; a tampered link → "This link isn't
+valid"); one-click POST → off, GET → 405. Android emulator: the Rewards
+card switch (saved, toast); a real review → "New review" push → tap opened
+the event's Reviews screen; a real cancellation → "Event cancelled" push →
+tap opened Tickets › Cancelled. A real reward email through the local
+pipeline to Resend's test inbox (footer link and Outlook button markup
+present). Rendered screenshots at 640 px, 375 px and a forced-dark
+approximation.
+
+**Not verified:** Outlook for Windows and the Gmail apps themselves (no
+access to those clients here — the owner can open the next reward email in
+Gmail); iOS push.
 
 
 ---

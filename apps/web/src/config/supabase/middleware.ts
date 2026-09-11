@@ -57,6 +57,9 @@ export async function updateSession(request: NextRequest) {
     // Friend invite landing (Abonten Rewards) -- for people who aren't
     // signed up yet.
     pathname.startsWith("/invite/") ||
+    // The unsubscribe page linked from Abonten Rewards emails -- works
+    // without signing in (the link carries a signed token).
+    pathname.startsWith("/unsubscribe/") ||
     // The "your account is restricted" landing itself — must stay reachable
     // for a signed-in-but-banned user so the redirect below can't loop.
     pathname.startsWith("/account-restricted") ||

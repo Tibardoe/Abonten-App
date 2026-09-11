@@ -4,6 +4,7 @@ import type {
   EmailSendResult,
   RewardEmail,
 } from "@abonten/services/notifications/deliveryCore";
+import { rewardEmailUnsubscribeLinks } from "@abonten/services/notifications/rewardEmailPreferenceCore";
 import { Resend } from "resend";
 
 /**
@@ -26,15 +27,25 @@ export async function sendRewardUpdateEmail(
       ? email.items[0].title
       : `Abonten Rewards: ${email.items.length} updates`;
 
+  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "https://abontenhub.com";
+
   try {
+    // One-click unsubscribe (RFC 8058) for Gmail / Yahoo / Outlook's own
+    // "Unsubscribe" button, plus the link in the email's footer.
+    const unsubscribe = rewardEmailUnsubscribeLinks(email.userId, base);
     const { error } = await new Resend(process.env.RESEND_API_KEY).emails.send({
       from: "Abonten Rewards <rewards@abontenhub.com>",
       to: [email.to],
       subject,
+      headers: {
+        "List-Unsubscribe": `<${unsubscribe.oneClick}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
       react: RewardUpdateEmailTemplate({
         name: email.name,
         items: email.items,
-        rewardsUrl: `${process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.abontenhub.com"}/rewards`,
+        rewardsUrl: `${base}/rewards`,
+        unsubscribeUrl: unsubscribe.page,
       }),
     });
     if (error) {

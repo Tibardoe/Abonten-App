@@ -150,6 +150,7 @@ export type {
   PromotePlaceResult,
   PromotionCreditResult,
   LoyaltyProgressResult,
+  RewardEmailPreferenceResult,
   EventPromoterCommissionResult,
   PlaceVisitPanelResult,
   PlaceVisitBody,

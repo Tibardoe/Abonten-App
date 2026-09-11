@@ -19,3 +19,13 @@ export const ABONTEN_LOGO_EMAIL_LIGHT_URL =
 
 export const ABONTEN_LOGO_EMAIL_DARK_URL =
   "https://res.cloudinary.com/abonten/image/upload/f_png,q_auto,w_480/v1786977808/branding/abonten-logo-white.png";
+
+/**
+ * The dark logo on a white, rounded tile, for emails. Gmail's and Outlook's
+ * apps ignore the `prefers-color-scheme` swap above and darken the email's
+ * background in dark mode, which makes the transparent black logo invisible;
+ * on its own white tile it stays readable in every client (and is invisible
+ * against a white email in light mode).
+ */
+export const ABONTEN_LOGO_EMAIL_TILE_URL =
+  "https://res.cloudinary.com/abonten/image/upload/w_480,b_white/bo_40px_solid_white,r_32/f_png,q_auto/v1786975388/branding/abonten-logo.png";

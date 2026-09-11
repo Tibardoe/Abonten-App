@@ -113,6 +113,7 @@ import type {
   RequestPlaceBookingResult,
   RespondToPlaceBookingBody,
   RespondToPlaceReviewBody,
+  RewardEmailPreferenceResult,
   RewardsProgramResult,
   SaveEventDraftBody,
   SaveEventDraftResult,
@@ -382,6 +383,19 @@ export function createApiClient(options: ApiClientOptions) {
         return request<ApiEnvelope<{ count: number }>>(
           "/api/mobile/notifications/unread-count",
           { method: "GET", auth: true },
+        );
+      },
+      /** Whether the caller gets Abonten Rewards emails (and to where). */
+      rewardEmails() {
+        return request<RewardEmailPreferenceResult>(
+          "/api/mobile/notifications/reward-emails",
+          { method: "GET", auth: true },
+        );
+      },
+      setRewardEmails(enabled: boolean) {
+        return request<RewardEmailPreferenceResult>(
+          "/api/mobile/notifications/reward-emails",
+          { method: "PUT", body: { enabled }, auth: true },
         );
       },
     },

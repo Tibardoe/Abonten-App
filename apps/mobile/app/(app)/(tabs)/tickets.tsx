@@ -15,7 +15,8 @@ import {
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
-import { useCallback, useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
 
 // Native echo of the web /manage/my-events tab set. The web strip is a
@@ -96,6 +97,14 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
 
 export default function Tickets() {
   const [section, setSection] = useState<Section>("tickets");
+  // A notification can open a section directly (`?section=cancelled` from
+  // "Event cancelled").
+  const { section: requested } = useLocalSearchParams<{ section?: string }>();
+  useEffect(() => {
+    if (requested === "cancelled" || requested === "refunds") {
+      setSection(requested);
+    }
+  }, [requested]);
   const [ticketsSub, setTicketsSub] = useState<TicketsSub>("active");
   const [reviewSub, setReviewSub] = useState<ReviewSub>("toReview");
 
