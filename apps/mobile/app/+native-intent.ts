@@ -1,3 +1,4 @@
+import { captureReferral } from "@/features/rewards/referralCapture";
 import { supabase } from "@/lib/supabase";
 
 // Translates an incoming Universal / App Link (https://abontenhub.com/...)
@@ -40,13 +41,18 @@ export async function redirectSystemPath({
       path.startsWith("http") ? undefined : "https://abontenhub.com",
     );
     const parts = url.pathname.split("/").filter(Boolean);
+    // A shared link can carry the sharer's referral code (?ref=). Remembered
+    // for this event's checkout; never delays the navigation.
+    const ref = url.searchParams.get("ref");
 
     if (parts[0] === "events" && parts[1]) {
       const id = await resolveEvent(decodeURIComponent(parts[1]));
+      if (id && ref) void captureReferral(ref, { eventId: id });
       return id ? `/(app)/event/${id}` : "/(app)/(tabs)";
     }
     if (parts[0] === "places" && parts[1]) {
       const id = await resolvePlace(decodeURIComponent(parts[1]));
+      if (id && ref) void captureReferral(ref, { placeId: id });
       return id ? `/(app)/place/${id}` : "/(app)/(tabs)";
     }
     // Conversation deep links (notification tap / cross-device). The segment

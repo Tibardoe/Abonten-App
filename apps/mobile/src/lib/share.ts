@@ -1,4 +1,5 @@
 import { generateSlug } from "@abonten/core/geerateSlug";
+import { withReferralCode } from "@abonten/core/rewards/referralCode";
 import { Share } from "react-native";
 
 // Native share — the mobile stand-in for the web share buttons. The web
@@ -14,26 +15,47 @@ import { Share } from "react-native";
 // when it's installed (app/+native-intent.ts + app.json).
 const SITE = "https://abontenhub.com";
 
-export function eventShareUrl(eventCode: string): string {
-  return `${SITE}/events/${generateSlug(eventCode) ?? ""}`;
+/**
+ * The public event link. With the signed-in sharer's referral code it gets
+ * ?ref=CODE, so a ticket bought through it can earn them credit.
+ */
+export function eventShareUrl(
+  eventCode: string,
+  referralCode?: string | null,
+): string {
+  return withReferralCode(
+    `${SITE}/events/${generateSlug(eventCode) ?? ""}`,
+    referralCode ?? null,
+  );
 }
 
 export function placeShareUrl(slug: string): string {
   return `${SITE}/places/${slug}`;
 }
 
-export async function shareLink(title: string, url: string): Promise<void> {
+/** Opens the share sheet; resolves true when the user actually shared. */
+export async function shareLink(title: string, url: string): Promise<boolean> {
   try {
-    await Share.share({ message: `${title}\n${url}`, url, title });
+    const result = await Share.share({
+      message: `${title}\n${url}`,
+      url,
+      title,
+    });
+    return result.action === Share.sharedAction;
   } catch {
     // User dismissed the sheet, or sharing is unavailable — nothing to do.
+    return false;
   }
 }
 
-export function shareEvent(title: string, eventCode: string): Promise<void> {
-  return shareLink(title, eventShareUrl(eventCode));
+export function shareEvent(
+  title: string,
+  eventCode: string,
+  referralCode?: string | null,
+): Promise<boolean> {
+  return shareLink(title, eventShareUrl(eventCode, referralCode));
 }
 
-export function sharePlace(title: string, slug: string): Promise<void> {
+export function sharePlace(title: string, slug: string): Promise<boolean> {
   return shareLink(title, placeShareUrl(slug));
 }

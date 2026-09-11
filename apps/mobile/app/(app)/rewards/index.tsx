@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { useReferralCode } from "@/features/rewards/useReferralCode";
 import {
   flattenCreditActivity,
   useCreditActivity,
@@ -92,6 +93,28 @@ function BalanceCard({ summary }: { summary: CreditSummary }) {
           </AppText>
         </View>
       ) : null}
+    </Card>
+  );
+}
+
+// The user's code. Event share links already carry it, so there's nothing
+// to copy -- this only explains what it does (same words as web).
+function ReferralCodeCard({
+  code,
+  rateBps,
+}: { code: string; rateBps: number }) {
+  return (
+    <Card className="gap-1">
+      <AppText variant="cardTitle">Your referral code</AppText>
+      <AppText variant="hero" className="tracking-widest">
+        {code}
+      </AppText>
+      <AppText variant="small">
+        When you share an event, the link carries this code. If someone buys a
+        ticket through it, you earn {(rateBps / 100).toFixed(0)}% of the ticket
+        price in credit once the event is over. Your own tickets and events you
+        organize don&apos;t count.
+      </AppText>
     </Card>
   );
 }
@@ -204,6 +227,7 @@ export default function Rewards() {
   const enabled = program.data?.enabled === true;
   const summary = useCreditSummary({ enabled });
   const activity = useCreditActivity({ enabled });
+  const referralCode = useReferralCode();
   const items = flattenCreditActivity(activity.data?.pages);
 
   const onEndReached = useCallback(() => {
@@ -275,6 +299,12 @@ export default function Rewards() {
             ) : (
               <Skeleton height={144} radius={16} />
             )}
+            {referralCode && program.data.eventReferral ? (
+              <ReferralCodeCard
+                code={referralCode}
+                rateBps={program.data.eventReferral.rateBps}
+              />
+            ) : null}
             <HowItWorks program={program.data} />
             <AppText variant="overline" className="pt-2">
               Activity

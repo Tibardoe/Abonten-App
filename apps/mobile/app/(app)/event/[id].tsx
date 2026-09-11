@@ -25,6 +25,10 @@ import {
   useEventRating,
   useEventReviewsList,
 } from "@/features/reviews/useEventReviewsList";
+import {
+  logEventShare,
+  useReferralCode,
+} from "@/features/rewards/useReferralCode";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -199,6 +203,7 @@ export default function EventDetailScreen() {
 
   const eventCode = data?.event.event_code;
   const eventTitle = data?.event.title;
+  const referralCode = useReferralCode();
 
   const header = (
     <AppHeader
@@ -210,7 +215,12 @@ export default function EventDetailScreen() {
           kind="event"
           id={id}
           shareTitle={eventTitle ?? "Event"}
-          shareUrl={eventCode ? eventShareUrl(eventCode) : null}
+          shareUrl={eventCode ? eventShareUrl(eventCode, referralCode) : null}
+          onShared={() => {
+            if (session && data?.event.id) {
+              logEventShare(session.user.id, data.event.id, referralCode);
+            }
+          }}
           onReport={
             session &&
             data?.event.organizer_id &&

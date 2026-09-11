@@ -13,12 +13,15 @@ export function DetailHeaderActions({
   id,
   shareTitle,
   shareUrl,
+  onShared,
   onReport,
 }: {
   kind: "event" | "place";
   id: string | undefined;
   shareTitle: string;
   shareUrl: string | null;
+  /** Called after the share sheet reports a completed share. */
+  onShared?: () => void;
   /** When set, a flag button is shown that opens the report sheet. */
   onReport?: () => void;
 }) {
@@ -40,7 +43,11 @@ export function DetailHeaderActions({
           accessibilityRole="button"
           accessibilityLabel="Share"
           hitSlop={8}
-          onPress={() => shareLink(shareTitle, shareUrl)}
+          onPress={() =>
+            shareLink(shareTitle, shareUrl).then((shared) => {
+              if (shared) onShared?.();
+            })
+          }
           className="p-1 active:opacity-70"
         >
           <Icon name="share-outline" size={22} tone="foreground" />

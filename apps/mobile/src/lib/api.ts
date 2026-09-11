@@ -1,4 +1,6 @@
 import { createApiClient } from "@abonten/api-client";
+import { Platform } from "react-native";
+import { getInstallId } from "./installId";
 import { supabase } from "./supabase";
 
 const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
@@ -21,4 +23,7 @@ export const api = createApiClient({
   // Sample ~10% of calls into app_request_metric (Admin › Monitoring ›
   // Request telemetry). Off in dev so local traffic doesn't skew it.
   metricSampleRate: __DEV__ ? 0 : 0.1,
+  // Rewards fraud signal only (see installId.ts).
+  getInstallId,
+  platform: Platform.OS === "ios" ? "ios" : "android",
 });
