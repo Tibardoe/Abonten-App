@@ -2519,8 +2519,8 @@ Migration `20260911163306_notification_preferences_and_app_push`:
   and the logo on a white tile (`ABONTEN_LOGO_EMAIL_TILE_URL`) so it stays
   readable when a mail app darkens the email. What's left in the report is
   cosmetic: square button corners in Outlook for Windows, and react-email's
-  standard hidden preview text. The ticket and cancellation emails still
-  use the old pattern (not changed here).
+  standard hidden preview text. (The ticket-purchase and event-cancellation
+  emails were moved onto the same parts right after — see below.)
 
 **Verified:** integration suite on a fresh replay (3 new tests in
 `rewards-notification-delivery`: opted-out email skipped while the push
@@ -2542,6 +2542,23 @@ approximation.
 **Not verified:** Outlook for Windows and the Gmail apps themselves (no
 access to those clients here — the owner can open the next reward email in
 Gmail); iOS push.
+
+**All emails on one client-safe layout (2026-09-11, code only).** The three
+emails (`TicketPurchaseEmailTemplate`, `EventCancellationEmailTemplate`,
+`RewardUpdateEmailTemplate`) are now built from shared parts in
+`apps/web/src/components/organisms/EmailParts.tsx` (`EmailShell` with the
+tiled logo and heading, `EmailIntro`, `EmailDetailRow`, `EmailButton`,
+`EmailFooter`, …), so the Gmail / Outlook / dark-mode rules above live in one
+place. Same wording and data as before; the purchase email's label / value
+rows are a fixed two-column table that wraps on a phone instead of a media
+query that stacked them, and ticket codes use a Courier stack. The white
+logo (`ABONTEN_LOGO_EMAIL_DARK_URL`) was removed — nothing uses it now; the
+ticket PDF keeps the plain logo. doiuse-email before → after for the
+purchase email: `display:none` ×3, class selectors, `@media` and the
+`ui-sans-serif` / `ui-monospace` stacks → only react-email's hidden preview
+text and the button's rounded corners in Outlook for Windows. Checked:
+rendered HTML of all three at 640 px, 375 px and forced dark; web typecheck
+and production build. Not sent through a real purchase or cancellation.
 
 
 ---
