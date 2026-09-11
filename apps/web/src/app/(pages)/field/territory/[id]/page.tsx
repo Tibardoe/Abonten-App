@@ -4,6 +4,7 @@ import StatusChip from "@/fieldOps/atoms/StatusChip";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import AssignmentCard from "@/fieldOps/molecules/AssignmentCard";
 import ProspectRow from "@/fieldOps/molecules/ProspectRow";
+import StartOnboardingButton from "@/fieldOps/molecules/StartOnboardingButton";
 import ProspectForm from "@/fieldOps/organisms/ProspectForm";
 import { notFound } from "next/navigation";
 
@@ -84,10 +85,19 @@ export default async function FieldTerritoryPage({
             {prospects.length})
           </h2>
           {canAddProspects ? (
-            <ProspectForm
-              campaignId={current.campaign.id}
-              territoryId={territory.id}
-            />
+            <div className="flex flex-wrap gap-2">
+              <StartOnboardingButton
+                campaignId={current.campaign.id}
+                territoryId={territory.id}
+                label="Onboard a business"
+                size="default"
+                variant="outline"
+              />
+              <ProspectForm
+                campaignId={current.campaign.id}
+                territoryId={territory.id}
+              />
+            </div>
           ) : null}
         </div>
         {!canAddProspects && !current.isLead ? (

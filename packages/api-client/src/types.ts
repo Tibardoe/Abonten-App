@@ -1,8 +1,13 @@
 import type {
   FieldOpsAssignment,
+  FieldOpsEvidenceUploadTicket,
   FieldOpsLeadDashboard,
   FieldOpsMe,
+  FieldOpsOnboarding,
+  FieldOpsOnboardingDetail,
+  FieldOpsOnboardingDraft,
   FieldOpsProspect,
+  FieldOpsSimilarPlace,
   FieldOpsTeamMember,
   FieldOpsTerritory,
   FieldOpsTerritoryView,
@@ -1589,6 +1594,90 @@ export type FieldOpsTeamResult = ApiEnvelope<FieldOpsTeamMember[]>;
 export type FieldOpsTeamMemberResult = ApiEnvelope<FieldOpsTeamMember>;
 export type FieldOpsMemberStatusResult = ApiEnvelope<{ status: string }>;
 export type FieldOpsAnnouncementResult = ApiEnvelope<{ recipients: number }>;
+
+export type {
+  FieldOpsConsentView,
+  FieldOpsEvidenceUploadTicket,
+  FieldOpsOnboarding,
+  FieldOpsOnboardingDetail,
+  FieldOpsOnboardingDraft,
+  FieldOpsOnboardingStatus,
+  FieldOpsSimilarPlace,
+} from "@abonten/types/fieldOps";
+
+export type FieldOpsOnboardingResult = ApiEnvelope<FieldOpsOnboarding>;
+export type FieldOpsOnboardingsResult = ApiEnvelope<FieldOpsOnboarding[]>;
+export type FieldOpsOnboardingDraftResult =
+  ApiEnvelope<FieldOpsOnboardingDraft>;
+export type FieldOpsOnboardingDetailResult =
+  ApiEnvelope<FieldOpsOnboardingDetail>;
+export type FieldOpsSimilarPlacesResult = ApiEnvelope<FieldOpsSimilarPlace[]>;
+export type FieldOpsOwnerOtpResult = ApiEnvelope<{
+  ownerPhoneMasked: string;
+  resendInSeconds: number;
+  consentPath: string | null;
+}>;
+export type FieldOpsEvidenceTicketResult =
+  ApiEnvelope<FieldOpsEvidenceUploadTicket>;
+export type FieldOpsRemovedResult = ApiEnvelope<{ removed: boolean }>;
+
+export type FieldOpsOnboardingStartBody = {
+  campaignId: string;
+  territoryId: string;
+  prospectId?: string | null;
+  clientRequestId?: string;
+};
+export type FieldOpsSimilarSearchBody = {
+  campaignId: string;
+  name: string;
+  location: { lat: number; lng: number };
+  phoneE164?: string | null;
+  whatsappE164?: string | null;
+};
+export type FieldOpsOwnerOtpRequestBody = {
+  campaignId: string;
+  ownerFullName: string;
+  ownerPhoneE164: string;
+};
+export type FieldOpsEvidenceRequestBody = {
+  campaignId: string;
+  kind: "storefront" | "interior" | "owner_consent" | "other";
+  mimeType: string;
+  sizeBytes: number;
+  capturedAt?: string | null;
+  location?: { lat: number; lng: number } | null;
+  accuracyM?: number | null;
+};
+export type FieldOpsPlaceDetailsBody = {
+  name: string;
+  categoryId: number;
+  description: string;
+  address: string;
+  location: { lat: number; lng: number };
+  websiteUrl?: string | null;
+  phoneE164?: string | null;
+  whatsappE164?: string | null;
+  openingHours?: {
+    dayOfWeek: number;
+    openTime: string | null;
+    closeTime: string | null;
+    isClosed: boolean;
+  }[];
+  cover: { publicId: string; version: string };
+  photos?: { publicId: string; version: string }[];
+};
+export type FieldOpsOnboardingSubmitBody = {
+  campaignId: string;
+  place: FieldOpsPlaceDetailsBody;
+  submissionLocation?: { lat: number; lng: number } | null;
+  submissionAccuracyM?: number | null;
+  duplicateAcknowledged?: boolean;
+};
+export type FieldOpsReviewBody = {
+  campaignId: string;
+  decision: "verified" | "needs_changes" | "rejected";
+  note?: string | null;
+};
 
 export type FieldOpsAssignmentStartBody = {
   campaignId: string;

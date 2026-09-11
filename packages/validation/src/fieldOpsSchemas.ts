@@ -382,6 +382,197 @@ export const fieldOpsAnnouncementSchema = z.object({
 
 export const fieldOpsCampaignIdSchema = z.object({ campaignId: uuid });
 
+// ── Phase 2: onboarding wizard + lead review ────────────────
+
+const onboardingRef = z.object({ campaignId: uuid, onboardingId: uuid });
+
+export const fieldOpsOnboardingStartSchema = z.object({
+  campaignId: uuid,
+  territoryId: uuid,
+  prospectId: uuid.nullable().optional(),
+  /** Reused on retry so a double tap never opens two onboardings. */
+  clientRequestId: uuid.optional(),
+});
+
+export const fieldOpsSimilarSearchSchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  name: z.string().trim().min(2).max(150),
+  location: latLngSchema,
+  phoneE164: e164.nullable().optional(),
+  whatsappE164: e164.nullable().optional(),
+});
+
+export const fieldOpsOwnerOtpRequestSchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  ownerFullName: z.string().trim().min(2).max(120),
+  ownerPhoneE164: e164,
+});
+
+export const fieldOpsOwnerOtpVerifySchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{4,8}$/, "Enter the code we sent"),
+});
+
+/** The public consent page: the token identifies the onboarding. */
+export const fieldOpsConsentVerifySchema = z.object({
+  token: z.string().min(20).max(600),
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{4,8}$/, "Enter the code we sent"),
+});
+
+export const fieldOpsEvidenceKindSchema = z.enum([
+  "storefront",
+  "interior",
+  "owner_consent",
+  "other",
+]);
+
+export const fieldOpsEvidenceRequestSchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  kind: fieldOpsEvidenceKindSchema,
+  mimeType: z.enum([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+  ]),
+  sizeBytes: z
+    .number()
+    .int()
+    .min(1)
+    .max(10 * 1024 * 1024),
+  capturedAt: z.string().datetime().nullable().optional(),
+  location: latLngSchema.nullable().optional(),
+  accuracyM: z.number().min(0).max(100000).nullable().optional(),
+});
+
+export const fieldOpsEvidenceRemoveSchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  evidenceId: uuid,
+});
+
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM");
+
+export const fieldOpsOpeningHoursSchema = z
+  .array(
+    z
+      .object({
+        dayOfWeek: z.number().int().min(0).max(6),
+        openTime: hhmm.nullable(),
+        closeTime: hhmm.nullable(),
+        isClosed: z.boolean(),
+      })
+      .refine((h) => h.isClosed || (h.openTime && h.closeTime), {
+        message: "Give opening and closing times, or mark the day closed",
+      }),
+  )
+  .max(7);
+
+const cloudinaryId = z
+  .string()
+  .trim()
+  .min(3)
+  .max(200)
+  .regex(/^[a-z0-9_/-]+$/i, "Invalid photo reference");
+
+export const fieldOpsPlaceDetailsSchema = z.object({
+  name: z.string().trim().min(2).max(150),
+  categoryId: z.number().int().min(1),
+  description: z.string().trim().min(20).max(2000),
+  address: z.string().trim().min(3).max(300),
+  location: latLngSchema,
+  websiteUrl: z.string().trim().url().max(300).nullable().optional(),
+  phoneE164: e164.nullable().optional(),
+  whatsappE164: e164.nullable().optional(),
+  openingHours: fieldOpsOpeningHoursSchema.optional(),
+  cover: z.object({ publicId: cloudinaryId, version: z.string().min(1) }),
+  photos: z
+    .array(z.object({ publicId: cloudinaryId, version: z.string().min(1) }))
+    .max(10)
+    .optional(),
+});
+
+export const fieldOpsOnboardingSubmitSchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  place: fieldOpsPlaceDetailsSchema,
+  /** Offline mode: where the member is right now. */
+  submissionLocation: latLngSchema.nullable().optional(),
+  submissionAccuracyM: z.number().min(0).max(100000).nullable().optional(),
+  /** The member looked at the similar listings and says it's none of them. */
+  duplicateAcknowledged: z.boolean().optional(),
+});
+
+export const fieldOpsOnboardingWithdrawSchema = onboardingRef.extend({
+  reason: z.string().trim().max(1000).nullable().optional(),
+});
+
+export const fieldOpsOnboardingRefSchema = onboardingRef;
+
+export const fieldOpsOnboardingListSchema = z.object({
+  campaignId: uuid,
+  status: z
+    .enum([
+      "draft",
+      "submitted",
+      "needs_changes",
+      "verified",
+      "flagged",
+      "succeeded",
+      "rejected",
+      "withdrawn",
+    ])
+    .optional(),
+});
+
+export const fieldOpsReviewSchema = z
+  .object({
+    campaignId: uuid,
+    onboardingId: uuid,
+    decision: z.enum(["verified", "needs_changes", "rejected"]),
+    note: z.string().trim().max(2000).nullable().optional(),
+  })
+  .refine((v) => v.decision === "verified" || (v.note && v.note.length >= 3), {
+    message: "Tell the member what to change, or why it was rejected",
+    path: ["note"],
+  });
+
+/** Admin override of a lead's decision (fieldops.verify). */
+export const fieldOpsAdminOnboardingDecisionSchema = z.object({
+  onboardingId: uuid,
+  decision: z.enum(["verified", "needs_changes", "rejected"]),
+  note: z.string().trim().min(3).max(2000),
+  reason,
+});
+
+export const fieldOpsAdminOnboardingListSchema = z.object({
+  campaignId: uuid.optional(),
+  status: fieldOpsOnboardingListSchema.shape.status.optional(),
+  cursor: z.string().optional(),
+});
+
+export type FieldOpsPlaceDetailsInput = z.infer<
+  typeof fieldOpsPlaceDetailsSchema
+>;
+export type FieldOpsOnboardingSubmitInput = z.infer<
+  typeof fieldOpsOnboardingSubmitSchema
+>;
+export type FieldOpsEvidenceRequestInput = z.infer<
+  typeof fieldOpsEvidenceRequestSchema
+>;
+export type FieldOpsReviewInput = z.infer<typeof fieldOpsReviewSchema>;
+
 export type FieldOpsAssignmentCreateInput = z.infer<
   typeof fieldOpsAssignmentCreateSchema
 >;

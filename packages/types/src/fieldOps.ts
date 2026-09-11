@@ -355,6 +355,185 @@ export type FieldOpsLeadDashboard = {
   }[];
 };
 
+// ── Phase 2: onboarding, owner OTP, evidence, lead review ───
+
+export type FieldOpsOnboardingStatus =
+  | "draft"
+  | "submitted"
+  | "needs_changes"
+  | "verified"
+  | "flagged"
+  | "succeeded"
+  | "rejected"
+  | "withdrawn";
+
+export type FieldOpsEvidenceKind =
+  | "storefront"
+  | "interior"
+  | "owner_consent"
+  | "other";
+
+export type FieldOpsReviewDecision = "verified" | "needs_changes" | "rejected";
+
+/** An existing listing that looks like the business being onboarded. */
+export type FieldOpsSimilarPlace = {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  distanceM: number;
+  /** pg_trgm name similarity, 0..1. */
+  similarity: number;
+  phoneMatch: boolean;
+  /** 0..1, from @abonten/core/fieldOps/duplicateScore. */
+  score: number;
+  strong: boolean;
+  createdAt: string;
+};
+
+/** One onboarding as members, leads and admins see it (PII masked). */
+export type FieldOpsOnboarding = {
+  id: string;
+  campaignId: string;
+  teamId: string;
+  memberId: string;
+  memberUserId: string;
+  memberName: string | null;
+  assignmentId: string | null;
+  territoryId: string | null;
+  territoryName: string | null;
+  prospectId: string | null;
+  mode: FieldOpsAssignmentMode;
+  kind: "place" | "event";
+  activityKey: FieldOpsActivityKey | null;
+  businessName: string | null;
+  businessPhoneMasked: string | null;
+  ownerFullName: string | null;
+  ownerPhoneMasked: string | null;
+  ownerVerified: boolean;
+  ownerIsNewAccount: boolean | null;
+  ownerPriorPlaces: number;
+  ownerPriorEvents: number;
+  placeId: string | null;
+  placeSlug: string | null;
+  placeName: string | null;
+  placeStatus: string | null;
+  entityCreatedAt: string | null;
+  submissionLocation: { lat: number; lng: number } | null;
+  submissionAccuracyM: number | null;
+  submissionDistanceM: number | null;
+  insideTerritory: boolean | null;
+  similarMatches: FieldOpsSimilarPlace[];
+  duplicateAcknowledged: boolean;
+  status: FieldOpsOnboardingStatus;
+  submittedAt: string | null;
+  resubmissionCount: number;
+  reviewedAt: string | null;
+  reviewDecision: FieldOpsReviewDecision | null;
+  reviewNote: string | null;
+  holdingUntil: string | null;
+  flags: string[];
+  succeededAt: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
+  withdrawnAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FieldOpsOnboardingEvidence = {
+  id: string;
+  kind: FieldOpsEvidenceKind;
+  /** Short-lived signed URL, or null when the object hasn't been uploaded. */
+  url: string | null;
+  capturedAt: string | null;
+  capturedLocation: { lat: number; lng: number } | null;
+  accuracyM: number | null;
+  uploadedAt: string | null;
+  createdAt: string;
+};
+
+export type FieldOpsOnboardingEvent = {
+  id: number;
+  fromStatus: string | null;
+  toStatus: string;
+  actorKind: "member" | "lead" | "admin" | "system";
+  actorName: string | null;
+  note: string | null;
+  details: Record<string, unknown>;
+  createdAt: string;
+};
+
+/** One line of the eligibility checklist (lead review now, sweep later). */
+export type FieldOpsEligibilityCheck = {
+  key: string;
+  label: string;
+  /** null = can't be evaluated yet (e.g. holding period not started). */
+  ok: boolean | null;
+  severity: "hard" | "soft" | "info";
+  detail: string | null;
+};
+
+export type FieldOpsOnboardingDetail = {
+  onboarding: FieldOpsOnboarding;
+  evidence: FieldOpsOnboardingEvidence[];
+  timeline: FieldOpsOnboardingEvent[];
+  place: {
+    id: string;
+    name: string;
+    slug: string;
+    status: string;
+    description: string;
+    categoryName: string | null;
+    address: string | null;
+    location: { lat: number; lng: number } | null;
+    coverPublicId: string;
+    coverVersion: string;
+    photoCount: number;
+    hasOpeningHours: boolean;
+    hasContact: boolean;
+    ownerMatches: boolean;
+  } | null;
+  checks: FieldOpsEligibilityCheck[];
+  /** The rule that would pay this onboarding right now, if one is live. */
+  rule: {
+    id: string;
+    amountMinor: number;
+    currency: string;
+    holdingDays: number;
+  } | null;
+};
+
+/** What the wizard needs to resume: the row plus what's already done. */
+export type FieldOpsOnboardingDraft = {
+  onboarding: FieldOpsOnboarding;
+  evidence: FieldOpsOnboardingEvidence[];
+  ownerOtp: {
+    /** Seconds until another code may be sent (0 = now). */
+    resendInSeconds: number;
+    /** Online mode: the link the owner opens to enter the code themselves. */
+    consentPath: string | null;
+  };
+  /** The programme's duplicate-search thresholds (for the UI copy). */
+  duplicateRadiusM: number;
+};
+
+export type FieldOpsEvidenceUploadTicket = {
+  evidenceId: string;
+  bucket: string;
+  path: string;
+  /** Token for supabase.storage.from(bucket).uploadToSignedUrl(path, token, file). */
+  token: string;
+};
+
+/** What the public consent page shows the owner (no member/campaign PII). */
+export type FieldOpsConsentView = {
+  businessName: string | null;
+  ownerPhoneMasked: string | null;
+  verified: boolean;
+  expired: boolean;
+};
+
 /** A territory as a member sees it, with their own assignments and prospects there. */
 export type FieldOpsTerritoryView = {
   territory: FieldOpsTerritory;
