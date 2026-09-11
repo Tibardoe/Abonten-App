@@ -47,6 +47,7 @@ import {
   rejectCreditAdjustmentCore,
   requestCreditAdjustmentCore,
   setCreditAccountStatusCore,
+  setReferralCodeDisabledCore,
   updateRewardsSettingsCore,
 } from "@abonten/services/admin/rewards/rewardsAdminCore";
 import {
@@ -76,6 +77,7 @@ import {
   grantAdminRoleSchema,
   incidentUpsertSchema,
   moderationActionSchema,
+  referralCodeDisabledSchema,
   reportAssignSchema,
   reportRequestInfoSchema,
   reportResolveSchema,
@@ -947,6 +949,27 @@ export async function setCreditAccountStatus(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "setCreditAccountStatus");
+  }
+}
+
+// Turn a user's referral code off (spam / a reported farm) or back on.
+export async function setReferralCodeDisabled(input: unknown) {
+  const parsed = referralCodeDisabledSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await setReferralCodeDisabledCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/rewards/accounts/${parsed.data.userId}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "setReferralCodeDisabled");
   }
 }
 

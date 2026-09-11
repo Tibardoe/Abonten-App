@@ -18,8 +18,9 @@ const STATUSES: RewardEventStatus[] = [
 ];
 const RANGES = [7, 30, 90];
 
-// Event referrals: what the engine decided and what it would cost. While
-// shadow mode is on every decision here is a projection -- nothing was paid.
+// Event referrals and friend invites: what the engine decided and what it
+// would cost. While shadow mode is on every decision here is a projection --
+// nothing was paid.
 export default async function ReferralsPage({
   searchParams,
 }: {
@@ -58,7 +59,7 @@ export default async function ReferralsPage({
     <div>
       <PageHeader
         title="Referrals"
-        description="Every referred ticket sale the reward engine evaluated. In shadow mode these are projections: no credit was posted and nobody was told."
+        description="Every referred ticket sale and friend invite the reward engine evaluated. In shadow mode these are projections: no credit was posted and nobody was told."
       />
       <RewardsTabs active="/rewards/referrals" />
 
@@ -178,6 +179,39 @@ export default async function ReferralsPage({
             </Card>
           </div>
 
+          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
+            Friend invites
+          </h3>
+          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat
+              label="Friends who joined with an invite"
+              value={s.friend.joined}
+            />
+            <Stat
+              label="Friends who qualified"
+              value={
+                (s.friend.byPath.first_order ?? 0) +
+                (s.friend.byPath.organizer_sales ?? 0) +
+                (s.friend.byPath.place_claim ?? 0)
+              }
+              hint={`${s.friend.byPath.first_order ?? 0} first order · ${s.friend.byPath.organizer_sales ?? 0} own event sold · ${s.friend.byPath.place_claim ?? 0} place claim`}
+            />
+            <Stat
+              label="Inviter rewards (pending + held + released)"
+              value={formatCredit(
+                (s.friend.byStatus.pending?.amountMinor ?? 0) +
+                  (s.friend.byStatus.held?.amountMinor ?? 0) +
+                  (s.friend.byStatus.released?.amountMinor ?? 0),
+              )}
+              hint={`${s.friend.byStatus.rejected?.count ?? 0} rejected · ${s.friend.byStatus.voided?.count ?? 0} voided`}
+            />
+            <Stat
+              label="Welcome credit granted"
+              value={formatCredit(s.friend.welcome.amountMinor)}
+              hint={`${s.friend.welcome.granted} friends · ${s.friend.welcome.rejected} refused (already bought or same device)`}
+            />
+          </div>
+
           {s.engine.deadLetters > 0 ||
           s.engine.settlementBacklog > 0 ||
           s.engine.outboxLagSeconds > 600 ? (
@@ -236,9 +270,9 @@ export default async function ReferralsPage({
         </EmptyState>
       ) : events.data.length === 0 ? (
         <EmptyState>
-          No referred sales yet. They appear here once referral capture is on,
-          the Event referral rule is live, and someone buys through a shared
-          link.
+          No referral decisions yet. They appear here once referral capture is
+          on, a referral rule is live, and someone buys through a shared link or
+          joins with an invite.
         </EmptyState>
       ) : (
         <>

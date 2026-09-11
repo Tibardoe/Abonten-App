@@ -2083,6 +2083,112 @@ the daily stats rollup from the blueprint isn't built (the Referrals page
 aggregates on the fly). Friend referrals, invite links and the Android
 install referrer are Phase 5.
 
+### 27.6 Phase 5 — friend invites (2026-09-11)
+
+Invite a friend → they join with your link or code → when they first buy a
+ticket of GH₵ 30 or more (or their own event sells to 10 verified buyers, or
+an admin approves their place claim) you earn GH₵ 3 once it has settled;
+they get GH₵ 2 welcome credit for that first order once their phone is
+verified. **Ships switched off and in shadow mode** (both friend rules have
+no live version; capture is off). Full design:
+`docs/architecture/rewards-ledger.md` › Friend invites.
+
+Migration `20260911032237_friend_referrals` (applied to production before
+the code — additive, plus function replacements that keep every existing
+call working; all 24 function hashes and grants identical to a replay;
+advisors: nothing new):
+
+- `user_referral` (one inviter per person for life: first bind wins; status
+  bound → qualified → rewarded, or rejected / expired; the friend can read
+  their own row). `reward_event.source_type` gains `user_referral`, `event`,
+  `place_claim`; `reward_outbox` gains `claim_changed`.
+- `referral_bind` (capture on + inviter rule live; refuses own code,
+  unknown/disabled codes, accounts older than 7 days or that have bought,
+  published or had a claim approved, circles up to 3 levels, restricted
+  inviters), `referral_stats` (counts, earnings, recent friends as first
+  name + initial, "invited by", whether a code can still be entered),
+  `referral_resolve_code` (the invite page), all service-role only.
+- Welcome credit: `_reward_grant_welcome` — a `reward_event` released at
+  once through a new `immediate` branch in `_reward_accrue` (budget-gated,
+  `welcome` lot, scope `first_order`, 30 days); needs a verified phone
+  (`rewards_settle_due` sweeps for friends who verify later); refused if the
+  friend already bought or shares the inviter's email/device.
+- `first_order` credit is now spendable: `credit_spendable` takes the order
+  total (new optional 3rd argument; the 2-argument version was replaced) and
+  `credit_reserve` uses the same scopes — welcome credit counts only on a
+  first ticket order of at least GH₵ 30 by someone with no paid order that
+  still stands, and is spent before general credit.
+- Inviter reward: `_reward_friend_decide` + the three qualification paths
+  (`_reward_friend_qualify_order` / `_organizer` / `_claim`), triggered from
+  the outbox (paid checkouts of a bound friend or of an event a bound friend
+  organizes; claim status changes). Caps: 10 per inviter per month, review
+  flag past 50 lifetime; risk as for event referrals plus "many friends
+  joined within an hour" and the organizer block (a friend buying the
+  inviter's own tickets is rejected). `_reward_settle_one` now handles the
+  new sources (all-or-nothing release; the organizer path recounts buyers at
+  settlement; the claim path checks the place is still theirs) and waits for
+  the friend's phone too. A voided reward puts the friend back to `bound`
+  so a later order can still qualify.
+- Hardening: `place_claim_request` inserts must be `pending` with no
+  reviewer (the policy only checked the claimant, so a user could file an
+  already-"approved" claim row; ownership itself was never at risk).
+
+Code: `@abonten/core/rewards/invite` (invite/Play Store links, install
+referrer parsing, the cookie invite entry, result wording, + tests);
+`@abonten/services/rewards/inviteCore` (`bindReferralCodeCore` — rate
+limited 5/hour; `getReferralInviteCore`; `resolveReferralCodeCore` — 20/min
+per IP; `invitesLiveCore`), `referralCookie` invite helpers (+ tests),
+`getSpendableCredit(…, orderTotalMinor)`; admin `referralAdminCore`
+(friend rules can be made live; friend stats on the Referrals summary),
+`rewardsAdminCore` (referral graph on the account page,
+`setReferralCodeDisabledCore`). Web: `proxy.ts` stores `/invite/CODE` (and
+`?ref=` on pages that aren't events/places) in the signed cookie plus a
+readable `abn_inv` flag; `InviteBinder` binds after sign-in; public
+`/invite/[code]` page with Open Graph tags; "Have an invite code?" on
+sign-in; /rewards Invite friends panel (link, WhatsApp share, stats, enter
+a code) and a welcome-credit line. Mobile: `/invite/CODE` and
+`abonten://invite/CODE` deep links, the Play install referrer
+(`expo-application`, already in the dev/production build via
+expo-notifications — now a direct dependency), a SecureStore pending
+invite bound by `useInviteBinding` after sign-in, the invite screen,
+Rewards › Invite friends (QR code via `qrcode` + react-native-svg, WhatsApp
+share with a share-sheet fallback), the sign-in invite field. Routes:
+`GET /api/mobile/rewards/invite`, `POST /rewards/referral/bind`,
+`GET /rewards/referral/resolve` (public). Admin: friend rules on the Rules
+page, friend stats on Referrals, labels in the decision table, referral
+card + disable/enable code on the account page.
+
+**Verified:** integration suite **174/174** on a fresh replay (new
+`rewards-friend-referral` 11: link/offer/resolve, bind rules — own code,
+circle, 8-day-old account, organizer, unknown/invalid — welcome only after
+phone verification and only on a first order of GH₵ 30+, first order →
+pending → released with the welcome credit spent on it, refund voids and a
+later order re-qualifies, the inviter's-own-event block, organizer path
+(2 buyers on a test rule) and approved place claim (release in 14 days),
+monthly cap, shadow mode, same-device welcome refused, invites off, clients
+locked out, a forged "approved" claim insert refused); unit tests core 220
++ services 36; typecheck 11/11; parity 113. Local stack, real UI: admin made
+both friend rules live on the Rules page; web invite page (OG title "Ama M.
+invited you to Abonten"), signed-out → sign-up by email with the invite
+field prefilled → bound with a toast, cookie cleared; phone verified →
+welcome credit on /rewards; checkout offered the GH₵ 2 on the first order,
+a credit-only first order spent the welcome lot first and (correctly) did
+not qualify the inviter; admin Referrals/account pages, disabling a code
+made its invite page invalid. Android: `abonten://invite/CODE` signed out →
+invite screen → sign-in with the code prefilled → email sign-up → bound
+(device install recorded); Rewards showed the welcome credit; Invite
+friends screen rendered the QR code and the WhatsApp share fell back to the
+share sheet with the right message.
+
+**Not verified / known limits:** the Play install referrer end to end (it
+needs an install from the Play Store; the app isn't listed yet —
+`ANDROID_APP_LISTED` in `@abonten/core/rewards/invite` hides the store link
+until it is); `https://abontenhub.com/invite/…` opening the Android app
+needs a new build (the `/invite` intent filter is added in `app.json`); iOS
+(Team ID); a cash-paid qualifying first order through real Paystack
+(covered by the integration test with Paystack mocked); push for the new
+notifications (in-app only, like Phase 4).
+
 
 ---
 

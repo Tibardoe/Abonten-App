@@ -583,7 +583,126 @@ export async function getCreditAccountDetailCore(
       goodwillUsedThisMonthMinor: goodwillUsed,
       goodwillMonthlyCapMinor: settings?.supportGoodwillMonthlyCapMinor ?? 0,
       dualApprovalThresholdMinor: settings?.dualApprovalThresholdMinor ?? 0,
+      referrals: await readReferrals(supabase, userId),
     },
+  };
+}
+
+// The referral graph around one account: their code, who invited them, and
+// the people they invited (most recent 20).
+async function readReferrals(
+  supabase: ServiceRoleClient,
+  userId: string,
+): Promise<AdminCreditAccountDetail["referrals"]> {
+  const [code, invitedBy, invited] = await Promise.all([
+    supabase
+      .from("referral_code")
+      .select("code, disabled_at, disabled_reason")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("user_referral")
+      .select("referrer_user_id, status, source, bound_at")
+      .eq("referee_user_id", userId)
+      .maybeSingle(),
+    supabase
+      .from("user_referral")
+      .select("referee_user_id, status, bound_at", { count: "exact" })
+      .eq("referrer_user_id", userId)
+      .order("bound_at", { ascending: false })
+      .limit(20),
+  ]);
+  const names = await namesFor(supabase, [
+    invitedBy.data?.referrer_user_id ?? null,
+    ...(invited.data ?? []).map((r) => r.referee_user_id),
+  ]);
+  return {
+    code: code.data
+      ? {
+          code: code.data.code,
+          disabledAt: code.data.disabled_at,
+          disabledReason: code.data.disabled_reason,
+        }
+      : null,
+    invitedBy: invitedBy.data
+      ? {
+          userId: invitedBy.data.referrer_user_id,
+          name: displayName(names.get(invitedBy.data.referrer_user_id)),
+          status: invitedBy.data.status,
+          source: invitedBy.data.source,
+          boundAt: invitedBy.data.bound_at,
+        }
+      : null,
+    invited: (invited.data ?? []).map((r) => ({
+      userId: r.referee_user_id,
+      name: displayName(names.get(r.referee_user_id)),
+      status: r.status,
+      boundAt: r.bound_at,
+    })),
+    invitedCount: invited.count ?? 0,
+  };
+}
+
+/**
+ * Turns a user's referral code off (spam, a reported farm) or back on. A
+ * disabled code records no new clicks, stamps no checkouts and binds no new
+ * friends; rewards already decided are unaffected (review them separately).
+ */
+export async function setReferralCodeDisabledCore(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: { userId: string; disabled: boolean; reason: string },
+  requestMeta?: RequestMeta,
+): Promise<AdminEnvelope<{ code: string }>> {
+  try {
+    assertPermission(ctx, "rewards.freeze");
+  } catch (e) {
+    return denied(e);
+  }
+
+  const { data: before } = await supabase
+    .from("referral_code")
+    .select("code, disabled_at")
+    .eq("user_id", input.userId)
+    .maybeSingle();
+  if (!before)
+    return { status: 404, message: "This user has no referral code" };
+
+  const { error } = await supabase
+    .from("referral_code")
+    .update(
+      input.disabled
+        ? {
+            disabled_at: new Date().toISOString(),
+            disabled_reason: input.reason,
+            disabled_by: ctx.userId,
+          }
+        : { disabled_at: null, disabled_reason: null, disabled_by: null },
+    )
+    .eq("user_id", input.userId);
+  if (error) return dbError(error, "Could not change the referral code");
+
+  await recordAdminAudit(supabase, {
+    actorId: ctx.userId,
+    actorRoles: ctx.roles,
+    action: input.disabled
+      ? "rewards.referral_code.disable"
+      : "rewards.referral_code.enable",
+    targetType: "user",
+    targetId: input.userId,
+    summary: `Referral code ${before.code} ${input.disabled ? "disabled" : "enabled"}`,
+    reason: input.reason,
+    before: { disabledAt: before.disabled_at },
+    after: { disabled: input.disabled },
+    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+  });
+
+  return {
+    status: 200,
+    message: input.disabled
+      ? "Referral code disabled."
+      : "Referral code enabled.",
+    data: { code: before.code },
   };
 }
 

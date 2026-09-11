@@ -18,7 +18,20 @@ import {
 import Link from "next/link";
 import { AdjustmentDecision } from "../../AdjustmentDecision";
 import { RewardsTabs } from "../../RewardsTabs";
-import { AdjustmentPanel, FreezePanel, GoodwillPanel } from "./AccountActions";
+import {
+  AdjustmentPanel,
+  FreezePanel,
+  GoodwillPanel,
+  ReferralCodePanel,
+} from "./AccountActions";
+
+const REFERRAL_STATUS: Record<string, string> = {
+  bound: "joined",
+  qualified: "qualified · reward pending",
+  rewarded: "rewarded",
+  rejected: "rejected",
+  expired: "didn't qualify in time",
+};
 
 const LOT_TONE: Record<string, "success" | "warning" | "neutral" | "danger"> = {
   active: "success",
@@ -138,6 +151,92 @@ export default async function CreditAccountDetailPage({
           status={a.status}
           canFreeze={ctx.permissions.includes("rewards.freeze")}
         />
+      </div>
+
+      <h3 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
+        Referrals
+      </h3>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Card className="p-3 text-sm">
+          <p className="font-semibold">Referral code</p>
+          {d.referrals.code ? (
+            <>
+              <p className="mt-1 flex items-center gap-2">
+                <span className="font-mono">{d.referrals.code.code}</span>
+                {d.referrals.code.disabledAt ? (
+                  <Badge tone="danger">disabled</Badge>
+                ) : (
+                  <Badge tone="success">active</Badge>
+                )}
+              </p>
+              {d.referrals.code.disabledReason ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {d.referrals.code.disabledReason}
+                </p>
+              ) : null}
+              <ReferralCodePanel
+                userId={userId}
+                code={d.referrals.code.code}
+                disabled={!!d.referrals.code.disabledAt}
+                canChange={ctx.permissions.includes("rewards.freeze")}
+              />
+            </>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">
+              None yet (created the first time they share while referrals are
+              on).
+            </p>
+          )}
+          <p className="mt-3 font-semibold">Invited by</p>
+          {d.referrals.invitedBy ? (
+            <p className="mt-1">
+              <Link
+                href={`/rewards/accounts/${d.referrals.invitedBy.userId}`}
+                className="text-primary hover:underline"
+              >
+                {d.referrals.invitedBy.name ??
+                  `${d.referrals.invitedBy.userId.slice(0, 8)}…`}
+              </Link>{" "}
+              <span className="text-xs text-muted-foreground">
+                ·{" "}
+                {REFERRAL_STATUS[d.referrals.invitedBy.status] ??
+                  d.referrals.invitedBy.status}{" "}
+                · via {d.referrals.invitedBy.source.replace("_", " ")} ·{" "}
+                {timeAgo(d.referrals.invitedBy.boundAt)}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">Nobody.</p>
+          )}
+        </Card>
+        <Card className="p-3 text-sm">
+          <p className="font-semibold">
+            Friends they invited ({d.referrals.invitedCount})
+          </p>
+          {d.referrals.invited.length === 0 ? (
+            <p className="mt-1 text-xs text-muted-foreground">None yet.</p>
+          ) : (
+            <ul className="mt-1 divide-y divide-border">
+              {d.referrals.invited.map((f) => (
+                <li
+                  key={f.userId}
+                  className="flex items-center justify-between gap-2 py-1.5"
+                >
+                  <Link
+                    href={`/rewards/accounts/${f.userId}`}
+                    className="text-primary hover:underline"
+                  >
+                    {f.name ?? `${f.userId.slice(0, 8)}…`}
+                  </Link>
+                  <span className="text-xs text-muted-foreground">
+                    {REFERRAL_STATUS[f.status] ?? f.status} ·{" "}
+                    {timeAgo(f.boundAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
 
       <h3 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">

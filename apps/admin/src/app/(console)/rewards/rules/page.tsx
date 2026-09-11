@@ -10,12 +10,12 @@ import { ActivateRuleButton, NewRuleVersionForm } from "./RuleControls";
 const RULE_LABELS: Record<string, { title: string; shipped: boolean }> = {
   event_referral: { title: "Event referral", shipped: true },
   friend_referral_referrer: {
-    title: "Friend referral (referrer)",
-    shipped: false,
+    title: "Friend invite (inviter's reward)",
+    shipped: true,
   },
   friend_referral_referee: {
-    title: "Friend referral (welcome credit)",
-    shipped: false,
+    title: "Friend invite (welcome credit)",
+    shipped: true,
   },
   organizer_rebate: { title: "Organizer rebate", shipped: false },
   venue_rebate: { title: "Venue rebate", shipped: false },

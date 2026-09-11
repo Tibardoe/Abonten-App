@@ -54,6 +54,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/reviews") ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/auth") ||
+    // Friend invite landing (Abonten Rewards) -- for people who aren't
+    // signed up yet.
+    pathname.startsWith("/invite/") ||
     // The "your account is restricted" landing itself — must stay reachable
     // for a signed-in-but-banned user so the redirect below can't loop.
     pathname.startsWith("/account-restricted") ||

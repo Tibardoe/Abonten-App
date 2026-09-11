@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { deriveSigningKey } from "../security/signing";
 import {
+  addInviteToCookie,
   addTouchToCookie,
   decodeReferralCookie,
   encodeReferralCookie,
+  inviteFromCookie,
   referralKeyForPath,
+  removeInvitesFromCookie,
 } from "./referralCookie";
 
 const key = deriveSigningKey("referral-cookie:v1", "test-secret");
@@ -72,5 +75,35 @@ describe("referral cookie", () => {
     expect(decodeReferralCookie(value, key)).toEqual({
       good: { c: "AAAAAAA", t: now },
     });
+  });
+
+  it("keeps a friend invite next to event touches and drops it after binding", () => {
+    const withEvent = addTouchToCookie(null, "/events/x", "AAAAAAA", now, key);
+    const withInvite = addInviteToCookie(
+      withEvent,
+      "bbbbbbb",
+      now,
+      "typed",
+      key,
+    );
+    expect(inviteFromCookie(withInvite, now, key)).toEqual({
+      code: "BBBBBBB",
+      touchedAt: new Date(now).toISOString(),
+      source: "typed",
+    });
+    expect(addInviteToCookie(withEvent, "nope", now, "link", key)).toBeNull();
+
+    const cleared = removeInvitesFromCookie(withInvite, key);
+    expect(inviteFromCookie(cleared, now, key)).toBeNull();
+    expect(decodeReferralCookie(cleared, key)).toEqual({
+      "e:x": { c: "AAAAAAA", t: now },
+    });
+    // Nothing left: the caller deletes the cookie.
+    expect(
+      removeInvitesFromCookie(
+        addInviteToCookie(null, "BBBBBBB", now, "link", key),
+        key,
+      ),
+    ).toBeNull();
   });
 });

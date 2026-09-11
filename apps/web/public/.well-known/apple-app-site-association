@@ -6,7 +6,8 @@
         "appIDs": ["TEAMID.com.abonten.app"],
         "components": [
           { "/": "/events/*", "comment": "Open an event in the app" },
-          { "/": "/places/*", "comment": "Open a place in the app" }
+          { "/": "/places/*", "comment": "Open a place in the app" },
+          { "/": "/invite/*", "comment": "Open a friend's invite in the app" }
         ]
       }
     ]

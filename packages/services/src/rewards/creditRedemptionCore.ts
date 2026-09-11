@@ -117,9 +117,15 @@ export type SpendableCredit = {
   allowFullCredit: boolean;
 };
 
+/**
+ * `orderTotalMinor` (tickets): welcome credit only counts on a first ticket
+ * order of at least the welcome rule's minimum, so the database needs the
+ * order's size to say what's spendable on it.
+ */
 export async function getSpendableCredit(
   userId: string,
   scope: "promotions" | "tickets",
+  orderTotalMinor?: number,
 ): Promise<SpendableCredit> {
   if (rewardsKillSwitchOn()) {
     return {
@@ -132,7 +138,13 @@ export async function getSpendableCredit(
   }
   const { data, error } = await getSupabaseServiceClient().rpc(
     "credit_spendable",
-    { p_user_id: userId, p_scope: scope },
+    {
+      p_user_id: userId,
+      p_scope: scope,
+      ...(orderTotalMinor === undefined
+        ? {}
+        : { p_order_total_minor: orderTotalMinor }),
+    },
   );
   if (error) {
     logger.error(`credit_spendable failed: ${error.message}`);

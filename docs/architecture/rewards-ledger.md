@@ -250,6 +250,52 @@ projection has been reviewed. A new rule version is published switched off;
 one that could pay more than the live one must be made live by a different
 admin.
 
+## Friend invites (Phase 5)
+
+1. **Invite.** The inviter shares `abontenhub.com/invite/CODE` (Rewards ›
+   Invite friends: link, WhatsApp, QR in the app). Web: `proxy.ts` keeps it
+   in the signed `abn_ref` cookie (key `i`; a `?ref=` link to a page that
+   isn't an event or place counts too, key `u`) and sets the readable
+   `abn_inv` flag. App: `+native-intent.ts` keeps it in SecureStore; on
+   Android the Play install referrer (`ref=CODE`) is read once per install.
+   A code can also be typed on the sign-in screen or on /rewards.
+2. **Bind.** After sign-in (`InviteBinder` on web, `useInviteBinding` in the
+   app) the server calls `referral_bind`: capture on and the
+   `friend_referral_referrer` rule live; not your own code; the account is
+   under 7 days old (`bind_within_days`) and hasn't bought a ticket,
+   published an event or had a place claim approved; no circle (checked 3
+   levels up); the inviter isn't restricted. First bind wins, for life.
+   The inviter gets an in-app "A friend joined" notification (live only).
+3. **Welcome credit.** If `friend_referral_referee` is live and the friend's
+   phone is verified (now, or later — `rewards_settle_due` sweeps), a
+   `reward_event` is recorded and released at once: a `welcome` lot, scope
+   `first_order`, 30 days. It's refused (recorded as rejected) if the
+   friend has already bought, or shares the inviter's email or device.
+   `first_order` credit is only offered on a ticket order of at least the
+   rule's minimum (GH₵ 30) by someone with no paid ticket order that still
+   stands (`_credit_first_order_eligible`), and is spent before general
+   credit.
+4. **Qualify.** Within 60 days of sign-up (`qualify_within_days`), the first
+   of: (1) a paid ticket order of GH₵ 30+ with real cash in it; (2) an event
+   the friend organizes sells paid tickets to 10 unique buyers with verified
+   phones who aren't linked to them (`organizer_unique_buyers`); (3) an
+   admin approves their place claim and the place is theirs. That writes a
+   `friend_referral_referrer` reward_event (GH₵ 3) for the inviter —
+   budget-gated, capped at 10 per inviter per month, flagged for review past
+   50 lifetime, risk-scored like event referrals (plus "many friends joined
+   within an hour"; a friend buying the inviter's own event's tickets is
+   blocked). Pending until the event settles (path 3: 14 days after
+   approval). Released in full when due and both phones are verified; a
+   refund/cancellation voids it and the friend can qualify again with
+   another order; an organizer-path reward is voided if the buyers are gone
+   at settlement; a claim reward if the claim or place ownership changed.
+5. **Shadow.** As for event referrals: with `shadow_mode` on (or the
+   inviter/friend outside the audience) binds are real but rewards and
+   welcome credit are recorded without posting anything.
+
+**Switching it on:** with capture on, Reward rules → Friend invite (welcome
+credit) → Make live, then Friend invite (inviter's reward) → Make live.
+
 ## Disputes
 
 `payment_dispute` records every Paystack `charge.dispute.*` webhook event
@@ -267,6 +313,7 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **"Held for review" payout:** Admin › Finance › Payouts shows the events and their credit share. Check the buyers aren't linked to the organizer, then Clear review with a note; otherwise mark the payout failed/cancelled (the balance returns to the organizer ledger).
 - **"Reward engine: outbox event(s) failed 8 times" incident:** `select id, event_type, aggregate_id, last_error from reward_outbox where dead_lettered_at is not null`. Fix the cause, then `update reward_outbox set dead_lettered_at = null, next_attempt_at = now() where id = …` — processing is idempotent (`reward_event.idempotency_key`).
 - **Rewards health check down:** `select rewards_health()` — outbox lag, overdue settlements, dead letters, released rewards without a journal. Check the `rewards-process-outbox` / `rewards-settle-due` cron jobs are active.
-- **A referrer abusing links:** disable the code (`update referral_code set disabled_at = now(), disabled_reason = …`); new touches and stamps with it are refused. Reject their held rewards in the Review queue.
+- **A referrer abusing links or invites:** Admin › Rewards › account › Referrals › Disable code (`rewards.freeze`, audited); new touches, stamps and friend binds with it are refused and its invite page shows "not valid". Reject their held rewards in the Review queue.
+- **A friend says they didn't get welcome credit:** `select * from user_referral where referee_user_id = …` and the `friend_referral_referee` reward_event for them. No row = the invite never bound (too late, not a new account, own code…). No reward_event = their phone isn't verified yet. `rejected` = they had already bought, or shared the inviter's device/email.
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) and `rewards-event-referral.integration.test.ts` (the referral engine).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) `rewards-event-referral.integration.test.ts` (the referral engine) and `rewards-friend-referral.integration.test.ts` (friend invites).

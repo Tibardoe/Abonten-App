@@ -5,6 +5,7 @@ import { ExploreLocationProvider } from "@/features/discovery/ExploreLocationPro
 import { usePushRegistration } from "@/features/notifications/usePushRegistration";
 import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
 import { useRemindersSync } from "@/features/reminders/useRemindersSync";
+import { useInviteBinding } from "@/features/rewards/useInviteBinding";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
 
@@ -21,6 +22,8 @@ function StackHost() {
   // Reconcile local event reminders with the cross-device `event_reminder`
   // rows (clears ones whose event was deleted / turned off elsewhere).
   useRemindersSync();
+  // Apply a friend's invite held on this device once someone is signed in.
+  useInviteBinding();
   const c = useThemeColors();
 
   return (

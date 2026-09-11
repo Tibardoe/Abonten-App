@@ -12,6 +12,7 @@ import {
 const PROGRAM_KEY = ["mobile", "rewards", "program"] as const;
 const SUMMARY_KEY = ["mobile", "rewards", "summary"] as const;
 const ACTIVITY_KEY = ["mobile", "rewards", "activity"] as const;
+const INVITE_KEY = ["mobile", "rewards", "invite"] as const;
 
 /** Whether Rewards is switched on for this user + the active terms. */
 export function useRewardsProgram(options?: { enabled?: boolean }) {
@@ -35,6 +36,32 @@ export function useCreditSummary(options?: { enabled?: boolean }) {
       return res.data;
     },
     staleTime: 30_000,
+  });
+}
+
+/** The caller's friend-invite link, offer, stats and who invited them. */
+export function useReferralInvite(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: INVITE_KEY,
+    enabled: options?.enabled ?? true,
+    queryFn: async () => {
+      const res = await api.rewards.invite();
+      if (res.status !== 200 || !res.data) {
+        throw new Error(res.message ?? "Couldn't load your invites");
+      }
+      return res.data;
+    },
+    staleTime: 30_000,
+  });
+}
+
+/** Whether friend invites are live (works signed out). */
+export function useInvitesLive() {
+  return useQuery({
+    queryKey: ["mobile", "invites-live"],
+    queryFn: async () =>
+      (await api.rewards.resolveReferral()).data?.programOn === true,
+    staleTime: 10 * 60_000,
   });
 }
 

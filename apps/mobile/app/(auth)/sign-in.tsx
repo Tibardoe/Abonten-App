@@ -1,6 +1,7 @@
 import { CountryCodeField } from "@/auth/CountryCodeField";
 import { GoogleIcon } from "@/auth/GoogleIcon";
 import { signInWithGoogle } from "@/auth/googleSignIn";
+import { InviteCodeField } from "@/features/rewards/InviteCodeField";
 import { api } from "@/lib/api";
 import { hapticError } from "@/lib/haptics";
 import { type Country, DEFAULT_COUNTRY } from "@abonten/core/countries";
@@ -231,6 +232,8 @@ export default function SignIn() {
                 className="mt-1"
               />
             </View>
+
+            <InviteCodeField />
 
             <AppText variant="caption" className="text-center">
               By continuing you agree to Abonten's{" "}

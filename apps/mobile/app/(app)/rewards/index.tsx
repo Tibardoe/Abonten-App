@@ -4,6 +4,7 @@ import {
   flattenCreditActivity,
   useCreditActivity,
   useCreditSummary,
+  useReferralInvite,
   useRewardsProgram,
 } from "@/features/rewards/useRewards";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
@@ -15,18 +16,21 @@ import type {
   CreditActivityItem,
   CreditActivityState,
   CreditSummary,
+  ReferralInvite,
   RewardsProgram,
 } from "@abonten/types/rewards";
 import {
   AppText,
   Badge,
   type BadgeTone,
+  Button,
   Card,
   EmptyState,
   ListFooter,
   Refresher,
   Skeleton,
 } from "@abonten/ui-native";
+import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, View } from "react-native";
 
@@ -45,7 +49,14 @@ const STATE_BADGE: Partial<
   reversed: { label: "Reversed", tone: "destructive" },
 };
 
-function BalanceCard({ summary }: { summary: CreditSummary }) {
+function BalanceCard({
+  summary,
+  welcomeMinOrderMinor,
+}: {
+  summary: CreditSummary;
+  welcomeMinOrderMinor: number | null;
+}) {
+  const welcomeMinor = summary.bySpendScope.first_order ?? 0;
   return (
     <Card elevated className="gap-1">
       <AppText variant="meta">Available to spend</AppText>
@@ -67,6 +78,16 @@ function BalanceCard({ summary }: { summary: CreditSummary }) {
       {summary.onHoldMinor > 0 ? (
         <AppText variant="meta">
           {formatCredit(summary.onHoldMinor)} on hold for a checkout in progress
+        </AppText>
+      ) : null}
+      {welcomeMinor > 0 ? (
+        <AppText variant="meta">
+          {formatCredit(welcomeMinor)} is welcome credit for your first ticket
+          order
+          {welcomeMinOrderMinor
+            ? ` of ${formatCredit(welcomeMinOrderMinor)} or more`
+            : ""}
+          .
         </AppText>
       ) : null}
       {summary.expiringSoon ? (
@@ -115,6 +136,35 @@ function ReferralCodeCard({
         price in credit once the event is over. Your own tickets and events you
         organize don&apos;t count.
       </AppText>
+    </Card>
+  );
+}
+
+// Invites have their own screen (code, QR, share sheet, friends list).
+function InviteCard({ invite }: { invite: ReferralInvite }) {
+  const router = useRouter();
+  return (
+    <Card className="gap-2">
+      <AppText variant="cardTitle">Invite friends</AppText>
+      <AppText variant="small">
+        {invite.referrerMinor
+          ? `You get ${formatCredit(invite.referrerMinor)} when a friend buys their first ticket${
+              invite.refereeMinor
+                ? `, and they get ${formatCredit(invite.refereeMinor)} off it`
+                : ""
+            }.`
+          : "Invite friends to Abonten."}
+        {invite.stats.joined > 0
+          ? ` ${invite.stats.joined} joined so far.`
+          : ""}
+      </AppText>
+      <Button
+        title="Invite friends"
+        leftIcon="people-outline"
+        variant="outline"
+        onPress={() => router.push("/(app)/rewards/invite")}
+        className="mt-1"
+      />
     </Card>
   );
 }
@@ -228,6 +278,7 @@ export default function Rewards() {
   const summary = useCreditSummary({ enabled });
   const activity = useCreditActivity({ enabled });
   const referralCode = useReferralCode();
+  const invite = useReferralInvite({ enabled });
   const items = flattenCreditActivity(activity.data?.pages);
 
   const onEndReached = useCallback(() => {
@@ -240,7 +291,8 @@ export default function Rewards() {
     program.refetch();
     summary.refetch();
     activity.refetch();
-  }, [program, summary, activity]);
+    invite.refetch();
+  }, [program, summary, activity, invite]);
 
   if (program.isLoading) {
     return (
@@ -289,7 +341,12 @@ export default function Rewards() {
         ListHeaderComponent={
           <View className="gap-4 pb-2 pt-4">
             {summary.data ? (
-              <BalanceCard summary={summary.data} />
+              <BalanceCard
+                summary={summary.data}
+                welcomeMinOrderMinor={
+                  program.data.friendReferral?.minOrderMinor ?? null
+                }
+              />
             ) : summary.isError ? (
               <Card>
                 <AppText variant="small">
@@ -304,6 +361,9 @@ export default function Rewards() {
                 code={referralCode}
                 rateBps={program.data.eventReferral.rateBps}
               />
+            ) : null}
+            {invite.data?.enabled || invite.data?.invitedBy ? (
+              <InviteCard invite={invite.data} />
             ) : null}
             <HowItWorks program={program.data} />
             <AppText variant="overline" className="pt-2">

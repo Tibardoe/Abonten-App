@@ -2,6 +2,12 @@ import { fetchCountryMetadata } from "@/actions/fetchCountryMetaData";
 import AuthModal from "@/components/organisms/AuthModal";
 import { createClient } from "@/config/supabase/server";
 import { getSafeRedirectPath } from "@abonten/core/getSafeRedirectPath";
+import { invitesLiveCore } from "@abonten/services/rewards/inviteCore";
+import {
+  REFERRAL_COOKIE_NAME,
+  inviteFromCookie,
+} from "@abonten/services/rewards/referralCookie";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
@@ -36,11 +42,22 @@ export default async function page({
     }
   }
 
+  // A friend's invite this browser already holds (an /invite link) fills
+  // in the "Have an invite code?" field.
+  const [invitesLive, cookieStore] = await Promise.all([
+    invitesLiveCore().catch(() => false),
+    cookies(),
+  ]);
+  const heldInvite = invitesLive
+    ? inviteFromCookie(cookieStore.get(REFERRAL_COOKIE_NAME)?.value, Date.now())
+    : null;
+
   return (
     <AuthModal
       callingCode={countryMetadata?.callingCode}
       next={safeNext}
       authError={Array.isArray(authError) ? authError[0] : authError}
+      invite={{ enabled: invitesLive, code: heldInvite?.code ?? null }}
     />
   );
 }

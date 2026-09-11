@@ -1,8 +1,12 @@
+import { inviteCodeFromPath } from "@abonten/core/rewards/invite";
 import {
   DEVICE_COOKIE_NAME,
+  INVITE_FLAG_COOKIE_NAME,
   REFERRAL_COOKIE_MAX_AGE_SECONDS,
   REFERRAL_COOKIE_NAME,
+  addInviteToCookie,
   addTouchToCookie,
+  referralKeyForPath,
 } from "@abonten/services/rewards/referralCookie";
 import type { NextRequest } from "next/server";
 import { updateSession } from "./config/supabase/middleware";
@@ -52,23 +56,42 @@ export async function proxy(request: NextRequest) {
   // Abonten Rewards: remember a referral link (?ref=CODE) in a signed,
   // httpOnly cookie so the checkout can credit it. No database work here --
   // the code is validated when it's used. Never allowed to break a page.
+  // A friend's invite (/invite/CODE) goes in the same cookie; it's bound to
+  // the account after sign-in (InviteBinder). A `?ref=` link to a page that
+  // isn't an event or place counts as an invite too.
   const ref = request.nextUrl.searchParams.get("ref");
-  if (ref) {
+  const inviteCode = inviteCodeFromPath(request.nextUrl.pathname);
+  if (ref || inviteCode) {
     try {
-      const next = addTouchToCookie(
-        request.cookies.get(REFERRAL_COOKIE_NAME)?.value,
-        request.nextUrl.pathname,
-        ref,
-        Date.now(),
-      );
+      const current = request.cookies.get(REFERRAL_COOKIE_NAME)?.value;
+      const next = inviteCode
+        ? addInviteToCookie(current, inviteCode, Date.now())
+        : addTouchToCookie(
+            current,
+            request.nextUrl.pathname,
+            ref as string,
+            Date.now(),
+          );
       if (next) {
-        response.cookies.set(REFERRAL_COOKIE_NAME, next, {
+        const cookieOptions = {
           path: "/",
-          httpOnly: true,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
+          sameSite: "lax" as const,
           maxAge: REFERRAL_COOKIE_MAX_AGE_SECONDS,
+        };
+        response.cookies.set(REFERRAL_COOKIE_NAME, next, {
+          ...cookieOptions,
+          httpOnly: true,
         });
+        if (
+          inviteCode ||
+          referralKeyForPath(request.nextUrl.pathname) === "u"
+        ) {
+          response.cookies.set(INVITE_FLAG_COOKIE_NAME, "1", {
+            ...cookieOptions,
+            httpOnly: false,
+          });
+        }
       }
     } catch {
       // signing key unavailable -- skip capture

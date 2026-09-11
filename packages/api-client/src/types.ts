@@ -37,6 +37,9 @@ import type {
   CreditActivityItem,
   CreditQuote,
   CreditSummary,
+  ReferralBindOutcome,
+  ReferralCodeInfo,
+  ReferralInvite,
   ReferralLink,
   RewardsProgram,
 } from "@abonten/types/rewards";
@@ -90,6 +93,13 @@ export type ReferralTouchBody = {
   source?: "link" | "qr" | "install_referrer";
 };
 export type ReferralTouchResult = { status: number; message?: string };
+export type ReferralInviteResult = ApiEnvelope<ReferralInvite>;
+export type ReferralBindBody = {
+  code: string;
+  source?: "link" | "typed" | "install_referrer";
+};
+export type ReferralBindResultEnvelope = ApiEnvelope<ReferralBindOutcome>;
+export type ReferralResolveResult = ApiEnvelope<ReferralCodeInfo>;
 
 // ---- messaging ---------------------------------------------------------
 

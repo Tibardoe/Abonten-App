@@ -300,6 +300,12 @@ export const creditAccountStatusSchema = z.object({
   reason: creditReason,
 });
 
+export const referralCodeDisabledSchema = z.object({
+  userId: z.string().uuid(),
+  disabled: z.boolean(),
+  reason: creditReason,
+});
+
 // Withdrawal settings are deliberately NOT editable: cash withdrawal is out
 // of scope for version 1 (owner decision 2026-09-10) and there is no
 // withdrawal code for the switch to turn on.

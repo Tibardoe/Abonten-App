@@ -90,7 +90,11 @@ import type {
   PromoteEventResult,
   PromotePlaceResult,
   PromotionPaymentAttemptResult,
+  ReferralBindBody,
+  ReferralBindResultEnvelope,
+  ReferralInviteResult,
   ReferralLinkResult,
+  ReferralResolveResult,
   ReferralTouchBody,
   ReferralTouchResult,
   RequestEmailOtpBody,
@@ -1478,6 +1482,39 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+      /**
+       * The caller's friend-invite link, the offer, their invite stats and
+       * who invited them (the code is created on first use while invites
+       * are live).
+       */
+      invite() {
+        return request<ReferralInviteResult>("/api/mobile/rewards/invite", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /**
+       * Join a friend's invite. The server decides (new accounts only,
+       * first bind wins); `data.result` says what happened.
+       */
+      bindReferral(body: ReferralBindBody) {
+        return request<ReferralBindResultEnvelope>(
+          "/api/mobile/rewards/referral/bind",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * What the invite screen shows for a code (works signed out). With no
+       * code, only `programOn`: whether friend invites are live.
+       */
+      resolveReferral(code?: string) {
+        return request<ReferralResolveResult>(
+          `/api/mobile/rewards/referral/resolve${
+            code ? `?code=${encodeURIComponent(code)}` : ""
+          }`,
+          { method: "GET", auth: false },
+        );
       },
     },
 
