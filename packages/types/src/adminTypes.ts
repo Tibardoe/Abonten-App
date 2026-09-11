@@ -839,7 +839,12 @@ export type FeeEntryView = {
 export type TransactionDetail = {
   id: string;
   status: TransactionStatus;
+  /** Cash collected (Paystack). */
   amount: number;
+  /** Abonten Credit that paid for part or all of the order. */
+  creditAmount: number;
+  /** Credit given back as credit by a refund. */
+  creditRefundedAmount: number;
   currency: string;
   reason: string | null;
   payerName: string | null;
@@ -897,6 +902,20 @@ export type PayoutListItem = {
   requestedAt: string | null;
   processedAt: string | null;
   createdAt: string;
+  /**
+   * 'required': held because a large share of an event's sales was paid
+   * with Abonten Credit; it can't be completed until someone clears it.
+   */
+  reviewStatus: "none" | "required" | "cleared";
+  reviewEvents: PayoutReviewEvent[];
+};
+
+export type PayoutReviewEvent = {
+  eventId: string;
+  title: string;
+  revenue: number;
+  creditRevenue: number;
+  shareBps: number;
 };
 
 export type OrganizerFinanceSummary = {

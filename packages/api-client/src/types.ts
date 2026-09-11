@@ -387,6 +387,8 @@ export type PreparedCheckoutPayment = {
   invalidSessionIds: string[];
   grandTotal: number;
   currency: string;
+  /** What the "Use credit" switch offers; null when Rewards is off. */
+  credit: CreditQuote | null;
 };
 
 // One `ticket_checkout` row joined with a slim event + ticket-type embed.
@@ -486,7 +488,9 @@ export type MomoNetwork = { code: string; name: string };
 
 export type CheckoutAttemptBody = {
   checkoutSessionIds: string[];
-  paymentMethodId: string;
+  /** Required unless Abonten Credit covers the whole order. */
+  paymentMethodId?: string | null;
+  useCredit?: boolean;
 };
 
 export type PaystackPaymentInfo =
@@ -510,7 +514,11 @@ export type CheckoutAttemptResult =
         paymentGroupId: string;
         // payment_attempt rows — only `id` is read by the app
         attempts: { id: string }[];
-        paystack: PaystackPaymentInfo;
+        /** null when credit paid for everything. */
+        paystack: PaystackPaymentInfo | null;
+        credit: { appliedMinor: number; cashMinor: number } | null;
+        /** Credit-only orders are finalized immediately; this is the outcome. */
+        verification: VerifyPaymentResult | null;
       };
     }
   | { status: 400 | 401 | 404 | 500; message: string }

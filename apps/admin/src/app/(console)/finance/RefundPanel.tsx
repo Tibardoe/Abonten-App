@@ -11,11 +11,16 @@ import { useState, useTransition } from "react";
 export function RefundPanel({
   transactionId,
   refundableLabel,
+  creditBackLabel,
+  cashBackLabel,
   canRefund,
   stepUpFresh,
 }: {
   transactionId: string;
   refundableLabel: string;
+  /** Set when the order was paid (partly) with Abonten Credit. */
+  creditBackLabel?: string | null;
+  cashBackLabel?: string | null;
   canRefund: boolean;
   stepUpFresh: boolean;
 }) {
@@ -31,9 +36,14 @@ export function RefundPanel({
     <div className="mt-3 space-y-2 rounded border border-warning/40 bg-warning/10 p-3">
       <p className="text-sm font-semibold">Issue a refund</p>
       <p className="text-xs text-muted-foreground">
-        Sends {refundableLabel} back via Paystack (ticket revenue only — the
-        service fee is retained) and holds it against the organizer&apos;s
-        ledger. Idempotent; a retry won&apos;t double-refund.
+        {creditBackLabel
+          ? `Returns ${refundableLabel}: ${creditBackLabel} as Abonten Credit${
+              cashBackLabel ? ` and ${cashBackLabel} via Paystack` : ""
+            }, in proportion to how the order was paid`
+          : `Sends ${refundableLabel} back via Paystack`}{" "}
+        (ticket revenue only — the service fee is retained) and holds it against
+        the organizer&apos;s ledger. Idempotent; a retry won&apos;t
+        double-refund.
       </p>
       {!stepUpFresh ? (
         <p className="text-xs text-destructive">

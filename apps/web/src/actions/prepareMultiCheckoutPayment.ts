@@ -6,10 +6,12 @@ import {
   type PreparedCheckoutPayment,
   prepareCheckoutPayment,
 } from "@abonten/services/checkout/checkoutPaymentPreparation";
+import { safeQuoteTicketCredit } from "@abonten/services/rewards/ticketCreditCore";
+import type { CreditQuote } from "@abonten/types/rewards";
 
 type PrepareMultiCheckoutPaymentResult =
   | { status: 400 | 401 | 500; message: string }
-  | ({ status: 200 } & PreparedCheckoutPayment);
+  | ({ status: 200; credit: CreditQuote | null } & PreparedCheckoutPayment);
 
 /**
  * Read-only, authoritative "what do I actually owe right now" check for a
@@ -17,6 +19,8 @@ type PrepareMultiCheckoutPaymentResult =
  * (after self-healing expiry) rather than trusting anything the client
  * computed. Used to drive the live Pay button total, and reused internally
  * by createMultiCheckoutPaymentAttempt.ts right before it writes anything.
+ * `credit` is what the "Use credit" switch offers (null when the program is
+ * off for this user or nothing can be quoted).
  */
 export default async function prepareMultiCheckoutPayment(
   checkoutSessionIds: string[],
@@ -42,7 +46,8 @@ export default async function prepareMultiCheckoutPayment(
       checkoutSessionIds,
       supabase,
     );
-    return { status: 200, ...prepared };
+    const credit = await safeQuoteTicketCredit(supabase, user.id, prepared);
+    return { status: 200, ...prepared, credit };
   } catch (error) {
     logger.error(`Failed preparing checkout payment: ${error}`);
     return { status: 500, message: "Something went wrong!" };

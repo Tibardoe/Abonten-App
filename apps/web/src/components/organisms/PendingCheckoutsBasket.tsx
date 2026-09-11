@@ -251,6 +251,9 @@ export default function PendingCheckoutsBasket({
       // (promo eligibility, availability) — refetch rather than fully trust
       // the patch above.
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      // The payment panel's total (and credit quote) come from the prepare
+      // step, cached per session set -- refresh it after the order changes.
+      queryClient.invalidateQueries({ queryKey: ["prepare-multi-checkout"] });
       router.refresh();
     },
   });
@@ -308,6 +311,9 @@ export default function PendingCheckoutsBasket({
         return next;
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      // The payment panel's total (and credit quote) come from the prepare
+      // step, cached per session set -- refresh it after the order changes.
+      queryClient.invalidateQueries({ queryKey: ["prepare-multi-checkout"] });
       router.refresh();
     },
   });
@@ -369,6 +375,9 @@ export default function PendingCheckoutsBasket({
         return next;
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      // The payment panel's total (and credit quote) come from the prepare
+      // step, cached per session set -- refresh it after the order changes.
+      queryClient.invalidateQueries({ queryKey: ["prepare-multi-checkout"] });
       router.refresh();
     },
   });

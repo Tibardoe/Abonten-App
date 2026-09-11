@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { paymentFulfillmentDeps } from "@/utils/paymentFulfillmentDeps";
 import {
   type CreateMultiCheckoutPaymentAttemptCoreResult,
   createMultiCheckoutPaymentAttemptCore,
@@ -8,7 +9,9 @@ import {
 
 type CreateMultiCheckoutPaymentAttemptInput = {
   checkoutSessionIds: string[];
-  paymentMethodId: string;
+  /** Required unless Abonten Credit covers the whole order. */
+  paymentMethodId?: string | null;
+  useCredit?: boolean;
 };
 
 /**
@@ -20,7 +23,8 @@ type CreateMultiCheckoutPaymentAttemptInput = {
  * the whole group.
  *
  * Always re-validates against the database (never the client) right before
- * writing anything.
+ * writing anything. With `useCredit`, Abonten Credit pays part of the order
+ * (or all of it, which finalizes the order before this returns).
  */
 export default async function createMultiCheckoutPaymentAttempt(
   input: CreateMultiCheckoutPaymentAttemptInput,
@@ -45,5 +49,6 @@ export default async function createMultiCheckoutPaymentAttempt(
     input,
     (checkoutSessionId) =>
       `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/${checkoutSessionId}?type=ticket`,
+    paymentFulfillmentDeps,
   );
 }

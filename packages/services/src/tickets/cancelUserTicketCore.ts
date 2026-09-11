@@ -93,17 +93,22 @@ export async function cancelUserTicketCore(
   if (transactionId) {
     const { data: transaction, error: transactionError } = await supabase
       .from("transaction")
-      .select("id, amount")
+      .select("id, amount, credit_amount")
       .eq("id", transactionId)
       .eq("user_id", userId)
-      .maybeSingle<{ id: string; amount: number }>();
+      .maybeSingle<{ id: string; amount: number; credit_amount: number }>();
 
     if (transactionError || !transaction) {
       logger.error(`Failed fetching transaction: ${transactionError?.message}`);
       return { status: 500, message: "Something went wrong!" };
     }
 
-    if (transaction.amount > 0) {
+    // Paid with cash, Abonten Credit, or both: an order paid entirely with
+    // credit has amount 0 and is refunded to credit.
+    if (
+      Number(transaction.amount) + Number(transaction.credit_amount ?? 0) >
+      0
+    ) {
       // A single Paystack charge (transaction) can cover multiple tickets —
       // every ticket, quantity, and even every event in a multi-checkout
       // group shares one transaction_id (see generateTicket.ts). The refund

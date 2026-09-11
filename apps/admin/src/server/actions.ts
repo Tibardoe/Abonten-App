@@ -12,6 +12,7 @@ import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
 import {
+  clearPayoutReviewAdminCore,
   createPayoutAdminCore,
   refundTransactionAdminCore,
   sendPayoutAdminCore,
@@ -59,6 +60,7 @@ import {
   adminNoteSchema,
   adminRefundSchema,
   broadcastNotificationSchema,
+  clearPayoutReviewSchema,
   clearReviewResponseSchema,
   createPayoutSchema,
   creditAccountStatusSchema,
@@ -394,6 +396,34 @@ export async function createPayout(input: unknown) {
     );
     if (res.status === 200) {
       revalidatePath(`/finance/organizers/${parsed.data.organizerId}`);
+      revalidatePath("/finance/payouts");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e);
+  }
+}
+
+// Clear the credit-share review on a held payout (payout_credit_review).
+export async function clearPayoutReview(input: unknown) {
+  const parsed = clearPayoutReviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      status: 400,
+      message: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await clearPayoutReviewAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath(`/finance/payouts/${parsed.data.payoutId}`);
       revalidatePath("/finance/payouts");
     }
     return res;

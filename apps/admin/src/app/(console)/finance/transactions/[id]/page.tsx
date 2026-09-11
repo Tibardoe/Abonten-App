@@ -10,6 +10,7 @@ import {
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadTransactionDetail } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { splitRefundTender } from "@abonten/core/rewards/refundTenderSplit";
 import Link from "next/link";
 import { RefundPanel } from "../../RefundPanel";
 
@@ -47,6 +48,16 @@ export default async function TransactionDetailPage({
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
     Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
+  // Same split issueRefundCore applies: an order paid with credit gets the
+  // credit share back as credit, the rest via Paystack.
+  const refundSplit =
+    t.creditAmount > 0
+      ? splitRefundTender({
+          refundMinor: Math.round(t.refundableAmount * 100),
+          cashMinor: Math.round(t.amount * 100),
+          creditMinor: Math.round(t.creditAmount * 100),
+        })
+      : null;
   const canRefund =
     ctx.permissions.includes("finance.refund") &&
     t.status !== "refunded" &&
@@ -70,7 +81,19 @@ export default async function TransactionDetailPage({
       />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
-        <Stat label="Amount charged" value={money(t.amount, t.currency)} />
+        <Stat
+          label="Amount charged"
+          value={money(t.amount, t.currency)}
+          hint={
+            t.creditAmount > 0
+              ? `+ ${money(t.creditAmount, t.currency)} Abonten Credit${
+                  t.creditRefundedAmount > 0
+                    ? ` (${money(t.creditRefundedAmount, t.currency)} returned)`
+                    : ""
+                }`
+              : undefined
+          }
+        />
         <Stat
           label="Refundable now"
           value={money(t.refundableAmount, t.currency)}
@@ -121,6 +144,16 @@ export default async function TransactionDetailPage({
           <RefundPanel
             transactionId={t.id}
             refundableLabel={money(t.refundableAmount, t.currency)}
+            creditBackLabel={
+              refundSplit
+                ? money(refundSplit.creditBackMinor / 100, t.currency)
+                : null
+            }
+            cashBackLabel={
+              refundSplit && refundSplit.cashBackMinor > 0
+                ? money(refundSplit.cashBackMinor / 100, t.currency)
+                : null
+            }
             canRefund={canRefund}
             stepUpFresh={stepUpFresh}
           />

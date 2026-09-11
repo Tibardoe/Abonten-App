@@ -96,9 +96,16 @@ function TransactionRow({
             </AppText>
           </View>
         </View>
-        <AppText variant="bodyStrong">
-          {money(row.total_paid ?? row.amount, row.currency)}
-        </AppText>
+        <View className="items-end">
+          <AppText variant="bodyStrong">
+            {money(row.total_paid ?? row.amount, row.currency)}
+          </AppText>
+          {row.credit_used ? (
+            <AppText variant="caption">
+              incl. {money(Number(row.credit_used), row.currency)} credit
+            </AppText>
+          ) : null}
+        </View>
       </View>
       <View className="flex-row items-center justify-between">
         <View className="flex-row flex-wrap items-center gap-1.5">

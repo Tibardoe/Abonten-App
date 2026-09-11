@@ -1875,6 +1875,80 @@ a buyer can delete their own usage row and apply a once-per-person promo code
 again — low impact, since `promo_code.times_used` / `max_uses` still caps the
 code overall).
 
+### 27.3 Phase 3 — paying for tickets with credit (2026-09-11)
+
+Migration `20260910233238_credit_ticket_redemption` (applied to production via
+MCP before the code deploy — it's additive; function hashes identical to a
+from-scratch replay; advisors unchanged):
+
+- `credit_spendable` also returns the ticket-order limits
+  (`max_share_bps`, `allow_full_credit`).
+- `record_platform_fee` is credit-aware: service fee = (cash + credit) −
+  ticket revenue; new `platform_fee_entry.credit_applied`. Credit is not
+  subtracted from `net_revenue` again (it was booked as an expense when
+  granted). Before this, a part-credit order would have recorded a zero fee.
+- `credit_refund_redemption(transaction, amount)`: journal `redeem.refund`,
+  new `refund` lots mirroring the scope/withdrawable flag of the lots used,
+  idempotent per transaction; `transaction.credit_refunded_amount`.
+- `cancel_event_and_release_tickets` includes orders paid entirely with
+  credit (it filtered `amount > 0`, so they would never have been refunded on
+  cancellation); `transaction_amount` = total paid.
+- `get_user_transaction_history` counts credit in the fee/total and returns
+  `credit_used` (dropped and re-created: new OUT column).
+- Payout review: `payout.review_status/review_reason/review_details/
+  reviewed_by/reviewed_at/review_note`; `BEFORE INSERT` trigger flags payouts
+  when an event settled in the last 180 days had > 20% credit-funded ticket
+  revenue; `BEFORE UPDATE` guard refuses `completed` until
+  `admin_clear_payout_review`.
+
+Code: `@abonten/core/rewards/creditAllocation.apportionCredit`,
+`refundTenderSplit` (+ tests); `@abonten/services/rewards/ticketCreditCore`
+(`loadTicketOrder`, `quoteTicketCredit` — own-event block);
+`quoteCredit` generalized in `creditRedemptionCore`;
+`createMultiCheckoutPaymentAttemptCore` gains `useCredit` (credit reserved for
+the payment group, per-attempt cash/credit split, credit-only orders
+finalized immediately); `finalizePaystackPayment` handles ticket groups
+(reservation target = payment group, credit-only groups, lapsed-session check,
+real provider in ticket metadata); `issueRefundCore` splits refunds by tender
+and finishes a failed credit step on retry; `cancelUserTicketCore` refunds
+credit-paid tickets; admin `clearPayoutReviewAdminCore` +
+`sendPayoutAdminCore` guard; admin payout list/transaction detail/refund
+panel show credit; the `redeemTicketsEnabled` / `allowFullCreditTicketOrders`
+switches are unlocked. Web: the prepare step returns `credit`, the "Use
+credit" switch on ticket checkout (the basket now refreshes the total after a
+quantity change — it used to keep the old "Pay GHS …" label), `/transactions`
+shows "incl. GH₵ X credit". Mobile: shared `CreditSwitch`, ticket
+`PaymentSection` credit switch + credit-only path, transactions list credit
+line; `api.checkout.attempt` takes `useCredit` / optional `paymentMethodId`,
+`prepare` returns `credit`.
+
+**Verified:** 12 new unit tests (`apportionCredit`, `splitRefundTender`);
+`credits-ticket-redemption.integration.test.ts` (6: part-credit quote + min
+cash + own-event refusal; credit-only order end to end incl. fee/earning
+records and an instant credit refund; part-credit with Paystack's amount
+checked and a split refund GH₵ 28.57 credit / GH₵ 71.43 cash, retry
+idempotent; event cancellation returns credit-only orders; payout held →
+settle refused → cleared → settled, cleared event not re-flagged; failed
+reservation leaves no open attempt); full suite **151/151** on a fresh
+replay; typecheck 11/11; web + admin builds; parity 108. Driven on the local
+stack: web part-credit ticket order paid through a **real Paystack
+test-mode charge** of the cash part (GH₵ 226.16 + GH₵ 25.84 credit; fee
+recorded as GH₵ 12.00 with credit_applied 25.84), including a Cloudinary
+failure that landed in "Retry" and then completed without charging again;
+credit-only ticket order; self-cancel → "GH₵ 80.00 is back in your Abonten
+Credit" (fee retained); `/transactions` and `/rewards` lines; Admin payout
+held → completion refused → review cleared → completed, audit entries
+written; settings save; transaction detail and refund-split copy. Android:
+ticket checkout credit switch (on/off), part-credit order paid through a real
+Paystack test MoMo charge, transactions list with credit lines and a
+"Refund issued" credit refund.
+
+**Not verified / known limits:** iOS; a live (not test-mode) Paystack
+charge; the first-order/welcome credit scope (Phase 5). If a mixed order's
+Paystack refund later fails (`refund.failed`), the organizer hold is released
+as before while the credit share stays refunded — an admin re-running the
+refund converges (cash re-requested, credit step idempotent).
+
 ---
 
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*

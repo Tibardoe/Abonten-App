@@ -147,6 +147,7 @@ export default function PaymentMethodSelector(
     data: prepared,
     isPending: isPreparePending,
     isError: isPrepareError,
+    refetch: refetchPrepared,
   } = useQuery({
     queryKey: ["prepare-multi-checkout", sortedSessionIds],
     queryFn: () => prepareMultiCheckoutPayment(sortedSessionIds),
@@ -161,8 +162,9 @@ export default function PaymentMethodSelector(
     }
   }, [prepared]);
 
-  // Abonten Credit on promotions: the server quotes how much applies; the
-  // switch starts ON whenever there is credit to use (it expires otherwise).
+  // Abonten Credit: the server quotes how much applies (tickets: as part of
+  // the prepare step; promotions: its own quote). The switch starts ON
+  // whenever there is credit to use (it expires otherwise).
   const promotionTarget =
     props.kind === "promotion"
       ? { kind: "place" as const, checkoutId: props.placePromotionCheckoutId }
@@ -181,24 +183,34 @@ export default function PaymentMethodSelector(
         : Promise.resolve(null),
     enabled: !!promotionTarget,
   });
+  const rawCreditQuote =
+    props.kind === "ticket"
+      ? prepared?.status === 200
+        ? prepared.credit
+        : null
+      : creditQuoteResponse?.status === 200
+        ? creditQuoteResponse.data
+        : null;
   const creditQuote =
-    creditQuoteResponse?.status === 200 &&
-    creditQuoteResponse.data.offered &&
-    creditQuoteResponse.data.creditMinor > 0
-      ? creditQuoteResponse.data
+    rawCreditQuote?.offered && rawCreditQuote.creditMinor > 0
+      ? rawCreditQuote
       : null;
+  const refreshCreditQuote = () => {
+    if (props.kind === "ticket") refetchPrepared();
+    else refetchCreditQuote();
+  };
   const [useCreditChoice, setUseCreditChoice] = useState<boolean | null>(null);
   const useCredit = !!creditQuote && (useCreditChoice ?? true);
   const creditCoversAll = useCredit && !!creditQuote?.creditOnly;
 
   const amount =
-    props.kind === "promotion" || props.kind === "event-promotion"
-      ? useCredit && creditQuote
-        ? creditMinorToCedis(creditQuote.cashMinor)
-        : props.amount
-      : prepared?.status === 200
-        ? prepared.grandTotal
-        : 0;
+    useCredit && creditQuote
+      ? creditMinorToCedis(creditQuote.cashMinor)
+      : props.kind === "promotion" || props.kind === "event-promotion"
+        ? props.amount
+        : prepared?.status === 200
+          ? prepared.grandTotal
+          : 0;
   const currency =
     props.kind === "promotion" || props.kind === "event-promotion"
       ? props.currency
@@ -269,26 +281,37 @@ export default function PaymentMethodSelector(
     });
   };
 
+  // With credit covering everything there's no Paystack step: the tickets
+  // are issued before the call returns and `verification` carries the result.
   const ticketPayMutation = useMutation({
-    mutationFn: (paymentMethodId: string) =>
+    mutationFn: (paymentMethodId: string | null) =>
       createMultiCheckoutPaymentAttempt({
         checkoutSessionIds:
           props.kind === "ticket" ? props.checkoutSessionIds : [],
         paymentMethodId,
+        useCredit,
       }),
     onSuccess: (response) => {
       if (response.status === 409) {
         toast.error(response.message);
-        if (props.kind === "ticket") {
+        if (props.kind === "ticket" && response.invalidSessionIds.length > 0) {
           props.onInvalidSessions?.(response.invalidSessionIds);
         }
+        refreshCreditQuote();
         return;
       }
       if (response.status !== 200) {
         toast.error(response.message);
         return;
       }
-      handlePaystackInfo(response.data.attempts[0].id, response.data.paystack);
+      const primaryAttemptId = response.data.attempts[0].id;
+      if (response.data.paystack) {
+        handlePaystackInfo(primaryAttemptId, response.data.paystack);
+        return;
+      }
+      if (response.data.verification) {
+        applyVerification(response.data.verification, primaryAttemptId);
+      }
     },
     onError: () => toast.error("Failed to start payment. Please try again."),
   });
@@ -307,7 +330,7 @@ export default function PaymentMethodSelector(
     onSuccess: (response) => {
       if (response.status !== 200) {
         toast.error(response.message);
-        if (response.status === 409) refetchCreditQuote();
+        if (response.status === 409) refreshCreditQuote();
         return;
       }
       if (response.data.paystack) {
@@ -344,6 +367,7 @@ export default function PaymentMethodSelector(
       // server-side, so only the completed session(s) disappear; unrelated
       // pending checkouts are untouched.
       queryClient.invalidateQueries({ queryKey: PENDING_CHECKOUTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ["prepare-multi-checkout"] });
     } else if (props.kind === "event-promotion") {
       invalidateEventListQueries(queryClient);
     } else if (props.kind === "promotion") {
@@ -681,7 +705,7 @@ export default function PaymentMethodSelector(
                 });
               } else {
                 setUiState({ phase: "selecting" });
-                if (promotionTarget) refetchCreditQuote();
+                refreshCreditQuote();
               }
             }}
             className="underline font-medium"
@@ -745,7 +769,7 @@ export default function PaymentMethodSelector(
         disabled={(!creditCoversAll && !selectedId) || payMutation.isPending}
         onClick={() => {
           if (creditCoversAll) {
-            promotionPayMutation.mutate(null);
+            payMutation.mutate(null);
           } else if (selectedId) {
             payMutation.mutate(selectedId);
           }

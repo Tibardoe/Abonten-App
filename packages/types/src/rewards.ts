@@ -133,7 +133,9 @@ export type CreditBlockedReason =
   | "account_frozen"
   | "account_closed"
   | "in_debt"
-  | "order_too_small";
+  | "order_too_small"
+  /** Credit can't pay for tickets to an event you organize. */
+  | "own_event";
 
 /**
  * What the checkout "Use credit" switch offers for one order. `creditMinor`

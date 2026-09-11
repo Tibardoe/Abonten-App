@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocateCredit } from "./creditAllocation";
+import { allocateCredit, apportionCredit } from "./creditAllocation";
 
 const base = {
   orderTotalMinor: 5000,
@@ -59,5 +59,23 @@ describe("allocateCredit", () => {
     expect(
       allocateCredit({ ...base, orderTotalMinor: 80, spendableMinor: 50 }),
     ).toEqual({ creditMinor: 0, cashMinor: 80, creditOnly: false });
+  });
+});
+
+describe("apportionCredit", () => {
+  it("splits credit pro rata and gives the rounding to the largest part", () => {
+    expect(apportionCredit(1000, [2100, 5250, 1050])).toEqual([250, 625, 125]);
+    const odd = apportionCredit(1001, [3000, 3000, 3000]);
+    expect(odd.reduce((a, b) => a + b, 0)).toBe(1001);
+    expect(odd).toEqual([334, 334, 333]);
+  });
+
+  it("never gives a part more than its own total", () => {
+    expect(apportionCredit(10_000, [300, 700])).toEqual([300, 700]);
+  });
+
+  it("returns zeros when there is nothing to split", () => {
+    expect(apportionCredit(0, [100, 200])).toEqual([0, 0]);
+    expect(apportionCredit(500, [0, 0])).toEqual([0, 0]);
   });
 });

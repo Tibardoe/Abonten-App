@@ -2,13 +2,15 @@ import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { prepareCheckoutPayment } from "@abonten/services/checkout/checkoutPaymentPreparation";
+import { safeQuoteTicketCredit } from "@abonten/services/rewards/ticketCreditCore";
 
 // POST /api/mobile/checkout/prepare  { checkoutSessionIds: string[] }
 //
 // Authoritative "what do I owe right now" for a set of pending checkout
 // sessions — re-reads live DB state (after self-healing expiry), never
 // trusts a client-computed total. Same prepareCheckoutPayment the web
-// prepareMultiCheckoutPayment action calls.
+// prepareMultiCheckoutPayment action calls. `credit` is what the "Use
+// credit" switch offers (null when Rewards is off for this user).
 export async function POST(req: Request) {
   const auth = await getMobileAuth(req);
   if (auth.response) return auth.response;
@@ -36,7 +38,13 @@ export async function POST(req: Request) {
       auth.supabase,
     );
 
-    return apiJson({ status: 200, data: prepared });
+    const credit = await safeQuoteTicketCredit(
+      auth.supabase,
+      auth.user.id,
+      prepared,
+    );
+
+    return apiJson({ status: 200, data: { ...prepared, credit } });
   } catch (error) {
     logger.error("mobile POST /checkout/prepare failed", error);
     return apiJson({ status: 500, message: "Something went wrong!" });
