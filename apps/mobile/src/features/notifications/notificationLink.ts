@@ -47,8 +47,10 @@ function targetFromData(
         ? `/(app)/messages/${data.conversationId}`
         : "/(app)/(tabs)/messages";
     case "ticket":
-      return data.ticketId
-        ? `/(app)/ticket/${data.ticketId}`
+      if (data.ticketId) return `/(app)/ticket/${data.ticketId}`;
+      // e.g. "Event cancelled": open the section it's listed in.
+      return data.ticketsSection
+        ? `/(app)/(tabs)/tickets?section=${data.ticketsSection}`
         : "/(app)/(tabs)/tickets";
     case "event":
     case "event_featured":

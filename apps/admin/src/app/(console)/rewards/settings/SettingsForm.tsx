@@ -350,7 +350,8 @@ export function SettingsForm({
               Only for credit someone can use now: credit ready, welcome credit
               and promotion credit. At most one email per person every 12 hours;
               later notices go in the next one. Accounts with no email address
-              (phone sign-in) get the push only.
+              (phone sign-in) get the push only, and anyone can unsubscribe from
+              the email itself or their Rewards page.
             </span>
           </span>
         </label>
@@ -361,7 +362,7 @@ export function SettingsForm({
             {delivery.email.sent} by email (one message can carry several),{" "}
             {delivery.push.queued + delivery.email.queued} waiting,{" "}
             {delivery.push.skipped + delivery.email.skipped} skipped (no app or
-            email address, or switched off),{" "}
+            email address, unsubscribed, or switched off),{" "}
             {delivery.push.failed + delivery.email.failed} failed.
             {delivery.dispatchConfigured
               ? ""

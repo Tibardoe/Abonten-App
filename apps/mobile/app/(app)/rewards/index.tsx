@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { RewardEmailCard } from "@/features/rewards/RewardEmailCard";
 import { useReferralCode } from "@/features/rewards/useReferralCode";
 import {
   flattenCreditActivity,
@@ -398,6 +399,7 @@ export default function Rewards() {
               <InviteCard invite={invite.data} />
             ) : null}
             <HowItWorks program={program.data} />
+            <RewardEmailCard />
             <AppText variant="overline" className="pt-2">
               Activity
             </AppText>

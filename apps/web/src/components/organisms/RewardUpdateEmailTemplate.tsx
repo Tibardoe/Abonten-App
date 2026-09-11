@@ -1,9 +1,7 @@
-import {
-  ABONTEN_LOGO_EMAIL_DARK_URL,
-  ABONTEN_LOGO_EMAIL_LIGHT_URL,
-} from "@/config/brandAssets";
+import { ABONTEN_LOGO_EMAIL_TILE_URL } from "@/config/brandAssets";
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -13,9 +11,7 @@ import {
   Link,
   Preview,
   Section,
-  Tailwind,
   Text,
-  pixelBasedPreset,
 } from "@react-email/components";
 
 export type RewardUpdateEmailItem = { title: string; body: string | null };
@@ -24,6 +20,7 @@ interface RewardUpdateEmailProps {
   name: string | null;
   items: RewardUpdateEmailItem[];
   rewardsUrl: string;
+  unsubscribeUrl: string;
 }
 
 /**
@@ -31,108 +28,187 @@ interface RewardUpdateEmailProps {
  * credit, promotion credit). One email can carry several notices -- the
  * delivery queue batches a person's notices and sends at most one reward
  * email every 12 hours (sendRewardUpdateEmail.ts). The text is the same as
- * the in-app notification's, so the two never disagree. Styled like
- * EventCancellationEmailTemplate.tsx.
+ * the in-app notification's, so the two never disagree.
+ *
+ * Written for the awkward clients, with plain inline styles rather than
+ * Tailwind classes:
+ * - Outlook for Windows (Word's renderer) ignores padding on links and
+ *   falls back to Times New Roman when the first font isn't installed, so
+ *   the button is react-email's <Button> (Outlook padding workaround) and
+ *   the font stack starts with Helvetica / Arial.
+ * - No `<style>` block, class selectors or `display:none` swaps: Gmail's
+ *   mobile web client and Outlook for Windows drop them (checked against
+ *   caniemail with doiuse-email). The logo sits on its own white tile, so
+ *   it stays readable when a client darkens the email in dark mode.
+ * - Every reward email has an unsubscribe link (and List-Unsubscribe
+ *   headers, added by the sender).
  */
+const FONT = "Helvetica, Arial, sans-serif";
+const MUTED = "#6b6b6b";
+const FAINT = "#737373";
+
 export default function RewardUpdateEmailTemplate({
   name,
   items,
   rewardsUrl,
+  unsubscribeUrl,
 }: RewardUpdateEmailProps) {
   const heading = items.length === 1 ? items[0].title : "Your rewards update";
   return (
-    <Html>
+    <Html lang="en">
       <Head>
         <meta name="color-scheme" content="light dark" />
         <meta name="supported-color-schemes" content="light dark" />
-        <style>
-          {`.abonten-logo-dark{display:none}
-            @media (prefers-color-scheme:dark){
-              .abonten-logo-light{display:none!important}
-              .abonten-logo-dark{display:block!important}
-            }`}
-        </style>
       </Head>
-      <Tailwind
-        config={{
-          presets: [pixelBasedPreset],
-          theme: { extend: { colors: { brand: "#007291" } } },
-        }}
-      >
-        <Body className="bg-white font-sans">
-          <Preview>{items[0]?.body ?? heading}</Preview>
-          <Container className="my-[10px] mx-auto w-[600px] max-w-full border border-[#E5E5E5]">
-            <Section className="py-10 px-[48px] text-center">
-              <Img
-                src={ABONTEN_LOGO_EMAIL_LIGHT_URL}
-                width="120"
-                alt="Abonten Hub"
-                className="abonten-logo-light mx-auto mb-4"
-                style={{ display: "block" }}
-              />
-              <Img
-                src={ABONTEN_LOGO_EMAIL_DARK_URL}
-                width="120"
-                alt="Abonten Hub"
-                className="abonten-logo-dark mx-auto mb-4"
-                style={{ display: "none" }}
-              />
-              <Heading className="text-[28px] leading-[1.3] font-bold text-center -tracking-[1px]">
-                {heading}
-              </Heading>
-              <Text className="m-0 text-[14px] leading-[2] text-[#747474] font-medium">
-                Hi {name ?? "there"}, here&apos;s what&apos;s new with your
-                Abonten Credit.
-              </Text>
-            </Section>
+      <Preview>{items[0]?.body ?? heading}</Preview>
+      <Body style={{ backgroundColor: "#ffffff", fontFamily: FONT, margin: 0 }}>
+        <Container
+          style={{
+            width: "100%",
+            maxWidth: "600px",
+            margin: "10px auto",
+            border: "1px solid #e5e5e5",
+          }}
+        >
+          <Section style={{ padding: "36px 32px 28px", textAlign: "center" }}>
+            <Img
+              src={ABONTEN_LOGO_EMAIL_TILE_URL}
+              width="96"
+              alt="Abonten Hub"
+              style={{ display: "block", margin: "0 auto 12px" }}
+            />
+            <Heading
+              as="h1"
+              style={{
+                fontFamily: FONT,
+                fontSize: "26px",
+                lineHeight: "32px",
+                fontWeight: 700,
+                color: "#111111",
+                margin: "0 0 8px",
+              }}
+            >
+              {heading}
+            </Heading>
+            <Text
+              style={{
+                fontFamily: FONT,
+                fontSize: "15px",
+                lineHeight: "22px",
+                color: MUTED,
+                margin: 0,
+              }}
+            >
+              Hi {name ?? "there"}, here&apos;s what&apos;s new with your
+              Abonten Credit.
+            </Text>
+          </Section>
 
-            <Hr className="border-[#E5E5E5] m-0" />
+          <Hr style={{ borderColor: "#e5e5e5", margin: 0 }} />
 
-            <Section className="px-[48px] py-6">
-              {items.map((item, i) => (
-                <Section
-                  // biome-ignore lint/suspicious/noArrayIndexKey: a static email list that never re-orders
-                  key={i}
-                  className={i > 0 ? "pt-4" : undefined}
-                >
-                  <Text className="m-0 text-[15px] font-bold text-black">
-                    {item.title}
-                  </Text>
-                  {item.body ? (
-                    <Text className="m-0 mt-1 text-[14px] leading-[1.6] text-[#555555]">
-                      {item.body}
-                    </Text>
-                  ) : null}
-                </Section>
-              ))}
-            </Section>
-
-            <Hr className="border-[#E5E5E5] m-0" />
-
-            <Section className="py-8 text-center">
-              <Link
-                href={rewardsUrl}
-                className="bg-brand text-white font-bold text-[14px] rounded-[8px] px-8 py-3 inline-block"
+          <Section style={{ padding: "24px 32px" }}>
+            {items.map((item, i) => (
+              <Section
+                // biome-ignore lint/suspicious/noArrayIndexKey: a static email list that never re-orders
+                key={i}
+                style={i > 0 ? { paddingTop: "18px" } : undefined}
               >
-                Open Abonten Rewards
+                <Text
+                  style={{
+                    fontFamily: FONT,
+                    fontSize: "16px",
+                    lineHeight: "22px",
+                    fontWeight: 700,
+                    color: "#111111",
+                    margin: 0,
+                  }}
+                >
+                  {item.title}
+                </Text>
+                {item.body ? (
+                  <Text
+                    style={{
+                      fontFamily: FONT,
+                      fontSize: "15px",
+                      lineHeight: "22px",
+                      color: "#444444",
+                      margin: "4px 0 0",
+                    }}
+                  >
+                    {item.body}
+                  </Text>
+                ) : null}
+              </Section>
+            ))}
+          </Section>
+
+          <Section style={{ padding: "4px 32px 32px", textAlign: "center" }}>
+            <Button
+              href={rewardsUrl}
+              style={{
+                backgroundColor: "#007291",
+                color: "#ffffff",
+                fontFamily: FONT,
+                fontSize: "15px",
+                fontWeight: 700,
+                lineHeight: "20px",
+                borderRadius: "8px",
+                padding: "13px 28px",
+                textDecoration: "none",
+              }}
+            >
+              Open Abonten Rewards
+            </Button>
+          </Section>
+
+          <Hr style={{ borderColor: "#e5e5e5", margin: 0 }} />
+
+          <Section style={{ padding: "20px 32px 24px", textAlign: "center" }}>
+            <Text
+              style={{
+                fontFamily: FONT,
+                fontSize: "13px",
+                lineHeight: "19px",
+                color: FAINT,
+                margin: 0,
+              }}
+            >
+              You&apos;re getting this because you earned Abonten Credit on your
+              Abonten Hub account. Credit can be spent on Abonten and can&apos;t
+              be exchanged for cash.
+            </Text>
+            <Text
+              style={{
+                fontFamily: FONT,
+                fontSize: "13px",
+                lineHeight: "19px",
+                color: FAINT,
+                margin: "12px 0 0",
+              }}
+            >
+              Don&apos;t want these emails?{" "}
+              <Link
+                href={unsubscribeUrl}
+                style={{ color: FAINT, textDecoration: "underline" }}
+              >
+                Unsubscribe
               </Link>
-            </Section>
-
-            <Hr className="border-[#E5E5E5] m-0" />
-
-            <Section className="py-[22px]">
-              <Text className="m-0 text-[#AFAFAF] text-[13px] text-center px-10">
-                You&apos;re getting this because you earned Abonten Credit on
-                your Abonten Hub account. Credit can be spent on Abonten and
-                can&apos;t be exchanged for cash.
-              </Text>
-              <Text className="m-0 text-[#AFAFAF] text-[13px] text-center pt-4">
-                © {new Date().getFullYear()} Abonten Hub. All Rights Reserved.
-              </Text>
-            </Section>
-          </Container>
-        </Body>
-      </Tailwind>
+              . You&apos;ll still see your credit in the app.
+            </Text>
+            <Text
+              style={{
+                fontFamily: FONT,
+                fontSize: "13px",
+                lineHeight: "19px",
+                color: FAINT,
+                margin: "12px 0 0",
+              }}
+            >
+              © {new Date().getFullYear()} Abonten Hub
+            </Text>
+          </Section>
+        </Container>
+      </Body>
     </Html>
   );
 }

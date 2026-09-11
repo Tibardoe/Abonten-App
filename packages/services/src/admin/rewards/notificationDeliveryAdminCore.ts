@@ -31,6 +31,7 @@ export async function getNotificationDeliveryStatsCore(
     supabase
       .from("notification_delivery")
       .select("channel, status")
+      .eq("source", "rewards")
       .gte("created_at", since)
       .limit(20_000),
     supabase

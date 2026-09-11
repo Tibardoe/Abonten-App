@@ -3,6 +3,7 @@ import { getCreditSummary } from "@/actions/getCreditSummary";
 import { getLoyaltyProgress } from "@/actions/getLoyaltyProgress";
 import { getReferralInvite } from "@/actions/getReferralInvite";
 import { getReferralLink } from "@/actions/getReferralLink";
+import { getRewardEmailPreference } from "@/actions/getRewardEmailPreference";
 import { getRewardsProgram } from "@/actions/getRewardsProgram";
 import {
   PageTitle,
@@ -12,6 +13,7 @@ import {
 import CreditBalanceCard from "@/rewards/molecules/CreditBalanceCard";
 import LoyaltyProgressCard from "@/rewards/molecules/LoyaltyProgressCard";
 import ReferralCodeCard from "@/rewards/molecules/ReferralCodeCard";
+import RewardEmailToggle from "@/rewards/molecules/RewardEmailToggle";
 import CreditActivityList from "@/rewards/organisms/CreditActivityList";
 import InvitePanel from "@/rewards/organisms/InvitePanel";
 import RewardsHowItWorks from "@/rewards/organisms/RewardsHowItWorks";
@@ -29,13 +31,15 @@ export default async function RewardsPage() {
     notFound();
   }
 
-  const [summary, firstPage, referral, invite, loyalty] = await Promise.all([
-    getCreditSummary(),
-    getCreditActivity(),
-    getReferralLink(),
-    getReferralInvite(),
-    getLoyaltyProgress(),
-  ]);
+  const [summary, firstPage, referral, invite, loyalty, emails] =
+    await Promise.all([
+      getCreditSummary(),
+      getCreditActivity(),
+      getReferralLink(),
+      getReferralInvite(),
+      getLoyaltyProgress(),
+      getRewardEmailPreference(),
+    ]);
   const referralCode = referral.data?.code ?? null;
   const inviteData = invite.status === 200 ? invite.data : undefined;
 
@@ -85,6 +89,10 @@ export default async function RewardsPage() {
       ) : null}
 
       <RewardsHowItWorks program={program.data} />
+
+      {emails.status === 200 && emails.data ? (
+        <RewardEmailToggle initial={emails.data} />
+      ) : null}
 
       <section>
         <SectionTitle>Activity</SectionTitle>

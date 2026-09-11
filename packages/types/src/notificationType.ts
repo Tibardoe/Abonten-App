@@ -26,6 +26,8 @@ export type NotificationData = {
   placeId?: string;
   placeSlug?: string;
   ticketId?: string;
+  /** With kind "ticket" and no ticketId: the Tickets tab section to open. */
+  ticketsSection?: "cancelled" | "refunds";
   reviewId?: string;
   conversationId?: string;
 };

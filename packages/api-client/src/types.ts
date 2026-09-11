@@ -46,6 +46,7 @@ import type {
   ReferralCodeInfo,
   ReferralInvite,
   ReferralLink,
+  RewardEmailPreference,
   RewardsProgram,
 } from "@abonten/types/rewards";
 
@@ -101,6 +102,7 @@ export type ReferralTouchResult = { status: number; message?: string };
 export type ReferralInviteResult = ApiEnvelope<ReferralInvite>;
 export type PromotionCreditResult = ApiEnvelope<PromotionCredit>;
 export type LoyaltyProgressResult = ApiEnvelope<LoyaltyProgress | null>;
+export type RewardEmailPreferenceResult = ApiEnvelope<RewardEmailPreference>;
 export type EventPromoterCommissionResult =
   ApiEnvelope<EventPromoterCommission>;
 export type PlaceVisitPanelResult = ApiEnvelope<PlaceVisitPanel>;

@@ -3,8 +3,9 @@ import { logger } from "@abonten/core/logger";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { type PushResult, sendPushToUser } from "./sendPushNotification";
 
-// Push + email delivery for notifications written in SQL (the reward
-// engine's notices -- see migration 20260911152213). The
+// Push + email delivery for notifications written in SQL: the reward
+// engine's notices (push + email, migrations 20260911152213 / 20260911163306)
+// and the "New review" / "Event cancelled" notices (push only). The
 // `notification-delivery` pg_cron job calls POST /api/notifications/deliver
 // while anything is due; that route checks the token and runs this. The
 // database decides what is due (quiet hours, one email per 12 hours); this
@@ -17,6 +18,8 @@ export type RewardEmailItem = {
 };
 
 export type RewardEmail = {
+  /** For the signed unsubscribe link. */
+  userId: string;
   to: string;
   name: string | null;
   items: RewardEmailItem[];
@@ -56,6 +59,7 @@ type ClaimedRow = {
   notification_id: string;
   user_id: string;
   channel: string;
+  source: string;
   type: string;
   title: string;
   body: string | null;
@@ -86,17 +90,16 @@ export async function isDeliveryTokenValid(
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-/** Several notices for one person in a run go out as one push. */
-function pushFor(rows: ClaimedRow[]) {
-  if (rows.length === 1) {
-    const [row] = rows;
-    return {
-      title: row.title,
-      body: row.body,
-      link: row.link,
-      data: (row.data ?? {}) as Record<string, unknown>,
-    };
-  }
+const singlePush = (row: ClaimedRow) => ({
+  title: row.title,
+  body: row.body,
+  link: row.link,
+  data: (row.data ?? {}) as Record<string, unknown>,
+});
+
+/** Several reward notices for one person in a run go out as one push. */
+function rewardPushFor(rows: ClaimedRow[]) {
+  if (rows.length === 1) return singlePush(rows[0]);
   const summary = rows.map((r) => r.title).join(" · ");
   return {
     title: `${rows.length} Abonten Rewards updates`,
@@ -156,9 +159,14 @@ export async function deliverQueuedNotificationsCore(
     else if (status === "queued") summary.retrying += ids.length;
   };
 
+  // Reward notices are batched per person; a review or a cancellation is
+  // its own push (it opens its own screen).
   const groups = new Map<string, ClaimedRow[]>();
   for (const row of rows) {
-    const key = `${row.channel}:${row.user_id}`;
+    const key =
+      row.source === "rewards"
+        ? `${row.channel}:${row.user_id}`
+        : `${row.channel}:${row.user_id}:${row.delivery_id}`;
     const list = groups.get(key) ?? [];
     list.push(row);
     groups.set(key, list);
@@ -169,7 +177,12 @@ export async function deliverQueuedNotificationsCore(
     const ids = group.map((r) => r.delivery_id);
     try {
       if (channel === "push") {
-        const result = await sendPush(userId, pushFor(group));
+        const result = await sendPush(
+          userId,
+          group[0].source === "rewards"
+            ? rewardPushFor(group)
+            : singlePush(group[0]),
+        );
         if (result === "sent") {
           await finish(ids, "sent");
           summary.pushSent += 1;
@@ -195,6 +208,7 @@ export async function deliverQueuedNotificationsCore(
         return;
       }
       const result = await deps.sendEmail({
+        userId,
         to: email,
         name: profile.data?.full_name || profile.data?.username || null,
         items: group

@@ -2783,7 +2783,9 @@ export type Database = {
           finished_at: string | null;
           id: number;
           notification_id: string;
+          source: string;
           status: string;
+          urgent: boolean;
           user_id: string;
         };
         Insert: {
@@ -2795,7 +2797,9 @@ export type Database = {
           finished_at?: string | null;
           id?: never;
           notification_id: string;
+          source?: string;
           status?: string;
+          urgent?: boolean;
           user_id: string;
         };
         Update: {
@@ -2807,7 +2811,9 @@ export type Database = {
           finished_at?: string | null;
           id?: never;
           notification_id?: string;
+          source?: string;
           status?: string;
+          urgent?: boolean;
           user_id?: string;
         };
         Relationships: [
@@ -2857,6 +2863,39 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [];
+      };
+      notification_preference: {
+        Row: {
+          reward_emails: boolean;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          reward_emails?: boolean;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          reward_emails?: boolean;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_preference_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_preference_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
       };
       observability_config: {
         Row: {
@@ -8999,6 +9038,7 @@ export type Database = {
           delivery_id: number;
           link: string;
           notification_id: string;
+          source: string;
           title: string;
           type: string;
           user_id: string;

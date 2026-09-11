@@ -104,7 +104,12 @@ and `POST /api/mobile/places/visits`).
 `notifications/deliveryCore` (reward pushes and emails) has no mobile or
 Server Action twin: its only caller is `POST /api/notifications/deliver`,
 hit by the `notification-delivery` pg_cron job with a token, which injects
-the web app's React-email sender.
+the web app's React-email sender. `notifications/rewardEmailPreferenceCore`
+— the Rewards page email switch: `getRewardEmailPreference` /
+`setRewardEmailPreference` and `GET/PUT /api/mobile/notifications/reward-emails`;
+its signed-link path (`setRewardEmailsByLink`, `POST
+/api/notifications/unsubscribe`) is web-only because the link only exists in
+emails.
 Logging an event share is class A on mobile (`event_share` owner-insert
 under RLS) and a Server Action on web. The two credit reads call
 `auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their
