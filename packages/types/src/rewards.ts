@@ -155,6 +155,32 @@ export type CreditQuote = {
 };
 
 // ─────────────────────────────────────────────────────────────
+// Referral links (Phase 4)
+// ─────────────────────────────────────────────────────────────
+
+/** The caller's referral code for share links (null while capture is off). */
+export type ReferralLink = {
+  captureEnabled: boolean;
+  code: string | null;
+  /** How long after opening a link a purchase still counts. */
+  attributionWindowDays: number;
+};
+
+/**
+ * A referral link the buyer opened, sent with a checkout as a HINT only: the
+ * server re-validates the code, the window and who it belongs to before
+ * anything is stamped. `eventSlug` is what the web cookie knows (the link's
+ * URL); the app sends the event id it resolved.
+ */
+export type ReferralHint = {
+  code: string;
+  touchedAt: string;
+  source?: "link" | "qr" | "install_referrer";
+  eventId?: string;
+  eventSlug?: string;
+};
+
+// ─────────────────────────────────────────────────────────────
 // Admin console (apps/admin › Rewards)
 // ─────────────────────────────────────────────────────────────
 
@@ -208,6 +234,7 @@ export type RewardsProgramSettings = {
   supportGoodwillMonthlyCapMinor: number;
   creditSharePayoutHoldBps: number;
   withdrawalMinMinor: number;
+  referralAttributionWindowDays: number;
   updatedAt: string;
   updatedBy: string | null;
 };
@@ -228,6 +255,8 @@ export type RewardRuleSummary = {
   expiryDays: number | null;
   withdrawable: boolean;
   note: string | null;
+  createdBy: string | null;
+  createdByName: string | null;
   createdAt: string;
 };
 
@@ -337,4 +366,63 @@ export type AdminCreditAccountDetail = {
   goodwillMonthlyCapMinor: number;
   /** Adjustments at or above this need a second approver. */
   dualApprovalThresholdMinor: number;
+};
+
+export type RewardEventStatus =
+  | "pending"
+  | "held"
+  | "released"
+  | "voided"
+  | "rejected"
+  | "deferred"
+  | "clawed_back";
+
+/** One reward decision (admin only; risk flags are never shown to users). */
+export type AdminRewardEvent = {
+  id: string;
+  ruleKey: string;
+  ruleVersion: number | null;
+  isShadow: boolean;
+  status: RewardEventStatus;
+  decision: "auto" | "review" | "reject";
+  statusReason: string | null;
+  amountMinor: number;
+  releasedMinor: number | null;
+  riskScore: number;
+  riskFlags: string[];
+  basis: Record<string, unknown>;
+  beneficiary: { id: string; name: string | null };
+  buyer: { id: string | null; name: string | null };
+  event: { id: string | null; title: string | null };
+  transactionId: string | null;
+  releaseAt: string | null;
+  createdAt: string;
+  settledAt: string | null;
+  review: { by: string | null; at: string | null; note: string | null };
+};
+
+/** Shadow-mode projection for tuning rates before anything is paid. */
+export type AdminReferralSummary = {
+  sinceDays: number;
+  touches: number;
+  attributedCheckouts: number;
+  referredTicketRevenueMinor: number;
+  referredNetRevenueMinor: number;
+  byStatus: Partial<
+    Record<RewardEventStatus, { count: number; amountMinor: number }>
+  >;
+  /** Projected rewards (pending + held + released) ÷ referred net revenue. */
+  projectedCostShareBps: number | null;
+  riskFlags: { flag: string; count: number }[];
+  topReferrers: {
+    userId: string;
+    name: string | null;
+    rewards: number;
+    amountMinor: number;
+  }[];
+  engine: {
+    outboxLagSeconds: number;
+    deadLetters: number;
+    settlementBacklog: number;
+  };
 };

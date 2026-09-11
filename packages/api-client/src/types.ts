@@ -37,6 +37,7 @@ import type {
   CreditActivityItem,
   CreditQuote,
   CreditSummary,
+  ReferralLink,
   RewardsProgram,
 } from "@abonten/types/rewards";
 
@@ -81,6 +82,14 @@ export type CreditSummaryResult = ApiEnvelope<CreditSummary>;
 export type CreditActivityResult = PaginatedResult<CreditActivityItem>;
 export type RewardsProgramResult = ApiEnvelope<RewardsProgram>;
 export type CreditQuoteResult = ApiEnvelope<CreditQuote>;
+export type ReferralLinkResult = ApiEnvelope<ReferralLink>;
+export type ReferralTouchBody = {
+  code: string;
+  eventId?: string | null;
+  placeId?: string | null;
+  source?: "link" | "qr" | "install_referrer";
+};
+export type ReferralTouchResult = { status: number; message?: string };
 
 // ---- messaging ---------------------------------------------------------
 
@@ -207,6 +216,13 @@ export type ValidateCheckoutBody = {
   // validateCheckoutCore. A bad code fails the whole validate call with its
   // own message (e.g. "Promo code is invalid!").
   promoCode?: string | null;
+  // The referral link the buyer opened for this event, if any (a hint:
+  // the server re-validates the code, its age and who it belongs to).
+  referral?: {
+    code: string;
+    touchedAt: string;
+    source?: "link" | "qr" | "install_referrer";
+  } | null;
 };
 
 // validateCheckoutCore replies flat (not wrapped in `data`): 200 carries
