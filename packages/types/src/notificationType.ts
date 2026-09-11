@@ -18,10 +18,13 @@ export type NotificationEntityKind =
   | "place_claim"
   | "place_booking"
   | "message"
-  | "rewards";
+  | "rewards"
+  | "fieldops";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
+  /** With kind "fieldops": the /field route to open (web + later Expo). */
+  fieldOpsRoute?: string;
   eventId?: string;
   placeId?: string;
   placeSlug?: string;

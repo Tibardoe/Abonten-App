@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phase 0 (2026-09-11)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–1 (2026-09-11)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -2638,12 +2638,85 @@ seeded rule versions all inactive, no campaign):**
   expected authenticated-executable WARNs for the four self-only helpers
   (same class as `is_staff`). CI gained a `unit-tests` job (core + services
   vitest + `check:api-parity`), which were not in CI before.
-- **Not yet built:** everything that moves work or money — assignments and
-  the `/field` area (P1), the onboarding wizard with owner OTP + duplicate
+**Phase 1 — field shell (migration `20260911181444_fieldops_assignments`,
+applied to production via MCP; still inert until an admin switches the
+programme on and activates a campaign):**
+- `fieldops_assignment` — one member × one territory × a date range
+  (`starts_on = ends_on` for a day); `assigned → started → completed |
+  cancelled`; reassignment is cancel + a new row; one open assignment per
+  member per territory (partial unique); offline members check in with the
+  device's GPS (`start_location`, generated `start_lat/lng`,
+  `start_accuracy_m`, `start_distance_m` from the territory centre —
+  informational, shown to the lead, never refused on). The
+  `fieldops_assignment_check` trigger enforces member ∈ team ∈ campaign,
+  `member_user_id` = the membership's user, active offline/online member,
+  mode matches role, territory active and in the campaign's region.
+  `fieldops_prospect` — a business/organizer a member identified in a
+  territory (`identified → contacted → interested | declined | converted`,
+  `contact_attempts` jsonb appended by the member, optional
+  `matched_place_id` for "already on Abonten"); the same integrity trigger.
+  RLS on both: SELECT own rows (`member_user_id = auth.uid()`) or
+  `fieldops_is_lead_of_team(team_id)`; no client writes.
+- **Services** (`packages/services/src/fieldOps/`): `shared/fieldOpsRows`
+  (row mappers, `pointWkt/polygonWkt`, `notifyFieldOps` → in-app + push via
+  `createNotificationCore`, honouring the programme's push switch);
+  `member/{myFieldOpsQuery,assignmentsCore,prospectsCore}` and
+  `lead/{leadDashboardQuery,leadTerritoriesCore,leadAssignmentsCore,
+  leadTeamCore,announceCore}` — every core `(serviceClient, userId, input)`
+  re-derives the caller's membership with `resolveFieldOpsContext` +
+  `requireMembership(role)` and gates on the campaign status (plan §6:
+  planning in draft/active, starting only while active, prospects while
+  active/winding_down, team changes in draft/active/paused). A lead never
+  reads payout details, never appoints another lead, never edits their own
+  row; suspending/removing a member cancels their open assignments.
+  `getMyFieldOpsCore` also binds pending phone invitations
+  (`fieldops_bind_invited_memberships`) and honours the
+  `worker_ui_enabled` switch (now editable in Admin › Field Ops › Settings).
+- **Transports:** 18 web Server Actions in `apps/web/src/actions/fieldOps/`
+  (shared plumbing `apps/web/src/utils/fieldOpsAction.ts`: cookie session →
+  zod → service-role client → core) and 15 `/api/mobile/field-ops/**` route
+  handlers built on one `fieldOpsRoute` helper
+  (`api/mobile/field-ops/_lib/handler.ts`), typed as `api.fieldOps.*` /
+  `api.fieldOps.lead.*` in `@abonten/api-client` (parity: 134 routes).
+- **Web UI** (`apps/web/src/app/(pages)/field/**`, components in
+  `apps/web/src/fieldOps/{atoms,molecules,organisms}`): the layout 404s
+  unless the programme + worker UI are on and the visitor holds a membership
+  (`loadFieldOpsMe` = request-cached `getMyFieldOps`). Members: `/field`
+  Today (campaign banner, today's assignments with Start [GPS check-in for
+  offline] / Complete, quick stats), `/field/assignments`,
+  `/field/territory/[id]` (territory, own assignments, "Add a business",
+  prospects with contact logging). Team lead: `/field/lead` (coverage board
+  covered / completed / uncovered + coverage %, today's assignments, team
+  headcount), `/field/lead/territories` (add/edit with "Find on the map" via
+  the existing `/api/geocode` proxy, mark completed / reopen),
+  `/field/lead/assignments` (day picker, create member × territory × dates,
+  cancel with reason), `/field/lead/team` (invite by phone, suspend /
+  reactivate / remove), `/field/lead/announce`. A "Field work" link
+  (`FieldOpsNavLink`, `useFieldOpsMe`) appears in the header and side menu
+  only for people with a membership while the programme is on. English
+  only for now (same as Rewards; the i18n namespace is deferred).
+- **Notifications:** `fieldops_assignment_created`,
+  `fieldops_assignment_changed`, `fieldops_membership_added`,
+  `fieldops_announcement` with `data.kind = "fieldops"` + `fieldOpsRoute`
+  (new `NotificationEntityKind`; mobile's `notificationTarget()` falls
+  through to `link` until Phase 9).
+- **Verified:** integration `fieldops-assignments` (10: lead-only planning
+  and cross-campaign refusal, one open assignment per member/territory +
+  reassignment history, wrong role / past date / foreign territory refused
+  by the trigger, RLS self-or-lead reads with no client writes, GPS start →
+  distance recorded → second start refused → complete, paused campaign
+  blocks starting, prospects need an open assignment + contact attempts
+  move status + phone masked for the lead, coverage board + lead territory
+  scope, phone invites + lead-appointment refused + suspension cancels open
+  work + self-edit refused, announcements reach every active member but the
+  sender) plus the Phase 0 suites and the full integration run on a fresh
+  local replay; core / services unit tests; services, admin, web and
+  api-client typecheck; web production build; `check:api-parity`. The
+  `/field` pages are not yet exercised in a browser.
+- **Not yet built:** the onboarding wizard with owner OTP + duplicate
   search + lead review (P2), the commission ledger and sweep (P3), payouts
   (P4), events / claim assistance (P5), content creator (P6), analytics
-  (P7), Playwright + pilot readiness (P8). The admin UI is not yet exercised
-  in a browser (typecheck + build only).
+  (P7), Playwright + pilot readiness (P8).
 
 ---
 

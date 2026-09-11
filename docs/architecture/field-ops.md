@@ -1,8 +1,9 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phase 0 shipped 2026-09-11 (branch `feat/field-ops-p0`). The owner approved
-the full plan that day and the four gating decisions: team leads and workers
-use the web app (`/field`, Phase 1); business ownership is proven by an OTP
+_Phase 0 shipped 2026-09-11 (branch `feat/field-ops-p0`), Phase 1 the same
+day (`feat/field-ops-p1`). The owner approved the full plan and the four
+gating decisions: team leads and workers use the web app (`/field`, Phase
+1); business ownership is proven by an OTP
 the owner enters (Phase 2); a commission needs the team lead's review plus a
 holding period re-checked by a sweep (Phase 3); payouts are weekly manual
 MoMo batches by a finance admin (Phase 4). The full architecture is in the
@@ -46,6 +47,15 @@ the start; Field Ops only records *how it was acquired*.
 | `fieldops_team`, `fieldops_team_member` | One team per campaign in v1. Members have a role (`team_lead`, `content_creator`, `offline_member`, `online_member`) and status (`invited`, `active`, `suspended`, `left`); one membership per person per campaign; one active lead per team. Phone invitations bind when the person with that verified phone appears (`fieldops_bind_invited_memberships`). Payout columns are column-level revoked from clients. |
 | `fieldops_commission_rule` | Versioned, immutable (only `is_active` may change; no deletes). Programme defaults (`campaign_id null`) or a per-campaign override. Seeded at GH₵ 5 for place/event onboarding, GH₵ 2 for claim assistance, placeholders for content and stipends; **all inactive**. |
 
+## Model (Phase 1)
+
+| Table | Role |
+|---|---|
+| `fieldops_assignment` | One member working one territory over a date range (a day when `starts_on = ends_on`). `assigned → started → completed \| cancelled`; reassignment = cancel + new row; one open assignment per member per territory. Offline members check in with GPS on start (`start_location`, `start_accuracy_m`, `start_distance_m` to the territory centre — informational, shown to the lead). `fieldops_assignment_check` keeps member/team/campaign/territory/role/mode consistent. |
+| `fieldops_prospect` | A business or organizer a member identified in a territory: `identified → contacted → interested \| declined \| converted`, a `contact_attempts` log, optional `matched_place_id`. Needs an open assignment in that territory. |
+
+Both: SELECT for the member's own rows or the lead's team; no client writes.
+
 ## Lifecycle
 
 ```
@@ -73,8 +83,21 @@ territory in the region and an active team lead); the same table lives in
 - **Clients** (members, leads): SELECT only, scoped by
   `fieldops_is_member(campaign)` / `fieldops_is_lead_of_team(team)`; no
   INSERT/UPDATE/DELETE grants on any `fieldops_` table. Member/lead services
-  (Phase 1+) resolve `resolveFieldOpsContext(serviceClient, userId)` and
-  write on the service role.
+  (`packages/services/src/fieldOps/{member,lead}/`) resolve
+  `resolveFieldOpsContext(serviceClient, userId)`, assert the role with
+  `requireMembership`, gate on the campaign status and write on the service
+  role. Web: `apps/web/src/actions/fieldOps/*` (18 actions); mobile:
+  `/api/mobile/field-ops/**` (15 routes) → `api.fieldOps.*`.
+- **What a team lead may do** (`/field/lead`): add/edit territories in
+  their campaign's region and mark them completed, plan and cancel
+  assignments (draft/active campaign), invite field members by phone and
+  suspend / reactivate / remove them (never another lead, never
+  themselves), send announcements. They never see payout details, other
+  campaigns, or anything outside `/field`.
+- **What a member may do** (`/field`): see their own assignments, start
+  today's (offline = GPS check-in; only while the campaign is active) and
+  complete it, log and update their own prospects in a territory they hold
+  an open assignment for.
 - A version of a rule that would pay **more** than the live one must be
   activated by a different admin from the one who published it. Nothing can
   be made live until the phase that pays that activity ships
@@ -83,8 +106,10 @@ territory in the region and an active team lead); the same table lives in
 ## Switching it off
 
 - Operationally: Admin › Field Ops › Settings › "Programme switched on"
-  (step-up, audited). Off = `/field` is a 404 (Phase 1), no submissions, no
-  commissions; the admin module stays readable.
+  (step-up, audited). Off = `/field` is a 404 and the "Field work" link
+  disappears, no submissions, no commissions; the admin module stays
+  readable. "Worker web area switched on" hides `/field` alone while the
+  rest keeps running.
 - Emergency: `FIELD_OPS_KILL_SWITCH=true` on the web and admin deployments
   (`isFieldOpsKillSwitchOn()`), mirroring `REWARDS_KILL_SWITCH`.
 - Per region: pause / wind down / complete / archive the campaign.
@@ -105,9 +130,21 @@ territory in the region and an active team lead); the same table lives in
   off) → Make live (another admin if it pays more). A campaign-specific
   version is published from the campaign page in a later phase; the service
   already supports it.
+- **Run a team day (lead):** `/field/lead/territories` → add the towns
+  ("Find on the map" or type coordinates) → `/field/lead/team` → invite
+  members by phone (they join when they sign in with that number) →
+  `/field/lead/assignments` → pick the day, assign member × territory →
+  the member gets a notification; `/field/lead` shows coverage and who has
+  checked in. Reassign = cancel (with a reason the member sees) + assign.
+- **Work a day (member):** `/field` → Start (offline members allow
+  location) → open the territory → "Add a business" for everyone you
+  speak to, "Log a contact" as it progresses → Mark completed.
 - **Tests:** `packages/core/src/fieldOps/*.test.ts` (lifecycle table,
   territory geometry), `packages/services/src/__integration__/fieldops-rbac`
   (client writes refused, scoped reads, self-only helpers, admin permission
-  checks, immutable rules) and `fieldops-lifecycle` (state machine,
+  checks, immutable rules), `fieldops-lifecycle` (state machine,
   activation guards, one live campaign per region, territory containment,
-  phone invitation binding).
+  phone invitation binding) and `fieldops-assignments` (lead-only
+  planning, one open assignment per member/territory, RLS self-or-lead,
+  GPS start / complete, paused campaign, prospects + contact log, coverage
+  board, lead team management, announcements).

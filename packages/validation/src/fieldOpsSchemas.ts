@@ -239,6 +239,172 @@ export const fieldOpsRuleActivationSchema = z.object({
   reason,
 });
 
+// ── Phase 1: field shell (members + team leads) ─────────────
+// Every schema below carries the campaignId the caller says they are acting
+// in; the service checks that the caller really holds the needed role there.
+
+const uuid = z.string().uuid();
+
+export const fieldOpsAssignmentCreateSchema = z
+  .object({
+    campaignId: uuid,
+    memberId: uuid,
+    territoryId: uuid,
+    startsOn: isoDate,
+    endsOn: isoDate,
+    notes: z.string().trim().max(2000).nullable().optional(),
+  })
+  .refine((v) => v.endsOn >= v.startsOn, {
+    message: "The end date can't be before the start date",
+    path: ["endsOn"],
+  });
+
+export const fieldOpsAssignmentCancelSchema = z.object({
+  campaignId: uuid,
+  assignmentId: uuid,
+  reason,
+});
+
+export const fieldOpsAssignmentStartSchema = z.object({
+  campaignId: uuid,
+  assignmentId: uuid,
+  location: latLngSchema.nullable().optional(),
+  accuracyM: z.number().min(0).max(100000).nullable().optional(),
+});
+
+export const fieldOpsAssignmentCompleteSchema = z.object({
+  campaignId: uuid,
+  assignmentId: uuid,
+});
+
+export const fieldOpsAssignmentListSchema = z.object({
+  campaignId: uuid,
+  /** YYYY-MM-DD; assignments covering that day. */
+  date: isoDate.optional(),
+  status: z.enum(["assigned", "started", "completed", "cancelled"]).optional(),
+});
+
+export const fieldOpsProspectKindSchema = z.enum([
+  "place",
+  "event",
+  "organizer",
+]);
+export const fieldOpsContactChannelSchema = z.enum([
+  "in_person",
+  "phone",
+  "whatsapp",
+  "social",
+  "email",
+]);
+export const fieldOpsContactOutcomeSchema = z.enum([
+  "no_answer",
+  "call_back",
+  "interested",
+  "declined",
+  "other",
+]);
+
+export const fieldOpsProspectCreateSchema = z.object({
+  campaignId: uuid,
+  territoryId: uuid,
+  kind: fieldOpsProspectKindSchema,
+  name: z.string().trim().min(2).max(120),
+  contactName: z.string().trim().max(120).nullable().optional(),
+  contactPhoneE164: e164.nullable().optional(),
+  contactChannel: fieldOpsContactChannelSchema.nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export const fieldOpsProspectUpdateSchema = z
+  .object({
+    campaignId: uuid,
+    prospectId: uuid,
+    status: z
+      .enum(["identified", "contacted", "interested", "declined"])
+      .optional(),
+    contactAttempt: z
+      .object({
+        channel: fieldOpsContactChannelSchema,
+        outcome: fieldOpsContactOutcomeSchema,
+        note: z.string().trim().max(500).nullable().optional(),
+      })
+      .optional(),
+    contactName: z.string().trim().max(120).nullable().optional(),
+    contactPhoneE164: e164.nullable().optional(),
+    notes: z.string().trim().max(2000).nullable().optional(),
+  })
+  .refine(
+    (v) =>
+      v.status !== undefined ||
+      v.contactAttempt !== undefined ||
+      v.contactName !== undefined ||
+      v.contactPhoneE164 !== undefined ||
+      v.notes !== undefined,
+    { message: "Nothing to change" },
+  );
+
+export const fieldOpsTerritoryLookupSchema = z.object({
+  campaignId: uuid,
+  territoryId: uuid,
+});
+
+/** A lead adds or edits a town/area in their campaign's region. */
+export const fieldOpsLeadTerritorySchema = fieldOpsTerritorySchema
+  .omit({ regionId: true, status: true })
+  .extend({ campaignId: uuid });
+
+export const fieldOpsLeadTerritoryStatusSchema = z.object({
+  campaignId: uuid,
+  territoryId: uuid,
+  status: z.enum(["active", "completed"]),
+});
+
+/** A lead invites a field member by phone (never another lead). */
+export const fieldOpsLeadInviteSchema = z.object({
+  campaignId: uuid,
+  role: z.enum(["content_creator", "offline_member", "online_member"]),
+  invitedPhoneE164: e164,
+  fullName: z.string().trim().min(2).max(120),
+});
+
+export const fieldOpsLeadMemberStatusSchema = z.object({
+  campaignId: uuid,
+  memberId: uuid,
+  status: z.enum(["active", "suspended", "left"]),
+  reason,
+});
+
+export const fieldOpsAnnouncementSchema = z.object({
+  campaignId: uuid,
+  title: z.string().trim().min(3).max(120),
+  body: z.string().trim().min(3).max(1000),
+});
+
+export const fieldOpsCampaignIdSchema = z.object({ campaignId: uuid });
+
+export type FieldOpsAssignmentCreateInput = z.infer<
+  typeof fieldOpsAssignmentCreateSchema
+>;
+export type FieldOpsAssignmentStartInput = z.infer<
+  typeof fieldOpsAssignmentStartSchema
+>;
+export type FieldOpsAssignmentListInput = z.infer<
+  typeof fieldOpsAssignmentListSchema
+>;
+export type FieldOpsProspectCreateInput = z.infer<
+  typeof fieldOpsProspectCreateSchema
+>;
+export type FieldOpsProspectUpdateInput = z.infer<
+  typeof fieldOpsProspectUpdateSchema
+>;
+export type FieldOpsLeadTerritoryInput = z.infer<
+  typeof fieldOpsLeadTerritorySchema
+>;
+export type FieldOpsLeadInviteInput = z.infer<typeof fieldOpsLeadInviteSchema>;
+export type FieldOpsAnnouncementInput = z.infer<
+  typeof fieldOpsAnnouncementSchema
+>;
+
 export type FieldOpsSettingsInput = z.infer<typeof fieldOpsSettingsSchema>;
 export type FieldOpsRegionInput = z.infer<typeof fieldOpsRegionSchema>;
 export type FieldOpsTerritoryInput = z.infer<typeof fieldOpsTerritorySchema>;

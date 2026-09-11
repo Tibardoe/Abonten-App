@@ -10,6 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import FieldOpsNavLink from "@/fieldOps/atoms/FieldOpsNavLink";
 import {
   useCurrentUserDetails,
   useIsOrganizer,
@@ -172,6 +173,8 @@ export default function Header() {
               <EventUploadButton />
 
               <RewardsNavLink />
+
+              <FieldOpsNavLink />
 
               {/* Not gated on isOrganizer/isPlaceOwner like the links above --
               every signed-in user can have messages/notifications, regardless
