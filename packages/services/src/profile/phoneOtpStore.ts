@@ -14,7 +14,9 @@
 
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 
-export type PhoneOtpPurpose = "sign-in" | "phone-update";
+// "fieldops-owner": the business owner's consent code in a Field Ops
+// onboarding (migration fieldops_onboarding widened the CHECK).
+export type PhoneOtpPurpose = "sign-in" | "phone-update" | "fieldops-owner";
 
 type PendingOtp = {
   requestId: string;

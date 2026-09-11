@@ -1,7 +1,8 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phase 0 shipped 2026-09-11 (branch `feat/field-ops-p0`), Phase 1 the same
-day (`feat/field-ops-p1`). The owner approved the full plan and the four
+_Phase 0 shipped 2026-09-11 (branch `feat/field-ops-p0`), Phases 1 and 2
+the same day (`feat/field-ops-p1`, `feat/field-ops-p2`). The owner approved
+the full plan and the four
 gating decisions: team leads and workers use the web app (`/field`, Phase
 1); business ownership is proven by an OTP
 the owner enters (Phase 2); a commission needs the team lead's review plus a
@@ -55,6 +56,39 @@ the start; Field Ops only records *how it was acquired*.
 | `fieldops_prospect` | A business or organizer a member identified in a territory: `identified → contacted → interested \| declined \| converted`, a `contact_attempts` log, optional `matched_place_id`. Needs an open assignment in that territory. |
 
 Both: SELECT for the member's own rows or the lead's team; no client writes.
+
+## Model (Phase 2)
+
+| Table | Role |
+|---|---|
+| `fieldops_onboarding` | One business onboarding from wizard start to review: who, where, the owner (OTP-verified `owner_user_id`), the real `place_id` (created through `create_place` with the onboarding's `client_request_id`), the member's position at submission, the duplicate-search snapshot, `draft → submitted → verified \| needs_changes \| rejected` (+ `withdrawn`; `verified → succeeded \| flagged` belongs to the Phase 3 sweep). Owner ≠ member and reviewer ≠ member are CHECKs; a place is onboarded once, an owner once per campaign. |
+| `fieldops_onboarding_evidence` | Storefront / interior / consent photos in the private `fieldops-evidence` bucket, with GPS + accuracy. Written and read only through service-issued signed URLs. |
+| `fieldops_onboarding_event` | Append-only timeline (trigger-enforced). |
+
+`fieldops_transition_onboarding` is the only way a status changes;
+`fieldops_find_similar_places` (pg_trgm + radius, or same phone) is the
+duplicate search; `fieldops_phone_belongs_to_member` backs the "owner is
+never a team member" rule.
+
+## Onboarding flow
+
+1. Member opens a territory they are assigned to → **Onboard a business**
+   (or from a logged prospect). A draft opens (idempotent per tap).
+2. Business name + pin → duplicate check. A likely match means withdraw
+   (claim assistance for existing listings is Phase 5).
+3. Owner's name + phone → a code goes to the OWNER's phone (never the
+   member's or any teammate's). The owner types it on the member's phone,
+   or — online mode — opens the consent link `/consent/field/<token>` on
+   their own phone. Their Abonten account is created/found right there and
+   will own the listing.
+4. Details (category, description, address, contacts, opening hours) and
+   photos (cover + gallery to Cloudinary; storefront + interior evidence to
+   the private bucket with GPS — required for in-person work).
+5. Submit: the service re-checks duplicates, creates the place under the
+   owner, records distance / territory containment, and hands it to the
+   team lead. The lead verifies (starts the holding period, snapshots the
+   rule), returns it with a note (one resubmission), or rejects. Admins can
+   decide in the lead's place from Admin › Field Ops › Onboardings.
 
 ## Lifecycle
 
@@ -144,7 +178,11 @@ territory in the region and an active team lead); the same table lives in
   (client writes refused, scoped reads, self-only helpers, admin permission
   checks, immutable rules), `fieldops-lifecycle` (state machine,
   activation guards, one live campaign per region, territory containment,
-  phone invitation binding) and `fieldops-assignments` (lead-only
+  phone invitation binding), `fieldops-assignments` (lead-only
   planning, one open assignment per member/territory, RLS self-or-lead,
   GPS start / complete, paused campaign, prospects + contact log, coverage
-  board, lead team management, announcements).
+  board, lead team management, announcements) and `fieldops-onboarding`
+  (start gate, owner OTP rules with a faked Hubtel, place created under the
+  owner, duplicates, RLS + append-only timeline, review round-trip, admin
+  decision). `packages/core/src/fieldOps/{duplicateScore,eligibility}.test.ts`
+  cover the pure scoring and checklist logic.

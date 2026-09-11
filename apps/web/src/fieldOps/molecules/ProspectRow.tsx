@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import StartOnboardingButton from "@/fieldOps/molecules/StartOnboardingButton";
 import { useToast } from "@/hooks/useToast";
 import type { FieldOpsProspect } from "@abonten/types/fieldOps";
 import { useRouter } from "next/navigation";
@@ -80,6 +81,18 @@ export default function ProspectRow({
             </li>
           ))}
         </ul>
+      ) : null}
+      {editable &&
+      p.status !== "converted" &&
+      p.kind === "place" &&
+      !logging ? (
+        <div className="mt-3">
+          <StartOnboardingButton
+            campaignId={p.campaignId}
+            territoryId={p.territoryId}
+            prospectId={p.id}
+          />
+        </div>
       ) : null}
       {editable && p.status !== "converted" ? (
         logging ? (

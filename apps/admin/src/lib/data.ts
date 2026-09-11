@@ -29,6 +29,11 @@ import {
   getCampaignDetailCore,
   listCampaignsCore,
 } from "@abonten/services/admin/fieldOps/campaignsAdminCore";
+import {
+  type ListOnboardingsFilters,
+  getOnboardingAdminDetailCore,
+  listOnboardingsAdminCore,
+} from "@abonten/services/admin/fieldOps/onboardingsAdminCore";
 import { getFieldOpsOverviewCore } from "@abonten/services/admin/fieldOps/overviewAdminCore";
 import {
   getRegionDetailCore,
@@ -470,6 +475,26 @@ export async function loadFieldOpsRules() {
   const ctx = await requireAdmin();
   const rules = await listCommissionRulesCore(getServiceClient(), ctx, null);
   return { ctx, rules };
+}
+
+export async function loadFieldOpsOnboardings(filters: ListOnboardingsFilters) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [onboardings, campaigns] = await Promise.all([
+    listOnboardingsAdminCore(svc, ctx, filters),
+    listCampaignsCore(svc, ctx, { status: "all" }),
+  ]);
+  return { ctx, onboardings, campaigns };
+}
+
+export async function loadFieldOpsOnboarding(onboardingId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getOnboardingAdminDetailCore(
+    getServiceClient(),
+    ctx,
+    onboardingId,
+  );
+  return { ctx, detail };
 }
 
 export async function loadFieldOpsSettings() {

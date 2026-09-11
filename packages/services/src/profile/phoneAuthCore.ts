@@ -26,7 +26,7 @@ export type ResolvePhoneUserResult =
   | { ok: true; userId: string; isNewUser: boolean }
   | { ok: false; status: 400 | 401 | 429 | 500; message: string };
 
-type FindOrCreateResult =
+export type FindOrCreateResult =
   | { userId: string; isNewUser: true }
   | { userId: string; isNewUser: false }
   | { error: string };
@@ -90,7 +90,12 @@ export async function verifyPhoneOtpAndResolveUser(
   return { ok: true, userId: found.userId, isNewUser: found.isNewUser };
 }
 
-async function findOrCreateUserByPhone(
+/**
+ * Find-or-create the auth.users row for a verified phone. Exported for the
+ * Field Ops owner flow (fieldOps/member/ownerOtpCore), which confirms the
+ * business owner's code the same way but never mints a session.
+ */
+export async function findOrCreateUserByPhone(
   phoneE164: string,
 ): Promise<FindOrCreateResult> {
   const service = getSupabaseServiceClient();

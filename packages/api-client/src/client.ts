@@ -53,15 +53,30 @@ import type {
   FieldOpsAssignmentStartBody,
   FieldOpsAssignmentStatus,
   FieldOpsAssignmentsResult,
+  FieldOpsEvidenceRequestBody,
+  FieldOpsEvidenceTicketResult,
   FieldOpsLeadDashboardResult,
   FieldOpsLeadInviteBody,
   FieldOpsLeadMemberStatusBody,
   FieldOpsLeadTerritoryBody,
   FieldOpsMeResult,
   FieldOpsMemberStatusResult,
+  FieldOpsOnboardingDetailResult,
+  FieldOpsOnboardingDraftResult,
+  FieldOpsOnboardingResult,
+  FieldOpsOnboardingStartBody,
+  FieldOpsOnboardingStatus,
+  FieldOpsOnboardingSubmitBody,
+  FieldOpsOnboardingsResult,
+  FieldOpsOwnerOtpRequestBody,
+  FieldOpsOwnerOtpResult,
   FieldOpsProspectCreateBody,
   FieldOpsProspectResult,
   FieldOpsProspectUpdateBody,
+  FieldOpsRemovedResult,
+  FieldOpsReviewBody,
+  FieldOpsSimilarPlacesResult,
+  FieldOpsSimilarSearchBody,
   FieldOpsTeamMemberResult,
   FieldOpsTeamResult,
   FieldOpsTerritoriesResult,
@@ -1683,7 +1698,121 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "PATCH", body, auth: true },
         );
       },
+      /** The caller's onboardings in a campaign. */
+      onboardings(params: {
+        campaignId: string;
+        status?: FieldOpsOnboardingStatus;
+      }) {
+        const query = new URLSearchParams({ campaignId: params.campaignId });
+        if (params.status) query.set("status", params.status);
+        return request<FieldOpsOnboardingsResult>(
+          `/api/mobile/field-ops/onboardings?${query.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Open (or resume, via clientRequestId) a draft onboarding. */
+      startOnboarding(body: FieldOpsOnboardingStartBody) {
+        return request<FieldOpsOnboardingResult>(
+          "/api/mobile/field-ops/onboardings",
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** The wizard's resume state. */
+      onboardingDraft(onboardingId: string, campaignId: string) {
+        return request<FieldOpsOnboardingDraftResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}?campaignId=${encodeURIComponent(campaignId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Full detail (evidence, timeline, checklist) for the member or their lead. */
+      onboardingDetail(onboardingId: string, campaignId: string) {
+        return request<FieldOpsOnboardingDetailResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/detail?campaignId=${encodeURIComponent(campaignId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Existing listings that look like this business. */
+      similarPlaces(onboardingId: string, body: FieldOpsSimilarSearchBody) {
+        return request<FieldOpsSimilarPlacesResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/similar`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** Send the consent code to the business owner's phone. */
+      requestOwnerOtp(onboardingId: string, body: FieldOpsOwnerOtpRequestBody) {
+        return request<FieldOpsOwnerOtpResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/owner-otp`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      verifyOwnerOtp(
+        onboardingId: string,
+        body: { campaignId: string; code: string },
+      ) {
+        return request<FieldOpsOnboardingResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/owner-otp/verify`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** A signed upload ticket for one evidence photo (then storage.uploadToSignedUrl). */
+      requestEvidenceUpload(
+        onboardingId: string,
+        body: FieldOpsEvidenceRequestBody,
+      ) {
+        return request<FieldOpsEvidenceTicketResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/evidence`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      removeEvidence(
+        onboardingId: string,
+        evidenceId: string,
+        campaignId: string,
+      ) {
+        return request<FieldOpsRemovedResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/evidence/${encodeURIComponent(evidenceId)}`,
+          { method: "DELETE", body: { campaignId }, auth: true },
+        );
+      },
+      /** Create the place under the verified owner and send it for review. */
+      submitOnboarding(
+        onboardingId: string,
+        body: FieldOpsOnboardingSubmitBody,
+      ) {
+        return request<FieldOpsOnboardingResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/submit`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      withdrawOnboarding(
+        onboardingId: string,
+        body: { campaignId: string; reason?: string | null },
+      ) {
+        return request<FieldOpsOnboardingResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/withdraw`,
+          { method: "POST", body, auth: true },
+        );
+      },
       lead: {
+        /** The lead's review queue (submitted first). */
+        review(params: {
+          campaignId: string;
+          status?: FieldOpsOnboardingStatus;
+        }) {
+          const query = new URLSearchParams({ campaignId: params.campaignId });
+          if (params.status) query.set("status", params.status);
+          return request<FieldOpsOnboardingsResult>(
+            `/api/mobile/field-ops/lead/review?${query.toString()}`,
+            { method: "GET", auth: true },
+          );
+        },
+        /** Verify / return / reject a submitted onboarding. */
+        decide(onboardingId: string, body: FieldOpsReviewBody) {
+          return request<FieldOpsOnboardingResult>(
+            `/api/mobile/field-ops/lead/review/${encodeURIComponent(onboardingId)}`,
+            { method: "POST", body, auth: true },
+          );
+        },
         /** Coverage board, today's assignments, team headcount (team lead only). */
         dashboard(campaignId: string) {
           return request<FieldOpsLeadDashboardResult>(

@@ -6,6 +6,7 @@ import Link from "next/link";
 const TABS = [
   { href: "/field-ops", label: "Overview" },
   { href: "/field-ops/campaigns", label: "Campaigns" },
+  { href: "/field-ops/onboardings", label: "Onboardings" },
   { href: "/field-ops/regions", label: "Regions & territories" },
   { href: "/field-ops/rules", label: "Commission rules" },
   { href: "/field-ops/settings", label: "Settings" },

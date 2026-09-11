@@ -2511,6 +2511,347 @@ export type Database = {
           },
         ];
       };
+      fieldops_onboarding: {
+        Row: {
+          activity_key: string | null;
+          assignment_id: string | null;
+          business_name: string | null;
+          business_phone_e164: string | null;
+          business_whatsapp_e164: string | null;
+          campaign_id: string;
+          client_request_id: string;
+          created_at: string;
+          duplicate_acknowledged: boolean;
+          entity_created_at: string | null;
+          event_id: string | null;
+          flag_details: Json;
+          flags: string[];
+          holding_until: string | null;
+          id: string;
+          inside_territory: boolean | null;
+          kind: string;
+          member_id: string;
+          member_user_id: string;
+          mode: string;
+          overridden_at: string | null;
+          overridden_by: string | null;
+          override_note: string | null;
+          owner_duplicate_waived_at: string | null;
+          owner_duplicate_waived_by: string | null;
+          owner_full_name: string | null;
+          owner_is_new_account: boolean | null;
+          owner_phone_e164: string | null;
+          owner_phone_verified_at: string | null;
+          owner_prior_events: number;
+          owner_prior_places: number;
+          owner_user_id: string | null;
+          place_id: string | null;
+          prospect_id: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          resubmission_count: number;
+          review_decision: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rule_id: string | null;
+          similar_matches: Json;
+          status: string;
+          submission_accuracy_m: number | null;
+          submission_distance_m: number | null;
+          submission_lat: number | null;
+          submission_lng: number | null;
+          submission_location: unknown;
+          submitted_at: string | null;
+          succeeded_at: string | null;
+          team_id: string;
+          territory_id: string | null;
+          updated_at: string;
+          withdrawn_at: string | null;
+        };
+        Insert: {
+          activity_key?: string | null;
+          assignment_id?: string | null;
+          business_name?: string | null;
+          business_phone_e164?: string | null;
+          business_whatsapp_e164?: string | null;
+          campaign_id: string;
+          client_request_id?: string;
+          created_at?: string;
+          duplicate_acknowledged?: boolean;
+          entity_created_at?: string | null;
+          event_id?: string | null;
+          flag_details?: Json;
+          flags?: string[];
+          holding_until?: string | null;
+          id?: string;
+          inside_territory?: boolean | null;
+          kind?: string;
+          member_id: string;
+          member_user_id: string;
+          mode: string;
+          overridden_at?: string | null;
+          overridden_by?: string | null;
+          override_note?: string | null;
+          owner_duplicate_waived_at?: string | null;
+          owner_duplicate_waived_by?: string | null;
+          owner_full_name?: string | null;
+          owner_is_new_account?: boolean | null;
+          owner_phone_e164?: string | null;
+          owner_phone_verified_at?: string | null;
+          owner_prior_events?: number;
+          owner_prior_places?: number;
+          owner_user_id?: string | null;
+          place_id?: string | null;
+          prospect_id?: string | null;
+          rejected_at?: string | null;
+          rejection_reason?: string | null;
+          resubmission_count?: number;
+          review_decision?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rule_id?: string | null;
+          similar_matches?: Json;
+          status?: string;
+          submission_accuracy_m?: number | null;
+          submission_distance_m?: number | null;
+          submission_lat?: number | null;
+          submission_lng?: number | null;
+          submission_location?: unknown;
+          submitted_at?: string | null;
+          succeeded_at?: string | null;
+          team_id: string;
+          territory_id?: string | null;
+          updated_at?: string;
+          withdrawn_at?: string | null;
+        };
+        Update: {
+          activity_key?: string | null;
+          assignment_id?: string | null;
+          business_name?: string | null;
+          business_phone_e164?: string | null;
+          business_whatsapp_e164?: string | null;
+          campaign_id?: string;
+          client_request_id?: string;
+          created_at?: string;
+          duplicate_acknowledged?: boolean;
+          entity_created_at?: string | null;
+          event_id?: string | null;
+          flag_details?: Json;
+          flags?: string[];
+          holding_until?: string | null;
+          id?: string;
+          inside_territory?: boolean | null;
+          kind?: string;
+          member_id?: string;
+          member_user_id?: string;
+          mode?: string;
+          overridden_at?: string | null;
+          overridden_by?: string | null;
+          override_note?: string | null;
+          owner_duplicate_waived_at?: string | null;
+          owner_duplicate_waived_by?: string | null;
+          owner_full_name?: string | null;
+          owner_is_new_account?: boolean | null;
+          owner_phone_e164?: string | null;
+          owner_phone_verified_at?: string | null;
+          owner_prior_events?: number;
+          owner_prior_places?: number;
+          owner_user_id?: string | null;
+          place_id?: string | null;
+          prospect_id?: string | null;
+          rejected_at?: string | null;
+          rejection_reason?: string | null;
+          resubmission_count?: number;
+          review_decision?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rule_id?: string | null;
+          similar_matches?: Json;
+          status?: string;
+          submission_accuracy_m?: number | null;
+          submission_distance_m?: number | null;
+          submission_lat?: number | null;
+          submission_lng?: number | null;
+          submission_location?: unknown;
+          submitted_at?: string | null;
+          succeeded_at?: string | null;
+          team_id?: string;
+          territory_id?: string | null;
+          updated_at?: string;
+          withdrawn_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_onboarding_assignment_id_fkey";
+            columns: ["assignment_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_assignment";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "event";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "place";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_prospect_id_fkey";
+            columns: ["prospect_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_prospect";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_rule_id_fkey";
+            columns: ["rule_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_commission_rule";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_territory_id_fkey";
+            columns: ["territory_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_territory";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_onboarding_event: {
+        Row: {
+          actor_kind: string;
+          actor_user_id: string | null;
+          created_at: string;
+          details: Json;
+          from_status: string | null;
+          id: number;
+          note: string | null;
+          onboarding_id: string;
+          to_status: string;
+        };
+        Insert: {
+          actor_kind: string;
+          actor_user_id?: string | null;
+          created_at?: string;
+          details?: Json;
+          from_status?: string | null;
+          id?: never;
+          note?: string | null;
+          onboarding_id: string;
+          to_status: string;
+        };
+        Update: {
+          actor_kind?: string;
+          actor_user_id?: string | null;
+          created_at?: string;
+          details?: Json;
+          from_status?: string | null;
+          id?: never;
+          note?: string | null;
+          onboarding_id?: string;
+          to_status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_onboarding_event_onboarding_id_fkey";
+            columns: ["onboarding_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_onboarding";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_onboarding_evidence: {
+        Row: {
+          accuracy_m: number | null;
+          captured_at: string | null;
+          captured_lat: number | null;
+          captured_lng: number | null;
+          captured_location: unknown;
+          created_at: string;
+          id: string;
+          kind: string;
+          mime_type: string | null;
+          onboarding_id: string;
+          size_bytes: number | null;
+          storage_path: string;
+          uploaded_at: string | null;
+          uploaded_by: string;
+        };
+        Insert: {
+          accuracy_m?: number | null;
+          captured_at?: string | null;
+          captured_lat?: number | null;
+          captured_lng?: number | null;
+          captured_location?: unknown;
+          created_at?: string;
+          id?: string;
+          kind: string;
+          mime_type?: string | null;
+          onboarding_id: string;
+          size_bytes?: number | null;
+          storage_path: string;
+          uploaded_at?: string | null;
+          uploaded_by: string;
+        };
+        Update: {
+          accuracy_m?: number | null;
+          captured_at?: string | null;
+          captured_lat?: number | null;
+          captured_lng?: number | null;
+          captured_location?: unknown;
+          created_at?: string;
+          id?: string;
+          kind?: string;
+          mime_type?: string | null;
+          onboarding_id?: string;
+          size_bytes?: number | null;
+          storage_path?: string;
+          uploaded_at?: string | null;
+          uploaded_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_onboarding_evidence_onboarding_id_fkey";
+            columns: ["onboarding_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_onboarding";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       fieldops_program_setting: {
         Row: {
           commission_generation_enabled: boolean;
@@ -2586,6 +2927,7 @@ export type Database = {
           member_user_id: string;
           name: string;
           notes: string | null;
+          onboarding_id: string | null;
           status: string;
           team_id: string;
           territory_id: string;
@@ -2605,6 +2947,7 @@ export type Database = {
           member_user_id: string;
           name: string;
           notes?: string | null;
+          onboarding_id?: string | null;
           status?: string;
           team_id: string;
           territory_id: string;
@@ -2624,6 +2967,7 @@ export type Database = {
           member_user_id?: string;
           name?: string;
           notes?: string | null;
+          onboarding_id?: string | null;
           status?: string;
           team_id?: string;
           territory_id?: string;
@@ -2649,6 +2993,13 @@ export type Database = {
             columns: ["member_id"];
             isOneToOne: false;
             referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_prospect_onboarding_id_fkey";
+            columns: ["onboarding_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_onboarding";
             referencedColumns: ["id"];
           },
           {
@@ -8909,6 +9260,29 @@ export type Database = {
         };
         Returns: undefined;
       };
+      fieldops_find_similar_places: {
+        Args: {
+          p_lat: number;
+          p_limit?: number;
+          p_lng: number;
+          p_name: string;
+          p_phone?: string;
+          p_radius_m?: number;
+          p_similarity?: number;
+          p_whatsapp?: string;
+        };
+        Returns: {
+          created_at: string;
+          distance_m: number;
+          id: string;
+          name: string;
+          owner_id: string;
+          phone_match: boolean;
+          similarity: number;
+          slug: string;
+          status: string;
+        }[];
+      };
       fieldops_is_lead_of_team: {
         Args: { p_team_id: string };
         Returns: boolean;
@@ -8944,6 +9318,10 @@ export type Database = {
           team_id: string;
         }[];
       };
+      fieldops_phone_belongs_to_member: {
+        Args: { p_phone_e164: string };
+        Returns: boolean;
+      };
       fieldops_program_enabled: { Args: never; Returns: boolean };
       fieldops_set_campaign_status: {
         Args: { p_actor: string; p_campaign_id: string; p_status: string };
@@ -8978,6 +9356,79 @@ export type Database = {
       fieldops_territory_contains: {
         Args: { p_lat: number; p_lng: number; p_territory_id: string };
         Returns: boolean;
+      };
+      fieldops_transition_onboarding: {
+        Args: {
+          p_actor: string;
+          p_actor_kind: string;
+          p_details?: Json;
+          p_note?: string;
+          p_onboarding_id: string;
+          p_to: string;
+        };
+        Returns: {
+          activity_key: string | null;
+          assignment_id: string | null;
+          business_name: string | null;
+          business_phone_e164: string | null;
+          business_whatsapp_e164: string | null;
+          campaign_id: string;
+          client_request_id: string;
+          created_at: string;
+          duplicate_acknowledged: boolean;
+          entity_created_at: string | null;
+          event_id: string | null;
+          flag_details: Json;
+          flags: string[];
+          holding_until: string | null;
+          id: string;
+          inside_territory: boolean | null;
+          kind: string;
+          member_id: string;
+          member_user_id: string;
+          mode: string;
+          overridden_at: string | null;
+          overridden_by: string | null;
+          override_note: string | null;
+          owner_duplicate_waived_at: string | null;
+          owner_duplicate_waived_by: string | null;
+          owner_full_name: string | null;
+          owner_is_new_account: boolean | null;
+          owner_phone_e164: string | null;
+          owner_phone_verified_at: string | null;
+          owner_prior_events: number;
+          owner_prior_places: number;
+          owner_user_id: string | null;
+          place_id: string | null;
+          prospect_id: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          resubmission_count: number;
+          review_decision: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rule_id: string | null;
+          similar_matches: Json;
+          status: string;
+          submission_accuracy_m: number | null;
+          submission_distance_m: number | null;
+          submission_lat: number | null;
+          submission_lng: number | null;
+          submission_location: unknown;
+          submitted_at: string | null;
+          succeeded_at: string | null;
+          team_id: string;
+          territory_id: string | null;
+          updated_at: string;
+          withdrawn_at: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_onboarding";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       get_active_place_promotions: {
         Args: {

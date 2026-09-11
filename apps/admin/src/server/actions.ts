@@ -15,6 +15,7 @@ import {
   setCampaignStatusCore,
   upsertCampaignCore,
 } from "@abonten/services/admin/fieldOps/campaignsAdminCore";
+import { decideOnboardingAdminCore } from "@abonten/services/admin/fieldOps/onboardingsAdminCore";
 import {
   geocodeQueryCore,
   upsertRegionCore,
@@ -122,6 +123,7 @@ import {
 } from "@abonten/validation/adminSchemas";
 import {
   fieldOpsAddMemberSchema,
+  fieldOpsAdminOnboardingDecisionSchema,
   fieldOpsCampaignSchema,
   fieldOpsCampaignStatusChangeSchema,
   fieldOpsGeocodeSchema,
@@ -1280,5 +1282,26 @@ export async function setFieldOpsRuleActive(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "setFieldOpsRuleActive");
+  }
+}
+
+export async function decideFieldOpsOnboarding(input: unknown) {
+  const parsed = fieldOpsAdminOnboardingDecisionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await decideOnboardingAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/onboardings", "layout");
+      revalidatePath("/field-ops");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "decideFieldOpsOnboarding");
   }
 }

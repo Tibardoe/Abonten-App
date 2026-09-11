@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–1 (2026-09-11)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–2 (2026-09-11)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -2713,10 +2713,117 @@ programme on and activates a campaign):**
   local replay; core / services unit tests; services, admin, web and
   api-client typecheck; web production build; `check:api-parity`. The
   `/field` pages are not yet exercised in a browser.
-- **Not yet built:** the onboarding wizard with owner OTP + duplicate
-  search + lead review (P2), the commission ledger and sweep (P3), payouts
-  (P4), events / claim assistance (P5), content creator (P6), analytics
-  (P7), Playwright + pilot readiness (P8).
+**Phase 2 — place onboarding wizard, owner OTP, evidence, lead review
+(migration `20260911215206_fieldops_onboarding`, applied to production via
+MCP):**
+- **Model.** `fieldops_onboarding` is the activity record from wizard
+  start to the lead's decision: member/team/campaign/assignment/territory/
+  prospect links, `mode`, `kind`, `activity_key`, the business and its
+  owner (`owner_phone_e164`, OTP-resolved `owner_user_id`, prior place/
+  event counts), the real entity (`place_id` FK on delete set null;
+  `client_request_id` is the one handed to `create_place`, so a retried
+  submission finds the same place), the member's position at submission
+  (`submission_location`, `submission_distance_m` to the pin,
+  `inside_territory`), the duplicate-search snapshot (`similar_matches`,
+  `duplicate_acknowledged`), and the lifecycle `draft → submitted →
+  verified | needs_changes | rejected` (`needs_changes → submitted`,
+  `verified → succeeded | flagged | rejected` reserved for the Phase 3
+  sweep, `withdrawn` from draft/submitted/needs_changes). CHECKs:
+  owner ≠ member, reviewer ≠ member; partial uniques: a place/event is
+  onboarded once programme-wide, one live onboarding per owner per campaign
+  unless an admin waives it. `fieldops_onboarding_evidence` (private
+  bucket `fieldops-evidence`, key `<campaign>/<onboarding>/<uuid>.<ext>`,
+  captured GPS + accuracy, `uploaded_at` set when the service sees the
+  object) and the append-only `fieldops_onboarding_event` timeline
+  (trigger refuses UPDATE/DELETE; service_role has only SELECT/INSERT).
+  `fieldops_prospect.onboarding_id` links a prospect to the onboarding it
+  became (`converted` on submission). `phone_otp_state.purpose` gained
+  `fieldops-owner`.
+- **Functions (service_role only):** `fieldops_transition_onboarding` —
+  the one way a status changes (row lock, lifecycle table, owner-verified
+  guard for `submitted`, self-review guard, timestamp stamping, timeline
+  row); `fieldops_find_similar_places` — pg_trgm name similarity within a
+  radius OR exact phone/WhatsApp digits match anywhere, ordered by phone
+  match → similarity → distance; `fieldops_phone_belongs_to_member` — is
+  this phone any team member's (invited phone or `auth.users.phone`).
+  RLS: members SELECT their own onboardings (owner phone/user columns are
+  column-level excluded — the number is masked in every client view and
+  only an admin with `users.view_pii` sees it), leads their team's;
+  evidence/timeline follow the onboarding; no client writes.
+- **Owner OTP** (`fieldOps/member/ownerOtpCore`): the code goes to the
+  OWNER's phone through Hubtel with its own purpose; refused outright when
+  the number is the member's own or any team member's; rate-limited per
+  member (`consume_rate_limit`, 20/hour) and per phone (60 s cooldown, 5
+  attempts, 5-minute TTL from `phoneOtpStore`). Verifying runs the same
+  `findOrCreateUserByPhone` as phone sign-in (now exported from
+  `phoneAuthCore`) — the owner's account exists from that moment with a
+  confirmed phone and no session — then `attachOwnerCore` pins it (owner
+  ≠ member, owner not a team member, prior counts). Online members get a
+  **consent link** `/consent/field/<token>` (HMAC token from
+  `deriveSigningKey("fieldops-consent")`, 30-minute TTL) the owner opens
+  on their own phone; the public page is token-authorised and per-IP
+  rate-limited.
+- **Submission** (`submitOnboardingCore`): needs the owner verified, an
+  active campaign (winding_down only for fixes to returned work), the
+  daily cap (`daily_submission_cap` counts submissions per member per UTC
+  day), photos uploaded under the member's own signed Cloudinary folder,
+  the member's GPS position for offline work, storefront + interior
+  evidence for offline work (confirmed against the bucket), and a
+  server-side duplicate re-check (a strong match must be acknowledged; a
+  same-phone match is refused outright pending claim assistance in P5).
+  It then calls the existing **`postPlaceCore`** with the OWNER's user id
+  on the service role (so `place.owner_id` is the owner from the first
+  instant; the gallery rows are inserted directly because
+  `addPlacePhotoCore` checks the folder against the owner), records
+  distance / territory containment (`fieldops_territory_contains`),
+  snapshots the matches, transitions to `submitted`, marks the prospect
+  converted and notifies the active team lead
+  (`fieldops_submission_received`).
+- **Review** (`fieldOps/lead/reviewCore`): the lead's queue (submitted
+  first) and decision; a note is required unless verifying; `verified`
+  snapshots the rule in force (`rule_id`: campaign override, else
+  programme default) and `holding_until` (campaign override → rule
+  `holding_days` → programme default); the member is notified
+  (`fieldops_submission_reviewed`). Admin › Field Ops › Onboardings lists
+  everything (status / campaign filters), the detail shows evidence
+  (signed URLs), timeline, similar listings and the **eligibility
+  checklist**, and `fieldops.verify` can decide a submitted onboarding in
+  the lead's place (recorded as an override, audited
+  `fieldops.onboarding.<decision>`).
+- **Pure logic** (`@abonten/core/fieldOps`): `duplicateScore` (phone match
+  decisive; name similarity discounted by distance; "strong" needs ≥ 0.6
+  similarity inside the radius) and `eligibility` (`evaluateEligibility`
+  = plan §8.2 as hard/soft/info checks; the TS copy drives the checklist,
+  the Phase 3 SQL sweep will be the authority) — 11 unit tests.
+- **Web UI:** `/field/onboard/[id]` five-step wizard (business + pin +
+  duplicate check → owner code / consent link → details with the existing
+  category picker and opening-hours editor → cover + gallery via the
+  existing signed Cloudinary upload and evidence via
+  `storage.uploadToSignedUrl` → review & submit), state kept in
+  `sessionStorage` per onboarding; `/field/submissions` + `[id]`;
+  `/field/lead/review` + `[id]` with the decision form; "Onboard this
+  business" on the territory page and on each place prospect;
+  `/consent/field/[token]` public owner page. 15 new web actions, 12 new
+  `/api/mobile/field-ops/**` routes (`api.fieldOps.*onboarding*`,
+  `api.fieldOps.lead.review/decide`; parity 146).
+- **Verified:** integration `fieldops-onboarding` (11: assigned-territory
+  gate + idempotent start, own/team phone refused as owner + cooldown,
+  wrong code / consumed code, owner ≠ member at service and CHECK level,
+  consent token round-trip + expiry, GPS/evidence/photo-folder gates then
+  a place owned by the owner with the onboarding's client_request_id,
+  similarity by name and by phone + same-owner/same-place refused by the
+  partial uniques, RLS self-or-lead with the owner phone column
+  unreadable and the timeline append-only, self-review refused →
+  needs_changes → resubmit (one place still) → verified with holding,
+  admin decision with/without `fieldops.verify` + audit row, prospect
+  conversion), plus the P0/P1 suites; core/services unit tests; services,
+  admin, web and api-client typecheck; web + admin builds; parity.
+  Hubtel is faked in the suite (`sendOtp`/`verifyOtp` deps); the real SMS
+  path and the wizard in a browser are not yet exercised.
+- **Not yet built:** the commission ledger and sweep (P3), payouts (P4),
+  events / claim assistance (P5 — the wizard currently tells the member to
+  withdraw when the business is already listed), content creator (P6),
+  analytics (P7), Playwright + pilot readiness (P8).
 
 ---
 

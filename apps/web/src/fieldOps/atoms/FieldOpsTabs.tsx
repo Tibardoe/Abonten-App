@@ -7,10 +7,12 @@ import { usePathname } from "next/navigation";
 const MEMBER_TABS = [
   { href: "/field", label: "Today" },
   { href: "/field/assignments", label: "Assignments" },
+  { href: "/field/submissions", label: "Submissions" },
 ];
 
 const LEAD_TABS = [
   { href: "/field/lead", label: "Dashboard" },
+  { href: "/field/lead/review", label: "Review" },
   { href: "/field/lead/territories", label: "Territories" },
   { href: "/field/lead/assignments", label: "Assignments" },
   { href: "/field/lead/team", label: "Team" },
