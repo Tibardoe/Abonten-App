@@ -22,6 +22,7 @@ const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   place_booking: "bookmark-outline",
   message: "chatbubble-ellipses-outline",
   rewards: "gift-outline",
+  fieldops: "briefcase-outline",
 };
 
 function fallbackIcon(kind?: NotificationEntityKind): IoniconName {

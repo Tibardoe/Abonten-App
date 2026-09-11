@@ -53,6 +53,7 @@ import type {
   FieldOpsAssignmentStartBody,
   FieldOpsAssignmentStatus,
   FieldOpsAssignmentsResult,
+  FieldOpsEarningsResult,
   FieldOpsEvidenceRequestBody,
   FieldOpsEvidenceTicketResult,
   FieldOpsLeadDashboardResult,
@@ -1791,6 +1792,19 @@ export function createApiClient(options: ApiClientOptions) {
         return request<FieldOpsOnboardingResult>(
           `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/withdraw`,
           { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * The caller's own commission lines and money totals. Read-only:
+       * amounts and statuses are set by the eligibility sweep.
+       */
+      earnings(params: { campaignId?: string } = {}) {
+        const query = new URLSearchParams();
+        if (params.campaignId) query.set("campaignId", params.campaignId);
+        const qs = query.toString();
+        return request<FieldOpsEarningsResult>(
+          `/api/mobile/field-ops/earnings${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
         );
       },
       lead: {

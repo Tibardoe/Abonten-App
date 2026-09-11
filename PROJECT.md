@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–2 (2026-09-11)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–3 (2026-09-11)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -2820,10 +2820,87 @@ MCP):**
   admin, web and api-client typecheck; web + admin builds; parity.
   Hubtel is faked in the suite (`sendOtp`/`verifyOtp` deps); the real SMS
   path and the wizard in a browser are not yet exercised.
-- **Not yet built:** the commission ledger and sweep (P3), payouts (P4),
-  events / claim assistance (P5 — the wizard currently tells the member to
-  withdraw when the business is already listed), content creator (P6),
-  analytics (P7), Playwright + pilot readiness (P8).
+**Phase 3 — commission ledger + eligibility sweep (migrations
+`20260911223818_fieldops_commissions`, `20260911223847_fieldops_reconciliation`
+and `20260911230537_fieldops_sweep_array_fix`, all applied to production via
+MCP, advisor-clean, replay from scratch; branch `feat/field-ops-p3`).**
+
+- **Ledger.** `fieldops_commission` — minor units, currency, the
+  `rule_id`/`rule_version`/`amount_minor` frozen at verification, statuses
+  `pending → approved → in_payout → paid` plus `rejected` / `reversed`,
+  `idempotency_key` unique (`onboarding:<id>`, `reverse:<id>`), a partial
+  unique so one onboarding earns once, and CHECKs that an earning is never
+  negative and an offset never positive. `fieldops_commission_guard` allows
+  **only** the status and its stamps to change and only along that
+  lifecycle; there is **no DELETE grant at all**, not even for
+  `service_role` (the money-path posture, one step stricter). Append-only
+  `fieldops_commission_event`; `fieldops_job_run` records every sweep and
+  housekeeping run. Clients SELECT their own rows (a lead the team's) with
+  the payout plumbing columns revoked, and write nothing.
+- **The sweep.** `fieldops_run_eligibility_sweep(limit)` on pg_cron every 15
+  minutes (`fieldops-eligibility-sweep`), a no-op unless `program_enabled`
+  **and** `commission_generation_enabled`. It takes `verified` onboardings
+  whose `holding_until` has passed (`for update skip locked`), calls
+  `fieldops_evaluate_onboarding` — the SQL authority for plan §8.2, mirrored
+  in TypeScript by `@abonten/core/fieldOps/eligibility` for the review
+  checklist — and then: all checks pass → `succeeded` + commission
+  `approved`; a **hard** failure (listing gone, unpublished, moderated away,
+  owner changed, or not the place this onboarding created) → `rejected` with
+  the failed keys in `flags` and the commission `rejected`; a **soft**
+  failure or a `spot_check_bps` sample → `flagged` for an admin with the
+  money left `pending`; over `budget_cap_minor` → stays `verified` with
+  `budget_exhausted`; a rule that pays on `event_started` / `claim_approved`
+  → parked with `awaiting_release_policy` until P5/P6. A per-row exception
+  handler keeps one bad row from stopping a run. `fieldops_run_housekeeping`
+  (daily 02:25) closes reviews left open past a completed campaign's grace
+  period. `fieldops_decide_flag` resolves a flag (approve → payable with the
+  admin as approver; the admin who verified a row may not decide its flag);
+  `fieldops_reverse_commission` never edits the original — a **paid** one
+  gains a negative offset beside it so the money that left stays on record.
+- **Observability.** `fieldops_health()` (sweep lag and failures, overdue
+  holding periods, stuck reviews, stale flags, successful onboardings with
+  no commission, payable commissions with no rule, pending/approved totals)
+  is check key `fieldops` on Admin › Monitoring — a switched-off programme
+  reads healthy rather than lagging. `run_financial_reconciliation` gains
+  two Field Ops invariants (every `succeeded` onboarding has exactly one
+  live commission; nothing payable without a rule behind it).
+- **Surfaces.** Member `/field/earnings` (four money buckets, per-commission
+  lines with reversals struck through, the live rate, next release date) +
+  `GET /api/mobile/field-ops/earnings` / `api.fieldOps.earnings` (parity
+  147). Admin gains **Review queue** (`/field-ops/review`, each flag
+  explained in plain words, approve/reject inline) and **Commissions**
+  (`/field-ops/commissions` + `[id]`, per-status totals, full history,
+  reversal behind `fieldops.commissions.approve` + step-up); the Overview
+  adds "waiting on a lead / on an admin / in holding / ready to pay".
+  `commissionGenerationEnabled` is now editable in Settings and
+  `SHIPPED_ACTIVITIES` admits the two place-onboarding activities, so a
+  rule can finally be made live.
+- **Verified:** integration `fieldops-sweep` (26: pending at verification
+  with the rule frozen, nothing touched before the holding period, the
+  approve / hard-reject / owner-changed / soft-flag / spot-check / budget
+  branches, a rate rise mid-flight leaving the earned amount at 500, a
+  second sweep adding no second row, the programme switch, `fieldops_job_run`,
+  the admin flag queue + approve/reject + audit, ledger immutability
+  [amount, illegal status move, DELETE, append-only events], reversal of an
+  approved and of a paid commission with the offset netting to zero, RLS
+  self/lead/stranger + client writes refused, health and reconciliation),
+  full suite **35 files / 256 tests** on a stack replayed from scratch;
+  core 252 + services 36 unit tests; `turbo typecheck` 11/11; web and admin
+  `next build` clean with `/field/earnings`, `/field-ops/review`,
+  `/field-ops/commissions` present; parity 147; Biome clean on touched
+  files. The sweep has **never run against production data** — the
+  programme is still switched off there.
+- **Caught in testing:** the first cut of the sweep appended flag strings to
+  a `text[]` with `flags || 'literal'`, which Postgres resolves to
+  `anyarray || anyarray` and fails as `malformed array literal`. The per-row
+  exception handler swallowed it, so every flagged and rejected branch
+  silently left rows `verified`. `array_append` throughout is the fix
+  (`20260911230537`); the integration suite is what exposed it.
+- **Not yet built:** payouts (P4 — `payoutsEnabled` is still refused
+  server-side and `/field/earnings` says the payout-details form comes with
+  the next release), events / claim assistance (P5 — the wizard still tells
+  the member to withdraw when the business is already listed), content
+  creator (P6), analytics (P7), Playwright + pilot readiness (P8).
 
 ---
 

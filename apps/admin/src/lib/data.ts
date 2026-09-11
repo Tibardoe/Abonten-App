@@ -30,6 +30,11 @@ import {
   listCampaignsCore,
 } from "@abonten/services/admin/fieldOps/campaignsAdminCore";
 import {
+  type ListCommissionFilters,
+  getCommissionAdminDetailCore,
+  listCommissionsAdminCore,
+} from "@abonten/services/admin/fieldOps/commissionsAdminCore";
+import {
   type ListOnboardingsFilters,
   getOnboardingAdminDetailCore,
   listOnboardingsAdminCore,
@@ -39,6 +44,7 @@ import {
   getRegionDetailCore,
   listRegionsCore,
 } from "@abonten/services/admin/fieldOps/regionsAdminCore";
+import { listFlagQueueAdminCore } from "@abonten/services/admin/fieldOps/reviewQueueAdminCore";
 import { listCommissionRulesCore } from "@abonten/services/admin/fieldOps/rulesAdminCore";
 import { getFieldOpsSettingsCore } from "@abonten/services/admin/fieldOps/settingsAdminCore";
 import { listTeamMembersCore } from "@abonten/services/admin/fieldOps/teamAdminCore";
@@ -495,6 +501,39 @@ export async function loadFieldOpsOnboarding(onboardingId: string) {
     onboardingId,
   );
   return { ctx, detail };
+}
+
+export async function loadFieldOpsCommissions(filters: ListCommissionFilters) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [commissions, campaigns] = await Promise.all([
+    listCommissionsAdminCore(svc, ctx, filters),
+    listCampaignsCore(svc, ctx, { status: "all" }),
+  ]);
+  return { ctx, commissions, campaigns };
+}
+
+export async function loadFieldOpsCommission(commissionId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getCommissionAdminDetailCore(
+    getServiceClient(),
+    ctx,
+    commissionId,
+  );
+  return { ctx, detail };
+}
+
+export async function loadFieldOpsFlagQueue(filters: {
+  campaignId?: string;
+  cursor?: string;
+}) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [queue, campaigns] = await Promise.all([
+    listFlagQueueAdminCore(svc, ctx, filters),
+    listCampaignsCore(svc, ctx, { status: "all" }),
+  ]);
+  return { ctx, queue, campaigns };
 }
 
 export async function loadFieldOpsSettings() {

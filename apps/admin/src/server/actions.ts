@@ -15,12 +15,14 @@ import {
   setCampaignStatusCore,
   upsertCampaignCore,
 } from "@abonten/services/admin/fieldOps/campaignsAdminCore";
+import { reverseCommissionAdminCore } from "@abonten/services/admin/fieldOps/commissionsAdminCore";
 import { decideOnboardingAdminCore } from "@abonten/services/admin/fieldOps/onboardingsAdminCore";
 import {
   geocodeQueryCore,
   upsertRegionCore,
   upsertTerritoryCore,
 } from "@abonten/services/admin/fieldOps/regionsAdminCore";
+import { decideFlagAdminCore } from "@abonten/services/admin/fieldOps/reviewQueueAdminCore";
 import {
   publishCommissionRuleVersionCore,
   setCommissionRuleActiveCore,
@@ -123,6 +125,8 @@ import {
 } from "@abonten/validation/adminSchemas";
 import {
   fieldOpsAddMemberSchema,
+  fieldOpsAdminCommissionReverseSchema,
+  fieldOpsAdminFlagDecisionSchema,
   fieldOpsAdminOnboardingDecisionSchema,
   fieldOpsCampaignSchema,
   fieldOpsCampaignStatusChangeSchema,
@@ -1303,5 +1307,55 @@ export async function decideFieldOpsOnboarding(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "decideFieldOpsOnboarding");
+  }
+}
+
+/** Resolves a flag the eligibility sweep raised (fieldops.verify). */
+export async function decideFieldOpsFlag(input: unknown) {
+  const parsed = fieldOpsAdminFlagDecisionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await decideFlagAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/review");
+      revalidatePath("/field-ops/onboardings", "layout");
+      revalidatePath("/field-ops/commissions");
+      revalidatePath("/field-ops");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "decideFieldOpsFlag");
+  }
+}
+
+/**
+ * Takes a commission back (fieldops.commissions.approve + step-up). The
+ * original row is never edited: a paid one gains a negative offset.
+ */
+export async function reverseFieldOpsCommission(input: unknown) {
+  const parsed = fieldOpsAdminCommissionReverseSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await reverseCommissionAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/commissions", "layout");
+      revalidatePath("/field-ops");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "reverseFieldOpsCommission");
   }
 }

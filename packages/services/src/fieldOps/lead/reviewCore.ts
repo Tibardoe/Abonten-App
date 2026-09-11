@@ -4,6 +4,7 @@ import type {
   FieldOpsReviewDecision,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { recordPendingCommission } from "../shared/commissionRows";
 import {
   fieldOpsError,
   requireMembership,
@@ -168,6 +169,13 @@ export async function reviewOnboardingCore(
     return trErr.code === "23514"
       ? { status: 409, message: trErr.message }
       : dbErr(trErr, "Could not save the decision");
+  }
+
+  // Verification earns a PENDING commission at the rule's amount. It only
+  // becomes payable once the sweep re-checks everything after the holding
+  // period — the lead's decision never moves money on its own.
+  if (input.decision === "verified") {
+    await recordPendingCommission(supabase, row.id);
   }
 
   const titles: Record<FieldOpsReviewDecision, string> = {

@@ -3,6 +3,7 @@ import type {
   FieldOpsEvidenceUploadTicket,
   FieldOpsLeadDashboard,
   FieldOpsMe,
+  FieldOpsMyEarnings,
   FieldOpsOnboarding,
   FieldOpsOnboardingDetail,
   FieldOpsOnboardingDraft,
@@ -1620,6 +1621,10 @@ export type FieldOpsOwnerOtpResult = ApiEnvelope<{
 export type FieldOpsEvidenceTicketResult =
   ApiEnvelope<FieldOpsEvidenceUploadTicket>;
 export type FieldOpsRemovedResult = ApiEnvelope<{ removed: boolean }>;
+
+export type { FieldOpsMyEarnings } from "@abonten/types/fieldOps";
+/** null when the caller is on no campaign at all. */
+export type FieldOpsEarningsResult = ApiEnvelope<FieldOpsMyEarnings | null>;
 
 export type FieldOpsOnboardingStartBody = {
   campaignId: string;

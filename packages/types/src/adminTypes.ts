@@ -501,6 +501,9 @@ export type HealthCheckKey =
   | "cloudinary"
   // Abonten Rewards engine: outbox lag, settlement backlog, dead letters.
   | "rewards"
+  // Field Ops: eligibility-sweep lag and failures, overdue holding periods,
+  // successful onboardings with no commission behind them.
+  | "fieldops"
   // synthetic: written by the pg_cron job itself from the HTTP status it
   // gets back calling /api/observability/health, so a rejected/unreachable
   // endpoint is visible instead of the dashboard just looking empty.

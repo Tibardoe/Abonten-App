@@ -28,7 +28,10 @@ import {
 // a promise nothing pays out, so it's refused. Extend as phases ship:
 // place onboarding (Phase 3 sweep), events + claim assist (Phase 5),
 // content + stipends (Phase 6).
-const SHIPPED_ACTIVITIES = new Set<FieldOpsActivityKey>([]);
+const SHIPPED_ACTIVITIES = new Set<FieldOpsActivityKey>([
+  "place_onboarding_offline",
+  "place_onboarding_online",
+]);
 
 export async function listCommissionRulesCore(
   supabase: ServiceRoleClient,

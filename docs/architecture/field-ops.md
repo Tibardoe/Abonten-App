@@ -1,14 +1,13 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phase 0 shipped 2026-09-11 (branch `feat/field-ops-p0`), Phases 1 and 2
-the same day (`feat/field-ops-p1`, `feat/field-ops-p2`). The owner approved
-the full plan and the four
-gating decisions: team leads and workers use the web app (`/field`, Phase
-1); business ownership is proven by an OTP
-the owner enters (Phase 2); a commission needs the team lead's review plus a
-holding period re-checked by a sweep (Phase 3); payouts are weekly manual
-MoMo batches by a finance admin (Phase 4). The full architecture is in the
-approved plan; this file is the reference and runbook for what is live._
+_Phases 0-3 shipped 2026-09-11 (branches `feat/field-ops-p0` … `-p3`). The
+owner approved the full plan and the four gating decisions: team leads and
+workers use the web app (`/field`, Phase 1); business ownership is proven by
+an OTP the owner enters (Phase 2); a commission needs the team lead's review
+plus a holding period re-checked by a sweep (Phase 3); payouts are weekly
+manual MoMo batches by a finance admin (Phase 4, not yet built). The full
+architecture is in the approved plan; this file is the reference and runbook
+for what is live._
 
 ## What it is
 
@@ -31,8 +30,8 @@ the start; Field Ops only records *how it was acquired*.
   flip `user_info.is_admin` and grant the staff bypasses in
   `guard_staff_managed_columns` / `place_admin_update` /
   `approve_place_claim`). `addTeamMemberCore` refuses admins.
-- Commissions (Phase 3) are their own ledger: never organizer money
-  (`organizer_ledger_entry`), never user credit (`credit_*`).
+- Commissions are their own ledger (`fieldops_commission`): never organizer
+  money (`organizer_ledger_entry`), never user credit (`credit_*`).
 - No core table gains a column. Field Ops tables point at `place`, `event`
   and `auth.users` with FKs; member/owner user ids are stored without an FK
   so history outlives a deleted account.
@@ -70,6 +69,49 @@ Both: SELECT for the member's own rows or the lead's team; no client writes.
 duplicate search; `fieldops_phone_belongs_to_member` backs the "owner is
 never a team member" rule.
 
+## Model (Phase 3)
+
+| Table | Role |
+|---|---|
+| `fieldops_commission` | One earned commission in minor units, or a negative reversal offset. `pending → approved → in_payout → paid`, plus `rejected` and `reversed`. The amount, currency and `rule_id`/`rule_version` are frozen at verification, so a later rate change never rewrites history. `idempotency_key` (`onboarding:<id>`, `reverse:<id>`) makes a repeated posting a no-op. A trigger allows only the status and its stamps to change and only along that lifecycle; there is **no DELETE grant at all**, not even for `service_role`. |
+| `fieldops_commission_event` | Append-only status trail (trigger-enforced), with the actor and reason behind every move. |
+| `fieldops_job_run` | One row per sweep / housekeeping run: what it processed, how it ended, the last error. `fieldops_health()` reads the latest row per job. |
+
+Clients read their own rows (a lead reads the team's) and write nothing.
+
+## The eligibility sweep
+
+`fieldops_run_eligibility_sweep(limit)` runs every 15 minutes
+(`fieldops-eligibility-sweep`) and is a no-op unless both `program_enabled`
+and `commission_generation_enabled` are on. For each `verified` onboarding
+whose `holding_until` has passed, in a campaign that is active, winding down
+or completed, it calls `fieldops_evaluate_onboarding` and then:
+
+| Outcome | Onboarding | Commission |
+|---|---|---|
+| Every check passes | `succeeded` | `approved` (approver `null` = the sweep) |
+| A **hard** check fails — the listing is gone, unpublished, moderated away, or no longer owned by the verified owner | `rejected` with the failed keys in `flags` | `rejected` |
+| A **soft** check fails (photos, description, contact, opening hours, territory, on-site distance, an older duplicate) | `flagged` | left `pending` |
+| Sampled by `spot_check_bps` although everything passed | `flagged` with `spot_check` | left `pending` |
+| The campaign's `budget_cap_minor` would be exceeded | stays `verified`, flag `budget_exhausted` | left `pending` |
+| Its rule pays on something later phases own (`event_started`, `claim_approved`) | stays `verified`, flag `awaiting_release_policy` | left `pending` |
+
+A per-row exception handler keeps one bad row from stopping the run; the
+failure count and message land in `fieldops_job_run` and then in
+`fieldops_health()`. `@abonten/core/fieldOps/eligibility` is the TypeScript
+copy of the same checks and drives the review checklist — the SQL is the
+authority, because only it moves money.
+
+Admins resolve a flag with `fieldops_decide_flag` (approve → the commission
+becomes payable with the admin recorded as approver; reject → both are
+rejected; the admin who verified a row may not decide its flag). A
+commission is taken back with `fieldops_reverse_commission`: the original
+row is never edited, and one that was already **paid** gains a negative
+offset beside it so the money that actually left stays on record.
+
+`fieldops_run_housekeeping` (daily, 02:25) closes reviews left open past a
+completed campaign's grace period and counts evidence due for purging.
+
 ## Onboarding flow
 
 1. Member opens a territory they are assigned to → **Onboard a business**
@@ -87,8 +129,12 @@ never a team member" rule.
 5. Submit: the service re-checks duplicates, creates the place under the
    owner, records distance / territory containment, and hands it to the
    team lead. The lead verifies (starts the holding period, snapshots the
-   rule), returns it with a note (one resubmission), or rejects. Admins can
-   decide in the lead's place from Admin › Field Ops › Onboardings.
+   rule, records a **pending** commission), returns it with a note (one
+   resubmission), or rejects. Admins can decide in the lead's place from
+   Admin › Field Ops › Onboardings.
+6. After the holding period the sweep re-runs every objective check and
+   either approves the commission (onboarding `succeeded`), flags it for an
+   admin, or rejects both. Nothing a worker or lead does moves money.
 
 ## Lifecycle
 
@@ -131,7 +177,7 @@ territory in the region and an active team lead); the same table lives in
 - **What a member may do** (`/field`): see their own assignments, start
   today's (offline = GPS check-in; only while the campaign is active) and
   complete it, log and update their own prospects in a territory they hold
-  an open assignment for.
+  an open assignment for, and read their own earnings (`/field/earnings`).
 - A version of a rule that would pay **more** than the live one must be
   activated by a different admin from the one who published it. Nothing can
   be made live until the phase that pays that activity ships
@@ -161,9 +207,20 @@ territory in the region and an active team lead); the same table lives in
   team lead (by phone invitation or an existing user id; members need a
   verified phone unless the setting is off) → Activate.
 - **Change what an activity pays:** Rules › New version… (published switched
-  off) → Make live (another admin if it pays more). A campaign-specific
-  version is published from the campaign page in a later phase; the service
-  already supports it.
+  off) → Make live (another admin if it pays more). Only activities whose
+  engine exists can be made live (`SHIPPED_ACTIVITIES` in
+  `rulesAdminCore.ts`: place onboarding today; events and claim assistance
+  with Phase 5, content with Phase 6). A campaign-specific version is
+  published from the campaign page in a later phase; the service already
+  supports it.
+- **Decide a flag:** Admin › Field Ops › Review queue lists what the sweep
+  would not pay on its own, why, and the amount waiting. Approve or reject
+  with a note; both are audited. Commissions and their history are under
+  Admin › Field Ops › Commissions, where one can also be reversed
+  (`fieldops.commissions.approve` + step-up).
+- **Switch commission generation off without stopping the field work:**
+  Settings › "Commissions being generated". The sweep becomes a no-op;
+  submissions and reviews carry on.
 - **Run a team day (lead):** `/field/lead/territories` → add the towns
   ("Find on the map" or type coordinates) → `/field/lead/team` → invite
   members by phone (they join when they sign in with that number) →
@@ -185,4 +242,7 @@ territory in the region and an active team lead); the same table lives in
   (start gate, owner OTP rules with a faked Hubtel, place created under the
   owner, duplicates, RLS + append-only timeline, review round-trip, admin
   decision). `packages/core/src/fieldOps/{duplicateScore,eligibility}.test.ts`
-  cover the pure scoring and checklist logic.
+  cover the pure scoring and checklist logic, and `fieldops-sweep` covers
+  the commission ledger end to end (pending at verification, every sweep
+  branch, budget cap, frozen rate across a version change, double-run
+  idempotency, immutability and reversal, RLS, health and reconciliation).
