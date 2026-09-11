@@ -16,7 +16,8 @@ export type AdminRoleKey =
   | "moderator"
   | "finance_admin"
   | "support_admin"
-  | "analyst";
+  | "analyst"
+  | "field_ops_manager";
 
 export type AdminPermissionKey =
   | "dashboard.view"
@@ -67,7 +68,13 @@ export type AdminPermissionKey =
   | "rewards.freeze"
   | "rewards.goodwill"
   | "rewards.configure"
-  | "rewards.withdrawals";
+  | "rewards.withdrawals"
+  | "fieldops.view"
+  | "fieldops.manage"
+  | "fieldops.rules"
+  | "fieldops.verify"
+  | "fieldops.commissions.approve"
+  | "fieldops.commissions.pay";
 
 export type AdminUserStatus = "active" | "disabled";
 

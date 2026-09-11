@@ -1,0 +1,33 @@
+import { cn } from "@/components/ui";
+import Link from "next/link";
+
+// Module tabs for Field Ops. Later phases add Onboardings, Review queue,
+// Commissions, Payouts and Content here.
+const TABS = [
+  { href: "/field-ops", label: "Overview" },
+  { href: "/field-ops/campaigns", label: "Campaigns" },
+  { href: "/field-ops/regions", label: "Regions & territories" },
+  { href: "/field-ops/rules", label: "Commission rules" },
+  { href: "/field-ops/settings", label: "Settings" },
+];
+
+export function FieldOpsTabs({ active }: { active: string }) {
+  return (
+    <div className="mb-4 flex flex-wrap gap-1 border-b border-border pb-2">
+      {TABS.map((t) => (
+        <Link
+          key={t.href}
+          href={t.href}
+          className={cn(
+            "rounded px-3 py-1.5 text-xs",
+            active === t.href
+              ? "bg-primary text-primary-foreground"
+              : "border border-border hover:bg-muted",
+          )}
+        >
+          {t.label}
+        </Link>
+      ))}
+    </div>
+  );
+}

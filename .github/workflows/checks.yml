@@ -45,6 +45,31 @@ jobs:
 
       - run: npx biome check apps/web/src apps/admin/src apps/mobile/app apps/mobile/src packages
 
+  # Unit tests (pure functions in packages/core + packages/services) and the
+  # mobile API parity guard need no secrets either. Added 2026-09-11 with the
+  # Field Ops module: neither was in CI before, so a broken pure helper or a
+  # /api/mobile route without its @abonten/api-client twin only surfaced when
+  # someone ran them by hand.
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx vitest run
+        working-directory: packages/core
+
+      - run: npm run test -w @abonten/services
+
+      - run: npm run check:api-parity
+
   build-web:
     runs-on: ubuntu-latest
     timeout-minutes: 15

@@ -13,6 +13,7 @@ import {
   Gift,
   LayoutDashboard,
   LifeBuoy,
+  MapPinned,
   ScrollText,
   Settings,
   ShieldAlert,
@@ -94,6 +95,12 @@ const ITEMS: Item[] = [
     label: "Rewards",
     icon: Gift,
     permission: "rewards.view",
+  },
+  {
+    href: "/field-ops",
+    label: "Field Ops",
+    icon: MapPinned,
+    permission: "fieldops.view",
   },
   {
     href: "/notifications",
