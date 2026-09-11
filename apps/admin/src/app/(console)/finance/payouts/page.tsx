@@ -13,6 +13,7 @@ import { loadPayouts } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
 import { FinanceTabs } from "../FinanceTabs";
+import { PayoutReviewClear } from "../PayoutReviewClear";
 import { PayoutRowActions } from "../PayoutRowActions";
 
 function payoutTone(s: string) {
@@ -83,6 +84,24 @@ export default async function PayoutsPage({
                 </Td>
                 <Td>
                   <Badge tone={payoutTone(p.status)}>{p.status}</Badge>
+                  {p.reviewStatus === "required" ? (
+                    <div className="mt-1 space-y-0.5">
+                      <Badge tone="danger">Held for review</Badge>
+                      {p.reviewEvents.map((e) => (
+                        <div
+                          key={e.eventId}
+                          className="text-xs text-muted-foreground"
+                        >
+                          {e.title}: {(e.shareBps / 100).toFixed(0)}% of{" "}
+                          {money(e.revenue, p.currency)} paid with credit
+                        </div>
+                      ))}
+                    </div>
+                  ) : p.reviewStatus === "cleared" ? (
+                    <div className="text-xs text-muted-foreground">
+                      Credit review cleared
+                    </div>
+                  ) : null}
                   {p.failureReason ? (
                     <div className="text-xs text-destructive">
                       {p.failureReason}
@@ -97,6 +116,13 @@ export default async function PayoutsPage({
                 </Td>
                 {canManage && (
                   <Td>
+                    {p.status === "processing" &&
+                    p.reviewStatus === "required" ? (
+                      <PayoutReviewClear
+                        payoutId={p.id}
+                        stepUpFresh={stepUpFresh}
+                      />
+                    ) : null}
                     {p.status === "processing" ? (
                       <PayoutRowActions
                         payoutId={p.id}

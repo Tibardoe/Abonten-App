@@ -18,16 +18,6 @@ const LOCKED: {
   value: (s: RewardsProgramSettings) => boolean;
 }[] = [
   {
-    label: "Spend credit on tickets",
-    phase: "Phase 3",
-    value: (s) => s.redeemTicketsEnabled,
-  },
-  {
-    label: "Orders paid fully with credit",
-    phase: "Phase 3",
-    value: (s) => s.allowFullCreditTicketOrders,
-  },
-  {
     label: "Capture referral links",
     phase: "Phase 4",
     value: (s) => s.referralCaptureEnabled,
@@ -64,6 +54,12 @@ export function SettingsForm({
   const [enabled, setEnabled] = useState(settings.rewardsEnabled);
   const [redeemPromotions, setRedeemPromotions] = useState(
     settings.redeemPromotionsEnabled,
+  );
+  const [redeemTickets, setRedeemTickets] = useState(
+    settings.redeemTicketsEnabled,
+  );
+  const [allowFullCredit, setAllowFullCredit] = useState(
+    settings.allowFullCreditTicketOrders,
   );
   const [audience, setAudience] = useState(settings.audience);
   const [beta, setBeta] = useState(settings.betaUserIds.join("\n"));
@@ -103,6 +99,8 @@ export function SettingsForm({
         patch: {
           rewardsEnabled: enabled,
           redeemPromotionsEnabled: redeemPromotions,
+          redeemTicketsEnabled: redeemTickets,
+          allowFullCreditTicketOrders: allowFullCredit,
           audience,
           betaUserIds,
           minCashChargeMinor: toMinor(minCash),
@@ -218,6 +216,43 @@ export function SettingsForm({
             </span>
           </span>
         </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={redeemTickets}
+            disabled={!editable}
+            onChange={(e) => setRedeemTickets(e.target.checked)}
+          />
+          <span>
+            <span className="block">Tickets</span>
+            <span className="block text-xs text-muted-foreground">
+              Shows a “Use credit” switch on ticket checkout. Every cedi of
+              credit spent on a ticket is paid by Abonten: the organizer still
+              gets the full ticket price. Credit can&apos;t be used on tickets
+              to your own event.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 pl-6 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={allowFullCredit}
+            disabled={!editable || !redeemTickets}
+            onChange={(e) => setAllowFullCredit(e.target.checked)}
+          />
+          <span>
+            <span className="block">
+              Allow ticket orders paid fully with credit
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Off: a ticket order always charges at least the minimum cash
+              amount below. On: credit can cover the whole order (only when the
+              share limit below is 100%).
+            </span>
+          </span>
+        </label>
       </Card>
 
       <Card className="space-y-3 p-4">
@@ -260,7 +295,7 @@ export function SettingsForm({
           )}
           {field(
             "Most of a ticket order credit can pay",
-            "100% allows a whole order to be paid with credit (once that ships).",
+            "Needs to be 100% for “paid fully with credit” to take effect.",
             maxShare,
             setMaxShare,
             "%",
