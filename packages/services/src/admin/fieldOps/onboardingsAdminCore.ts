@@ -6,6 +6,7 @@ import type {
   FieldOpsReviewDecision,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { recordPendingCommission } from "../../fieldOps/shared/commissionRows";
 import { notifyFieldOps } from "../../fieldOps/shared/fieldOpsRows";
 import {
   ONBOARDING_COLUMNS,
@@ -168,6 +169,12 @@ export async function decideOnboardingAdminCore(
     p_details: { reason: input.reason },
   });
   if (error) return dbError(error, "Could not record the decision");
+
+  // Same as a lead's verification: the pending commission is recorded now,
+  // and only the sweep can make it payable.
+  if (input.decision === "verified") {
+    await recordPendingCommission(supabase, row.id);
+  }
 
   await recordAdminAudit(supabase, {
     actorId: ctx.userId,

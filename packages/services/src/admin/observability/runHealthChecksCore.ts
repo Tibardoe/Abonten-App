@@ -211,6 +211,31 @@ export async function runHealthChecksCore(
     rh ?? undefined,
   );
 
+  // fieldops: the commission sweep is running and nothing is stuck. Down
+  // when the sweep has not finished in over an hour while the programme is
+  // on, a run reported failures, work is overdue, or a successful
+  // onboarding somehow has no commission behind it.
+  const fieldops = await timed(async () => {
+    const { data, error } = await serviceClient.rpc("fieldops_health");
+    if (error) throw new Error(error.message);
+    return (data ?? {}) as Record<string, number | boolean>;
+  });
+  const fh = fieldops.value;
+  push(
+    "fieldops",
+    fieldops,
+    !!fh &&
+      // A switched-off programme is healthy by definition: the sweep is a
+      // deliberate no-op, so its lag means nothing.
+      (fh.enabled !== true ||
+        (Number(fh.sweep_lag_seconds ?? 0) <= 3600 &&
+          Number(fh.sweep_failures ?? 0) === 0 &&
+          Number(fh.due_not_swept ?? 0) === 0 &&
+          Number(fh.succeeded_without_commission ?? 0) === 0 &&
+          Number(fh.approved_without_rule ?? 0) === 0)),
+    fh ?? undefined,
+  );
+
   // `self` = "the health endpoint ran to completion". Written here so the
   // Admin Monitor shows Endpoint reachability = ok whenever this function
   // finishes — independent of whether the pg_cron caller's HTTP client

@@ -192,6 +192,18 @@ export type FieldOpsAdminOverview = {
   regionCount: number;
   territoryCount: number;
   liveRuleCount: number;
+  /** Phase 3: what the programme owes, and what needs a human. */
+  money: {
+    pendingMinor: number;
+    approvedMinor: number;
+    paidMinor: number;
+    currency: string;
+  };
+  awaitingReview: number;
+  flagged: number;
+  succeeded: number;
+  /** Sweep lag and stuck work, from fieldops_health(). */
+  sweepLagSeconds: number;
 };
 
 // ── Phase 1: assignments, prospects, the /field shell ───────
@@ -542,4 +554,105 @@ export type FieldOpsTerritoryView = {
   prospects: FieldOpsProspect[];
   /** Whether the caller may add prospects here right now. */
   canAddProspects: boolean;
+};
+
+// ── Phase 3: commissions, earnings, the sweep ───────────────
+
+export type FieldOpsCommissionStatus =
+  | "pending"
+  | "approved"
+  | "in_payout"
+  | "paid"
+  | "rejected"
+  | "reversed";
+
+/**
+ * One earned commission, or (when `reversesCommissionId` is set) the negative
+ * offset that takes back money already paid out. Amounts are minor units.
+ */
+export type FieldOpsCommission = {
+  id: string;
+  campaignId: string;
+  teamId: string;
+  memberId: string;
+  memberUserId: string;
+  memberName: string | null;
+  onboardingId: string | null;
+  /** The business the commission was earned on, when there is one. */
+  businessName: string | null;
+  activityKey: FieldOpsActivityKey;
+  /** The version of the rule the amount was frozen from. */
+  ruleVersion: number | null;
+  amountMinor: number;
+  currency: string;
+  status: FieldOpsCommissionStatus;
+  reversesCommissionId: string | null;
+  earnedAt: string;
+  approvedAt: string | null;
+  paidAt: string | null;
+  rejectedAt: string | null;
+  rejectionReason: string | null;
+  reversedAt: string | null;
+  reversalReason: string | null;
+  createdAt: string;
+};
+
+export type FieldOpsCommissionEvent = {
+  id: number;
+  fromStatus: string | null;
+  toStatus: string;
+  actorKind: "system" | "lead" | "admin";
+  actorName: string | null;
+  reason: string | null;
+  createdAt: string;
+};
+
+/** Money totals in minor units for one member or one campaign. */
+export type FieldOpsEarningsTotals = {
+  /** Verified, inside the holding period. */
+  pendingMinor: number;
+  /** Confirmed by the sweep and waiting for a payout batch. */
+  approvedMinor: number;
+  /** In a payout batch that has not been paid yet (Phase 4). */
+  inPayoutMinor: number;
+  /** Paid out, net of reversal offsets. */
+  paidMinor: number;
+  currency: string;
+};
+
+export type FieldOpsMyEarnings = {
+  campaign: FieldOpsCampaignSummary;
+  totals: FieldOpsEarningsTotals;
+  commissions: FieldOpsCommission[];
+  /** The soonest holding period still running, if any. */
+  nextReleaseAt: string | null;
+  /** The live rate for this member's own activity, for "you earn X" copy. */
+  liveRate: { amountMinor: number; currency: string } | null;
+};
+
+/** One flagged onboarding waiting for an admin decision. */
+export type FieldOpsFlaggedOnboarding = {
+  onboarding: FieldOpsOnboarding;
+  commission: FieldOpsCommission | null;
+  /** Why the sweep flagged it: check keys plus `spot_check` / `no_rule`. */
+  flags: string[];
+  flagDetails: Record<string, unknown>;
+};
+
+export type FieldOpsCommissionDetail = {
+  commission: FieldOpsCommission;
+  timeline: FieldOpsCommissionEvent[];
+};
+
+export type FieldOpsHealth = {
+  enabled: boolean;
+  sweepLagSeconds: number;
+  sweepFailures: number;
+  dueNotSwept: number;
+  stuckReviews: number;
+  staleFlags: number;
+  succeededWithoutCommission: number;
+  approvedWithoutRule: number;
+  pendingMinor: number;
+  approvedMinor: number;
 };

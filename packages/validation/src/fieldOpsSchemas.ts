@@ -562,6 +562,67 @@ export const fieldOpsAdminOnboardingListSchema = z.object({
   cursor: z.string().optional(),
 });
 
+// ── Phase 3: commissions and the flag queue ─────────────────
+
+const commissionStatus = z.enum([
+  "pending",
+  "approved",
+  "in_payout",
+  "paid",
+  "rejected",
+  "reversed",
+]);
+
+/** A member's own earnings page. */
+export const fieldOpsEarningsSchema = z.object({
+  campaignId: uuid.optional(),
+});
+
+/** Admin ledger browse (fieldops.view). */
+export const fieldOpsAdminCommissionListSchema = z.object({
+  campaignId: uuid.optional(),
+  memberId: uuid.optional(),
+  status: commissionStatus.optional(),
+  cursor: z.string().optional(),
+});
+
+/** Admin takes a commission back (fieldops.commissions.approve + step-up). */
+export const fieldOpsAdminCommissionReverseSchema = z.object({
+  commissionId: uuid,
+  reason,
+});
+
+/** Admin resolves a flag the sweep raised (fieldops.verify). */
+export const fieldOpsAdminFlagDecisionSchema = z
+  .object({
+    onboardingId: uuid,
+    decision: z.enum(["succeeded", "rejected"]),
+    note: z.string().trim().max(2000).nullable().optional(),
+  })
+  .refine((v) => v.decision === "succeeded" || (v.note && v.note.length >= 3), {
+    message: "Say why it was rejected",
+    path: ["note"],
+  });
+
+export const fieldOpsAdminFlagQueueSchema = z.object({
+  campaignId: uuid.optional(),
+  cursor: z.string().optional(),
+});
+
+export type FieldOpsEarningsInput = z.infer<typeof fieldOpsEarningsSchema>;
+export type FieldOpsAdminCommissionListInput = z.infer<
+  typeof fieldOpsAdminCommissionListSchema
+>;
+export type FieldOpsAdminCommissionReverseInput = z.infer<
+  typeof fieldOpsAdminCommissionReverseSchema
+>;
+export type FieldOpsAdminFlagDecisionInput = z.infer<
+  typeof fieldOpsAdminFlagDecisionSchema
+>;
+export type FieldOpsAdminFlagQueueInput = z.infer<
+  typeof fieldOpsAdminFlagQueueSchema
+>;
+
 export type FieldOpsPlaceDetailsInput = z.infer<
   typeof fieldOpsPlaceDetailsSchema
 >;

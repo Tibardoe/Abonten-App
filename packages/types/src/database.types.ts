@@ -16,6 +16,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       admin_audit_log: {
@@ -2458,6 +2483,186 @@ export type Database = {
           },
         ];
       };
+      fieldops_commission: {
+        Row: {
+          activity_key: string;
+          amount_minor: number;
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          content_submission_id: string | null;
+          created_at: string;
+          currency: string;
+          earned_at: string;
+          id: string;
+          idempotency_key: string;
+          member_id: string;
+          member_user_id: string;
+          onboarding_id: string | null;
+          paid_at: string | null;
+          payout_item_id: string | null;
+          period_start: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          reversal_reason: string | null;
+          reversed_at: string | null;
+          reversed_by: string | null;
+          reverses_commission_id: string | null;
+          rule_id: string | null;
+          rule_version: number | null;
+          status: string;
+          team_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          activity_key: string;
+          amount_minor: number;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          campaign_id: string;
+          content_submission_id?: string | null;
+          created_at?: string;
+          currency?: string;
+          earned_at?: string;
+          id?: string;
+          idempotency_key: string;
+          member_id: string;
+          member_user_id: string;
+          onboarding_id?: string | null;
+          paid_at?: string | null;
+          payout_item_id?: string | null;
+          period_start?: string | null;
+          rejected_at?: string | null;
+          rejection_reason?: string | null;
+          reversal_reason?: string | null;
+          reversed_at?: string | null;
+          reversed_by?: string | null;
+          reverses_commission_id?: string | null;
+          rule_id?: string | null;
+          rule_version?: number | null;
+          status?: string;
+          team_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          activity_key?: string;
+          amount_minor?: number;
+          approved_at?: string | null;
+          approved_by?: string | null;
+          campaign_id?: string;
+          content_submission_id?: string | null;
+          created_at?: string;
+          currency?: string;
+          earned_at?: string;
+          id?: string;
+          idempotency_key?: string;
+          member_id?: string;
+          member_user_id?: string;
+          onboarding_id?: string | null;
+          paid_at?: string | null;
+          payout_item_id?: string | null;
+          period_start?: string | null;
+          rejected_at?: string | null;
+          rejection_reason?: string | null;
+          reversal_reason?: string | null;
+          reversed_at?: string | null;
+          reversed_by?: string | null;
+          reverses_commission_id?: string | null;
+          rule_id?: string | null;
+          rule_version?: number | null;
+          status?: string;
+          team_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_commission_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_commission_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_commission_onboarding_id_fkey";
+            columns: ["onboarding_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_onboarding";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_commission_reverses_commission_id_fkey";
+            columns: ["reverses_commission_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_commission";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_commission_rule_id_fkey";
+            columns: ["rule_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_commission_rule";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_commission_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_commission_event: {
+        Row: {
+          actor_kind: string;
+          actor_user_id: string | null;
+          commission_id: string;
+          created_at: string;
+          details: Json;
+          from_status: string | null;
+          id: number;
+          reason: string | null;
+          to_status: string;
+        };
+        Insert: {
+          actor_kind: string;
+          actor_user_id?: string | null;
+          commission_id: string;
+          created_at?: string;
+          details?: Json;
+          from_status?: string | null;
+          id?: never;
+          reason?: string | null;
+          to_status: string;
+        };
+        Update: {
+          actor_kind?: string;
+          actor_user_id?: string | null;
+          commission_id?: string;
+          created_at?: string;
+          details?: Json;
+          from_status?: string | null;
+          id?: never;
+          reason?: string | null;
+          to_status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_commission_event_commission_id_fkey";
+            columns: ["commission_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_commission";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       fieldops_commission_rule: {
         Row: {
           activity_key: string;
@@ -2510,6 +2715,48 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      fieldops_job_run: {
+        Row: {
+          details: Json;
+          failed: number;
+          finished_at: string | null;
+          flagged: number;
+          id: number;
+          job: string;
+          last_error: string | null;
+          processed: number;
+          rejected: number;
+          started_at: string;
+          succeeded: number;
+        };
+        Insert: {
+          details?: Json;
+          failed?: number;
+          finished_at?: string | null;
+          flagged?: number;
+          id?: never;
+          job: string;
+          last_error?: string | null;
+          processed?: number;
+          rejected?: number;
+          started_at?: string;
+          succeeded?: number;
+        };
+        Update: {
+          details?: Json;
+          failed?: number;
+          finished_at?: string | null;
+          flagged?: number;
+          id?: never;
+          job?: string;
+          last_error?: string | null;
+          processed?: number;
+          rejected?: number;
+          started_at?: string;
+          succeeded?: number;
+        };
+        Relationships: [];
       };
       fieldops_onboarding: {
         Row: {
@@ -8667,6 +8914,16 @@ export type Database = {
         Returns: string;
       };
       _event_settles_at: { Args: { p_event_id: string }; Returns: string };
+      _fieldops_notify: {
+        Args: {
+          p_body: string;
+          p_route: string;
+          p_title: string;
+          p_type: string;
+          p_user_id: string;
+        };
+        Returns: undefined;
+      };
       _normalized_email: { Args: { p_email: string }; Returns: string };
       _notification_delivery_due: {
         Args: { p_limit: number };
@@ -9260,6 +9517,81 @@ export type Database = {
         };
         Returns: undefined;
       };
+      fieldops_decide_flag: {
+        Args: {
+          p_admin: string;
+          p_decision: string;
+          p_note?: string;
+          p_onboarding_id: string;
+        };
+        Returns: {
+          activity_key: string | null;
+          assignment_id: string | null;
+          business_name: string | null;
+          business_phone_e164: string | null;
+          business_whatsapp_e164: string | null;
+          campaign_id: string;
+          client_request_id: string;
+          created_at: string;
+          duplicate_acknowledged: boolean;
+          entity_created_at: string | null;
+          event_id: string | null;
+          flag_details: Json;
+          flags: string[];
+          holding_until: string | null;
+          id: string;
+          inside_territory: boolean | null;
+          kind: string;
+          member_id: string;
+          member_user_id: string;
+          mode: string;
+          overridden_at: string | null;
+          overridden_by: string | null;
+          override_note: string | null;
+          owner_duplicate_waived_at: string | null;
+          owner_duplicate_waived_by: string | null;
+          owner_full_name: string | null;
+          owner_is_new_account: boolean | null;
+          owner_phone_e164: string | null;
+          owner_phone_verified_at: string | null;
+          owner_prior_events: number;
+          owner_prior_places: number;
+          owner_user_id: string | null;
+          place_id: string | null;
+          prospect_id: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          resubmission_count: number;
+          review_decision: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rule_id: string | null;
+          similar_matches: Json;
+          status: string;
+          submission_accuracy_m: number | null;
+          submission_distance_m: number | null;
+          submission_lat: number | null;
+          submission_lng: number | null;
+          submission_location: unknown;
+          submitted_at: string | null;
+          succeeded_at: string | null;
+          team_id: string;
+          territory_id: string | null;
+          updated_at: string;
+          withdrawn_at: string | null;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_onboarding";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      fieldops_evaluate_onboarding: {
+        Args: { p_onboarding_id: string };
+        Returns: Json;
+      };
       fieldops_find_similar_places: {
         Args: {
           p_lat: number;
@@ -9283,6 +9615,7 @@ export type Database = {
           status: string;
         }[];
       };
+      fieldops_health: { Args: never; Returns: Json };
       fieldops_is_lead_of_team: {
         Args: { p_team_id: string };
         Returns: boolean;
@@ -9323,6 +9656,89 @@ export type Database = {
         Returns: boolean;
       };
       fieldops_program_enabled: { Args: never; Returns: boolean };
+      fieldops_record_pending_commission: {
+        Args: { p_onboarding_id: string };
+        Returns: {
+          activity_key: string;
+          amount_minor: number;
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          content_submission_id: string | null;
+          created_at: string;
+          currency: string;
+          earned_at: string;
+          id: string;
+          idempotency_key: string;
+          member_id: string;
+          member_user_id: string;
+          onboarding_id: string | null;
+          paid_at: string | null;
+          payout_item_id: string | null;
+          period_start: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          reversal_reason: string | null;
+          reversed_at: string | null;
+          reversed_by: string | null;
+          reverses_commission_id: string | null;
+          rule_id: string | null;
+          rule_version: number | null;
+          status: string;
+          team_id: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_commission";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      fieldops_reverse_commission: {
+        Args: { p_admin: string; p_commission_id: string; p_reason: string };
+        Returns: {
+          activity_key: string;
+          amount_minor: number;
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          content_submission_id: string | null;
+          created_at: string;
+          currency: string;
+          earned_at: string;
+          id: string;
+          idempotency_key: string;
+          member_id: string;
+          member_user_id: string;
+          onboarding_id: string | null;
+          paid_at: string | null;
+          payout_item_id: string | null;
+          period_start: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          reversal_reason: string | null;
+          reversed_at: string | null;
+          reversed_by: string | null;
+          reverses_commission_id: string | null;
+          rule_id: string | null;
+          rule_version: number | null;
+          status: string;
+          team_id: string;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_commission";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      fieldops_run_eligibility_sweep: {
+        Args: { p_limit?: number };
+        Returns: Json;
+      };
+      fieldops_run_housekeeping: { Args: never; Returns: Json };
       fieldops_set_campaign_status: {
         Args: { p_actor: string; p_campaign_id: string; p_status: string };
         Returns: {
@@ -10527,6 +10943,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

@@ -15,6 +15,10 @@ import type { FieldOpsCampaignStatus } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "./FieldOpsTabs";
 
+/** Commission amounts are minor units, unlike the ui.tsx `money` helper. */
+const fieldOpsMoney = (minor: number, currency: string) =>
+  `${currency} ${(minor / 100).toFixed(2)}`;
+
 export function campaignStatusTone(status: FieldOpsCampaignStatus) {
   switch (status) {
     case "active":
@@ -98,6 +102,43 @@ export default async function FieldOpsOverviewPage() {
                     label="Territories"
                     value={overview.data.territoryCount}
                     hint="towns and areas mapped"
+                  />
+                </div>
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-4">
+                  <Stat
+                    label="Waiting on a lead"
+                    value={overview.data.awaitingReview}
+                    hint="submitted onboardings"
+                    href="/field-ops/onboardings?status=submitted"
+                    tone={
+                      overview.data.awaitingReview > 0 ? "warning" : undefined
+                    }
+                  />
+                  <Stat
+                    label="Waiting on an admin"
+                    value={overview.data.flagged}
+                    hint="flagged by the sweep"
+                    href="/field-ops/review"
+                    tone={overview.data.flagged > 0 ? "warning" : undefined}
+                  />
+                  <Stat
+                    label="In holding"
+                    value={fieldOpsMoney(
+                      overview.data.money.pendingMinor,
+                      overview.data.money.currency,
+                    )}
+                    hint="verified, not yet confirmed"
+                    href="/field-ops/commissions?status=pending"
+                  />
+                  <Stat
+                    label="Ready to pay"
+                    value={fieldOpsMoney(
+                      overview.data.money.approvedMinor,
+                      overview.data.money.currency,
+                    )}
+                    hint={`${overview.data.succeeded} successful onboardings`}
+                    href="/field-ops/commissions?status=approved"
                   />
                 </div>
 

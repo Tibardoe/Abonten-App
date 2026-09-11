@@ -78,6 +78,10 @@ function targetFromData(
       return data.placeId ? `/(app)/place/${data.placeId}` : null;
     case "rewards":
       return "/(app)/rewards";
+    case "fieldops":
+      // Field workers use the web app (/field). The app has no section to
+      // open until Phase 9, so the notice is readable but not tappable.
+      return null;
     default:
       return null;
   }
