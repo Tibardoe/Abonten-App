@@ -26,6 +26,7 @@ const HEALTH_LABELS: Record<string, string> = {
   hubtel: "Hubtel (SMS/OTP)",
   cloudinary: "Cloudinary",
   push: "Expo push",
+  rewards: "Rewards engine",
 };
 
 // Pull the human-readable failure cause out of a down check's detail blob.

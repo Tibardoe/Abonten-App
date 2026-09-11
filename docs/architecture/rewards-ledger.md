@@ -183,6 +183,73 @@ its own cash (`amount`) and credit (`credit_amount`) share (`apportionCredit`).
   (`admin_clear_payout_review`, Admin › Finance › Payouts › Clear review;
   `finance.payout` + step-up + audited). Cleared events aren't flagged again.
 
+## Event referrals (Phase 4)
+
+How a share becomes credit:
+
+1. **Code.** Each user gets one 7-character `referral_code` (no I, L, O, 0,
+   1), created the first time they can share while
+   `referral_capture_enabled` is on. Signed-in users' event share links carry
+   it as `?ref=CODE`.
+2. **Touch.** Opening such a link is logged in `referral_touch` (salted IP/UA
+   hashes, 90-day retention). Web: `proxy.ts` stores the touch in the signed,
+   httpOnly `abn_ref` cookie (keyed by the event slug) and
+   `ReferralTouchLogger` logs it. App: `+native-intent.ts` keeps it in
+   SecureStore (keyed by event id) and logs it, signed out too. For a
+   signed-in visitor the latest touch per event is also kept in
+   `referral_attribution` (works across devices).
+3. **Stamp.** When the buyer opens a checkout, `stampCheckoutReferralCore`
+   takes the web cookie / app hint plus the stored attribution, picks the
+   last touch inside the window (`referral_attribution_window_days`, 7) and
+   calls `stamp_checkout_referral`, which re-checks everything and stamps
+   `ticket_checkout.referrer_user_id`. The stamp can't be changed afterwards.
+   Refused: the buyer's own code, the event organizer's (or an organizer
+   buying their own tickets), an unknown/disabled code, a stale touch, a
+   restricted referrer.
+4. **Evaluate.** The checkout turning `paid` queues `checkout_paid` in
+   `reward_outbox` (trigger, same transaction). `rewards_process_outbox`
+   (every minute) calls `_reward_evaluate_event_referral`, which writes one
+   `reward_event`: amount = min(rate × ticket revenue, net-share cap × the
+   checkout's share of the transaction's net revenue, what's left of the
+   per-referrer event/month caps), rounded down; one rewarded checkout per
+   buyer per event; minimum order. Then the risk score (below) decides
+   pending / held / rejected. A live pending or held reward commits the
+   monthly budget and creates a PENDING lot (`reward.accrue`); over budget →
+   `deferred` (retried by the settle job, never dropped).
+5. **Settle.** `rewards_settle_due` (every 15 minutes) releases pending
+   rewards whose event has settled (last session end + 48h):
+   `credit_release_lot` pro rata to the tickets still valid, then one
+   "Your credit is ready" in-app notification per person. It voids
+   refunded / cancelled / event-cancelled / removed sales and holds disputed
+   or hidden ones. Live credit needs the referrer's verified phone (checked
+   daily; voided after 90 days without one). Refunds, cancellations,
+   moderation and disputes also queue an outbox re-check so a dead sale is
+   voided straight away. A chargeback after release claws the credit back
+   (`reward.clawback`, may put the account in debt).
+
+**Risk score** (`riskScore.ts` mirrors `_reward_risk_weight`; override
+weights in `reward_program_setting.risk_weights`): blocking — self referral,
+organizer involved, same (normalized) email, same phone, paid with the
+referrer's card/wallet; weighted — same device/install +60, buyer account
+under 24h +15, referrer's sales often refunded +40, >50% of the event's sales
+from this referrer +25, >20 rewards in a day +30, open dispute +80, ticket
+checked in −15. Under 30 passes, 30–69 is held for review (Admin › Rewards ›
+Review queue; approve = release when due, reject = void), 70+ is rejected.
+Users never see flags.
+
+**Shadow mode** (`shadow_mode`, default on): every decision is recorded with
+`is_shadow = true`, but no budget, lot, journal or notification. A referrer
+outside the program's audience is always evaluated in shadow. Admin ›
+Rewards › Referrals shows the projection (cost as a share of referred net
+revenue, flags, top referrers). Caps count shadow and live separately.
+
+**Switching it on:** Program settings → Capture referral links (starts
+stamping; links get `?ref=`), then Reward rules → Event referral → Make live
+(v1 = the owner-approved 1% / 35% terms). Leave shadow mode on until the
+projection has been reviewed. A new rule version is published switched off;
+one that could pay more than the live one must be made live by a different
+admin.
+
 ## Disputes
 
 `payment_dispute` records every Paystack `charge.dispute.*` webhook event
@@ -198,5 +265,8 @@ follow-up. No money moves; Paystack holds the disputed amount.
 - **A paid promotion that never activated with credit captured:** give the credit back with an audited adjustment (Adjust credit). (`credit_refund_redemption` is wired for ticket refunds; promotions have no refund flow.)
 - **A refund whose credit step failed** (the transaction is `refund_pending`/`refunded` but `credit_refunded_amount` is 0): run the admin refund again (or `issueRefundCore`) — it only finishes the credit step, idempotently.
 - **"Held for review" payout:** Admin › Finance › Payouts shows the events and their credit share. Check the buyers aren't linked to the organizer, then Clear review with a note; otherwise mark the payout failed/cancelled (the balance returns to the organizer ledger).
+- **"Reward engine: outbox event(s) failed 8 times" incident:** `select id, event_type, aggregate_id, last_error from reward_outbox where dead_lettered_at is not null`. Fix the cause, then `update reward_outbox set dead_lettered_at = null, next_attempt_at = now() where id = …` — processing is idempotent (`reward_event.idempotency_key`).
+- **Rewards health check down:** `select rewards_health()` — outbox lag, overdue settlements, dead letters, released rewards without a journal. Check the `rewards-process-outbox` / `rewards-settle-due` cron jobs are active.
+- **A referrer abusing links:** disable the code (`update referral_code set disabled_at = now(), disabled_reason = …`); new touches and stamps with it are refused. Reject their held rewards in the Review queue.
 - **Switch the program off in an emergency:** set `REWARDS_KILL_SWITCH=true` on the web deployment, or untick "Program switched on" in Admin › Rewards › Program settings.
-- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption).
+- **Tests:** `packages/services/src/__integration__/credits-*.integration.test.ts` (ledger, authorization/RLS, concurrency, admin operations, promotion and ticket redemption) and `rewards-event-referral.integration.test.ts` (the referral engine).

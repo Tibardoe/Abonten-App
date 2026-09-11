@@ -5,6 +5,10 @@ import {
   useToggleFavorite,
 } from "@/features/favorites/useFavorites";
 import { useEventReminder } from "@/features/reminders/useEventReminder";
+import {
+  logEventShare,
+  useReferralCode,
+} from "@/features/rewards/useReferralCode";
 import { setPendingRedirect } from "@/lib/authRedirect";
 import { shareEvent } from "@/lib/share";
 import type { Occurrence } from "@abonten/types/occurrenceType";
@@ -151,6 +155,7 @@ export function EventCardMenu({
   const router = useRouter();
   const pathname = usePathname();
   const { session } = useSession();
+  const referralCode = useReferralCode();
   const favorited = useIsFavorited("event", event.id).data ?? false;
   const toggle = useToggleFavorite("event", event.id);
 
@@ -199,7 +204,13 @@ export function EventCardMenu({
           label="Share"
           onPress={() => {
             onClose();
-            shareEvent(event.title, event.event_code);
+            shareEvent(event.title, event.event_code, referralCode).then(
+              (shared) => {
+                if (shared && session) {
+                  logEventShare(session.user.id, event.id, referralCode);
+                }
+              },
+            );
           }}
         />
 

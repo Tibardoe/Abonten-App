@@ -7,6 +7,7 @@ import { loadMessages } from "@/i18n/messages";
 import ReactQueryProvider from "@/providers/ReactQueryProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
 import ToastProvider from "@/providers/ToastProvider";
+import ReferralTouchLogger from "@/rewards/atoms/ReferralTouchLogger";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -52,6 +53,7 @@ export default async function RootLayout({
             <ReactQueryProvider>
               <ToastProvider>
                 <main>{children}</main>
+                <ReferralTouchLogger />
               </ToastProvider>
             </ReactQueryProvider>
           </LocaleProvider>

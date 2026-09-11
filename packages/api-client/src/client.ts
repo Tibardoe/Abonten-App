@@ -90,6 +90,9 @@ import type {
   PromoteEventResult,
   PromotePlaceResult,
   PromotionPaymentAttemptResult,
+  ReferralLinkResult,
+  ReferralTouchBody,
+  ReferralTouchResult,
   RequestEmailOtpBody,
   RequestEmailOtpData,
   RequestPayoutBody,
@@ -155,6 +158,14 @@ export type ApiClientOptions = {
    * 0 / undefined disables it. Set ~0.1 in release builds, 0 in dev.
    */
   metricSampleRate?: number;
+  /**
+   * A stable id for this app install (created once, kept in secure storage),
+   * sent as `x-abonten-install-id`. The server records which accounts use an
+   * install as a Rewards fraud signal; it never gates a request.
+   */
+  getInstallId?: () => string | null | Promise<string | null>;
+  /** "android" | "ios", sent as `x-abonten-platform` with the install id. */
+  platform?: "android" | "ios";
 };
 
 // The internal telemetry sink. Referenced here as a literal so the
@@ -240,6 +251,12 @@ export function createApiClient(options: ApiClientOptions) {
     if (init.auth) {
       const token = (await options.getAccessToken?.()) ?? null;
       if (token) headers.Authorization = `Bearer ${token}`;
+    }
+
+    const installId = (await options.getInstallId?.()) ?? null;
+    if (installId) {
+      headers["x-abonten-install-id"] = installId;
+      if (options.platform) headers["x-abonten-platform"] = options.platform;
     }
 
     const startedAt = Date.now();
@@ -1437,6 +1454,28 @@ export function createApiClient(options: ApiClientOptions) {
       program() {
         return request<RewardsProgramResult>("/api/mobile/rewards/program", {
           method: "GET",
+          auth: true,
+        });
+      },
+      /**
+       * The caller's referral code for share links (created on first use);
+       * code is null while referral capture is off.
+       */
+      referral() {
+        return request<ReferralLinkResult>("/api/mobile/rewards/referral", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /**
+       * Log that a referral link was opened in the app (fire-and-forget).
+       * Works signed out too; a signed-in visitor's touch also counts for
+       * their later checkout on any device.
+       */
+      touch(body: ReferralTouchBody) {
+        return request<ReferralTouchResult>("/api/mobile/rewards/touch", {
+          method: "POST",
+          body,
           auth: true,
         });
       },

@@ -90,7 +90,11 @@ saved payment methods + card verification, upload signatures, Abonten
 Rewards reads (`rewards/creditsQuery` — credit summary + activity;
 `rewards/rewardsProgramQuery` — which program features are on, honouring the
 `REWARDS_KILL_SWITCH` deploy flag; `rewards/creditRedemptionCore` — the
-promotion checkout "Use credit" quote). The two credit reads call
+promotion checkout "Use credit" quote; `rewards/referralCore` — the caller's
+referral code and referral-link touch logging, `/api/mobile/rewards/referral`
+and `/rewards/touch`, the touch route also accepting signed-out calls).
+Logging an event share is class A on mobile (`event_share` owner-insert
+under RLS) and a Server Action on web. The two credit reads call
 `auth.uid()`-scoped `SECURITY DEFINER` RPCs and would be class-A safe on their
 own; they sit behind the API so the kill switch and the "program enabled for
 this user" gate apply identically on both platforms.

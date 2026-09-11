@@ -1,3 +1,4 @@
+import { referralHintForEvent } from "@/features/rewards/referralCapture";
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -9,10 +10,16 @@ type ValidateInput = {
 };
 
 // Reserve inventory + open a pending checkout session. Mirrors the web
-// validateCheckout action, including promo-code validation + claim.
+// validateCheckout action, including promo-code validation + claim. Sends
+// the referral link this app opened for the event, if any (a hint -- the
+// server decides whether it counts).
 export function useValidateCheckout() {
   return useMutation({
-    mutationFn: (input: ValidateInput) => api.checkout.validate(input),
+    mutationFn: async (input: ValidateInput) =>
+      api.checkout.validate({
+        ...input,
+        referral: await referralHintForEvent(input.eventId).catch(() => null),
+      }),
   });
 }
 

@@ -4,6 +4,9 @@ import Link from "next/link";
 const TABS = [
   { href: "/rewards", label: "Overview" },
   { href: "/rewards/accounts", label: "Credit accounts" },
+  { href: "/rewards/referrals", label: "Referrals" },
+  { href: "/rewards/queue", label: "Review queue" },
+  { href: "/rewards/rules", label: "Reward rules" },
   { href: "/rewards/settings", label: "Program settings" },
 ];
 

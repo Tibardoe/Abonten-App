@@ -191,6 +191,26 @@ export async function runHealthChecksCore(
     httpStatus: expo.value?.status,
   });
 
+  // rewards: the engine's queues are moving. Down when the oldest outbox
+  // event has waited over 10 minutes, a due reward is over an hour late, or
+  // anything was dead-lettered / released without its ledger journal.
+  const rewards = await timed(async () => {
+    const { data, error } = await serviceClient.rpc("rewards_health");
+    if (error) throw new Error(error.message);
+    return (data ?? {}) as Record<string, number>;
+  });
+  const rh = rewards.value;
+  push(
+    "rewards",
+    rewards,
+    !!rh &&
+      Number(rh.outbox_lag_seconds ?? 0) <= 600 &&
+      Number(rh.settlement_backlog ?? 0) === 0 &&
+      Number(rh.outbox_dead_letters ?? 0) === 0 &&
+      Number(rh.released_without_journal ?? 0) === 0,
+    rh ?? undefined,
+  );
+
   // `self` = "the health endpoint ran to completion". Written here so the
   // Admin Monitor shows Endpoint reachability = ok whenever this function
   // finishes — independent of whether the pg_cron caller's HTTP client

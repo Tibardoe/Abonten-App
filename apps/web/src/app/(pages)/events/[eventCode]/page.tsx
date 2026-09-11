@@ -345,6 +345,7 @@ export default async function page({
                 title={event.title}
                 address={event.address.full_address}
                 eventCode={event.event_code}
+                eventId={event.id}
               />
               <ReportButton
                 targetType="event"
@@ -410,6 +411,7 @@ export default async function page({
                   title={event.title}
                   address={event.address.full_address}
                   eventCode={event.event_code}
+                  eventId={event.id}
                 />
               </div>
 
@@ -488,6 +490,7 @@ export default async function page({
                 title={event.title}
                 address={event.address.full_address}
                 eventCode={event.event_code}
+                eventId={event.id}
               />
             </div>
 

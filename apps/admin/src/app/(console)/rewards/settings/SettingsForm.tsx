@@ -18,16 +18,6 @@ const LOCKED: {
   value: (s: RewardsProgramSettings) => boolean;
 }[] = [
   {
-    label: "Capture referral links",
-    phase: "Phase 4",
-    value: (s) => s.referralCaptureEnabled,
-  },
-  {
-    label: "Shadow mode (evaluate rewards without paying)",
-    phase: "Phase 4",
-    value: (s) => s.shadowMode,
-  },
-  {
     label: "Cash withdrawals",
     phase: "Not in version 1",
     value: (s) => s.withdrawalsEnabled,
@@ -82,6 +72,11 @@ export function SettingsForm({
   const [payoutHold, setPayoutHold] = useState(
     pct(settings.creditSharePayoutHoldBps),
   );
+  const [capture, setCapture] = useState(settings.referralCaptureEnabled);
+  const [shadow, setShadow] = useState(settings.shadowMode);
+  const [windowDays, setWindowDays] = useState(
+    String(settings.referralAttributionWindowDays),
+  );
   const [reason, setReason] = useState("");
 
   const editable = canConfigure && stepUpFresh;
@@ -110,6 +105,9 @@ export function SettingsForm({
           dualApprovalThresholdMinor: toMinor(dualApproval),
           supportGoodwillMonthlyCapMinor: toMinor(goodwillCap),
           creditSharePayoutHoldBps: toBps(payoutHold),
+          referralCaptureEnabled: capture,
+          shadowMode: shadow,
+          referralAttributionWindowDays: Math.round(Number(windowDays)),
         },
       });
       setMsg(res.message ?? null);
@@ -256,6 +254,54 @@ export function SettingsForm({
       </Card>
 
       <Card className="space-y-3 p-4">
+        <p className="text-sm font-semibold">Event referrals</p>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={capture}
+            disabled={!editable}
+            onChange={(e) => setCapture(e.target.checked)}
+          />
+          <span>
+            <span className="block">Capture referral links</span>
+            <span className="block text-xs text-muted-foreground">
+              Signed-in users&apos; share links carry their referral code, and a
+              checkout opened through one records who referred it. Nothing is
+              paid by this alone: the “Event referral” rule must also be live.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={shadow}
+            disabled={!editable}
+            onChange={(e) => setShadow(e.target.checked)}
+          />
+          <span>
+            <span className="block">
+              Shadow mode (evaluate rewards without paying)
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              On: every referred sale is evaluated and shown under Referrals,
+              but no credit is posted and nobody is notified. Turn it off only
+              after reviewing the projected cost and risk flags — referrers then
+              start earning real credit.
+            </span>
+          </span>
+        </label>
+        {field(
+          "Attribution window",
+          "A purchase counts for a referral link opened within this many days (the most recent link wins).",
+          windowDays,
+          setWindowDays,
+          "days",
+        )}
+      </Card>
+
+      <Card className="space-y-3 p-4">
         <p className="text-sm font-semibold">Money limits</p>
         <div className="grid gap-4 sm:grid-cols-2">
           {field(
@@ -311,7 +357,7 @@ export function SettingsForm({
       </Card>
 
       <Card className="space-y-2 p-4">
-        <p className="text-sm font-semibold">Coming in later phases</p>
+        <p className="text-sm font-semibold">Not available yet</p>
         <ul className="space-y-1 text-sm">
           {LOCKED.map((l) => (
             <li

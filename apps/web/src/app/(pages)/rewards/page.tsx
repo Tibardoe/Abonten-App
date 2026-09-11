@@ -1,5 +1,6 @@
 import { getCreditActivity } from "@/actions/getCreditActivity";
 import { getCreditSummary } from "@/actions/getCreditSummary";
+import { getReferralLink } from "@/actions/getReferralLink";
 import { getRewardsProgram } from "@/actions/getRewardsProgram";
 import {
   PageTitle,
@@ -7,6 +8,7 @@ import {
   SupportingText,
 } from "@/components/ui/typography";
 import CreditBalanceCard from "@/rewards/molecules/CreditBalanceCard";
+import ReferralCodeCard from "@/rewards/molecules/ReferralCodeCard";
 import CreditActivityList from "@/rewards/organisms/CreditActivityList";
 import RewardsHowItWorks from "@/rewards/organisms/RewardsHowItWorks";
 import { notFound } from "next/navigation";
@@ -23,10 +25,12 @@ export default async function RewardsPage() {
     notFound();
   }
 
-  const [summary, firstPage] = await Promise.all([
+  const [summary, firstPage, referral] = await Promise.all([
     getCreditSummary(),
     getCreditActivity(),
+    getReferralLink(),
   ]);
+  const referralCode = referral.data?.code ?? null;
 
   async function fetchPage(cursor: string | null) {
     "use server";
@@ -49,6 +53,14 @@ export default async function RewardsPage() {
           We couldn&apos;t load your balance right now. Try again in a moment.
         </p>
       )}
+
+      {referralCode && program.data.eventReferral ? (
+        <ReferralCodeCard
+          code={referralCode}
+          rateBps={program.data.eventReferral.rateBps}
+          windowDays={referral.data?.attributionWindowDays ?? 7}
+        />
+      ) : null}
 
       <RewardsHowItWorks program={program.data} />
 

@@ -323,9 +323,50 @@ export const rewardsSettingsSchema = z.object({
       dualApprovalThresholdMinor: z.number().int().min(0).max(10000000),
       supportGoodwillMonthlyCapMinor: z.number().int().min(0).max(1000000),
       creditSharePayoutHoldBps: z.number().int().min(0).max(10000),
+      referralAttributionWindowDays: z.number().int().min(1).max(90),
     })
     .strict()
     .partial(),
+});
+
+// Held rewards (risk review). The note is audited and stored on the reward.
+export const rewardReviewSchema = z.object({
+  rewardEventId: z.string().uuid(),
+  approve: z.boolean(),
+  note: z
+    .string()
+    .trim()
+    .min(5, "Say what you checked (at least 5 characters)")
+    .max(1000),
+});
+
+const optionalBps = z.number().int().min(0).max(10000).nullable();
+
+// A new rule version. Versions are never edited; this publishes the next
+// one, inactive. Caps are whole numbers (pesewas / counts).
+export const rewardRuleVersionSchema = z.object({
+  ruleKey: z.enum([
+    "event_referral",
+    "friend_referral_referrer",
+    "friend_referral_referee",
+    "organizer_rebate",
+    "venue_rebate",
+    "organizer_milestone",
+  ]),
+  rateBps: optionalBps,
+  netShareCapBps: optionalBps,
+  flatMinor: z.number().int().min(0).max(1000000).nullable(),
+  minBasisMinor: z.number().int().min(0).max(100000000),
+  caps: z.record(z.string().regex(/^[a-z_]+$/), z.number().int().min(0)),
+  expiryDays: z.number().int().min(1).max(3650).nullable(),
+  note: z.string().trim().min(3, "Describe the change").max(500),
+  reason: creditReason,
+});
+
+export const rewardRuleActivationSchema = z.object({
+  ruleKey: rewardRuleVersionSchema.shape.ruleKey,
+  ruleId: z.string().uuid().nullable(),
+  reason: creditReason,
 });
 
 export type ReportResolveInput = z.infer<typeof reportResolveSchema>;
