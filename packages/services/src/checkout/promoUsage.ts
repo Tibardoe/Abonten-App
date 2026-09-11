@@ -1,116 +1,39 @@
 import { logger } from "@abonten/core/logger";
-import type { Database } from "@abonten/types/database.types";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 // Deliberately NOT a "use server" Server Action — see src/utils/ticketInventory.ts
 // for why. These accept an arbitrary userId with no session binding of their
-// own, so they must only ever be reached through validateCheckout, which
-// already resolves userId from the caller's own session.
+// own, so they must only ever be reached from server code that already
+// resolved userId from the caller's own session and checked the checkout is
+// theirs.
 //
-// `client` is optional: the web (cookie-session) callers omit it and get a
-// fresh cookie-bound client; the mobile API route path passes its already-
-// authenticated Bearer client through validateCheckoutCore so the
-// promo_code / promo_code_usage writes run as the same `authenticated`
-// role + `auth.uid()` the RLS policies expect
-// (promo_code_authenticated_usage_update, promo_code_usage_owner_*).
-
-/**
- * Atomically claims `unitsToClaim` redemptions of a promo code for one
- * user/event, mirroring the compare-and-swap pattern in
- * reserveTicketQuantity: the times_used increment is guarded by
- * `.eq("times_used", <value just read>)`, so two concurrent checkouts
- * racing for the last remaining redemption can never both succeed.
- * The per-user promo_code_usage row (PK: promo_code_id, user_id, event_id)
- * additionally prevents the same user claiming twice.
- */
-export async function claimPromoUsage(
-  promoCodeId: string,
-  userId: string,
-  eventId: string,
-  unitsToClaim: number,
-  client: SupabaseClient<Database>,
-) {
-  const supabase = client;
-
-  const { data: promoCode, error: promoCodeError } = await supabase
-    .from("promo_code")
-    .select("times_used, max_uses")
-    .eq("id", promoCodeId)
-    .maybeSingle();
-
-  // times_used is nullable in the DB (DEFAULT 0, no NOT NULL constraint)
-  // but nothing in this codebase ever writes it as null -- treat a null
-  // read as corrupted state rather than silently coalescing to 0, which
-  // could desync the compare-and-swap check below.
-  if (promoCodeError || !promoCode || promoCode.times_used === null) {
-    return { status: 404, message: "Promo code no longer exists" };
-  }
-
-  if (
-    promoCode.max_uses !== null &&
-    promoCode.times_used + unitsToClaim > promoCode.max_uses
-  ) {
-    return {
-      status: 409,
-      message: "Promo code has reached its usage limit!",
-    };
-  }
-
-  const { error: usageInsertError } = await supabase
-    .from("promo_code_usage")
-    .insert({ promo_code_id: promoCodeId, user_id: userId, event_id: eventId });
-
-  if (usageInsertError) {
-    // Most likely the per-user PK already exists (already used this promo).
-    return { status: 400, message: "You have already used this promo code" };
-  }
-
-  const { data: updated, error: updateError } = await supabase
-    .from("promo_code")
-    .update({ times_used: promoCode.times_used + unitsToClaim })
-    .eq("id", promoCodeId)
-    .eq("times_used", promoCode.times_used)
-    .select("id");
-
-  if (updateError || !updated || updated.length === 0) {
-    // Lost the race for the last slot(s) — undo the usage row we just
-    // inserted so this user isn't locked out of retrying.
-    await supabase
-      .from("promo_code_usage")
-      .delete()
-      .eq("promo_code_id", promoCodeId)
-      .eq("user_id", userId)
-      .eq("event_id", eventId);
-
-    return {
-      status: 409,
-      message:
-        "This promo code was just claimed by someone else. Please try again.",
-    };
-  }
-
-  return { status: 200 };
-}
+// Service role throughout: clients can no longer write promo_code_usage or
+// promo_code.times_used (migration lock_promo_and_subscription_writes). Both
+// used to be client-writable so this code could run as the buyer, which also
+// let any signed-in user reset a code's usage count to 0 or delete their own
+// "already used" row and apply a once-per-customer code again. (Claiming a
+// code at checkout happens inside create_ticket_checkout.)
 
 const MAX_CAS_ATTEMPTS = 5;
 
 /**
  * Adjusts times_used by a signed delta WITHOUT touching the promo_code_usage
- * row (unlike claimPromoUsage/releasePromoUsage, which create/delete it). Used
+ * row (unlike releasePromoUsage, which deletes it). Used
  * when a single checkout line's quantity changes after the usage row already
  * exists — the user has still "used" the code for this event regardless of
  * how many units it currently covers, so that row's lifecycle is managed
  * separately (see updateTicketCheckoutQuantity.ts / deleteTicketSummaryCheckout.ts).
- * A positive delta is bound-checked against max_uses, same as claimPromoUsage;
- * a non-positive delta is floored at 0, same as releasePromoUsage. Same CAS
- * retry pattern as both.
+ * A positive delta is bound-checked against max_uses, same as the claim in
+ * create_ticket_checkout; a non-positive delta is floored at 0, same as
+ * releasePromoUsage. Same CAS retry pattern as both.
  */
 export async function adjustPromoUsageUnits(
-  supabase: SupabaseClient<Database>,
   promoCodeId: string,
   unitsDelta: number,
 ) {
   if (unitsDelta === 0) return { status: 200 };
+
+  const supabase = getSupabaseServiceClient();
 
   for (let attempt = 0; attempt < MAX_CAS_ATTEMPTS; attempt++) {
     const { data: promoCode, error: promoCodeError } = await supabase
@@ -163,10 +86,10 @@ export async function adjustPromoUsageUnits(
 }
 
 /**
- * Compensating action for claimPromoUsage: gives back a redemption that was
+ * Compensating action for the promo claim in create_ticket_checkout: gives back a redemption that was
  * claimed for a checkout that ultimately failed, expired, or was cancelled
  * before payment — same role releaseTicketQuantity plays for inventory.
- * Uses the same compare-and-swap update as claimPromoUsage, retried on
+ * Uses a compare-and-swap update on times_used, retried on
  * contention, for the same reason: a plain read-then-write loses
  * increments when two releases race.
  */
@@ -175,11 +98,10 @@ export async function releasePromoUsage(
   userId: string,
   eventId: string,
   unitsToRelease: number,
-  client: SupabaseClient<Database>,
 ) {
   if (unitsToRelease <= 0) return;
 
-  const supabase = client;
+  const supabase = getSupabaseServiceClient();
 
   await supabase
     .from("promo_code_usage")
@@ -221,4 +143,26 @@ export async function releasePromoUsage(
   logger.error(
     `Failed releasing ${unitsToRelease} promo usage unit(s) for ${promoCodeId} after ${MAX_CAS_ATTEMPTS} attempts (contention)`,
   );
+}
+
+/**
+ * Drops the buyer's "already used this code" row without changing the usage
+ * count (the count was already adjusted line by line). Callers have checked
+ * that no other pending/paid line of theirs still carries the discount.
+ */
+export async function forgetPromoUsage(
+  promoCodeId: string,
+  userId: string,
+  eventId: string,
+) {
+  const { error } = await getSupabaseServiceClient()
+    .from("promo_code_usage")
+    .delete()
+    .eq("promo_code_id", promoCodeId)
+    .eq("user_id", userId)
+    .eq("event_id", eventId);
+
+  if (error) {
+    logger.error(`Failed clearing promo usage row: ${error.message}`);
+  }
 }

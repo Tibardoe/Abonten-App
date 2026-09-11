@@ -12,6 +12,7 @@ import {
 
 type CheckoutRow = {
   id: string;
+  event_id: string;
   ticket_type_id: string;
   quantity: number;
   unit_price: number;
@@ -63,7 +64,7 @@ export default async function updateTicketCheckoutQuantity(
   const { data: rawCheckout, error: checkoutError } = await supabase
     .from("ticket_checkout")
     .select(
-      "id, ticket_type_id, quantity, unit_price, discounted_units, promo_code, status",
+      "id, event_id, ticket_type_id, quantity, unit_price, discounted_units, promo_code, status",
     )
     .eq("id", ticketCheckoutId)
     .eq("user_id", user.id)
@@ -101,9 +102,11 @@ export default async function updateTicketCheckoutQuantity(
   let timesUsed = 0;
 
   if (checkout.promo_code) {
+    // Event-scoped: codes are unique per event, not globally.
     const { data: promoCode, error: promoCodeError } = await supabase
       .from("promo_code")
       .select("id, times_used, max_uses, discount_percentage")
+      .eq("event_id", checkout.event_id)
       .eq("promo_code", checkout.promo_code)
       .maybeSingle();
 
@@ -159,7 +162,6 @@ export default async function updateTicketCheckoutQuantity(
   // --- Adjust promo usage (does not touch the promo_code_usage row) ---
   if (promoCodeRowId && promoUnitsDelta !== 0) {
     const adjustment = await adjustPromoUsageUnits(
-      supabase,
       promoCodeRowId,
       promoUnitsDelta,
     );
@@ -172,7 +174,7 @@ export default async function updateTicketCheckoutQuantity(
 
   const rollbackPromo = async () => {
     if (promoCodeRowId && promoUnitsDelta !== 0) {
-      await adjustPromoUsageUnits(supabase, promoCodeRowId, -promoUnitsDelta);
+      await adjustPromoUsageUnits(promoCodeRowId, -promoUnitsDelta);
     }
   };
 

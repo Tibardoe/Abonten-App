@@ -4,6 +4,7 @@ import {
   STEP_UP_MAX_AGE_MS,
 } from "@abonten/core/adminPermissions";
 import { resolveAdminContext } from "@abonten/services/admin/adminContext";
+import { readStepUpToken } from "@abonten/services/admin/stepUpToken";
 import type {
   AdminContext,
   AdminPermissionKey,
@@ -58,16 +59,18 @@ export async function requireAdmin(opts?: {
     throw new AdminUnauthenticatedError("No access");
   }
 
+  // Signed and bound to this user (see stepUpToken.ts): a forged, copied or
+  // pre-signing cookie reads as "not re-authenticated".
   const cookieStore = await cookies();
-  const stepUpRaw = cookieStore.get(STEP_UP_COOKIE)?.value;
-  const reauthenticatedAt = stepUpRaw ? Number.parseInt(stepUpRaw, 10) : null;
+  const reauthenticatedAt = readStepUpToken(
+    cookieStore.get(STEP_UP_COOKIE)?.value,
+    user.id,
+  );
 
   try {
     const ctx = await resolveAdminContext(getServiceClient(), user.id, {
       email: user.email ?? null,
-      reauthenticatedAt: Number.isFinite(reauthenticatedAt)
-        ? reauthenticatedAt
-        : null,
+      reauthenticatedAt,
     });
     // Attach the admin's id + role keys to this request's Sentry scope
     // (request-isolated in @sentry/nextjs) — no email / other PII.

@@ -445,6 +445,64 @@ describe("paying for tickets with credit", () => {
       .select("id")
       .eq("idempotency_key", `redeem.refund:${txn?.id}`);
     expect(journals).toHaveLength(1);
+
+    // Paystack later fails the cash part (the webhook's refund.failed
+    // branch): only the cash share goes back to the organizer; the credit
+    // the buyer already got back stays held.
+    const heldNet = async () => {
+      const { data } = await service
+        .from("organizer_ledger_entry")
+        .select("amount")
+        .eq("transaction_id", txn?.id as string)
+        .in("entry_type", ["refund_hold", "refund_release"]);
+      return (
+        Math.round(
+          (data ?? []).reduce((sum, row) => sum + Number(row.amount), 0) * 100,
+        ) / 100
+      );
+    };
+    const failCashRefund = async () => {
+      await service
+        .from("transaction")
+        .update({ status: "successful" })
+        .eq("id", txn?.id as string)
+        .eq("status", "refund_pending");
+      const { error } = await service.rpc("record_refund_release", {
+        p_transaction_id: txn?.id as string,
+      });
+      expect(error).toBeNull();
+    };
+
+    expect(await heldNet()).toBe(-100);
+    await failCashRefund();
+    expect(await heldNet()).toBe(-28.57);
+
+    // Running the refund again re-requests only the cash, tops the hold back
+    // up to the full amount and doesn't return the credit twice.
+    const retry = await issueRefundCore(service, txn?.id as string);
+    expect(retry.status).toBe(200);
+    expect(paystack.refundTransaction).toHaveBeenCalledTimes(2);
+    expect(paystack.refundTransaction).toHaveBeenLastCalledWith(
+      reference,
+      7143,
+    );
+    expect(await heldNet()).toBe(-100);
+    const { data: stillOne } = await service
+      .from("credit_journal")
+      .select("id")
+      .eq("idempotency_key", `redeem.refund:${txn?.id}`);
+    expect(stillOne).toHaveLength(1);
+    const { data: balance } = await service
+      .from("credit_account")
+      .select("available_minor")
+      .eq("user_id", buyer.id)
+      .single();
+    expect(balance?.available_minor).toBe(2857);
+
+    // A second failure lands in the same place (it used to release both
+    // earlier holds and over-credit the organizer).
+    await failCashRefund();
+    expect(await heldNet()).toBe(-28.57);
   });
 
   it("refunds orders paid entirely with credit when the organizer cancels the event", async () => {

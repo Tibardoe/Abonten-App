@@ -13,6 +13,7 @@ export function RefundPanel({
   refundableLabel,
   creditBackLabel,
   cashBackLabel,
+  creditAlreadyReturnedLabel,
   canRefund,
   stepUpFresh,
 }: {
@@ -21,6 +22,11 @@ export function RefundPanel({
   /** Set when the order was paid (partly) with Abonten Credit. */
   creditBackLabel?: string | null;
   cashBackLabel?: string | null;
+  /**
+   * The credit share already went back on an earlier attempt whose cash part
+   * Paystack failed: this retry only sends the cash share.
+   */
+  creditAlreadyReturnedLabel?: string | null;
   canRefund: boolean;
   stepUpFresh: boolean;
 }) {
@@ -36,11 +42,13 @@ export function RefundPanel({
     <div className="mt-3 space-y-2 rounded border border-warning/40 bg-warning/10 p-3">
       <p className="text-sm font-semibold">Issue a refund</p>
       <p className="text-xs text-muted-foreground">
-        {creditBackLabel
-          ? `Returns ${refundableLabel}: ${creditBackLabel} as Abonten Credit${
-              cashBackLabel ? ` and ${cashBackLabel} via Paystack` : ""
-            }, in proportion to how the order was paid`
-          : `Sends ${refundableLabel} back via Paystack`}{" "}
+        {creditAlreadyReturnedLabel
+          ? `Sends the remaining ${cashBackLabel ?? refundableLabel} back via Paystack (${creditAlreadyReturnedLabel} of Abonten Credit was already returned on an earlier attempt)`
+          : creditBackLabel
+            ? `Returns ${refundableLabel}: ${creditBackLabel} as Abonten Credit${
+                cashBackLabel ? ` and ${cashBackLabel} via Paystack` : ""
+              }, in proportion to how the order was paid`
+            : `Sends ${refundableLabel} back via Paystack`}{" "}
         (ticket revenue only — the service fee is retained) and holds it against
         the organizer&apos;s ledger. Idempotent; a retry won&apos;t
         double-refund.

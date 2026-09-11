@@ -1,12 +1,14 @@
 import { STEP_UP_COOKIE_NAME } from "@/lib/adminGuard";
 import { createSsrClient } from "@/lib/supabaseServer";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
+import { createStepUpToken } from "@abonten/services/admin/stepUpToken";
 import { NextResponse } from "next/server";
 
 // OAuth PKCE callback: exchange the code for a session cookie, then land on
 // the console (which itself enforces the allowlist + admin_user check).
 // `stepup=1` means this round-trip was a deliberate re-authentication for a
-// sensitive action — stamp the step-up cookie.
+// sensitive action — stamp the step-up cookie, signed for the user this
+// exchange just proved (see stepUpToken.ts).
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
@@ -15,17 +17,22 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createSsrClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       const res = NextResponse.redirect(new URL(next, url.origin));
-      if (stepup) {
-        res.cookies.set(STEP_UP_COOKIE_NAME, String(Date.now()), {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          path: "/",
-          maxAge: Math.floor(STEP_UP_MAX_AGE_MS / 1000),
-        });
+      const userId = data.session?.user.id ?? data.user?.id;
+      if (stepup && userId) {
+        res.cookies.set(
+          STEP_UP_COOKIE_NAME,
+          createStepUpToken(userId, Date.now()),
+          {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: Math.floor(STEP_UP_MAX_AGE_MS / 1000),
+          },
+        );
       }
       return res;
     }

@@ -106,7 +106,7 @@ export async function POST(req: Request) {
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq("paystack_reference", reference)
         .eq("status", "refund_pending")
-        .select("id, user_id")
+        .select("id, user_id, credit_refunded_amount")
         .maybeSingle();
 
       if (updateError) {
@@ -132,6 +132,10 @@ export async function POST(req: Request) {
         // own refund_hold rows, and this call site is already guarded by
         // the `.eq("status","refund_pending")` update above, so a retried
         // webhook delivery for the same failure never runs this twice.
+        // For an order paid partly with Abonten Credit, the credit share
+        // was already returned to the buyer, so only the cash share of the
+        // hold is released (see migration
+        // lock_promo_subscription_writes_and_partial_refund_release).
         if (newStatus === "successful") {
           const { error: releaseError } = await supabase.rpc(
             "record_refund_release",
@@ -145,6 +149,8 @@ export async function POST(req: Request) {
           }
         }
 
+        const creditReturned = Number(updated.credit_refunded_amount ?? 0);
+
         // Best-effort — the transaction/ledger state above is already
         // final regardless of whether this notification succeeds.
         await createNotificationCore(supabase, {
@@ -157,7 +163,9 @@ export async function POST(req: Request) {
           body:
             newStatus === "refunded"
               ? "Your refund has been processed by Paystack."
-              : "We couldn't process your refund automatically. Our team will follow up.",
+              : creditReturned > 0
+                ? `Your GH₵ ${creditReturned.toFixed(2)} of Abonten Credit is back, but we couldn't return the rest to your payment method automatically. Our team will follow up.`
+                : "We couldn't process your refund automatically. Our team will follow up.",
           link: "/transactions",
           data: { kind: "ticket" },
         }).catch((error) => {

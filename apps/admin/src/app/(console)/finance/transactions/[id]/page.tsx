@@ -154,6 +154,11 @@ export default async function TransactionDetailPage({
                 ? money(refundSplit.cashBackMinor / 100, t.currency)
                 : null
             }
+            creditAlreadyReturnedLabel={
+              t.creditRefundedAmount > 0
+                ? money(t.creditRefundedAmount, t.currency)
+                : null
+            }
             canRefund={canRefund}
             stepUpFresh={stepUpFresh}
           />

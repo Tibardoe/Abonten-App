@@ -44,9 +44,9 @@ type RefundTransactionRow = {
 async function returnCreditShare(
   transaction: RefundTransactionRow,
   creditBackMinor: number,
-): Promise<boolean> {
-  if (creditBackMinor <= 0) return true;
-  const { error } = await getSupabaseServiceClient().rpc(
+): Promise<{ ok: boolean; returnedNow: boolean }> {
+  if (creditBackMinor <= 0) return { ok: true, returnedNow: false };
+  const { data, error } = await getSupabaseServiceClient().rpc(
     "credit_refund_redemption",
     { p_transaction_id: transaction.id, p_amount_minor: creditBackMinor },
   );
@@ -54,9 +54,10 @@ async function returnCreditShare(
     logger.error(
       `Failed returning ${creditBackMinor} pesewas of credit for transaction ${transaction.id}: ${error.message}`,
     );
-    return false;
+    return { ok: false, returnedNow: false };
   }
-  return true;
+  const row = Array.isArray(data) ? data[0] : data;
+  return { ok: true, returnedNow: Boolean(row?.created) };
 }
 
 /**
@@ -129,7 +130,7 @@ export async function issueRefundCore(
         transaction,
         toPesewas(Number(refundableAgain ?? 0)),
       );
-      if (!(await returnCreditShare(transaction, again.creditBackMinor))) {
+      if (!(await returnCreditShare(transaction, again.creditBackMinor)).ok) {
         return {
           status: 500,
           message:
@@ -264,11 +265,11 @@ export async function issueRefundCore(
   }
 
   // The credit share comes back straight away. A failure here is retried by
-  // calling this again (see the refund_pending branch above).
-  const creditReturned = await returnCreditShare(
-    transaction,
-    split.creditBackMinor,
-  );
+  // calling this again (see the refund_pending branch above). On a retry
+  // after Paystack failed the cash part, the credit is already back: the
+  // call is a no-op and record_refund_hold above only re-held the cash share.
+  const credit = await returnCreditShare(transaction, split.creditBackMinor);
+  const creditReturned = credit.ok;
 
   // Nothing went to Paystack, so no refund.processed webhook will arrive:
   // the refund is complete now.
@@ -297,10 +298,9 @@ export async function issueRefundCore(
   // Best-effort — the hold above is already the source of truth; a failed
   // notification never undoes a real refund request. Completion/failure is
   // notified separately by the webhook once Paystack actually confirms it.
-  const creditText =
-    split.creditBackMinor > 0
-      ? `GH₵ ${fromPesewas(split.creditBackMinor).toFixed(2)} is back in your Abonten Credit`
-      : null;
+  const creditText = credit.returnedNow
+    ? `GH₵ ${fromPesewas(split.creditBackMinor).toFixed(2)} is back in your Abonten Credit`
+    : null;
   const completed = split.cashBackMinor === 0;
   await createNotificationCore(privileged, {
     userId: transaction.user_id,

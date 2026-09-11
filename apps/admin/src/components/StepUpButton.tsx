@@ -3,7 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { Button } from "./ui";
 
-// Re-runs the OAuth round trip; the callback stamps the step-up cookie so
+// Re-runs the OAuth round trip; the callback stamps the (signed) step-up cookie so
 // sensitive actions (ban user, grant role, settings) are unlocked for the
 // next 10 minutes.
 export function StepUpButton({ next = "/settings" }: { next?: string }) {
@@ -17,6 +17,9 @@ export function StepUpButton({ next = "/settings" }: { next?: string }) {
       provider: "google",
       options: {
         redirectTo: `${origin}/auth/callback?stepup=1&next=${encodeURIComponent(next)}`,
+        // Always show Google's account chooser, so confirming identity is a
+        // deliberate step rather than a silent redirect.
+        queryParams: { prompt: "select_account" },
       },
     });
   }
