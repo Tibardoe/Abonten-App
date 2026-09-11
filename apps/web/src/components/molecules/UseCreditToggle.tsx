@@ -26,9 +26,11 @@ export default function UseCreditToggle({
             Use {formatCredit(quote.creditMinor)} Abonten Credit
           </p>
           <p className="text-xs text-muted-foreground">
-            {quote.creditOnly
-              ? "Your credit covers this. No card or wallet is charged."
-              : `You have ${formatCredit(quote.spendableMinor)} you can use here.`}
+            {!quote.creditOnly
+              ? `You have ${formatCredit(quote.spendableMinor)} you can use here.`
+              : checked
+                ? "Your credit covers this. No card or wallet is charged."
+                : "Your credit can cover all of this. Turn it on to use it."}
           </p>
         </div>
         <button

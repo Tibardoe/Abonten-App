@@ -54,7 +54,7 @@ export default async function page({
         {events?.length
           ? events.map((event, index) => (
               <EventCard
-                key={event.title}
+                key={event.id}
                 priority={index < 4}
                 title={event.title}
                 id={event.id}
