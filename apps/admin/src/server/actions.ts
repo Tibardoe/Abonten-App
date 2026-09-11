@@ -37,6 +37,11 @@ import {
   updateReportStatusCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
 import {
+  decideHeldRewardCore,
+  publishRewardRuleVersionCore,
+  setRewardRuleActiveCore,
+} from "@abonten/services/admin/rewards/referralAdminCore";
+import {
   approveCreditAdjustmentCore,
   grantGoodwillCreditCore,
   rejectCreditAdjustmentCore,
@@ -79,6 +84,9 @@ import {
   resolveReportGroupSchema,
   reviewClaimSchema,
   revokeAdminRoleSchema,
+  rewardReviewSchema,
+  rewardRuleActivationSchema,
+  rewardRuleVersionSchema,
   rewardsSettingsSchema,
   sendPayoutSchema,
   setAdminUserStatusSchema,
@@ -91,6 +99,71 @@ import {
 } from "@abonten/validation/adminSchemas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+// Held rewards: approve (release when due) or reject. rewards.review; no
+// step-up -- it can only ever pay out a reward the engine already priced.
+export async function decideHeldReward(input: unknown) {
+  const parsed = rewardReviewSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await decideHeldRewardCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/rewards/queue");
+      revalidatePath("/rewards/referrals");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "decideHeldReward");
+  }
+}
+
+// Rule versions change what the program pays: rewards.configure + step-up.
+export async function publishRewardRuleVersion(input: unknown) {
+  const parsed = rewardRuleVersionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await publishRewardRuleVersionCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/rewards/rules");
+    return res;
+  } catch (e) {
+    return adminError(e, "publishRewardRuleVersion");
+  }
+}
+
+export async function setRewardRuleActive(input: unknown) {
+  const parsed = rewardRuleActivationSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await setRewardRuleActiveCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/rewards/rules");
+      revalidatePath("/rewards");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "setRewardRuleActive");
+  }
+}
 
 const svc = () => getServiceClient();
 

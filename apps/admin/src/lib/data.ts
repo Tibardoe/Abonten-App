@@ -56,6 +56,11 @@ import {
   listReportsCore,
 } from "@abonten/services/admin/reports/reportsAdminCore";
 import {
+  getReferralSummaryCore,
+  listRewardEventsCore,
+  listRewardRulesCore,
+} from "@abonten/services/admin/rewards/referralAdminCore";
+import {
   getCreditAccountDetailCore,
   getRewardsOverviewCore,
   listCreditAccountsCore,
@@ -325,6 +330,34 @@ export async function loadCreditAccounts(
 ) {
   const ctx = await requireAdmin();
   return listCreditAccountsCore(getServiceClient(), ctx, filters);
+}
+
+export async function loadReferrals(
+  filters: Parameters<typeof listRewardEventsCore>[2],
+  sinceDays = 30,
+) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [summary, events] = await Promise.all([
+    getReferralSummaryCore(svc, ctx, sinceDays),
+    listRewardEventsCore(svc, ctx, filters),
+  ]);
+  return { ctx, summary, events };
+}
+
+export async function loadRewardQueue(cursor?: string | null) {
+  const ctx = await requireAdmin();
+  const events = await listRewardEventsCore(getServiceClient(), ctx, {
+    status: "held",
+    cursor,
+  });
+  return { ctx, events };
+}
+
+export async function loadRewardRules() {
+  const ctx = await requireAdmin();
+  const rules = await listRewardRulesCore(getServiceClient(), ctx);
+  return { ctx, rules };
 }
 
 export async function loadCreditAccountDetail(userId: string) {
