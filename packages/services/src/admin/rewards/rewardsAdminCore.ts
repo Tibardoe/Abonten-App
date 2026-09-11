@@ -49,7 +49,7 @@ type RequestMeta = Record<string, unknown> | undefined;
 const denied = (e: unknown): AdminEnvelope<never> =>
   adminError(e) as AdminEnvelope<never>;
 
-async function namesFor(
+export async function namesFor(
   supabase: ServiceRoleClient,
   ids: (string | null | undefined)[],
 ): Promise<Map<string, { username: string | null; fullName: string | null }>> {
@@ -69,7 +69,7 @@ async function namesFor(
   return map;
 }
 
-const displayName = (
+export const displayName = (
   n: { username: string | null; fullName: string | null } | undefined,
 ): string | null => n?.fullName || n?.username || null;
 
@@ -93,6 +93,7 @@ type SettingsRow = {
   support_goodwill_monthly_cap_minor: number;
   credit_share_payout_hold_bps: number;
   withdrawal_min_minor: number;
+  referral_attribution_window_days: number;
   updated_at: string;
   updated_by: string | null;
 };
@@ -116,6 +117,7 @@ function mapSettings(row: SettingsRow): RewardsProgramSettings {
     supportGoodwillMonthlyCapMinor: num(row.support_goodwill_monthly_cap_minor),
     creditSharePayoutHoldBps: row.credit_share_payout_hold_bps,
     withdrawalMinMinor: num(row.withdrawal_min_minor),
+    referralAttributionWindowDays: num(row.referral_attribution_window_days),
     updatedAt: row.updated_at,
     updatedBy: row.updated_by,
   };
@@ -136,7 +138,7 @@ async function readSettings(
   return mapSettings(data as unknown as SettingsRow);
 }
 
-async function readRules(
+export async function readRules(
   supabase: ServiceRoleClient,
 ): Promise<RewardRuleSummary[]> {
   const { data, error } = await supabase
@@ -148,6 +150,10 @@ async function readRules(
     logger.error(`readRules failed: ${error.message}`);
     return [];
   }
+  const names = await namesFor(
+    supabase,
+    (data ?? []).map((r) => r.created_by),
+  );
   return (data ?? []).map((r) => ({
     id: r.id,
     ruleKey: r.rule_key,
@@ -164,6 +170,8 @@ async function readRules(
     expiryDays: r.expiry_days,
     withdrawable: r.withdrawable,
     note: r.note,
+    createdBy: r.created_by,
+    createdByName: r.created_by ? displayName(names.get(r.created_by)) : null,
     createdAt: r.created_at,
   }));
 }
@@ -611,7 +619,7 @@ export async function listPendingCreditAdjustmentsCore(
 
 // Maps a raised Postgres error from a credit_* function to an envelope. The
 // functions raise user-safe messages with specific SQLSTATEs.
-function dbError(
+export function dbError(
   error: { message: string; code?: string },
   fallback: string,
 ): AdminEnvelope<never> {
@@ -932,16 +940,15 @@ const SETTINGS_COLUMN: Record<keyof RewardsSettingsPatch, string> = {
   dualApprovalThresholdMinor: "dual_approval_threshold_minor",
   supportGoodwillMonthlyCapMinor: "support_goodwill_monthly_cap_minor",
   creditSharePayoutHoldBps: "credit_share_payout_hold_bps",
+  referralAttributionWindowDays: "referral_attribution_window_days",
 };
 
 // Switches for behaviour that isn't built yet. The console shows them
 // locked; this refuses them server-side too, so nobody can switch on a
 // half-built feature with a crafted request. Remove a key when its phase
-// ships (tickets: Phase 3, referral capture + shadow mode: Phase 4).
-const UNSHIPPED_SETTINGS = new Set<keyof RewardsSettingsPatch>([
-  "referralCaptureEnabled",
-  "shadowMode",
-]);
+// ships (tickets: Phase 3, referral capture + shadow mode: Phase 4). Every
+// switch that exists today has shipped.
+const UNSHIPPED_SETTINGS = new Set<keyof RewardsSettingsPatch>([]);
 
 export async function updateRewardsSettingsCore(
   supabase: ServiceRoleClient,

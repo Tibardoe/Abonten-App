@@ -10,8 +10,10 @@ import {
 } from "@abonten/core/eventPurchaseEligibility";
 import { logger } from "@abonten/core/logger";
 import { getPromoCodeCore } from "@abonten/services/promo-codes/getPromoCodeCore";
+import { stampCheckoutReferralCore } from "@abonten/services/rewards/referralCore";
 import { checkRateLimit } from "@abonten/services/security/rateLimit";
 import type { Database } from "@abonten/types/database.types";
+import type { ReferralHint } from "@abonten/types/rewards";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
@@ -34,6 +36,11 @@ export type CheckoutDetailsProp = {
   quantities: { [ticketTypeId: string]: number };
   promoCode?: string | null;
   occurrenceId?: string | null;
+  /**
+   * Referral links the buyer opened (web: from the signed abn_ref cookie;
+   * app: its capture store). Hints only -- see stampCheckoutReferralCore.
+   */
+  referralHints?: ReferralHint[] | null;
 };
 
 type PendingCheckoutRow = {
@@ -65,7 +72,13 @@ export type ValidateCheckoutResult = {
 export async function validateCheckoutCore(
   supabase: SupabaseClient<Database>,
   userId: string,
-  { eventId, quantities, promoCode, occurrenceId }: CheckoutDetailsProp,
+  {
+    eventId,
+    quantities,
+    promoCode,
+    occurrenceId,
+    referralHints,
+  }: CheckoutDetailsProp,
 ): Promise<ValidateCheckoutResult> {
   // Upper-bound the requested quantities before touching inventory. Both
   // transports (web action + /api/mobile/checkout/validate) reach this
@@ -142,7 +155,7 @@ export async function validateCheckoutCore(
   const { data: event, error: eventError } = await supabase
     .from("event")
     .select(
-      "id, status, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
+      "id, status, event_code, starts_at, ends_at, event_occurrence(id, starts_at, ends_at)",
     )
     .eq("id", eventId)
     .maybeSingle();
@@ -377,6 +390,15 @@ export async function validateCheckoutCore(
       message: createError?.message || "Something went wrong!",
     };
   }
+
+  // Abonten Rewards: credit the referral link that brought the buyer here
+  // (last touch within the window). Never blocks the purchase.
+  await stampCheckoutReferralCore({
+    userId,
+    checkoutSessionId: checkoutSessionId as string,
+    event: { id: event.id, eventCode: event.event_code },
+    hints: referralHints,
+  });
 
   return { status: 200, checkoutSessionId: checkoutSessionId as string };
 }
