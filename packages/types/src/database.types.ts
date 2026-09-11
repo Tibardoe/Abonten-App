@@ -3167,6 +3167,12 @@ export type Database = {
           processed_at: string | null;
           reference: string;
           requested_at: string;
+          review_details: Json | null;
+          review_note: string | null;
+          review_reason: string | null;
+          review_status: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
           status: string;
           transfer_code: string | null;
           transfer_failure_reason: string | null;
@@ -3186,6 +3192,12 @@ export type Database = {
           processed_at?: string | null;
           reference: string;
           requested_at?: string;
+          review_details?: Json | null;
+          review_note?: string | null;
+          review_reason?: string | null;
+          review_status?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
           status?: string;
           transfer_code?: string | null;
           transfer_failure_reason?: string | null;
@@ -3205,6 +3217,12 @@ export type Database = {
           processed_at?: string | null;
           reference?: string;
           requested_at?: string;
+          review_details?: Json | null;
+          review_note?: string | null;
+          review_reason?: string | null;
+          review_status?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
           status?: string;
           transfer_code?: string | null;
           transfer_failure_reason?: string | null;
@@ -4113,6 +4131,7 @@ export type Database = {
       platform_fee_entry: {
         Row: {
           created_at: string;
+          credit_applied: number;
           currency: string;
           entry_type: string;
           event_id: string | null;
@@ -4127,6 +4146,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          credit_applied?: number;
           currency: string;
           entry_type: string;
           event_id?: string | null;
@@ -4141,6 +4161,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          credit_applied?: number;
           currency?: string;
           entry_type?: string;
           event_id?: string | null;
@@ -6214,6 +6235,7 @@ export type Database = {
           amount: number;
           created_at: string;
           credit_amount: number;
+          credit_refunded_amount: number;
           currency: string;
           email: string;
           full_name: string;
@@ -6234,6 +6256,7 @@ export type Database = {
           amount: number;
           created_at?: string;
           credit_amount?: number;
+          credit_refunded_amount?: number;
           currency?: string;
           email: string;
           full_name: string;
@@ -6254,6 +6277,7 @@ export type Database = {
           amount?: number;
           created_at?: string;
           credit_amount?: number;
+          credit_refunded_amount?: number;
           currency?: string;
           email?: string;
           full_name?: string;
@@ -6770,6 +6794,14 @@ export type Database = {
         Args: { p_code: string; p_user_id: string };
         Returns: string;
       };
+      _payout_credit_review: {
+        Args: { p_currency: string; p_organizer_id: string };
+        Returns: Json;
+      };
+      admin_clear_payout_review: {
+        Args: { p_admin_id: string; p_note: string; p_payout_id: string };
+        Returns: string;
+      };
       admin_create_payout: {
         Args: {
           p_amount: number;
@@ -7006,6 +7038,18 @@ export type Database = {
         }[];
       };
       credit_reconciliation_checks: { Args: never; Returns: Json };
+      credit_refund_redemption: {
+        Args: {
+          p_amount_minor: number;
+          p_label?: string;
+          p_transaction_id: string;
+        };
+        Returns: {
+          created: boolean;
+          journal_id: string;
+          refunded_minor: number;
+        }[];
+      };
       credit_reject_adjustment: {
         Args: { p_admin: string; p_note: string; p_request_id: string };
         Returns: undefined;
@@ -7834,6 +7878,7 @@ export type Database = {
           cancelled_quantity: number;
           completed_at: string;
           created_at: string;
+          credit_used: number;
           currency: string;
           id: string;
           kind: string;
