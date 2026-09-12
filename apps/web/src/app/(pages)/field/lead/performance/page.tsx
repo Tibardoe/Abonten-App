@@ -60,7 +60,13 @@ export default async function FieldLeadPerformancePage() {
               stats.money.paid_minor,
             stats.currency,
           )}
-          hint={`${money(stats.money.paid_minor, stats.currency)} paid`}
+          // "Earned" is confirmed money only. Without the holding figure a
+          // lead who just verified a submission sees 0.00 and assumes the
+          // verification did nothing.
+          hint={`${money(stats.money.paid_minor, stats.currency)} paid · ${money(
+            stats.money.pending_minor,
+            stats.currency,
+          )} in holding`}
         />
       </div>
 

@@ -29,27 +29,31 @@ export function BatchActions({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [reason, setReason] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
+  // The message is tied to the status it was produced under: once the batch
+  // moves on (approved -> paid) "Approved. It can now be paid." is no longer
+  // true and must not stay on screen.
+  const [msg, setMsg] = useState<{ text: string; status: string } | null>(null);
+  const say = (text: string | null) => setMsg(text ? { text, status } : null);
 
   const approve = () =>
     start(async () => {
-      setMsg(null);
+      say(null);
       const res = await approveFieldOpsPayoutBatch({
         batchId,
         reason: reason.trim() || "Approved for this week's payout run",
       });
-      setMsg(res.message ?? null);
+      say(res.message ?? null);
       if (res.status === 200) router.refresh();
     });
 
   const cancel = () =>
     start(async () => {
-      setMsg(null);
+      say(null);
       const res = await cancelFieldOpsPayoutBatch({
         batchId,
         reason: reason.trim(),
       });
-      setMsg(res.message ?? null);
+      say(res.message ?? null);
       if (res.status === 200) router.refresh();
     });
 
@@ -57,10 +61,10 @@ export function BatchActions({
   // CSV carries full mobile money numbers and never becomes a URL.
   const exportCsv = () =>
     start(async () => {
-      setMsg(null);
+      say(null);
       const res = await exportFieldOpsPayoutBatch(batchId);
       if (res.status !== 200 || !res.data) {
-        setMsg(res.message ?? "Could not export.");
+        say(res.message ?? "Could not export.");
         return;
       }
       const blob = new Blob([res.data.csv], { type: "text/csv;charset=utf-8" });
@@ -70,7 +74,7 @@ export function BatchActions({
       a.download = res.data.filename;
       a.click();
       URL.revokeObjectURL(url);
-      setMsg("Downloaded.");
+      say("Downloaded.");
     });
 
   return (
@@ -111,8 +115,8 @@ export function BatchActions({
           Cancel batch
         </Button>
       ) : null}
-      {msg ? (
-        <p className="w-full text-xs text-muted-foreground">{msg}</p>
+      {msg && msg.status === status ? (
+        <p className="w-full text-xs text-muted-foreground">{msg.text}</p>
       ) : null}
     </Card>
   );

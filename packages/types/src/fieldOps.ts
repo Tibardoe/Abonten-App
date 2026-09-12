@@ -536,6 +536,12 @@ export type FieldOpsOnboardingDraft = {
   };
   /** The programme's duplicate-search thresholds (for the UI copy). */
   duplicateRadiusM: number;
+  /**
+   * E.164 dial prefix of the campaign's region (e.g. "+233"), so a worker
+   * can type a phone number the local way ("024...") and still get a valid
+   * international number.
+   */
+  dialCode: string;
 };
 
 export type FieldOpsEvidenceUploadTicket = {

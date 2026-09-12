@@ -4,6 +4,7 @@ import { completeFieldOpsAssignment } from "@/actions/fieldOps/completeFieldOpsA
 import { startFieldOpsAssignment } from "@/actions/fieldOps/startFieldOpsAssignment";
 import { Button } from "@/components/ui/button";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { useToast } from "@/hooks/useToast";
 import type { FieldOpsAssignment } from "@abonten/types/fieldOps";
 import Link from "next/link";
@@ -125,8 +126,7 @@ export default function AssignmentCard({
       {a.notes ? <p className="mt-2 text-sm">{a.notes}</p> : null}
       {a.status === "started" && a.startDistanceM !== null ? (
         <p className="mt-2 text-xs text-muted-foreground">
-          Checked in {Math.round(a.startDistanceM / 100) / 10} km from the town
-          centre.
+          Checked in {formatDistance(a.startDistanceM)} from the town centre.
         </p>
       ) : null}
       {a.status === "cancelled" && a.cancelReason ? (

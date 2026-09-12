@@ -355,7 +355,7 @@ api/user-profile                                   /api/user-profile
 8. **Inconsistent UUID default generator across tables.** Some tables default `id` to `extensions.uuid_generate_v4()` (`attendance`, `event`, `event_occurrence`, `highlight`, `review`, `story`, `ticket`, `ticket_type`, `transaction`, `user_image_history`, `wallet`), while others use `gen_random_uuid()` (`promo_code`, `receiving_account`, `ticket_checkout`, `subscription_checkout`). Functionally equivalent, but inconsistent — not something application code needs to worry about, just a schema-authoring inconsistency.
 9. **`review.reviewed_id` targets a user, not an event.** It has a foreign key to `user_info.id`, meaning the schema models reviews as being about a *person* (e.g. an organizer), not an event directly — worth keeping in mind since "review an event" UI copy could be misleading about what's actually being rated at the database level.
 
-10. **Migration ledger vs. repo — RE-AUDITED 2026-09-08 against a real from-scratch replay; the earlier, alarming version of this entry was WRONG.** The repo now replays cleanly and reproduces production's messaging behaviour exactly. Method: `npm run test:db:up` on a wiped volume (162 migrations applied from scratch), then a normalized object-by-object diff against production (`sderrexhawjbmsugndcq`). **Correction:** an earlier note here claimed `messaging_inbox_search_filters_moderation_fix` was "the only definition of production's current `list_conversations`" and that a replay would build a different function. **That is false** — `list_conversations` hashes IDENTICALLY on both sides, as do all 13 messaging functions, once SQL comments are normalized away (the Supabase MCP apply path strips comments from function bodies, which is what made the raw hashes differ). Of the 9 migrations applied in production with no repo file, **8 had already been folded into repo files** — proven by comparing normalized bodies of all 111 comparable functions, only 2 of which differ at all. **The 9th was real and is now fixed:** `20260831122456_add_device_token_for_push` was genuinely missing, so `public.device_token` did not exist in a from-scratch replay at all, while `@abonten/services/notifications/deviceTokenCore.ts` + `sendPushNotification.ts` depend on it — a fresh environment could not register a push token. Restored verbatim from production's own ledger (`supabase_migrations.schema_migrations.statements`) at its true version; a subsequent full replay confirms the table, its RLS, 1 policy, 3 indexes and 6 columns now match production exactly. **After that fix, `information_schema.columns` matches production EXACTLY (1170 columns, identical fingerprint), as does the realtime publication.** Remaining, fully-explained, all NON-messaging: (a) **`place_promotion` / `place_promotion_checkout` / `place_promotion_tier` have RLS DISABLED in a replay** (production: enabled, 6 policies) because `scripts/test-db/setup-local-test-db.mjs` neutralizes an RLS block in `20260825105513_enable_rls_places_batch3.sql` that references tables not created until `20260826090000` — a real ordering defect, so **a brand-new environment built from this repo would ship place-promotion tables with no row-level security**; (b) a **stale `get_filtered_events(… p_event_type text …)` overload** survives a replay because `20260902120000_add_public_attendance_count_rpcs.sql` re-creates the pre-multi-type signature *after* `20260826095846` correctly dropped it (production has only the `text[]` form, so a replay has 2 overloads where production has 1); (c) `user_info_id_key` persists in a replay (production dropped it; the harness neutralizes that DROP as documented-irreducible) — accounts for the +1 constraint and +1 index; (d) `pgsodium.key` / `vault.secrets` triggers exist only on hosted Supabase, not the local CLI stack — not repo-owned. **(a) and (b) were FIXED 2026-09-08** by forward-only migrations rather than by editing history: `20260908215345_place_promotion_rls_replay_fix` re-enables RLS and recreates all six policies after the tables exist (policy bodies copied verbatim from production's `pg_policy`; a no-op there, and the resulting policy set now hashes IDENTICALLY to production), and `20260908215414_drop_stale_get_filtered_events_text_overload` drops the resurrected signature. After both, a from-scratch replay has **114 functions (was 115) and 201 policies (was 195) -- the same counts as production** -- with `information_schema.columns` and the realtime publication still byte-identical. Only (c) `user_info_id_key` and (d) the pgsodium/vault platform triggers remain, both documented above as not repo-owned.
+10. **Migration ledger vs. repo — RE-AUDITED 2026-09-08 against a real from-scratch replay; the earlier, alarming version of this entry was WRONG.** The repo now replays cleanly and reproduces production's messaging behaviour exactly. Method: `npm run test:db:up` on a wiped volume (162 migrations applied from scratch), then a normalized object-by-object diff against production (`sderrexhawjbmsugndcq`). **Correction:** an earlier note here claimed `messaging_inbox_search_filters_moderation_fix` was "the only definition of production's current `list_conversations`" and that a replay would build a different function. **That is false** — `list_conversations` hashes IDENTICALLY on both sides, as do all 13 messaging functions, once SQL comments are normalized away (the Supabase MCP apply path strips comments from function bodies, which is what made the raw hashes differ). Of the 9 migrations applied in production with no repo file, **8 had already been folded into repo files** — proven by comparing normalized bodies of all 111 comparable functions, only 2 of which differ at all. **The 9th was real and is now fixed:** `20260831122456_add_device_token_for_push` was genuinely missing, so `public.device_token` did not exist in a from-scratch replay at all, while `@abonten/services/notifications/deviceTokenCore.ts` + `sendPushNotification.ts` depend on it — a fresh environment could not register a push token. Restored verbatim from production's own ledger (`supabase_migrations.schema_migrations.statements`) at its true version; a subsequent full replay confirms the table, its RLS, 1 policy, 3 indexes and 6 columns now match production exactly. **After that fix, `information_schema.columns` matches production EXACTLY (1170 columns, identical fingerprint), as does the realtime publication.** Remaining, fully-explained, all NON-messaging: (a) **`place_promotion` / `place_promotion_checkout` / `place_promotion_tier` have RLS DISABLED in a replay** (production: enabled, 6 policies) because `scripts/test-db/setup-local-test-db.mjs` neutralizes an RLS block in `20260825105513_enable_rls_places_batch3.sql` that references tables not created until `20260826090000` — a real ordering defect, so **a brand-new environment built from this repo would ship place-promotion tables with no row-level security**; (b) a **stale `get_filtered_events(… p_event_type text …)` overload** survives a replay because `20260902120000_add_public_attendance_count_rpcs.sql` re-creates the pre-multi-type signature *after* `20260826095846` correctly dropped it (production has only the `text[]` form, so a replay has 2 overloads where production has 1); (c) `user_info_id_key` persists in a replay (production dropped it; the harness neutralizes that DROP as documented-irreducible) — accounts for the +1 constraint and +1 index; (d) `pgsodium.key` / `vault.secrets` triggers exist only on hosted Supabase, not the local CLI stack — not repo-owned. **(a) and (b) were FIXED 2026-09-08** by forward-only migrations rather than by editing history: `20260908215345_place_promotion_rls_replay_fix` re-enables RLS and recreates all six policies after the tables exist (policy bodies copied verbatim from production's `pg_policy`; a no-op there, and the resulting policy set now hashes IDENTICALLY to production), and `20260908215414_drop_stale_get_filtered_events_text_overload` drops the resurrected signature. After both, a from-scratch replay has **114 functions (was 115) and 201 policies (was 195) -- the same counts as production** -- with `information_schema.columns` and the realtime publication still byte-identical. Only (c) `user_info_id_key` and (d) the pgsodium/vault platform triggers remain, both documented above as not repo-owned. **Re-confirmed 2026-09-12** (Field Ops P8): a fresh from-scratch replay and production still fingerprint identically — 175 tables, 175 with RLS, 197 policies, 266 functions, 1854 columns, with matching table/function/column digests — so (a) and (b) remain closed.
 
 11. **⚠️ OPEN (found 2026-09-08, device QA): plain text messages sent from mobile were stored as `message_type='file'`.** `apps/mobile/src/components/messaging/Composer.tsx`'s send path read `anyAudio ? "audio" : anyImage ? "image" : "file"` — with no `"text"` branch, a typed message with no attachment fell through to `"file"`. Pre-existing on `main`, not a branch regression. It silently disabled two shipped features, because both are gated on `message_type === "text"`: **emoji-only large rendering** (`classifyEmojiOnly`) and the **Copy action** in the message context menu; it also made a reply preview of a text message read "Attachment". Fixed (`toUpload.length > 0 ? "file" : "text"`) and verified on-device end-to-end — a newly sent message now persists as `text`. **The existing rows are NOT repaired:** at the time of the audit production held 11 such rows, all in one test conversation, and all 11 `file`-typed messages were mistyped (there are no legitimate file messages yet). **RESOLVED 2026-09-08** by `20260908215129_backfill_mistyped_text_messages` (applied to production on the owner's instruction). The predicate is self-limiting -- a row qualifies only with ZERO attachments -- and was dry-run first: 11 rows matched, 0 `file` rows with an attachment were at risk, 0 would have been left contentless. Production now reports 0 mistyped rows and 0 `file` messages, and emoji-only rendering plus the Copy action were confirmed working on-device afterwards.
 
@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–7 (2026-09-11/12)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–8 (2026-09-11/12)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -3067,7 +3067,60 @@ applied to production via MCP, advisor-clean, replays from scratch; branch
   permission gate, and the CSV), full suite **39 files / 327 tests**;
   `turbo typecheck` 11/11; web and admin builds clean; parity 155; Biome
   clean.
-- **Not yet built:** Playwright + pilot readiness (P8).
+- **Not yet built:** nothing — P8 closed the programme out (below).
+
+### 28.9 Phase 8 — hardening & pilot readiness (2026-09-12)
+
+- **Schema replay proven.** A from-scratch local replay and production have
+  identical fingerprints: 175 tables, 175 with RLS, 197 policies, 266
+  functions, 1854 columns, matching table/function/column digests. The two
+  replay defects §7.6 item 10 records as fixed on 2026-09-08 (a
+  `place_promotion` RLS gap in a replay, a stale `get_filtered_events`
+  overload) were **re-checked here and do not reproduce** — the fixes hold.
+  `supabase db push`
+  remains forbidden here (~40 local migrations have no remote ledger row).
+- **Sweep load.** 7,000 verified onboardings swept with zero failures —
+  ~1,156 rows/s on the cheap rejection path, ~250–360 rows/s through the
+  full evaluator (trigram + PostGIS duplicate search per row). The cron's
+  200 per tick every 15 minutes has a wide margin.
+- **Job timing fixed** (`20260912030106_fieldops_job_timing`): `now()` is
+  transaction time, so `fieldops_job_run` recorded every run as 0.000
+  seconds — the one number that would reveal a slowing sweep. A
+  `before insert or update` trigger now stamps `clock_timestamp()` on the
+  table itself (so any later job inherits it) and `fieldops_health()` gained
+  `sweep_seconds`. Applied via MCP; no new advisor findings.
+- **Whole chain driven in a real browser** against a local stack with a
+  pilot-shaped campaign: assignment → GPS check-in → territory → prospect →
+  wizard (duplicate search, owner OTP, details, private-bucket evidence,
+  Cloudinary cover) → submission → **the listing created under the owner's
+  account, not the worker's** → lead review with checklist and signed
+  evidence URLs → verify → pending → holding → sweep → approved → member
+  saves a payout number → admin builds a batch → a **second** admin
+  approves → reference recorded → paid. `fieldops_health()` and
+  `run_financial_reconciliation` clean; the commission timeline reads
+  `pending → approved → in_payout → paid` with the right actor per step.
+  The SMS leg is the one part not exercised for real (Hubtel owns the code;
+  the run used the same faked client the integration suite does).
+- **Defects the run found and fixed.** (1) A worker typing a number the
+  normal Ghanaian way (`024…`) produced `+024…`; the submission was refused
+  at the last step, after the uploads, by a message that never said which
+  field was wrong. The draft now carries the region's dial code
+  (`FieldOpsOnboardingDraft.dialCode`) and the wizard uses the app's shared
+  `normalizePhoneNumber`, with the error next to the field. (2) The
+  eligibility checklist showed a red ✗ on "Team lead verified" for a
+  submission nobody had reviewed yet — `reviewVerified` is now
+  `boolean | null`, and a pending **hard** check no longer counts toward a
+  pass (it previously could, e.g. an onboarding with no listing at all).
+  (3) The commission-generation and payout kill switches — which the
+  shutdown plan depends on — were still shown as "not available yet" and
+  could not be changed; they are real switches now. (4) The Content tab was
+  offered to members who cannot submit. (5) Check-in distances read "0 km"
+  for a worker standing on the spot. (6) Several screens still promised
+  phases that had shipped.
+- **Verified:** full integration suite **39 files / 327 tests**; unit 254
+  (core) + 36 (services); `turbo typecheck` 11/11; parity 155; web + admin
+  production builds clean; Biome clean on every touched file; no new
+  Supabase advisors.
 
 ---
 

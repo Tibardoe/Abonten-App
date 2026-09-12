@@ -63,7 +63,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
   if (analytics.status !== 200 || !analytics.data) {
     return (
       <div>
-        <PageHeader title="Field Ops - Campaign figures" />
+        <PageHeader title="Field Ops · Campaign figures" />
         <FieldOpsTabs active="/field-ops/campaigns" />
         <EmptyState>{analytics.message ?? "Campaign not found."}</EmptyState>
       </div>

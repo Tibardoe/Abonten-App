@@ -92,7 +92,7 @@ export default async function FieldOpsCommissionsPage({
           <Stat
             label="In a payout batch"
             value={commissionMoney(totals.in_payout, currency)}
-            hint="Phase 4"
+            hint="Built into a batch, not yet sent"
           />
           <Stat
             label="Paid"

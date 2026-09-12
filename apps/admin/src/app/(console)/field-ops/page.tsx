@@ -197,9 +197,9 @@ export default async function FieldOpsOverviewPage() {
                   </Table>
                 )}
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Onboardings, commissions and payouts appear here once those
-                  phases ship. Until then this module only holds the set-up:
-                  regions, territories, campaigns, teams and rules.
+                  Open a campaign for its territories, team, daily figures and
+                  the money it has generated. Onboardings, the review queue,
+                  commissions and payouts have their own tabs above.
                 </p>
               </>
             );

@@ -49,7 +49,7 @@ export default async function FieldOpsPayoutsPage({
   return (
     <div>
       <PageHeader
-        title="Field Ops - Payouts"
+        title="Field Ops · Payouts"
         description="Approved commissions are grouped per member into a batch, a second admin approves it, the money is sent by mobile money, and each transfer's reference is recorded here."
       />
       <FieldOpsTabs active="/field-ops/payouts" />

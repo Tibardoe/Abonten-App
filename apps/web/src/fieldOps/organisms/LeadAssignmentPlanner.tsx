@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { useToast } from "@/hooks/useToast";
 import type {
   FieldOpsAssignment,
@@ -158,8 +159,8 @@ export default function LeadAssignmentPlanner({
                 </div>
                 {a.status === "started" && a.startDistanceM !== null ? (
                   <p className="text-xs text-muted-foreground">
-                    Checked in {Math.round(a.startDistanceM / 100) / 10} km from
-                    the centre
+                    Checked in {formatDistance(a.startDistanceM)} from the
+                    centre
                     {a.startAccuracyM !== null
                       ? ` (±${a.startAccuracyM} m)`
                       : ""}

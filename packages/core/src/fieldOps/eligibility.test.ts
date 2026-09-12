@@ -142,4 +142,27 @@ describe("evaluateEligibility", () => {
     );
     expect(r.pass).toBe(true);
   });
+
+  it("does not pass while a hard check is still pending", () => {
+    // The lead has not decided yet: pending, not failed -- and definitely
+    // not "ready", which would let money move on an unreviewed submission.
+    const r = evaluateEligibility(
+      { ...good, reviewVerified: null },
+      rule,
+      settings,
+    );
+    expect(r.checks.find((c) => c.key === "lead_verified")?.ok).toBeNull();
+    expect(r.hard).toEqual([]);
+    expect(r.pass).toBe(false);
+  });
+
+  it("still fails outright when the lead rejected it", () => {
+    const r = evaluateEligibility(
+      { ...good, reviewVerified: false },
+      rule,
+      settings,
+    );
+    expect(r.hard).toContain("lead_verified");
+    expect(r.pass).toBe(false);
+  });
 });

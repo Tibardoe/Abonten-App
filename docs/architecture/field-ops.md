@@ -395,3 +395,68 @@ territory in the region and an active team lead); the same table lives in
   the in-flight lock, grouping and the missing-number case, the
   second-admin rule, paid/failed/cancel, the member's history, the CSV
   gate, and the books balancing after a post-payment reversal).
+
+## Hardening (Phase 8)
+
+What was checked before the pilot, and what it found.
+
+**Schema replay.** A from-scratch local replay of `supabase/migrations/` and
+production have identical fingerprints: 175 tables, 175 with RLS, 197
+policies, 266 functions, 1854 columns, with matching table/function/column
+digests. The two replay defects fixed during the 2026-09-08 ledger-drift
+work (a `place_promotion` RLS gap in a replay, and a stale
+`get_filtered_events` overload) were re-checked here and **do not
+reproduce** — those fixes hold.
+`supabase db push` is still never used here: ~40 local migrations have no
+remote ledger entry, so a push would replay them wrongly. Migrations go in
+through the Supabase MCP and the local file is renamed to the version the
+MCP stamps.
+
+**Sweep load.** 7,000 verified onboardings swept with zero failures:
+~1,156 rows/s down the cheap rejection path, ~250–360 rows/s down the full
+evaluator (trigram + PostGIS duplicate search per row). The cron's 200 rows
+per tick every 15 minutes is far inside that budget.
+
+**Job timing was broken and is fixed.** `fieldops_job_run.started_at`
+defaulted to `now()` and the jobs stamped `finished_at = now()` — but
+`now()` is *transaction* time in Postgres, so both resolved to the same
+instant and every run recorded a duration of 0.000. The one number anyone
+would watch to notice the sweep slowing down was useless, and it hid the
+real duration during the load check. `20260912030106_fieldops_job_timing`
+puts the wall clock in the table itself (a `before insert or update`
+trigger using `clock_timestamp()`), so any job added later gets the same
+guarantee, and `fieldops_health()` gained a `sweep_seconds` key.
+
+**Browser run of the whole worker chain.** Driven against a local stack
+with a pilot-shaped campaign (region Ashanti, towns Ejisu and Juaben, a
+lead, an offline member and a content creator, live rules at GH₵5 and
+GH₵3): sign in → today's assignment → GPS check-in → territory →
+prospect → onboarding wizard (duplicate search, owner OTP, details,
+evidence photos to the private bucket, cover photo to Cloudinary) →
+submission → the listing created **under the owner's account, not the
+worker's** → lead review with the checklist and signed evidence URLs →
+verification → commission pending → holding period → sweep → approved →
+payout destination saved by the member → admin builds a batch → a
+**second** admin approves it → the transfer reference recorded → paid.
+`fieldops_health()` and `run_financial_reconciliation` both come back
+clean, and the commission timeline reads
+`pending → approved → in_payout → paid` with the right actor on each step.
+
+The SMS leg is the one part not exercised end to end: Hubtel generates and
+holds the code, so a real message to a real handset is the only way to
+complete it. The integration suite covers that path with the Hubtel client
+faked; the browser run used the same cores with the same fake.
+
+**What the run fixed.** A worker typing a phone number the normal Ghanaian
+way (`024…`) had it turned into `+024…` and the submission was refused at
+the very last step, after the photos were uploaded, by a message that did
+not say which field was wrong. The draft now carries the campaign region's
+dial code and the wizard reads numbers through the app's shared
+normaliser, with the error shown next to the field instead. Alongside it:
+the "Team lead verified" check no longer shows a red cross on a submission
+nobody has reviewed yet (and a pending hard check no longer counts as a
+pass anywhere), the commission-generation and payout kill switches are now
+real switches rather than a "not available yet" notice, the Content tab is
+only shown to the content creator, check-in distances read in metres under
+a kilometre, and several screens still promised phases that had already
+shipped.
