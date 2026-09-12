@@ -1,14 +1,18 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { HELP_URL, LEGAL_URLS, openExternalLink } from "@/lib/legalLinks";
 import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 
 // Native echo of the web SettingsDesktopSidebar — the same five entries,
-// same order, same `settings.nav.*` labels.
+// same order, same `settings.nav.*` labels — plus two rows that open the
+// public help centre and legal pages on the website (the web app reaches
+// them from its footer, which the native app has no equivalent of).
 const ITEMS: {
   key: string;
-  route: string;
+  route?: string;
+  url?: string;
   icon: IoniconName;
   labelKey: string;
 }[] = [
@@ -42,6 +46,18 @@ const ITEMS: {
     icon: "language-outline",
     labelKey: "nav.language",
   },
+  {
+    key: "help",
+    url: HELP_URL,
+    icon: "help-circle-outline",
+    labelKey: "nav.help",
+  },
+  {
+    key: "legal",
+    url: LEGAL_URLS.terms,
+    icon: "document-text-outline",
+    labelKey: "nav.legal",
+  },
 ];
 
 export default function SettingsHub() {
@@ -63,7 +79,10 @@ export default function SettingsHub() {
           <Pressable
             key={item.key}
             accessibilityRole="button"
-            onPress={() => router.push(item.route)}
+            onPress={() => {
+              if (item.url) void openExternalLink(item.url);
+              else if (item.route) router.push(item.route);
+            }}
             className="flex-row items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 active:opacity-80"
           >
             <Icon name={item.icon} size={20} tone="muted" />

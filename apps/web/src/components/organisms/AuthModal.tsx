@@ -6,6 +6,7 @@ import verifyEmailSignIn from "@/actions/verifyEmailSignIn";
 import verifyPhoneSignIn from "@/actions/verifyPhoneSignIn";
 import { useGetUserLocation } from "@/hooks/useUserLocation";
 import InviteCodeField from "@/rewards/molecules/InviteCodeField";
+import { LEGAL_PATHS } from "@abonten/core/brand/socialLinks";
 import {
   EMAIL_OTP_CODE_LENGTH,
   isLikelyEmail,
@@ -18,6 +19,7 @@ import { HUBTEL_OTP_CODE_LENGTH } from "@abonten/core/otpConstants";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { IoChevronBack } from "react-icons/io5";
 import GoogleAuthButton from "../atoms/GoogleAuthButton";
@@ -301,6 +303,27 @@ export default function AuthModal({
             {invite?.enabled ? (
               <InviteCodeField initialCode={invite.code} />
             ) : null}
+
+            <p className="text-center text-xs text-muted-foreground">
+              {t.rich("consentNotice", {
+                terms: (chunks) => (
+                  <Link
+                    href={LEGAL_PATHS.terms}
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+                privacy: (chunks) => (
+                  <Link
+                    href={LEGAL_PATHS.privacy}
+                    className="font-semibold text-primary underline-offset-4 hover:underline"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </p>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { getFieldOpsConsentView } from "@/actions/fieldOps/getFieldOpsConsentView";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import ConsentForm from "@/fieldOps/organisms/ConsentForm";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +45,11 @@ export default async function FieldConsentPage({
       )}
       <p className="text-xs text-muted-foreground">
         By entering the code you agree to list your business on Abonten and to
-        the Abonten terms. Nothing is charged.
+        the{" "}
+        <Link href="/legal/terms" className="underline underline-offset-4">
+          Abonten Terms and Conditions
+        </Link>
+        . Nothing is charged.
       </p>
     </div>
   );

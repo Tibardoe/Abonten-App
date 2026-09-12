@@ -4,6 +4,7 @@ import { signInWithGoogle } from "@/auth/googleSignIn";
 import { InviteCodeField } from "@/features/rewards/InviteCodeField";
 import { api } from "@/lib/api";
 import { hapticError } from "@/lib/haptics";
+import { LEGAL_URLS, openExternalLink } from "@/lib/legalLinks";
 import { type Country, DEFAULT_COUNTRY } from "@abonten/core/countries";
 import {
   AbontenLogo,
@@ -18,7 +19,6 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -26,9 +26,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const TERMS_URL = "https://abonten.com/terms";
-const PRIVACY_URL = "https://abonten.com/privacy";
 
 export default function SignIn() {
   const router = useRouter();
@@ -241,7 +238,7 @@ export default function SignIn() {
                 variant="caption"
                 tone="brand"
                 className="font-semibold"
-                onPress={() => Linking.openURL(TERMS_URL)}
+                onPress={() => void openExternalLink(LEGAL_URLS.terms)}
               >
                 Terms
               </AppText>{" "}
@@ -250,7 +247,7 @@ export default function SignIn() {
                 variant="caption"
                 tone="brand"
                 className="font-semibold"
-                onPress={() => Linking.openURL(PRIVACY_URL)}
+                onPress={() => void openExternalLink(LEGAL_URLS.privacy)}
               >
                 Privacy Policy
               </AppText>

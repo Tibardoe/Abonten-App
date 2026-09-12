@@ -60,6 +60,13 @@ export async function updateSession(request: NextRequest) {
     // The unsubscribe page linked from Abonten Rewards emails -- works
     // without signing in (the link carries a signed token).
     pathname.startsWith("/unsubscribe/") ||
+    // Public policies and the help centre. The mobile sign-in screen, the
+    // footers and every email link here for people who are not signed in,
+    // and the legal documents must be readable before someone agrees to them.
+    pathname === "/legal" ||
+    pathname.startsWith("/legal/") ||
+    pathname === "/help" ||
+    pathname.startsWith("/help/") ||
     // The "your account is restricted" landing itself — must stay reachable
     // for a signed-in-but-banned user so the redirect below can't loop.
     pathname.startsWith("/account-restricted") ||

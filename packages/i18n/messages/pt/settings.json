@@ -4,7 +4,9 @@
     "editProfile": "Editar perfil",
     "security": "Segurança",
     "switchAppearance": "Aparência",
-    "language": "Idioma"
+    "language": "Idioma",
+    "help": "Central de ajuda",
+    "legal": "Jurídico e políticas"
   },
   "appearance": {
     "title": "Aparência",

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import SignOutButton from "./SignOutButton";
 
 // Landing for a signed-in account that has been suspended or banned. The
@@ -19,6 +20,21 @@ export default function AccountRestrictedPage() {
         <p className="text-sm text-muted-foreground leading-relaxed">
           Access to Abonten has been limited for this account. If you think this
           is a mistake, contact support and we&apos;ll take a look.
+        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          <Link
+            href="/help/account/restricted-accounts"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            What a restricted account means and how to reach support
+          </Link>
+          {" · "}
+          <Link
+            href="/legal/terms"
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Terms and Conditions
+          </Link>
         </p>
         <div className="pt-2">
           <SignOutButton />
