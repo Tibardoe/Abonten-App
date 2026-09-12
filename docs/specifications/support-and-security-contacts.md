@@ -19,7 +19,7 @@ complianceReviewRequired: no
 - The primary support channel is the **in-app support conversation** (web: Messages › "Contact Abonten Support" and the help centre's contact card; app: Account › Help & support). It lands in Admin › Support.
 - **Official email channels now exist**: support@abontenhub.com, privacy@abontenhub.com and security@abontenhub.com — Google Workspace aliases on the founder's primary Workspace mailbox, designated by the founder on 2026-09-12 (legal A3 Decided). They are defined once in `packages/core/src/brand/contacts.ts` and published in Terms §19, Privacy §11/§15, the Security page, the help centre contact card, the restricted-account page, both web footers and the mobile drawer. Mail lands in one mailbox; nothing routes into the admin Support queue (procedure: `../operations/account-and-support-procedures.md` §Email channels).
 - The company postal address (P.O. Box 465, Weija, Accra) is published. The founder's personal phone numbers and email on the registrar's forms are **not** public channels and must not be used; the validator's `contacts` rule fails on any non-official or personal address in documentation.
-- Still missing: published support hours and a response target (decision O1); a responsible-disclosure policy and `/.well-known/security.txt` (decision S2).
+- Still missing: published support hours and a response target (decision O1 — decision record `../operations/support-operating-policy.md`); counsel-approved safe-harbour wording for the responsible-disclosure section (legal D3). The section and `/.well-known/security.txt` themselves exist since 2026-09-12.
 
 ## 2. Placeholders in the public documents
 
@@ -40,7 +40,7 @@ complianceReviewRequired: no
 | Mailbox operations: who reads what, reply-as-alias setup, verification, no forwarding | Documented in `../operations/account-and-support-procedures.md` §Email channels; the Gmail "Send mail as" setup is a one-time action for the founder before any reply is sent |
 | Help pages, privacy procedure, admin support page, vulnerability runbook, processor table (Google Workspace) updated | Done 2026-09-12 |
 | Support hours and response target published | **Open — decision O1** |
-| Responsible-disclosure policy on the Security page and `/.well-known/security.txt` (the file needs the web proxy's public allowlist) | **Open — decision S2**; counsel drafts the safe-harbour wording |
+| Responsible-disclosure section on the Security page and `/.well-known/security.txt` (served through the existing `/.well-known/` allowlist — no proxy change was needed) | **Done 2026-09-12** (`../security/responsible-disclosure.md`); safe-harbour wording remains **legal D3**; response target remains **O1** |
 | Route email into the admin Support queue (for example a Workspace forwarding rule into a service that opens a support conversation) | Not built; product decision, not required for the channels to work |
 
 ## 4. Approval required before implementation

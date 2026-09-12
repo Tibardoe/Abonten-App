@@ -1,7 +1,7 @@
 ---
 title: Security at Abonten
 summary: How Abonten Hub protects accounts, payments and data, and how to report a security problem.
-version: 1.1-draft
+version: 1.2-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -49,6 +49,53 @@ legalReviewRequired: no
 - Sign out of shared devices.
 - Contact support at once if you see activity you don't recognise.
 
-## Reporting a vulnerability
+## Responsible disclosure
 
-If you find a security weakness in Abonten, please tell us before making it public. Email **security@abontenhub.com** with what you found, where, and how to reproduce it; you can also use the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app). Please do not access other people's data, disrupt the service, or demand payment. A full responsible-disclosure policy, including what you can expect from us and in what timeframe, is being prepared and will be published here.
+If you find a security weakness in Abonten, please tell us before making it public. This section explains how to report it, what to include, and what to expect. A machine-readable version of our contact details is published at `/.well-known/security.txt`.
+
+### How to report
+
+Email **security@abontenhub.com**. If you cannot use email, the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app) also reaches us, but email is preferred for security matters.
+
+### What to include
+
+- Where the problem is (the page, screen, API endpoint or feature).
+- What kind of problem you believe it is and what an attacker could do with it.
+- Step-by-step instructions to reproduce it, with any request or response details, screenshots or a short video.
+- The date and time you tested, and the account (if any) you used.
+- How you would like to be credited, if at all, and how we can reach you.
+
+### What happens next
+
+We will acknowledge receipt by email, investigate, and keep you informed of our progress and of when a fix is in place. Abonten has not yet published a target time for acknowledging or resolving reports; until it does, please allow a reasonable period before following up.
+
+### Testing we ask you to keep to
+
+- Test only against accounts and data you own or have permission to use. Create your own test accounts rather than using someone else's.
+- Stop and report as soon as you can show the problem exists; do not go further to demonstrate impact.
+- Do not change or delete data that is not yours, and do not use a weakness to move money, issue tickets or refunds, or alter anyone's balance.
+
+### Testing we do not permit
+
+- Accessing, downloading or retaining other people's personal data, messages, tickets or payment details.
+- Denial-of-service, load or volume testing, or anything that degrades the service for others.
+- Social engineering, phishing or physical attacks on Abonten staff, organizers, place owners, field team members or users.
+- Automated scanning that generates significant traffic or sign-in-code requests.
+- Testing our third-party providers (for example Paystack, Supabase, Cloudinary, Hubtel or Resend) directly; report anything you notice about them to us, and we will pass it on.
+- Demanding payment, or threatening publication, in exchange for a report.
+
+### Personal data you encounter
+
+If you come across personal data while testing, do not read, copy or keep more of it than is needed to describe the problem; delete anything you did retain once we confirm we have understood the report; and never share it with anyone else.
+
+### How we handle your report
+
+Reports are read only by the people who need to fix the problem. We may share details with a provider whose system is involved so that they can fix their part. We will not share your identity without your permission, and we will not pursue anyone who reports in good faith and keeps to this section — see the note on legal status below.
+
+### Coordinated disclosure
+
+Please give us the chance to fix the problem before you publish anything about it. We will agree a publication date with you once a fix is available; if we need more time we will explain why. Abonten does not run a paid bounty programme.
+
+### Legal status of this section
+
+This section describes how Abonten intends to work with security researchers. **It is not yet a legal safe harbour.** The wording on researcher authorisation, permitted testing boundaries, liability and disclosure timing is under review by legal counsel and will be updated when that review is complete. Until then, please treat it as our published expectations rather than a legal undertaking.

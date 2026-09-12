@@ -16,6 +16,8 @@ complianceReviewRequired: yes
 
 ## Severity
 
+The "Response" column holds **internal working targets for staff**. They are not published, not promised to users and not a service-level commitment; the published position is decision O1 (`../operations/support-operating-policy.md`).
+
 | Level | Definition | Examples | Response |
 |---|---|---|---|
 | **S1 — Critical** | Money at risk at scale, personal data exposed, platform down, admin compromise | Webhook secret leaked; mass duplicate charges; database publicly readable; site or payments down for all users | Immediate, all hands; founder as commander; status Broadcast when the console is available |

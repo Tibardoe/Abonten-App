@@ -27,9 +27,9 @@ Keeping the text in the web app (rather than in this folder) guarantees it is in
 | Terms and Conditions | `apps/web/src/content/legal/terms.md` | `/legal/terms` | 1.2-draft | Review required | not yet | B7, C1, C3, E1–E9, F1, F4 (A1, A3 decided 2026-09-12) |
 | Privacy Policy | `apps/web/src/content/legal/privacy-policy.md` | `/legal/privacy` | 1.2-draft | Review required | not yet | A2, B1–B9, G2 (A1, A3 decided 2026-09-12) |
 | Cookie Policy | `apps/web/src/content/legal/cookie-policy.md` | `/legal/cookies` | 1.0-draft | Review required | not yet | B4 |
-| Security overview | `apps/web/src/content/legal/security.md` | `/legal/security` | 1.1-draft | Review required | not yet | S2 (disclosure policy; contact address decided 2026-09-12) |
+| Security overview | `apps/web/src/content/legal/security.md` | `/legal/security` | 1.2-draft | Review required | not yet | D3 (safe-harbour wording), S2/O1 (response target) |
 
-Item codes refer to `../LEGAL_REVIEW_REQUIRED.md` (letters A–G) and `../OPERATIONAL_DECISIONS_REQUIRED.md` (S2). The verified corporate identity (name, registration number, addresses) is in [company-registration.md](company-registration.md).
+Item codes refer to `../LEGAL_REVIEW_REQUIRED.md` (letters A–G) and `../OPERATIONAL_DECISIONS_REQUIRED.md` (S2). The verified corporate identity (name, registration number, addresses) is in [company-registration.md](company-registration.md). Compliance records awaiting evidence: [dpc-registration.md](dpc-registration.md) (A2), [business-operating-permit.md](business-operating-permit.md) (A4).
 
 ## What the documents are grounded in
 

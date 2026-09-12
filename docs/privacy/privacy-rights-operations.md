@@ -16,7 +16,7 @@ complianceReviewRequired: yes
 
 Pattern for every request: **Received → Verify identity → Locate data → Assess → Execute → Record → Respond → Escalate if needed.**
 
-Statutory response times under the Data Protection Act, 2012 are **legal item B5**; until confirmed, treat every request as due within **30 days** and acknowledge within 3 working days.
+Statutory response times under the Data Protection Act, 2012 are **legal item B5**; until confirmed, treat every request as due within **30 days** and acknowledge within 3 working days. Both figures are an **internal interim working practice** — they are not published anywhere, are not a commitment to users, and will be replaced by the statutory period (B5) and the support operating policy (decision O1, `../operations/support-operating-policy.md`).
 
 ## Where requests arrive
 

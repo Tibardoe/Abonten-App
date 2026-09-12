@@ -1,0 +1,7 @@
+# Abonten Hub Ltd - security contact (RFC 9116)
+# Policy and what to expect: https://abontenhub.com/legal/security#responsible-disclosure
+Contact: mailto:security@abontenhub.com
+Expires: 2027-03-12T00:00:00.000Z
+Policy: https://abontenhub.com/legal/security#responsible-disclosure
+Canonical: https://abontenhub.com/.well-known/security.txt
+Preferred-Languages: en

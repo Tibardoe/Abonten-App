@@ -28,7 +28,7 @@ Every specification ends with an **Approval required before implementation** sec
 | [data-export.md](data-export.md) | No self-service data export; access requests are manual | Legal B5 · decision O3 · decision O2 |
 | [retention-jobs.md](retention-jobs.md) | Nine data sets with no retention period or purge job | Legal B3, B9 · decisions R1–R9 |
 | [appeals-workflow.md](appeals-workflow.md) | No formal appeal path for moderation and account actions | Decision O4 · decision M3 · legal E4 (wording) |
-| [support-and-security-contacts.md](support-and-security-contacts.md) | No official support, privacy or security address; placeholders in the legal pages | Legal A3 · decisions S2, O1 |
+| [support-and-security-contacts.md](support-and-security-contacts.md) | ~~No official address~~ — channels published 2026-09-12 (A3 Decided); responsible-disclosure section and `security.txt` published; remaining: support operating policy and safe-harbour wording | Decision O1 (`../operations/support-operating-policy.md`) · legal D3 (`../security/responsible-disclosure.md`) |
 | [future-improvements.md](future-improvements.md) | P2 roadmap: security hardening, localization, iOS, operational improvements | Various (each entry names its item) |
 
 ## Priority mapping

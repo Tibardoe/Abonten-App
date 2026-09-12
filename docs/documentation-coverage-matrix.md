@@ -105,6 +105,10 @@ Public pages are served at `/legal/<slug>` and `/help/<section>/<slug>`; the lin
 | Monitoring, errors, incidents | — | [Admin › Monitoring and incidents](admin/monitoring-and-incidents.md) · [Incident response](incident-response/README.md) · [Sentry and error rate](incident-response/sentry-and-error-rate.md) · [Outages](incident-response/outages-service-email-push-third-party.md) | [Observability](architecture/observability.md) |
 | Finance operations centre | — | [Finance runbooks](finance/README.md) · [Admin › Finance](admin/finance.md) | [Payment security](security/payment-security.md) |
 | Security (public statement and internal model) | [Security at Abonten](../apps/web/src/content/legal/security.md) | [Security documentation](security/README.md) · [Vulnerability report](incident-response/vulnerability-report.md) | [Application](security/application-security.md) · [Database](security/database-security.md) · [Infrastructure](security/infrastructure-and-provider-responsibilities.md) · [Secrets](security/secrets-and-environment.md) |
+| Responsible disclosure and `security.txt` | [Security at Abonten §Responsible disclosure](../apps/web/src/content/legal/security.md) · `/.well-known/security.txt` | [Responsible disclosure framework](security/responsible-disclosure.md) · [Vulnerability report](incident-response/vulnerability-report.md) | [Documentation validation (`security-txt` rule)](development/documentation-validation.md) |
+| Support channels and operating policy | [Terms §19](../apps/web/src/content/legal/terms.md) · [Restricted accounts](../apps/web/src/content/help/account/restricted-accounts.md) | [Account and support procedures](operations/account-and-support-procedures.md) · [Support operating policy (O1)](operations/support-operating-policy.md) · [Admin › Support](admin/support.md) | — |
+| Corporate and compliance records | [Terms §1](../apps/web/src/content/legal/terms.md) · [Privacy §1](../apps/web/src/content/legal/privacy-policy.md) | [Company registration](legal/company-registration.md) · [DPC registration (A2)](legal/dpc-registration.md) · [Business Operating Permit (A4)](legal/business-operating-permit.md) | — |
+| Mobile release verification | — | [Open-item register](operations/open-items.md) | [Release verification (M1)](mobile/release-verification.md) · [EAS](deployment/mobile-eas.md) |
 | Account takeover, admin compromise, leaked secrets, database exposure, data breach | — | [Account takeover](incident-response/account-takeover.md) · [Admin compromise](incident-response/admin-compromise.md) · [Leaked secret](incident-response/leaked-secret.md) · [Database exposure](incident-response/database-exposure.md) · [PII exposure and data breach](incident-response/pii-exposure-and-data-breach.md) | [Secrets and environment §Leak response](security/secrets-and-environment.md) |
 | Scheduled jobs | — | [Scheduled jobs](operations/scheduled-jobs.md) | [Rewards ledger](architecture/rewards-ledger.md) · [Field ops](architecture/field-ops.md) |
 | Deployment, release, rollback, disaster recovery | — | [Deployment and release (operations)](operations/deployment-and-release.md) · [Release checklist](deployment/release-checklist.md) | [Vercel](deployment/web-and-admin-vercel.md) · [EAS](deployment/mobile-eas.md) · [Supabase migrations](deployment/supabase-migrations.md) · [Rollback and recovery](deployment/rollback-and-recovery.md) · [Disaster recovery](deployment/disaster-recovery.md) |
@@ -128,8 +132,11 @@ Journey index: [journeys/README.md](journeys/README.md). Legal versioning: [lega
 
 | Gap | Tracked in |
 |---|---|
-| Support hours and response target | Decision O1 |
-| Official support, privacy and security contacts | Legal A3 · [Contacts spec](specifications/support-and-security-contacts.md) |
+| Support hours and response target | Decision O1 · [Support operating policy](operations/support-operating-policy.md) |
+| ~~Official support, privacy and security contacts~~ | Closed 2026-09-12 (legal A3) · [Contacts spec](specifications/support-and-security-contacts.md) |
+| DPC registration status; Business Operating Permit | Legal A2, A4 · [DPC record](legal/dpc-registration.md) · [BOP record](legal/business-operating-permit.md) |
+| Responsible-disclosure safe harbour | Legal D3 · [Responsible disclosure framework](security/responsible-disclosure.md) |
+| Mobile build / device / production verification | [Release verification](mobile/release-verification.md) · [Open items](operations/open-items.md) M1 |
 | Retention periods for nine data sets | Decisions R1–R9 · [Retention spec](specifications/retention-jobs.md) |
 | Formal appeals | Decision O4 · [Appeals spec](specifications/appeals-workflow.md) |
 | Self-service data export | Decision O3 · [Data export spec](specifications/data-export.md) |

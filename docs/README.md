@@ -38,17 +38,17 @@ Public content is kept inside the web app, not here, so that it is always presen
 | `documentation-audit-matrix.md` | Feature × app × documented/accurate/gap |
 | `documentation-coverage-matrix.md` | Feature × public / internal / technical document — where each thing is documented |
 | `specifications/` | Technical specifications gated on open legal or business decisions (cookie consent, age gate, data export, retention jobs, appeals, contacts) and the P2 roadmap — designs, not approved policy |
-| `legal/` | Legal register, versioning strategy, effective-date log |
+| `legal/` | Legal register, versioning strategy, effective-date log, company registration record, compliance records awaiting evidence (DPC registration, Business Operating Permit) |
 | `privacy/` | Data inventory, retention and deletion, privacy-rights operations, cookies/storage inventory, processors |
 | `security/` | Application, database, payment, infrastructure and access-control security; secrets and environment |
 | `incident-response/` | Severity model and one runbook per incident family |
 | `admin/` | Admin console handbook, one page per module, plus support scenarios |
 | `field-operations/` | Field team handbook (members and leads) |
 | `finance/` | Payments and ticketing runbook, state machines, refunds, settlement and payouts, reconciliation, disputes |
-| `operations/` | "What do I do when…", moderation policy, notifications and email ops, rewards ops, account/support procedures, scheduled jobs, deployment and release |
+| `operations/` | **Open-item register**, support operating policy (O1 decision record), "What do I do when…", moderation policy, notifications and email ops, rewards ops, account/support procedures, scheduled jobs, deployment and release |
 | `troubleshooting/` | Problem → symptoms → causes → checks → resolution → escalation |
 | `journeys/` | End-to-end journey maps per role |
-| `web/`, `mobile/` | Product documentation for each app (`mobile/00–16` are historical phase logs) |
+| `web/`, `mobile/` | Product documentation for each app; `mobile/release-verification.md` records SOURCE / BUILD / DEVICE / PRODUCTION verification of mobile changes (`mobile/00–16` are historical phase logs) |
 | `user-guide/` | Internal index of the public help set and the web-vs-app difference table |
 | `architecture/` | System overview, feature inventory, roles and permissions, data model, integrations, background jobs, environment variables, plus the four existing deep dives |
 | `development/` | Setup, testing, CI, conventions, documentation validation |

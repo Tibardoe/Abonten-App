@@ -123,6 +123,13 @@ const REQUIRED = [
   "docs/specifications/README.md",
   "docs/architecture/observability.md",
   "docs/deployment/disaster-recovery.md",
+  "docs/operations/open-items.md",
+  "docs/operations/support-operating-policy.md",
+  "docs/security/responsible-disclosure.md",
+  "docs/legal/dpc-registration.md",
+  "docs/legal/business-operating-permit.md",
+  "docs/mobile/release-verification.md",
+  "apps/web/public/.well-known/security.txt",
   "docs/changelog/README.md",
   "apps/web/src/content/legal/terms.md",
   "apps/web/src/content/legal/privacy-policy.md",
@@ -544,6 +551,68 @@ for (const file of allMarkdown) {
         }
       }
     });
+}
+
+// ---- rule: security-txt (RFC 9116 file stays valid) ------------------------
+
+// /.well-known/security.txt is a static file; it must name the official
+// security mailbox, carry an Expires date that has not passed (RFC 9116 makes
+// the file invalid once it has), and point its Policy at a section that
+// actually exists on the public Security page.
+const securityTxtFile = join(ROOT, "apps/web/public/.well-known/security.txt");
+if (existsSync(securityTxtFile)) {
+  const r = rel(securityTxtFile);
+  const fields = {};
+  read(securityTxtFile)
+    .split("\n")
+    .forEach((line) => {
+      const m = line.match(/^([A-Za-z-]+):\s*(.+)$/);
+      if (m) fields[m[1]] = m[2].trim();
+    });
+  if (fields.Contact !== `mailto:${OFFICIAL_CONTACTS.security}`)
+    fail(
+      "security-txt",
+      r,
+      0,
+      `Contact must be mailto:${OFFICIAL_CONTACTS.security}`,
+    );
+  const expires = Date.parse(fields.Expires ?? "");
+  if (Number.isNaN(expires))
+    fail("security-txt", r, 0, "Expires must be an ISO 8601 date-time");
+  else if (expires < Date.now())
+    fail(
+      "security-txt",
+      r,
+      0,
+      `Expires ${fields.Expires} has passed — renew it`,
+    );
+  else if (expires - Date.now() < 30 * 86_400_000)
+    warn("security-txt", r, 0, `Expires ${fields.Expires} is within 30 days`);
+  const policyAnchor = (fields.Policy ?? "").split("#")[1];
+  const securityPage = join(CONTENT_DIR, "legal/security.md");
+  if (!fields.Policy?.startsWith("https://abontenhub.com/legal/security"))
+    fail("security-txt", r, 0, "Policy must point at the public Security page");
+  else if (policyAnchor && existsSync(securityPage)) {
+    const headings = read(securityPage)
+      .split("\n")
+      .filter((l) => /^#{1,4}\s/.test(l))
+      .map((l) =>
+        l
+          .replace(/^#+\s*/, "")
+          .toLowerCase()
+          .normalize("NFKD")
+          .replace(/[^a-z0-9\s-]/g, "")
+          .trim()
+          .replace(/[\s-]+/g, "-"),
+      );
+    if (!headings.includes(policyAnchor))
+      fail(
+        "security-txt",
+        r,
+        0,
+        `Policy anchor #${policyAnchor} does not match a heading on the Security page`,
+      );
+  }
 }
 
 // ---- rule: coverage (every document reachable from the hub) ----------------

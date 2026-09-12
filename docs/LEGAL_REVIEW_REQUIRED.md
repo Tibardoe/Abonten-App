@@ -25,9 +25,9 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 | # | Item | Affects | Decision needed | Status |
 |---|---|---|---|---|
 | A1 | Legal name, registration number and registered address of the operating entity | Terms §1, Privacy §1, §15 | Confirm entity and insert | **Decided (2026-09-12):** Abonten Hub Ltd, private company limited by shares, registration number CS015010126, registered address House No. 10, Purple Street, Weija Block Factory, Accra — from the Registrar-General's certified Form 3 dated 04-Feb-2026; inserted. Record: `legal/company-registration.md` |
-| A2 | Whether the operator must register as a data controller with Ghana's Data Protection Commission (DPC) under the Data Protection Act, 2012 (Act 843), and its registration status | Privacy §1, §11 | Confirm status; register if required; insert reference | Open — the company documents do not show any DPC registration |
+| A2 | Whether the operator must register as a data controller with Ghana's Data Protection Commission (DPC) under the Data Protection Act, 2012 (Act 843), and its registration status | Privacy §1, §11 | Confirm status; register if required; insert reference | **STATUS: VERIFICATION REQUIRED** — record and dependent wording in [legal/dpc-registration.md](legal/dpc-registration.md); the company documents show no DPC registration; nothing may claim one |
 | A3 | Dedicated contact channels for legal, privacy and security enquiries (email address, postal address) | Terms §19, Privacy §15, Security page | Choose channels; publish | **Decided (2026-09-12):** support@abontenhub.com, privacy@abontenhub.com, security@abontenhub.com (Google Workspace aliases on the founder's account) plus P.O. Box 465, Weija, Accra; published in Terms 1.2-draft, Privacy 1.2-draft, Security 1.1-draft and in the apps (`packages/core/src/brand/contacts.ts`). Mailbox operations: `operations/account-and-support-procedures.md`. Hours/SLA remain decision O1; disclosure policy remains S2 |
-| A4 | Business Operating Permit (district assembly): Form 3 records a permit *request* with no reference number | Corporate record | Confirm whether the permit was issued; record the reference internally | Open |
+| A4 | Business Operating Permit (district assembly): Form 3 records a permit *request* with no reference number; which permits apply to Abonten's actual operations needs advice | Corporate record | Confirm whether the permit was issued; record the reference; adviser identifies applicable permits | **STATUS: VERIFICATION REQUIRED; LEGAL/BUSINESS COMPLIANCE REVIEW REQUIRED** — record in [legal/business-operating-permit.md](legal/business-operating-permit.md) |
 
 ## B. Data Protection Act, 2012 (Act 843)
 
@@ -57,6 +57,7 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 |---|---|---|---|---|
 | D1 | Whether Abonten falls within any licensing, registration or critical-information-infrastructure designation under Act 1038 (**to be verified, not assumed**) | Security docs | Confirm scope | Open |
 | D2 | Incident-reporting obligations to the Cyber Security Authority, if any | `incident-response/README.md` | Confirm and add to escalation | Open |
+| D3 | **Responsible-disclosure safe harbour** — the public Security page §Responsible disclosure states that no legal safe harbour is offered yet. Counsel must review and approve: safe-harbour wording, researcher authorisation language, prohibited-testing boundaries, liability language, disclosure timing, good-faith protections, statements about third-party providers, researchers' handling of personal data (Act 843) | Security page 1.2-draft; `security/responsible-disclosure.md`; `/.well-known/security.txt` `Policy` link | Approve or amend wording; decide whether any legal undertaking is given | Open — **LEGAL REVIEW REQUIRED**; engineering must not draft stronger wording |
 
 ## E. Payments and consumer terms
 
