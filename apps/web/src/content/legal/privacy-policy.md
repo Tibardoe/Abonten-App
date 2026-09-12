@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.0-draft
+version: 1.1-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -12,11 +12,11 @@ legalReviewRequired: yes
 
 # Privacy Policy
 
-> **Draft for review.** This policy describes what Abonten Hub actually does with personal information today. It has been prepared with Ghana's Data Protection Act, 2012 (Act 843) in mind but has not yet been reviewed by legal counsel, and some organisational details (the data controller's registered identity, registration with the Data Protection Commission, and contact addresses) are still to be confirmed. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
+> **Draft for review.** This policy describes what Abonten Hub actually does with personal information today. It has been prepared with Ghana's Data Protection Act, 2012 (Act 843) in mind but has not yet been reviewed by legal counsel, and some organisational details (registration with the Data Protection Commission, and contact addresses) are still to be confirmed. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
 
 ## 1. Who is responsible for your data
 
-Abonten Hub ("Abonten", "we") operates the abontenhub.com website and the Abonten mobile app and decides how personal information collected through them is used. The data controller is [LEGAL ENTITY NAME — TO BE CONFIRMED], registered address [REGISTERED ADDRESS — TO BE CONFIRMED]. Data Protection Commission registration: [DPC REGISTRATION STATUS — TO BE CONFIRMED]. These details will be stated here once confirmed; nothing in this policy should be read as a claim of registration or approval until they are.
+Abonten Hub ("Abonten", "we") operates the abontenhub.com website and the Abonten mobile app and decides how personal information collected through them is used. The data controller is **Abonten Hub Ltd**, a private company limited by shares incorporated in Ghana (company registration number CS015010126), registered address House No. 10, Purple Street, near Mount Zion Church, Weija Block Factory, Accra, Ga South District, Greater Accra Region, Ghana (P.O. Box 465, Weija, Accra; digital address GS-0257-3290). Data Protection Commission registration: [DPC REGISTRATION STATUS — TO BE CONFIRMED]. Nothing in this policy should be read as a claim of registration with, or approval by, the Commission until that line is completed.
 
 Organizers and place owners who receive attendee or customer information through Abonten (section 6) are responsible for how they use it.
 
@@ -162,4 +162,4 @@ We will update this policy when our practices change. The version and last-updat
 
 ## 15. Contact
 
-Support and privacy requests: the in-app support conversation (section 11). Privacy contact: [PRIVACY CONTACT — TO BE CONFIRMED]. Postal address: [REGISTERED ADDRESS — TO BE CONFIRMED]. Both will be published here once confirmed.
+Support and privacy requests: the in-app support conversation (section 11). Privacy contact: [PRIVACY CONTACT — TO BE CONFIRMED] (to be published once confirmed). Postal address: Abonten Hub Ltd, P.O. Box 465, Weija, Accra, Ghana.

@@ -1,7 +1,7 @@
 ---
 title: Terms and Conditions
 summary: The agreement between you and Abonten Hub when you use the website or the mobile app, whether you attend events, organize them, or run a place.
-version: 1.0-draft
+version: 1.1-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -18,7 +18,7 @@ legalReviewRequired: yes
 
 Abonten Hub ("Abonten", "we", "us") is a platform for discovering events and places in Ghana, buying event tickets, requesting bookings at places, messaging organizers and place owners, and sharing highlights and reviews. It is available at abontenhub.com and through the Abonten mobile app.
 
-Abonten is operated by [LEGAL ENTITY NAME — TO BE CONFIRMED] (company registration number [COMPANY REGISTRATION NUMBER — TO BE CONFIRMED]), whose registered address is [REGISTERED ADDRESS — TO BE CONFIRMED]. These details will be completed once confirmed. Until then, contact us through the in-app support conversation described in section 19.
+Abonten is operated by **Abonten Hub Ltd**, a private company limited by shares incorporated in Ghana under the Companies Act, 2019 (Act 992), company registration number **CS015010126**. Registered address: House No. 10, Purple Street, near Mount Zion Church, Weija Block Factory, Accra, Ga South District, Greater Accra Region, Ghana. Postal address: P.O. Box 465, Weija, Accra. Digital address: GS-0257-3290. Contact channels are described in section 19.
 
 These terms apply to everyone who uses Abonten: people who browse and buy ("customers"), people who list and run events ("organizers"), people who manage a place listing ("place owners"), and members of Abonten's own field teams where that programme is running. Additional rules for organizers, place owners and field-team members are in sections 8 to 11.
 

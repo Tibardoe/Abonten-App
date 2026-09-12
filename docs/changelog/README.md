@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-12 — Operating entity confirmed from company documents
+
+- Legal item A1 **Decided**: the founder supplied certified true copies (Registrar-General's Department, 04-Feb-2026) of Form 3, the Beneficial Ownership Profile and the Constitution. Terms 1.1-draft §1 and Privacy Policy 1.1-draft §1/§15 now name **Abonten Hub Ltd** (private company limited by shares, registration number CS015010126), the registered address in Weija, Accra, P.O. Box 465 Weija Accra and digital address GS-0257-3290. Still drafts, Review required, no effective date.
+- Not filled, deliberately: DPC registration status (the documents show none — A2), support/privacy/security email channels (A3; the personal contacts on the registrar's forms are not public channels). New A4: Business Operating Permit reference not recorded.
+- New `legal/company-registration.md` (company-level facts only; directors' personal data excluded; source PDFs not committed). New `packages/core/src/brand/legalEntity.ts`; copyright lines in emails and the mobile drawer now read "Abonten Hub Ltd".
+- `legal/README.md` register, versioning log, `LEGAL_REVIEW_REQUIRED.md` §H and the contacts specification updated. Placeholders in the legal drafts: 15 → 9.
+
 ## 2026-09-12 — Registers enriched, gated specifications, master index, coverage matrix
 
 - `OPERATIONAL_DECISIONS_REQUIRED.md` 1.1: every open decision now states what it affects, the current implementation from code, and a recommended default explicitly labelled as a recommendation, not approved policy; added S6 (disaster-recovery objectives) and D5 (localization scope).

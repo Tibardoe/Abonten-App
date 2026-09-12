@@ -31,7 +31,7 @@ How the system works: [README.md](README.md) · Writing rules: [DOCUMENTATION_ST
 | Place Owner Guide (4 pages) | `/help/place-owners/…` | [content/help/place-owners](../apps/web/src/content/help/place-owners/managing-your-place.md) | Draft |
 | Help / FAQ — account, privacy and safety (4 pages) and the help home | `/help`, `/help/account/…` | [content/help/account](../apps/web/src/content/help/account/profile-and-settings.md) | Draft |
 
-Legal register, versioning and effective dates: [legal/README.md](legal/README.md) · [legal/versioning-and-effective-dates.md](legal/versioning-and-effective-dates.md). Placeholders awaiting the founder's details: [LEGAL_REVIEW_REQUIRED.md §H](LEGAL_REVIEW_REQUIRED.md).
+Legal register, versioning and effective dates: [legal/README.md](legal/README.md) · [legal/versioning-and-effective-dates.md](legal/versioning-and-effective-dates.md). Operating entity (verified): [legal/company-registration.md](legal/company-registration.md). Placeholders still awaiting details: [LEGAL_REVIEW_REQUIRED.md §H](LEGAL_REVIEW_REQUIRED.md).
 
 ### INTERNAL — staff handbooks and runbooks (never published)
 
@@ -111,7 +111,7 @@ Legal register, versioning and effective dates: [legal/README.md](legal/README.m
 
 ## By folder (every document)
 
-- **legal/** — [README](legal/README.md) · [versioning-and-effective-dates](legal/versioning-and-effective-dates.md)
+- **legal/** — [README](legal/README.md) · [company-registration](legal/company-registration.md) · [versioning-and-effective-dates](legal/versioning-and-effective-dates.md)
 - **privacy/** — [data-inventory](privacy/data-inventory.md) · [data-retention-and-deletion](privacy/data-retention-and-deletion.md) · [privacy-rights-operations](privacy/privacy-rights-operations.md) · [cookies-and-storage-inventory](privacy/cookies-and-storage-inventory.md) · [third-party-processors](privacy/third-party-processors.md)
 - **specifications/** — [README](specifications/README.md) · [cookie-consent](specifications/cookie-consent.md) · [age-gate](specifications/age-gate.md) · [data-export](specifications/data-export.md) · [retention-jobs](specifications/retention-jobs.md) · [appeals-workflow](specifications/appeals-workflow.md) · [support-and-security-contacts](specifications/support-and-security-contacts.md) · [future-improvements](specifications/future-improvements.md)
 - **security/** — [README](security/README.md) · [application-security](security/application-security.md) · [database-security](security/database-security.md) · [payment-security](security/payment-security.md) · [infrastructure-and-provider-responsibilities](security/infrastructure-and-provider-responsibilities.md) · [secrets-and-environment](security/secrets-and-environment.md) · [access-control-model](security/access-control-model.md)

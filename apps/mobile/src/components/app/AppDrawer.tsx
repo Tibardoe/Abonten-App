@@ -3,6 +3,7 @@ import { unregisterPushToken } from "@/features/notifications/usePushRegistratio
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
 import { HELP_URL, LEGAL_LINK_ROWS, openExternalLink } from "@/lib/legalLinks";
+import { LEGAL_ENTITY_NAME } from "@abonten/core/brand/legalEntity";
 import { SOCIAL_LINKS } from "@abonten/core/brand/socialLinks";
 import {
   AbontenLogo,
@@ -465,7 +466,7 @@ export function AppDrawer() {
                 ))}
               </View>
               <AppText variant="meta" className="mt-1">
-                © {new Date().getFullYear()} Abonten Hub
+                © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
               </AppText>
             </View>
           </ScrollView>

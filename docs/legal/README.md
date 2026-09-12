@@ -24,12 +24,12 @@ Keeping the text in the web app (rather than in this folder) guarantees it is in
 
 | Document | File | Route | Version | Status | Effective | Blocking review items |
 |---|---|---|---|---|---|---|
-| Terms and Conditions | `apps/web/src/content/legal/terms.md` | `/legal/terms` | 1.0-draft | Review required | not yet | A1, A3, B7, C1, C3, E1–E9, F1, F4 |
-| Privacy Policy | `apps/web/src/content/legal/privacy-policy.md` | `/legal/privacy` | 1.0-draft | Review required | not yet | A1–A3, B1–B9, G2 |
+| Terms and Conditions | `apps/web/src/content/legal/terms.md` | `/legal/terms` | 1.1-draft | Review required | not yet | A3, B7, C1, C3, E1–E9, F1, F4 (A1 decided 2026-09-12) |
+| Privacy Policy | `apps/web/src/content/legal/privacy-policy.md` | `/legal/privacy` | 1.1-draft | Review required | not yet | A2, A3, B1–B9, G2 (A1 decided 2026-09-12) |
 | Cookie Policy | `apps/web/src/content/legal/cookie-policy.md` | `/legal/cookies` | 1.0-draft | Review required | not yet | B4 |
 | Security overview | `apps/web/src/content/legal/security.md` | `/legal/security` | 1.0-draft | Review required | not yet | A3 (security contact), S2 |
 
-Item codes refer to `../LEGAL_REVIEW_REQUIRED.md` (letters A–G) and `../OPERATIONAL_DECISIONS_REQUIRED.md` (S2).
+Item codes refer to `../LEGAL_REVIEW_REQUIRED.md` (letters A–G) and `../OPERATIONAL_DECISIONS_REQUIRED.md` (S2). The verified corporate identity (name, registration number, addresses) is in [company-registration.md](company-registration.md).
 
 ## What the documents are grounded in
 

@@ -48,6 +48,8 @@ Every change to a file in `apps/web/src/content/legal/` is versioned by git. In 
 | Document | Version | Effective | Change | Notice given |
 |---|---|---|---|---|
 | Terms and Conditions | 1.0-draft | — | Initial draft prepared from the codebase (2026-09-12) | — |
+| Terms and Conditions | 1.1-draft | — | Minor: operating entity, registration number and addresses inserted from the Registrar-General's certified Form 3 (2026-09-12) | — (draft) |
+| Privacy Policy | 1.1-draft | — | Minor: data controller identity and postal address inserted; DPC status still a placeholder (2026-09-12) | — (draft) |
 | Privacy Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Cookie Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Security overview | 1.0-draft | — | Initial draft (2026-09-12) | — |

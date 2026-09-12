@@ -17,16 +17,14 @@ complianceReviewRequired: no
 ## 1. Current state
 
 - The only support channel is the **in-app support conversation** (web: Messages › "Contact Abonten Support" and the help centre's contact card; app: Account › Help & support). It lands in Admin › Support.
-- **No support, privacy or security email address or postal address exists** anywhere in the code, the public content or the documentation. None has been invented; the public pages carry explicit placeholders.
+- **No support, privacy or security email address exists** anywhere in the code, the public content or the documentation. None has been invented; the public pages carry explicit placeholders. The company's postal address (P.O. Box 465, Weija, Accra) is published as of 2026-09-12; the founder's personal phone numbers and email that appear on the registrar's forms are **not** public channels and must not be used.
 - Vulnerability reports, privacy requests and legal notices all arrive through the same support conversation, which requires a signed-in account — so a person **without** an account (a business owner listed by the field programme, a security researcher, a regulator) has no published route today.
 
 ## 2. Placeholders in the public documents
 
 | Placeholder text | Where | Replaced by |
 |---|---|---|
-| `[LEGAL ENTITY NAME — TO BE CONFIRMED]` | Terms §1, Privacy §1 | Operating entity (legal A1) |
-| `[COMPANY REGISTRATION NUMBER — TO BE CONFIRMED]` | Terms §1 | Registration number (A1) |
-| `[REGISTERED ADDRESS — TO BE CONFIRMED]` | Terms §1, Privacy §1 and §15 | Registered / business address (A1) |
+| ~~Entity name, registration number, registered and postal address~~ | Terms §1, Privacy §1 and §15 | **Filled 2026-09-12** from the certified Form 3 — see `../legal/company-registration.md` (A1 Decided) |
 | `[DPC REGISTRATION STATUS — TO BE CONFIRMED]` | Privacy §1 | Data Protection Commission status, only if verified (A2) |
 | `[SUPPORT CONTACT — TO BE CONFIRMED]` | Terms §19 | Official support address (A3, O1) |
 | `[PRIVACY CONTACT — TO BE CONFIRMED]` | Terms §19, Privacy §15 | Privacy address (A3) |
@@ -47,8 +45,8 @@ complianceReviewRequired: no
 
 | Item | Decision needed | Register |
 |---|---|---|
-| Entity, registration number, address | Founder provides | Legal A1 |
-| Data Protection Commission registration status | Verified fact only | Legal A2 |
+| ~~Entity, registration number, address~~ | Provided 2026-09-12 (certified company documents) | Legal A1 — Decided |
+| Data Protection Commission registration status | Verified fact only — not shown in the company documents | Legal A2 |
 | Support, privacy and security addresses | Founder provides | Legal A3 |
 | Support hours and response target | Founder | Decision O1 |
 | Disclosure policy text | Counsel | Decision S2 |

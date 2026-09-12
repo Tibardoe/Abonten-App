@@ -1,4 +1,5 @@
 import { ABONTEN_LOGO_EMAIL_TILE_URL } from "@/config/brandAssets";
+import { LEGAL_ENTITY_NAME } from "@abonten/core/brand/legalEntity";
 import {
   Body,
   Button,
@@ -238,7 +239,7 @@ export function EmailFooter({ children }: { children: ReactNode }) {
       <Section style={{ padding: "20px 32px 24px", textAlign: "center" }}>
         {children}
         <EmailFinePrint>
-          © {new Date().getFullYear()} Abonten Hub
+          © {new Date().getFullYear()} {LEGAL_ENTITY_NAME}
         </EmailFinePrint>
       </Section>
     </>

@@ -24,9 +24,10 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 
 | # | Item | Affects | Decision needed | Status |
 |---|---|---|---|---|
-| A1 | Legal name, registration number and registered address of the operating entity | Terms §1, Privacy §1, §15 | Confirm entity and insert | Open |
-| A2 | Whether the operator must register as a data controller with Ghana's Data Protection Commission (DPC) under the Data Protection Act, 2012 (Act 843), and its registration status | Privacy §1, §11 | Confirm status; register if required; insert reference | Open |
-| A3 | Dedicated contact channels for legal, privacy and security enquiries (email address, postal address) | Terms §19, Privacy §15, Security page | Choose channels; publish | Open |
+| A1 | Legal name, registration number and registered address of the operating entity | Terms §1, Privacy §1, §15 | Confirm entity and insert | **Decided (2026-09-12):** Abonten Hub Ltd, private company limited by shares, registration number CS015010126, registered address House No. 10, Purple Street, Weija Block Factory, Accra — from the Registrar-General's certified Form 3 dated 04-Feb-2026; inserted. Record: `legal/company-registration.md` |
+| A2 | Whether the operator must register as a data controller with Ghana's Data Protection Commission (DPC) under the Data Protection Act, 2012 (Act 843), and its registration status | Privacy §1, §11 | Confirm status; register if required; insert reference | Open — the company documents do not show any DPC registration |
+| A3 | Dedicated contact channels for legal, privacy and security enquiries (email address, postal address) | Terms §19, Privacy §15, Security page | Choose channels; publish | Open — postal address now published (P.O. Box 465, Weija, Accra); email channels still to be designated. The personal phone numbers and email on the registrar's Form 3 are **not** public channels |
+| A4 | Business Operating Permit (district assembly): Form 3 records a permit *request* with no reference number | Corporate record | Confirm whether the permit was issued; record the reference internally | Open |
 
 ## B. Data Protection Act, 2012 (Act 843)
 
@@ -93,10 +94,10 @@ These tokens appear verbatim in the public drafts. They are deliberate: the info
 
 | Placeholder | Documents | Provided by | Register item |
 |---|---|---|---|
-| `[LEGAL ENTITY NAME — TO BE CONFIRMED]` | Terms §1, Privacy §1 | Founder | A1 |
-| `[COMPANY REGISTRATION NUMBER — TO BE CONFIRMED]` | Terms §1 | Founder | A1 |
-| `[REGISTERED ADDRESS — TO BE CONFIRMED]` | Terms §1, Privacy §1 and §15 | Founder | A1 |
-| `[DPC REGISTRATION STATUS — TO BE CONFIRMED]` | Privacy §1 | Verified fact only — never assumed | A2 |
+| ~~`[LEGAL ENTITY NAME — TO BE CONFIRMED]`~~ | Terms §1, Privacy §1 | **Filled 2026-09-12** from the certified Form 3: Abonten Hub Ltd | A1 (Decided) |
+| ~~`[COMPANY REGISTRATION NUMBER — TO BE CONFIRMED]`~~ | Terms §1 | **Filled 2026-09-12**: CS015010126 | A1 (Decided) |
+| ~~`[REGISTERED ADDRESS — TO BE CONFIRMED]`~~ | Terms §1, Privacy §1 and §15 | **Filled 2026-09-12**: registered address and P.O. Box 465, Weija, Accra | A1 (Decided) |
+| `[DPC REGISTRATION STATUS — TO BE CONFIRMED]` | Privacy §1 | Verified fact only — never assumed; not shown in the company documents | A2 |
 | `[SUPPORT CONTACT — TO BE CONFIRMED]` | Terms §19 | Founder | A3 (with decision O1) |
 | `[PRIVACY CONTACT — TO BE CONFIRMED]` | Terms §19, Privacy §15 | Founder | A3 |
 | `[SECURITY CONTACT — TO BE CONFIRMED]` | Security page | Founder | A3 (with decision S2) |
@@ -113,7 +114,9 @@ Procedure for filling them: [specifications/support-and-security-contacts.md](sp
 | [specifications/data-export.md](specifications/data-export.md) | B5 |
 | [specifications/retention-jobs.md](specifications/retention-jobs.md) | B3, B9, E3 |
 | [specifications/appeals-workflow.md](specifications/appeals-workflow.md) | E4 (wording) |
-| [specifications/support-and-security-contacts.md](specifications/support-and-security-contacts.md) | A1–A3 |
+| [specifications/support-and-security-contacts.md](specifications/support-and-security-contacts.md) | A3 (A1 is Decided) |
+
+Verified corporate identity: [legal/company-registration.md](legal/company-registration.md).
 
 ## How to use this register
 
