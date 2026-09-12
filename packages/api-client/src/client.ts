@@ -71,6 +71,8 @@ import type {
   FieldOpsOnboardingsResult,
   FieldOpsOwnerOtpRequestBody,
   FieldOpsOwnerOtpResult,
+  FieldOpsPayoutDestinationBody,
+  FieldOpsPayoutDestinationResult,
   FieldOpsProspectCreateBody,
   FieldOpsProspectResult,
   FieldOpsProspectUpdateBody,
@@ -1805,6 +1807,19 @@ export function createApiClient(options: ApiClientOptions) {
         return request<FieldOpsEarningsResult>(
           `/api/mobile/field-ops/earnings${qs ? `?${qs}` : ""}`,
           { method: "GET", auth: true },
+        );
+      },
+      /** Where the caller's own earnings are sent (masked). */
+      payoutDestination(campaignId: string) {
+        return request<FieldOpsPayoutDestinationResult>(
+          `/api/mobile/field-ops/payout-destination?campaignId=${encodeURIComponent(campaignId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      setPayoutDestination(body: FieldOpsPayoutDestinationBody) {
+        return request<FieldOpsPayoutDestinationResult>(
+          "/api/mobile/field-ops/payout-destination",
+          { method: "PUT", body, auth: true },
         );
       },
       lead: {

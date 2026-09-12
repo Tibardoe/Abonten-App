@@ -623,6 +623,76 @@ export type FieldOpsAdminFlagQueueInput = z.infer<
   typeof fieldOpsAdminFlagQueueSchema
 >;
 
+// -- Phase 4: payouts ----------------------------------------
+
+/** Ghana MoMo networks; kept as a closed list so the CSV stays uploadable. */
+const momoNetwork = z.enum(["MTN", "Telecel", "AirtelTigo"]);
+
+/** A member sets where their own earnings go. */
+export const fieldOpsPayoutDestinationSchema = z.object({
+  campaignId: uuid,
+  momoNumber: z
+    .string()
+    .trim()
+    .regex(/^0[235][0-9]{8}$/, "Enter a 10-digit Ghana mobile money number"),
+  momoNetwork,
+  holderName: z
+    .string()
+    .trim()
+    .min(2, "Enter the name on the mobile money account")
+    .max(120),
+});
+
+export const fieldOpsPayoutBatchListSchema = z.object({
+  campaignId: uuid.optional(),
+  status: z.enum(["draft", "approved", "paid", "cancelled"]).optional(),
+});
+
+export const fieldOpsPayoutBatchBuildSchema = z.object({
+  campaignId: uuid,
+  label: z.string().trim().min(2, "Name the batch, e.g. Week 37").max(80),
+  reason,
+});
+
+export const fieldOpsPayoutBatchRefSchema = z.object({
+  batchId: uuid,
+  reason,
+});
+
+export const fieldOpsPayoutItemMarkSchema = z
+  .object({
+    itemId: uuid,
+    status: z.enum(["paid", "failed"]),
+    reference: z.string().trim().max(200).nullable().optional(),
+    failureReason: z.string().trim().max(2000).nullable().optional(),
+  })
+  .refine(
+    (v) =>
+      v.status === "failed"
+        ? Boolean(v.failureReason && v.failureReason.length >= 3)
+        : Boolean(v.reference && v.reference.length >= 3),
+    {
+      message: "Record the transfer reference, or say why the transfer failed",
+      path: ["reference"],
+    },
+  );
+
+export type FieldOpsPayoutDestinationInput = z.infer<
+  typeof fieldOpsPayoutDestinationSchema
+>;
+export type FieldOpsPayoutBatchListInput = z.infer<
+  typeof fieldOpsPayoutBatchListSchema
+>;
+export type FieldOpsPayoutBatchBuildInput = z.infer<
+  typeof fieldOpsPayoutBatchBuildSchema
+>;
+export type FieldOpsPayoutBatchRefInput = z.infer<
+  typeof fieldOpsPayoutBatchRefSchema
+>;
+export type FieldOpsPayoutItemMarkInput = z.infer<
+  typeof fieldOpsPayoutItemMarkSchema
+>;
+
 export type FieldOpsPlaceDetailsInput = z.infer<
   typeof fieldOpsPlaceDetailsSchema
 >;

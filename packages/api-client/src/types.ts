@@ -7,6 +7,7 @@ import type {
   FieldOpsOnboarding,
   FieldOpsOnboardingDetail,
   FieldOpsOnboardingDraft,
+  FieldOpsPayoutDestination,
   FieldOpsProspect,
   FieldOpsSimilarPlace,
   FieldOpsTeamMember,
@@ -1625,6 +1626,16 @@ export type FieldOpsRemovedResult = ApiEnvelope<{ removed: boolean }>;
 export type { FieldOpsMyEarnings } from "@abonten/types/fieldOps";
 /** null when the caller is on no campaign at all. */
 export type FieldOpsEarningsResult = ApiEnvelope<FieldOpsMyEarnings | null>;
+
+export type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
+export type FieldOpsPayoutDestinationResult =
+  ApiEnvelope<FieldOpsPayoutDestination>;
+export type FieldOpsPayoutDestinationBody = {
+  campaignId: string;
+  momoNumber: string;
+  momoNetwork: "MTN" | "Telecel" | "AirtelTigo";
+  holderName: string;
+};
 
 export type FieldOpsOnboardingStartBody = {
   campaignId: string;

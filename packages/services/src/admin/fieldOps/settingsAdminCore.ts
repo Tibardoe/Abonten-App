@@ -55,13 +55,11 @@ const SETTINGS_COLUMN: Record<keyof FieldOpsSettingsPatch, string> = {
 };
 
 // Switches whose behaviour hasn't shipped yet are refused server-side so a
-// crafted request can't turn on half-built behaviour. Remove a key when its
-// phase ships: the worker UI switch shipped with Phase 1 (/field honours
-// it), commission generation with Phase 3 (the sweep reads it), payouts are
-// still Phase 4.
-const UNSHIPPED_SETTINGS = new Set<keyof FieldOpsSettingsPatch>([
-  "payoutsEnabled",
-]);
+// crafted request can't turn on half-built behaviour. Every one of them has
+// now shipped: the worker UI with Phase 1, commission generation with the
+// Phase 3 sweep, payouts with the Phase 4 batches. The set stays so a
+// future half-built switch has somewhere to go.
+const UNSHIPPED_SETTINGS = new Set<keyof FieldOpsSettingsPatch>([]);
 
 export async function updateFieldOpsSettingsCore(
   supabase: ServiceRoleClient,
