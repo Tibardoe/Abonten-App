@@ -19,12 +19,15 @@ export type NotificationEntityKind =
   | "place_booking"
   | "message"
   | "rewards"
-  | "fieldops";
+  | "fieldops"
+  | "verification";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
   /** With kind "fieldops": the /field route to open (web + later Expo). */
   fieldOpsRoute?: string;
+  /** With kind "verification": which subject's verification screen to open. */
+  verificationSubject?: "place" | "organizer";
   eventId?: string;
   placeId?: string;
   placeSlug?: string;

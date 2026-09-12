@@ -73,6 +73,14 @@ import type {
 
 // Every mobile API route replies with this envelope (mirrors the web Server
 // Action convention). The HTTP status code always equals `status`.
+import type {
+  OrganizerType,
+  SubjectVerificationView,
+  VerificationProgram,
+  VerificationSubjectType,
+  VerificationUploadTicket,
+} from "@abonten/types/verificationType";
+
 export type ApiEnvelope<T> = {
   status: number;
   message?: string;
@@ -1845,3 +1853,43 @@ export type FieldOpsAnnouncementBody = {
   title: string;
   body: string;
 };
+
+// ── Trust & Verification (PROJECT.md §30) ───────────────────
+// The DTOs themselves live in @abonten/types/verificationType, shared with
+// the web app and the admin console; only the request bodies and the
+// envelope aliases are declared here.
+
+export type VerificationSubjectBody = {
+  subjectType: VerificationSubjectType;
+  subjectId: string;
+};
+
+export type StartVerificationBody = VerificationSubjectBody & {
+  organizerType?: OrganizerType | null;
+  legalName?: string | null;
+  applicantNote?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+};
+
+export type UpdateVerificationBody = {
+  organizerType?: OrganizerType | null;
+  legalName?: string | null;
+  applicantNote?: string | null;
+  contactPhone?: string | null;
+  contactEmail?: string | null;
+};
+
+export type VerificationEvidenceBody = {
+  evidenceType: string;
+  mimeType: string;
+  sizeBytes: number;
+  fileName?: string | null;
+};
+
+export type VerificationProgramResult = ApiEnvelope<VerificationProgram>;
+export type VerificationSubjectResult = ApiEnvelope<SubjectVerificationView>;
+export type StartVerificationResult = ApiEnvelope<{ caseId: string }>;
+export type VerificationEvidenceTicketResult =
+  ApiEnvelope<VerificationUploadTicket>;
+export type VerificationActionResult = { status: number; message?: string };

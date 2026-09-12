@@ -179,6 +179,9 @@ export default async function ClaimDetailPage({
             claimId={c.id}
             canReview={ctx.permissions.includes("claims.review")}
             isPending={c.status === "pending"}
+            canVerify={ctx.permissions.includes("verification.review")}
+            documentCount={c.documents.length}
+            placeAlreadyVerified={c.place.verified}
           />
         </div>
       </div>

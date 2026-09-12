@@ -278,11 +278,23 @@ export async function reviewClaimCore(
     decision: "approve" | "reject";
     reason?: string;
     expectedStatus?: ClaimStatus;
+    /**
+     * "Approve and verify" — the reviewer judged the claim's documents good
+     * enough to also verify the place. Runs as ONE transaction
+     * (approve_place_claim_and_verify), so a claim can never end up approved
+     * but unverified when the reviewer asked for both.
+     */
+    alsoVerify?: boolean;
   },
   requestMeta?: Record<string, unknown>,
 ): Promise<AdminEnvelope> {
   try {
     assertPermission(ctx, "claims.review");
+    // Verifying is a separate, more sensitive act than transferring
+    // ownership, so it needs its own permission on top.
+    if (input.alsoVerify && input.decision === "approve") {
+      assertPermission(ctx, "verification.review");
+    }
   } catch (e) {
     return { status: 403, message: (e as Error).message };
   }
@@ -310,11 +322,22 @@ export async function reviewClaimCore(
   const place = claim.place as { name?: string; slug?: string } | null;
   const placeName = place?.name ?? "the place";
 
+  const verifyToo = !!input.alsoVerify && input.decision === "approve";
+
   if (input.decision === "approve") {
-    const { error: rpcErr } = await supabase.rpc("approve_place_claim", {
-      p_request_id: input.claimId,
-      p_admin_id: ctx.userId,
-    });
+    // Since 2026-09-12 approve_place_claim transfers ownership ONLY — the
+    // verified badge is its own reviewed lifecycle (PROJECT.md §30). The
+    // reviewer opts into verifying with alsoVerify, which runs both in one
+    // transaction.
+    const { error: rpcErr } = verifyToo
+      ? await supabase.rpc("approve_place_claim_and_verify", {
+          p_request_id: input.claimId,
+          p_admin_id: ctx.userId,
+        })
+      : await supabase.rpc("approve_place_claim", {
+          p_request_id: input.claimId,
+          p_admin_id: ctx.userId,
+        });
     if (rpcErr) {
       logger.error(`approve_place_claim failed: ${rpcErr.message}`);
       const notAuthorized = rpcErr.message?.includes("Not authorized");
@@ -332,6 +355,20 @@ export async function reviewClaimCore(
       body: `You now manage ${placeName}.`,
       link: `/manage/places/${claim.place_id}`,
     });
+    if (verifyToo) {
+      await createNotificationCore(supabase, {
+        userId: claim.claimant_id,
+        type: "verification_approved",
+        title: "Verified",
+        body: `${placeName} is now verified on Abonten.`,
+        link: `/manage/places/${claim.place_id}?tab=verification`,
+        data: {
+          kind: "verification",
+          verificationSubject: "place",
+          placeId: claim.place_id as string,
+        },
+      });
+    }
   } else {
     const { data: updated, error: updErr } = await supabase
       .from("place_claim_request")
@@ -362,14 +399,21 @@ export async function reviewClaimCore(
   await recordAdminAudit(supabase, {
     actorId: ctx.userId,
     actorRoles: ctx.roles,
-    action: `claim.${input.decision}`,
+    action: verifyToo ? "claim.approve_and_verify" : `claim.${input.decision}`,
     targetType: "place_claim",
     targetId: input.claimId,
-    summary: `${input.decision === "approve" ? "Approved" : "Rejected"} claim for ${placeName}`,
+    summary: `${
+      input.decision === "approve"
+        ? verifyToo
+          ? "Approved and verified"
+          : "Approved"
+        : "Rejected"
+    } claim for ${placeName}`,
     reason: input.reason ?? null,
     before: { status: "pending" },
     after: {
       status: input.decision === "approve" ? "approved" : "rejected",
+      verified: verifyToo,
       place_id: claim.place_id,
       claimant_id: claim.claimant_id,
     },
@@ -380,7 +424,9 @@ export async function reviewClaimCore(
     status: 200,
     message:
       input.decision === "approve"
-        ? "Claim approved — ownership transferred."
+        ? verifyToo
+          ? "Claim approved — ownership transferred and the place verified."
+          : "Claim approved — ownership transferred."
         : "Claim rejected.",
   };
 }

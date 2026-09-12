@@ -176,6 +176,7 @@ export async function getDashboardCore(
     urgentReports: c.urgentReports ?? 0,
     reportsUnassigned: c.reportsUnassigned ?? 0,
     pendingClaims: c.pendingClaims ?? 0,
+    pendingVerifications: c.pendingVerifications ?? 0,
     openErrorGroups: c.openErrorGroups ?? 0,
     failingHealthChecks: c.failingHealthChecks ?? 0,
     stuckPayments: c.stuckPayments ?? 0,

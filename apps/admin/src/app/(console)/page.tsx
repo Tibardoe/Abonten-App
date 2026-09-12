@@ -53,7 +53,12 @@ export default async function DashboardPage({
     {
       label: "Pending place claims",
       value: na.pendingClaims,
-      href: "/reports",
+      href: "/claims",
+    },
+    {
+      label: "Pending verifications",
+      value: na.pendingVerifications,
+      href: "/verification",
     },
     {
       label: "Open error groups",

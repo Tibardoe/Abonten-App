@@ -30,6 +30,19 @@ Account status: `user_info.status_id` → `user_status` (1 Active, 2 Suspended, 
 
 Tables `admin_role`, `admin_permission`, `admin_role_permission` (live matrix), `admin_user`, `admin_user_role` — all service-role only. `resolveAdminContext` (services) reads the matrix per request with fallbacks to the compiled seed (`@abonten/core/adminPermissions.ts`). 55 keys, 7 roles, 13 step-up permissions — full lists in `../admin/settings-and-rbac.md`. Step-up token: `admin/stepUpToken.ts` (HMAC over `userId:ms`, purpose `admin-stepup:v1`, 10 min).
 
+
+### Verification permissions (2026-09-12)
+
+Four keys, deliberately separated so triaging a queue does not hand every admin role access to other businesses' paperwork:
+
+| Key | Grants | Seeded to |
+|---|---|---|
+| `verification.view` | The queue, case metadata and history | operations, moderator, support_admin, analyst, field_ops_manager |
+| `verification.evidence` | Opening the submitted documents (5-minute signed links) | operations, moderator |
+| `verification.review` | Approve / reject / request more information; "approve and verify" on a claim | operations, moderator |
+| `verification.revoke` | Removing a live badge — in `STEP_UP_PERMISSIONS` | operations |
+
+super_admin holds all four by rule. Detail: [trust-and-verification.md](trust-and-verification.md); who *should* hold them is decision V2.
 ## Field roles
 
 `team_lead`, `content_creator`, `offline_member`, `online_member`; membership status `invited/active/suspended/left`. Boundaries in `../field-operations/roles-and-permissions.md`.

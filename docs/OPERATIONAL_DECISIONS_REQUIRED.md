@@ -99,6 +99,20 @@ What retention affects in every row: Privacy Policy §9 and §10, `privacy/data-
 | S5 | Cookie consent banner | Cookie Policy; `apps/web/src/proxy.ts` | No banner. Attribution and abuse-detection cookies are set on first visit. | Depends on legal B4. If required, implement the gated design in [specifications/cookie-consent.md](specifications/cookie-consent.md). | Open (depends on legal B4) |
 | S6 | Disaster-recovery objectives: recovery time and data-loss tolerance, backup retention confirmation, restore-drill cadence | `deployment/disaster-recovery.md`; `security/database-security.md` | Supabase-managed backups; retention and point-in-time recovery depend on the plan and are not recorded in the repository. No restore drill is recorded. | Confirm the plan's backup retention in the Supabase dashboard and record it; set objectives; perform a restore drill into a scratch project at least twice a year. | Open |
 
+## Trust and verification
+
+Shipped 2026-09-12, switched **off**. Design: [architecture/trust-and-verification.md](architecture/trust-and-verification.md). Reviewer handbook: [admin/verification.md](admin/verification.md).
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| V1 | Evidence retention periods | `verification_program_setting.retention_days_unapproved` / `_after_revoke` / `draft_expiry_days`; nightly `purge_verification_evidence()` | Ships at 90 days after a rejection or withdrawal, 365 days after a revocation, 14 days before a stale draft is withdrawn. Settings, not constants. | Confirm against legal H2 (Act 843) and set. Shorter for unapproved cases is safer; keeping approved evidence while the badge is live is what lets a decision be re-examined. | Open (depends on legal H2) |
+| V2 | Who may review, and who may revoke | `admin_role_permission` seed; `verification.*` keys | Seeded: operations all four; moderator view + evidence + review; support_admin, analyst, field_ops_manager view only. Revoking needs step-up. | Keep revocation narrow (operations and super_admin). Grant `verification.evidence` only to people who need to open other businesses' paperwork. | Open |
+| V3 | Whether individual and informal organizers may apply | Organizer type picker; `verification_program_setting.organizer_types_enabled` | All three types ship enabled: individual, business, organisation. Individuals submit alternative evidence (venue confirmations, event permits, past-event material). No identity documents are ever requested. | Keep individuals in — excluding them would shut out most Ghanaian organizers. If review load is the worry, launch with business and organisation only by removing `individual` from the setting. | Open |
+| V4 | Reverification after a material change | `verification_on_place_subject_change` trigger | A verified place whose name, address, location or category changes logs a `subject_changed` event on its case. Nothing is suspended automatically. | Keep it advisory for now. Revisit once there is enough volume to know whether edits after verification are a real abuse route. | Open |
+| V5 | Cooldown after a rejection | `startVerificationCaseCore` rate limit | Five new requests per user per hour; nothing more. A rejected applicant can reapply immediately. | Leave as is. A rejection usually means a wrong document, and making people wait to send the right one helps nobody. | Open |
+| V6 | When to open the programme, and to whom | `verification_program_setting.place_requests_enabled` / `organizer_requests_enabled` / `audience`; `VERIFICATION_KILL_SWITCH` | Both switches off, audience `staff`. Nothing is visible to owners. | Open places to `staff` first and verify one real place end to end, then `all`. Open organizers once the place queue is comfortable. | Open |
+
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |

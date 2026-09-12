@@ -3171,3 +3171,31 @@ section only records where things are and the code that changed.
 - **Not done / decisions.** No cookie banner, no age gate, no data export,
   no appeals workflow, no support email, retention periods without jobs —
   all recorded as decisions or legal-review items, not built.
+
+---
+
+## 30. Trust & Verification — places and organizers (2026-09-12)
+
+Full design, state machine and storage model: [docs/architecture/trust-and-verification.md](docs/architecture/trust-and-verification.md). Reviewer handbook: [docs/admin/verification.md](docs/admin/verification.md).
+
+**What it is.** A place owner, or an event organizer, asks Abonten to review documents supporting their business and its link to their account. An admin decides. A Verified badge follows. Migration `20260912120000_trust_verification.sql`, applied to production via the Supabase MCP and replayed clean from a wiped volume locally.
+
+**Why.** Before this, `place.verified` was a bare boolean set only as a side effect of `approve_place_claim`. An owner-created place could never be verified; a web claim needed no documents yet produced a badge; and Rewards already paid money on the flag (venue rebate, place-visit credit) with no evidence trail. Organizers had no trust signal at all.
+
+**§30.1 Model.** `verification_case` (typed subject: `place_id` XOR `organizer_user_id`, matching `subject_type`; `subject_id` is a stored generated column over the two; partial unique indexes give one open and one approved case per subject) · `verification_evidence` (metadata; bytes live in the bucket) · `verification_event` (append-only, trigger-enforced) · `verification_program_setting` (one row of switches) · `verification_evidence_type` (categories; a new one is an INSERT, not a code change). Cached flags: `place.verified` / `verified_at` / `verification_case_id`, `user_info.organizer_verified` / `organizer_verified_at` / `organizer_verification_case_id`. Internal reviewer notes go to the existing immutable `admin_note` with `target_type = 'verification_case'` — never to a table a requester can reach.
+
+**§30.2 State machine.** `draft → pending_review → approved | rejected | needs_info`, `needs_info → pending_review | rejected`, any open state → `withdrawn`, `approved → revoked`. **`verification_transition()` is the only thing that moves a case** — `SECURITY DEFINER`, `service_role` only. It locks **subject first, then case** (so it cannot deadlock with `approve_place_claim`, which locks claim → place → case through the trigger), validates `(status, action, actor_kind)`, re-checks ownership and eligibility at submit and approve, requires evidence to submit and a reason to reject / ask / revoke, applies the cached flags and writes the history row. `packages/core/src/verification/stateMachine.ts` mirrors the same table so the UI only ever offers transitions the database will accept.
+
+**§30.3 Claims decoupled.** `approve_place_claim` no longer sets `verified` — it transfers ownership and sets `claimed`. `approve_place_claim_and_verify()` does both in one transaction for a reviewer who judged the claim's documents sufficient (`verification.review` on top of `claims.review`; audited as `claim.approve_and_verify`). Existing verified places were backfilled as `source = 'legacy_claim'` cases.
+
+**§30.4 Evidence storage.** Private bucket `verification-evidence`, 10 MB, images + PDF, **no `storage.objects` policies** (the Field Ops pattern): uploads use a service-issued signed upload URL minted only after the ownership check; reads use 5-minute signed URLs minted only for an admin holding `verification.evidence`. A document URL never reaches the applicant and is never logged. `purge_verification_evidence()` runs nightly at 03:30 (pg_cron): withdraws stale drafts, purges past-retention evidence, removes orphaned objects and clears unused tickets.
+
+**§30.5 Access model.** The four tables carry **no anon/authenticated privileges** and a deny-all policy — not even a requester can read their own case. That is deliberate: the case row carries `reviewed_by` / `revoked_by` and the history carries admin `actor_id`, so an owner-scoped policy would hand a requester the identity of the staff member who judged them. Every read goes through `@abonten/services/verification`, which checks ownership and strips those fields. Mobile therefore uses `/api/mobile/verification/**` rather than reading Supabase directly, unlike place claims.
+
+**§30.6 Permissions.** `verification.view` (queue + metadata) · `verification.evidence` (open documents) · `verification.review` (approve / reject / request info) · `verification.revoke` (in `STEP_UP_PERMISSIONS`). Seeded: operations all four; moderator view + evidence + review; support_admin / analyst / field_ops_manager view.
+
+**§30.7 Automatic behaviour.** Owner change → system revoke + open cases withdrawn. Organizer ban → system revoke. Suspension → badge hidden, case untouched. Name / address / location / category edit on a verified place → `subject_changed` event only (no automatic action, decision V4). Archive or unpublish → verification kept, badge invisible, new requests blocked.
+
+**§30.8 Rollout.** Ships **off**: both switches false, `audience = 'staff'`, plus a `VERIFICATION_KILL_SWITCH` env flag that wins over the table. The programme resolver fails closed. Places already verified keep their badge — the switches gate new requests, not existing badges. Open items: **V1–V6** (operational) and **H1–H4** (legal), both registers.
+
+**§30.9 Verification performed.** 349 unit tests and 358 integration tests pass, the latter including 31 new cases covering client-write denial (42501 on all four tables), the impossibility of any client read, refused RPC execution, storage unreachable from a client session, bucket MIME enforcement, IDOR across all five owner actions, per-permission admin gating, evidence hidden without `verification.evidence`, both revocation triggers, and four races (double start, double approve, approve-after-withdraw, approve-after-archive). Migration replays clean from scratch. Monorepo typecheck, `check:api-parity` (163 routes), `check:docs` and Biome all pass. **Not yet verified:** the mobile screens are SOURCE VERIFIED only — no EAS build or device run (open item M2).

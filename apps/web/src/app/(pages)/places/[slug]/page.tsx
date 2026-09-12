@@ -14,9 +14,9 @@ import PlaceCheckIn from "@/places/molecules/PlaceCheckIn";
 import PlaceOpenStatusBadge from "@/places/molecules/PlaceOpenStatusBadge";
 import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
-import VerifiedBadge from "@/places/molecules/VerifiedBadge";
 import PlaceActionButtons from "@/places/organisms/PlaceActionButtons";
 import PlaceReviewsSection from "@/places/organisms/PlaceReviewsSection";
+import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
 import { parseWKBHex } from "@abonten/core/parseWKBHex";
@@ -204,7 +204,7 @@ export default async function page({
             </span>
             {place.verified && (
               <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">
-                <VerifiedBadge />
+                <VerifiedBadgePopover subjectType="place" />
               </span>
             )}
             <span className="px-2 py-1 md:px-4 md:py-2 bg-black/20 backdrop-blur-sm rounded-full text-xs md:text-base">

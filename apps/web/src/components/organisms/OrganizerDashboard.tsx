@@ -24,6 +24,7 @@ import type {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
+import OrganizerVerificationCard from "@/verification/molecules/OrganizerVerificationCard";
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;
 
@@ -162,6 +163,8 @@ export default function OrganizerDashboard() {
       />
 
       <OrganizerFinanceSummary />
+
+      <OrganizerVerificationCard />
 
       <section className="flex flex-col gap-3">
         <SectionTitle>Sales Over Time</SectionTitle>

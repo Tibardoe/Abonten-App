@@ -4,6 +4,7 @@ import { getPlaceBookings } from "@/actions/getPlaceBookings";
 import { getPlaceInsights } from "@/actions/getPlaceInsights";
 import { getPlacePromotionTiers } from "@/actions/getPlacePromotionTiers";
 import { getPlaceReviews } from "@/actions/getPlaceReviews";
+import { getSubjectVerification } from "@/actions/verification/getSubjectVerification";
 import { createClient } from "@/config/supabase/server";
 import ManagePlaceView from "@/places/organisms/ManagePlaceView";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
@@ -67,6 +68,7 @@ export default async function page({
     bookingsFirstPage,
     insightsResponse,
     tiersResponse,
+    verificationResponse,
     { data: activePromotionRaw },
   ] = await Promise.all([
     supabase
@@ -91,6 +93,9 @@ export default async function page({
     getPlaceBookings(placeId, { status: "pending" }),
     getPlaceInsights(placeId),
     getPlacePromotionTiers(),
+    // Verification travels with the rest of the page so the tab opens with
+    // no loading flash; it resolves to null when the programme is off.
+    getSubjectVerification({ subjectType: "place", subjectId: placeId }),
     // "Is this place currently featured" is always computed from
     // ends_at > now(), never stored -- same convention
     // getActivePlacePromotions.ts's RPC uses. A plain inline query is enough
@@ -128,6 +133,11 @@ export default async function page({
       }
     : null;
 
+  const verification =
+    verificationResponse.status === 200
+      ? (verificationResponse.data ?? null)
+      : null;
+
   async function fetchReviewsPage(cursor: string | null) {
     "use server";
     return getPlaceReviews(placeId, { cursor });
@@ -155,6 +165,13 @@ export default async function page({
       insightsError={insightsError}
       promotionTiers={promotionTiers}
       currentPromotion={currentPromotion}
+      verification={verification}
+      setup={{
+        photoCount: photos?.length ?? 0,
+        hasOpeningHours: (openingHours?.length ?? 0) > 0,
+        hasContact: !!(place.phone || place.whatsapp || place.website_url),
+        serviceCount: services?.length ?? 0,
+      }}
     />
   );
 }

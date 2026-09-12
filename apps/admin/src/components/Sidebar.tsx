@@ -18,6 +18,7 @@ import {
   Settings,
   ShieldAlert,
   ShieldBan,
+  ShieldCheck,
   Store,
   Users,
   Wallet,
@@ -57,6 +58,12 @@ const ITEMS: Item[] = [
     label: "Claims",
     icon: ClipboardCheck,
     permission: "claims.view",
+  },
+  {
+    href: "/verification",
+    label: "Verification",
+    icon: ShieldCheck,
+    permission: "verification.view",
   },
   {
     href: "/support",

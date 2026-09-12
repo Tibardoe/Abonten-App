@@ -54,6 +54,10 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "finance.adjust",
   "claims.view",
   "claims.review",
+  "verification.view",
+  "verification.evidence",
+  "verification.review",
+  "verification.revoke",
   "reviews.view",
   "notifications.view",
   "notifications.send",
@@ -102,6 +106,9 @@ const MODERATOR: AdminPermissionKey[] = [
   "events.view",
   "places.view",
   "reviews.view",
+  "verification.view",
+  "verification.evidence",
+  "verification.review",
   "monitoring.view",
 ];
 
@@ -144,6 +151,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "reports.view",
   "reports.note",
   "claims.view",
+  "verification.view",
   "reviews.view",
   "monitoring.view",
   "support.view",
@@ -162,6 +170,7 @@ const ANALYST: AdminPermissionKey[] = [
   "transactions.view",
   "finance.view",
   "claims.view",
+  "verification.view",
   "reviews.view",
   "reports.view",
   "notifications.view",
@@ -187,6 +196,7 @@ const FIELD_OPS_MANAGER: AdminPermissionKey[] = [
   "places.view",
   "events.view",
   "organizers.view",
+  "verification.view",
   "audit.view",
 ];
 
@@ -274,6 +284,7 @@ export function requirePermission(
 // guard checks AdminContext.reauthenticatedAt against STEP_UP_MAX_AGE_MS.
 export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "users.ban",
+  "verification.revoke",
   "finance.refund",
   "finance.payout",
   "finance.adjust",

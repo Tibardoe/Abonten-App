@@ -115,6 +115,12 @@ import {
   getUserDetailCore,
   listUsersCore,
 } from "@abonten/services/admin/users/usersAdminCore";
+import {
+  type ListVerificationFilters,
+  getVerificationCaseDetailCore,
+  listVerificationCasesCore,
+  verificationOverviewCore,
+} from "@abonten/services/admin/verification/verificationAdminCore";
 import type { DashboardRange } from "@abonten/types/adminTypes";
 
 const REPORT_ATTACH_TTL = 300;
@@ -129,6 +135,16 @@ async function signReportAttachment(path: string): Promise<string | null> {
 async function signClaimDocument(path: string): Promise<string | null> {
   const { data } = await getServiceClient()
     .storage.from("place-claim-documents")
+    .createSignedUrl(path, REPORT_ATTACH_TTL);
+  return data?.signedUrl ?? null;
+}
+
+// Verification evidence is business paperwork. The link is minted only for
+// a reviewer the service already checked holds verification.evidence, and it
+// expires in five minutes.
+async function signVerificationEvidence(path: string): Promise<string | null> {
+  const { data } = await getServiceClient()
+    .storage.from("verification-evidence")
     .createSignedUrl(path, REPORT_ATTACH_TTL);
   return data?.signedUrl ?? null;
 }
@@ -603,4 +619,23 @@ export async function loadCreditAccountDetail(userId: string) {
     userId,
   );
   return { ctx, detail };
+}
+
+// ── Trust & Verification ────────────────────────────────────
+
+export async function loadVerificationCases(filters: ListVerificationFilters) {
+  const ctx = await requireAdmin();
+  return listVerificationCasesCore(getServiceClient(), ctx, filters);
+}
+
+export async function loadVerificationCaseDetail(id: string) {
+  const ctx = await requireAdmin();
+  return getVerificationCaseDetailCore(getServiceClient(), ctx, id, {
+    signDoc: signVerificationEvidence,
+  });
+}
+
+export async function loadVerificationOverview() {
+  const ctx = await requireAdmin();
+  return verificationOverviewCore(getServiceClient(), ctx);
 }

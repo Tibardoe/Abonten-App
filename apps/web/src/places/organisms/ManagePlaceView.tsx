@@ -17,10 +17,14 @@ import type {
   OwnerPlaceBooking,
 } from "@abonten/types/placeBookingType";
 import type { PlacePromotionTier } from "@abonten/types/placeType";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { IoAddOutline } from "react-icons/io5";
 
+import PlaceSetupChecklist from "@/places/molecules/PlaceSetupChecklist";
+import VerificationSection from "@/verification/organisms/VerificationSection";
+import { computePlaceSetup } from "@abonten/core/placeSetup";
+import type { SubjectVerificationView } from "@abonten/types/verificationType";
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md) -- same convention every other Places component uses for a joined/raw row
 type ManagedPlace = any;
 // biome-ignore lint/suspicious/noExplicitAny: see above
@@ -61,6 +65,15 @@ type ManagePlaceViewProps = {
   insightsError: boolean;
   promotionTiers: PlacePromotionTier[];
   currentPromotion: { ends_at: string; tier_label: string | null } | null;
+  /** Server-rendered verification view, so the tab opens without a flash. */
+  verification: SubjectVerificationView | null;
+  /** Counts behind the setup checklist. */
+  setup: {
+    photoCount: number;
+    hasOpeningHours: boolean;
+    hasContact: boolean;
+    serviceCount: number;
+  };
 };
 
 type Tab =
@@ -71,7 +84,8 @@ type Tab =
   | "bookings"
   | "reviews"
   | "insights"
-  | "promotion";
+  | "promotion"
+  | "verification";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "details", label: "Details & Location" },
@@ -82,6 +96,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "reviews", label: "Reviews" },
   { id: "insights", label: "Insights" },
   { id: "promotion", label: "Promotion" },
+  { id: "verification", label: "Verification" },
 ];
 
 // Top-level management view for a single place, tabbed across the sections
@@ -102,9 +117,15 @@ export default function ManagePlaceView({
   insightsError,
   promotionTiers,
   currentPromotion,
+  verification,
+  setup,
 }: ManagePlaceViewProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("details");
+  const searchParams = useSearchParams();
+  // A verification notification deep-links straight to its tab.
+  const [activeTab, setActiveTab] = useState<Tab>(() =>
+    searchParams.get("tab") === "verification" ? "verification" : "details",
+  );
   const [showEventModal, setShowEventModal] = useState(false);
 
   const refresh = () => router.refresh();
@@ -149,6 +170,18 @@ export default function ManagePlaceView({
           onChange={handleFileChange}
         />
       </div>
+
+      <PlaceSetupChecklist
+        setup={computePlaceSetup({
+          ...setup,
+          verificationStatus:
+            verification?.approved?.status ??
+            verification?.openCase?.status ??
+            null,
+          verificationAvailable: !!verification?.program.placeRequestsEnabled,
+        })}
+        onGoToTab={(tab) => setActiveTab(tab as Tab)}
+      />
 
       <div className="flex gap-2 overflow-x-auto border-b border-border pb-px md:justify-center">
         {TABS.map((tab) => (
@@ -230,6 +263,14 @@ export default function ManagePlaceView({
             placeId={place.id}
             tiers={promotionTiers}
             currentPromotion={currentPromotion}
+          />
+        )}
+
+        {activeTab === "verification" && (
+          <VerificationSection
+            subjectType="place"
+            subjectId={place.id}
+            initial={verification}
           />
         )}
       </div>

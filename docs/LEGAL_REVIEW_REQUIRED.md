@@ -106,6 +106,17 @@ These tokens appear verbatim in the public drafts. They are deliberate: the info
 
 Procedure for filling them: [specifications/support-and-security-contacts.md](specifications/support-and-security-contacts.md) §3.
 
+## H — Trust and verification
+
+Abonten asks place owners and event organizers to send business documents so a reviewer can confirm the business is real and that the account belongs to the people who run it. Shipped 2026-09-12, switched off. Design: [architecture/trust-and-verification.md](architecture/trust-and-verification.md).
+
+| # | Item | Where it appears | What counsel must confirm or decide | Status |
+|---|---|---|---|---|
+| H1 | Which documents Abonten may ask for and store: Registrar General's certificate, district-assembly Business Operating Permit, sector licences, TIN certificate, lease or tenancy agreement, utility bill, authorisation letter, and for organizers event permits and past-event material | `verification_evidence_type` seed; help `place-owners/getting-verified`, `organizers/getting-verified` | Confirm each category may lawfully be requested and held, and whether any should be removed. Nothing is mandatory: an applicant sends whatever they have. No identity documents are requested. | Open |
+| H2 | Retention period for business documents under the Data Protection Act, 2012 (Act 843) | `verification_program_setting`; nightly purge job; help pages | Confirm a lawful period for unapproved and for revoked cases. Ships at 90 and 365 days as a working default, changeable by setting. Ties to decision V1 and to the R-items in [specifications/retention-jobs.md](specifications/retention-jobs.md). | Open |
+| H3 | The public meaning of the Verified badge | `packages/core/src/verification/copy.ts`; badge popover on web and mobile; help pages | Confirm the wording: Abonten reviewed documents supporting the business's registration and its link to the account, and verification is **not** a guarantee of the business, its service, safety or quality. Nothing may be added that implies endorsement. | Open |
+| H4 | Whether a verification decision is subject to the appeals route | [specifications/appeals-workflow.md](specifications/appeals-workflow.md); Terms | Decide whether a rejected or revoked applicant has a formal appeal beyond simply reapplying, which the product already allows. | Open |
+
 ## Specifications waiting on this register
 
 | Specification | Blocking legal items |
