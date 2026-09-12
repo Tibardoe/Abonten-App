@@ -21,6 +21,7 @@ complianceReviewRequired: no
 | [roles-and-permissions.md](roles-and-permissions.md) | End-user roles (derived), admin RBAC, field roles, suspension, RLS map |
 | [data-model-overview.md](data-model-overview.md) | Table groups, key relationships, status columns, partitions, unused tables |
 | [integrations.md](integrations.md) | Each external service: what, where in code, config, failure behaviour |
+| [observability.md](observability.md) | Self-hosted error/health/metric pipeline, Sentry projects, where to look, gaps |
 | [shared-backend.md](shared-backend.md) | The service package and the A/B/C operation classification (existing) |
 | [rewards-ledger.md](rewards-ledger.md) | Abonten Credit ledger and rewards engine (existing, with runbook) |
 | [field-ops.md](field-ops.md) | The field programme (existing, with runbook) |

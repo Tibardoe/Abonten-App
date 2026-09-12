@@ -21,5 +21,6 @@ complianceReviewRequired: no
 | [supabase-migrations.md](supabase-migrations.md) | Applying schema changes to production safely |
 | [release-checklist.md](release-checklist.md) | Before / during / after a release |
 | [rollback-and-recovery.md](rollback-and-recovery.md) | Rolling back each layer; database recovery; kill switches |
+| [disaster-recovery.md](disaster-recovery.md) | Losing a system rather than shipping a bug: objectives (undecided), state and copies, scenarios, recovery order |
 
 Operations view: `../operations/deployment-and-release.md`.

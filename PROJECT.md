@@ -3138,7 +3138,9 @@ section only records where things are and the code that changed.
 - **Two homes.** Internal documentation is `docs/` (hub `docs/INDEX.md`,
   standard `docs/DOCUMENTATION_STANDARD.md`, registers
   `docs/LEGAL_REVIEW_REQUIRED.md` and `docs/OPERATIONAL_DECISIONS_REQUIRED.md`,
-  coverage `docs/documentation-audit-matrix.md`). **Public** documents — Terms
+  coverage `docs/documentation-audit-matrix.md` and
+  `docs/documentation-coverage-matrix.md`, gated specifications
+  `docs/specifications/`). **Public** documents — Terms
   and Conditions, Privacy Policy, Cookie Policy, Security overview, and a
   26-page help centre — are Markdown in `apps/web/src/content/{legal,help}`
   and are rendered statically at `/legal/*` and `/help/*`. They were written

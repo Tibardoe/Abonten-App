@@ -4,7 +4,7 @@ purpose: Record, per feature, where it exists (web, mobile, admin, backend), whe
 audience: Documentation maintainers, product, QA
 scope: Every significant feature as of 2026-09-12
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-12
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Documentation ↔ code audit matrix
 
-Legend: ✅ exists · 🟡 partial · ❌ absent · — not applicable. "Documented" = a current document covers it; "Accurate" = checked against code in this programme.
+Legend: ✅ exists · 🟡 partial · ❌ absent · — not applicable. "Documented" = a current document covers it; "Accurate" = checked against code in this programme. For *which* documents cover each feature, see [documentation-coverage-matrix.md](documentation-coverage-matrix.md); for the gaps that need a decision before anything is built, see [specifications/README.md](specifications/README.md).
 
 | Feature | Web | Mobile | Admin | Backend | Documented | Accurate | Gap / note |
 |---|---|---|---|---|---|---|---|

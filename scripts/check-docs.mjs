@@ -119,6 +119,10 @@ const REQUIRED = [
   "docs/LEGAL_REVIEW_REQUIRED.md",
   "docs/OPERATIONAL_DECISIONS_REQUIRED.md",
   "docs/documentation-audit-matrix.md",
+  "docs/documentation-coverage-matrix.md",
+  "docs/specifications/README.md",
+  "docs/architecture/observability.md",
+  "docs/deployment/disaster-recovery.md",
   "docs/changelog/README.md",
   "apps/web/src/content/legal/terms.md",
   "apps/web/src/content/legal/privacy-policy.md",
@@ -457,6 +461,96 @@ for (const file of allMarkdown) {
       }
     });
 }
+
+// ---- rule: coverage (every document reachable from the hub) ----------------
+
+function linkedTargets(file) {
+  const out = new Set();
+  if (!existsSync(file)) return out;
+  forEachLink(read(file), (target) => {
+    if (
+      /^(https?:)?\/\//i.test(target) ||
+      target.startsWith("/") ||
+      target.startsWith("#") ||
+      target.startsWith("mailto:")
+    )
+      return;
+    const clean = target.split("#")[0];
+    if (clean) out.add(resolve(dirname(file), decodeURIComponent(clean)));
+  });
+  return out;
+}
+
+const hubLinks = linkedTargets(join(DOCS_DIR, "INDEX.md"));
+const coverageLinks = linkedTargets(
+  join(DOCS_DIR, "documentation-coverage-matrix.md"),
+);
+const readmeLinkCache = new Map();
+for (const file of docFiles) {
+  const r = rel(file);
+  if (isLegacy(r) || r === "docs/INDEX.md") continue;
+  const folderReadme = join(dirname(file), "README.md");
+  if (!readmeLinkCache.has(folderReadme))
+    readmeLinkCache.set(folderReadme, linkedTargets(folderReadme));
+  const reachable =
+    hubLinks.has(resolve(file)) ||
+    (resolve(folderReadme) !== resolve(file) &&
+      readmeLinkCache.get(folderReadme).has(resolve(file)));
+  if (!reachable)
+    fail(
+      "coverage",
+      r,
+      1,
+      "not linked from docs/INDEX.md or its folder README.md",
+    );
+}
+for (const file of contentFiles) {
+  if (!coverageLinks.has(resolve(file)))
+    fail(
+      "coverage",
+      rel(file),
+      1,
+      "public page not referenced from docs/documentation-coverage-matrix.md",
+    );
+}
+
+// ---- rule: legal placeholders ----------------------------------------------
+
+// Explicit tokens stand in for details the founder has not provided (entity,
+// address, contacts, effective date). They are allowed — expected, even — in
+// a draft, and forbidden once a legal document is Published or Approved.
+const PLACEHOLDER = /\[[A-Z][A-Z /]+ — TO BE CONFIRMED\]/g;
+let placeholderCount = 0;
+for (const file of contentFiles) {
+  const r = rel(file);
+  if (!r.includes("/content/legal/")) continue;
+  const src = read(file);
+  const fm = frontMatter(src) ?? {};
+  const n = (src.match(PLACEHOLDER) ?? []).length;
+  placeholderCount += n;
+  const isFinal = fm.status === "Published" || fm.status === "Approved";
+  if (!isFinal) continue;
+  if (n > 0)
+    fail(
+      "legal-placeholders",
+      r,
+      1,
+      `${n} "TO BE CONFIRMED" placeholder(s) remain in a ${fm.status} document`,
+    );
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fm.effectiveDate ?? ""))
+    fail(
+      "legal-placeholders",
+      r,
+      1,
+      `a ${fm.status} legal document needs a real effectiveDate (YYYY-MM-DD)`,
+    );
+}
+warn(
+  "legal-placeholders",
+  "—",
+  0,
+  `${placeholderCount} "TO BE CONFIRMED" placeholder(s) in the public legal documents`,
+);
 
 // ---- external links (opt-in) -----------------------------------------------
 

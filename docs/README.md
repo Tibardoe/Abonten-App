@@ -36,6 +36,8 @@ Public content is kept inside the web app, not here, so that it is always presen
 | `LEGAL_REVIEW_REQUIRED.md` | Register of items needing counsel or official confirmation |
 | `OPERATIONAL_DECISIONS_REQUIRED.md` | Business/policy decisions the code cannot answer |
 | `documentation-audit-matrix.md` | Feature × app × documented/accurate/gap |
+| `documentation-coverage-matrix.md` | Feature × public / internal / technical document — where each thing is documented |
+| `specifications/` | Technical specifications gated on open legal or business decisions (cookie consent, age gate, data export, retention jobs, appeals, contacts) and the P2 roadmap — designs, not approved policy |
 | `legal/` | Legal register, versioning strategy, effective-date log |
 | `privacy/` | Data inventory, retention and deletion, privacy-rights operations, cookies/storage inventory, processors |
 | `security/` | Application, database, payment, infrastructure and access-control security; secrets and environment |
@@ -50,7 +52,7 @@ Public content is kept inside the web app, not here, so that it is always presen
 | `user-guide/` | Internal index of the public help set and the web-vs-app difference table |
 | `architecture/` | System overview, feature inventory, roles and permissions, data model, integrations, background jobs, environment variables, plus the four existing deep dives |
 | `development/` | Setup, testing, CI, conventions, documentation validation |
-| `deployment/` | Vercel (web/admin), EAS (mobile), Supabase migrations, release checklist, rollback and recovery |
+| `deployment/` | Vercel (web/admin), EAS (mobile), Supabase migrations, release checklist, rollback and recovery, disaster recovery |
 | `changelog/` | Documentation changelog |
 | `audit/` | The 2026-09-04 limitation audit (system map, register, roadmap) |
 
