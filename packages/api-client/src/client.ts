@@ -54,6 +54,12 @@ import type {
   FieldOpsAssignmentStatus,
   FieldOpsAssignmentsResult,
   FieldOpsClaimAssistBody,
+  FieldOpsContentBriefBody,
+  FieldOpsContentBriefResult,
+  FieldOpsContentResult,
+  FieldOpsContentReviewBody,
+  FieldOpsContentSubmissionResult,
+  FieldOpsContentSubmitBody,
   FieldOpsEarningsResult,
   FieldOpsEventSubmitBody,
   FieldOpsEvidenceRequestBody,
@@ -82,6 +88,7 @@ import type {
   FieldOpsReviewBody,
   FieldOpsSimilarPlacesResult,
   FieldOpsSimilarSearchBody,
+  FieldOpsTeamContentResult,
   FieldOpsTeamMemberResult,
   FieldOpsTeamResult,
   FieldOpsTerritoriesResult,
@@ -1828,6 +1835,23 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body, auth: true },
         );
       },
+      /** The campaign's content briefs and the caller's own deliverables. */
+      content(params: { campaignId?: string } = {}) {
+        const query = new URLSearchParams();
+        if (params.campaignId) query.set("campaignId", params.campaignId);
+        const qs = query.toString();
+        return request<FieldOpsContentResult>(
+          `/api/mobile/field-ops/content${qs ? `?${qs}` : ""}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Send in a posted deliverable. Content creator only. */
+      submitContent(body: FieldOpsContentSubmitBody) {
+        return request<FieldOpsContentSubmissionResult>(
+          "/api/mobile/field-ops/content",
+          { method: "POST", body, auth: true },
+        );
+      },
       /** Where the caller's own earnings are sent (masked). */
       payoutDestination(campaignId: string) {
         return request<FieldOpsPayoutDestinationResult>(
@@ -1842,6 +1866,27 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       lead: {
+        /** The team's content briefs and deliverables. */
+        content(campaignId: string) {
+          return request<FieldOpsTeamContentResult>(
+            `/api/mobile/field-ops/lead/content?campaignId=${encodeURIComponent(campaignId)}`,
+            { method: "GET", auth: true },
+          );
+        },
+        /** Write or edit a brief for the content creator. */
+        upsertContentBrief(body: FieldOpsContentBriefBody) {
+          return request<FieldOpsContentBriefResult>(
+            "/api/mobile/field-ops/lead/content/briefs",
+            { method: "POST", body, auth: true },
+          );
+        },
+        /** Approve or reject a deliverable. */
+        reviewContent(submissionId: string, body: FieldOpsContentReviewBody) {
+          return request<FieldOpsContentSubmissionResult>(
+            `/api/mobile/field-ops/lead/content/${encodeURIComponent(submissionId)}`,
+            { method: "POST", body, auth: true },
+          );
+        },
         /** The lead's review queue (submitted first). */
         review(params: {
           campaignId: string;

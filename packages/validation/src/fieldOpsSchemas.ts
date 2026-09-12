@@ -700,6 +700,91 @@ export type FieldOpsEventSubmitInput = z.infer<
   typeof fieldOpsEventSubmitSchema
 >;
 
+// -- Phase 6: the content creator -----------------------------
+
+const contentPlatform = z.enum([
+  "tiktok",
+  "instagram",
+  "facebook",
+  "x",
+  "youtube",
+  "whatsapp",
+  "other",
+]);
+
+/** A brief the lead or an admin writes for the content creator. */
+export const fieldOpsContentBriefSchema = z.object({
+  campaignId: uuid,
+  briefId: uuid.optional(),
+  title: z.string().trim().min(3, "Give the brief a title").max(150),
+  description: z.string().trim().max(4000).nullable().optional(),
+  platforms: z.array(contentPlatform).max(7).default([]),
+  assignedMemberId: uuid.nullable().optional(),
+  dueOn: z.string().date().nullable().optional(),
+  status: z.enum(["open", "closed"]).optional(),
+});
+
+/** A posted deliverable. Metrics are self-reported and never paid on. */
+export const fieldOpsContentSubmitSchema = z.object({
+  campaignId: uuid,
+  briefId: uuid.nullable().optional(),
+  platform: contentPlatform,
+  url: z
+    .string()
+    .trim()
+    .url("Paste the link to the post")
+    .max(500)
+    .refine((v) => v.startsWith("http://") || v.startsWith("https://"), {
+      message: "Paste the link to the post",
+    }),
+  caption: z.string().trim().max(2000).nullable().optional(),
+  postedAt: z.string().datetime({ offset: true }).nullable().optional(),
+  selfReportedMetrics: z
+    .object({
+      views: z.number().int().min(0).max(1_000_000_000).optional(),
+      likes: z.number().int().min(0).max(1_000_000_000).optional(),
+      shares: z.number().int().min(0).max(1_000_000_000).optional(),
+    })
+    .default({}),
+});
+
+export const fieldOpsContentListSchema = z.object({
+  campaignId: uuid.optional(),
+});
+
+export const fieldOpsContentReviewSchema = z
+  .object({
+    campaignId: uuid,
+    submissionId: uuid,
+    decision: z.enum(["approved", "rejected"]),
+    note: z.string().trim().max(2000).nullable().optional(),
+  })
+  .refine((v) => v.decision === "approved" || (v.note && v.note.length >= 3), {
+    message: "Say what was wrong with it",
+    path: ["note"],
+  });
+
+/** An admin authorises a month's stipends (fieldops.commissions.approve). */
+export const fieldOpsStipendRunSchema = z.object({
+  campaignId: uuid,
+  periodStart: z.string().date(),
+  reason,
+});
+
+export type FieldOpsContentBriefInput = z.infer<
+  typeof fieldOpsContentBriefSchema
+>;
+export type FieldOpsContentSubmitInput = z.infer<
+  typeof fieldOpsContentSubmitSchema
+>;
+export type FieldOpsContentListInput = z.infer<
+  typeof fieldOpsContentListSchema
+>;
+export type FieldOpsContentReviewInput = z.infer<
+  typeof fieldOpsContentReviewSchema
+>;
+export type FieldOpsStipendRunInput = z.infer<typeof fieldOpsStipendRunSchema>;
+
 // -- Phase 4: payouts ----------------------------------------
 
 /** Ghana MoMo networks; kept as a closed list so the CSV stays uploadable. */

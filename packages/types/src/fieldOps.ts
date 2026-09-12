@@ -746,3 +746,61 @@ export type FieldOpsMyPayout = {
   paidAt: string | null;
   createdAt: string;
 };
+
+// ── Phase 6: the content creator ────────────────────────────
+
+export type FieldOpsContentPlatform =
+  | "tiktok"
+  | "instagram"
+  | "facebook"
+  | "x"
+  | "youtube"
+  | "whatsapp"
+  | "other";
+
+export type FieldOpsContentBrief = {
+  id: string;
+  campaignId: string;
+  title: string;
+  description: string | null;
+  platforms: string[];
+  assignedMemberId: string | null;
+  assignedMemberName: string | null;
+  dueOn: string | null;
+  status: "open" | "closed";
+  /** How many deliverables have been sent against this brief. */
+  submissionCount: number;
+  createdAt: string;
+};
+
+export type FieldOpsContentSubmission = {
+  id: string;
+  campaignId: string;
+  briefId: string | null;
+  briefTitle: string | null;
+  memberId: string;
+  memberUserId: string;
+  memberName: string | null;
+  platform: FieldOpsContentPlatform;
+  url: string;
+  caption: string | null;
+  postedAt: string | null;
+  /** Whatever the platform showed the creator. Never paid on. */
+  selfReportedMetrics: { views?: number; likes?: number; shares?: number };
+  status: "submitted" | "approved" | "rejected";
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  holdingUntil: string | null;
+  createdAt: string;
+};
+
+/** Everything the /field/content screen needs in one call. */
+export type FieldOpsMyContent = {
+  campaign: FieldOpsCampaignSummary;
+  briefs: FieldOpsContentBrief[];
+  submissions: FieldOpsContentSubmission[];
+  /** The live rate per approved deliverable, for the "you earn X" line. */
+  liveRate: { amountMinor: number; currency: string } | null;
+  /** False for anyone who is not the campaign's content creator. */
+  canSubmit: boolean;
+};

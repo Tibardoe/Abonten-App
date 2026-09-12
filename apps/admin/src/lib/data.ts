@@ -34,6 +34,7 @@ import {
   getCommissionAdminDetailCore,
   listCommissionsAdminCore,
 } from "@abonten/services/admin/fieldOps/commissionsAdminCore";
+import { listContentAdminCore } from "@abonten/services/admin/fieldOps/contentAdminCore";
 import {
   type ListOnboardingsFilters,
   getOnboardingAdminDetailCore,
@@ -562,6 +563,19 @@ export async function loadFieldOpsPayoutBatch(batchId: string) {
   const ctx = await requireAdmin();
   const detail = await getPayoutBatchCore(getServiceClient(), ctx, batchId);
   return { ctx, detail };
+}
+
+export async function loadFieldOpsContent(filters: {
+  campaignId?: string;
+  status?: string;
+}) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [content, campaigns] = await Promise.all([
+    listContentAdminCore(svc, ctx, filters),
+    listCampaignsCore(svc, ctx, { status: "all" }),
+  ]);
+  return { ctx, content, campaigns };
 }
 
 export async function loadFieldOpsSettings() {

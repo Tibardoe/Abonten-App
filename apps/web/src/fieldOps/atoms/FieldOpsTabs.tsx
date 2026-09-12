@@ -8,6 +8,7 @@ const MEMBER_TABS = [
   { href: "/field", label: "Today" },
   { href: "/field/assignments", label: "Assignments" },
   { href: "/field/submissions", label: "Submissions" },
+  { href: "/field/content", label: "Content" },
   { href: "/field/earnings", label: "Earnings" },
 ];
 
@@ -17,6 +18,7 @@ const LEAD_TABS = [
   { href: "/field/lead/territories", label: "Territories" },
   { href: "/field/lead/assignments", label: "Assignments" },
   { href: "/field/lead/team", label: "Team" },
+  { href: "/field/lead/content", label: "Content" },
   { href: "/field/lead/announce", label: "Announce" },
 ];
 
