@@ -115,6 +115,14 @@ export default function PlaceManageScreen() {
               </Pressable>
             </Link>
           ) : null}
+          <Link href={`/(app)/organizer/places/${id}/verification`} asChild>
+            <Pressable className="flex-row items-center justify-between rounded-xl border border-border bg-card px-4 py-3 active:opacity-80">
+              <AppText className="text-base text-foreground">
+                Verification
+              </AppText>
+              <AppText className="text-muted-foreground">›</AppText>
+            </Pressable>
+          </Link>
           <Link href={`/(app)/organizer/places/${id}/promote`} asChild>
             <Pressable className="flex-row items-center justify-between rounded-xl border border-primary bg-card px-4 py-3 active:opacity-80">
               <AppText className="text-base font-semibold text-primary">

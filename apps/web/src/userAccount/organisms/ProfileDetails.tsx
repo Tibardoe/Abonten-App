@@ -11,6 +11,8 @@ import SettingsButton from "../atoms/SettingsButton";
 import Higlight from "../molecules/Highlight";
 import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
+import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerified";
+import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 type LayoutUserProp = {
   username: string;
   userDetails?: Awaited<ReturnType<typeof getUserProfileDetails>>;
@@ -65,14 +67,23 @@ export default async function ProfileDetails({
     ? "View your profile picture"
     : `View ${data?.username}'s profile picture`;
 
-  const averageRating = await getUserRating(userDetails.data.user_id);
+  const [averageRating, organizerVerifiedRes] = await Promise.all([
+    getUserRating(userDetails.data.user_id),
+    getOrganizerVerified(userDetails.data.user_id),
+  ]);
+  const organizerVerified = organizerVerifiedRes.data.verified;
 
   return (
     <>
       {/* On mobile */}
       <div className="md:hidden flex flex-col gap-7">
         <div className="flex w-full justify-between">
-          <h2 className="font-medium">{data?.username}</h2>
+          <span className="flex items-center gap-1.5">
+            <h2 className="font-medium">{data?.username}</h2>
+            {organizerVerified ? (
+              <VerifiedBadgePopover subjectType="organizer" compact />
+            ) : null}
+          </span>
 
           {isCurrentUser ? (
             <div className="flex items-center gap-3">
@@ -171,7 +182,12 @@ export default async function ProfileDetails({
             viewable={hasCustomAvatar}
           />
           <div className="grid grid-cols-3 gap-3 justify-start items-center">
-            <h2 className="font-medium">{data?.username}</h2>
+            <span className="flex items-center gap-1.5">
+              <h2 className="font-medium">{data?.username}</h2>
+              {organizerVerified ? (
+                <VerifiedBadgePopover subjectType="organizer" compact />
+              ) : null}
+            </span>
 
             {isCurrentUser && (
               <Button className="font-medium hover:bg-primary/90">

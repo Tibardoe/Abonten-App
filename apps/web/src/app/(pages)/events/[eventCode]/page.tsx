@@ -34,6 +34,7 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import { PiTicketBold } from "react-icons/pi";
 
+import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
@@ -109,7 +110,9 @@ export default async function page({
   user_info!organizer_id(
     avatar_public_id,
     avatar_version,
-    username
+    username,
+    organizer_verified,
+    status_id
   ),
   ticket_type(
     id,
@@ -301,12 +304,18 @@ export default async function page({
                   />
                 </Link>
                 <div className="flex-1 min-w-0">
-                  <Link
-                    href={`/user/${event.user_info.username}/posts`}
-                    className="text-lg font-medium text-card-foreground truncate"
-                  >
-                    {event.user_info.username}
-                  </Link>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Link
+                      href={`/user/${event.user_info.username}/posts`}
+                      className="text-lg font-medium text-card-foreground truncate"
+                    >
+                      {event.user_info.username}
+                    </Link>
+                    {event.user_info.organizer_verified &&
+                    event.user_info.status_id === 1 ? (
+                      <VerifiedBadgePopover subjectType="organizer" compact />
+                    ) : null}
+                  </div>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (

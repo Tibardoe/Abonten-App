@@ -172,6 +172,8 @@ import type {
   SendMessageResult,
   SetConversationStateBody,
   SetPlaceStatusBody,
+  StartVerificationBody,
+  StartVerificationResult,
   SubmitChargeOtpResult,
   SubmitReportBody,
   SubmitReportResult,
@@ -187,10 +189,17 @@ import type {
   UpdatePlaceServiceBody,
   UpdatePromoCodeBody,
   UpdatePromoCodeResult,
+  UpdateVerificationBody,
   UploadSignatureKind,
   UserPostType,
   ValidateCheckoutBody,
   ValidateCheckoutResult,
+  VerificationActionResult,
+  VerificationEvidenceBody,
+  VerificationEvidenceTicketResult,
+  VerificationProgramResult,
+  VerificationSubjectBody,
+  VerificationSubjectResult,
   VerifyPaymentResult,
   VerifyPhoneOtpBody,
 } from "./types";
@@ -2011,6 +2020,73 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: true,
         });
+      },
+    },
+
+    /**
+     * Trust & Verification (PROJECT.md §30). A place owner or an organizer
+     * asks Abonten to review documents supporting their link to the
+     * business; an admin decides. Ships switched off — `program` reports
+     * both switches false until the programme is opened.
+     */
+    verification: {
+      program() {
+        return request<VerificationProgramResult>(
+          "/api/mobile/verification/program",
+          { method: "GET", auth: true },
+        );
+      },
+      /** The whole verification screen for one place or organizer. */
+      subject(body: VerificationSubjectBody) {
+        const qs = new URLSearchParams({
+          subjectType: body.subjectType,
+          subjectId: body.subjectId,
+        }).toString();
+        return request<VerificationSubjectResult>(
+          `/api/mobile/verification/subject?${qs}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Opens a draft request. */
+      start(body: StartVerificationBody) {
+        return request<StartVerificationResult>(
+          "/api/mobile/verification/cases",
+          { method: "POST", body, auth: true },
+        );
+      },
+      update(caseId: string, body: UpdateVerificationBody) {
+        return request<VerificationActionResult>(
+          `/api/mobile/verification/cases/${encodeURIComponent(caseId)}`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /**
+       * A signed upload ticket for one document, then
+       * storage.from(bucket).uploadToSignedUrl(path, token, bytes).
+       */
+      requestEvidenceUpload(caseId: string, body: VerificationEvidenceBody) {
+        return request<VerificationEvidenceTicketResult>(
+          `/api/mobile/verification/cases/${encodeURIComponent(caseId)}/evidence`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      removeEvidence(caseId: string, evidenceId: string) {
+        return request<VerificationActionResult>(
+          `/api/mobile/verification/cases/${encodeURIComponent(caseId)}/evidence/${encodeURIComponent(evidenceId)}/delete`,
+          { method: "POST", auth: true },
+        );
+      },
+      submit(caseId: string) {
+        return request<VerificationActionResult>(
+          `/api/mobile/verification/cases/${encodeURIComponent(caseId)}/submit`,
+          { method: "POST", auth: true },
+        );
+      },
+      withdraw(caseId: string) {
+        return request<VerificationActionResult>(
+          `/api/mobile/verification/cases/${encodeURIComponent(caseId)}/withdraw`,
+          { method: "POST", auth: true },
+        );
       },
     },
   };

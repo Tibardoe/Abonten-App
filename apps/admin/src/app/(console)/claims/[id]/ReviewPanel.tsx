@@ -9,15 +9,23 @@ export function ReviewPanel({
   claimId,
   canReview,
   isPending: claimPending,
+  canVerify,
+  documentCount,
+  placeAlreadyVerified,
 }: {
   claimId: string;
   canReview: boolean;
   /** whether the claim itself is still in "pending" status */
   isPending: boolean;
+  /** holds verification.review — may also verify the place */
+  canVerify: boolean;
+  documentCount: number;
+  placeAlreadyVerified: boolean;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [reason, setReason] = useState("");
+  const [alsoVerify, setAlsoVerify] = useState(false);
   const [msg, setMsg] = useState<{ tone: "ok" | "err"; text: string } | null>(
     null,
   );
@@ -31,6 +39,7 @@ export function ReviewPanel({
           decision,
           reason: reason.trim() || undefined,
           expectedStatus: "pending",
+          alsoVerify: decision === "approve" ? alsoVerify : undefined,
         });
         if (res.status === 200) {
           setMsg({ tone: "ok", text: res.message ?? "Done." });
@@ -75,9 +84,33 @@ export function ReviewPanel({
         <>
           <p className="text-xs text-muted-foreground">
             Approving reassigns <strong>place ownership</strong> to the claimant
-            and marks the place claimed + verified. This cannot be undone from
+            and marks the place claimed. It no longer verifies the place —
+            verification is its own reviewed step. This cannot be undone from
             here.
           </p>
+
+          {canVerify && !placeAlreadyVerified ? (
+            <label className="flex items-start gap-2 rounded border border-border p-2 text-xs">
+              <input
+                type="checkbox"
+                checked={alsoVerify}
+                onChange={(e) => setAlsoVerify(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                <span className="font-medium">
+                  Also mark this place verified
+                </span>
+                <span className="block text-muted-foreground">
+                  {documentCount > 0
+                    ? `Only if the ${documentCount} attached document${
+                        documentCount === 1 ? "" : "s"
+                      } genuinely prove the business and the claimant's link to it.`
+                    : "No documents were attached — leave this unticked and let the owner apply for verification separately."}
+                </span>
+              </span>
+            </label>
+          ) : null}
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -90,7 +123,13 @@ export function ReviewPanel({
               size="sm"
               disabled={pending}
               onClick={() => {
-                if (confirm("Approve this claim and transfer ownership?")) {
+                if (
+                  confirm(
+                    alsoVerify
+                      ? "Approve this claim, transfer ownership AND verify the place?"
+                      : "Approve this claim and transfer ownership?",
+                  )
+                ) {
                   run("approve");
                 }
               }}

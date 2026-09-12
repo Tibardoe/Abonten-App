@@ -82,6 +82,13 @@ function targetFromData(
       // Field workers use the web app (/field). The app has no section to
       // open until Phase 9, so the notice is readable but not tappable.
       return null;
+    case "verification":
+      if (data.verificationSubject === "organizer") {
+        return "/(app)/organizer/verification";
+      }
+      return data.placeId
+        ? `/(app)/organizer/places/${data.placeId}/verification`
+        : "/(app)/organizer/verification";
     default:
       return null;
   }

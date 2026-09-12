@@ -390,6 +390,10 @@ export default function OrganizerDashboard() {
             label={`Place drafts (${placeDraftCount})`}
           />
         ) : null}
+        <NavRow
+          href="/(app)/organizer/verification"
+          label="Organizer verification"
+        />
         <NavRow href="/(app)/organizer/finance" label="Finances" />
       </View>
     </ScrollView>

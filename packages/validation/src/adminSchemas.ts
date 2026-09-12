@@ -152,6 +152,50 @@ export const reviewClaimSchema = z.object({
   reason: z.string().trim().max(2000).optional(),
   // optimistic concurrency: the status the client last saw ("pending")
   expectedStatus: z.enum(["pending", "approved", "rejected"]).optional(),
+  // "Approve and verify": the reviewer judged the claim's documents good
+  // enough to also verify the place. Needs verification.review on top of
+  // claims.review; runs as one transaction (approve_place_claim_and_verify).
+  alsoVerify: z.boolean().optional(),
+});
+
+// ─────────────────────────────────────────────────────────────
+// Trust & Verification (PROJECT.md §30)
+// ─────────────────────────────────────────────────────────────
+
+export const decideVerificationSchema = z
+  .object({
+    caseId: z.string().uuid(),
+    decision: z.enum(["approve", "reject", "request_info"]),
+    // Shown to the requester verbatim, so it must say something useful.
+    reason: z.string().trim().max(2000).optional(),
+    expectedStatus: z
+      .enum([
+        "draft",
+        "pending_review",
+        "needs_info",
+        "approved",
+        "rejected",
+        "withdrawn",
+        "revoked",
+      ])
+      .optional(),
+  })
+  .refine(
+    (v) => v.decision === "approve" || (v.reason?.trim().length ?? 0) > 0,
+    {
+      message: "A reason is required — the applicant is shown it",
+      path: ["reason"],
+    },
+  );
+
+export const revokeVerificationSchema = z.object({
+  caseId: z.string().uuid(),
+  reason: z.string().trim().min(1, "A reason is required").max(2000),
+});
+
+export const verificationNoteSchema = z.object({
+  caseId: z.string().uuid(),
+  body: z.string().trim().min(1, "Write a note").max(4000),
 });
 
 export const adminRefundSchema = z.object({

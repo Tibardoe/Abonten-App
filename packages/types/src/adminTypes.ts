@@ -6,6 +6,12 @@
 //   - supabase/migrations/20260907090*  (CHECK constraints + seed data)
 //   - packages/core/src/adminPermissions.ts  (the role->permission matrix)
 
+import type {
+  OrganizerType,
+  VerificationStatus,
+  VerificationSubjectType,
+} from "./verificationType";
+
 // ─────────────────────────────────────────────────────────────
 // RBAC
 // ─────────────────────────────────────────────────────────────
@@ -49,6 +55,10 @@ export type AdminPermissionKey =
   | "finance.adjust"
   | "claims.view"
   | "claims.review"
+  | "verification.view"
+  | "verification.evidence"
+  | "verification.review"
+  | "verification.revoke"
   | "reviews.view"
   | "notifications.view"
   | "notifications.send"
@@ -576,6 +586,7 @@ export type NeedsAttention = {
   urgentReports: number;
   reportsUnassigned: number;
   pendingClaims: number;
+  pendingVerifications: number;
   openErrorGroups: number;
   failingHealthChecks: number;
   stuckPayments: number;
@@ -650,6 +661,113 @@ export type ClaimDetail = {
   };
   documents: ClaimDocumentView[];
   notes: AdminNoteEntry[];
+};
+
+// ─────────────────────────────────────────────────────────────
+// Trust & Verification (PROJECT.md §30)
+// ─────────────────────────────────────────────────────────────
+
+export type VerificationListItem = {
+  id: string;
+  subjectType: VerificationSubjectType;
+  subjectId: string;
+  subjectName: string | null;
+  /** Place slug, so the list can deep-link to the public page. */
+  subjectSlug: string | null;
+  status: VerificationStatus;
+  organizerType: OrganizerType | null;
+  requesterId: string;
+  requesterName: string | null;
+  evidenceCount: number;
+  source: string;
+  createdAt: string;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+};
+
+/** One evidence row as a reviewer sees it. `url` is null without verification.evidence. */
+export type VerificationEvidenceView = {
+  id: string;
+  evidenceType: string;
+  evidenceTypeLabel: string | null;
+  fileName: string | null;
+  mimeType: string;
+  sizeBytes: number;
+  status: string;
+  createdAt: string;
+  /** Short-lived signed URL, minted server-side. */
+  url: string | null;
+};
+
+export type VerificationTimelineEntry = {
+  id: number;
+  eventType: string;
+  actorKind: string;
+  actorId: string | null;
+  actorName: string | null;
+  fromStatus: string | null;
+  toStatus: string | null;
+  reason: string | null;
+  meta: Record<string, unknown> | null;
+  createdAt: string;
+};
+
+export type VerificationCaseDetail = {
+  id: string;
+  subjectType: VerificationSubjectType;
+  status: VerificationStatus;
+  organizerType: OrganizerType | null;
+  legalName: string | null;
+  applicantNote: string | null;
+  contactEmail: string | null; // only for users.view_pii
+  contactPhone: string | null; // only for users.view_pii
+  decisionReason: string | null;
+  source: string;
+  claimRequestId: string | null;
+  createdAt: string;
+  submittedAt: string | null;
+  reviewedBy: string | null;
+  reviewedByName: string | null;
+  reviewedAt: string | null;
+  revokedByName: string | null;
+  revokedAt: string | null;
+  subject: {
+    id: string;
+    name: string | null;
+    slug: string | null;
+    /** place.status, or the organizer's account status. */
+    status: string | null;
+    moderationState: string | null;
+    /** Current place owner; for an organizer case, the organizer. */
+    currentOwnerId: string | null;
+    verified: boolean;
+    /** True when the subject changed hands since the request was filed. */
+    ownerChangedSinceSubmission: boolean;
+    /** Open reports filed against this subject — reviewer context. */
+    openReportCount: number;
+  };
+  requester: {
+    id: string;
+    username: string | null;
+    fullName: string | null;
+    email: string | null; // only for users.view_pii
+    accountStatus: string | null;
+  };
+  evidence: VerificationEvidenceView[];
+  /** Whether this reviewer may open the documents. */
+  canOpenEvidence: boolean;
+  timeline: VerificationTimelineEntry[];
+  notes: AdminNoteEntry[];
+  /** Earlier cases for the same subject, newest first. */
+  priorCases: VerificationListItem[];
+};
+
+export type VerificationOverviewCounts = {
+  pendingPlaces: number;
+  pendingOrganizers: number;
+  needsInfo: number;
+  approvedPlaces: number;
+  approvedOrganizers: number;
 };
 
 export type ModeratableContentItem = {
