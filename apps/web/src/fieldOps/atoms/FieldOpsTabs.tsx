@@ -19,6 +19,7 @@ const LEAD_TABS = [
   { href: "/field/lead/assignments", label: "Assignments" },
   { href: "/field/lead/team", label: "Team" },
   { href: "/field/lead/content", label: "Content" },
+  { href: "/field/lead/performance", label: "Performance" },
   { href: "/field/lead/announce", label: "Announce" },
 ];
 

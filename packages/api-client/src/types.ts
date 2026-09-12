@@ -1,4 +1,5 @@
 import type {
+  FieldOpsAnalytics,
   FieldOpsAssignment,
   FieldOpsContentBrief,
   FieldOpsContentPlatform,
@@ -1703,6 +1704,9 @@ export type FieldOpsEventSubmitBody = {
   submissionLocation?: { lat: number; lng: number } | null;
   submissionAccuracyM?: number | null;
 };
+
+export type { FieldOpsAnalytics } from "@abonten/types/fieldOps";
+export type FieldOpsAnalyticsResult = ApiEnvelope<FieldOpsAnalytics>;
 
 export type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 export type FieldOpsPayoutDestinationResult =

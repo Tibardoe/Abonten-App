@@ -46,6 +46,7 @@ import type {
   EventPromoCodesResult,
   EventPromoterCommissionResult,
   EventPromotionContextResult,
+  FieldOpsAnalyticsResult,
   FieldOpsAnnouncementBody,
   FieldOpsAnnouncementResult,
   FieldOpsAssignmentCreateBody,
@@ -1866,6 +1867,13 @@ export function createApiClient(options: ApiClientOptions) {
         );
       },
       lead: {
+        /** The team's and territories' figures, computed live. */
+        performance(campaignId: string) {
+          return request<FieldOpsAnalyticsResult>(
+            `/api/mobile/field-ops/lead/performance?campaignId=${encodeURIComponent(campaignId)}`,
+            { method: "GET", auth: true },
+          );
+        },
         /** The team's content briefs and deliverables. */
         content(campaignId: string) {
           return request<FieldOpsTeamContentResult>(

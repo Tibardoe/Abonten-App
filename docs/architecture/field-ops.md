@@ -1,14 +1,14 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phases 0-6 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
+_Phases 0-7 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
 The owner approved the full plan and the four gating decisions: team leads
 and workers use the web app (`/field`, Phase 1); business ownership is
 proven by an OTP the owner enters (Phase 2); a commission needs the team
 lead's review plus a holding period re-checked by a sweep (Phase 3); payouts
 are weekly manual MoMo batches approved by a second admin (Phase 4). Events
-and claim assistance joined in Phase 5, the content creator in Phase 6. The
-full architecture is in the approved plan; this file is the reference and
-runbook for what is live._
+and claim assistance joined in Phase 5, the content creator in Phase 6, the
+figures in Phase 7. The full architecture is in the approved plan; this file
+is the reference and runbook for what is live._
 
 ## What it is
 
@@ -203,6 +203,29 @@ an admin (`fieldops.commissions.approve` + step-up, audited) and creates
 `approved` commissions on the spot with that admin recorded. It is
 idempotent per member per month, so running it twice pays nobody twice.
 
+## The figures (Phase 7)
+
+Four functions, all read-only and all computed live from records the team
+cannot edit. At a dozen people and low thousands of rows per campaign there
+is no case for a rollup table — and a live figure cannot go stale.
+
+| Function | Answers |
+|---|---|
+| `fieldops_campaign_stats` | Members, coverage, the prospect funnel, onboardings by status and kind, content, money by status, and **cost per success** (everything committed ÷ successes — `null`, not zero, while nothing has succeeded). |
+| `fieldops_member_stats` | Per member: days assigned, prospects, submitted, stood up, rejected, content approved, earned and paid, and the **median hours their work waits for a review** — which is a lead problem, not a member one. |
+| `fieldops_territory_stats` | Per town: covered or not, and found → spoken to → sent in → listed. |
+| `fieldops_daily_series` | A day per row across the window, **including the empty days**, so a chart never draws a misleading straight line through a gap. |
+
+Surfaces: Admin › Field Ops › Campaigns › *Figures*
+(`/field-ops/campaigns/[id]/analytics`, with the same plain-CSS bars the
+Analytics module uses — no chart library — and a team CSV export), and
+`/field/lead/performance` for the lead, which is the same data scoped to
+their own campaign and refuses anyone who is not its lead.
+
+Counts are shown as "3 of 4" rather than "75%" wherever the denominator is
+small, because a percentage of four things is more precise-looking than it
+is true.
+
 ## Onboarding flow
 
 1. Member opens a territory they are assigned to → **Onboard a business**
@@ -365,7 +388,10 @@ territory in the region and an active team lead); the same table lives in
   assignment rules, self-review refusal, approval → pending commission →
   swept, a creator who leaves unpaid, admin override with its audit row,
   and idempotent stipends), and `fieldops-payouts` covers the money
-  leaving (destination masking and
+  leaving, and `fieldops-analytics` seeds a known shape and checks the
+  arithmetic comes back (coverage from real assignments, the funnel,
+  per-member totals including a member who did nothing, every day in the
+  window, the permission gate, and the CSV) (destination masking and
   the in-flight lock, grouping and the missing-number case, the
   second-admin rule, paid/failed/cancel, the member's history, the CSV
   gate, and the books balancing after a post-payment reversal).

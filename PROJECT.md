@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–6 (2026-09-11/12)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–7 (2026-09-11/12)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -3039,7 +3039,35 @@ applied to production via MCP, advisor-clean, replays from scratch; branch
   317 tests**; `turbo typecheck` 11/11; web and admin builds clean with
   `/field/content`, `/field/lead/content` and `/field-ops/content` present;
   parity 154; Biome clean.
-- **Not yet built:** analytics (P7), Playwright + pilot readiness (P8).
+**Phase 7 — the figures (migration `20260912014434_fieldops_analytics`,
+applied to production via MCP, advisor-clean, replays from scratch; branch
+`feat/field-ops-p7`).**
+
+- **Four read-only SQL functions**, all computed live from records the team
+  cannot edit: `fieldops_campaign_stats` (members, coverage, the prospect
+  funnel, onboardings by status and kind, content, money by status, and cost
+  per success — `null` rather than zero while nothing has succeeded),
+  `fieldops_member_stats` (per member, including the median hours their work
+  waits for a review), `fieldops_territory_stats` (the per-town funnel), and
+  `fieldops_daily_series` (every day in the window, **including the empty
+  ones**, so a chart cannot draw a straight line through a gap). No rollup
+  table: a dozen people produce low thousands of rows per campaign, and a
+  live figure cannot go stale.
+- **Surfaces.** Admin › Field Ops › Campaigns › **Figures**
+  (`/field-ops/campaigns/[id]/analytics`) with the same plain-CSS bars the
+  Analytics module already uses — recharts is in `package.json` but unused
+  anywhere in admin, so adding a chart library here would have been the
+  odd choice — plus a team CSV export. `/field/lead/performance` gives the
+  lead the same data for their own campaign (+ the mobile twin; parity 155).
+  Counts read "3 of 4" rather than "75%" where the denominator is small.
+- **Verified:** integration `fieldops-analytics` (10: coverage counted from
+  real assignments rather than a column, the funnel, per-member totals
+  including a member who did nothing, the null-vs-zero cost case, every day
+  in the window, the lead's scoped copy and its refusal for a non-lead, the
+  permission gate, and the CSV), full suite **39 files / 327 tests**;
+  `turbo typecheck` 11/11; web and admin builds clean; parity 155; Biome
+  clean.
+- **Not yet built:** Playwright + pilot readiness (P8).
 
 ---
 

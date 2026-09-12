@@ -73,9 +73,17 @@ export default async function FieldOpsCampaignPage({
           </>
         }
         actions={
-          <Badge tone={campaignStatusTone(campaign.status)}>
-            {CAMPAIGN_STATUS_LABEL[campaign.status]}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/field-ops/campaigns/${campaign.id}/analytics`}
+              className="rounded border border-border px-2.5 py-1 text-xs hover:bg-muted"
+            >
+              Figures
+            </Link>
+            <Badge tone={campaignStatusTone(campaign.status)}>
+              {CAMPAIGN_STATUS_LABEL[campaign.status]}
+            </Badge>
+          </div>
         }
       />
       <FieldOpsTabs active="/field-ops/campaigns" />
