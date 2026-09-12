@@ -70,6 +70,22 @@ jobs:
 
       - run: npm run check:api-parity
 
+  # Documentation validation (docs/** and the public legal/help content):
+  # required files, metadata, internal links, code references, placeholder
+  # and social links, secret patterns, public/internal separation. No
+  # secrets, no network (external links are an opt-in local run).
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm run check:docs
+
   build-web:
     runs-on: ubuntu-latest
     timeout-minutes: 15
