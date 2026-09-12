@@ -60,6 +60,11 @@ const nextConfig: NextConfig = {
   // any external links working.
   async redirects() {
     return [
+      // Short legal URLs (the mobile app once linked to /terms and /privacy
+      // on the wrong domain; external references may still use these paths).
+      { source: "/terms", destination: "/legal/terms", permanent: true },
+      { source: "/privacy", destination: "/legal/privacy", permanent: true },
+      { source: "/cookies", destination: "/legal/cookies", permanent: true },
       {
         source: "/manage/attendance/event-list",
         destination: "/manage/events",

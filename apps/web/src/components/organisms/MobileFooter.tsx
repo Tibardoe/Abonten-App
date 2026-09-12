@@ -1,65 +1,31 @@
+import { SUPPORT_EMAIL, mailto } from "@abonten/core/brand/contacts";
+import { HELP_PATH, LEGAL_PATHS } from "@abonten/core/brand/socialLinks";
 import Link from "next/link";
 import MaskIcon from "../atoms/MaskIcon";
+import SocialLinks from "../molecules/SocialLinks";
 
 export default function MobileFooter() {
   return (
     // mt-auto pins this to the bottom of the sidebar's flex column; pt-10
     // separates it from the nav above without leaving a gap below it.
-    <div className="mt-auto flex w-full flex-col space-y-3 pt-10">
-      <div className="flex flex-col gap-3 pl-[5%]">
-        <Link href="#">Terms & Conditions</Link>
+    <footer className="mt-auto flex w-full flex-col space-y-3 pt-10">
+      <nav aria-label="Legal and help" className="flex flex-col gap-3 pl-[5%]">
+        <Link href={LEGAL_PATHS.terms}>Terms &amp; Conditions</Link>
 
-        <Link href="#">Privacy</Link>
+        <Link href={LEGAL_PATHS.privacy}>Privacy</Link>
 
-        <Link href="#">Cookies</Link>
+        <Link href={LEGAL_PATHS.cookies}>Cookies</Link>
 
-        <Link href="#">Security</Link>
-      </div>
+        <Link href={LEGAL_PATHS.security}>Security</Link>
+
+        <Link href={HELP_PATH}>Help</Link>
+
+        <a href={mailto(SUPPORT_EMAIL)}>Contact</a>
+      </nav>
 
       <hr />
 
-      {/* Socials */}
-      <div className="flex gap-3 items-center self-center">
-        <Link href="#">
-          <MaskIcon
-            className="w-[30px] h-[30px]"
-            src="/assets/images/facebook.svg"
-            alt="Facebook"
-          />
-        </Link>
-
-        <Link href="#">
-          <MaskIcon
-            className="w-[20px] h-[20px]"
-            src="/assets/images/twitter.svg"
-            alt="Twitter"
-          />
-        </Link>
-
-        <Link href="#">
-          <MaskIcon
-            className="w-[30px] h-[30px]"
-            src="/assets/images/instagram.svg"
-            alt="Instagram"
-          />
-        </Link>
-
-        <Link href="#">
-          <MaskIcon
-            className="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
-            src="/assets/images/linkedin.svg"
-            alt="LinkedIn"
-          />
-        </Link>
-
-        <Link href="#">
-          <MaskIcon
-            className="w-[30px] h-[30px] lg:w-[40px] lg:h-[40px]"
-            src="/assets/images/tiktok.svg"
-            alt="TikTok"
-          />
-        </Link>
-      </div>
+      <SocialLinks className="self-center" />
 
       <div className="flex gap-2 pl-[5%]">
         <MaskIcon
@@ -69,6 +35,6 @@ export default function MobileFooter() {
         />
         <p>{new Date().getFullYear()} Abonten Hub</p>
       </div>
-    </div>
+    </footer>
   );
 }

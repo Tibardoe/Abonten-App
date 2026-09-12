@@ -3125,3 +3125,49 @@ applied to production via MCP, advisor-clean, replays from scratch; branch
 ---
 
 *This document reflects only what was directly verified by reading the repository's code, configuration, and git history. Sections marked "Needs Investigation" should be confirmed with the project owner or by deeper runtime/schema inspection before being relied upon.*
+
+---
+
+## 29. Documentation, legal, compliance and security programme (2026-09-12)
+
+A repository-wide documentation system was added on branch
+`docs/enterprise-documentation-programme` (see `docs/changelog/README.md`
+for the itemised list). Facts, not summaries, live in the documents; this
+section only records where things are and the code that changed.
+
+- **Two homes.** Internal documentation is `docs/` (hub `docs/INDEX.md`,
+  standard `docs/DOCUMENTATION_STANDARD.md`, registers
+  `docs/LEGAL_REVIEW_REQUIRED.md` and `docs/OPERATIONAL_DECISIONS_REQUIRED.md`,
+  coverage `docs/documentation-audit-matrix.md` and
+  `docs/documentation-coverage-matrix.md`, gated specifications
+  `docs/specifications/`). **Public** documents — Terms
+  and Conditions, Privacy Policy, Cookie Policy, Security overview, and a
+  26-page help centre — are Markdown in `apps/web/src/content/{legal,help}`
+  and are rendered statically at `/legal/*` and `/help/*`. They were written
+  from verified behaviour (fee model §22, 30-minute hold, refund rules §21/§22,
+  the exact cookie set, account-deletion cascade, provider list) and are
+  marked **Review required** with no effective date; every legal or policy
+  unknown is a row in a register rather than invented text.
+- **Code.** `@abonten/core/markdown/parseMarkdown` (dependency-free parser,
+  14 unit tests) + `apps/web/src/components/organisms/MarkdownDocument.tsx`;
+  `apps/web/src/utils/publicContent.ts` reads the content at build time;
+  routes `(pages)/legal/page.tsx`, `legal/[slug]/page.tsx`, `help/page.tsx`,
+  `help/[section]/[slug]/page.tsx` (all `force-static`, prerendered);
+  `ContactSupportCard.tsx` opens the existing support conversation; `/legal`
+  and `/help` added to the proxy public allowlist; redirects `/terms`,
+  `/privacy`, `/cookies`. `@abonten/core/brand/socialLinks` is the single
+  source for the public origin, legal/help paths and the official X /
+  Instagram / TikTok accounts; `SocialLinks.tsx` feeds both footers (the
+  Facebook and LinkedIn icons, which had no accounts, were removed); the
+  mobile drawer, sign-in screen (previously `abonten.com/terms`, a route that
+  never existed) and Settings hub use `apps/mobile/src/lib/legalLinks.ts`
+  (in-app browser). Web sign-in gained the consent line
+  (`auth.consentNotice`, six locales); Settings gained `nav.help`/`nav.legal`.
+- **Validation.** `scripts/check-docs.mjs` (`npm run check:docs`, CI job
+  `docs`): required files, metadata block, internal links, backticked code
+  paths exist, placeholder/dead links, official social URLs, secret patterns,
+  public/internal separation (no repo paths, env names, table names or
+  permission keys in public content), terminology; `--external` probes links.
+- **Not done / decisions.** No cookie banner, no age gate, no data export,
+  no appeals workflow, no support email, retention periods without jobs —
+  all recorded as decisions or legal-review items, not built.
