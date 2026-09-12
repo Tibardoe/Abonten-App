@@ -624,6 +624,8 @@ export type FieldOpsMyEarnings = {
   campaign: FieldOpsCampaignSummary;
   totals: FieldOpsEarningsTotals;
   commissions: FieldOpsCommission[];
+  /** Payments the office has sent or is preparing (Phase 4). */
+  payouts: FieldOpsMyPayout[];
   /** The soonest holding period still running, if any. */
   nextReleaseAt: string | null;
   /** The live rate for this member's own activity, for "you earn X" copy. */
@@ -655,4 +657,84 @@ export type FieldOpsHealth = {
   approvedWithoutRule: number;
   pendingMinor: number;
   approvedMinor: number;
+};
+
+// ── Phase 4: payouts ────────────────────────────────────────
+
+export type FieldOpsPayoutBatchStatus =
+  | "draft"
+  | "approved"
+  | "paid"
+  | "cancelled";
+
+export type FieldOpsPayoutBatch = {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  label: string;
+  currency: string;
+  status: FieldOpsPayoutBatchStatus;
+  totalMinor: number;
+  itemCount: number;
+  paymentMethod: "momo_manual" | "bank_manual" | "paystack_transfer";
+  createdBy: string;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  paidAt: string | null;
+  cancelledAt: string | null;
+  cancelReason: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FieldOpsPayoutItem = {
+  id: string;
+  batchId: string;
+  memberId: string;
+  memberUserId: string;
+  memberName: string | null;
+  amountMinor: number;
+  currency: string;
+  commissionCount: number;
+  destination: {
+    network: string | null;
+    holderName: string | null;
+    numberMasked: string | null;
+    /** Full number: only for an admin with users.view_pii, else null. */
+    number: string | null;
+  };
+  status: "pending" | "paid" | "failed";
+  paymentReference: string | null;
+  failureReason: string | null;
+  paidAt: string | null;
+  createdAt: string;
+};
+
+export type FieldOpsPayoutBatchDetail = {
+  batch: FieldOpsPayoutBatch;
+  items: FieldOpsPayoutItem[];
+  /** False when the viewer built this batch — a second admin must approve. */
+  canApprove: boolean;
+};
+
+/** Where a member's own earnings are sent. Never carries the full number. */
+export type FieldOpsPayoutDestination = {
+  numberMasked: string | null;
+  network: string | null;
+  holderName: string | null;
+  updatedAt: string | null;
+};
+
+/** One line of a member's own payout history. */
+export type FieldOpsMyPayout = {
+  id: string;
+  batchLabel: string | null;
+  amountMinor: number;
+  currency: string;
+  commissionCount: number;
+  status: "pending" | "paid" | "failed";
+  paymentReference: string | null;
+  paidAt: string | null;
+  createdAt: string;
 };

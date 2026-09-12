@@ -1,13 +1,13 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phases 0-3 shipped 2026-09-11 (branches `feat/field-ops-p0` … `-p3`). The
-owner approved the full plan and the four gating decisions: team leads and
-workers use the web app (`/field`, Phase 1); business ownership is proven by
-an OTP the owner enters (Phase 2); a commission needs the team lead's review
-plus a holding period re-checked by a sweep (Phase 3); payouts are weekly
-manual MoMo batches by a finance admin (Phase 4, not yet built). The full
-architecture is in the approved plan; this file is the reference and runbook
-for what is live._
+_Phases 0-4 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
+The owner approved the full plan and the four gating decisions: team leads
+and workers use the web app (`/field`, Phase 1); business ownership is
+proven by an OTP the owner enters (Phase 2); a commission needs the team
+lead's review plus a holding period re-checked by a sweep (Phase 3); payouts
+are weekly manual MoMo batches approved by a second admin (Phase 4). The
+full architecture is in the approved plan; this file is the reference and
+runbook for what is live._
 
 ## What it is
 
@@ -111,6 +111,39 @@ offset beside it so the money that actually left stays on record.
 
 `fieldops_run_housekeeping` (daily, 02:25) closes reviews left open past a
 completed campaign's grace period and counts evidence due for purging.
+
+## Model (Phase 4)
+
+| Table | Role |
+|---|---|
+| `fieldops_payout_batch` | One payout run for one campaign: `draft → approved → paid`, or `cancelled`. A DB CHECK refuses `approved_by = created_by`, so a second admin always signs off. Only one batch per campaign may be open at a time, so two admins can never split the same commissions. Totals are frozen once it leaves draft. |
+| `fieldops_payout_item` | One member's share of one batch, with the destination as it stood when the batch was built (the number is **masked** in the snapshot; the full value lives on the team-member row). `pending → paid \| failed`. |
+
+`fieldops_build_payout_batch` sums every `approved` commission per member
+and moves them to `in_payout`; a member with no mobile-money number on file
+is left out, and their money simply waits for the next batch.
+`fieldops_approve_payout_batch` is the second signature.
+`fieldops_mark_payout_item` records one transfer: **paid** (with a
+reference) pays its commissions and notifies the member, **failed** (with a
+reason) puts them straight back to `approved` so nothing is stranded. The
+batch closes itself once nothing is pending.
+`fieldops_cancel_payout_batch` unwinds a batch that has paid nobody yet.
+
+A member sets their own destination on `/field/earnings`; it is read back
+masked, and it cannot be changed while a payment to the old number is
+already in flight. The finance CSV (`fieldops.commissions.pay` **plus**
+`users.view_pii`, audited) is the one place a full number leaves the
+console, and it is built in the browser from the action's reply rather than
+served as a URL.
+
+`fieldops_payout_reconciliation` and the Phase 4 keys in `fieldops_health()`
+keep the two sides honest: what the ledger says was paid must equal what the
+payout items say was sent, nothing may sit in `in_payout` without a live
+batch behind it, and no item may be marked paid without a reference. A
+commission reversed **after** it was paid keeps its `paid` row — the money
+really did leave — and the negative offset beside it is what nets the member
+down; reversing something that had not been sent yet simply makes it
+`reversed`.
 
 ## Onboarding flow
 
@@ -221,6 +254,17 @@ territory in the region and an active team lead); the same table lives in
 - **Switch commission generation off without stopping the field work:**
   Settings › "Commissions being generated". The sweep becomes a no-op;
   submissions and reviews carry on.
+- **Pay the team (weekly):** Admin › Field Ops › Payouts → pick the
+  campaign → check the preview (it lists anyone left out for want of a
+  mobile-money number) → **Build batch** → a **different** admin opens it
+  and **Approve for payment** → export the CSV or work down the list,
+  sending each transfer from the mobile-money account and recording its
+  reference → a failed transfer is marked failed with a reason and that
+  member's money returns to the pool for next week. The batch closes
+  itself when nothing is pending. Cancel only unwinds a batch that has
+  paid nobody.
+- **Switch payouts off:** Settings › "Payouts enabled". Batches cannot be
+  built; everything already approved just waits.
 - **Run a team day (lead):** `/field/lead/territories` → add the towns
   ("Find on the map" or type coordinates) → `/field/lead/team` → invite
   members by phone (they join when they sign in with that number) →
@@ -245,4 +289,8 @@ territory in the region and an active team lead); the same table lives in
   cover the pure scoring and checklist logic, and `fieldops-sweep` covers
   the commission ledger end to end (pending at verification, every sweep
   branch, budget cap, frozen rate across a version change, double-run
-  idempotency, immutability and reversal, RLS, health and reconciliation).
+  idempotency, immutability and reversal, RLS, health and reconciliation),
+  and `fieldops-payouts` covers the money leaving (destination masking and
+  the in-flight lock, grouping and the missing-number case, the
+  second-admin rule, paid/failed/cancel, the member's history, the CSV
+  gate, and the books balancing after a post-payment reversal).

@@ -1,7 +1,9 @@
+import { getFieldOpsPayoutDestination } from "@/actions/fieldOps/getFieldOpsPayoutDestination";
 import { getMyFieldOpsEarnings } from "@/actions/fieldOps/getMyFieldOpsEarnings";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import StatTile from "@/fieldOps/atoms/StatTile";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
+import PayoutDestinationForm from "@/fieldOps/organisms/PayoutDestinationForm";
 import type { FieldOpsCommission } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -25,7 +27,10 @@ export default async function FieldEarningsPage() {
   const current = me.data?.current;
   if (!current) notFound();
 
-  const res = await getMyFieldOpsEarnings({ campaignId: current.campaign.id });
+  const [res, destination] = await Promise.all([
+    getMyFieldOpsEarnings({ campaignId: current.campaign.id }),
+    getFieldOpsPayoutDestination({ campaignId: current.campaign.id }),
+  ]);
   const earnings = res.data;
   if (!earnings) notFound();
 
@@ -120,9 +125,49 @@ export default async function FieldEarningsPage() {
       <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
         A commission is confirmed after the holding period, once an automatic
         check confirms the business is still listed and owned by the owner who
-        verified their phone. Payouts are made by the office; the payout details
-        form arrives with the next release.
+        verified their phone. Confirmed earnings are paid out by the office in
+        weekly batches.
       </p>
+
+      <PayoutDestinationForm
+        campaignId={current.campaign.id}
+        current={destination.data ?? null}
+      />
+
+      {earnings.payouts.length > 0 ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-lg font-semibold">Payments</h2>
+          <ul className="flex flex-col gap-3">
+            {earnings.payouts.map((p) => (
+              <li key={p.id} className="rounded-xl border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-medium">{p.batchLabel ?? "Payment"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {p.status === "paid"
+                        ? `Sent ${p.paidAt ? new Date(p.paidAt).toLocaleDateString() : ""}`
+                        : p.status === "failed"
+                          ? "Did not go through - it is back in your confirmed total"
+                          : "Being prepared"}
+                      {p.commissionCount > 0
+                        ? ` - ${p.commissionCount} commission${p.commissionCount === 1 ? "" : "s"}`
+                        : ""}
+                    </p>
+                    {p.paymentReference ? (
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">
+                        {p.paymentReference}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="font-semibold tabular-nums">
+                    {money(p.amountMinor, p.currency)}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Your commissions</h2>

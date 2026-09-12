@@ -41,6 +41,11 @@ import {
 } from "@abonten/services/admin/fieldOps/onboardingsAdminCore";
 import { getFieldOpsOverviewCore } from "@abonten/services/admin/fieldOps/overviewAdminCore";
 import {
+  getPayoutBatchCore,
+  listPayoutBatchesCore,
+  previewPayoutBatchCore,
+} from "@abonten/services/admin/fieldOps/payoutsAdminCore";
+import {
   getRegionDetailCore,
   listRegionsCore,
 } from "@abonten/services/admin/fieldOps/regionsAdminCore";
@@ -534,6 +539,29 @@ export async function loadFieldOpsFlagQueue(filters: {
     listCampaignsCore(svc, ctx, { status: "all" }),
   ]);
   return { ctx, queue, campaigns };
+}
+
+export async function loadFieldOpsPayouts(filters: {
+  campaignId?: string;
+  status?: string;
+}) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [batches, campaigns] = await Promise.all([
+    listPayoutBatchesCore(svc, ctx, filters),
+    listCampaignsCore(svc, ctx, { status: "all" }),
+  ]);
+  // The preview only makes sense for one campaign at a time.
+  const preview = filters.campaignId
+    ? await previewPayoutBatchCore(svc, ctx, filters.campaignId)
+    : null;
+  return { ctx, batches, campaigns, preview };
+}
+
+export async function loadFieldOpsPayoutBatch(batchId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getPayoutBatchCore(getServiceClient(), ctx, batchId);
+  return { ctx, detail };
 }
 
 export async function loadFieldOpsSettings() {

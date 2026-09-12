@@ -2597,6 +2597,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "fieldops_commission_payout_item_fkey";
+            columns: ["payout_item_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_payout_item";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "fieldops_commission_reverses_commission_id_fkey";
             columns: ["reverses_commission_id"];
             isOneToOne: false;
@@ -3095,6 +3102,159 @@ export type Database = {
             columns: ["onboarding_id"];
             isOneToOne: false;
             referencedRelation: "fieldops_onboarding";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_payout_batch: {
+        Row: {
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          id: string;
+          item_count: number;
+          label: string;
+          notes: string | null;
+          paid_at: string | null;
+          paid_by: string | null;
+          payment_method: string;
+          status: string;
+          total_minor: number;
+          updated_at: string;
+        };
+        Insert: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          campaign_id: string;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          created_by: string;
+          currency?: string;
+          id?: string;
+          item_count?: number;
+          label: string;
+          notes?: string | null;
+          paid_at?: string | null;
+          paid_by?: string | null;
+          payment_method?: string;
+          status?: string;
+          total_minor?: number;
+          updated_at?: string;
+        };
+        Update: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          campaign_id?: string;
+          cancel_reason?: string | null;
+          cancelled_at?: string | null;
+          created_at?: string;
+          created_by?: string;
+          currency?: string;
+          id?: string;
+          item_count?: number;
+          label?: string;
+          notes?: string | null;
+          paid_at?: string | null;
+          paid_by?: string | null;
+          payment_method?: string;
+          status?: string;
+          total_minor?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_payout_batch_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_payout_item: {
+        Row: {
+          amount_minor: number;
+          batch_id: string;
+          campaign_id: string;
+          commission_count: number;
+          created_at: string;
+          currency: string;
+          destination_snapshot: Json;
+          failure_reason: string | null;
+          id: string;
+          member_id: string;
+          member_user_id: string;
+          paid_at: string | null;
+          paid_by: string | null;
+          payment_reference: string | null;
+          status: string;
+          transfer_code: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          amount_minor: number;
+          batch_id: string;
+          campaign_id: string;
+          commission_count?: number;
+          created_at?: string;
+          currency?: string;
+          destination_snapshot?: Json;
+          failure_reason?: string | null;
+          id?: string;
+          member_id: string;
+          member_user_id: string;
+          paid_at?: string | null;
+          paid_by?: string | null;
+          payment_reference?: string | null;
+          status?: string;
+          transfer_code?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          amount_minor?: number;
+          batch_id?: string;
+          campaign_id?: string;
+          commission_count?: number;
+          created_at?: string;
+          currency?: string;
+          destination_snapshot?: Json;
+          failure_reason?: string | null;
+          id?: string;
+          member_id?: string;
+          member_user_id?: string;
+          paid_at?: string | null;
+          paid_by?: string | null;
+          payment_reference?: string | null;
+          status?: string;
+          transfer_code?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_payout_item_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_payout_batch";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_payout_item_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_payout_item_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
             referencedColumns: ["id"];
           },
         ];
@@ -9505,9 +9665,101 @@ export type Database = {
           isSetofReturn: true;
         };
       };
+      fieldops_approve_payout_batch: {
+        Args: { p_admin: string; p_batch_id: string };
+        Returns: {
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          id: string;
+          item_count: number;
+          label: string;
+          notes: string | null;
+          paid_at: string | null;
+          paid_by: string | null;
+          payment_method: string;
+          status: string;
+          total_minor: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_payout_batch";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       fieldops_bind_invited_memberships: {
         Args: { p_user_id: string };
         Returns: number;
+      };
+      fieldops_build_payout_batch: {
+        Args: {
+          p_admin: string;
+          p_campaign_id: string;
+          p_label: string;
+          p_method?: string;
+        };
+        Returns: {
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          id: string;
+          item_count: number;
+          label: string;
+          notes: string | null;
+          paid_at: string | null;
+          paid_by: string | null;
+          payment_method: string;
+          status: string;
+          total_minor: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_payout_batch";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      fieldops_cancel_payout_batch: {
+        Args: { p_admin: string; p_batch_id: string; p_reason: string };
+        Returns: {
+          approved_at: string | null;
+          approved_by: string | null;
+          campaign_id: string;
+          cancel_reason: string | null;
+          cancelled_at: string | null;
+          created_at: string;
+          created_by: string;
+          currency: string;
+          id: string;
+          item_count: number;
+          label: string;
+          notes: string | null;
+          paid_at: string | null;
+          paid_by: string | null;
+          payment_method: string;
+          status: string;
+          total_minor: number;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_payout_batch";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       fieldops_commission_rule_set_active: {
         Args: {
@@ -9621,6 +9873,40 @@ export type Database = {
         Returns: boolean;
       };
       fieldops_is_member: { Args: { p_campaign_id: string }; Returns: boolean };
+      fieldops_mark_payout_item: {
+        Args: {
+          p_admin: string;
+          p_failure?: string;
+          p_item_id: string;
+          p_reference?: string;
+          p_status: string;
+        };
+        Returns: {
+          amount_minor: number;
+          batch_id: string;
+          campaign_id: string;
+          commission_count: number;
+          created_at: string;
+          currency: string;
+          destination_snapshot: Json;
+          failure_reason: string | null;
+          id: string;
+          member_id: string;
+          member_user_id: string;
+          paid_at: string | null;
+          paid_by: string | null;
+          payment_reference: string | null;
+          status: string;
+          transfer_code: string | null;
+          updated_at: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_payout_item";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       fieldops_memberships_for: {
         Args: { p_user_id: string };
         Returns: {
@@ -9651,6 +9937,7 @@ export type Database = {
           team_id: string;
         }[];
       };
+      fieldops_payout_reconciliation: { Args: never; Returns: Json };
       fieldops_phone_belongs_to_member: {
         Args: { p_phone_e164: string };
         Returns: boolean;

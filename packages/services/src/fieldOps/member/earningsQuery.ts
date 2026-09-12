@@ -1,6 +1,7 @@
 import type {
   FieldOpsMembership,
   FieldOpsMyEarnings,
+  FieldOpsMyPayout,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
@@ -54,25 +55,35 @@ export async function getMyEarningsCore(
     return fieldOpsError(e);
   }
 
-  const [campaign, { data, error }, { data: holding }] = await Promise.all([
-    campaignSummary(supabase, membership.campaignId),
-    supabase
-      .from("fieldops_commission")
-      .select(COMMISSION_COLUMNS)
-      .eq("campaign_id", membership.campaignId)
-      .eq("member_user_id", userId)
-      .order("earned_at", { ascending: false })
-      .limit(300),
-    supabase
-      .from("fieldops_onboarding")
-      .select("holding_until")
-      .eq("member_user_id", userId)
-      .eq("campaign_id", membership.campaignId)
-      .eq("status", "verified")
-      .not("holding_until", "is", null)
-      .order("holding_until", { ascending: true })
-      .limit(1),
-  ]);
+  const [campaign, { data, error }, { data: holding }, { data: payoutRows }] =
+    await Promise.all([
+      campaignSummary(supabase, membership.campaignId),
+      supabase
+        .from("fieldops_commission")
+        .select(COMMISSION_COLUMNS)
+        .eq("campaign_id", membership.campaignId)
+        .eq("member_user_id", userId)
+        .order("earned_at", { ascending: false })
+        .limit(300),
+      supabase
+        .from("fieldops_onboarding")
+        .select("holding_until")
+        .eq("member_user_id", userId)
+        .eq("campaign_id", membership.campaignId)
+        .eq("status", "verified")
+        .not("holding_until", "is", null)
+        .order("holding_until", { ascending: true })
+        .limit(1),
+      supabase
+        .from("fieldops_payout_item")
+        .select(
+          "id, amount_minor, currency, commission_count, status, payment_reference, paid_at, created_at, fieldops_payout_batch(label)",
+        )
+        .eq("member_user_id", userId)
+        .eq("campaign_id", membership.campaignId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
   if (error) return dbErr(error, "Could not load your earnings");
   if (!campaign) return { status: 404, message: "Campaign not found" };
 
@@ -92,12 +103,37 @@ export async function getMyEarningsCore(
       ? await liveRuleFor(supabase, membership.campaignId, activityKey)
       : null;
 
+  const payouts: FieldOpsMyPayout[] = (
+    (payoutRows ?? []) as unknown as {
+      id: string;
+      amount_minor: number | string;
+      currency: string;
+      commission_count: number;
+      status: string;
+      payment_reference: string | null;
+      paid_at: string | null;
+      created_at: string;
+      fieldops_payout_batch?: { label: string } | null;
+    }[]
+  ).map((p) => ({
+    id: p.id,
+    batchLabel: p.fieldops_payout_batch?.label ?? null,
+    amountMinor: Number(p.amount_minor ?? 0),
+    currency: p.currency,
+    commissionCount: Number(p.commission_count ?? 0),
+    status: p.status as FieldOpsMyPayout["status"],
+    paymentReference: p.payment_reference,
+    paidAt: p.paid_at,
+    createdAt: p.created_at,
+  }));
+
   return {
     status: 200,
     data: {
       campaign,
       totals: totalsFor(commissions, campaign.currency),
       commissions,
+      payouts,
       nextReleaseAt: holding?.[0]?.holding_until ?? null,
       liveRate: rule
         ? { amountMinor: rule.amountMinor, currency: rule.currency }

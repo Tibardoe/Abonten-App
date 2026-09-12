@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–3 (2026-09-11)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–4 (2026-09-11/12)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -2896,9 +2896,63 @@ MCP, advisor-clean, replay from scratch; branch `feat/field-ops-p3`).**
   exception handler swallowed it, so every flagged and rejected branch
   silently left rows `verified`. `array_append` throughout is the fix
   (`20260911230537`); the integration suite is what exposed it.
-- **Not yet built:** payouts (P4 — `payoutsEnabled` is still refused
-  server-side and `/field/earnings` says the payout-details form comes with
-  the next release), events / claim assistance (P5 — the wizard still tells
+**Phase 4 — manual MoMo payouts (migration `20260912000042_fieldops_payouts`,
+applied to production via MCP, advisor-clean, replays from scratch; branch
+`feat/field-ops-p4`).**
+
+- **Model.** `fieldops_payout_batch` (`draft → approved → paid`, or
+  `cancelled`) with a DB CHECK that `approved_by <> created_by` — the
+  second-admin rule is a constraint, not a convention — and only one open
+  batch per campaign so two admins can never split the same commissions.
+  `fieldops_payout_item` is one member's share, carrying the destination as
+  it stood when the batch was built (masked in the snapshot; the full number
+  stays on the team-member row). Both tables have immutability guards that
+  allow only the lifecycle columns to move, no client writes at all, and no
+  batch DELETE even for `service_role`. The Phase 3 `payout_item_id` column
+  finally gets its FK.
+- **Flow.** `fieldops_build_payout_batch` sums every `approved` commission
+  per member and moves them to `in_payout`; anyone without a mobile-money
+  number is left out and their money waits for the next batch.
+  `fieldops_mark_payout_item` records one transfer — **paid** (reference
+  required) pays its commissions and pushes `fieldops_commission_paid` to
+  the member; **failed** (reason required) returns them to `approved`
+  immediately, so nothing is ever stranded in `in_payout`. The batch closes
+  itself once nothing is pending. `fieldops_cancel_payout_batch` unwinds a
+  batch that has paid nobody.
+- **Surfaces.** Admin › Field Ops › **Payouts**: a preview of the next batch
+  (including who is left out and why), build, second-admin approval,
+  per-item paid/failed recording, cancel, and a finance CSV behind
+  `fieldops.commissions.pay` **plus** `users.view_pii` — the one place a
+  full number leaves the console, built in the browser from the action's
+  reply rather than served as a URL, and audited. Members get a payout
+  form and a payment history on `/field/earnings` (+ the
+  `/api/mobile/field-ops/payout-destination` twin; parity 148). A member
+  cannot change their number while a payment to the old one is in flight.
+  `payoutsEnabled` is now editable, so `UNSHIPPED_SETTINGS` is empty.
+- **Books.** `fieldops_payout_reconciliation` and three new
+  `fieldops_health()` keys: what the ledger says was paid must equal what
+  the payout items say was sent, nothing may sit in `in_payout` without a
+  live batch, and nothing may be marked paid without a reference.
+- **Bug found and fixed in the Phase 3 ledger:** reversing a commission that
+  had **already been paid** was doing two things at once — moving the
+  original to `reversed` *and* adding a negative offset — which took the
+  money off the member's balance twice. A payment that really happened now
+  keeps its `paid` row (that is what the payout item says) and the offset
+  alone records the claw-back; only money that had not left yet becomes
+  `reversed`. A second reversal of the same commission is refused. Caught
+  by the new reconciliation check, before the programme was ever switched
+  on.
+- **Verified:** integration `fieldops-payouts` (22: destination masking and
+  the in-flight lock, cross-campaign refusal, column-level revocation,
+  preview + who is left out, grouping, the one-open-batch rule, the
+  second-admin rule from both sides, PII gating, paid → commissions paid +
+  notification + batch self-close, double-pay refused, failed → money
+  straight back, cancel + rebuild, cancel refused after a payment, the
+  member's history and own-row-only RLS, client writes refused, the CSV
+  gate, and the books balancing after a post-payment reversal), full suite
+  **36 files / 278 tests**; `turbo typecheck` 11/11; web and admin builds
+  clean with `/field-ops/payouts[/id]` present; parity 148; Biome clean.
+- **Not yet built:** events / claim assistance (P5 — the wizard still tells
   the member to withdraw when the business is already listed), content
   creator (P6), analytics (P7), Playwright + pilot readiness (P8).
 

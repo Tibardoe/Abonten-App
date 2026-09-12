@@ -18,6 +18,13 @@ import {
 import { reverseCommissionAdminCore } from "@abonten/services/admin/fieldOps/commissionsAdminCore";
 import { decideOnboardingAdminCore } from "@abonten/services/admin/fieldOps/onboardingsAdminCore";
 import {
+  approvePayoutBatchCore,
+  buildPayoutBatchCore,
+  cancelPayoutBatchCore,
+  exportPayoutBatchCsvCore,
+  markPayoutItemCore,
+} from "@abonten/services/admin/fieldOps/payoutsAdminCore";
+import {
   geocodeQueryCore,
   upsertRegionCore,
   upsertTerritoryCore,
@@ -133,6 +140,9 @@ import {
   fieldOpsGeocodeSchema,
   fieldOpsMemberRoleChangeSchema,
   fieldOpsMemberStatusSchema,
+  fieldOpsPayoutBatchBuildSchema,
+  fieldOpsPayoutBatchRefSchema,
+  fieldOpsPayoutItemMarkSchema,
   fieldOpsRegionSchema,
   fieldOpsRuleActivationSchema,
   fieldOpsRuleVersionSchema,
@@ -1331,6 +1341,110 @@ export async function decideFieldOpsFlag(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "decideFieldOpsFlag");
+  }
+}
+
+// Payout batches move real money, so every one of these is
+// fieldops.commissions.approve / .pay plus step-up, and the second-admin
+// rule on approval is enforced by a DB CHECK, not by this layer.
+export async function buildFieldOpsPayoutBatch(input: unknown) {
+  const parsed = fieldOpsPayoutBatchBuildSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await buildPayoutBatchCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/payouts", "layout");
+      revalidatePath("/field-ops/commissions", "layout");
+      revalidatePath("/field-ops");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "buildFieldOpsPayoutBatch");
+  }
+}
+
+export async function approveFieldOpsPayoutBatch(input: unknown) {
+  const parsed = fieldOpsPayoutBatchRefSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await approvePayoutBatchCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/field-ops/payouts", "layout");
+    return res;
+  } catch (e) {
+    return adminError(e, "approveFieldOpsPayoutBatch");
+  }
+}
+
+export async function markFieldOpsPayoutItem(input: unknown) {
+  const parsed = fieldOpsPayoutItemMarkSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await markPayoutItemCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/payouts", "layout");
+      revalidatePath("/field-ops/commissions", "layout");
+      revalidatePath("/field-ops");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "markFieldOpsPayoutItem");
+  }
+}
+
+export async function cancelFieldOpsPayoutBatch(input: unknown) {
+  const parsed = fieldOpsPayoutBatchRefSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await cancelPayoutBatchCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/payouts", "layout");
+      revalidatePath("/field-ops/commissions", "layout");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "cancelFieldOpsPayoutBatch");
+  }
+}
+
+/** The finance CSV with full destinations — view_pii on top of .pay. */
+export async function exportFieldOpsPayoutBatch(batchId: unknown) {
+  if (typeof batchId !== "string") {
+    return { status: 400, message: "Invalid batch" };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    return await exportPayoutBatchCsvCore(svc(), ctx, batchId);
+  } catch (e) {
+    return adminError(e, "exportFieldOpsPayoutBatch");
   }
 }
 
