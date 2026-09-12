@@ -15,6 +15,10 @@ import {
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { EventDetailSkeleton } from "@/components/skeletons";
+import {
+  VerifiedPill,
+  showsOrganizerBadge,
+} from "@/components/verification/VerifiedPill";
 import { useEventDetail } from "@/features/discovery/useEventDetail";
 import { useGeocode } from "@/features/discovery/useGeocode";
 import { useSimilarEvents } from "@/features/discovery/useSimilarEvents";
@@ -413,9 +417,18 @@ export default function EventDetailScreen() {
               />
               <View className="flex-1">
                 <AppText variant="caption">Organized by</AppText>
-                <AppText variant="bodyStrong" numberOfLines={1}>
-                  {event.user_info.username}
-                </AppText>
+                <View className="flex-row items-center gap-1.5">
+                  <AppText
+                    variant="bodyStrong"
+                    numberOfLines={1}
+                    className="shrink"
+                  >
+                    {event.user_info.username}
+                  </AppText>
+                  {showsOrganizerBadge(event.user_info) ? (
+                    <VerifiedPill subjectType="organizer" />
+                  ) : null}
+                </View>
                 <View className="mt-0.5 flex-row items-center gap-1">
                   <Stars rating={organizerRating.average} size={12} />
                   <AppText variant="caption">

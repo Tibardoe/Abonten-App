@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-12 — Verification device pass: the mobile badges
+
+- **Device pass** on the Android emulator against production closed open item **M2**. The whole lifecycle was driven on the device (start → upload → submit → admin asks for more → resubmit → approve → badge), with the programme switched on for the `staff` audience only.
+- **Behaviour change**: the mobile Verified badge is now tappable and explains itself in the same legal-reviewed words as the web popover, and a **Verified organizer** badge now appears on the event organizer card and the public profile. Before this, mobile showed a bare "Verified" pill with no explanation, and organizer verification produced nothing visible on mobile at all.
+- **Still missing on mobile** (cosmetic, tracked in PROJECT.md §30.10): per-place verification status chips and the place-setup checklist.
+
 ## 2026-09-12 — Trust & Verification shipped (switched off)
 
 - **New capability**: place owners and event organizers can ask Abonten to review documents supporting their business and its link to their account; an admin decides; a Verified badge follows. Migration `20260912120000_trust_verification.sql` applied to production via the Supabase MCP and replayed clean from scratch locally. Ships **off** (`verification_program_setting` both switches false, audience `staff`, plus `VERIFICATION_KILL_SWITCH`).

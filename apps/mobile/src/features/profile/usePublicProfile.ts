@@ -18,6 +18,8 @@ export type PublicProfile = {
   total_favorites: number;
   average_rating: number;
   total_ratings: number;
+  organizer_verified: boolean;
+  status_id: number | null;
 };
 
 function str(v: unknown): string | null {
@@ -44,6 +46,16 @@ async function fetchProfile(username: string): Promise<PublicProfile> {
     .maybeSingle();
   if (ratingsError) throw ratingsError;
 
+  // `user_profile_details` predates organizer verification and does not carry
+  // its columns, so read them from `user_info` (publicly selectable) rather
+  // than change a view other surfaces depend on — the same call the web
+  // profile makes in actions/verification/getOrganizerVerified.ts.
+  const { data: verifiedRow } = await supabase
+    .from("user_info")
+    .select("organizer_verified, status_id")
+    .eq("id", row.user_id as string)
+    .maybeSingle();
+
   const parsed = parseRatingAggregate(ratingRow);
   const total = parsed.count;
   const avg = roundRating(parsed.average);
@@ -59,6 +71,8 @@ async function fetchProfile(username: string): Promise<PublicProfile> {
     total_favorites: num(row.total_favorites),
     average_rating: avg,
     total_ratings: total,
+    organizer_verified: verifiedRow?.organizer_verified === true,
+    status_id: verifiedRow?.status_id ?? null,
   };
 }
 

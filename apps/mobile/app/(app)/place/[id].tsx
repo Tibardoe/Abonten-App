@@ -17,6 +17,7 @@ import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
+import { VerifiedPill } from "@/components/verification/VerifiedPill";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
@@ -374,12 +375,7 @@ export default function PlaceDetailScreen() {
                 </AppText>
               </View>
               {place.verified ? (
-                <View className="flex-row items-center gap-1 rounded-full bg-black/40 px-3 py-1">
-                  <Icon name="checkmark-circle" size={13} color="#fff" />
-                  <AppText className="text-[12px] font-semibold text-white">
-                    Verified
-                  </AppText>
-                </View>
+                <VerifiedPill subjectType="place" variant="overlay" />
               ) : null}
               <View className="rounded-full bg-black/40 px-3 py-1">
                 <AppText className="text-[12px] font-semibold text-white">

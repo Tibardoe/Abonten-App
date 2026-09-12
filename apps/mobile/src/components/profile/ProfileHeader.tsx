@@ -1,5 +1,9 @@
 import { ImageViewer } from "@/components/ImageViewer";
 import { HighlightsRow } from "@/components/profile/HighlightsRow";
+import {
+  VerifiedPill,
+  showsOrganizerBadge,
+} from "@/components/verification/VerifiedPill";
 import type { PublicProfile } from "@/features/profile/usePublicProfile";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { AppText, Avatar, Button } from "@abonten/ui-native";
@@ -56,9 +60,14 @@ export function ProfileHeader({
           />
         </Pressable>
         <View className="flex-1 gap-2">
-          <AppText variant="bodyStrong" numberOfLines={1}>
-            {profile.full_name ?? `@${profile.username}`}
-          </AppText>
+          <View className="flex-row items-center gap-1.5">
+            <AppText variant="bodyStrong" numberOfLines={1} className="shrink">
+              {profile.full_name ?? `@${profile.username}`}
+            </AppText>
+            {showsOrganizerBadge(profile) ? (
+              <VerifiedPill subjectType="organizer" />
+            ) : null}
+          </View>
           <View className="flex-row justify-between">
             <Stat value={profile.total_posts} label="Posts" />
             <Stat value={profile.total_favorites} label="Favorites" />
