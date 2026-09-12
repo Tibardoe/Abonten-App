@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL, mailto } from "@abonten/core/brand/contacts";
 import {
   HELP_PATH,
   LEGAL_PATHS,
@@ -35,4 +36,9 @@ export async function openExternalLink(url: string): Promise<void> {
   } catch {
     await Linking.openURL(url).catch(() => {});
   }
+}
+
+/** Opens the device mail app addressed to the official support mailbox. */
+export async function openSupportEmail(subject?: string): Promise<void> {
+  await Linking.openURL(mailto(SUPPORT_EMAIL, subject)).catch(() => {});
 }

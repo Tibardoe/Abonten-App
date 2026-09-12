@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL, mailto } from "@abonten/core/brand/contacts";
 import Link from "next/link";
 import SignOutButton from "./SignOutButton";
 
@@ -19,7 +20,14 @@ export default function AccountRestrictedPage() {
         </h1>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Access to Abonten has been limited for this account. If you think this
-          is a mistake, contact support and we&apos;ll take a look.
+          is a mistake, email{" "}
+          <a
+            href={mailto(SUPPORT_EMAIL, "Restricted account")}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {SUPPORT_EMAIL}
+          </a>{" "}
+          from the address on your account and we&apos;ll take a look.
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed">
           <Link

@@ -462,6 +462,90 @@ for (const file of allMarkdown) {
     });
 }
 
+// ---- rule: contacts (official addresses only, quoted exactly) --------------
+
+// The three official mailboxes designated by the founder (legal item A3).
+// The legal pages must quote them verbatim; no other @abontenhub.com address
+// and no personal mailbox (gmail etc.) may appear in docs or public content.
+const OFFICIAL_CONTACTS = {
+  support: "support@abontenhub.com",
+  privacy: "privacy@abontenhub.com",
+  security: "security@abontenhub.com",
+};
+// Outbound-only sender addresses used by the app's transactional email
+// (Resend) or given as the SMTP sender example. They may be named in docs but
+// are not contact channels and must never be presented as one.
+const SYSTEM_SENDERS = new Set([
+  "tickets@abontenhub.com",
+  "rewards@abontenhub.com",
+  "no-reply@abontenhub.com",
+]);
+const contactsFile = join(ROOT, "packages/core/src/brand/contacts.ts");
+if (!existsSync(contactsFile)) {
+  fail("contacts", "packages/core/src/brand/contacts.ts", 0, "missing");
+} else {
+  const src = read(contactsFile);
+  for (const [k, addr] of Object.entries(OFFICIAL_CONTACTS)) {
+    const local = addr.split("@")[0];
+    if (!src.includes(`\`${local}@\${CONTACT_DOMAIN}\``) && !src.includes(addr))
+      fail("contacts", rel(contactsFile), 0, `official ${k} address missing`);
+  }
+  if (!src.includes('CONTACT_DOMAIN = "abontenhub.com"'))
+    fail(
+      "contacts",
+      rel(contactsFile),
+      0,
+      "CONTACT_DOMAIN must be abontenhub.com",
+    );
+}
+const CONTACT_EXPECTATIONS = {
+  "apps/web/src/content/legal/terms.md": ["support", "privacy", "security"],
+  "apps/web/src/content/legal/privacy-policy.md": ["privacy", "support"],
+  "apps/web/src/content/legal/security.md": ["security"],
+};
+for (const [file, keys] of Object.entries(CONTACT_EXPECTATIONS)) {
+  const full = join(ROOT, file);
+  if (!existsSync(full)) continue;
+  const src = read(full);
+  for (const k of keys) {
+    if (!src.includes(OFFICIAL_CONTACTS[k]))
+      fail("contacts", file, 0, `must quote ${OFFICIAL_CONTACTS[k]}`);
+  }
+}
+const EMAIL_RE = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g;
+const PERSONAL_MAIL = /@(gmail|yahoo|hotmail|outlook|icloud|proton(mail)?)\./i;
+for (const file of allMarkdown) {
+  const r = rel(file);
+  if (RULE_DOCS.has(r)) continue;
+  read(file)
+    .split("\n")
+    .forEach((line, i) => {
+      for (const m of line.matchAll(EMAIL_RE)) {
+        const addr = m[0];
+        if (/@abontenhub\.com$/i.test(addr)) {
+          const lower = addr.toLowerCase();
+          if (
+            !Object.values(OFFICIAL_CONTACTS).includes(lower) &&
+            !SYSTEM_SENDERS.has(lower)
+          )
+            fail(
+              "contacts",
+              r,
+              i + 1,
+              `non-official @abontenhub.com address ${addr} (only support@, privacy@, security@ may be published)`,
+            );
+        } else if (PERSONAL_MAIL.test(addr)) {
+          fail(
+            "contacts",
+            r,
+            i + 1,
+            `personal mailbox ${addr} in documentation`,
+          );
+        }
+      }
+    });
+}
+
 // ---- rule: coverage (every document reachable from the hub) ----------------
 
 function linkedTargets(file) {

@@ -1,7 +1,7 @@
 ---
 title: Security at Abonten
 summary: How Abonten Hub protects accounts, payments and data, and how to report a security problem.
-version: 1.0-draft
+version: 1.1-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -51,4 +51,4 @@ legalReviewRequired: no
 
 ## Reporting a vulnerability
 
-If you find a security weakness in Abonten, please tell us before making it public. Report it through the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app) and describe what you found and how to reproduce it. Security contact: [SECURITY CONTACT — TO BE CONFIRMED]. A responsible-disclosure policy is being prepared and will be published here.
+If you find a security weakness in Abonten, please tell us before making it public. Email **security@abontenhub.com** with what you found, where, and how to reproduce it; you can also use the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app). Please do not access other people's data, disrupt the service, or demand payment. A full responsible-disclosure policy, including what you can expect from us and in what timeframe, is being prepared and will be published here.

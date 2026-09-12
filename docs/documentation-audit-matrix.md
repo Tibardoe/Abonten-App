@@ -53,7 +53,7 @@ Legend: ✅ exists · 🟡 partial · ❌ absent · — not applicable. "Documen
 | Place / event reviews + replies | ✅ | ✅ | ✅ content | ✅ | ✅ | ✅ | `review` table is person-to-person (naming) |
 | Highlights | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | No comments/reactions (by design) |
 | Messaging (text, media, voice, reactions) | ✅ (no voice) | ✅ | support + reported | 13 RPCs | ✅ | ✅ | No retention / conversation deletion (R3) |
-| Support conversation | ✅ | ✅ | ✅ queue | ✅ | ✅ | ✅ | No support email (A3) |
+| Support conversation | ✅ | ✅ | ✅ queue | ✅ | ✅ | ✅ | support@abontenhub.com added 2026-09-12 (Workspace alias, not routed into the admin queue); hours/SLA O1 |
 | Reports | ✅ | ✅ | ✅ | `submitReportCore` | ✅ | ✅ | No appeals (O4); no auto-hide (M1) |
 | Moderation | — | — | ✅ | `apply_moderation_action` | ✅ | ✅ | Media not purged on remove |
 | Notifications in-app | ✅ | ✅ | ✅ ops | ✅ | ✅ | ✅ | No per-type preferences |

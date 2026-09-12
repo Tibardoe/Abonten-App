@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-12 — Official contact channels published
+
+- Legal item A3 **Decided**: the founder created Google Workspace aliases support@abontenhub.com, privacy@abontenhub.com and security@abontenhub.com. Published in Terms 1.2-draft §19, Privacy Policy 1.2-draft §11/§15 (Google Workspace added to the §4 processor table), Security overview 1.1-draft "Reporting a vulnerability"; help pages `account/restricted-accounts` and `account/privacy-and-your-data` updated. Still drafts, Review required, no effective date. Placeholders in the legal drafts: 9 → 5 (DPC status and the four effective dates).
+- Code: `packages/core/src/brand/contacts.ts` (single source); help-centre contact card gains "Can't sign in? Email support@…"; restricted-account page links the support mailbox; both web footers gain "Contact"; mobile drawer gains a support-email row (`openSupportEmail` in `apps/mobile/src/lib/legalLinks.ts`).
+- Internal: `operations/account-and-support-procedures.md` §Email channels (aliases land in one mailbox, reply-as-alias setup, verification, no forwarding, no routing into the admin queue); privacy-rights procedure accepts email requests with address verification; admin Support page, vulnerability runbook, appeals spec, audit matrix, processors table, legal register and versioning log updated; contacts specification marked done except O1 (hours) and S2 (disclosure policy).
+- Validator: new **contacts** rule — official addresses must be present and quoted exactly; no other `@abontenhub.com` or personal mailbox may appear in documentation.
+
 ## 2026-09-12 — Operating entity confirmed from company documents
 
 - Legal item A1 **Decided**: the founder supplied certified true copies (Registrar-General's Department, 04-Feb-2026) of Form 3, the Beneficial Ownership Profile and the Constitution. Terms 1.1-draft §1 and Privacy Policy 1.1-draft §1/§15 now name **Abonten Hub Ltd** (private company limited by shares, registration number CS015010126), the registered address in Weija, Accra, P.O. Box 465 Weija Accra and digital address GS-0257-3290. Still drafts, Review required, no effective date.

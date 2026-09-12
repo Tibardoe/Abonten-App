@@ -23,7 +23,7 @@ Users whose content is hidden or removed, or whose account is suspended or banne
 | Element | Today |
 |---|---|
 | Actions that can be contested | Content: `moderation_state` set to `hidden`, `removed` or `restricted` via `apply_moderation_action`; accounts: status Suspended or Banned via `setUserStatusCore` (global sign-out) |
-| How a user contests | Contacts support through the in-app support conversation (if still reachable), from another account, or through a contact address once published (legal A3). Banned or suspended users are redirected to the restricted-account page on the web and receive a 403 in the app; the support conversation is **not** reachable from a suspended session |
+| How a user contests | Emails support@abontenhub.com (linked from the restricted-account page and the help centre since 2026-09-12) or, if still reachable, uses the in-app support conversation. Banned or suspended users are redirected to the restricted-account page on the web and receive a 403 in the app; the support conversation is **not** reachable from a suspended session, so email is the practical route |
 | Who reverses | An admin holding `moderation.restore` (content) or `users.restore` (accounts); bans are restored by the founder in practice (`operations/content-moderation-policy.md` §7) |
 | Record | The reversal is in `admin_audit_log` and, for content, `moderation_action`; the reason for reversal is whatever the admin typed. There is no record that an appeal was made, by whom, or its outcome |
 | Reporter feedback | None (decision M3) |

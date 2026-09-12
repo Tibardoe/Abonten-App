@@ -28,7 +28,7 @@ Restriction does not delete anything. Tickets already issued remain records; ref
 
 ## How to contact us
 
-Abonten does not have a formal appeals form yet. Send a message through the **in-app support conversation** if you can still reach it, or from another account you own, or through a contact address published on the [Legal](/legal) pages when available. Explain what happened; an administrator with the right permission can review and, where appropriate, restore your account.
+Abonten does not have a formal appeals form yet. Email **support@abontenhub.com** from the email address on your account (or, if you can still reach it, use the **in-app support conversation**). Explain what happened; an administrator with the right permission can review and, where appropriate, restore your account.
 
 ## Restored accounts
 

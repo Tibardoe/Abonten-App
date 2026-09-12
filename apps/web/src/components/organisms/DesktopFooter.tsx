@@ -1,3 +1,4 @@
+import { SUPPORT_EMAIL, mailto } from "@abonten/core/brand/contacts";
 import { HELP_PATH, LEGAL_PATHS } from "@abonten/core/brand/socialLinks";
 import Link from "next/link";
 import MaskIcon from "../atoms/MaskIcon";
@@ -30,6 +31,8 @@ export default function DesktopFooter() {
           <Link href={LEGAL_PATHS.security}>Security</Link>
 
           <Link href={HELP_PATH}>Help</Link>
+
+          <a href={mailto(SUPPORT_EMAIL)}>Contact</a>
         </nav>
       </div>
     </footer>

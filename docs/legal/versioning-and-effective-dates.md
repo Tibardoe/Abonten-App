@@ -50,6 +50,9 @@ Every change to a file in `apps/web/src/content/legal/` is versioned by git. In 
 | Terms and Conditions | 1.0-draft | — | Initial draft prepared from the codebase (2026-09-12) | — |
 | Terms and Conditions | 1.1-draft | — | Minor: operating entity, registration number and addresses inserted from the Registrar-General's certified Form 3 (2026-09-12) | — (draft) |
 | Privacy Policy | 1.1-draft | — | Minor: data controller identity and postal address inserted; DPC status still a placeholder (2026-09-12) | — (draft) |
+| Terms and Conditions | 1.2-draft | — | Minor: official support, privacy and security email addresses inserted in §19 (2026-09-12) | — (draft) |
+| Privacy Policy | 1.2-draft | — | Minor: privacy and support addresses in §11 and §15; Google Workspace mailboxes added to the processor table in §4 (2026-09-12) | — (draft) |
+| Security overview | 1.1-draft | — | Minor: security@abontenhub.com published in "Reporting a vulnerability"; disclosure policy still pending (2026-09-12) | — (draft) |
 | Privacy Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Cookie Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Security overview | 1.0-draft | — | Initial draft (2026-09-12) | — |

@@ -2,7 +2,13 @@ import { useSession } from "@/auth/SessionProvider";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
-import { HELP_URL, LEGAL_LINK_ROWS, openExternalLink } from "@/lib/legalLinks";
+import {
+  HELP_URL,
+  LEGAL_LINK_ROWS,
+  openExternalLink,
+  openSupportEmail,
+} from "@/lib/legalLinks";
+import { SUPPORT_EMAIL } from "@abonten/core/brand/contacts";
 import { LEGAL_ENTITY_NAME } from "@abonten/core/brand/legalEntity";
 import { SOCIAL_LINKS } from "@abonten/core/brand/socialLinks";
 import {
@@ -451,6 +457,14 @@ export function AppDrawer() {
                 className="active:opacity-60"
               >
                 <AppText variant="muted">Help centre</AppText>
+              </Pressable>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel={`Email ${SUPPORT_EMAIL}`}
+                onPress={() => openSupportEmail()}
+                className="active:opacity-60"
+              >
+                <AppText variant="muted">{SUPPORT_EMAIL}</AppText>
               </Pressable>
               <View className="mt-1 flex-row items-center gap-5">
                 {SOCIAL_LINKS.map((link) => (

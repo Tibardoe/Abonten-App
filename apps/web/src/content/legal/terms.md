@@ -1,7 +1,7 @@
 ---
 title: Terms and Conditions
 summary: The agreement between you and Abonten Hub when you use the website or the mobile app, whether you attend events, organize them, or run a place.
-version: 1.1-draft
+version: 1.2-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -211,7 +211,7 @@ Places may list phone numbers, WhatsApp numbers and websites; contacting a busin
 
 Support is provided through the **in-app support conversation**: open Messages and choose "Contact Abonten Support" (web) or Account › Help & support (app). Replies arrive as messages and notifications. The help centre at [abontenhub.com/help](/help) answers common questions.
 
-Official support contact: [SUPPORT CONTACT — TO BE CONFIRMED]. Legal and privacy enquiries: [PRIVACY CONTACT — TO BE CONFIRMED]. These channels will be published here once confirmed; until then, please use the in-app support conversation.
+If you cannot sign in, email **support@abontenhub.com** from the email address on your account. Legal and privacy enquiries: **privacy@abontenhub.com**. Security reports: **security@abontenhub.com** (see the [Security](/legal/security) page). Postal address: Abonten Hub Ltd, P.O. Box 465, Weija, Accra, Ghana. Support hours and response times have not yet been published.
 
 ## 20. Disclaimers
 

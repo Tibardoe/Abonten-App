@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Admin › Support queue
 
-Abonten's support channel is the **in-app support conversation** (`conversation.type = 'support'`), opened by users from Messages › "Contact Abonten Support" (web), Account › Help & support (app), or the help centre's "Contact support" card. There is no public support email today (decision A3).
+Abonten's support channel is the **in-app support conversation** (`conversation.type = 'support'`), opened by users from Messages › "Contact Abonten Support" (web), Account › Help & support (app), or the help centre's "Contact support" card. Since 2026-09-12 there is also a public mailbox, **support@abontenhub.com** (a Google Workspace alias on the founder's account, **not** routed into this queue) — see `../operations/account-and-support-procedures.md` §Email channels. Where the writer has an account, continue the conversation in-app so the record stays with the account.
 
 Source: `packages/services/src/admin/support/supportAdminCore.ts`. Permissions: `support.view`, `support.respond`.
 

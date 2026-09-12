@@ -18,6 +18,26 @@ complianceReviewRequired: no
 
 Support is the in-app **support conversation** (Admin › Support). It is tied to a signed-in account, which is our identity check for routine matters. Requests arriving any other way (social media DMs, personal contacts) are asked to use the app or website so the record stays with the account. Hours and response targets: decision O1.
 
+## Email channels (since 2026-09-12)
+
+| Address | Purpose | Handled by | Procedure |
+|---|---|---|---|
+| support@abontenhub.com | People who cannot sign in (restricted accounts, lost phone/email), and general enquiries | Support | This page; `../admin/support-scenarios.md` |
+| privacy@abontenhub.com | Access, correction, deletion, objection and complaint requests | Support, escalating to the founder | `../privacy/privacy-rights-operations.md` |
+| security@abontenhub.com | Vulnerability reports and security concerns | Founder (incident commander) | `../incident-response/vulnerability-report.md` |
+
+How they work: all three are **Google Workspace aliases** on the founder's primary Workspace mailbox (whose own address is never published or written into documentation). Mail to an alias lands in that one mailbox; nothing routes into the admin Support queue. The three addresses are defined once in `packages/core/src/brand/contacts.ts` and quoted verbatim in the legal pages (the validator checks they match).
+
+Rules:
+
+1. **Reply as the alias, not the personal address.** In Gmail: Settings › Accounts › "Send mail as" › add each alias (Workspace aliases need no SMTP verification; tick "Treat as an alias"), then pick the alias in the From field when replying. Until that is set up, replies would go out from the personal address — do not reply until it is.
+2. **Move account matters in-app where possible.** If the writer has an account and can sign in, ask them to continue in the support conversation so the record is tied to the account; log the email in an admin note.
+3. **Verify before acting.** For anything about an account, the email must come from the address on that account (`users.view_pii`), or the person must confirm from the app. Never act on a request about someone else's account.
+4. **Never forward** customer email to personal or third-party addresses; never paste one-time codes, card details or attendee lists into email.
+5. **Retention:** email lives in Google Workspace under Google's terms; it is not part of the database inventory. Treat the mailbox as personal data storage: delete threads once resolved and recorded, until a retention decision (R-series) covers it.
+6. **Hours and response target:** none published (decision O1). Acknowledge privacy requests within 3 working days per the interim practice in the privacy procedure.
+7. **Filters and labels:** set Gmail filters so each alias gets its own label and the security label is starred; check daily.
+
 ## Tone and limits
 
 Plain, short, factual. Never ask for one-time codes, card numbers, PINs or passwords (there are none). Never promise refund completion, payout timing or moderation outcomes we do not control. Link the help centre article when it answers the question.

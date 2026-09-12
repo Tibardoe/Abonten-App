@@ -21,9 +21,9 @@ Statutory response times under the Data Protection Act, 2012 are **legal item B5
 ## Where requests arrive
 
 - The in-app **support conversation** (Admin › Support queue; permission `support.view` / `support.respond`).
-- Any other channel published later (legal item A3).
+- The **privacy@abontenhub.com** mailbox (and support@abontenhub.com, where users often write instead). These are Google Workspace aliases delivering to the founder's mailbox — see `../operations/account-and-support-procedures.md` §Email channels for who reads them and how to reply as the alias.
 
-Do **not** ask for more identifying information than needed. The signed-in support conversation already proves control of the account; never ask for a national ID or card details.
+Do **not** ask for more identifying information than needed. The signed-in support conversation already proves control of the account; never ask for a national ID or card details. For a request that arrives **by email**, verify that it came from the email address on the account (Admin › Users, `users.view_pii`); if it did not, ask the person to write from that address or to confirm the request from the app. Email requests are otherwise handled with the same steps as in-app requests, and the response is sent to the account's email address, not to whichever address wrote in.
 
 ## Recording
 

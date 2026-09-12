@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.1-draft
+version: 1.2-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -12,7 +12,7 @@ legalReviewRequired: yes
 
 # Privacy Policy
 
-> **Draft for review.** This policy describes what Abonten Hub actually does with personal information today. It has been prepared with Ghana's Data Protection Act, 2012 (Act 843) in mind but has not yet been reviewed by legal counsel, and some organisational details (registration with the Data Protection Commission, and contact addresses) are still to be confirmed. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
+> **Draft for review.** This policy describes what Abonten Hub actually does with personal information today. It has been prepared with Ghana's Data Protection Act, 2012 (Act 843) in mind but has not yet been reviewed by legal counsel, and our registration status with the Data Protection Commission is still to be confirmed. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
 
 ## 1. Who is responsible for your data
 
@@ -72,7 +72,7 @@ Abonten runs on cloud services. The providers below process personal information
 | Paystack | Payment processing, card tokenization, refunds and payouts | Nigeria / Ghana |
 | Hubtel | Sends SMS one-time codes | Ghana |
 | Resend | Sends transactional emails (tickets, cancellations, rewards, sign-in codes) | United States |
-| Google | Google sign-in; maps and geocoding | Global |
+| Google | Google sign-in; maps and geocoding; Google Workspace hosts our support, privacy and security mailboxes, so emails you send us are stored there | Global |
 | Expo | Delivers push notifications to the app | United States |
 | Sentry | Error monitoring for the website, admin console and app | United States |
 
@@ -146,7 +146,7 @@ Under the Data Protection Act, 2012 you have the right to:
 - **withdraw consent** where processing is based on it, for example by revoking location or notification permission on your device, or turning off rewards emails;
 - **complain** to the Data Protection Commission of Ghana if you believe we have handled your information unlawfully.
 
-To exercise a right, contact us through the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app). We will confirm your identity using the account you are signed into and respond within the period required by law. Abonten does not yet offer a self-service data export; access requests are handled manually.
+To exercise a right, contact us through the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app) or email **privacy@abontenhub.com**. We will confirm your identity — using the account you are signed into, or the email address or phone number on your account — and respond within the period required by law. Abonten does not yet offer a self-service data export; access requests are handled manually.
 
 ## 12. Security
 
@@ -162,4 +162,4 @@ We will update this policy when our practices change. The version and last-updat
 
 ## 15. Contact
 
-Support and privacy requests: the in-app support conversation (section 11). Privacy contact: [PRIVACY CONTACT — TO BE CONFIRMED] (to be published once confirmed). Postal address: Abonten Hub Ltd, P.O. Box 465, Weija, Accra, Ghana.
+Support and privacy requests: the in-app support conversation (section 11). Privacy contact: **privacy@abontenhub.com**. General support: **support@abontenhub.com**. Postal address: Abonten Hub Ltd, P.O. Box 465, Weija, Accra, Ghana. When you write to us by email about your account, we will confirm your identity before acting — usually by asking you to write from, or confirm through, the email address or phone number on your account.

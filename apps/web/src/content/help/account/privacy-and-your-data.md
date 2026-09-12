@@ -25,7 +25,7 @@ Push notifications can be turned off in your phone settings. Rewards emails have
 
 ## Ask for a copy of your data or a correction
 
-Most details can be corrected directly in Settings. For a copy of the personal information Abonten holds about you, or a correction we cannot make ourselves, contact support through the in-app support conversation while signed in — we use that to confirm it is really you. There is no self-service download yet; requests are handled by staff.
+Most details can be corrected directly in Settings. For a copy of the personal information Abonten holds about you, or a correction we cannot make ourselves, contact support through the in-app support conversation while signed in — we use that to confirm it is really you — or email **privacy@abontenhub.com** from the email address on your account. There is no self-service download yet; requests are handled by staff.
 
 ## Delete your account
 
