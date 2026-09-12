@@ -16,6 +16,15 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-12 — Trust & Verification shipped (switched off)
+
+- **New capability**: place owners and event organizers can ask Abonten to review documents supporting their business and its link to their account; an admin decides; a Verified badge follows. Migration `20260912120000_trust_verification.sql` applied to production via the Supabase MCP and replayed clean from scratch locally. Ships **off** (`verification_program_setting` both switches false, audience `staff`, plus `VERIFICATION_KILL_SWITCH`).
+- **Behaviour change**: approving a place claim no longer sets `place.verified`. Claims transfer ownership only; verification is a separate reviewed step. A reviewer may tick "Also mark this place verified" on a claim that carries documents (`verification.review` required). Existing verified places were backfilled as approved cases.
+- **New permissions**: `verification.view`, `verification.evidence`, `verification.review`, `verification.revoke` (the last behind step-up).
+- **New docs**: [architecture/trust-and-verification.md](../architecture/trust-and-verification.md), [admin/verification.md](../admin/verification.md). Updated: `admin/claims.md`, `admin/settings-and-rbac.md`, `architecture/roles-and-permissions.md`, `architecture/README.md`, `admin/README.md`, `INDEX.md`, `documentation-coverage-matrix.md`, `operations/open-items.md`.
+- **New registers**: operational decisions **V1–V6**, legal items **H1–H4**. Retention periods and the badge wording are working defaults pending counsel, not approved policy.
+- **Public help**: `organizers/getting-verified.md` added; `place-owners/claiming-and-verifying-a-place.md` rewritten. The old page wrongly said a field-team listing is verified through the owner's one-time code — Field Ops has never written `place.verified`, and that claim has been removed.
+
 ## 2026-09-12 — O1 support operating policy decided
 
 - Founder's decision: support staffed **Monday to Friday, 09:00–17:00 Ghana time (GMT)**, Ghanaian public holidays excluded; **two-working-day reply goal** for support and privacy enquiries; **two-working-day acknowledgement goal** for security reports; all published as goals, never as contractual commitments. Escalation procedure not decided — new decision **O7**.

@@ -105,7 +105,9 @@ export function ownerStatusCopy(
   subjectType: VerificationSubjectType,
   opts: { subjectName?: string | null; reason?: string | null } = {},
 ): { title: string; body: string } {
-  const name = opts.subjectName?.trim() || (subjectType === "place" ? "this place" : "your organizer profile");
+  const name =
+    opts.subjectName?.trim() ||
+    (subjectType === "place" ? "this place" : "your organizer profile");
   switch (status) {
     case "draft":
       return {
@@ -126,7 +128,8 @@ export function ownerStatusCopy(
       };
     case "approved":
       return {
-        title: subjectType === "place" ? "Verified place" : "Verified organizer",
+        title:
+          subjectType === "place" ? "Verified place" : "Verified organizer",
         body:
           subjectType === "place"
             ? "Your Verified badge is showing on your listing."

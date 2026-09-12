@@ -13,11 +13,7 @@ import type {
   VerificationStatus,
 } from "@abonten/types/verificationType";
 
-export type {
-  VerificationAction,
-  VerificationActorKind,
-  VerificationStatus,
-};
+export type { VerificationAction, VerificationActorKind, VerificationStatus };
 
 type Rule = {
   action: VerificationAction;
@@ -148,5 +144,7 @@ export function canStartNewCase(
   status: VerificationStatus | null | undefined,
 ): boolean {
   if (!status) return true;
-  return status === "rejected" || status === "withdrawn" || status === "revoked";
+  return (
+    status === "rejected" || status === "withdrawn" || status === "revoked"
+  );
 }

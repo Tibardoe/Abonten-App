@@ -1,16 +1,19 @@
 import { randomUUID } from "node:crypto";
 import { logger } from "@abonten/core/logger";
 import { NOTIFICATION_COPY } from "@abonten/core/verification/copy";
-import { canStartNewCase, isEditable } from "@abonten/core/verification/stateMachine";
-import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
-  type SubjectVerificationView,
-  type VerificationCaseSummary,
-  type VerificationProgram,
-  type VerificationSubjectType,
-  type VerificationUploadTicket,
-} from "@abonten/types/verificationType";
+  canStartNewCase,
+  isEditable,
+} from "@abonten/core/verification/stateMachine";
 import type { NotificationData } from "@abonten/types/notificationType";
+import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import type {
+  SubjectVerificationView,
+  VerificationCaseSummary,
+  VerificationProgram,
+  VerificationSubjectType,
+  VerificationUploadTicket,
+} from "@abonten/types/verificationType";
 import { createNotificationCore } from "../notifications/createNotification";
 import { checkRateLimit } from "../security/rateLimit";
 import {
@@ -194,9 +197,8 @@ export async function getSubjectVerificationCore(
       ["draft", "pending_review", "needs_info"].includes(r.status),
     ) ?? null;
   const closedRow =
-    rows.find((r) =>
-      ["rejected", "withdrawn", "revoked"].includes(r.status),
-    ) ?? null;
+    rows.find((r) => ["rejected", "withdrawn", "revoked"].includes(r.status)) ??
+    null;
 
   const [approved, openCase, lastClosedCase] = await Promise.all([
     approvedRow ? loadCaseWithChildren(supabase, approvedRow, labels) : null,
@@ -360,7 +362,10 @@ async function ownedEditableCase(
     .maybeSingle();
   if (error) {
     logger.error(`ownedEditableCase failed: ${error.message}`);
-    return { ok: false, result: { status: 500, message: "Something went wrong!" } };
+    return {
+      ok: false,
+      result: { status: 500, message: "Something went wrong!" },
+    };
   }
   // Not yours reads exactly like not found.
   if (!data || (data as CaseRow).requester_id !== userId) {
@@ -397,9 +402,14 @@ export async function updateVerificationCaseCore(
   const owned = await ownedEditableCase(supabase, userId, input.caseId);
   if (!owned.ok) return owned.result;
 
-  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
   if (input.organizerType !== undefined) {
-    if (owned.row.subject_type !== "organizer" && input.organizerType !== null) {
+    if (
+      owned.row.subject_type !== "organizer" &&
+      input.organizerType !== null
+    ) {
       return {
         status: 400,
         message: "Organizer type only applies to organizer verification.",
@@ -410,8 +420,10 @@ export async function updateVerificationCaseCore(
   if (input.legalName !== undefined) patch.legal_name = input.legalName;
   if (input.applicantNote !== undefined)
     patch.applicant_note = input.applicantNote;
-  if (input.contactPhone !== undefined) patch.contact_phone = input.contactPhone;
-  if (input.contactEmail !== undefined) patch.contact_email = input.contactEmail;
+  if (input.contactPhone !== undefined)
+    patch.contact_phone = input.contactPhone;
+  if (input.contactEmail !== undefined)
+    patch.contact_email = input.contactEmail;
 
   const { error } = await supabase
     .from("verification_case")
@@ -623,7 +635,9 @@ export async function submitVerificationCaseCore(
 
   const facts = await resolveSubject(supabase, userId, {
     subjectType: row.subject_type as VerificationSubjectType,
-    subjectId: (row.subject_id ?? row.place_id ?? row.organizer_user_id) as string,
+    subjectId: (row.subject_id ??
+      row.place_id ??
+      row.organizer_user_id) as string,
   });
   if (!facts) return { status: 404, message: "Not found" };
   if (!facts.eligible) {

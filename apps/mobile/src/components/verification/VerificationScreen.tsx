@@ -35,9 +35,9 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import * as DocumentPicker from "expo-document-picker";
+import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import * as Haptics from "expo-haptics";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 
@@ -46,16 +46,18 @@ import { Alert, Pressable, ScrollView, View } from "react-native";
 // picker and the camera roll rather than a file input, per-file rows with
 // retry, toasts and haptics, not a web form squeezed onto a phone.
 
-const STATUS_TONE: Record<VerificationStatus, "muted" | "brand" | "success" | "warning"> =
-  {
-    draft: "muted",
-    pending_review: "muted",
-    needs_info: "warning",
-    approved: "success",
-    rejected: "warning",
-    withdrawn: "muted",
-    revoked: "warning",
-  };
+const STATUS_TONE: Record<
+  VerificationStatus,
+  "muted" | "brand" | "success" | "warning"
+> = {
+  draft: "muted",
+  pending_review: "muted",
+  needs_info: "warning",
+  approved: "success",
+  rejected: "warning",
+  withdrawn: "muted",
+  revoked: "warning",
+};
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -197,7 +199,11 @@ export default function VerificationScreen({
         <AppText tone="muted" className="text-center">
           Couldn&apos;t load verification.
         </AppText>
-        <Button title="Try again" variant="outline" onPress={() => q.refetch()} />
+        <Button
+          title="Try again"
+          variant="outline"
+          onPress={() => q.refetch()}
+        />
       </View>
     );
   }
@@ -207,8 +213,7 @@ export default function VerificationScreen({
     subjectType === "place"
       ? program.placeRequestsEnabled
       : program.organizerRequestsEnabled;
-  const currentType =
-    evidenceType || evidenceTypes[0]?.key || "other";
+  const currentType = evidenceType || evidenceTypes[0]?.key || "other";
 
   async function pickDocument() {
     const res = await DocumentPicker.getDocumentAsync({
@@ -654,7 +659,9 @@ export default function VerificationScreen({
             ) : null}
 
             <Button
-              title={lastClosedCase ? "Start a new request" : "Start verification"}
+              title={
+                lastClosedCase ? "Start a new request" : "Start verification"
+              }
               onPress={start}
               disabled={busy}
             />
@@ -731,7 +738,9 @@ function OrganizerTypePicker({
   if (allowed.length === 0) return null;
   return (
     <View className="gap-2">
-      <AppText variant="sectionHeading">What kind of organizer are you?</AppText>
+      <AppText variant="sectionHeading">
+        What kind of organizer are you?
+      </AppText>
       {allowed.map((t) => (
         <Pressable
           key={t}
@@ -739,7 +748,9 @@ function OrganizerTypePicker({
           accessibilityRole="radio"
           accessibilityState={{ selected: value === t }}
           className={`gap-1 rounded-xl border p-3 ${
-            value === t ? "border-primary bg-primary/10" : "border-border bg-card"
+            value === t
+              ? "border-primary bg-primary/10"
+              : "border-border bg-card"
           }`}
         >
           <AppText variant="small" className="font-medium">

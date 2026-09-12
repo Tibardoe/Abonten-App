@@ -29,9 +29,11 @@ function fakeClient(opts: {
           // `eq` was called with the user id; the stub keeps it simple by
           // answering from the captured id below.
           return {
-            data: chain.__id && (opts.activeAdminIds ?? []).includes(chain.__id as string)
-              ? { user_id: chain.__id, status: "active" }
-              : null,
+            data:
+              chain.__id &&
+              (opts.activeAdminIds ?? []).includes(chain.__id as string)
+                ? { user_id: chain.__id, status: "active" }
+                : null,
             error: null,
           };
         }
@@ -135,8 +137,12 @@ describe("verification programme gate", () => {
         .placeRequestsEnabled,
     ).toBe(true);
     expect(
-      (await getVerificationProgramCore(fakeClient({ setting }), "someone-else"))
-        .placeRequestsEnabled,
+      (
+        await getVerificationProgramCore(
+          fakeClient({ setting }),
+          "someone-else",
+        )
+      ).placeRequestsEnabled,
     ).toBe(false);
   });
 
@@ -151,7 +157,10 @@ describe("verification programme gate", () => {
   it("drops organizer types the settings row does not recognise", async () => {
     const program = await getVerificationProgramCore(
       fakeClient({
-        setting: { ...FULL_SETTING, organizer_types_enabled: ["business", "nonsense"] },
+        setting: {
+          ...FULL_SETTING,
+          organizer_types_enabled: ["business", "nonsense"],
+        },
       }),
       "user-1",
     );

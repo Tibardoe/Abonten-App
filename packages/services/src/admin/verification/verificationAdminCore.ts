@@ -92,7 +92,9 @@ async function resolveSubjects(
   const [places, users] = await Promise.all([
     placeIds.length
       ? supabase.from("place").select("id, name, slug").in("id", placeIds)
-      : Promise.resolve({ data: [] as { id: string; name: string; slug: string }[] }),
+      : Promise.resolve({
+          data: [] as { id: string; name: string; slug: string }[],
+        }),
     userIds.length
       ? supabase
           .from("user_info")

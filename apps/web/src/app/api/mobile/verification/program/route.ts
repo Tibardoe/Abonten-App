@@ -1,8 +1,8 @@
 import { getMobileAuth } from "@/app/api/mobile/_lib/authedClient";
 import { apiJson } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
-import { getVerificationProgramForUser } from "@abonten/services/verification/verificationCaseCore";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
+import { getVerificationProgramForUser } from "@abonten/services/verification/verificationCaseCore";
 
 // GET /api/mobile/verification/program
 // The resolved Trust & Verification switches for the caller. Ships all-off;

@@ -47,8 +47,8 @@ export default async function OrganizerVerificationPage() {
         </Link>
         <h1 className="text-xl font-bold">Organizer verification</h1>
         <p className="text-sm text-muted-foreground">
-          Show ticket buyers that Abonten has checked who is behind your
-          events. This is optional — you can keep creating events either way.
+          Show ticket buyers that Abonten has checked who is behind your events.
+          This is optional — you can keep creating events either way.
         </p>
       </div>
 

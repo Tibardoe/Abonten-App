@@ -26,7 +26,7 @@ export default function OrganizerVerificationCard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-        const {
+      const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {

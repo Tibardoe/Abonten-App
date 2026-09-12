@@ -1,12 +1,12 @@
 import { logger } from "@abonten/core/logger";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import {
-  type VerificationCaseSummary,
-  type VerificationEvidenceSummary,
-  type VerificationEvidenceType,
-  type VerificationHistoryEntry,
-  type VerificationStatus,
-  type VerificationSubjectType,
+import type {
+  VerificationCaseSummary,
+  VerificationEvidenceSummary,
+  VerificationEvidenceType,
+  VerificationHistoryEntry,
+  VerificationStatus,
+  VerificationSubjectType,
 } from "@abonten/types/verificationType";
 
 // Column lists, row shapes and row -> DTO mappers for Trust & Verification,
@@ -111,7 +111,8 @@ export function transitionError(
   if (msg.includes("verification_status_changed")) {
     return {
       status: 409,
-      message: "This request changed since you opened it. Reload and try again.",
+      message:
+        "This request changed since you opened it. Reload and try again.",
     };
   }
   if (msg.includes("verification_invalid_transition")) {
@@ -171,7 +172,9 @@ export function transitionArgs(input: {
     p_actor_kind: input.actorKind,
     p_action: input.action,
     ...(reason ? { p_reason: reason } : {}),
-    ...(input.expectedStatus ? { p_expected_status: input.expectedStatus } : {}),
+    ...(input.expectedStatus
+      ? { p_expected_status: input.expectedStatus }
+      : {}),
   };
 }
 
@@ -230,7 +233,9 @@ export function mapCase(
   return {
     id: row.id,
     subjectType: row.subject_type as VerificationSubjectType,
-    subjectId: (row.subject_id ?? row.place_id ?? row.organizer_user_id) as string,
+    subjectId: (row.subject_id ??
+      row.place_id ??
+      row.organizer_user_id) as string,
     status: row.status as VerificationStatus,
     organizerType:
       (row.organizer_type as VerificationCaseSummary["organizerType"]) ?? null,

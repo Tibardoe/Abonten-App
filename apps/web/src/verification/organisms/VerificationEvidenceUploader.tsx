@@ -67,7 +67,8 @@ export default function VerificationEvidenceUploader({
   );
   const [busy, setBusy] = useState(false);
 
-  const total = existing.length + staged.filter((s) => s.status !== "error").length;
+  const total =
+    existing.length + staged.filter((s) => s.status !== "error").length;
   const full = total >= maxFiles;
 
   function pick(files: FileList | null) {
@@ -105,7 +106,9 @@ export default function VerificationEvidenceUploader({
   async function uploadOne(item: Staged): Promise<boolean> {
     setStaged((prev) =>
       prev.map((s) =>
-        s.key === item.key ? { ...s, status: "uploading", error: undefined } : s,
+        s.key === item.key
+          ? { ...s, status: "uploading", error: undefined }
+          : s,
       ),
     );
 
@@ -244,7 +247,10 @@ export default function VerificationEvidenceUploader({
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {s.status === "done" ? (
-                  <IoCheckmarkCircle aria-hidden className="text-lg text-mint" />
+                  <IoCheckmarkCircle
+                    aria-hidden
+                    className="text-lg text-mint"
+                  />
                 ) : null}
                 {s.status === "error" ? (
                   <>
@@ -283,10 +289,7 @@ export default function VerificationEvidenceUploader({
       {!disabled ? (
         <div className="space-y-3 rounded-xl border border-border p-4">
           <div className="space-y-1">
-            <label
-              htmlFor="evidence-type"
-              className="text-sm font-medium"
-            >
+            <label htmlFor="evidence-type" className="text-sm font-medium">
               What are you sending?
             </label>
             <select

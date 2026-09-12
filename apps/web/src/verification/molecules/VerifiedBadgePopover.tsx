@@ -5,7 +5,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { BADGE_EXPLANATION, BADGE_LABEL } from "@abonten/core/verification/copy";
+import {
+  BADGE_EXPLANATION,
+  BADGE_LABEL,
+} from "@abonten/core/verification/copy";
 import type { VerificationSubjectType } from "@abonten/types/verificationType";
 import { IoCheckmarkCircle } from "react-icons/io5";
 

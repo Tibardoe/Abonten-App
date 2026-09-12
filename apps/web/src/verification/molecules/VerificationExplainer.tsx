@@ -1,7 +1,4 @@
-import {
-  HOW_REVIEW_WORKS,
-  WHY_VERIFY,
-} from "@abonten/core/verification/copy";
+import { HOW_REVIEW_WORKS, WHY_VERIFY } from "@abonten/core/verification/copy";
 import type {
   VerificationEvidenceType,
   VerificationSubjectType,

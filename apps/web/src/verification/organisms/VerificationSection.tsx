@@ -112,9 +112,9 @@ export default function VerificationSection({
         <div className="rounded-xl border border-border p-4">
           <h3 className="font-semibold">What your badge says</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Abonten reviewed documents supporting your business and your link
-            to this account. It is not a statement about your service, prices
-            or quality.
+            Abonten reviewed documents supporting your business and your link to
+            this account. It is not a statement about your service, prices or
+            quality.
           </p>
         </div>
         {approved.evidence.length > 0 ? (

@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import type {
   VerificationAction,
   VerificationActorKind,
   VerificationStatus,
 } from "@abonten/types/verificationType";
+import { describe, expect, it } from "vitest";
 import {
   actionsFor,
   canStartNewCase,
@@ -42,23 +42,27 @@ const ALL_ACTORS: VerificationActorKind[] = ["user", "admin", "system"];
 
 // Every (status, action, actor) triple the RPC accepts. Anything not in this
 // list must be refused.
-const ALLOWED: [VerificationStatus, VerificationAction, VerificationActorKind, VerificationStatus][] =
-  [
-    ["draft", "submit", "user", "pending_review"],
-    ["draft", "withdraw", "user", "withdrawn"],
-    ["draft", "withdraw", "system", "withdrawn"],
-    ["pending_review", "approve", "admin", "approved"],
-    ["pending_review", "reject", "admin", "rejected"],
-    ["pending_review", "request_info", "admin", "needs_info"],
-    ["pending_review", "withdraw", "user", "withdrawn"],
-    ["pending_review", "withdraw", "system", "withdrawn"],
-    ["needs_info", "resubmit", "user", "pending_review"],
-    ["needs_info", "reject", "admin", "rejected"],
-    ["needs_info", "withdraw", "user", "withdrawn"],
-    ["needs_info", "withdraw", "system", "withdrawn"],
-    ["approved", "revoke", "admin", "revoked"],
-    ["approved", "revoke", "system", "revoked"],
-  ];
+const ALLOWED: [
+  VerificationStatus,
+  VerificationAction,
+  VerificationActorKind,
+  VerificationStatus,
+][] = [
+  ["draft", "submit", "user", "pending_review"],
+  ["draft", "withdraw", "user", "withdrawn"],
+  ["draft", "withdraw", "system", "withdrawn"],
+  ["pending_review", "approve", "admin", "approved"],
+  ["pending_review", "reject", "admin", "rejected"],
+  ["pending_review", "request_info", "admin", "needs_info"],
+  ["pending_review", "withdraw", "user", "withdrawn"],
+  ["pending_review", "withdraw", "system", "withdrawn"],
+  ["needs_info", "resubmit", "user", "pending_review"],
+  ["needs_info", "reject", "admin", "rejected"],
+  ["needs_info", "withdraw", "user", "withdrawn"],
+  ["needs_info", "withdraw", "system", "withdrawn"],
+  ["approved", "revoke", "admin", "revoked"],
+  ["approved", "revoke", "system", "revoked"],
+];
 
 describe("verification state machine", () => {
   it("allows exactly the transitions the RPC allows", () => {
@@ -72,9 +76,7 @@ describe("verification state machine", () => {
   });
 
   it("refuses every other combination", () => {
-    const allowedKeys = new Set(
-      ALLOWED.map(([f, a, k]) => `${f}|${a}|${k}`),
-    );
+    const allowedKeys = new Set(ALLOWED.map(([f, a, k]) => `${f}|${a}|${k}`));
     for (const from of ALL_STATUSES) {
       for (const action of ALL_ACTIONS) {
         for (const actor of ALL_ACTORS) {
@@ -118,7 +120,9 @@ describe("verification state machine", () => {
   it("only ever revokes something that was approved", () => {
     for (const from of ALL_STATUSES) {
       for (const actor of ALL_ACTORS) {
-        expect(canTransition(from, "revoke", actor)).toBe(from === "approved" && actor !== "user");
+        expect(canTransition(from, "revoke", actor)).toBe(
+          from === "approved" && actor !== "user",
+        );
       }
     }
   });

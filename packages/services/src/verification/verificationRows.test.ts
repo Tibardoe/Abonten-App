@@ -38,7 +38,10 @@ describe("transitionError", () => {
   });
 
   it("treats a deadlock as retryable rather than a server error", () => {
-    const result = transitionError({ message: "deadlock detected", code: "40P01" });
+    const result = transitionError({
+      message: "deadlock detected",
+      code: "40P01",
+    });
     expect(result.status).toBe(409);
     expect(result.message).toMatch(/try again/i);
   });
@@ -49,7 +52,8 @@ describe("transitionError", () => {
 
   it("never leaks the raw database message to the caller", () => {
     const result = transitionError({
-      message: 'duplicate key value violates unique constraint "uq_x" for user 1234',
+      message:
+        'duplicate key value violates unique constraint "uq_x" for user 1234',
     });
     expect(result.message).not.toMatch(/constraint|uq_x|1234/);
   });
@@ -129,21 +133,27 @@ describe("mapHistory", () => {
 
 describe("evidencePath", () => {
   it("scopes the object key by subject, then case, then evidence", () => {
-    expect(
-      evidencePath("place", "p-1", "c-1", "e-1", "application/pdf"),
-    ).toBe("place/p-1/c-1/e-1.pdf");
+    expect(evidencePath("place", "p-1", "c-1", "e-1", "application/pdf")).toBe(
+      "place/p-1/c-1/e-1.pdf",
+    );
   });
 
   it("maps each accepted MIME type to its extension", () => {
-    expect(evidencePath("place", "p", "c", "e", "image/jpeg")).toMatch(/\.jpg$/);
+    expect(evidencePath("place", "p", "c", "e", "image/jpeg")).toMatch(
+      /\.jpg$/,
+    );
     expect(evidencePath("place", "p", "c", "e", "image/png")).toMatch(/\.png$/);
-    expect(evidencePath("place", "p", "c", "e", "image/heic")).toMatch(/\.heic$/);
+    expect(evidencePath("place", "p", "c", "e", "image/heic")).toMatch(
+      /\.heic$/,
+    );
     expect(evidencePath("organizer", "u", "c", "e", "image/webp")).toMatch(
       /^organizer\/u\/c\/e\.webp$/,
     );
   });
 
   it("falls back to .bin for anything unexpected", () => {
-    expect(evidencePath("place", "p", "c", "e", "text/plain")).toMatch(/\.bin$/);
+    expect(evidencePath("place", "p", "c", "e", "text/plain")).toMatch(
+      /\.bin$/,
+    );
   });
 });

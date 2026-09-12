@@ -26,7 +26,11 @@ Place summary and current owner (with how the listing was created — by a user,
 
 ## Deciding (`claims.review`, no step-up)
 
-**Approve** → `approve_place_claim(request, admin)`: transfers `owner_id` to the claimant, sets `claimed = true` and `verified = true`, marks the request approved, notifies the claimant, audits `claim.approved`. The previous owner loses management access immediately and is **not** notified automatically — message them through Support if appropriate.
+**Approve** → `approve_place_claim(request, admin)`: transfers `owner_id` to the claimant, sets `claimed = true`, marks the request approved, notifies the claimant, audits `claim.approve`. The previous owner loses management access immediately and is **not** notified automatically — message them through Support if appropriate.
+
+Since 2026-09-12 approving a claim **no longer verifies the place**. Verification is its own reviewed step with its own evidence and audit trail — see [verification.md](verification.md). A reviewer who judges the claim's attached documents good enough can tick **Also mark this place verified**, which runs `approve_place_claim_and_verify()` (both in one transaction) and audits `claim.approve_and_verify`. That option needs `verification.review` on top of `claims.review`, and it only appears when the claim actually carries documents and the place is not already verified.
+
+If a verified place later changes owner through a claim, its badge is revoked automatically and any open verification request is withdrawn.
 
 **Reject** → status `rejected`, notification to the claimant, audit `claim.rejected`. The claimant may file a new claim.
 

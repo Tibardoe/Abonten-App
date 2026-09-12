@@ -1,8 +1,8 @@
 import { api } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import {
-  VERIFICATION_EVIDENCE_MIME_TYPES,
   type SubjectVerificationView,
+  VERIFICATION_EVIDENCE_MIME_TYPES,
   type VerificationSubjectType,
 } from "@abonten/types/verificationType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -96,7 +96,9 @@ export function useVerificationActions(
 ) {
   const qc = useQueryClient();
   const invalidate = () =>
-    qc.invalidateQueries({ queryKey: VERIFICATION_KEY(subjectType, subjectId) });
+    qc.invalidateQueries({
+      queryKey: VERIFICATION_KEY(subjectType, subjectId),
+    });
 
   const start = useMutation({
     mutationFn: (input: {

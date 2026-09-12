@@ -19,6 +19,7 @@ complianceReviewRequired: no
 | [system-overview.md](system-overview.md) | Runtime topology, repository structure, the "one rule", request paths, deployments |
 | [feature-inventory.md](feature-inventory.md) | Every feature with app, role, entry point, tables, services/actions/API, permissions, notifications, payments, failure states |
 | [roles-and-permissions.md](roles-and-permissions.md) | End-user roles (derived), admin RBAC, field roles, suspension, RLS map |
+| [trust-and-verification.md](trust-and-verification.md) | Place and organizer verification: model, state machine, evidence storage, permissions |
 | [data-model-overview.md](data-model-overview.md) | Table groups, key relationships, status columns, partitions, unused tables |
 | [integrations.md](integrations.md) | Each external service: what, where in code, config, failure behaviour |
 | [observability.md](observability.md) | Self-hosted error/health/metric pipeline, Sentry projects, where to look, gaps |

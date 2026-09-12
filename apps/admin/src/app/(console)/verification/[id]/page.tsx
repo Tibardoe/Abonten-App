@@ -23,7 +23,9 @@ export default async function VerificationDetailPage({
 
   if (res.status !== 200 || !res.data) {
     return (
-      <EmptyState>{res.message ?? "Verification request not found."}</EmptyState>
+      <EmptyState>
+        {res.message ?? "Verification request not found."}
+      </EmptyState>
     );
   }
   const c = res.data;
@@ -73,7 +75,10 @@ export default async function VerificationDetailPage({
             <dl className="grid grid-cols-2 gap-2 text-sm">
               <dt className="text-muted-foreground">Name</dt>
               <dd>
-                <Link href={subjectHref} className="text-primary hover:underline">
+                <Link
+                  href={subjectHref}
+                  className="text-primary hover:underline"
+                >
                   {c.subject.name ?? c.subject.id.slice(0, 8)}
                 </Link>
               </dd>

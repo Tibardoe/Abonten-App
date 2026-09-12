@@ -43,6 +43,7 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Reports & Moderation | `reports.view` | [reports-and-moderation.md](reports-and-moderation.md) |
 | Content | `reviews.view` | [content.md](content.md) |
 | Claims | `claims.view` | [claims.md](claims.md) |
+| Verification | `verification.view` | [verification.md](verification.md) |
 | Support | `support.view` | [support.md](support.md) |
 | Blocked users, Users | `users.view` | [users.md](users.md) |
 | Organizers, Events, Places | `organizers.view`, `events.view`, `places.view` | [catalog.md](catalog.md) |
