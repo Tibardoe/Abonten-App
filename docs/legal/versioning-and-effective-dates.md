@@ -1,0 +1,53 @@
+---
+title: Legal document versioning and effective dates
+purpose: Define how legal documents are versioned, how an effective date is set, how users are notified, and how history is kept.
+audience: Founder, legal counsel, engineering
+scope: The four public legal documents
+status: Approved
+version: 1.0
+lastReviewed: 2026-09-12
+technicalOwner: Engineering (repository owner)
+businessOwner: Abonten Hub founder
+legalReviewRequired: yes
+complianceReviewRequired: no
+---
+
+# Legal document versioning and effective dates
+
+## Version numbers
+
+`version` in each document's front matter follows **major.minor**:
+
+- **major** — a change in substance: new obligations, new fees or refund terms, new data categories or purposes, new sharing, a new law relied on. Requires legal review and user notice.
+- **minor** — clarification, typo, reordering, or a factual update that does not change rights or obligations (for example a provider rename). No user notice required; still recorded.
+- The suffix `-draft` marks text not yet reviewed by counsel. It is removed when the document is approved.
+
+## Effective date
+
+- A document has **no** effective date until counsel has reviewed it and the founder approves it. Until then `effectiveDate` reads "Not yet in force — set when approved" and `status` is **Review required**; the page banner shows this.
+- On approval, set `effectiveDate` to the go-live date, `status: Published`, remove `-draft`, and record the change in the log below and in `../changelog/README.md`.
+- For a **major** change to a published document, the effective date must be at least the notice period decided under legal item C3 after users are notified.
+
+## Notifying users
+
+For a major change: an in-app notification to every active account (Admin › Notifications › Broadcast, `notifications.broadcast`, step-up required) and, for changes to payment or refund terms, an email to organizers. The notification links to the document. Minor changes need no notice.
+
+## Keeping history
+
+Every change to a file in `apps/web/src/content/legal/` is versioned by git. In addition, when a document moves to a new major version, copy the previous text to `docs/legal/history/<slug>-v<version>.md` so a reader can find what applied on a given date without using git. (No history files exist yet; the first will be created at the first major bump after publication.)
+
+## Consistency checks before any bump
+
+1. Re-read `../privacy/data-inventory.md`, `../privacy/cookies-and-storage-inventory.md` and `../privacy/data-retention-and-deletion.md` against the schema and code; fix them first.
+2. Confirm each blocking item in `README.md` is Decided.
+3. Run `npm run check:docs` (metadata, links, placeholders, secrets).
+4. Update `lastUpdated` in the document's front matter.
+
+## Effective-date log
+
+| Document | Version | Effective | Change | Notice given |
+|---|---|---|---|---|
+| Terms and Conditions | 1.0-draft | — | Initial draft prepared from the codebase (2026-09-12) | — |
+| Privacy Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
+| Cookie Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
+| Security overview | 1.0-draft | — | Initial draft (2026-09-12) | — |
