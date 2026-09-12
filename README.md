@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Abonten Hub
 
-## Getting Started
+Abonten Hub is an event and place discovery, ticketing, messaging and rewards platform for Ghana: a web app at **abontenhub.com**, an **Android app** (Expo), and an internal **admin console**, all sharing one backend.
 
-First, run the development server:
+## What is in this repository
+
+| Path | What |
+|---|---|
+| `apps/web` | Next.js 16 web app — also the backend: Server Actions, the mobile HTTP API (`/api/mobile/**`), the Paystack webhook, notification delivery, observability ingest. Serves the public legal pages (`/legal/*`) and help centre (`/help`) from `apps/web/src/content`. |
+| `apps/admin` | Next.js 16 admin console (RBAC, moderation, finance, rewards, field programme, monitoring). |
+| `apps/mobile` | Expo SDK 57 / Expo Router Android app (iOS not yet built). |
+| `packages/services` | The single source of business logic, framework-free, consumed by web and admin. |
+| `packages/core`, `types`, `validation`, `api-client`, `i18n`, `ui-native`, `ui-tokens`, `config` | Shared pure helpers, types, zod schemas, typed mobile client, six-locale messages, RN UI kit, design tokens, tool config. |
+| `supabase/migrations` | The database schema, RLS, functions, triggers and cron jobs — the source of truth (204 files). |
+| `scripts/` | `check-mobile-api-parity.mjs`, `check-docs.mjs`, local test-database scripts. |
+| `docs/` | Internal documentation: handbooks, runbooks, security, privacy, finance, architecture. Start at **[docs/INDEX.md](docs/INDEX.md)**. |
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npm run web:dev                   # http://localhost:3000
+npm run dev -w @abonten/admin     # admin console
+cd apps/mobile && npx expo start  # Android app (run from apps/mobile)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Environment files are not committed; see [docs/development/setup.md](docs/development/setup.md) for what each app needs and [docs/security/secrets-and-environment.md](docs/security/secrets-and-environment.md) for the variable names.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run typecheck                 # every workspace
+npx biome check <paths>           # lint/format (scoped)
+npm run check:api-parity          # every /api/mobile route has a typed client method
+npm run check:docs                # documentation validation
+npm run test:db:up && npm run test:integration && npm run test:db:down   # Supabase integration suite (Docker)
+```
 
-## Learn More
+Details: [docs/development/testing.md](docs/development/testing.md), [docs/development/ci.md](docs/development/ci.md).
 
-To learn more about Next.js, take a look at the following resources:
+## Documentation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Hub:** [docs/INDEX.md](docs/INDEX.md) — by problem, audience and folder.
+- **Engineering reference and changelog:** [PROJECT.md](PROJECT.md).
+- **Working rules for AI agents:** [CLAUDE.md](CLAUDE.md).
+- **Public policies (drafts under review):** served at `/legal/terms`, `/legal/privacy`, `/legal/cookies`, `/legal/security`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Status of optional programmes
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Abonten Rewards runs in shadow mode (no public credit); the field programme is built but switched off; Paystack Transfers are flag-gated off. See the registers in `docs/` for the decisions each one is waiting on.
