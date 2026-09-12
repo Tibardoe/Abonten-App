@@ -4,6 +4,7 @@ import { removeFieldOpsEvidence } from "@/actions/fieldOps/removeFieldOpsEvidenc
 import { requestFieldOpsEvidenceUpload } from "@/actions/fieldOps/requestFieldOpsEvidenceUpload";
 import { requestFieldOpsOwnerOtp } from "@/actions/fieldOps/requestFieldOpsOwnerOtp";
 import { searchFieldOpsSimilarPlaces } from "@/actions/fieldOps/searchFieldOpsSimilarPlaces";
+import { submitFieldOpsClaimAssist } from "@/actions/fieldOps/submitFieldOpsClaimAssist";
 import { submitFieldOpsOnboarding } from "@/actions/fieldOps/submitFieldOpsOnboarding";
 import { verifyFieldOpsOwnerOtp } from "@/actions/fieldOps/verifyFieldOpsOwnerOtp";
 import { withdrawFieldOpsOnboarding } from "@/actions/fieldOps/withdrawFieldOpsOnboarding";
@@ -193,7 +194,9 @@ export default function OnboardingWizard({
       if (res.status === 200) {
         setOwnerVerified(true);
         toast.success("Owner verified.");
-        goTo(3);
+        // Claim assistance ends here: the listing already exists, so there
+        // is nothing left for the member to fill in.
+        if (!state.claimPlaceId) goTo(3);
       } else {
         toast.error(res.message ?? "That code didn't work.");
       }
@@ -325,6 +328,35 @@ export default function OnboardingWizard({
     });
 
   // ── Step 5: submit ──────────────────────────────────────
+  // Claim assistance: the business is already listed, so there is nothing
+  // to fill in beyond proving who the owner is. It ends the wizard early.
+  const submitClaim = () =>
+    start(async () => {
+      if (!state.claimPlaceId) return;
+      let here: Position | null = null;
+      if (isOffline) {
+        try {
+          here = await currentPosition();
+        } catch {
+          here = null;
+        }
+      }
+      const res = await submitFieldOpsClaimAssist({
+        campaignId,
+        onboardingId: o.id,
+        placeId: state.claimPlaceId,
+        submissionLocation: here ? { lat: here.lat, lng: here.lng } : null,
+        submissionAccuracyM: here?.accuracyM ?? null,
+      });
+      if (res.status === 200) {
+        clearWizardState(o.id);
+        toast.success(res.message ?? "Claim filed.");
+        router.push(`/field/submissions/${o.id}`);
+      } else {
+        toast.error(res.message ?? "Couldn't file the claim.");
+      }
+    });
+
   const submit = () =>
     start(async () => {
       if (!state.location || !state.cover || state.categoryId === null) {
@@ -527,22 +559,39 @@ export default function OnboardingWizard({
                 ))}
               </ul>
               <p className="mt-2 text-xs text-muted-foreground">
-                If the business is already listed, don&apos;t onboard it again.
-                Helping the real owner claim an existing listing arrives in a
-                later update; withdraw this one for now.
+                If the business is already listed, don&apos;t list it again.
+                Pick it below and help the owner claim it instead &mdash; you
+                still earn for that, once an admin approves the claim.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
+                {similar.map((m) => (
+                  <Button
+                    key={`claim-${m.id}`}
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      patch({ claimPlaceId: m.id, claimPlaceName: m.name });
+                      goTo(2);
+                    }}
+                  >
+                    Help them claim {m.name}
+                  </Button>
+                ))}
                 <Button
                   type="button"
                   onClick={() => {
-                    patch({ duplicateAcknowledged: true });
+                    patch({
+                      duplicateAcknowledged: true,
+                      claimPlaceId: null,
+                      claimPlaceName: null,
+                    });
                     goTo(2);
                   }}
                 >
                   None of these, continue
                 </Button>
                 <Button type="button" variant="ghost" onClick={withdraw}>
-                  It&apos;s already listed, withdraw
+                  Withdraw
                 </Button>
               </div>
             </div>
@@ -553,6 +602,14 @@ export default function OnboardingWizard({
       {step === 2 ? (
         <section className="flex flex-col gap-3 rounded-xl border p-4">
           <h2 className="font-semibold">The owner</h2>
+          {state.claimPlaceId ? (
+            <p className="rounded-md border border-dashed p-3 text-sm">
+              You&apos;re helping the owner of{" "}
+              <span className="font-medium">{state.claimPlaceName}</span> claim
+              their existing listing. Verify their phone below, then file the
+              claim &mdash; there is nothing else to fill in.
+            </p>
+          ) : null}
           {ownerVerified ? (
             <p className="rounded-md bg-emerald-500/10 p-3 text-sm">
               Owner verified{ownerMasked ? ` (${ownerMasked})` : ""}. Their
@@ -654,13 +711,23 @@ export default function OnboardingWizard({
             <Button type="button" variant="ghost" onClick={() => goTo(1)}>
               Back
             </Button>
-            <Button
-              type="button"
-              onClick={() => goTo(3)}
-              disabled={!ownerVerified}
-            >
-              Next
-            </Button>
+            {state.claimPlaceId ? (
+              <Button
+                type="button"
+                onClick={submitClaim}
+                disabled={!ownerVerified || pending}
+              >
+                File the claim
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => goTo(3)}
+                disabled={!ownerVerified}
+              >
+                Next
+              </Button>
+            )}
           </div>
         </section>
       ) : null}

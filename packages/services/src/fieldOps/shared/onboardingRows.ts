@@ -53,6 +53,7 @@ export type OnboardingRow = {
   owner_prior_events: number;
   place_id: string | null;
   event_id: string | null;
+  claim_request_id: string | null;
   entity_created_at: string | null;
   submission_lat: number | null;
   submission_lng: number | null;
@@ -81,10 +82,18 @@ export type OnboardingRow = {
   fieldops_territory?: { name: string } | null;
   fieldops_team_member?: { full_name_snapshot: string | null } | null;
   place?: { id: string; name: string; slug: string; status: string } | null;
+  event?: {
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    starts_at: string | null;
+  } | null;
+  place_claim_request?: { id: string; status: string } | null;
 };
 
 export const ONBOARDING_COLUMNS =
-  "id, client_request_id, campaign_id, team_id, member_id, member_user_id, assignment_id, territory_id, prospect_id, mode, kind, activity_key, business_name, business_phone_e164, business_whatsapp_e164, owner_full_name, owner_phone_e164, owner_user_id, owner_phone_verified_at, owner_is_new_account, owner_prior_places, owner_prior_events, place_id, event_id, entity_created_at, submission_lat, submission_lng, submission_accuracy_m, submission_distance_m, inside_territory, similar_matches, duplicate_acknowledged, status, submitted_at, resubmission_count, reviewed_by, reviewed_at, review_decision, review_note, rule_id, holding_until, flags, flag_details, succeeded_at, rejected_at, rejection_reason, withdrawn_at, created_at, updated_at, fieldops_territory(name), fieldops_team_member(full_name_snapshot), place(id, name, slug, status)";
+  "id, client_request_id, campaign_id, team_id, member_id, member_user_id, assignment_id, territory_id, prospect_id, mode, kind, activity_key, business_name, business_phone_e164, business_whatsapp_e164, owner_full_name, owner_phone_e164, owner_user_id, owner_phone_verified_at, owner_is_new_account, owner_prior_places, owner_prior_events, place_id, event_id, claim_request_id, entity_created_at, submission_lat, submission_lng, submission_accuracy_m, submission_distance_m, inside_territory, similar_matches, duplicate_acknowledged, status, submitted_at, resubmission_count, reviewed_by, reviewed_at, review_decision, review_note, rule_id, holding_until, flags, flag_details, succeeded_at, rejected_at, rejection_reason, withdrawn_at, created_at, updated_at, fieldops_territory(name), fieldops_team_member(full_name_snapshot), place(id, name, slug, status), event(id, title, slug, status, starts_at), place_claim_request(id, status)";
 
 export function mapOnboarding(
   r: OnboardingRow,
@@ -118,6 +127,14 @@ export function mapOnboarding(
     placeSlug: r.place?.slug ?? null,
     placeName: r.place?.name ?? null,
     placeStatus: r.place?.status ?? null,
+    eventId: r.event_id,
+    eventSlug: r.event?.slug ?? null,
+    eventTitle: r.event?.title ?? null,
+    eventStartsAt: r.event?.starts_at ?? null,
+    claimRequestId: r.claim_request_id,
+    claimStatus:
+      (r.place_claim_request?.status as FieldOpsOnboarding["claimStatus"]) ??
+      null,
     entityCreatedAt: r.entity_created_at,
     submissionLocation:
       r.submission_lat !== null && r.submission_lng !== null

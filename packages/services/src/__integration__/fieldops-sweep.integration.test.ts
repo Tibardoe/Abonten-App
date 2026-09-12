@@ -444,7 +444,9 @@ describe("verification records a pending commission", () => {
   it("leaves it alone until the holding period has elapsed", async () => {
     const { onboardingId } = await onboardAndVerify("Kofi's Barbering");
     const result = await sweep();
-    expect(result.processed).toBe(0);
+    // The sweep runs over the whole database, so only this row's fate is
+    // asserted -- but nothing anywhere should ever error.
+    expect(Number(result.failed)).toBe(0);
     expect((await onboardingOf(onboardingId)).status).toBe("verified");
     expect((await commissionOf(onboardingId))?.status).toBe("pending");
   });

@@ -41,6 +41,45 @@ export default function OnboardingDetailView({
             {o.ownerPhoneMasked ? `· ${o.ownerPhoneMasked}` : ""}{" "}
             {o.ownerVerified ? "· verified" : "· not verified"}
           </dd>
+          {o.eventId ? (
+            <>
+              <dt className="text-muted-foreground">Event</dt>
+              <dd className="col-span-2">
+                {o.eventSlug ? (
+                  <Link
+                    href={`/events/${o.eventSlug}`}
+                    target="_blank"
+                    className="text-primary hover:underline"
+                  >
+                    {o.eventTitle ?? "the event"}
+                  </Link>
+                ) : (
+                  (o.eventTitle ?? "the event")
+                )}
+                {o.eventStartsAt ? (
+                  <>
+                    {" · "}
+                    {new Date(o.eventStartsAt) > new Date()
+                      ? `runs ${new Date(o.eventStartsAt).toLocaleDateString()}`
+                      : `ran ${new Date(o.eventStartsAt).toLocaleDateString()}`}
+                  </>
+                ) : null}
+              </dd>
+            </>
+          ) : null}
+          {o.claimRequestId ? (
+            <>
+              <dt className="text-muted-foreground">Claim</dt>
+              <dd className="col-span-2">
+                Filed for the owner ·{" "}
+                {o.claimStatus === "approved"
+                  ? "approved"
+                  : o.claimStatus === "rejected"
+                    ? "rejected"
+                    : "waiting for an admin"}
+              </dd>
+            </>
+          ) : null}
           <dt className="text-muted-foreground">Listing</dt>
           <dd className="col-span-2">
             {detail.place ? (

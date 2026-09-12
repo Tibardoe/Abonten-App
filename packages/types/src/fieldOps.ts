@@ -430,6 +430,14 @@ export type FieldOpsOnboarding = {
   placeSlug: string | null;
   placeName: string | null;
   placeStatus: string | null;
+  /** Phase 5: the event onboarded, when `kind` is "event". */
+  eventId: string | null;
+  eventSlug: string | null;
+  eventTitle: string | null;
+  eventStartsAt: string | null;
+  /** Phase 5: the claim filed for the owner, when this is claim assistance. */
+  claimRequestId: string | null;
+  claimStatus: "pending" | "approved" | "rejected" | null;
   entityCreatedAt: string | null;
   submissionLocation: { lat: number; lng: number } | null;
   submissionAccuracyM: number | null;

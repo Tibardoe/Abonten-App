@@ -25,12 +25,14 @@ import {
 // second-approver rule the Rewards module uses for cost increases).
 
 // Activities whose engine exists. Making any other rule live would record
-// a promise nothing pays out, so it's refused. Extend as phases ship:
-// place onboarding (Phase 3 sweep), events + claim assist (Phase 5),
-// content + stipends (Phase 6).
+// a promise nothing pays out, so it's refused. Content and the two stipends
+// are still Phase 6.
 const SHIPPED_ACTIVITIES = new Set<FieldOpsActivityKey>([
   "place_onboarding_offline",
   "place_onboarding_online",
+  "event_onboarding_offline",
+  "event_onboarding_online",
+  "existing_place_claim_assist",
 ]);
 
 export async function listCommissionRulesCore(
