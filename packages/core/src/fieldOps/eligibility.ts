@@ -36,7 +36,8 @@ export type EligibilitySnapshot = {
   /** A strong duplicate match the member acknowledged anyway. */
   strongDuplicate: boolean;
   duplicateAcknowledged: boolean;
-  reviewVerified: boolean;
+  /** null = the lead has not decided yet (pending, not a failure). */
+  reviewVerified: boolean | null;
   /** null = holding period not started (not verified yet). */
   holdingElapsed: boolean | null;
 };
@@ -51,7 +52,12 @@ export type EligibilityCheck = {
 
 export type EligibilityResult = {
   checks: EligibilityCheck[];
-  /** Every hard check passed and no soft check failed. */
+  /**
+   * Every hard check passed, none is still pending, and no soft check
+   * failed. A pending hard check (ok === null -- no listing yet, no review
+   * yet) is not a pass: it is simply not answerable, so it must never read
+   * as "ready".
+   */
   pass: boolean;
   hard: string[];
   soft: string[];
@@ -193,5 +199,13 @@ export function evaluateEligibility(
   const soft = checks
     .filter((c) => c.severity === "soft" && c.ok === false)
     .map((c) => c.key);
-  return { checks, pass: hard.length === 0 && soft.length === 0, hard, soft };
+  const pendingHard = checks.some(
+    (c) => c.severity === "hard" && c.ok === null,
+  );
+  return {
+    checks,
+    pass: hard.length === 0 && soft.length === 0 && !pendingHard,
+    hard,
+    soft,
+  };
 }

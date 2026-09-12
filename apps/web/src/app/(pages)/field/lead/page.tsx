@@ -2,6 +2,7 @@ import { getFieldOpsLeadDashboard } from "@/actions/fieldOps/getFieldOpsLeadDash
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import StatTile from "@/fieldOps/atoms/StatTile";
 import StatusChip from "@/fieldOps/atoms/StatusChip";
+import { formatDistance } from "@/fieldOps/lib/formatDistance";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
 import CampaignBanner from "@/fieldOps/molecules/CampaignBanner";
 import Link from "next/link";
@@ -116,7 +117,7 @@ export default async function FieldLeadDashboardPage() {
                   </span>{" "}
                   · {a.territoryName}
                   {a.status === "started" && a.startDistanceM !== null
-                    ? ` · checked in ${Math.round(a.startDistanceM / 100) / 10} km from centre`
+                    ? ` · checked in ${formatDistance(a.startDistanceM)} from centre`
                     : ""}
                 </span>
                 <StatusChip status={a.status} />

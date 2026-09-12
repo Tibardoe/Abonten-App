@@ -547,7 +547,13 @@ export async function buildOnboardingDetail(
     submissionAccuracyM: row.submission_accuracy_m,
     strongDuplicate: matches.some((m) => m.strong),
     duplicateAcknowledged: row.duplicate_acknowledged,
-    reviewVerified: ["verified", "flagged", "succeeded"].includes(row.status),
+    // Before the lead decides, this is pending rather than failed -- a red
+    // cross on a submission nobody has looked at yet reads as a rejection.
+    reviewVerified: ["verified", "flagged", "succeeded"].includes(row.status)
+      ? true
+      : ["rejected", "withdrawn"].includes(row.status)
+        ? false
+        : null,
     holdingElapsed: row.holding_until
       ? new Date(row.holding_until).getTime() <= Date.now()
       : null,

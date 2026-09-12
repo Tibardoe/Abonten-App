@@ -231,6 +231,7 @@ export default function EventOnboardingWizard({
             phone={ownerPhone}
             onFullName={setOwnerName}
             onPhone={setOwnerPhone}
+            dialCode={draft.dialCode}
           />
           <div className="flex justify-between">
             <Button type="button" variant="ghost" onClick={withdraw}>

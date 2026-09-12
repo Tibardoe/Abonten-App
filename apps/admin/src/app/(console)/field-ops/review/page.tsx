@@ -11,7 +11,8 @@ const FLAG_LABELS: Record<string, string> = {
   eligibility: "One or more checks did not pass",
   no_rule: "No commission rule was live when the lead verified it",
   budget_exhausted: "The campaign's budget cap would be exceeded",
-  awaiting_release_policy: "Its rule pays on something Phase 3 doesn't handle",
+  awaiting_release_policy:
+    "Its rule pays on something that hasn't happened yet (the event starting, a claim being approved)",
   photos: "Fewer photos than the rule asks for",
   description: "The description is shorter than the rule asks for",
   category: "No category set",

@@ -6,6 +6,7 @@ import OtpInput from "@/components/molecules/OtpInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toE164 } from "@/fieldOps/lib/wizardStorage";
 import { useToast } from "@/hooks/useToast";
 import { useState, useTransition } from "react";
 
@@ -25,9 +26,12 @@ export default function OwnerVerificationStep({
   phone,
   onFullName,
   onPhone,
+  dialCode,
 }: {
   campaignId: string;
   onboardingId: string;
+  /** The campaign region's dial prefix, so "024..." is read as local. */
+  dialCode: string;
   /** "owner" for a business, "organiser" for an event. */
   noun: string;
   verified: boolean;
@@ -45,11 +49,20 @@ export default function OwnerVerificationStep({
 
   const send = () =>
     start(async () => {
+      // The code is an SMS: a number that is not really E.164 would either
+      // be refused or sent into the void, so it is normalised here first.
+      const e164 = toE164(phone, dialCode);
+      if (!e164) {
+        toast.error(
+          `Enter the ${noun}'s phone, e.g. 024 123 4567 or ${dialCode}241234567.`,
+        );
+        return;
+      }
       const res = await requestFieldOpsOwnerOtp({
         campaignId,
         onboardingId,
         ownerFullName: fullName.trim(),
-        ownerPhoneE164: phone.trim(),
+        ownerPhoneE164: e164,
       });
       if (res.status === 200) {
         setSent(true);

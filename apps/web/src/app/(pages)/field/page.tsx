@@ -69,8 +69,13 @@ export default async function FieldTodayPage() {
             with how it went.
           </li>
           <li>
-            Onboarding a business onto Abonten (and earning the commission)
-            arrives in the next update of this page.
+            When an owner is ready, start the onboarding from the territory
+            page: the owner confirms the code sent to their phone, you fill in
+            the business details and photos, and your team lead reviews it.
+          </li>
+          <li>
+            Once it is verified and the holding period has passed, the
+            commission moves to &quot;ready to pay&quot; on your Earnings page.
           </li>
         </ol>
       </section>

@@ -78,6 +78,7 @@ export default function OnboardingWizard({
   const toast = useToast();
   const router = useRouter();
   const o = draft.onboarding;
+  const dial = draft.dialCode;
   const [pending, start] = useTransition();
   const [state, setState] = useState<WizardState>(() =>
     emptyWizardState({ name: o.businessName, ownerFullName: o.ownerFullName }),
@@ -149,8 +150,8 @@ export default function OnboardingWizard({
         onboardingId: o.id,
         name: state.name,
         location: state.location,
-        phoneE164: toE164(state.phone),
-        whatsappE164: toE164(state.whatsapp),
+        phoneE164: toE164(state.phone, dial),
+        whatsappE164: toE164(state.whatsapp, dial),
       });
       if (res.status !== 200 || !res.data) {
         toast.error(res.message ?? "Couldn't check for duplicates.");
@@ -163,9 +164,11 @@ export default function OnboardingWizard({
   // ── Step 2: owner ───────────────────────────────────────
   const sendCode = () =>
     start(async () => {
-      const phone = toE164(state.ownerPhone);
+      const phone = toE164(state.ownerPhone, dial);
       if (!phone) {
-        toast.error("Enter the owner's phone in international format.");
+        toast.error(
+          `Enter the owner's phone, e.g. 024 123 4567 or ${dial}241234567.`,
+        );
         return;
       }
       const res = await requestFieldOpsOwnerOtp({
@@ -382,8 +385,8 @@ export default function OnboardingWizard({
           address: state.address,
           location: state.location,
           websiteUrl: state.websiteUrl || null,
-          phoneE164: toE164(state.phone),
-          whatsappE164: toE164(state.whatsapp),
+          phoneE164: toE164(state.phone, dial),
+          whatsappE164: toE164(state.whatsapp, dial),
           openingHours: state.openingHours,
           cover: {
             publicId: state.cover.publicId,
@@ -424,11 +427,24 @@ export default function OnboardingWizard({
     !isOffline ||
     (evidence.some((e) => e.kind === "storefront") &&
       evidence.some((e) => e.kind === "interior"));
+  // Caught here rather than at submit: a number that cannot be read is the
+  // one thing on this step the server refuses outright, and finding that out
+  // after the photos are uploaded is a long walk back.
+  const phoneError =
+    state.phone.trim() && !toE164(state.phone, dial)
+      ? "Check this number."
+      : null;
+  const whatsappError =
+    state.whatsapp.trim() && !toE164(state.whatsapp, dial)
+      ? "Check this number."
+      : null;
   const detailsReady =
     state.name.trim().length >= 2 &&
     state.categoryId !== null &&
     state.description.trim().length >= 20 &&
     state.address.trim().length >= 3 &&
+    !phoneError &&
+    !whatsappError &&
     state.location !== null;
 
   return (
@@ -770,20 +786,28 @@ export default function OnboardingWizard({
               <Input
                 id="w-phone"
                 inputMode="tel"
-                placeholder="+233…"
+                placeholder={`024 123 4567 or ${dial}241234567`}
+                aria-invalid={phoneError ? true : undefined}
                 value={state.phone}
                 onChange={(e) => patch({ phone: e.target.value })}
               />
+              {phoneError ? (
+                <p className="text-xs text-destructive">{phoneError}</p>
+              ) : null}
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="w-wa">WhatsApp</Label>
               <Input
                 id="w-wa"
                 inputMode="tel"
-                placeholder="+233…"
+                placeholder={`024 123 4567 or ${dial}241234567`}
+                aria-invalid={whatsappError ? true : undefined}
                 value={state.whatsapp}
                 onChange={(e) => patch({ whatsapp: e.target.value })}
               />
+              {whatsappError ? (
+                <p className="text-xs text-destructive">{whatsappError}</p>
+              ) : null}
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="w-web">Website</Label>
@@ -983,7 +1007,10 @@ export default function OnboardingWizard({
             <dd className="col-span-2">{state.name}</dd>
             <dt className="text-muted-foreground">Owner</dt>
             <dd className="col-span-2">
-              {state.ownerFullName} {ownerMasked ? `· ${ownerMasked}` : ""}
+              {/* The saved draft wins when this tab never typed the name
+                  (resumed on another device, or after clearing the tab). */}
+              {state.ownerFullName || o.ownerFullName || ""}{" "}
+              {ownerMasked ? `· ${ownerMasked}` : ""}
             </dd>
             <dt className="text-muted-foreground">Address</dt>
             <dd className="col-span-2">{state.address}</dd>

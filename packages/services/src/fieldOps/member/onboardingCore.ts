@@ -1,3 +1,4 @@
+import { countries } from "@abonten/core/countries";
 import { distanceMetres } from "@abonten/core/fieldOps/territory";
 import { logger } from "@abonten/core/logger";
 import type {
@@ -237,6 +238,22 @@ export async function startOnboardingCore(
   return { status: 200, data: mapOnboarding(row) };
 }
 
+// The dial code the worker's numbers should be read against: the campaign's
+// region decides it, so "024..." typed in Ashanti becomes "+23324...". Falls
+// back to Ghana, the only country the programme runs in today.
+async function regionDialCode(
+  supabase: ServiceRoleClient,
+  regionId: string,
+): Promise<string> {
+  const { data } = await supabase
+    .from("fieldops_region")
+    .select("country_code")
+    .eq("id", regionId)
+    .maybeSingle();
+  const code = (data?.country_code ?? "GH").toUpperCase();
+  return countries.find((c) => c.countryCode === code)?.callingCode ?? "+233";
+}
+
 // ── Read back ───────────────────────────────────────────────
 
 export async function getOnboardingDraftCore(
@@ -244,8 +261,9 @@ export async function getOnboardingDraftCore(
   userId: string,
   input: { campaignId: string; onboardingId: string },
 ): Promise<FieldOpsEnvelope<FieldOpsOnboardingDraft>> {
+  let m: Awaited<ReturnType<typeof memberContext>>;
   try {
-    await memberContext(supabase, userId, input.campaignId);
+    m = await memberContext(supabase, userId, input.campaignId);
   } catch (e) {
     return fieldOpsError(e);
   }
@@ -256,12 +274,13 @@ export async function getOnboardingDraftCore(
     input.onboardingId,
   );
   if (!row) return { status: 404, message: "Onboarding not found" };
-  const [evidence, settings, cooldownMs] = await Promise.all([
+  const [evidence, settings, cooldownMs, dialCode] = await Promise.all([
     loadEvidence(supabase, row.id, { sign: true }),
     readProgramSettings(supabase),
     row.owner_phone_e164 && !row.owner_user_id
       ? getResendCooldownRemainingMs("fieldops-owner", row.owner_phone_e164)
       : Promise.resolve(0),
+    regionDialCode(supabase, m.regionId),
   ]);
   return {
     status: 200,
@@ -276,6 +295,7 @@ export async function getOnboardingDraftCore(
             : null,
       },
       duplicateRadiusM: Number(settings.duplicate_radius_m) || 300,
+      dialCode,
     },
   };
 }

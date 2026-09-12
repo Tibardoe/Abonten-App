@@ -25,7 +25,7 @@ export default async function FieldOpsPayoutBatchPage({
   if (detail.status !== 200 || !detail.data) {
     return (
       <div>
-        <PageHeader title="Field Ops - Payout batch" />
+        <PageHeader title="Field Ops · Payout batch" />
         <FieldOpsTabs active="/field-ops/payouts" />
         <EmptyState>{detail.message ?? "Batch not found."}</EmptyState>
       </div>

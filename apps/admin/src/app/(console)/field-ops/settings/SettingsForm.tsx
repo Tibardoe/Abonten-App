@@ -10,21 +10,6 @@ import { useState, useTransition } from "react";
 const input =
   "w-full rounded border border-border bg-background px-2 py-1.5 text-sm";
 
-// Switches for parts of the programme that haven't shipped are shown locked
-// with the phase that delivers them (and refused server-side too).
-const LOCKED: {
-  label: string;
-  phase: string;
-  value: (s: FieldOpsProgramSettings) => boolean;
-}[] = [
-  {
-    label: "Commission generation (eligibility sweep)",
-    phase: "Phase 3",
-    value: (s) => s.commissionGenerationEnabled,
-  },
-  { label: "Payout batches", phase: "Phase 4", value: (s) => s.payoutsEnabled },
-];
-
 export function SettingsForm({
   settings,
   canManage,
@@ -55,6 +40,10 @@ export function SettingsForm({
     String(settings.evidenceRetentionDays),
   );
   const [push, setPush] = useState(settings.notifyPushEnabled);
+  const [commissions, setCommissions] = useState(
+    settings.commissionGenerationEnabled,
+  );
+  const [payouts, setPayouts] = useState(settings.payoutsEnabled);
   const [reason, setReason] = useState("");
 
   const editable = canManage && stepUpFresh;
@@ -77,6 +66,8 @@ export function SettingsForm({
           spotCheckBps: Math.round(Number(spot) * 100),
           reviewGraceDays: Math.round(Number(grace)),
           evidenceRetentionDays: Math.round(Number(retention)),
+          commissionGenerationEnabled: commissions,
+          payoutsEnabled: payouts,
           notifyPushEnabled: push,
         },
       });
@@ -182,6 +173,41 @@ export function SettingsForm({
           <input
             type="checkbox"
             className="mt-1"
+            checked={commissions}
+            disabled={!editable}
+            onChange={(e) => setCommissions(e.target.checked)}
+          />
+          <span>
+            <span className="block">
+              Commission generation (eligibility sweep)
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              Off: the sweep stops confirming commissions. Work still gets
+              submitted and reviewed, and verified onboardings wait in holding
+              until this is switched back on — nothing is lost.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={payouts}
+            disabled={!editable}
+            onChange={(e) => setPayouts(e.target.checked)}
+          />
+          <span>
+            <span className="block">Payout batches</span>
+            <span className="block text-xs text-muted-foreground">
+              Off: no new batch can be built, approved or paid. Confirmed
+              commissions stay ready to pay.
+            </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
             checked={push}
             disabled={!editable}
             onChange={(e) => setPush(e.target.checked)}
@@ -267,23 +293,6 @@ export function SettingsForm({
             "days",
           )}
         </div>
-      </Card>
-
-      <Card className="space-y-2 p-4">
-        <p className="text-sm font-semibold">Not available yet</p>
-        <ul className="space-y-1 text-sm">
-          {LOCKED.map((l) => (
-            <li
-              key={l.label}
-              className="flex items-center justify-between gap-3"
-            >
-              <span className="text-muted-foreground">{l.label}</span>
-              <span className="text-xs text-muted-foreground">
-                {l.value(settings) ? "on" : "off"} · {l.phase}
-              </span>
-            </li>
-          ))}
-        </ul>
       </Card>
 
       {editable ? (

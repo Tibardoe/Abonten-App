@@ -8,9 +8,12 @@ const MEMBER_TABS = [
   { href: "/field", label: "Today" },
   { href: "/field/assignments", label: "Assignments" },
   { href: "/field/submissions", label: "Submissions" },
-  { href: "/field/content", label: "Content" },
   { href: "/field/earnings", label: "Earnings" },
 ];
+
+// Only the content creator can submit a deliverable, so only they get the
+// tab -- an offline member opening it would find briefs they cannot act on.
+const CONTENT_TAB = { href: "/field/content", label: "Content" };
 
 const LEAD_TABS = [
   { href: "/field/lead", label: "Dashboard" },
@@ -24,9 +27,19 @@ const LEAD_TABS = [
 ];
 
 /** Sub-navigation for the /field area; leads see their planning tabs. */
-export default function FieldOpsTabs({ isLead }: { isLead: boolean }) {
+export default function FieldOpsTabs({
+  isLead,
+  role,
+}: {
+  isLead: boolean;
+  role: string;
+}) {
   const pathname = usePathname();
-  const tabs = isLead ? LEAD_TABS : MEMBER_TABS;
+  const tabs = isLead
+    ? LEAD_TABS
+    : role === "content_creator"
+      ? [...MEMBER_TABS.slice(0, 3), CONTENT_TAB, ...MEMBER_TABS.slice(3)]
+      : MEMBER_TABS;
   return (
     <nav
       aria-label="Field work sections"

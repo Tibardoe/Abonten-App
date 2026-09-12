@@ -1,3 +1,4 @@
+import { normalizePhoneNumber } from "@abonten/core/normalizePhoneNumber";
 import type { PlaceOpeningHoursInput } from "@abonten/types/placeType";
 
 // The onboarding wizard keeps its half-typed form in sessionStorage keyed
@@ -92,8 +93,17 @@ export function clearWizardState(id: string): void {
   }
 }
 
-export function toE164(raw: string): string | null {
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length < 7 || digits.length > 15) return null;
-  return `+${digits}`;
+/**
+ * A phone number the way a field worker types it -> E.164.
+ *
+ * Workers type the local form ("0241234567"), so a bare `+` + digits would
+ * produce "+0241234567" and every submission would be rejected at the last
+ * step. `dialCode` is the campaign region's prefix (e.g. "+233"); a number
+ * already written internationally ("+233..." / "233...") is left alone by
+ * the shared normalizer.
+ */
+export function toE164(raw: string, dialCode: string): string | null {
+  if (!raw.trim()) return null;
+  const result = normalizePhoneNumber(dialCode, raw);
+  return result.ok ? result.e164 : null;
 }

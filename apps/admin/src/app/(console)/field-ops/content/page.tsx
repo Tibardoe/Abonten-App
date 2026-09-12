@@ -52,7 +52,7 @@ export default async function FieldOpsContentPage({
   return (
     <div>
       <PageHeader
-        title="Field Ops - Content"
+        title="Field Ops · Content"
         description="What each campaign asked for, what the creator posted, and the monthly stipends. Engagement figures are the creator's own report and nothing is paid on them."
       />
       <FieldOpsTabs active="/field-ops/content" />
