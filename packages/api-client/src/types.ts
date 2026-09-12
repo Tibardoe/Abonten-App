@@ -1,8 +1,12 @@
 import type {
   FieldOpsAssignment,
+  FieldOpsContentBrief,
+  FieldOpsContentPlatform,
+  FieldOpsContentSubmission,
   FieldOpsEvidenceUploadTicket,
   FieldOpsLeadDashboard,
   FieldOpsMe,
+  FieldOpsMyContent,
   FieldOpsMyEarnings,
   FieldOpsOnboarding,
   FieldOpsOnboardingDetail,
@@ -1626,6 +1630,49 @@ export type FieldOpsRemovedResult = ApiEnvelope<{ removed: boolean }>;
 export type { FieldOpsMyEarnings } from "@abonten/types/fieldOps";
 /** null when the caller is on no campaign at all. */
 export type FieldOpsEarningsResult = ApiEnvelope<FieldOpsMyEarnings | null>;
+
+export type {
+  FieldOpsContentBrief,
+  FieldOpsContentPlatform,
+  FieldOpsContentSubmission,
+  FieldOpsMyContent,
+} from "@abonten/types/fieldOps";
+
+export type FieldOpsContentResult = ApiEnvelope<FieldOpsMyContent | null>;
+export type FieldOpsContentSubmissionResult =
+  ApiEnvelope<FieldOpsContentSubmission>;
+export type FieldOpsContentBriefResult = ApiEnvelope<FieldOpsContentBrief>;
+export type FieldOpsTeamContentResult = ApiEnvelope<{
+  briefs: FieldOpsContentBrief[];
+  submissions: FieldOpsContentSubmission[];
+}>;
+
+export type FieldOpsContentSubmitBody = {
+  campaignId: string;
+  briefId?: string | null;
+  platform: FieldOpsContentPlatform;
+  url: string;
+  caption?: string | null;
+  postedAt?: string | null;
+  selfReportedMetrics?: { views?: number; likes?: number; shares?: number };
+};
+
+export type FieldOpsContentBriefBody = {
+  campaignId: string;
+  briefId?: string;
+  title: string;
+  description?: string | null;
+  platforms: FieldOpsContentPlatform[];
+  assignedMemberId?: string | null;
+  dueOn?: string | null;
+  status?: "open" | "closed";
+};
+
+export type FieldOpsContentReviewBody = {
+  campaignId: string;
+  decision: "approved" | "rejected";
+  note?: string | null;
+};
 
 export type FieldOpsClaimAssistBody = {
   campaignId: string;

@@ -2583,6 +2583,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "fieldops_commission_content_submission_fkey";
+            columns: ["content_submission_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_content_submission";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "fieldops_commission_member_id_fkey";
             columns: ["member_id"];
             isOneToOne: false;
@@ -2719,6 +2726,165 @@ export type Database = {
             columns: ["campaign_id"];
             isOneToOne: false;
             referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_content_brief: {
+        Row: {
+          assigned_member_id: string | null;
+          campaign_id: string;
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          due_on: string | null;
+          id: string;
+          platforms: string[];
+          status: string;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          assigned_member_id?: string | null;
+          campaign_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          due_on?: string | null;
+          id?: string;
+          platforms?: string[];
+          status?: string;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          assigned_member_id?: string | null;
+          campaign_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          due_on?: string | null;
+          id?: string;
+          platforms?: string[];
+          status?: string;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_content_brief_assigned_member_id_fkey";
+            columns: ["assigned_member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_content_brief_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      fieldops_content_submission: {
+        Row: {
+          brief_id: string | null;
+          campaign_id: string;
+          caption: string | null;
+          created_at: string;
+          holding_until: string | null;
+          id: string;
+          member_id: string;
+          member_user_id: string;
+          platform: string;
+          posted_at: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rule_id: string | null;
+          self_reported_metrics: Json;
+          status: string;
+          team_id: string;
+          updated_at: string;
+          url: string;
+        };
+        Insert: {
+          brief_id?: string | null;
+          campaign_id: string;
+          caption?: string | null;
+          created_at?: string;
+          holding_until?: string | null;
+          id?: string;
+          member_id: string;
+          member_user_id: string;
+          platform: string;
+          posted_at?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rule_id?: string | null;
+          self_reported_metrics?: Json;
+          status?: string;
+          team_id: string;
+          updated_at?: string;
+          url: string;
+        };
+        Update: {
+          brief_id?: string | null;
+          campaign_id?: string;
+          caption?: string | null;
+          created_at?: string;
+          holding_until?: string | null;
+          id?: string;
+          member_id?: string;
+          member_user_id?: string;
+          platform?: string;
+          posted_at?: string | null;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          rule_id?: string | null;
+          self_reported_metrics?: Json;
+          status?: string;
+          team_id?: string;
+          updated_at?: string;
+          url?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fieldops_content_submission_brief_id_fkey";
+            columns: ["brief_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_content_brief";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_content_submission_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_content_submission_member_id_fkey";
+            columns: ["member_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team_member";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_content_submission_rule_id_fkey";
+            columns: ["rule_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_commission_rule";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_content_submission_team_id_fkey";
+            columns: ["team_id"];
+            isOneToOne: false;
+            referencedRelation: "fieldops_team";
             referencedColumns: ["id"];
           },
         ];
@@ -10032,11 +10198,54 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      fieldops_review_content: {
+        Args: {
+          p_decision: string;
+          p_note?: string;
+          p_reviewer: string;
+          p_submission_id: string;
+        };
+        Returns: {
+          brief_id: string | null;
+          campaign_id: string;
+          caption: string | null;
+          created_at: string;
+          holding_until: string | null;
+          id: string;
+          member_id: string;
+          member_user_id: string;
+          platform: string;
+          posted_at: string | null;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          rule_id: string | null;
+          self_reported_metrics: Json;
+          status: string;
+          team_id: string;
+          updated_at: string;
+          url: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "fieldops_content_submission";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       fieldops_run_eligibility_sweep: {
         Args: { p_limit?: number };
         Returns: Json;
       };
       fieldops_run_housekeeping: { Args: never; Returns: Json };
+      fieldops_run_monthly_stipends: {
+        Args: {
+          p_admin: string;
+          p_campaign_id: string;
+          p_period_start: string;
+        };
+        Returns: Json;
+      };
       fieldops_set_campaign_status: {
         Args: { p_actor: string; p_campaign_id: string; p_status: string };
         Returns: {
@@ -10067,6 +10276,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      fieldops_sweep_content: { Args: { p_limit?: number }; Returns: Json };
       fieldops_territory_contains: {
         Args: { p_lat: number; p_lng: number; p_territory_id: string };
         Returns: boolean;

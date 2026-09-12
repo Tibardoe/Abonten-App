@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–5 (2026-09-11/12)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–6 (2026-09-11/12)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -3001,8 +3001,45 @@ MCP, advisor-clean, replay from scratch; branch `feat/field-ops-p5`).**
   re-run against an already-dirty database to prove the sweep never errors;
   `turbo typecheck` 11/11; web and admin builds clean; parity 150; Biome
   clean.
-- **Not yet built:** content creator (P6), analytics (P7), Playwright +
-  pilot readiness (P8).
+**Phase 6 — the content creator (migration `20260912012308_fieldops_content`,
+applied to production via MCP, advisor-clean, replays from scratch; branch
+`feat/field-ops-p6`).**
+
+- **Model.** `fieldops_content_brief` (what the campaign wants made; readable
+  by everyone on the campaign) and `fieldops_content_submission` (platform,
+  link, caption, the creator's **self-reported** figures). A trigger refuses
+  anyone but the active content creator, a partial unique on `lower(url)`
+  refuses the same post twice from anyone, and a CHECK refuses a self-review.
+  The Phase 3 `content_submission_id` column finally gets its FK.
+- **Same shape as an onboarding.** `fieldops_review_content` snapshots the
+  live `content_deliverable` rule, starts a holding period and records a
+  **pending** commission; `fieldops_sweep_content` (added to the same
+  15-minute cron job) confirms it afterwards. Nothing about a post on
+  someone else's platform is checkable from here, so the holding period is
+  really a window for a human to retract; a creator who leaves the team
+  mid-holding is not paid. Engagement numbers are never used to decide
+  anything and are labelled self-reported in all three UIs.
+- **Stipends.** `fieldops_run_monthly_stipends` is authorised by an admin
+  (`fieldops.commissions.approve` + step-up, audited) and creates `approved`
+  commissions for each active lead and creator at the live stipend rules —
+  a stipend is payroll, not per-item work. Idempotent per member per month
+  (`stipend:<member>:<yyyy-mm>`).
+- **Surfaces.** `/field/content` for the creator (briefs, a submit form that
+  says plainly that figures are not paid on, their own history) and
+  `/field/lead/content` for the lead (write briefs, review the queue).
+  Admin › Field Ops › **Content** lists everything across campaigns, can
+  decide in the lead's place, and runs a month's stipends. Four new mobile
+  twins (parity 154). `SHIPPED_ACTIVITIES` now admits all eight activities,
+  so every rule the programme defines can finally be made live.
+- **Bug found and fixed:** the submission URL CHECK used
+  `url ~ '^https?://.{5,500}$'` — Postgres caps a bounded regex repetition
+  at 255, so every insert failed with `invalid repetition count(s)`. The
+  length is now its own check.
+- **Verified:** integration `fieldops-content` (24), full suite **38 files /
+  317 tests**; `turbo typecheck` 11/11; web and admin builds clean with
+  `/field/content`, `/field/lead/content` and `/field-ops/content` present;
+  parity 154; Biome clean.
+- **Not yet built:** analytics (P7), Playwright + pilot readiness (P8).
 
 ---
 

@@ -1,13 +1,14 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phases 0-5 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
+_Phases 0-6 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
 The owner approved the full plan and the four gating decisions: team leads
 and workers use the web app (`/field`, Phase 1); business ownership is
 proven by an OTP the owner enters (Phase 2); a commission needs the team
 lead's review plus a holding period re-checked by a sweep (Phase 3); payouts
 are weekly manual MoMo batches approved by a second admin (Phase 4). Events
-and claim assistance joined in Phase 5. The full architecture is in the
-approved plan; this file is the reference and runbook for what is live._
+and claim assistance joined in Phase 5, the content creator in Phase 6. The
+full architecture is in the approved plan; this file is the reference and
+runbook for what is live._
 
 ## What it is
 
@@ -177,6 +178,31 @@ holds; two members cannot file the same claim (the existing partial unique
 on `place_claim_request` makes the second one a clean 409); and the flyer,
 like the place photos, must come from the member's own signed upload folder.
 
+## Model (Phase 6): the content creator
+
+| Table | Role |
+|---|---|
+| `fieldops_content_brief` | What the campaign wants made. Written by the team lead (or an admin), optionally assigned to the creator with a due date and a list of platforms. Readable by everyone on the campaign — it is the campaign's ask, not private work. |
+| `fieldops_content_submission` | One posted piece of content: platform, link, caption, and the creator's **self-reported** figures. `submitted → approved \| rejected`; a trigger refuses anyone but the active content creator, a partial unique on `lower(url)` refuses the same post twice, and a CHECK refuses a self-review. |
+
+Approval works exactly like a lead verifying an onboarding: it snapshots the
+live `content_deliverable` rule, starts a holding period, and records a
+**pending** commission. `fieldops_sweep_content` (same 15-minute job as the
+onboarding sweep) confirms it afterwards. Nothing about a post on someone
+else's platform can be checked from here, so what the holding period really
+buys is the chance for a human to retract the approval before the money is
+real; a creator who leaves the team mid-holding is not paid.
+
+**Engagement numbers are never paid on.** They are stored as self-reported
+and labelled that way on the creator's page, the lead's queue and the admin
+table — the lead is told to open the link and judge the work.
+
+**Monthly stipends** (`content_monthly_stipend`, `team_lead_monthly_stipend`)
+are not earned per item, so `fieldops_run_monthly_stipends` is authorised by
+an admin (`fieldops.commissions.approve` + step-up, audited) and creates
+`approved` commissions on the spot with that admin recorded. It is
+idempotent per member per month, so running it twice pays nobody twice.
+
 ## Onboarding flow
 
 1. Member opens a territory they are assigned to → **Onboard a business**
@@ -298,6 +324,12 @@ territory in the region and an active team lead); the same table lives in
   paid nobody.
 - **Switch payouts off:** Settings › "Payouts enabled". Batches cannot be
   built; everything already approved just waits.
+- **Run the content side:** the lead adds briefs at `/field/lead/content`;
+  the creator works from them and sends in links at `/field/content`; the
+  lead approves or rejects each one (a rejection needs a reason). Admin ›
+  Field Ops › Content shows every brief and deliverable across campaigns,
+  can decide in the lead's place, and runs a month's stipends for a
+  campaign.
 - **Run a team day (lead):** `/field/lead/territories` → add the towns
   ("Find on the map" or type coordinates) → `/field/lead/team` → invite
   members by phone (they join when they sign in with that number) →
@@ -329,7 +361,11 @@ territory in the region and an active team lead); the same table lives in
   owner, the self-claim and already-owned refusals, the duplicate-claim
   refusal, paying on an approved claim through the real `approve_place_claim`
   path, rejecting on a rejected one, and the dispute flag), and
-  `fieldops-payouts` covers the money leaving (destination masking and
+  `fieldops-content` covers the creator (role gate, duplicate post, brief
+  assignment rules, self-review refusal, approval → pending commission →
+  swept, a creator who leaves unpaid, admin override with its audit row,
+  and idempotent stipends), and `fieldops-payouts` covers the money
+  leaving (destination masking and
   the in-flight lock, grouping and the missing-number case, the
   second-admin rule, paid/failed/cancel, the member's history, the CSV
   gate, and the books balancing after a post-payment reversal).

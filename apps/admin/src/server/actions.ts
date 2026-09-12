@@ -16,6 +16,10 @@ import {
   upsertCampaignCore,
 } from "@abonten/services/admin/fieldOps/campaignsAdminCore";
 import { reverseCommissionAdminCore } from "@abonten/services/admin/fieldOps/commissionsAdminCore";
+import {
+  reviewContentAdminCore,
+  runMonthlyStipendsCore,
+} from "@abonten/services/admin/fieldOps/contentAdminCore";
 import { decideOnboardingAdminCore } from "@abonten/services/admin/fieldOps/onboardingsAdminCore";
 import {
   approvePayoutBatchCore,
@@ -137,6 +141,7 @@ import {
   fieldOpsAdminOnboardingDecisionSchema,
   fieldOpsCampaignSchema,
   fieldOpsCampaignStatusChangeSchema,
+  fieldOpsContentReviewSchema,
   fieldOpsGeocodeSchema,
   fieldOpsMemberRoleChangeSchema,
   fieldOpsMemberStatusSchema,
@@ -147,6 +152,7 @@ import {
   fieldOpsRuleActivationSchema,
   fieldOpsRuleVersionSchema,
   fieldOpsSettingsSchema,
+  fieldOpsStipendRunSchema,
   fieldOpsTerritorySchema,
 } from "@abonten/validation/fieldOpsSchemas";
 import { revalidatePath } from "next/cache";
@@ -1317,6 +1323,60 @@ export async function decideFieldOpsOnboarding(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "decideFieldOpsOnboarding");
+  }
+}
+
+/** Approves or rejects a content deliverable in the lead's place. */
+export async function decideFieldOpsContent(input: unknown) {
+  const parsed = fieldOpsContentReviewSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    const res = await reviewContentAdminCore(
+      svc(),
+      ctx,
+      {
+        submissionId: parsed.data.submissionId,
+        decision: parsed.data.decision,
+        note: parsed.data.note ?? null,
+      },
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/content");
+      revalidatePath("/field-ops/commissions", "layout");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "decideFieldOpsContent");
+  }
+}
+
+/**
+ * Authorises one month of stipends. It creates approved commissions, so it
+ * is fieldops.commissions.approve plus step-up, and it is idempotent per
+ * member per month.
+ */
+export async function runFieldOpsStipends(input: unknown) {
+  const parsed = fieldOpsStipendRunSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await runMonthlyStipendsCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/field-ops/content");
+      revalidatePath("/field-ops/commissions", "layout");
+      revalidatePath("/field-ops");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "runFieldOpsStipends");
   }
 }
 
