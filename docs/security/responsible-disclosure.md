@@ -40,7 +40,7 @@ Verification status (2026-09-12): **SOURCE VERIFIED and locally served** — `np
 ## Intake and handling
 
 1. Reports arrive at security@abontenhub.com (or, rarely, in the support conversation). Triage follows `../incident-response/vulnerability-report.md` — the founder is the incident commander (decision S1).
-2. **Acknowledgement target: NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** (decision O1 covers the urgent/security response target). The runbook's "1 working day" is an internal working target, not published and not a commitment.
+2. **Acknowledgement target (decision O1, 2026-09-12): two working days**, published on the Security page as a goal ("we aim to"), not a commitment; staffed Monday to Friday, 09:00–17:00 Ghana time. No resolution time is published. Internally the runbook aims for the same working day.
 3. Confirm and reproduce in a local stack, never on production with real users' data.
 4. Fix, deploy, verify; record an incident row in Admin › Monitoring.
 5. Tell the reporter when the fix is live and agree a publication date if they intend to publish.

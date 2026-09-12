@@ -54,6 +54,9 @@ Every change to a file in `apps/web/src/content/legal/` is versioned by git. In 
 | Privacy Policy | 1.2-draft | — | Minor: privacy and support addresses in §11 and §15; Google Workspace mailboxes added to the processor table in §4 (2026-09-12) | — (draft) |
 | Security overview | 1.1-draft | — | Minor: security@abontenhub.com published in "Reporting a vulnerability"; disclosure policy still pending (2026-09-12) | — (draft) |
 | Security overview | 1.2-draft | — | Minor: "Reporting a vulnerability" replaced by a full "Responsible disclosure" section (no time targets; explicit statement that no legal safe harbour is offered yet — legal D3); `/.well-known/security.txt` published (2026-09-12) | — (draft) |
+| Terms and Conditions | 1.3-draft | — | Minor: §19 support hours (Mon–Fri 09:00–17:00 Ghana time, public holidays excluded) and two-working-day reply goal, stated as a goal not a commitment (decision O1, 2026-09-12) | — (draft) |
+| Privacy Policy | 1.3-draft | — | Minor: §15 two-working-day acknowledgement goal for privacy requests; statutory limits unaffected (O1, 2026-09-12) | — (draft) |
+| Security overview | 1.3-draft | — | Minor: "What happens next" states the two-working-day acknowledgement goal for security reports (O1, 2026-09-12) | — (draft) |
 | Privacy Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Cookie Policy | 1.0-draft | — | Initial draft (2026-09-12) | — |
 | Security overview | 1.0-draft | — | Initial draft (2026-09-12) | — |

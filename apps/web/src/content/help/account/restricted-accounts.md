@@ -28,7 +28,7 @@ Restriction does not delete anything. Tickets already issued remain records; ref
 
 ## How to contact us
 
-Abonten does not have a formal appeals form yet. Email **support@abontenhub.com** from the email address on your account (or, if you can still reach it, use the **in-app support conversation**). Explain what happened; an administrator with the right permission can review and, where appropriate, restore your account.
+Abonten does not have a formal appeals form yet. Email **support@abontenhub.com** from the email address on your account (or, if you can still reach it, use the **in-app support conversation**). Explain what happened; an administrator with the right permission can review and, where appropriate, restore your account. Support is staffed Monday to Friday, 09:00–17:00 Ghana time, and we aim to reply within two working days (a goal, not a guarantee).
 
 ## Restored accounts
 

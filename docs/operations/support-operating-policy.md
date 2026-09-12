@@ -14,23 +14,23 @@ complianceReviewRequired: no
 
 # O1 — Support operating policy (decision record)
 
-**Current public position (accurate, published in Terms §19):** Abonten does not publish support hours or response targets. Nothing in the product, the help centre or the legal pages promises a response time. This document does not change that; it records the decision that would.
+**Current public position (Terms §19, since 2026-09-12):** support is staffed Monday to Friday, 09:00–17:00 Ghana time (GMT), excluding Ghanaian public holidays; Abonten *aims* to reply to support and privacy enquiries, and to acknowledge security reports, within two working days. These are published as goals, not guarantees. Before 2026-09-12 nothing was published; this document records the decision and where it was applied.
 
 ## 1. Decision required
 
 | Field | Decision |
 |---|---|
-| Support operating days | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** |
-| Support operating hours | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** |
-| Timezone | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** (Ghana observes GMT year-round; still a decision to state it) |
-| Normal response target (first reply) | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** |
-| Urgent / security response target | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** |
-| Whether targets are goals or contractual commitments | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** — until decided, every target is an internal goal and must be published (if at all) as "we aim to", never as a guarantee |
-| Escalation procedure (who, when, how the user is told) | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** (interim internal routing exists: `account-and-support-procedures.md`, `../privacy/privacy-rights-operations.md`, `../incident-response/README.md`) |
-| Weekends and Ghanaian public holidays included? | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** |
+| Support operating days | **Decided (founder, 2026-09-12): Monday to Friday** |
+| Support operating hours | **Decided (2026-09-12): 09:00–17:00** |
+| Timezone | **Decided (2026-09-12): Ghana time (GMT, no daylight saving)** |
+| Normal response target (first reply) | **Decided (2026-09-12): two working days — a goal.** Published as "we aim to reply within two working days" |
+| Urgent / security response target | **Decided (2026-09-12): acknowledgement of security reports within two working days — a goal.** Fix or resolution timing is not promised |
+| Whether targets are goals or contractual commitments | **Decided (2026-09-12): goals, not contractual commitments.** Every published statement uses "we aim to"; none is a guarantee or a service-level agreement. Counsel may still review the wording in the Terms (legal E4) |
+| Escalation procedure (who, when, how the user is told) | **NOT YET DEFINED — BUSINESS POLICY DECISION REQUIRED** — not covered by the 2026-09-12 decision; tracked as decision O7. Interim internal routing exists: `account-and-support-procedures.md`, `../privacy/privacy-rights-operations.md`, `../incident-response/README.md` |
+| Weekends and Ghanaian public holidays included? | **Decided (2026-09-12): excluded.** "Working day" means Monday to Friday excluding Ghanaian public holidays |
 | Emergency or 24/7 availability | **Not offered.** Do not state or imply otherwise anywhere |
 
-Decision owner: the founder. Record the decision here (with date) and in `../OPERATIONAL_DECISIONS_REQUIRED.md` O1, then work through §4.
+Decision recorded by the founder on 2026-09-12 (register `../OPERATIONAL_DECISIONS_REQUIRED.md` O1 — Decided; O7 — escalation, Open). §4 below was worked through the same day; the resulting wording is listed in §3.
 
 ## 2. What the product exposes today (verified)
 
@@ -47,7 +47,7 @@ Decision owner: the founder. Record the decision here (with date) and in `../OPE
 
 ## 3. Every location that mentions support availability or timing (audit 2026-09-12)
 
-Public statements are limited to "not published" or "working days" with no commitment. Internal documents hold working targets; each is labelled here as **internal — not a commitment**.
+This table is the audit taken **before** the decision. On 2026-09-12 the decided wording was applied to: Terms §19 (1.3-draft), Privacy §15 (1.3-draft), Security page "What happens next" (1.3-draft), help pages `customers/getting-started` (new "Contacting support" section), `account/restricted-accounts`, `account/privacy-and-your-data`, the field-operations handbook README, `admin/support.md`, `account-and-support-procedures.md`, `../privacy/privacy-rights-operations.md`, `../incident-response/vulnerability-report.md` and `../security/responsible-disclosure.md`. The "Current wording" column below is therefore historical for those rows; the incident-response severity table keeps its internal targets, labelled as such.
 
 | Location | Current wording | Type | Action when O1 is decided |
 |---|---|---|---|

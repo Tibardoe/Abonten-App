@@ -16,6 +16,11 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-12 — O1 support operating policy decided
+
+- Founder's decision: support staffed **Monday to Friday, 09:00–17:00 Ghana time (GMT)**, Ghanaian public holidays excluded; **two-working-day reply goal** for support and privacy enquiries; **two-working-day acknowledgement goal** for security reports; all published as goals, never as contractual commitments. Escalation procedure not decided — new decision **O7**.
+- Applied: Terms 1.3-draft §19, Privacy Policy 1.3-draft §15, Security overview 1.3-draft "What happens next", help pages `account/restricted-accounts` and `account/privacy-and-your-data`, `operations/support-operating-policy.md` (decision record), `operations/account-and-support-procedures.md`, `privacy/privacy-rights-operations.md` (acknowledgement 3 → 2 working days), `admin/support.md`, `incident-response/vulnerability-report.md`, `security/responsible-disclosure.md`, registers, legal register and versioning log.
+
 ## 2026-09-12 — Merged to main; production and device verification
 
 - The documentation-programme branch merged to `main` (`9b6c8b23`, no-fast-forward) and deployed by Vercel (production deployment `dpl_6HMSpPGYBNFkmeubVkrYZuKifNAJ`). `/.well-known/security.txt` **PRODUCTION VERIFIED**: `200`, `text/plain; charset=utf-8`, `X-Matched-Path: /.well-known/security.txt`, policy anchor present on `/legal/security`; `/terms` → `308` `/legal/terms`.

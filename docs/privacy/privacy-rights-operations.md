@@ -16,7 +16,7 @@ complianceReviewRequired: yes
 
 Pattern for every request: **Received → Verify identity → Locate data → Assess → Execute → Record → Respond → Escalate if needed.**
 
-Statutory response times under the Data Protection Act, 2012 are **legal item B5**; until confirmed, treat every request as due within **30 days** and acknowledge within 3 working days. Both figures are an **internal interim working practice** — they are not published anywhere, are not a commitment to users, and will be replaced by the statutory period (B5) and the support operating policy (decision O1, `../operations/support-operating-policy.md`).
+Statutory response times under the Data Protection Act, 2012 are **legal item B5**; until confirmed, treat every request as due within **30 days** — an **internal interim working practice**, not published and not a commitment. Acknowledge every request within **two working days** (Monday to Friday, 09:00–17:00 Ghana time): that is the published goal set by decision O1 (`../operations/support-operating-policy.md`) and appears in Privacy Policy §15.
 
 ## Where requests arrive
 
@@ -72,7 +72,7 @@ Abonten sends no marketing. If asked, confirm this in writing and point to the r
 
 ## 6. Privacy complaint
 
-1. Acknowledge within 3 working days.
+1. Acknowledge within two working days (published goal, O1).
 2. Escalate to the founder the same day; involve counsel if the complaint alleges unlawful processing or a breach.
 3. Investigate using the inventory and audit log (`admin_audit_log`, `moderation_action`, `report_event`).
 4. Respond with findings and remedy. Inform the person of their right to complain to the Data Protection Commission.

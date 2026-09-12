@@ -132,7 +132,7 @@ Journey index: [journeys/README.md](journeys/README.md). Legal versioning: [lega
 
 | Gap | Tracked in |
 |---|---|
-| Support hours and response target | Decision O1 · [Support operating policy](operations/support-operating-policy.md) |
+| ~~Support hours and response target~~ | Closed 2026-09-12 (decision O1) · [Support operating policy](operations/support-operating-policy.md); escalation procedure remains open (O7) |
 | ~~Official support, privacy and security contacts~~ | Closed 2026-09-12 (legal A3) · [Contacts spec](specifications/support-and-security-contacts.md) |
 | DPC registration status; Business Operating Permit | Legal A2, A4 · [DPC record](legal/dpc-registration.md) · [BOP record](legal/business-operating-permit.md) |
 | Responsible-disclosure safe harbour | Legal D3 · [Responsible disclosure framework](security/responsible-disclosure.md) |

@@ -57,3 +57,9 @@ Settings › Language offers English, French, Spanish, German, Portuguese and Ak
 - **"Too many attempts"** — you can enter a code wrongly five times before it is cancelled; request a new one. Sending is also limited per hour to protect your number.
 - **Google sign-in fails** — try again; if it keeps failing, use your phone number or email instead. The same email address reaches the same account.
 - **"Your account is restricted"** — see [Restricted accounts](/help/account/restricted-accounts).
+
+## Contacting support
+
+- **In the app or on the website:** open Messages and choose *Contact Abonten Support* (web) or Account › *Help & support* (app). Replies arrive as messages and notifications.
+- **If you cannot sign in:** email **support@abontenhub.com** from the email address on your account.
+- **Hours:** support is staffed Monday to Friday, 09:00–17:00 Ghana time (GMT), excluding public holidays. We aim to reply within two working days — this is a goal, not a guarantee. Abonten does not offer phone or 24/7 support.
