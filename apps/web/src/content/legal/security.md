@@ -12,7 +12,7 @@ legalReviewRequired: no
 
 # Security at Abonten
 
-> **Draft for review.** This page describes the controls that exist today. Abonten does not hold any security certification (for example PCI DSS or ISO 27001) and does not claim one; card data is handled entirely by our payment provider.
+> **Draft for review.** This page describes the controls that exist today. Abonten does not hold any security certification (for example PCI DSS or ISO 27001) and does not claim one; card data is handled entirely by our payment provider. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
 
 ## Accounts and sign-in
 
@@ -51,4 +51,4 @@ legalReviewRequired: no
 
 ## Reporting a vulnerability
 
-If you find a security weakness in Abonten, please tell us before making it public. Report it through the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app) and describe what you found and how to reproduce it. A dedicated security contact address and a responsible-disclosure policy are being prepared and will be published here.
+If you find a security weakness in Abonten, please tell us before making it public. Report it through the in-app support conversation (Messages › "Contact Abonten Support" on the web, or Account › Help & support in the app) and describe what you found and how to reproduce it. Security contact: [SECURITY CONTACT — TO BE CONFIRMED]. A responsible-disclosure policy is being prepared and will be published here.

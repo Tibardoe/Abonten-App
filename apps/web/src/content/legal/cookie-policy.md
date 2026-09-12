@@ -12,7 +12,7 @@ legalReviewRequired: yes
 
 # Cookie Policy
 
-> **Draft for review.** This policy is an exact inventory of what the website and app store today. Whether a consent banner is required for the attribution and abuse-detection cookies listed below is a question for legal review; none is shown at present.
+> **Draft for review.** This policy is an exact inventory of what the website and app store today. Whether a consent banner is required for the attribution and abuse-detection cookies listed below is a question for legal review; none is shown at present. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
 
 ## 1. What cookies are
 

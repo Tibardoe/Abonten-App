@@ -58,6 +58,12 @@ Every statement about system behaviour must be traceable to the code, the schema
 
 and add a row to `OPERATIONAL_DECISIONS_REQUIRED.md`. Retention values without an implemented job are written as **POLICY DECISION REQUIRED**. Anything that needs a lawyer or an official confirmation goes to `LEGAL_REVIEW_REQUIRED.md`.
 
+Three further conventions follow from this rule:
+
+- **Placeholders, not inventions.** Facts the founder has not supplied (legal entity, addresses, contact channels, effective dates) appear in the public legal documents as `[NAME — TO BE CONFIRMED]` tokens, listed in `LEGAL_REVIEW_REQUIRED.md` §H. `scripts/check-docs.mjs` fails if a legal document is Published or Approved while any remain.
+- **Recommendations are labelled.** Where a register offers a suggested default, the column or sentence says *recommendation, not approved policy*. No document may describe a recommendation as the current rule until the register row is Decided.
+- **Specifications are gated.** A design for work that depends on an open decision lives in `docs/specifications/`, ends with an "Approval required before implementation" section naming the register items, and is never built before those items are Decided.
+
 Never document a planned, flag-gated-off or shadow-mode feature as available. Say what state it is in.
 
 ## 4. Public vs internal

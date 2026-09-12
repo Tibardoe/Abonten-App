@@ -4,7 +4,7 @@ purpose: List every point in Abonten's documentation and product that requires q
 audience: Founder, legal counsel, compliance reviewer
 scope: Public legal documents, privacy programme, payments, consumer terms, app-store obligations
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-12
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,7 +14,9 @@ complianceReviewRequired: yes
 
 # Legal review register
 
-The documents in `apps/web/src/content/legal/` are **drafts prepared from the codebase, not legal advice**. Nothing in them claims registration, certification, licensing or compliance. This register lists what a qualified reviewer must confirm or decide. Items are grouped by the law or topic they concern; no law beyond those named is asserted to apply.
+> **Every item in this register requires review by qualified legal or compliance counsel.** The engineering team has not made any of these decisions and must not make them; where a specification under [specifications/](specifications/README.md) describes how something could be built, that is a technical design awaiting the decision, not a decision.
+
+The documents in `apps/web/src/content/legal/` are **professional drafts prepared from the codebase, not legal advice**. They describe what the product actually does. Nothing in them claims — and nothing in this repository may claim — that Abonten is legally compliant, registered with the Data Protection Commission, certified, licensed or approved, unless that fact has been explicitly verified and recorded here with its evidence. This register lists what a qualified reviewer must confirm or decide. Items are grouped by the law or topic they concern; no law beyond those named is asserted to apply.
 
 Status values: **Open** · **In review** · **Decided** (record the decision and date).
 
@@ -85,8 +87,36 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 | G1 | If marketing emails or SMS are ever introduced: consent capture and opt-out under Act 843 | Privacy §8 | Decide before launch | Open |
 | G2 | Reward-notice emails: confirm they are service messages, not marketing, given the existing opt-out | Privacy §8 | Confirm | Open |
 
+## H. Placeholders standing in for information not yet provided
+
+These tokens appear verbatim in the public drafts. They are deliberate: the information has not been provided and must not be invented. `scripts/check-docs.mjs` counts them and fails if a legal document is marked Published or Approved while any remain.
+
+| Placeholder | Documents | Provided by | Register item |
+|---|---|---|---|
+| `[LEGAL ENTITY NAME — TO BE CONFIRMED]` | Terms §1, Privacy §1 | Founder | A1 |
+| `[COMPANY REGISTRATION NUMBER — TO BE CONFIRMED]` | Terms §1 | Founder | A1 |
+| `[REGISTERED ADDRESS — TO BE CONFIRMED]` | Terms §1, Privacy §1 and §15 | Founder | A1 |
+| `[DPC REGISTRATION STATUS — TO BE CONFIRMED]` | Privacy §1 | Verified fact only — never assumed | A2 |
+| `[SUPPORT CONTACT — TO BE CONFIRMED]` | Terms §19 | Founder | A3 (with decision O1) |
+| `[PRIVACY CONTACT — TO BE CONFIRMED]` | Terms §19, Privacy §15 | Founder | A3 |
+| `[SECURITY CONTACT — TO BE CONFIRMED]` | Security page | Founder | A3 (with decision S2) |
+| `[EFFECTIVE DATE — TO BE CONFIRMED]` | Draft banner and `effectiveDate` of all four documents | Counsel at approval | See `legal/versioning-and-effective-dates.md` |
+
+Procedure for filling them: [specifications/support-and-security-contacts.md](specifications/support-and-security-contacts.md) §3.
+
+## Specifications waiting on this register
+
+| Specification | Blocking legal items |
+|---|---|
+| [specifications/cookie-consent.md](specifications/cookie-consent.md) | B4 |
+| [specifications/age-gate.md](specifications/age-gate.md) | B7 |
+| [specifications/data-export.md](specifications/data-export.md) | B5 |
+| [specifications/retention-jobs.md](specifications/retention-jobs.md) | B3, B9, E3 |
+| [specifications/appeals-workflow.md](specifications/appeals-workflow.md) | E4 (wording) |
+| [specifications/support-and-security-contacts.md](specifications/support-and-security-contacts.md) | A1–A3 |
+
 ## How to use this register
 
 1. Counsel works through each row and records the decision and date in the Status column.
-2. Engineering implements any resulting change (for example a cookie banner, a retention job, an age gate) and updates the affected documents.
-3. When every row a document depends on is Decided, the document can move from **Review required** to **Published** with an effective date (see `legal/versioning-and-effective-dates.md`).
+2. Engineering implements any resulting change (for example a cookie banner, a retention job, an age gate) from the matching specification and updates the affected documents.
+3. When every row a document depends on is Decided and every placeholder in section H is filled, the document can move from **Review required** to **Published** with an effective date (see `legal/versioning-and-effective-dates.md`). Never before.

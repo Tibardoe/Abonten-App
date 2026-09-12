@@ -12,13 +12,13 @@ legalReviewRequired: yes
 
 # Terms and Conditions
 
-> **Draft for review.** This document describes how Abonten Hub works today and the terms we intend to apply. It has not yet been reviewed by legal counsel and has no effective date. Until it does, the sections below are our published description of the service, not a finalised contract.
+> **Draft for review.** This document describes how Abonten Hub works today and the terms we intend to apply. It has not yet been reviewed by legal counsel and has no effective date. Until it does, the sections below are our published description of the service, not a finalised contract. Effective date: [EFFECTIVE DATE — TO BE CONFIRMED].
 
 ## 1. Who we are and what these terms cover
 
 Abonten Hub ("Abonten", "we", "us") is a platform for discovering events and places in Ghana, buying event tickets, requesting bookings at places, messaging organizers and place owners, and sharing highlights and reviews. It is available at abontenhub.com and through the Abonten mobile app.
 
-The operating legal entity, registered address and company registration details will be stated here once confirmed. Until then, contact us through the in-app support conversation described in section 19.
+Abonten is operated by [LEGAL ENTITY NAME — TO BE CONFIRMED] (company registration number [COMPANY REGISTRATION NUMBER — TO BE CONFIRMED]), whose registered address is [REGISTERED ADDRESS — TO BE CONFIRMED]. These details will be completed once confirmed. Until then, contact us through the in-app support conversation described in section 19.
 
 These terms apply to everyone who uses Abonten: people who browse and buy ("customers"), people who list and run events ("organizers"), people who manage a place listing ("place owners"), and members of Abonten's own field teams where that programme is running. Additional rules for organizers, place owners and field-team members are in sections 8 to 11.
 
@@ -211,7 +211,7 @@ Places may list phone numbers, WhatsApp numbers and websites; contacting a busin
 
 Support is provided through the **in-app support conversation**: open Messages and choose "Contact Abonten Support" (web) or Account › Help & support (app). Replies arrive as messages and notifications. The help centre at [abontenhub.com/help](/help) answers common questions.
 
-A dedicated email address for legal and privacy enquiries will be published here once confirmed.
+Official support contact: [SUPPORT CONTACT — TO BE CONFIRMED]. Legal and privacy enquiries: [PRIVACY CONTACT — TO BE CONFIRMED]. These channels will be published here once confirmed; until then, please use the in-app support conversation.
 
 ## 20. Disclaimers
 
