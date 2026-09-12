@@ -11,6 +11,7 @@ import { createSsrClient } from "@/lib/supabaseServer";
 import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
+import { exportCampaignStatsCsvCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
   setCampaignStatusCore,
   upsertCampaignCore,
@@ -1323,6 +1324,19 @@ export async function decideFieldOpsOnboarding(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "decideFieldOpsOnboarding");
+  }
+}
+
+/** The campaign's team table as a spreadsheet (fieldops.view). */
+export async function exportFieldOpsCampaignStats(campaignId: unknown) {
+  if (typeof campaignId !== "string") {
+    return { status: 400, message: "Invalid campaign" };
+  }
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    return await exportCampaignStatsCsvCore(svc(), ctx, campaignId);
+  } catch (e) {
+    return adminError(e, "exportFieldOpsCampaignStats");
   }
 }
 

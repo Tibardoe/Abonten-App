@@ -804,3 +804,100 @@ export type FieldOpsMyContent = {
   /** False for anyone who is not the campaign's content creator. */
   canSubmit: boolean;
 };
+
+// ── Phase 7: analytics ──────────────────────────────────────
+
+export type FieldOpsCampaignStats = {
+  campaignId: string;
+  status: string;
+  currency: string;
+  members: {
+    total: number;
+    active: number;
+    invited: number;
+    suspended: number;
+  };
+  territories: {
+    total: number;
+    covered: number;
+    completed: number;
+    uncovered: number;
+    coveragePct: number;
+  };
+  prospects: { total: number; contacted: number; converted: number };
+  onboardings: {
+    total: number;
+    draft: number;
+    submitted: number;
+    needs_changes: number;
+    verified: number;
+    flagged: number;
+    succeeded: number;
+    rejected: number;
+    withdrawn: number;
+    places: number;
+    events: number;
+    claim_assists: number;
+  };
+  content: { total: number; waiting: number; approved: number };
+  money: {
+    pending_minor: number;
+    approved_minor: number;
+    in_payout_minor: number;
+    paid_minor: number;
+    pending_count: number;
+    approved_count: number;
+    paid_count: number;
+  };
+  /** Null until something has actually succeeded. */
+  costPerSuccessMinor: number | null;
+};
+
+export type FieldOpsMemberStats = {
+  memberId: string;
+  memberUserId: string | null;
+  fullName: string | null;
+  role: FieldOpsMemberRole;
+  status: FieldOpsMemberStatus;
+  assignedDays: number;
+  prospects: number;
+  submitted: number;
+  verified: number;
+  succeeded: number;
+  rejected: number;
+  contentApproved: number;
+  earnedMinor: number;
+  paidMinor: number;
+  /** How long their work typically waits for a review, in hours. */
+  medianReviewHours: number | null;
+};
+
+export type FieldOpsTerritoryStats = {
+  territoryId: string;
+  name: string;
+  status: string;
+  covered: boolean;
+  prospects: number;
+  contacted: number;
+  submitted: number;
+  succeeded: number;
+  rejected: number;
+};
+
+export type FieldOpsDailyPoint = {
+  day: string;
+  submitted: number;
+  verified: number;
+  succeeded: number;
+  rejected: number;
+  earnedMinor: number;
+};
+
+/** Everything one analytics screen needs, in one call. */
+export type FieldOpsAnalytics = {
+  campaign: FieldOpsCampaignSummary;
+  stats: FieldOpsCampaignStats;
+  members: FieldOpsMemberStats[];
+  territories: FieldOpsTerritoryStats[];
+  daily: FieldOpsDailyPoint[];
+};

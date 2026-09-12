@@ -24,6 +24,7 @@ import {
   listModeratableContentCore,
 } from "@abonten/services/admin/content/contentBrowseCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
+import { getCampaignAnalyticsCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
   type ListCampaignsFilters,
   getCampaignDetailCore,
@@ -576,6 +577,16 @@ export async function loadFieldOpsContent(filters: {
     listCampaignsCore(svc, ctx, { status: "all" }),
   ]);
   return { ctx, content, campaigns };
+}
+
+export async function loadFieldOpsCampaignAnalytics(campaignId: string) {
+  const ctx = await requireAdmin();
+  const analytics = await getCampaignAnalyticsCore(
+    getServiceClient(),
+    ctx,
+    campaignId,
+  );
+  return { ctx, analytics };
 }
 
 export async function loadFieldOpsSettings() {

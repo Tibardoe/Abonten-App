@@ -9908,6 +9908,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      fieldops_campaign_stats: {
+        Args: { p_campaign_id: string };
+        Returns: Json;
+      };
       fieldops_cancel_payout_batch: {
         Args: { p_admin: string; p_batch_id: string; p_reason: string };
         Returns: {
@@ -9944,6 +9948,17 @@ export type Database = {
           p_rule_id: string;
         };
         Returns: undefined;
+      };
+      fieldops_daily_series: {
+        Args: { p_campaign_id: string; p_from: string; p_to: string };
+        Returns: {
+          day: string;
+          earned_minor: number;
+          rejected: number;
+          submitted: number;
+          succeeded: number;
+          verified: number;
+        }[];
       };
       fieldops_decide_flag: {
         Args: {
@@ -10083,6 +10098,26 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      fieldops_member_stats: {
+        Args: { p_campaign_id: string };
+        Returns: {
+          assigned_days: number;
+          content_approved: number;
+          earned_minor: number;
+          full_name: string;
+          median_review_hours: number;
+          member_id: string;
+          member_user_id: string;
+          paid_minor: number;
+          prospects: number;
+          rejected: number;
+          role: string;
+          status: string;
+          submitted: number;
+          succeeded: number;
+          verified: number;
+        }[];
       };
       fieldops_memberships_for: {
         Args: { p_user_id: string };
@@ -10280,6 +10315,20 @@ export type Database = {
       fieldops_territory_contains: {
         Args: { p_lat: number; p_lng: number; p_territory_id: string };
         Returns: boolean;
+      };
+      fieldops_territory_stats: {
+        Args: { p_campaign_id: string };
+        Returns: {
+          contacted: number;
+          covered: boolean;
+          name: string;
+          prospects: number;
+          rejected: number;
+          status: string;
+          submitted: number;
+          succeeded: number;
+          territory_id: string;
+        }[];
       };
       fieldops_transition_onboarding: {
         Args: {
