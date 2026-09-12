@@ -2,6 +2,8 @@ import { useSession } from "@/auth/SessionProvider";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
+import { HELP_URL, LEGAL_LINK_ROWS, openExternalLink } from "@/lib/legalLinks";
+import { SOCIAL_LINKS } from "@abonten/core/brand/socialLinks";
 import {
   AbontenLogo,
   AppText,
@@ -48,7 +50,11 @@ import { useMenuSheet } from "./menuSheet";
 // through everywhere except the ~22px edge strip (closed) or the whole
 // surface (open).
 
-const WEBSITE = "https://abontenhub.com";
+const SOCIAL_ICON: Record<(typeof SOCIAL_LINKS)[number]["key"], IoniconName> = {
+  x: "logo-x",
+  instagram: "logo-instagram",
+  tiktok: "logo-tiktok",
+};
 const OPEN_MS = 260;
 const CLOSE_MS = 200;
 const EDGE_WIDTH = 22;
@@ -211,9 +217,9 @@ export function AppDrawer() {
     close();
     router.push(path);
   };
-  const openWeb = () => {
+  const openExternal = (url: string) => {
     close();
-    Linking.openURL(WEBSITE).catch(() => {});
+    void openExternalLink(url);
   };
 
   return (
@@ -428,17 +434,36 @@ export function AppDrawer() {
             <Divider className="my-5" />
 
             <View className="gap-3">
-              {["Terms & Conditions", "Privacy", "Cookies", "Security"].map(
-                (label) => (
+              {LEGAL_LINK_ROWS.map(({ label, url }) => (
+                <Pressable
+                  key={label}
+                  accessibilityRole="link"
+                  onPress={() => openExternal(url)}
+                  className="active:opacity-60"
+                >
+                  <AppText variant="muted">{label}</AppText>
+                </Pressable>
+              ))}
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => openExternal(HELP_URL)}
+                className="active:opacity-60"
+              >
+                <AppText variant="muted">Help centre</AppText>
+              </Pressable>
+              <View className="mt-1 flex-row items-center gap-5">
+                {SOCIAL_LINKS.map((link) => (
                   <Pressable
-                    key={label}
-                    onPress={openWeb}
+                    key={link.key}
+                    accessibilityRole="link"
+                    accessibilityLabel={`Abonten on ${link.label}`}
+                    onPress={() => Linking.openURL(link.href).catch(() => {})}
                     className="active:opacity-60"
                   >
-                    <AppText variant="muted">{label}</AppText>
+                    <Icon name={SOCIAL_ICON[link.key]} size={22} tone="muted" />
                   </Pressable>
-                ),
-              )}
+                ))}
+              </View>
               <AppText variant="meta" className="mt-1">
                 © {new Date().getFullYear()} Abonten Hub
               </AppText>
