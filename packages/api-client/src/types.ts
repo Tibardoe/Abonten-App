@@ -1627,6 +1627,36 @@ export type { FieldOpsMyEarnings } from "@abonten/types/fieldOps";
 /** null when the caller is on no campaign at all. */
 export type FieldOpsEarningsResult = ApiEnvelope<FieldOpsMyEarnings | null>;
 
+export type FieldOpsClaimAssistBody = {
+  campaignId: string;
+  placeId: string;
+  note?: string | null;
+  submissionLocation?: { lat: number; lng: number } | null;
+  submissionAccuracyM?: number | null;
+};
+
+export type FieldOpsEventSubmitBody = {
+  campaignId: string;
+  event: {
+    title: string;
+    description: string;
+    category: string;
+    types: string[];
+    address: string;
+    location: { lat: number; lng: number };
+    startsAt: string;
+    endsAt: string;
+    capacity?: number | null;
+    websiteUrl?: string | null;
+    requireRegistration: boolean;
+    freeEvent: boolean;
+    singleTicket?: { price: number; quantity: number | null } | null;
+    flyer: { publicId: string; version: string };
+  };
+  submissionLocation?: { lat: number; lng: number } | null;
+  submissionAccuracyM?: number | null;
+};
+
 export type { FieldOpsPayoutDestination } from "@abonten/types/fieldOps";
 export type FieldOpsPayoutDestinationResult =
   ApiEnvelope<FieldOpsPayoutDestination>;

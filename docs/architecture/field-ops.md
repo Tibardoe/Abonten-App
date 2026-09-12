@@ -1,13 +1,13 @@
 # Field Ops: the regional promotion & field operations programme
 
-_Phases 0-4 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
+_Phases 0-5 shipped 2026-09-11/12 (branches `feat/field-ops-p0` … `-p4`).
 The owner approved the full plan and the four gating decisions: team leads
 and workers use the web app (`/field`, Phase 1); business ownership is
 proven by an OTP the owner enters (Phase 2); a commission needs the team
 lead's review plus a holding period re-checked by a sweep (Phase 3); payouts
-are weekly manual MoMo batches approved by a second admin (Phase 4). The
-full architecture is in the approved plan; this file is the reference and
-runbook for what is live._
+are weekly manual MoMo batches approved by a second admin (Phase 4). Events
+and claim assistance joined in Phase 5. The full architecture is in the
+approved plan; this file is the reference and runbook for what is live._
 
 ## What it is
 
@@ -145,12 +145,45 @@ really did leave — and the negative offset beside it is what nets the member
 down; reversing something that had not been sent yet simply makes it
 `reversed`.
 
+## Model (Phase 5): events and claim assistance
+
+Both are the same onboarding record with a different activity and a
+different moment of payment.
+
+| Activity | What the member does | When it pays |
+|---|---|---|
+| `event_onboarding_*` | Verifies the **organiser** by OTP, then lists the event through the ordinary `create_event` path so the organiser owns it from the start. | `release_policy: event_started` — only once `starts_at` has passed and the event was neither cancelled nor moderated away. A flyer that never happens pays nothing. |
+| `existing_place_claim_assist` | The business is already listed. Instead of creating a duplicate, the member verifies the **real owner** by OTP and files a `place_claim_request` with `claimant_id = owner_user_id`. | `release_policy: claim_approved` — only once an admin approves that claim through the existing Claims module. Worth less than a full onboarding, because less was done. |
+
+The sweep now honours all three gates. A row that is not due yet is left
+alone and looked at again next run — no flag, no noise — and counted as
+`waiting` in the job row and `waiting_on_release` in health. `due_not_swept`
+only counts rows whose gate has actually opened, so a six-week-away event is
+never mistaken for a stuck one.
+
+What the evaluator checks differs by activity: a claim assist has no photos,
+opening hours or pin of the team's own, so those checks are skipped — what
+matters is that the claim was filed for the verified owner and approved. An
+event is checked for being published, unmoderated, still the organiser's,
+created from this onboarding, and (if the rule says so) listed a real number
+of days before it runs.
+
+`fieldops_flag_on_claim` flags any onboarding whose listing someone **else**
+later tries to claim: an ownership dispute is always worth a human look.
+
+Guards that are worth stating plainly: the member can never be the claimant,
+can never claim their own listing, and cannot file a claim the owner already
+holds; two members cannot file the same claim (the existing partial unique
+on `place_claim_request` makes the second one a clean 409); and the flyer,
+like the place photos, must come from the member's own signed upload folder.
+
 ## Onboarding flow
 
 1. Member opens a territory they are assigned to → **Onboard a business**
    (or from a logged prospect). A draft opens (idempotent per tap).
-2. Business name + pin → duplicate check. A likely match means withdraw
-   (claim assistance for existing listings is Phase 5).
+2. Business name + pin → duplicate check. A likely match now offers
+   **claim assistance** instead: pick the existing listing and help its
+   owner claim it, which is paid in its own right.
 3. Owner's name + phone → a code goes to the OWNER's phone (never the
    member's or any teammate's). The owner types it on the member's phone,
    or — online mode — opens the consent link `/consent/field/<token>` on
@@ -290,7 +323,13 @@ territory in the region and an active team lead); the same table lives in
   the commission ledger end to end (pending at verification, every sweep
   branch, budget cap, frozen rate across a version change, double-run
   idempotency, immutability and reversal, RLS, health and reconciliation),
-  and `fieldops-payouts` covers the money leaving (destination masking and
+  `fieldops-events-claims` covers the two Phase 5 activities (the event
+  created under the organiser, the flyer-folder and past-date guards,
+  waiting / paying / rejecting on the event gate, a real claim filed for the
+  owner, the self-claim and already-owned refusals, the duplicate-claim
+  refusal, paying on an approved claim through the real `approve_place_claim`
+  path, rejecting on a rejected one, and the dispute flag), and
+  `fieldops-payouts` covers the money leaving (destination masking and
   the in-flight lock, grouping and the missing-number case, the
   second-admin rule, paid/failed/cancel, the member's history, the CSV
   gate, and the books balancing after a post-payment reversal).

@@ -93,6 +93,14 @@ export default async function FieldTerritoryPage({
                 size="default"
                 variant="outline"
               />
+              <StartOnboardingButton
+                campaignId={current.campaign.id}
+                territoryId={territory.id}
+                kind="event"
+                label="Onboard an event"
+                size="default"
+                variant="outline"
+              />
               <ProspectForm
                 campaignId={current.campaign.id}
                 territoryId={territory.id}

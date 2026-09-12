@@ -13,6 +13,10 @@ export type WizardState = {
   location: { lat: number; lng: number } | null;
   locationAccuracyM: number | null;
   duplicateAcknowledged: boolean;
+  /** Set when the member chose to help the owner claim an existing listing
+   *  instead of creating a second one. */
+  claimPlaceId: string | null;
+  claimPlaceName: string | null;
   ownerFullName: string;
   ownerPhone: string;
   categoryId: number | null;
@@ -45,6 +49,8 @@ export function emptyWizardState(seed: {
     location: null,
     locationAccuracyM: null,
     duplicateAcknowledged: false,
+    claimPlaceId: null,
+    claimPlaceName: null,
     ownerFullName: seed.ownerFullName ?? "",
     ownerPhone: "",
     categoryId: null,

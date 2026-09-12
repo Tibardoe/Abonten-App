@@ -2563,7 +2563,7 @@ and production build. Not sent through a real purchase or cancellation.
 
 ---
 
-## 28. Field Ops — regional promotion & field operations programme, Phases 0–4 (2026-09-11/12)
+## 28. Field Ops — regional promotion & field operations programme, Phases 0–5 (2026-09-11/12)
 
 A modular, switchable programme: a ~12-person regional team (team lead,
 content creator, offline + online members) is assigned to the towns of one
@@ -2952,9 +2952,57 @@ applied to production via MCP, advisor-clean, replays from scratch; branch
   gate, and the books balancing after a post-payment reversal), full suite
   **36 files / 278 tests**; `turbo typecheck` 11/11; web and admin builds
   clean with `/field-ops/payouts[/id]` present; parity 148; Biome clean.
-- **Not yet built:** events / claim assistance (P5 — the wizard still tells
-  the member to withdraw when the business is already listed), content
-  creator (P6), analytics (P7), Playwright + pilot readiness (P8).
+**Phase 5 — events and claim assistance (migrations
+`20260912003951_fieldops_events_claims` and
+`20260912005814_fieldops_notify_never_blocks`, both applied to production via
+MCP, advisor-clean, replay from scratch; branch `feat/field-ops-p5`).**
+
+- **Events.** The wizard gets an event branch (`EventOnboardingWizard`:
+  organiser → the event → flyer) sharing one extracted
+  `OwnerVerificationStep` with the business wizard. `submitEventOnboardingCore`
+  creates the event through the ordinary `postEventCore` / `create_event`
+  path under the **organiser**, with the onboarding's `client_request_id`, so
+  the sweep can prove the team really listed it. The flyer must come from
+  the member's own signed Cloudinary folder (new
+  `getEventFlyerUploadSignature`), and an event that starts in the past is
+  refused outright.
+- **Claim assistance.** When the duplicate check finds the business already
+  listed, the member can now help its owner claim it rather than withdraw.
+  `submitClaimAssistCore` verifies the real owner by OTP and files a
+  `place_claim_request` with `claimant_id = owner_user_id` — the member is
+  never the claimant, can never claim their own listing, cannot claim one the
+  owner already holds, and a second member filing the same claim gets a clean
+  409 from the existing partial unique.
+- **Real release gates.** The Phase 3 `awaiting_release_policy` parking is
+  replaced: `event_started` waits for `starts_at` to pass (and rejects a
+  cancelled or moderated event — note `event.status` spells it `canceled`,
+  unlike every other status column in the schema); `claim_approved` waits for
+  an admin and rejects when the claim is rejected. A row that is not due is
+  left alone with no flag and counted as `waiting_on_release`;
+  `due_not_swept` only counts gates that have actually opened.
+  `fieldops_evaluate_onboarding` now branches per activity — a claim assist
+  is not checked for photos, opening hours or a pin of the team's own.
+- **Dispute flag.** `fieldops_flag_on_claim` (trigger on
+  `place_claim_request`) flags any onboarding whose listing someone else
+  later tries to claim. `SHIPPED_ACTIVITIES` now admits all five onboarding
+  activities.
+- **Bug found and fixed — a notification could undo a payment.**
+  `_fieldops_notify` inserted straight into `notification`, whose `user_id`
+  has a FK to `auth.users`. A recipient whose account had been deleted made
+  that insert throw, and the error propagated out of the sweep's per-row
+  work, **rolling back the status transition and the commission approval
+  with it** — the row then sat `verified` forever and the member was never
+  paid (the same hazard applied to `fieldops_mark_payout_item`). Notices are
+  now best-effort: a missing recipient is skipped and any other write failure
+  is swallowed with a warning. Caught by the integration suite, where a
+  previous run's deleted test user reproduced it exactly.
+- **Verified:** integration `fieldops-events-claims` (15), full suite **37
+  files / 293 tests** on a stack replayed from scratch, and the same suite
+  re-run against an already-dirty database to prove the sweep never errors;
+  `turbo typecheck` 11/11; web and admin builds clean; parity 150; Biome
+  clean.
+- **Not yet built:** content creator (P6), analytics (P7), Playwright +
+  pilot readiness (P8).
 
 ---
 

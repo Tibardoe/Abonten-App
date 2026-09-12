@@ -2773,6 +2773,7 @@ export type Database = {
           business_phone_e164: string | null;
           business_whatsapp_e164: string | null;
           campaign_id: string;
+          claim_request_id: string | null;
           client_request_id: string;
           created_at: string;
           duplicate_acknowledged: boolean;
@@ -2830,6 +2831,7 @@ export type Database = {
           business_phone_e164?: string | null;
           business_whatsapp_e164?: string | null;
           campaign_id: string;
+          claim_request_id?: string | null;
           client_request_id?: string;
           created_at?: string;
           duplicate_acknowledged?: boolean;
@@ -2887,6 +2889,7 @@ export type Database = {
           business_phone_e164?: string | null;
           business_whatsapp_e164?: string | null;
           campaign_id?: string;
+          claim_request_id?: string | null;
           client_request_id?: string;
           created_at?: string;
           duplicate_acknowledged?: boolean;
@@ -2950,6 +2953,13 @@ export type Database = {
             columns: ["campaign_id"];
             isOneToOne: false;
             referencedRelation: "fieldops_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "fieldops_onboarding_claim_request_id_fkey";
+            columns: ["claim_request_id"];
+            isOneToOne: false;
+            referencedRelation: "place_claim_request";
             referencedColumns: ["id"];
           },
           {
@@ -9783,6 +9793,7 @@ export type Database = {
           business_phone_e164: string | null;
           business_whatsapp_e164: string | null;
           campaign_id: string;
+          claim_request_id: string | null;
           client_request_id: string;
           created_at: string;
           duplicate_acknowledged: boolean;
@@ -10076,6 +10087,7 @@ export type Database = {
           business_phone_e164: string | null;
           business_whatsapp_e164: string | null;
           campaign_id: string;
+          claim_request_id: string | null;
           client_request_id: string;
           created_at: string;
           duplicate_acknowledged: boolean;

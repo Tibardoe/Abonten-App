@@ -390,6 +390,8 @@ export const fieldOpsOnboardingStartSchema = z.object({
   campaignId: uuid,
   territoryId: uuid,
   prospectId: uuid.nullable().optional(),
+  /** A business listing, or an event an organiser is putting on (Phase 5). */
+  kind: z.enum(["place", "event"]).optional(),
   /** Reused on retry so a double tap never opens two onboardings. */
   clientRequestId: uuid.optional(),
 });
@@ -621,6 +623,81 @@ export type FieldOpsAdminFlagDecisionInput = z.infer<
 >;
 export type FieldOpsAdminFlagQueueInput = z.infer<
   typeof fieldOpsAdminFlagQueueSchema
+>;
+
+// -- Phase 5: events and claim assistance ---------------------
+
+/** Filing a claim for the owner on a listing that is already on Abonten. */
+export const fieldOpsClaimAssistSchema = z.object({
+  campaignId: uuid,
+  onboardingId: uuid,
+  placeId: uuid,
+  note: z.string().trim().max(1000).nullable().optional(),
+  submissionLocation: latLngSchema.nullable().optional(),
+  submissionAccuracyM: z
+    .number()
+    .int()
+    .min(0)
+    .max(100_000)
+    .nullable()
+    .optional(),
+});
+
+const eventTicket = z.object({
+  price: z.number().min(0).max(1_000_000),
+  quantity: z.number().int().min(1).max(1_000_000).nullable(),
+});
+
+export const fieldOpsEventSubmitSchema = z
+  .object({
+    campaignId: uuid,
+    onboardingId: uuid,
+    event: z.object({
+      title: z.string().trim().min(3, "Give the event a name").max(150),
+      description: z
+        .string()
+        .trim()
+        .min(80, "Describe the event in at least 80 characters")
+        .max(4000),
+      category: z.string().trim().min(2).max(60),
+      types: z.array(z.string().trim().min(1).max(60)).min(1).max(5),
+      address: z.string().trim().min(3).max(300),
+      location: latLngSchema,
+      startsAt: z.string().datetime({ offset: true }),
+      endsAt: z.string().datetime({ offset: true }),
+      capacity: z.number().int().min(1).max(1_000_000).nullable().optional(),
+      websiteUrl: z.string().trim().url().max(500).nullable().optional(),
+      requireRegistration: z.boolean(),
+      freeEvent: z.boolean(),
+      singleTicket: eventTicket.nullable().optional(),
+      flyer: z.object({
+        publicId: z.string().trim().min(1).max(300),
+        version: z.string().trim().min(1).max(50),
+      }),
+    }),
+    submissionLocation: latLngSchema.nullable().optional(),
+    submissionAccuracyM: z
+      .number()
+      .int()
+      .min(0)
+      .max(100_000)
+      .nullable()
+      .optional(),
+  })
+  .refine((v) => new Date(v.event.endsAt) > new Date(v.event.startsAt), {
+    message: "The event has to end after it starts",
+    path: ["event", "endsAt"],
+  })
+  .refine((v) => v.event.freeEvent || Boolean(v.event.singleTicket), {
+    message: "Set a ticket price, or mark the event free",
+    path: ["event", "singleTicket"],
+  });
+
+export type FieldOpsClaimAssistInput = z.infer<
+  typeof fieldOpsClaimAssistSchema
+>;
+export type FieldOpsEventSubmitInput = z.infer<
+  typeof fieldOpsEventSubmitSchema
 >;
 
 // -- Phase 4: payouts ----------------------------------------

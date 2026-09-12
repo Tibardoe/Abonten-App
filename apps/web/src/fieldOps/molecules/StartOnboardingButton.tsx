@@ -14,6 +14,7 @@ export default function StartOnboardingButton({
   campaignId,
   territoryId,
   prospectId,
+  kind = "place",
   label = "Onboard this business",
   size = "sm",
   variant = "default",
@@ -21,6 +22,8 @@ export default function StartOnboardingButton({
   campaignId: string;
   territoryId: string;
   prospectId?: string | null;
+  /** An event uses the same wizard with a different final step. */
+  kind?: "place" | "event";
   label?: string;
   size?: "sm" | "default";
   variant?: "default" | "outline";
@@ -36,6 +39,7 @@ export default function StartOnboardingButton({
         campaignId,
         territoryId,
         prospectId: prospectId ?? null,
+        kind,
         clientRequestId: requestId.current,
       });
       if (res.status === 200 && res.data) {

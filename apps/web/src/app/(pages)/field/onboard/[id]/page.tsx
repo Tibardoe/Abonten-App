@@ -1,6 +1,7 @@
 import { getFieldOpsOnboardingDraft } from "@/actions/fieldOps/getFieldOpsOnboardingDraft";
 import { PageTitle, SupportingText } from "@/components/ui/typography";
 import { loadFieldOpsMe } from "@/fieldOps/lib/loadFieldOpsMe";
+import EventOnboardingWizard from "@/fieldOps/organisms/EventOnboardingWizard";
 import OnboardingWizard from "@/fieldOps/organisms/OnboardingWizard";
 import { notFound, redirect } from "next/navigation";
 
@@ -26,16 +27,28 @@ export default async function FieldOnboardPage({
     redirect(`/field/submissions/${id}`);
   }
 
+  const isEvent = res.data.onboarding.kind === "event";
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <PageTitle>Onboard a business</PageTitle>
+        <PageTitle>
+          {isEvent ? "Onboard an event" : "Onboard a business"}
+        </PageTitle>
         <SupportingText>
           {res.data.onboarding.territoryName ?? current.campaign.regionName} ·{" "}
           {res.data.onboarding.mode === "offline" ? "in person" : "online"}
         </SupportingText>
       </div>
-      <OnboardingWizard campaignId={current.campaign.id} draft={res.data} />
+      {isEvent ? (
+        <EventOnboardingWizard
+          campaignId={current.campaign.id}
+          draft={res.data}
+          isOffline={res.data.onboarding.mode === "offline"}
+        />
+      ) : (
+        <OnboardingWizard campaignId={current.campaign.id} draft={res.data} />
+      )}
     </div>
   );
 }

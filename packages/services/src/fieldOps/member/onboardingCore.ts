@@ -93,6 +93,8 @@ export type StartOnboardingInput = {
   campaignId: string;
   territoryId: string;
   prospectId?: string | null;
+  /** A business listing, or an event an organiser is putting on. */
+  kind?: "place" | "event";
   clientRequestId?: string;
 };
 
@@ -206,7 +208,7 @@ export async function startOnboardingCore(
       territory_id: input.territoryId,
       prospect_id: prospect?.id ?? null,
       mode: m.mode,
-      kind: "place",
+      kind: input.kind ?? "place",
       business_name: prospect?.name ?? null,
       business_phone_e164: prospect?.contact_phone_e164 ?? null,
     } as never)
@@ -521,9 +523,10 @@ export async function submitOnboardingCore(
   }
   if (strong.some((x) => x.phoneMatch)) {
     // The same phone as an existing listing is never a "different business".
+    // The member's way forward is claim assistance, not a second listing.
     return {
       status: 409,
-      message: `${strong.find((x) => x.phoneMatch)?.name} already uses this phone number on Abonten. Claim assistance for existing listings arrives in a later update.`,
+      message: `${strong.find((x) => x.phoneMatch)?.name} already uses this phone number on Abonten. Help the owner claim that listing instead.`,
     };
   }
 

@@ -53,7 +53,9 @@ import type {
   FieldOpsAssignmentStartBody,
   FieldOpsAssignmentStatus,
   FieldOpsAssignmentsResult,
+  FieldOpsClaimAssistBody,
   FieldOpsEarningsResult,
+  FieldOpsEventSubmitBody,
   FieldOpsEvidenceRequestBody,
   FieldOpsEvidenceTicketResult,
   FieldOpsLeadDashboardResult,
@@ -1807,6 +1809,23 @@ export function createApiClient(options: ApiClientOptions) {
         return request<FieldOpsEarningsResult>(
           `/api/mobile/field-ops/earnings${qs ? `?${qs}` : ""}`,
           { method: "GET", auth: true },
+        );
+      },
+      /** Create the event under the organiser who verified their phone. */
+      submitEventOnboarding(
+        onboardingId: string,
+        body: FieldOpsEventSubmitBody,
+      ) {
+        return request<FieldOpsOnboardingResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/submit-event`,
+          { method: "POST", body, auth: true },
+        );
+      },
+      /** File a claim on a listing that is already on Abonten, for its owner. */
+      submitClaimAssist(onboardingId: string, body: FieldOpsClaimAssistBody) {
+        return request<FieldOpsOnboardingResult>(
+          `/api/mobile/field-ops/onboardings/${encodeURIComponent(onboardingId)}/claim-assist`,
+          { method: "POST", body, auth: true },
         );
       },
       /** Where the caller's own earnings are sent (masked). */
