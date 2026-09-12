@@ -1,7 +1,7 @@
 ---
 title: Security at Abonten
 summary: How Abonten Hub protects accounts, payments and data, and how to report a security problem.
-version: 1.2-draft
+version: 1.3-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -67,7 +67,7 @@ Email **security@abontenhub.com**. If you cannot use email, the in-app support c
 
 ### What happens next
 
-We will acknowledge receipt by email, investigate, and keep you informed of our progress and of when a fix is in place. Abonten has not yet published a target time for acknowledging or resolving reports; until it does, please allow a reasonable period before following up.
+We aim to acknowledge receipt by email within two working days (Monday to Friday, 09:00–17:00 Ghana time, excluding Ghanaian public holidays). That is a goal, not a guarantee. We will then investigate and keep you informed of our progress and of when a fix is in place; we do not publish a target time for resolving reports, because it depends on what is found.
 
 ### Testing we ask you to keep to
 

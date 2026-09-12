@@ -39,4 +39,4 @@ Only **support** conversations and conversations that have been **reported**. St
 
 ## Standards
 
-Acknowledge within the target in decision O1; never ask for card numbers, PINs or one-time codes; never promise a refund is complete before it is; link the help centre article when one answers the question; escalate money, safety and privacy matters per `support-scenarios.md`.
+Aim to reply within two working days — the published goal (decision O1, staffed Monday to Friday 09:00–17:00 Ghana time; not a contractual commitment); never ask for card numbers, PINs or one-time codes; never promise a refund is complete before it is; link the help centre article when one answers the question; escalate money, safety and privacy matters per `support-scenarios.md`.

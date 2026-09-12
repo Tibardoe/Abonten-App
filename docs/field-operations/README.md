@@ -67,3 +67,5 @@ The **web app** at abontenhub.com, signed in with your normal Abonten account �
 ## Support and escalation
 
 Your **team lead** first (announcements and the review notes are the channel; in-person or WhatsApp as your team agrees). Programme questions and disputes about a decision → the field programme manager at Abonten (admin console). Safety incidents → stop, leave the situation, tell your lead, and follow [conduct-privacy-security.md](conduct-privacy-security.md).
+
+Abonten's general support (for the business owners and organizers you onboard, not for programme questions) is staffed Monday to Friday, 09:00–17:00 Ghana time, and aims to reply within two working days — a goal, not a promise you may make on Abonten's behalf (decision O1, `../operations/support-operating-policy.md`). Never quote a faster turnaround to an owner.

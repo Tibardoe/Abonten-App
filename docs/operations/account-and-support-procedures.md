@@ -35,7 +35,7 @@ Rules:
 3. **Verify before acting.** For anything about an account, the email must come from the address on that account (`users.view_pii`), or the person must confirm from the app. Never act on a request about someone else's account.
 4. **Never forward** customer email to personal or third-party addresses; never paste one-time codes, card details or attendee lists into email.
 5. **Retention:** email lives in Google Workspace under Google's terms; it is not part of the database inventory. Treat the mailbox as personal data storage: delete threads once resolved and recorded, until a retention decision (R-series) covers it.
-6. **Hours and response target:** none published (decision O1). Acknowledge privacy requests within 3 working days per the interim practice in the privacy procedure.
+6. **Hours and response target (decision O1, 2026-09-12):** staffed Monday to Friday, 09:00–17:00 Ghana time, excluding public holidays; the published goal is a reply within two working days for support and privacy enquiries and an acknowledgement within two working days for security reports. Goals, not commitments — never promise more. Consider a Gmail auto-reply stating the hours. Escalation procedure: still open (decision O7).
 7. **Filters and labels:** set Gmail filters so each alias gets its own label and the security label is starred; check daily.
 
 ## Tone and limits

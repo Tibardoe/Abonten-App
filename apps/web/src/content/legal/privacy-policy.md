@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
 summary: What personal information Abonten Hub collects, why, who it is shared with, how long it is kept, and the choices and rights you have.
-version: 1.2-draft
+version: 1.3-draft
 effectiveDate: Not yet in force — set when approved
 lastUpdated: 2026-09-12
 status: Review required
@@ -162,4 +162,4 @@ We will update this policy when our practices change. The version and last-updat
 
 ## 15. Contact
 
-Support and privacy requests: the in-app support conversation (section 11). Privacy contact: **privacy@abontenhub.com**. General support: **support@abontenhub.com**. Postal address: Abonten Hub Ltd, P.O. Box 465, Weija, Accra, Ghana. When you write to us by email about your account, we will confirm your identity before acting — usually by asking you to write from, or confirm through, the email address or phone number on your account.
+Support and privacy requests: the in-app support conversation (section 11). Privacy contact: **privacy@abontenhub.com**. General support: **support@abontenhub.com**. Postal address: Abonten Hub Ltd, P.O. Box 465, Weija, Accra, Ghana. We aim to acknowledge privacy requests within two working days (Monday to Friday, 09:00–17:00 Ghana time, excluding public holidays); this is a goal, and the time limits set by law for responding to your request apply regardless. When you write to us by email about your account, we will confirm your identity before acting — usually by asking you to write from, or confirm through, the email address or phone number on your account.
