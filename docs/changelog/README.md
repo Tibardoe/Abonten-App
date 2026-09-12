@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-12 — Merged to main; production and device verification
+
+- The documentation-programme branch merged to `main` (`9b6c8b23`, no-fast-forward) and deployed by Vercel (production deployment `dpl_6HMSpPGYBNFkmeubVkrYZuKifNAJ`). `/.well-known/security.txt` **PRODUCTION VERIFIED**: `200`, `text/plain; charset=utf-8`, `X-Matched-Path: /.well-known/security.txt`, policy anchor present on `/legal/security`; `/terms` → `308` `/legal/terms`.
+- Mobile: EAS preview build `598fdb7f` (runtime `0.2.0`, version code 2, from `main`) and the first EAS Update ever published for the project, group `d5102dde` on the `preview` channel. Device checks (two emulators, signed out): sign-in Terms/Privacy links, all drawer legal/help rows, X/Instagram/TikTok icons, support-email row and the "Abonten Hub Ltd" copyright — all **DEVICE VERIFIED**; Settings hub rows and non-English locales **DEVICE VERIFICATION PENDING** (need a signed-in test account). **No production build exists** and none was created; a production release is a business decision. Full record: `mobile/release-verification.md`.
+- `operations/open-items.md`: S2 and M1 rows updated with the evidence above.
+
 ## 2026-09-12 — Open items made explicit: O1, S2, A2, A4, M1
 
 - **S2 implemented (policy text; legal review still open):** Security overview 1.2-draft replaces "Reporting a vulnerability" with a full "Responsible disclosure" section — channel, what to include, acknowledgement process (no time target), permitted and prohibited testing, personal-data expectations, handling, coordinated disclosure, conduct, and an explicit statement that **no legal safe harbour is offered yet**. New `apps/web/public/.well-known/security.txt` (RFC 9116: Contact, Expires 2027-03-12, Policy, Canonical, Preferred-Languages) — served signed-out through the pre-existing `/.well-known/` allowlist; no proxy, redirect or header change was needed. Verified against `next dev`: `200 OK`, `text/plain; charset=UTF-8`, no redirect; the `Policy` anchor exists on the rendered page. Production verification pending deploy. Framework and the **LEGAL REVIEW REQUIRED — SAFE HARBOUR** list: `security/responsible-disclosure.md`; new legal item D3. Validator: new `security-txt` rule (file present, Contact = security@abontenhub.com, Expires valid ISO date and in the future — warning inside 30 days — Policy points at the live section anchor).

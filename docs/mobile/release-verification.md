@@ -35,7 +35,9 @@ complianceReviewRequired: no
 | Runtime version policy | `appVersion` → runtime version `0.2.0`; an EAS Update only reaches installs whose native build has runtime version `0.2.0` |
 | Update channels | `development`, `preview`, `production` (one per EAS build profile) |
 | Updates library | `expo-updates` ~57.0.21 (Expo SDK 57) |
-| Current production build / update group | **NOT DETERMINED FROM CODE** — read from the EAS dashboard (`eas build:list`, `eas update:list --channel production`) before releasing |
+| Current production build / update group | **None.** `eas build:list` (2026-09-12) shows only `preview` and `development` builds; **no production build has ever been made**, no EAS Update had ever been published on any channel before 2026-09-12, and the app is not in Google Play. An update on the `production` channel would therefore reach no install. |
+| Preview build containing this programme | EAS build `598fdb7f-2f23-4073-a5bb-028834c4c1cc` — profile `preview`, channel `preview`, runtime `0.2.0`, version code 2, commit `9b6c8b23` (main after the merge), finished 2026-09-12 19:28 UTC, fingerprint `6f87b7f6…`. Built because native dependencies (`expo-audio`, `expo-application`, `expo-clipboard`, an `/invite` intent filter) had changed since the previous preview build of 2026-09-06, so an update alone could not have been loaded safely by that build. |
+| Preview update containing this programme | EAS Update group `d5102dde-714e-4b8a-82b3-1e07aab42cbf` (Android update `01a0971c-…`), branch/channel `preview`, runtime `0.2.0`, commit `9b6c8b23`, published 2026-09-12 |
 
 ## Changes on the documentation-programme branch that affect the app
 
@@ -53,20 +55,28 @@ No new native module, permission, config-plugin or `app.json` change is on the b
 
 ## Verification status (as of 2026-09-12)
 
+Two device set-ups were used on 2026-09-12 (tester: engineering, driven over `adb`, both signed out — no test account session was available):
+
+- **A — Development client + Metro**, AVD `abonten_a35` (emulator-5554): the debuggable dev client already installed there (version code 1) loaded the current `main` bundle from Metro. This exercises the exact JavaScript of the release but not the EAS artefact.
+- **B — EAS preview build `598fdb7f`**, AVD `Pixel_10_Pro_XL` (emulator-5556): the APK downloaded from EAS and installed with `adb install` (version code 2 confirmed). This is the artefact users on the `preview` channel would receive.
+
 | Change | SOURCE VERIFIED | BUILD VERIFIED | DEVICE VERIFIED | PRODUCTION VERIFIED |
 |---|---|---|---|---|
-| Sign-in legal links | Yes — `turbo typecheck` 11/11, Biome clean | No — no EAS Update published from this branch | **DEVICE VERIFICATION PENDING** | Pending |
-| Drawer legal / help / social / support / copyright rows | Yes | No | **DEVICE VERIFICATION PENDING** | Pending |
-| Settings hub rows | Yes | No | **DEVICE VERIFICATION PENDING** | Pending |
-| Brand constants | Yes | No | **DEVICE VERIFICATION PENDING** | Pending |
-| i18n keys (six locales) | Yes (JSON valid, typecheck) | No | **DEVICE VERIFICATION PENDING** — translations also await native review (decision D3) | Pending |
+| Sign-in legal links (Terms, Privacy) | Yes — `turbo typecheck` 11/11, Biome clean | Yes — build `598fdb7f`, update `d5102dde` | **Yes (A):** consent line renders; tapping "Terms" and "Privacy Policy" each opened a Chrome custom tab on `abontenhub.com` showing the Terms and Conditions / Privacy Policy 1.2-draft pages. Not repeated on B | **Not applicable yet** — no production build exists |
+| Drawer legal rows (Terms, Privacy, Cookies, Security) and Help centre | Yes | Yes | **Yes (A and B):** on A each row opened the matching live page (Privacy Policy 1.2-draft, Cookie Policy 1.0-draft, Security at Abonten 1.2-draft with "Responsible disclosure" in the contents, Help centre); on B all five rows are present and Terms opened `abontenhub.com` in the custom tab | Not applicable yet |
+| Drawer social icons (X, Instagram, TikTok) | Yes | Yes | **Yes (A):** each opened Chrome at `x.com/abontenhub`, `instagram.com/abontenhub`, `tiktok.com/@abontenhub` respectively; **B:** icons present, not tapped | Not applicable yet |
+| Drawer support-email row | Yes | Yes | **Yes (A):** row shows `support@abontenhub.com`; tapping fired the mail intent and opened Gmail (the emulator's Gmail is not set up, so its welcome screen appeared — the intent resolution is what was under test); **B:** row present | Not applicable yet |
+| Copyright line "© 2026 Abonten Hub Ltd" | Yes | Yes | **Yes (A and B)** | Not applicable yet |
+| Settings hub rows (Help centre, Legal) | Yes | Yes | **DEVICE VERIFICATION PENDING** — the Settings hub requires a signed-in session and no test account could be signed in on either emulator (no Google account on the device; phone and email codes go to real inboxes) | Not applicable yet |
+| i18n keys (six locales) | Yes (JSON valid, typecheck) | Yes | **DEVICE VERIFICATION PENDING** — English only was exercised; translations also await native review (decision D3) | Not applicable yet |
 
-Why device verification has not happened: no emulator or device was attached during the programme (`adb devices` empty on 2026-09-12) and the app is not installed on the available AVDs (`Pixel_10_Pro_XL`, `abonten_a35`); a device test needs a development or preview build that contains the branch, which has not been produced.
+## What "production" means here, and why nothing was published to it
 
-## Procedure to reach each level
+The `production` channel has no build listening to it (see the facts table). Publishing an EAS Update there would be a no-op, and producing the first production build (`eas build --profile production`, `autoIncrement`) is the first step of a store release — a business decision (Google Play listing, Data safety form: legal F2; iOS: decision D2), not a documentation task. **Decision required before any production release: none was made on 2026-09-12 and no production artefact was created.**
 
-1. **BUILD VERIFIED** — after merging to `main`: `eas update --channel preview --message "<commit>"` (preview first), then `eas update --channel production …`. Record the update group ids here.
-2. **DEVICE VERIFIED** — install the preview build on the emulator (`emulator -avd abonten_a35`, then `adb install <apk>` or open the dev client), load the preview update, and check: sign-in screen → Terms / Privacy open the live legal pages in the in-app browser; drawer → each legal row, Help centre, each social icon (opens X / Instagram / TikTok), the support-email row (opens the mail app to support@abontenhub.com), copyright line; Settings → Help centre and Legal rows; switch the device language to French and confirm the new strings render. Record device, date, tester and result per row above.
-3. **PRODUCTION VERIFIED** — after the production update: on a production install, repeat the drawer and sign-in checks; record the update id and date.
+## Procedure to close the remaining cells
 
-Until each cell above is filled with evidence, the mobile side of this programme is **SOURCE VERIFIED only**. Open-item register: `../operations/open-items.md` (M1).
+1. **Settings hub rows and locales (DEVICE):** sign a test account into either emulator (a Google account on the device, or a test phone/email the tester can read), open Account › Settings, confirm the Help centre and Legal rows open the live pages, then switch the device language to French and confirm the new strings render. Record device, date, tester and result.
+2. **PRODUCTION:** when the founder decides to release, `eas build --profile production --platform android` from `main`, submit to Google Play, then publish updates with `eas update --channel production --environment production`; repeat the drawer and sign-in checks on a production install and record the update id and date here.
+
+Open-item register: `../operations/open-items.md` (M1).
