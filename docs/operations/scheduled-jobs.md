@@ -25,7 +25,10 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `recover-stale-payment-attempts` | */5 min | `recover_stale_payment_attempts()` | `processing` > 15 min → `fulfillment_failed` / `pending` | Stuck attempts; reconciliation incident after 1 h |
 | `financial-reconciliation` | */30 min | `run_financial_reconciliation()` | Ledger/ticket/inventory/credit/field-ops invariants → incidents | Silent divergence |
 | `cleanup-expired-drafts` | hourly (`0 * * * *` style) | `cleanup_expired_drafts()` | Purge expired drafts; queue Cloudinary cleanup | Draft tables grow |
-| `purge-reviewed-claim-documents` | 03:00 | `purge_reviewed_claim_documents('30 days')` | Delete claim documents 30 days after decision | Retention promise broken |
+| `purge-reviewed-claim-documents` | 03:00 | `purge_reviewed_claim_documents('30 days')` | Delete claim-document rows 30 days after a decision and queue their bucket objects in `storage_purge_queue` (until 2026-09-13 it deleted from `storage.objects` directly, which Supabase refuses — it failed nightly) | Retention promise broken |
+| `purge-verification-evidence` | 03:30 | `purge_verification_evidence()` | Withdraw expired drafts; mark evidence past retention `purged` and queue the objects; queue orphans | Retention promise broken |
+| `storage-purge-dispatch` | */10 min | `run_storage_purge_dispatch()` → `POST /api/maintenance/storage-purge` | Delete queued bucket objects through the Storage API (only SQL cannot); 8 attempts then `failed` | Queued objects linger in buckets (rows are already gone); check `storage_purge_queue` where `status = 'failed'` |
+| `event-reminders` | hourly (:07) | `event_reminders_enqueue()` | "Tomorrow: <event>" in-app notice + queued push for active ticket holders of a session 23–25 h away, once per person per session; skips people with their own app reminder | No day-before reminders |
 | `cleanup-rate-limit-buckets` | 04:00 | `cleanup_rate_limit_buckets()` | Purge 1-day-old buckets | Table grows (no functional impact) |
 | `credit-expire-lots` | 02:00 | `credit_expire_due_lots(5000)` | Expire credit lots | Expired credit stays spendable |
 | `credit-release-stale-reservations` (part of rewards jobs) | periodic | `credit_release_stale_reservations` | Return credit from abandoned checkouts | Credit stuck reserved |
@@ -47,7 +50,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 
 ## Operating notes
 
-- Jobs calling the web app (`abonten-health-check`, `notification-delivery`) depend on `observability_config` / `notification_delivery_config` rows holding the deployment URL and token. After a domain change, update those rows.
+- Jobs calling the web app (`abonten-health-check`, `notification-delivery`, `storage-purge-dispatch`) depend on `observability_config` / `notification_delivery_config` / `storage_purge_config` rows holding the deployment URL and token. After a domain change, update those rows. `storage_purge_config.dispatch_url` was derived from the notification one when the migration ran; if it is NULL nothing is dispatched and the queue simply grows.
 - `fieldops_job_run` records every sweep with wall-clock duration (`clock_timestamp()` trigger); `fieldops_health()` exposes `sweep_seconds`.
 - Nothing has retry/dead-letter beyond each function's idempotency, except the rewards outbox (8 attempts → dead letter → incident).
 - Migrations that (re)schedule a job use `cron.schedule` with a job name; never edit `cron.job` by hand in production.

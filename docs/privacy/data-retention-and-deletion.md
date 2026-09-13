@@ -24,7 +24,8 @@ complianceReviewRequired: yes
 | Promotion / subscription checkouts | Matching `expire-*` cron jobs | Same pattern | migrations |
 | Expired credit reservations | `credit_release_stale_reservations` sweep | per reservation TTL | `20260910215010_credit_reservations.sql` |
 | Drafts (events, places, reviews) | `cleanup_expired_drafts()` cron; `draft_asset_cleanup_queue` → Cloudinary destroy | on `expires_at` | `20260818090100_add_drafts_cleanup_cron.sql`, `cleanupOrphanedDraftAssets.ts` |
-| Place-claim supporting documents | `purge_reviewed_claim_documents('30 days')` cron 03:00 — deletes storage objects **and** rows | 30 days after approve/reject | `20260903184813_add_place_claim_documents.sql` |
+| Place-claim supporting documents | `purge_reviewed_claim_documents('30 days')` cron 03:00 — deletes the rows and queues the bucket objects in `storage_purge_queue`; the `storage-purge-dispatch` cron (every 10 min) has `POST /api/maintenance/storage-purge` delete them through the Storage API (until 2026-09-13 the job deleted from `storage.objects` directly, which Supabase refuses — it had failed nightly and removed nothing) | 30 days after approve/reject | `20260903184813_add_place_claim_documents.sql`, `20260913200000_storage_purge_queue.sql` |
+| Verification evidence | `purge_verification_evidence()` cron 03:30 — same queue + Storage API path as above | `retention_days_unapproved` / `retention_days_after_revoke` | `20260912120000_trust_verification.sql`, `20260913200000_storage_purge_queue.sql` |
 | Rate-limit buckets | `cleanup_rate_limit_buckets()` cron 04:00 | 1 day | `20260904135447_rate_limit_primitive.sql` |
 | Referral click log (`referral_touch`) | `referral_purge_old_touches()` cron | 90 days | `20260911015208_referral_capture.sql` |
 | Credit lots | `credit_expire_due_lots(5000)` cron 02:00 — expires the lot; ledger rows are never deleted | per-lot expiry | `20260910193609_credits_ledger_core.sql` |
@@ -38,18 +39,28 @@ complianceReviewRequired: yes
 
 Path: web `Settings › Security › Delete account` → `deleteUser.ts`; app → `POST /api/mobile/account/delete`; both → `packages/services/src/profile/deleteAccountCore.ts`.
 
-1. `credit_close_account(user, 'user')` — pending rewards voided, balance forfeited; ledger history kept (tables have no FK to `user_info` by design).
-2. `auth.admin.deleteUser(userId)` — removes the Supabase Auth user. Postgres cascades follow.
+Since 2026-09-13 (migration `20260913200100_account_deletion_preserves_records`) deletion is an **anonymising soft delete**. The previous path hard-deleted the Auth user and let `ON DELETE CASCADE` remove the person's transactions, tickets, ledger entries, payouts and fee entries, and every event they organized together with other people's tickets for those events; that was verified against the live foreign keys on 2026-09-13 and closed.
+
+1. `account_deletion_blockers(user)` — deletion is **refused (HTTP 409)** while the person still has an upcoming published event with attendees, a payout in `processing`, earnings not yet paid out, or admin roles. The message tells them which step to take first.
+2. `credit_close_account(user, 'user')` — pending rewards voided, balance forfeited; ledger history kept.
+3. `anonymize_deleted_account(user)` — see the table.
+4. `auth.admin.deleteUser(user, shouldSoftDelete = true)` — Supabase Auth revokes every session, removes identities and MFA factors, obfuscates the email and phone, and keeps the `auth.users` row with `deleted_at` set. Nothing cascades. The same email or number can sign up again as a new account.
 
 | Effect | Tables |
 |---|---|
-| **Deleted (cascade)** | `user_info` → `event` (+ occurrences, ticket types), `place` (+ hours, services, photos), `favorite`, `favorite_place`, `highlight`, `receiving_account`, `payout_account`, `notification_preference`, `device_token`, `event_drafts`/`place_drafts`/`review_drafts`, reviews authored (`event_review`, `place_review`, `review`), `conversation_participant` rows, `notification` rows |
-| **Kept with identity nulled** (`ON DELETE SET NULL`) | `report.reporter_id`, `admin_audit_log.actor_id`, `moderation_action.actor_id`, `admin_user.created_by/disabled_by`, field-ops `created_by` columns |
-| **Kept, no FK to the user** | Credit ledger (`credit_*`), `reward_event`, field-ops member/owner ids (stored without FK so history outlives the account) |
-| **Kept as financial record** | `transaction`, `payment_attempt`, `ticket_checkout`, `ticket` (FK behaviour: rows reference the user; verify cascade vs restrict per table before relying on this — see gap below), `organizer_ledger_entry`, `payout`, `platform_fee_entry` |
+| **Anonymised** | `user_info`: name "Deleted user", username `deleted_<id prefix>`, avatar, bio, website and organizer-verified flags cleared, `status_id` 4 (Deleted) |
+| **Deleted** | `device_token`, `favorite`, `favorite_place`, `event_reminder`, `notification` (+ `notification_delivery`), `notification_preference`, `notification_subscription`, `user_image_history`, `receiving_account`, `highlight`, `drafts` (+ `event_drafts`/`place_drafts`/`review_drafts`), pending `place_claim_request` (+ documents; the bucket objects go to `storage_purge_queue`), draft events |
+| **Scrubbed shells** (rows are referenced by payment attempts / payouts) | `payment_method` → `removed`, details reduced to brand/last4/network/bank (the Paystack authorization code is gone); `payout_account` → `removed`, holder name and number replaced |
+| **Events** | Upcoming published events with no active tickets → `canceled`; everything else `archived_at` set (leaves discovery and search; direct links still open, organizer shown as "Deleted user") |
+| **Places** | Kept published, `claimed = false`, verification cleared — the next owner can claim the listing |
+| **Verification cases** | Open cases withdrawn, an approved one revoked (`verification_transition`, actor `system`, reason `account_deleted`) |
+| **Kept with identity nulled** (`ON DELETE SET NULL`) | unchanged — nothing is deleted from `auth.users`, so these columns keep their ids and resolve to the anonymised profile |
+| **Kept, no FK to the user** | Credit ledger (`credit_*`), `reward_event`, field-ops member/owner ids |
+| **Kept as financial record** (verified cascade would have removed them) | `transaction`, `payment_attempt`, `ticket_checkout`, `ticket`, `organizer_ledger_entry`, `payout`, `platform_fee_entry` — all now point at the anonymised profile |
+| **Kept as content** | Reviews authored (`event_review`, `place_review`, `review`) and messages sent, shown as "Deleted user" |
 | **Cloudinary media** | Not destroyed by the deletion path itself (avatar, flyers, photos remain on the CDN until a separate cleanup) — **gap** |
 
-**Gaps recorded:** no grace period (decision O5); Cloudinary media of a deleted user is not purged (engineering item); the exact cascade behaviour of every money-path FK should be re-verified against `information_schema.referential_constraints` before the Privacy Policy's "kept" list is finalised (legal B9).
+**Gaps recorded:** no grace period (decision O5); Cloudinary media of a deleted user is not purged (engineering item); reviews and messages are kept anonymised rather than deleted — confirm with counsel (legal B9).
 
 ## 3. Admin-initiated actions
 

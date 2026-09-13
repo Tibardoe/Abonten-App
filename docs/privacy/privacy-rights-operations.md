@@ -47,9 +47,9 @@ Record every request as an **admin note** on the user (Admin › Users › user 
 ## 3. Deletion request
 
 1. **Self-service first:** Settings › Security › Delete account. Explain what is deleted, kept and forfeited (`data-retention-and-deletion.md` §2; public text in `/help/account/deleting-your-account`).
-2. If the user **cannot sign in** (lost phone/email): verify identity by another means agreed with the founder (legal B5), then an engineer runs `deleteAccountCore(userId)` from a service-role context (or `auth.admin.deleteUser` after `credit_close_account`), and records it.
+2. If the user **cannot sign in** (lost phone/email): verify identity by another means agreed with the founder (legal B5), then an engineer runs `deleteAccountCore(userId)` from a service-role context and records it. Never call `auth.admin.deleteUser` without `shouldSoftDelete = true`: a hard delete cascades through the financial record.
 3. **Partial deletion** (e.g. "remove my review", "remove this photo") — the user can do it themselves; if not, staff use moderation `remove` for content or an engineer deletes the row.
-4. **Organizer with upcoming events:** tell them to cancel the events first (refunds to attendees) or the events vanish with the account and attendees lose their tickets without refunds being triggered — **engineering gap: deletion does not cancel events**. Escalate to the founder if they insist.
+4. **Organizer with upcoming events, a payout in progress or unpaid earnings:** the delete action itself refuses (HTTP 409) and names the step — cancel the events (attendees are refunded and told), wait for the payout, or request a payout first. Since 2026-09-13 events and tickets never vanish with an account: past events are archived, empty upcoming ones cancelled, and every transaction, ticket and ledger row is kept against the anonymised profile (`data-retention-and-deletion.md` §2). Escalate to the founder only if the person cannot complete the step themselves.
 5. Respond and record.
 
 ## 4. Objection and consent withdrawal
