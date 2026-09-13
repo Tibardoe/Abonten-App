@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/adminGuard";
 import { getServiceClient } from "@/lib/serviceClient";
+import { parseAdminRangeParams } from "@abonten/core/admin/adminDateRange";
 import { getPlatformAnalyticsCore } from "@abonten/services/admin/analytics/analyticsAdminCore";
 import { listAuditLogCore } from "@abonten/services/admin/audit/listAuditLogCore";
 import {
@@ -158,13 +159,18 @@ async function signVerificationEvidence(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
+// Pages hand their raw search params straight in: the range is parsed and
+// validated in one place (@abonten/core/admin/adminDateRange), so a bad link
+// shows a sensible 30-day view instead of an error.
 export async function loadDashboard(
-  range: DashboardRange,
-  from?: string,
-  to?: string,
+  searchParams: Record<string, string | string[] | undefined>,
 ) {
   const ctx = await requireAdmin();
-  return getDashboardCore(getServiceClient(), ctx, { range, from, to });
+  return getDashboardCore(
+    getServiceClient(),
+    ctx,
+    parseAdminRangeParams(searchParams),
+  );
 }
 
 export async function loadReports(filters: ListReportsFilters) {
@@ -300,12 +306,14 @@ export async function loadOrganizerDetail(id: string) {
 // ── Phase 3: Finance (read-only) ───────────────────────────
 
 export async function loadFinanceOverview(
-  range: DashboardRange,
-  from?: string,
-  to?: string,
+  searchParams: Record<string, string | string[] | undefined>,
 ) {
   const ctx = await requireAdmin();
-  return getFinanceOverviewCore(getServiceClient(), ctx, { range, from, to });
+  return getFinanceOverviewCore(
+    getServiceClient(),
+    ctx,
+    parseAdminRangeParams(searchParams),
+  );
 }
 export async function loadTransactions(filters: ListTransactionsFilters) {
   const ctx = await requireAdmin();
@@ -340,12 +348,14 @@ export async function loadErrorGroup(fingerprint: string) {
 }
 
 export async function loadAnalytics(
-  range: DashboardRange,
-  from?: string,
-  to?: string,
+  searchParams: Record<string, string | string[] | undefined>,
 ) {
   const ctx = await requireAdmin();
-  return getPlatformAnalyticsCore(getServiceClient(), ctx, { range, from, to });
+  return getPlatformAnalyticsCore(
+    getServiceClient(),
+    ctx,
+    parseAdminRangeParams(searchParams),
+  );
 }
 
 // ── Phase 5: global search ─────────────────────────────────
@@ -374,7 +384,10 @@ export async function loadBlocks(filters: ListBlocksFilters) {
 
 // ── Rewards (Abonten Credit) ────────────────────────────────
 
-export async function loadRewardsOverview(range: { from: string; to: string }) {
+export async function loadRewardsOverview(range: {
+  from: string;
+  to: string;
+}) {
   const ctx = await requireAdmin();
   const svc = getServiceClient();
   const [overview, pending] = await Promise.all([

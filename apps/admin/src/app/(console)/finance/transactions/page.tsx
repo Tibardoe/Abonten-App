@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   EmptyState,
@@ -19,16 +20,6 @@ const STATUS_TABS = [
   { key: "refund_pending", label: "Refund pending" },
   { key: "refunded", label: "Refunded" },
 ];
-
-function txTone(s: string) {
-  return s === "refunded"
-    ? "neutral"
-    : s === "refund_pending"
-      ? "warning"
-      : s === "successful"
-        ? "success"
-        : "info";
-}
 
 export default async function TransactionsPage({
   searchParams,
@@ -122,9 +113,7 @@ export default async function TransactionsPage({
                 </Td>
                 <Td className="tabular-nums">{money(t.amount, t.currency)}</Td>
                 <Td>
-                  <Badge tone={txTone(t.status)}>
-                    {t.status.replace("_", " ")}
-                  </Badge>
+                  <StatusBadge family="transaction" value={t.status} />
                 </Td>
                 <Td className="max-w-[220px] truncate text-muted-foreground">
                   {t.reason ?? "—"}

@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   EmptyState,
@@ -15,14 +16,6 @@ import Link from "next/link";
 import { FinanceTabs } from "../FinanceTabs";
 import { PayoutReviewClear } from "../PayoutReviewClear";
 import { PayoutRowActions } from "../PayoutRowActions";
-
-function payoutTone(s: string) {
-  return s === "paid" || s === "completed" || s === "succeeded"
-    ? "success"
-    : s === "failed"
-      ? "danger"
-      : "warning";
-}
 
 export default async function PayoutsPage({
   searchParams,
@@ -83,10 +76,10 @@ export default async function PayoutsPage({
                   {p.accountLabel ?? "—"}
                 </Td>
                 <Td>
-                  <Badge tone={payoutTone(p.status)}>{p.status}</Badge>
+                  <StatusBadge family="payout" value={p.status} />
                   {p.reviewStatus === "required" ? (
                     <div className="mt-1 space-y-0.5">
-                      <Badge tone="danger">Held for review</Badge>
+                      <StatusBadge family="payoutReview" value="required" />
                       {p.reviewEvents.map((e) => (
                         <div
                           key={e.eventId}

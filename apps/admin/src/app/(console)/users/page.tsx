@@ -43,12 +43,14 @@ export default async function UsersPage({
       <form className="mb-3 flex gap-2" action="/users">
         <input
           name="q"
+          aria-label="Search by username or name"
           defaultValue={sp.q ?? ""}
           placeholder="Search username or name…"
           className="h-9 w-64 rounded-md border border-border bg-background px-3 text-sm"
         />
         <select
           name="status"
+          aria-label="Account status"
           defaultValue={sp.status ?? ""}
           className="h-9 rounded-md border border-border bg-background px-2 text-sm"
         >
@@ -56,6 +58,7 @@ export default async function UsersPage({
           <option value="Active">Active</option>
           <option value="Suspended">Suspended</option>
           <option value="Banned">Banned</option>
+          <option value="Deleted">Deleted</option>
         </select>
         <button
           type="submit"

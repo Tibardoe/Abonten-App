@@ -4,7 +4,7 @@ purpose: Every scheduled job in production — what it does, when it runs, how t
 audience: Engineering, operations
 scope: pg_cron jobs in supabase/migrations, the delete-expired-events edge function
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -28,6 +28,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `purge-reviewed-claim-documents` | 03:00 | `purge_reviewed_claim_documents('30 days')` | Delete claim-document rows 30 days after a decision and queue their bucket objects in `storage_purge_queue` (until 2026-09-13 it deleted from `storage.objects` directly, which Supabase refuses — it failed nightly) | Retention promise broken |
 | `purge-verification-evidence` | 03:30 | `purge_verification_evidence()` | Withdraw expired drafts; mark evidence past retention `purged` and queue the objects; queue orphans | Retention promise broken |
 | `storage-purge-dispatch` | */10 min | `run_storage_purge_dispatch()` → `POST /api/maintenance/storage-purge` | Delete queued bucket objects through the Storage API (only SQL cannot); 8 attempts then `failed` | Queued objects linger in buckets (rows are already gone); check `storage_purge_queue` where `status = 'failed'` |
+| `purge-health-check-result` | 03:17 | `delete from health_check_result where checked_at < now() - interval '30 days'` | Keep the dependency-probe log to 30 days (12 probes every 2 minutes had grown it to 70,000 rows with nothing ever deleting) | Table grows without bound; the dashboard's latest-per-check read slows |
 | `event-reminders` | hourly (:07) | `event_reminders_enqueue()` | "Tomorrow: <event>" in-app notice + queued push for active ticket holders of a session 23–25 h away, once per person per session; skips people with their own app reminder | No day-before reminders |
 | `cleanup-rate-limit-buckets` | 04:00 | `cleanup_rate_limit_buckets()` | Purge 1-day-old buckets | Table grows (no functional impact) |
 | `credit-expire-lots` | 02:00 | `credit_expire_due_lots(5000)` | Expire credit lots | Expired credit stays spendable |

@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   EmptyState,
@@ -88,9 +89,7 @@ export default async function RefundsPage({
                   {money(r.refundableAmount, r.currency)}
                 </Td>
                 <Td>
-                  <Badge tone={r.status === "refunded" ? "neutral" : "warning"}>
-                    {r.status.replace("_", " ")}
-                  </Badge>
+                  <StatusBadge family="transaction" value={r.status} />
                 </Td>
                 <Td className="whitespace-nowrap text-muted-foreground">
                   {r.refundRequestedAt ? timeAgo(r.refundRequestedAt) : "—"}

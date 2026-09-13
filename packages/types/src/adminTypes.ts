@@ -567,6 +567,8 @@ export type Incident = {
   updatedAt: string;
 };
 
+import type { AdminOrganizerBalance } from "./adminMetrics";
+
 // ─────────────────────────────────────────────────────────────
 // Dashboard
 // ─────────────────────────────────────────────────────────────
@@ -579,16 +581,42 @@ export type DashboardRange =
   | "90d"
   | "custom";
 
+/**
+ * The console's period control. Replaces DashboardRange as surfaces move to
+ * `@abonten/core/admin/adminDateRange`, which resolves each key to a
+ * calendar-aligned window plus the equivalent previous one.
+ */
+export type AdminRangeKey = "today" | "7d" | "30d" | "90d" | "ytd" | "custom";
+
+/** How a time series is bucketed for a given range. */
+export type AdminBucket = "hour" | "day" | "week";
+
 export type DashboardKpis = {
+  /** Accounts with status Active (excludes suspended, banned, deleted). */
   totalUsers: number;
+  /** Every user_info row regardless of status. */
+  allAccounts: number;
+  /** Accounts created in the range, any status. */
   newUsers: number;
+  /** Distinct organizers of at least one non-draft event. */
   organizers: number;
+  /** Every event row (all statuses). */
   events: number;
+  /** Events with status published. */
+  eventsPublished: number;
   places: number;
+  /** Paid tickets issued in the range, excluding cancelled ones. */
   ticketsSold: number;
+  /** Free registrations issued in the range, excluding cancelled ones. */
+  freeRegistrations: number;
+  /** Σ ticket_revenue of `fee` entries in the range — before refunds. */
   grossTicketSales: number;
+  /** Σ service_fee of `fee` entries in the range (retained on refund). */
   platformFeeRevenue: number;
+  /** Cash sent back in the range: −Σ ticket_revenue of refund adjustments. */
   refunds: number;
+  /** Number of refund adjustments written in the range. */
+  refundsCount: number;
   currency: string;
 };
 
@@ -904,20 +932,34 @@ export type FinanceOverview = {
   currency: string;
   activeFeeRate: number | null;
   // customer side
+  // customer side — `fee` entries only, in range (before refunds)
   totalCustomerPayments: number;
   ticketRevenue: number;
   serviceFeeRevenue: number;
   processingCost: number;
   netPlatformRevenue: number;
+  /** `fee` entries in range; net/processing sums cover only the known-cost ones. */
+  feeEntries: number;
+  feeEntriesWithKnownCost: number;
   transactionsSuccessful: number;
-  // refunds
+  // refunds — pending is "right now", completed is in range
   refundsPending: number;
+  /** Ticket revenue still refundable on the pending requests. */
   refundsPendingAmount: number;
   refundsCompleted: number;
+  /** Cash actually sent back (ticket revenue only; the fee is retained). */
   refundsCompletedAmount: number;
-  // organizer side
+  // organizer side — all time, right now
+  /** Ticket sales before refunds (earning + promoter commission entries). */
   organizerEarningsBooked: number;
+  /**
+   * Refunds taken off the organizer. The deduction is the `refund_hold` row
+   * written when a refund is requested; it is reversed only if the refund
+   * FAILS (`refund_release`), so a confirmed refund stays deducted here.
+   */
   organizerEarningsHeld: number;
+  organizerEarningsPaidOut: number;
+  /** booked − held − paid out. Can be negative after post-payout refunds. */
   organizerEarningsOutstanding: number;
   payoutsPending: number;
   payoutsPendingAmount: number;
@@ -1062,11 +1104,24 @@ export type PayoutReviewEvent = {
 export type OrganizerFinanceSummary = {
   organizerId: string;
   organizerName: string | null;
+  /** The organizer's primary currency; anything else is in otherCurrencies. */
   currency: string;
+  /** Ticket sales before refunds, plus promoter commission. */
   earned: number;
+  /** Refunds taken back, from the moment each was requested. */
   held: number;
+  /** Paid out, plus anything reserved for a payout in flight. */
   paidOut: number;
+  /** earned - refunds - paid out. Negative after a post-payout refund. */
   outstanding: number;
+  /** Earned but not payable yet: an event settles 48 hours after it ends. */
+  pendingSettlement: number;
+  /** Payable right now — what a payout is checked against. */
+  available: number;
+  payoutsInFlight: number;
+  payoutsInFlightAmount: number;
+  /** Money in any currency other than the primary one, never summed with it. */
+  otherCurrencies: AdminOrganizerBalance[];
   payoutAccounts: {
     id: string;
     accountType: string | null;
@@ -1091,7 +1146,8 @@ export type AnalyticsSeriesPoint = {
   newEvents: number;
   newPlaces: number;
   ticketsIssued: number;
-  grossRevenue: number;
+  /** Σ ticket_revenue of `fee` entries that day — before refunds. */
+  grossTicketSales: number;
 };
 
 export type AnalyticsTopEvent = {
@@ -1104,7 +1160,7 @@ export type AnalyticsTopEvent = {
 export type AnalyticsTopOrganizer = {
   id: string;
   name: string | null;
-  grossRevenue: number;
+  grossTicketSales: number;
   currency: string;
 };
 
@@ -1114,23 +1170,31 @@ export type PlatformAnalytics = {
   to: string;
   currency: string;
   totals: {
+    /** Active accounts only. */
     users: number;
+    /** Distinct organizers of at least one non-draft event. */
     organizers: number;
     eventsPublished: number;
     eventsTotal: number;
     places: number;
+    /** Tickets issued (paid + free), excluding cancelled ones. */
     ticketsIssuedAllTime: number;
-    grossCustomerPaymentsAllTime: number;
+    /** Σ ticket_revenue of `fee` entries — before refunds. */
+    grossTicketSalesAllTime: number;
+    /** Σ net_revenue of `fee` entries with a known processing cost. */
     netPlatformRevenueAllTime: number;
   };
   inRange: {
     newUsers: number;
     newEvents: number;
     newPlaces: number;
+    /** Tickets issued (paid + free) in range, excluding cancelled ones. */
     ticketsIssued: number;
-    grossRevenue: number;
+    /** Σ ticket_revenue of `fee` entries in range — before refunds. */
+    grossTicketSales: number;
     netPlatformRevenue: number;
-    activeOrganizers: number;
+    /** Distinct organizers who created an event in the range. */
+    organizersWithNewEvents: number;
   };
   series: AnalyticsSeriesPoint[];
   topEvents: AnalyticsTopEvent[];

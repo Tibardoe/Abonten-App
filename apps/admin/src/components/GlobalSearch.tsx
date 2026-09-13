@@ -18,10 +18,12 @@ export function GlobalSearch() {
       className="flex items-center"
     >
       <input
+        type="search"
+        aria-label="Search users, events, places, transactions and reports"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search users, events, places, transactions, reports…"
-        className="h-8 w-72 rounded-md border border-border bg-background px-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+        className="h-8 w-40 rounded-md border border-border bg-background px-2.5 text-sm outline-none focus:ring-2 focus:ring-ring sm:w-72"
       />
     </form>
   );

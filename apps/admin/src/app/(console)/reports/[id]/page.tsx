@@ -1,12 +1,5 @@
-import {
-  Badge,
-  Card,
-  EmptyState,
-  PageHeader,
-  priorityTone,
-  reportStatusTone,
-  timeAgo,
-} from "@/components/ui";
+import { StatusBadge } from "@/components/metrics/StatusBadge";
+import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadReportDetail } from "@/lib/data";
 import { REPORT_CATEGORY_LABEL } from "@abonten/types/adminTypes";
@@ -38,10 +31,8 @@ export default async function ReportDetailPage({
         }
         actions={
           <div className="flex items-center gap-2">
-            <Badge tone={priorityTone(r.priority)}>{r.priority}</Badge>
-            <Badge tone={reportStatusTone(r.status)}>
-              {r.status.replace("_", " ")}
-            </Badge>
+            <StatusBadge family="reportPriority" value={r.priority} />
+            <StatusBadge family="report" value={r.status} />
           </div>
         }
       />
@@ -185,9 +176,7 @@ export default async function ReportDetailPage({
             <Card className="p-4">
               <h3 className="mb-1 text-sm font-semibold">Resolution</h3>
               <p className="text-sm">
-                <Badge tone={reportStatusTone(r.status)}>
-                  {r.status.replace("_", " ")}
-                </Badge>{" "}
+                <StatusBadge family="report" value={r.status} />{" "}
                 {r.resolutionAction ? `(${r.resolutionAction})` : null}
               </p>
               <p className="mt-1 whitespace-pre-wrap text-sm">{r.resolution}</p>

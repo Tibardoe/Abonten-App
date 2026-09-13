@@ -1,347 +1,277 @@
+import type { ResolvedAdminRange } from "@abonten/core/admin/adminDateRange";
+import {
+  type SuppressedBucket,
+  applySmallSampleRule,
+  ratioState,
+} from "@abonten/core/admin/smallSample";
 import { logger } from "@abonten/core/logger";
 import type {
-  AdminContext,
-  AnalyticsSeriesPoint,
-  DashboardRange,
-  PlatformAnalytics,
-} from "@abonten/types/adminTypes";
-import type { Database } from "@abonten/types/database.types";
+  AdminRangeMetrics,
+  AdminSnapshotMetrics,
+} from "@abonten/types/adminMetrics";
+import type { AdminContext } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
+import { num, toRangeMetrics, toSnapshotMetrics } from "../shared/metricRows";
 
-// Platform Analytics (Phase 4) — read-only aggregates. Abonten operates in
-// Ghana (Africa/Accra = UTC+0), so UTC day boundaries are local. Totals use
-// head-count queries; the daily series buckets raw created_at columns in JS
-// (capped) rather than N per-day round trips.
+// Platform Analytics: growth, sales and the only breakdowns of people the
+// data honestly supports.
+//
+// Three RPCs, aggregated in Postgres. The page used to pull up to 50,000 raw
+// rows per metric and bucket them in JavaScript, which silently dropped every
+// period that had no activity — a gap in a chart that read as "no data" when
+// it meant "zero".
+//
+// Demographics are aggregate-only and pass through the small-sample rule
+// before they leave this module, so nothing that could point at one person
+// ever reaches a screen.
 
-const SERIES_ROW_CAP = 50_000;
+export type AnalyticsSeriesRow = {
+  bucketStart: string;
+  newUsers: number;
+  newEvents: number;
+  newPlaces: number;
+  paidTickets: number;
+  freeRegistrations: number;
+  grossTicketSales: number;
+  serviceFeeRevenue: number;
+  cashRefunded: number;
+};
 
-function resolveRange(
-  range: DashboardRange,
-  from?: string,
-  to?: string,
-): { from: string; to: string } {
-  const now = new Date();
-  if (range === "custom" && from && to) return { from, to };
-  const iso = now.toISOString();
-  const daysAgo = (n: number) =>
-    new Date(now.getTime() - n * 86_400_000).toISOString();
-  switch (range) {
-    case "today":
-      return {
-        from: new Date(
-          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-        ).toISOString(),
-        to: iso,
-      };
-    case "7d":
-      return { from: daysAgo(7), to: iso };
-    case "90d":
-      return { from: daysAgo(90), to: iso };
-    default:
-      return { from: daysAgo(30), to: iso };
+export type AnalyticsPreviousRow = {
+  bucketStart: string;
+  newUsers: number;
+  paidTickets: number;
+  grossTicketSales: number;
+};
+
+export type AnalyticsTopEventRow = {
+  id: string;
+  title: string;
+  organizerId: string | null;
+  organizerName: string | null;
+  paidTickets: number;
+  grossTicketSales: number;
+};
+
+export type AnalyticsTopOrganizerRow = {
+  id: string;
+  name: string | null;
+  grossTicketSales: number;
+  currency: string;
+};
+
+export type DemographicBreakdown = {
+  buckets: SuppressedBucket[];
+  total: number;
+  suppressedCount: number;
+  allSuppressed: boolean;
+};
+
+export type AnalyticsDemographics = {
+  signInMethod: DemographicBreakdown;
+  platform: DemographicBreakdown;
+  /** People with a push-enabled device — the platform mix's real population. */
+  platformUsersTotal: number;
+  accountStatus: DemographicBreakdown;
+  roles: DemographicBreakdown;
+  activeUsers: number;
+  buyersAllTime: number;
+  repeatBuyersAllTime: number;
+  buyersCurrent: number;
+  buyersPrevious: number;
+  returningBuyers: number;
+  /** null when the sample is too small to state a percentage honestly. */
+  buyerConversion: number | null;
+  repeatBuyerShare: number | null;
+  returningBuyerRate: number | null;
+};
+
+export type PlatformAnalyticsV2 = {
+  range: ResolvedAdminRange;
+  bucket: "hour" | "day" | "week";
+  snapshot: AdminSnapshotMetrics;
+  current: AdminRangeMetrics;
+  previous: AdminRangeMetrics;
+  series: AnalyticsSeriesRow[];
+  previousSeries: AnalyticsPreviousRow[];
+  topEvents: AnalyticsTopEventRow[];
+  topOrganizers: AnalyticsTopOrganizerRow[];
+  /** Sales that cover several events at once and cannot be attributed. */
+  grossWithoutEvent: number;
+  demographics: AnalyticsDemographics;
+};
+
+type Row = Record<string, unknown>;
+
+/**
+ * `suppress` is on for anything that describes a person — how they sign in,
+ * what device they carry. It is off for operational states the console
+ * already shows elsewhere as plain counts (account status on the Users page,
+ * organizers on the Organizers page): hiding those buys no privacy and costs
+ * an operator real information.
+ */
+function toBreakdown(raw: unknown, suppress = true): DemographicBreakdown {
+  const list = Array.isArray(raw) ? raw : [];
+  const buckets = list.map((b) => {
+    const r = (b ?? {}) as Row;
+    return { key: String(r.key ?? "unknown"), count: num(r.count) };
+  });
+  if (!suppress) {
+    return {
+      buckets: buckets.map((b) => ({ ...b, suppressed: false })),
+      total: buckets.reduce((sum, b) => sum + b.count, 0),
+      suppressedCount: 0,
+      allSuppressed: false,
+    };
   }
+  const result = applySmallSampleRule(buckets);
+  return {
+    buckets: result.buckets,
+    total: result.total,
+    suppressedCount: result.suppressedCount,
+    allSuppressed: result.allSuppressed,
+  };
 }
 
-const dayKey = (iso: string) => iso.slice(0, 10);
-
-function num(v: unknown): number {
-  const n = typeof v === "string" ? Number.parseFloat(v) : (v as number);
-  return Number.isFinite(n) ? n : 0;
-}
-
-async function headCount(
-  supabase: ServiceRoleClient,
-  table: string,
-  // biome-ignore lint/suspicious/noExplicitAny: PostgREST builder chaining not worth typing
-  build?: (q: any) => any,
-): Promise<number> {
-  let q = supabase
-    .from(table as keyof Database["public"]["Tables"])
-    .select("id", { count: "exact", head: true });
-  if (build) q = build(q);
-  const { count, error } = await q;
-  if (error) {
-    logger.error(`analytics headCount(${table}) failed: ${error.message}`);
-    return 0;
-  }
-  return count ?? 0;
+function ratio(numerator: number, denominator: number): number | null {
+  return ratioState(numerator, denominator) === "ok"
+    ? numerator / denominator
+    : null;
 }
 
 export async function getPlatformAnalyticsCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  opts: { range: DashboardRange; from?: string; to?: string },
-): Promise<AdminEnvelope<PlatformAnalytics>> {
+  range: ResolvedAdminRange,
+): Promise<AdminEnvelope<PlatformAnalyticsV2>> {
   try {
     assertPermission(ctx, "analytics.view");
   } catch (e) {
     return { status: 403, message: (e as Error).message };
   }
 
-  const { from, to } = resolveRange(opts.range, opts.from, opts.to);
+  const prevFrom = range.prevFrom ?? range.from;
+  const prevTo = range.prevTo ?? range.from;
 
-  // ── all-time totals ──────────────────────────────────────
-  const [
-    users,
-    places,
-    eventsTotal,
-    eventsPublished,
-    ticketsAllTime,
-    { data: feeAll },
-    { data: cfg },
-  ] = await Promise.all([
-    headCount(supabase, "user_info"),
-    headCount(supabase, "place"),
-    headCount(supabase, "event"),
-    headCount(supabase, "event", (q) => q.eq("status", "published")),
-    headCount(supabase, "ticket"),
-    supabase
-      .from("platform_fee_entry")
-      .select("total_customer_payment, net_revenue, currency")
-      .limit(SERIES_ROW_CAP),
-    supabase
-      .from("platform_fee_config")
-      .select("currency")
-      .eq("is_active", true)
-      .maybeSingle(),
+  const [kpis, analytics, demographics] = await Promise.all([
+    supabase.rpc("admin_dashboard_kpis", {
+      p_from: range.from,
+      p_to: range.to,
+      p_prev_from: prevFrom,
+      p_prev_to: prevTo,
+    }),
+    supabase.rpc("admin_platform_analytics", {
+      p_from: range.from,
+      p_to: range.to,
+      p_bucket: range.bucket,
+      p_prev_from: prevFrom,
+      p_prev_to: prevTo,
+    }),
+    supabase.rpc("admin_user_demographics", {
+      p_from: range.from,
+      p_to: range.to,
+      p_prev_from: prevFrom,
+      p_prev_to: prevTo,
+    }),
   ]);
 
-  let currency = cfg?.currency ?? "GHS";
-  let grossAllTime = 0;
-  let netAllTime = 0;
-  for (const f of feeAll ?? []) {
-    if (f.currency) currency = f.currency;
-    grossAllTime += num(f.total_customer_payment);
-    netAllTime += num(f.net_revenue);
+  const failure = kpis.error ?? analytics.error ?? demographics.error;
+  if (failure) {
+    logger.error(`getPlatformAnalyticsCore failed: ${failure.message}`);
+    return { status: 500, message: "Couldn't load the analytics figures." };
   }
 
-  // organizers = distinct users who organize an event OR own a place
-  const [{ data: evOrg }, { data: plOwn }] = await Promise.all([
-    supabase
-      .from("event")
-      .select("organizer_id, created_at")
-      .limit(SERIES_ROW_CAP),
-    supabase.from("place").select("owner_id, created_at").limit(SERIES_ROW_CAP),
-  ]);
-  const organizerIds = new Set<string>();
-  for (const r of evOrg ?? [])
-    if (r.organizer_id) organizerIds.add(r.organizer_id);
-  for (const r of plOwn ?? []) if (r.owner_id) organizerIds.add(r.owner_id);
+  const k = (kpis.data ?? {}) as Row;
+  const a = (analytics.data ?? {}) as Row;
+  const d = (demographics.data ?? {}) as Row;
 
-  // ── in-range raw rows for the series ─────────────────────
-  const [
-    { data: uRows },
-    { data: eRows },
-    { data: pRows },
-    { data: tRows },
-    { data: feeRange },
-  ] = await Promise.all([
-    supabase
-      .from("user_info")
-      .select("created_at")
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .limit(SERIES_ROW_CAP),
-    supabase
-      .from("event")
-      .select("id, title, organizer_id, created_at")
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .limit(SERIES_ROW_CAP),
-    supabase
-      .from("place")
-      .select("created_at")
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .limit(SERIES_ROW_CAP),
-    supabase
-      .from("ticket")
-      .select("created_at, ticket_type_id")
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .limit(SERIES_ROW_CAP),
-    supabase
-      .from("platform_fee_entry")
-      .select("total_customer_payment, net_revenue, event_id, created_at")
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .limit(SERIES_ROW_CAP),
-  ]);
+  const series = (Array.isArray(a.series) ? a.series : []).map((row) => {
+    const r = (row ?? {}) as Row;
+    return {
+      bucketStart: String(r.bucketStart ?? ""),
+      newUsers: num(r.newUsers),
+      newEvents: num(r.newEvents),
+      newPlaces: num(r.newPlaces),
+      paidTickets: num(r.paidTickets),
+      freeRegistrations: num(r.freeRegistrations),
+      grossTicketSales: num(r.grossTicketSales),
+      serviceFeeRevenue: num(r.serviceFeeRevenue),
+      cashRefunded: num(r.cashRefunded),
+    } satisfies AnalyticsSeriesRow;
+  });
 
-  // bucket by UTC day
-  const buckets = new Map<string, AnalyticsSeriesPoint>();
-  const bump = (
-    key: string,
-    field: keyof Omit<AnalyticsSeriesPoint, "date">,
-    by = 1,
-  ) => {
-    const b =
-      buckets.get(key) ??
-      ({
-        date: key,
-        newUsers: 0,
-        newEvents: 0,
-        newPlaces: 0,
-        ticketsIssued: 0,
-        grossRevenue: 0,
-      } satisfies AnalyticsSeriesPoint);
-    (b[field] as number) += by;
-    buckets.set(key, b);
-  };
-  for (const r of uRows ?? []) bump(dayKey(r.created_at), "newUsers");
-  for (const r of eRows ?? []) bump(dayKey(r.created_at), "newEvents");
-  for (const r of pRows ?? []) bump(dayKey(r.created_at), "newPlaces");
-  for (const r of tRows ?? []) bump(dayKey(r.created_at), "ticketsIssued");
-  for (const r of feeRange ?? [])
-    bump(dayKey(r.created_at), "grossRevenue", num(r.total_customer_payment));
+  const previousSeries = (
+    Array.isArray(a.previousSeries) ? a.previousSeries : []
+  ).map((row) => {
+    const r = (row ?? {}) as Row;
+    return {
+      bucketStart: String(r.bucketStart ?? ""),
+      newUsers: num(r.newUsers),
+      paidTickets: num(r.paidTickets),
+      grossTicketSales: num(r.grossTicketSales),
+    } satisfies AnalyticsPreviousRow;
+  });
 
-  const series = [...buckets.values()].sort((a, b) =>
-    a.date < b.date ? -1 : 1,
+  const topEvents = (Array.isArray(a.topEvents) ? a.topEvents : []).map(
+    (row) => {
+      const r = (row ?? {}) as Row;
+      return {
+        id: String(r.id ?? ""),
+        title: String(r.title ?? ""),
+        organizerId: r.organizerId ? String(r.organizerId) : null,
+        organizerName: r.organizerName ? String(r.organizerName) : null,
+        paidTickets: num(r.paidTickets),
+        grossTicketSales: num(r.grossTicketSales),
+      } satisfies AnalyticsTopEventRow;
+    },
   );
 
-  const grossRange = (feeRange ?? []).reduce(
-    (s, f) => s + num(f.total_customer_payment),
-    0,
-  );
-  const netRange = (feeRange ?? []).reduce((s, f) => s + num(f.net_revenue), 0);
-  const activeOrganizers = new Set(
-    (eRows ?? []).map((e) => e.organizer_id).filter(Boolean),
-  ).size;
+  const topOrganizers = (
+    Array.isArray(a.topOrganizers) ? a.topOrganizers : []
+  ).map((row) => {
+    const r = (row ?? {}) as Row;
+    return {
+      id: String(r.id ?? ""),
+      name: r.name ? String(r.name) : null,
+      grossTicketSales: num(r.grossTicketSales),
+      currency: typeof r.currency === "string" ? r.currency : "GHS",
+    } satisfies AnalyticsTopOrganizerRow;
+  });
 
-  // ── top events (by tickets issued in range) ─────────────
-  const ttToEvent = new Map<string, string>();
-  const eventTitles = new Map<string, string>();
-  for (const e of eRows ?? []) eventTitles.set(e.id, e.title);
-  const inRangeTicketTypeIds = [
-    ...new Set(
-      (tRows ?? [])
-        .map((t) => t.ticket_type_id as string)
-        .filter((x): x is string => !!x),
-    ),
-  ];
-  if (inRangeTicketTypeIds.length > 0) {
-    const { data: tt } = await supabase
-      .from("ticket_type")
-      .select("id, event_id")
-      .in("id", inRangeTicketTypeIds);
-    for (const r of tt ?? []) {
-      if (r.event_id) ttToEvent.set(r.id, r.event_id);
-    }
-  }
-  const ticketsByEvent = new Map<string, number>();
-  for (const t of tRows ?? []) {
-    const ev = ttToEvent.get(t.ticket_type_id as string);
-    if (ev) ticketsByEvent.set(ev, (ticketsByEvent.get(ev) ?? 0) + 1);
-  }
-  const topEventIds = [...ticketsByEvent.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
-  // resolve titles/organizers for any top events not in the in-range set
-  const needTitles = topEventIds
-    .map(([id]) => id)
-    .filter((id) => !eventTitles.has(id));
-  const orgByEvent = new Map<string, string>();
-  for (const e of eRows ?? [])
-    if (e.organizer_id) orgByEvent.set(e.id, e.organizer_id);
-  if (needTitles.length > 0) {
-    const { data: ev2 } = await supabase
-      .from("event")
-      .select("id, title, organizer_id")
-      .in("id", needTitles);
-    for (const e of ev2 ?? []) {
-      eventTitles.set(e.id, e.title);
-      if (e.organizer_id) orgByEvent.set(e.id, e.organizer_id);
-    }
-  }
-
-  // ── top organizers (by gross in range) ──────────────────
-  const grossByEvent = new Map<string, number>();
-  for (const f of feeRange ?? [])
-    if (f.event_id)
-      grossByEvent.set(
-        f.event_id,
-        (grossByEvent.get(f.event_id) ?? 0) + num(f.total_customer_payment),
-      );
-  // need organizer for every event with gross
-  const grossEventIds = [...grossByEvent.keys()];
-  const missingOrg = grossEventIds.filter((id) => !orgByEvent.has(id));
-  if (missingOrg.length > 0) {
-    const { data: ev3 } = await supabase
-      .from("event")
-      .select("id, organizer_id")
-      .in("id", missingOrg);
-    for (const e of ev3 ?? [])
-      if (e.organizer_id) orgByEvent.set(e.id, e.organizer_id);
-  }
-  const grossByOrg = new Map<string, number>();
-  for (const [evId, g] of grossByEvent) {
-    const org = orgByEvent.get(evId);
-    if (org) grossByOrg.set(org, (grossByOrg.get(org) ?? 0) + g);
-  }
-  const topOrgIds = [...grossByOrg.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
-
-  // resolve names for everyone we mention
-  const nameIds = [
-    ...new Set([
-      ...topEventIds.map(([id]) => orgByEvent.get(id)).filter(Boolean),
-      ...topOrgIds.map(([id]) => id),
-    ]),
-  ] as string[];
-  const names = new Map<string, string>();
-  if (nameIds.length > 0) {
-    const { data: us } = await supabase
-      .from("user_info")
-      .select("id, full_name, username")
-      .in("id", nameIds);
-    for (const u of us ?? [])
-      names.set(u.id, u.full_name || u.username || u.id.slice(0, 8));
-  }
+  const activeUsers = num(d.activeUsers);
+  const buyersAllTime = num(d.buyersAllTime);
+  const buyersPrevious = num(d.buyersPrevious);
 
   return {
     status: 200,
     data: {
-      range: opts.range,
-      from,
-      to,
-      currency,
-      totals: {
-        users,
-        organizers: organizerIds.size,
-        eventsPublished,
-        eventsTotal,
-        places,
-        ticketsIssuedAllTime: ticketsAllTime,
-        grossCustomerPaymentsAllTime: grossAllTime,
-        netPlatformRevenueAllTime: netAllTime,
-      },
-      inRange: {
-        newUsers: (uRows ?? []).length,
-        newEvents: (eRows ?? []).length,
-        newPlaces: (pRows ?? []).length,
-        ticketsIssued: (tRows ?? []).length,
-        grossRevenue: grossRange,
-        netPlatformRevenue: netRange,
-        activeOrganizers,
-      },
+      range,
+      bucket: range.bucket,
+      snapshot: toSnapshotMetrics(k.snapshot),
+      current: toRangeMetrics(k.current),
+      previous: toRangeMetrics(k.previous),
       series,
-      topEvents: topEventIds.map(([id, tickets]) => ({
-        id,
-        title: eventTitles.get(id) ?? `${id.slice(0, 8)}…`,
-        organizerName: (() => {
-          const org = orgByEvent.get(id);
-          return org ? (names.get(org) ?? null) : null;
-        })(),
-        ticketsIssued: tickets,
-      })),
-      topOrganizers: topOrgIds.map(([id, gross]) => ({
-        id,
-        name: names.get(id) ?? null,
-        grossRevenue: gross,
-        currency,
-      })),
+      previousSeries,
+      topEvents,
+      topOrganizers,
+      grossWithoutEvent: num(a.grossWithoutEvent),
+      demographics: {
+        signInMethod: toBreakdown(d.signInMethod),
+        platform: toBreakdown(d.platform),
+        platformUsersTotal: num(d.platformUsersTotal),
+        accountStatus: toBreakdown(d.accountStatus, false),
+        roles: toBreakdown(d.roles, false),
+        activeUsers,
+        buyersAllTime,
+        repeatBuyersAllTime: num(d.repeatBuyersAllTime),
+        buyersCurrent: num(d.buyersCurrent),
+        buyersPrevious,
+        returningBuyers: num(d.returningBuyers),
+        buyerConversion: ratio(buyersAllTime, activeUsers),
+        repeatBuyerShare: ratio(num(d.repeatBuyersAllTime), buyersAllTime),
+        returningBuyerRate: ratio(num(d.returningBuyers), buyersPrevious),
+      },
     },
   };
 }

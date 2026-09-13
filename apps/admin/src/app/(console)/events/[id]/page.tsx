@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   Card,
@@ -43,7 +44,7 @@ export default async function EventDetailPage({
         }
         actions={
           <div className="flex items-center gap-2">
-            <Badge tone="neutral">{e.status}</Badge>
+            <StatusBadge family="event" value={e.status} />
             {e.moderationState ? (
               <Badge tone={modTone(e.moderationState)}>
                 {e.moderationState}
@@ -170,7 +171,7 @@ export default async function EventDetailPage({
             >
               Content tab
             </Link>{" "}
-            or an open report. Financial detail lives in Finance (later phase).
+            or an open report. Financial detail lives in Finance.
           </Card>
         </div>
       </div>

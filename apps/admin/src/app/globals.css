@@ -21,6 +21,16 @@
     --success-foreground: 0 0% 100%;
     --warning: 32 90% 42%;
     --warning-foreground: 32 40% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+    /* Chart series, in the order the console assigns them. Distinguishable
+       in both themes and for the common colour-vision deficiencies; charts
+       also label their series, so colour is never the only signal. */
+    --chart-1: 171 65% 40%;
+    --chart-2: 217 72% 52%;
+    --chart-3: 262 52% 58%;
+    --chart-4: 32 90% 42%;
+    --chart-5: 340 62% 52%;
     --radius: 0.5rem;
   }
 
@@ -42,6 +52,13 @@
     --success-foreground: 152 40% 10%;
     --warning: 36 80% 55%;
     --warning-foreground: 32 40% 10%;
+    --popover: 222 22% 14%;
+    --popover-foreground: 210 20% 92%;
+    --chart-1: 171 60% 45%;
+    --chart-2: 217 70% 62%;
+    --chart-3: 262 50% 68%;
+    --chart-4: 36 80% 55%;
+    --chart-5: 340 60% 62%;
   }
 
   * {

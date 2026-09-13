@@ -1,9 +1,10 @@
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   Card,
   EmptyState,
   PageHeader,
-  Stat,
   money,
   timeAgo,
 } from "@/components/ui";
@@ -12,14 +13,6 @@ import { loadOrganizerFinance } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
 import { CreatePayoutPanel } from "../../CreatePayoutPanel";
-
-function payoutTone(s: string) {
-  return s === "paid" || s === "completed" || s === "succeeded"
-    ? "success"
-    : s === "failed"
-      ? "danger"
-      : "warning";
-}
 
 export default async function OrganizerFinancePage({
   params,
@@ -62,20 +55,66 @@ export default async function OrganizerFinancePage({
         }
       />
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-4">
-        <Stat label="Earned" value={money(f.earned, f.currency)} />
-        <Stat
-          label="Held"
-          value={money(f.held, f.currency)}
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <MetricCard
+          metric="organizerMoney.booked"
+          value={f.earned}
+          format="money"
+          currency={f.currency}
+          period="All time"
+        />
+        <MetricCard
+          metric="organizerMoney.deducted"
+          value={f.held}
+          format="money"
+          currency={f.currency}
+          period="All time"
           tone={f.held > 0 ? "warning" : undefined}
         />
-        <Stat label="Paid out" value={money(f.paidOut, f.currency)} />
-        <Stat
-          label="Outstanding"
-          value={money(f.outstanding, f.currency)}
-          hint="earned − paid out − held"
+        <MetricCard
+          metric="organizerMoney.paidOut"
+          value={f.paidOut}
+          format="money"
+          currency={f.currency}
+          period="All time"
+        />
+        <MetricCard
+          label="Payable today"
+          definition={{
+            text: "What this organizer can be paid right now. Earnings become payable 48 hours after the event they came from ends, so this is smaller than what they are owed in total. A payout is checked against exactly this figure.",
+            source: "the settled part of the organizer ledger, less payouts",
+          }}
+          value={f.available}
+          format="money"
+          currency={f.currency}
+          period="Right now"
+          tone={f.available < 0 ? "danger" : undefined}
+          secondary={`${money(f.pendingSettlement, f.currency)} still settling`}
+        />
+        <MetricCard
+          metric="organizerMoney.stillOwed"
+          value={f.outstanding}
+          format="money"
+          currency={f.currency}
+          period="Right now"
+          tone={f.outstanding < 0 ? "danger" : undefined}
+          secondary={
+            f.payoutsInFlight > 0
+              ? `${money(f.payoutsInFlightAmount, f.currency)} in a payout being processed`
+              : undefined
+          }
         />
       </div>
+
+      {f.otherCurrencies.length > 0 ? (
+        <p className="mb-4 text-xs text-muted-foreground">
+          Also owed in other currencies, never added to the figures above:{" "}
+          {f.otherCurrencies
+            .map((m) => `${money(m.totalEarnings - m.paidOut, m.currency)}`)
+            .join(", ")}
+          .
+        </p>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-4">
@@ -129,7 +168,7 @@ export default async function OrganizerFinancePage({
               {f.recentPayouts.map((p) => (
                 <li key={p.id} className="rounded bg-muted/50 p-2">
                   <div className="flex items-center justify-between">
-                    <Badge tone={payoutTone(p.status)}>{p.status}</Badge>
+                    <StatusBadge family="payout" value={p.status} />
                     <span className="tabular-nums">
                       {money(p.amount, p.currency)}
                     </span>
@@ -166,7 +205,9 @@ export default async function OrganizerFinancePage({
                 <tbody>
                   {f.recentLedger.map((l) => (
                     <tr key={l.id} className="border-b border-border">
-                      <td className="px-3 py-2">{l.entryType}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge family="ledgerEntry" value={l.entryType} />
+                      </td>
                       <td className="px-3 py-2 tabular-nums">
                         {money(l.amount, l.currency)}
                       </td>

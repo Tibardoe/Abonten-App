@@ -3,6 +3,10 @@ import TrendIndicator from "@/components/atoms/TrendIndicator";
 import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import StatTilesSkeleton from "@/components/molecules/StatTilesSkeleton";
 import {
+  type TrendResult,
+  computeTrend,
+} from "@abonten/core/admin/computeTrend";
+import {
   DASHBOARD_PERIOD_COMPARISON_LABELS,
   type DashboardPeriod,
 } from "@abonten/core/organizerDashboardDateRange";
@@ -10,26 +14,17 @@ import {
 // biome-ignore lint/suspicious/noExplicitAny: no generated Supabase types exist in this repo (see PROJECT.md)
 type Row = any;
 
-type Trend =
-  | { kind: "none" }
-  | { kind: "new" }
-  | { kind: "percent"; value: number };
-
-// "All Time" has no meaningful prior period; a previous value of exactly 0
-// against a current value of 0 is genuinely nothing to compare either —
-// both cases render no trend rather than a fabricated 0%/Infinity%.
-function computeTrend(current: number, previous: number | null): Trend {
-  if (previous === null) return { kind: "none" };
-  if (previous === 0 && current === 0) return { kind: "none" };
-  if (previous === 0) return { kind: "new" };
-  return { kind: "percent", value: ((current - previous) / previous) * 100 };
-}
+// The rule lives in @abonten/core/admin/computeTrend so the organizer
+// dashboard and the admin console can never disagree about what a
+// percentage means: "All Time" has no prior period, and 0 against 0 is
+// nothing to compare — both render no trend rather than a fabricated
+// 0%/Infinity%.
 
 function TrendLine({
   trend,
   comparisonLabel,
 }: {
-  trend: Trend;
+  trend: TrendResult;
   comparisonLabel: string | null;
 }) {
   if (trend.kind === "none" || !comparisonLabel) return null;

@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   EmptyState,
@@ -90,7 +91,7 @@ export default async function ClaimsPage({
                 <Td>{c.claimantName ?? c.claimantId.slice(0, 8)}</Td>
                 <Td className="tabular-nums">{c.documentCount}</Td>
                 <Td>
-                  <Badge tone={claimTone(c.status)}>{c.status}</Badge>
+                  <StatusBadge family="claim" value={c.status} />
                 </Td>
                 <Td className="whitespace-nowrap text-muted-foreground">
                   {timeAgo(c.createdAt)}

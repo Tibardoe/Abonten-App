@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import { Badge, Card, EmptyState, PageHeader, timeAgo } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadVerificationCaseDetail } from "@/lib/data";
@@ -46,9 +47,7 @@ export default async function VerificationDetailPage({
         actions={
           <div className="flex items-center gap-2">
             <Badge tone={isPlace ? "info" : "neutral"}>{c.subjectType}</Badge>
-            <Badge tone={VERIFICATION_STATUS_TONE[c.status]}>
-              {c.status.replace("_", " ")}
-            </Badge>
+            <StatusBadge family="verification" value={c.status} />
           </div>
         }
       />
@@ -255,9 +254,7 @@ export default async function VerificationDetailPage({
               <ul className="space-y-1 text-sm">
                 {c.priorCases.map((p) => (
                   <li key={p.id} className="flex items-center gap-2">
-                    <Badge tone={VERIFICATION_STATUS_TONE[p.status]}>
-                      {p.status.replace("_", " ")}
-                    </Badge>
+                    <StatusBadge family="verification" value={p.status} />
                     <Link
                       href={`/verification/${p.id}`}
                       className="text-primary hover:underline"
