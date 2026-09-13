@@ -64,7 +64,54 @@ export type MetricKey =
   // operations
   | "attention.stuckPayments"
   | "attention.failingHealthChecks"
-  | "health.dependency";
+  | "health.dependency"
+  // Rewards › Referrals
+  | "referrals.linkVisits"
+  | "referrals.attributedCheckouts"
+  | "referrals.referredTicketSales"
+  | "referrals.rewards"
+  | "referrals.costShare"
+  | "referrals.friendsJoined"
+  | "referrals.friendsQualified"
+  | "referrals.inviterRewards"
+  | "referrals.welcomeCredit"
+  // Rewards › Rebates
+  | "rebates.organizer"
+  | "rebates.venue"
+  | "rebates.milestone"
+  | "rebates.placeVisits"
+  | "rebates.netRevenueBasis"
+  // Rewards › Promoters & loyalty
+  | "promoters.activeOffers"
+  | "promoters.sales"
+  | "promoters.commission"
+  | "loyalty.feeRebates"
+  // Discovery
+  | "search.searches"
+  | "search.zeroResultRate"
+  | "search.clickThroughRate"
+  | "search.latencyP50"
+  | "search.latencyP95"
+  | "recommendations.activeSubscriptions"
+  | "recommendations.liveDigests"
+  | "recommendations.shadowDigests"
+  | "recommendations.openRate"
+  | "recommendations.dismissRate"
+  // Field Ops
+  | "fieldOps.liveCampaigns"
+  | "fieldOps.activeMembers"
+  | "fieldOps.regions"
+  | "fieldOps.territories"
+  | "fieldOps.awaitingLead"
+  | "fieldOps.awaitingAdmin"
+  | "fieldOps.inHolding"
+  | "fieldOps.readyToPay"
+  | "fieldOps.inPayoutBatch"
+  | "fieldOps.paid"
+  | "fieldOps.coverage"
+  | "fieldOps.succeeded"
+  | "fieldOps.committed"
+  | "fieldOps.costPerSuccess";
 
 export type MetricDefinition = {
   key: MetricKey;
@@ -503,6 +550,459 @@ const DEFINITIONS: MetricDefinition[] = [
     caveats: [
       "A probe that stopped running keeps showing its last result; check the time beside it.",
     ],
+  },
+
+  // ── Rewards › Referrals ──────────────────────────────────────
+  // Every reward figure is "what the engine decided", in Abonten Credit.
+  // While shadow mode is on nothing was posted, so these are projections of
+  // cost, not cost.
+  {
+    key: "referrals.linkVisits",
+    label: "Link visits",
+    short: "Times a shared event link with a referral code was opened.",
+    definition:
+      "How many times an event link carrying a referral code was opened in the period. The same person opening the same link twice counts twice; it measures reach, not people.",
+    period: "range",
+    unit: "count",
+    source: "referral_touch.created_at in range",
+  },
+  {
+    key: "referrals.attributedCheckouts",
+    label: "Referred paid checkouts",
+    short: "Paid ticket orders that arrived through a referral link.",
+    definition:
+      "Ticket checkouts that were paid in the period and carried a referrer, whether or not the reward engine ended up paying anything for them.",
+    period: "range",
+    unit: "count",
+    source:
+      "ticket_checkout where referrer_user_id is set, status = paid, completed_at in range",
+  },
+  {
+    key: "referrals.referredTicketSales",
+    label: "Referred ticket sales",
+    short: "Ticket revenue on the sales the referral rule evaluated.",
+    definition:
+      "The ticket price (before the service fee, before any refund) of every sale the event-referral rule made a decision on in the period, including the ones it refused.",
+    period: "range",
+    unit: "money",
+    source: "reward_event.basis.ticket_revenue_minor, event_referral rule",
+    caveats: [
+      "In shadow mode the sale is real but the reward beside it is a projection.",
+    ],
+  },
+  {
+    key: "referrals.rewards",
+    label: "Referral rewards",
+    short: "Credit the event-referral rule decided to pay.",
+    definition:
+      "Credit decided for people who referred a ticket sale in the period: pending, held for review and released, added together. Refused, voided, deferred and clawed-back decisions are listed separately and are not in this figure.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event where rule_key = event_referral and status in (pending, held, released)",
+    caveats: [
+      "In shadow mode this is what would have been paid; no credit was posted.",
+    ],
+  },
+  {
+    key: "referrals.costShare",
+    label: "Referral cost share",
+    short: "Referral rewards as a share of the net revenue they sat on.",
+    definition:
+      "Referral rewards divided by the cash Abonten kept (service fee minus Paystack cost) on the same referred sales. The rule caps each reward at a share of its own sale's net revenue, so this only exceeds the cap if rewards were adjusted by hand.",
+    period: "range",
+    unit: "percent",
+    source: "referral rewards ÷ net revenue on the referred sales",
+  },
+  {
+    key: "referrals.friendsJoined",
+    label: "Friends who joined",
+    short: "New accounts bound to an inviter in the period.",
+    definition:
+      "People who created an account with a friend's invite code or link in the period. A person can be bound to one inviter only, and only while their account is new.",
+    period: "range",
+    unit: "count",
+    source: "user_referral.bound_at in range",
+  },
+  {
+    key: "referrals.friendsQualified",
+    label: "Friends who qualified",
+    short: "Invited friends who did the thing that earns a reward.",
+    definition:
+      "Invited friends whose action earned their inviter a decision in the period: a first ticket order, a ticket sold on their own event, or an approved place claim. Each friend counts once per path.",
+    period: "range",
+    unit: "count",
+    source: "reward_event, friend_referral_referrer rule, by basis.path",
+  },
+  {
+    key: "referrals.inviterRewards",
+    label: "Inviter rewards",
+    short: "Credit decided for people whose friends qualified.",
+    definition:
+      "Credit decided for inviters in the period: pending, held and released together. Refused and voided decisions are shown beside it.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event where rule_key = friend_referral_referrer and status in (pending, held, released)",
+  },
+  {
+    key: "referrals.welcomeCredit",
+    label: "Welcome credit granted",
+    short: "Credit released to invited friends after their first order.",
+    definition:
+      "Credit actually released to invited friends in the period, once their phone was verified and their first order went through. Friends refused for having bought before, or for sharing a device with the inviter, are counted beside it.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event where rule_key = friend_referral_referee and status = released",
+  },
+
+  // ── Rewards › Rebates ────────────────────────────────────────
+  {
+    key: "rebates.organizer",
+    label: "Organizer rebates",
+    short: "Promotion credit decided for organizers by the monthly run.",
+    definition:
+      "Promotion-only credit the monthly run decided for organizers in the period: 20% of the cash Abonten kept on their settled events. Paid or pending; when shadow mode is on, the shadow total is shown beside it and nothing was posted.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event where rule_key = organizer_rebate, by created_at, status not in (rejected, voided)",
+  },
+  {
+    key: "rebates.venue",
+    label: "Venue rebates",
+    short: "Promotion credit decided for verified place owners.",
+    definition:
+      "Promotion-only credit decided for the owner of a verified place in the period: 5% of the cash Abonten kept on other organizers' events held there. Held for review when the owner and the organizer look like the same person.",
+    period: "range",
+    unit: "money",
+    source: "reward_event where rule_key = venue_rebate, by created_at",
+  },
+  {
+    key: "rebates.milestone",
+    label: "Organizer milestones",
+    short: "One-off bonuses for organizers who reached a milestone.",
+    definition:
+      "One-off promotion credit decided in the period for organizers who crossed a milestone in settled sales. Each organizer can earn it once.",
+    period: "range",
+    unit: "money",
+    source: "reward_event where rule_key = organizer_milestone, by created_at",
+  },
+  {
+    key: "rebates.placeVisits",
+    label: "Place-visit rebates",
+    short: "Promotion credit for the people who checked in at a place.",
+    definition:
+      "Promotion-only credit decided in the period for verified place owners, per different person who checked in with the place's QR code during the month. Decided once the month is over.",
+    period: "range",
+    unit: "money",
+    source: "reward_event where rule_key = place_visits, by created_at",
+  },
+  {
+    key: "rebates.netRevenueBasis",
+    label: "Net revenue behind rebates",
+    short: "The cash Abonten kept on the sales the rebates were priced from.",
+    definition:
+      "The service fee minus Paystack's cost on the settled sales that the counted rebates were calculated from, live and shadow together. Rebates are a share of this, so it says what the programme is giving back relative to what it kept.",
+    period: "range",
+    unit: "money",
+    source: "reward_event.basis.net_revenue_minor, rebate rules",
+  },
+
+  // ── Rewards › Promoters & loyalty ────────────────────────────
+  {
+    key: "promoters.activeOffers",
+    label: "Events offering a commission",
+    short: "Events whose organizer is paying promoters right now.",
+    definition:
+      "Events with an active promoter commission set by their organizer at this moment. The organizer chooses the rate per event; a sale through a promoter's link on one of these events earns the promoter credit.",
+    period: "point-in-time",
+    unit: "count",
+    source: "event_promoter_commission where is_active",
+  },
+  {
+    key: "promoters.sales",
+    label: "Promoter sales",
+    short: "Ticket revenue on orders that came through promoters' links.",
+    definition:
+      "The ticket price of the orders that arrived through a promoter's link and were not refused, in the period. Live decisions only; shadow-mode projections are shown separately.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event.basis.ticket_revenue_minor where rule_key = promoter_commission, live, status not in (rejected, voided)",
+  },
+  {
+    key: "promoters.commission",
+    label: "Promoter commission",
+    short: "Credit decided for promoters, charged to organizers.",
+    definition:
+      "Credit decided for promoters in the period (pending, held and released together). The organizer is charged the same amount against their payout at once; what organizers were actually charged, net of reversals, is shown beside it and can differ when a sale is later refunded.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event where rule_key = promoter_commission and status in (pending, held, released), live",
+  },
+  {
+    key: "loyalty.feeRebates",
+    label: "Loyalty fee rebates",
+    short: "Service fee returned as credit on every fifth order.",
+    definition:
+      "Credit decided in the period for buyers whose fifth ticket order on a different event earned their cash service fee back (pending, held and released together). Refused decisions are counted beside it.",
+    period: "range",
+    unit: "money",
+    source:
+      "reward_event where rule_key = loyalty_fee_rebate and status in (pending, held, released), live",
+  },
+
+  // ── Discovery ────────────────────────────────────────────────
+  // The search and recommendation figures come from two SQL functions that
+  // take a number of days, so their window is a rolling one ending now
+  // rather than whole calendar days. The pages say so.
+  {
+    key: "search.searches",
+    label: "Searches",
+    short: "First result pages served in the period.",
+    definition:
+      "How many searches returned a first page of results in the period. Type-ahead suggestions and scrolling to later pages are not counted. The log holds no user, device or IP identifiers.",
+    period: "range",
+    unit: "count",
+    source: "search_query_log.created_at in the last N days",
+    caveats: ["A rolling window ending now, not whole calendar days."],
+  },
+  {
+    key: "search.zeroResultRate",
+    label: "Zero-result rate",
+    short: "Share of searches that found nothing.",
+    definition:
+      "Searches that returned no results, divided by all searches in the period. The list beside it shows what people looked for and could not find: missing listings, spellings, or wording organizers should use.",
+    period: "range",
+    unit: "percent",
+    source: "search_query_log where zero_results ÷ all searches",
+  },
+  {
+    key: "search.clickThroughRate",
+    label: "Search click-through",
+    short: "Share of searches where someone opened a result.",
+    definition:
+      "Searches after which the person opened one of the results, divided by all searches in the period. Opening nothing can mean the answer was already on the page, so read it with the zero-result rate.",
+    period: "range",
+    unit: "percent",
+    source: "search_query_log where clicked_at is set ÷ all searches",
+  },
+  {
+    key: "search.latencyP50",
+    label: "Search time (median)",
+    short: "Half of searches were faster than this.",
+    definition:
+      "The server-measured time to run a search, in milliseconds, at the median: half the searches in the period were faster. It excludes the network, so a person's wait is longer.",
+    period: "range",
+    unit: "ms",
+    source: "search_query_log.duration_ms, 50th percentile",
+  },
+  {
+    key: "search.latencyP95",
+    label: "Search time (p95)",
+    short: "Nineteen in twenty searches were faster than this.",
+    definition:
+      "The server-measured time to run a search, in milliseconds, at the 95th percentile: nineteen in twenty searches in the period were faster. Above 800 ms it turns amber.",
+    period: "range",
+    unit: "ms",
+    source: "search_query_log.duration_ms, 95th percentile",
+  },
+  {
+    key: "recommendations.activeSubscriptions",
+    label: "Active alert subscriptions",
+    short: "Opt-ins that are switched on right now.",
+    definition:
+      "Subscriptions people have turned on and not paused or turned off: an organizer's new events, a place's updates, or similar listings nearby. One person can hold several.",
+    period: "point-in-time",
+    unit: "count",
+    source: "notification_subscription where status = active",
+  },
+  {
+    key: "recommendations.liveDigests",
+    label: "Live digests",
+    short: "Recommendation digests created for real delivery.",
+    definition:
+      "Digests the builder created for real delivery in the period — at most one a day and three a week per person. Whether the push actually went out is under Push delivery.",
+    period: "range",
+    unit: "count",
+    source: "recommendation_digest where not is_shadow, by digest_date",
+  },
+  {
+    key: "recommendations.shadowDigests",
+    label: "Shadow digests",
+    short: "Digests that would have gone out in shadow mode.",
+    definition:
+      "Digests the builder recorded while shadow mode was on. Nobody received them; they show what the programme would send if it were live.",
+    period: "range",
+    unit: "count",
+    source: "recommendation_digest where is_shadow, by digest_date",
+  },
+  {
+    key: "recommendations.openRate",
+    label: "Digest open rate",
+    short: "Delivered digests that somebody opened.",
+    definition:
+      "Digests that were delivered and then opened, divided by digests delivered, in the period. Shown as not available until a push has actually been delivered.",
+    period: "range",
+    unit: "percent",
+    source:
+      "recommendation_digest where opened_at is set ÷ delivery_status = sent",
+  },
+  {
+    key: "recommendations.dismissRate",
+    label: "Picks marked not interested",
+    short: "Share of picks people dismissed.",
+    definition:
+      "Picks a person marked as not interested, divided by all picks they could see in the period. Above a quarter the matching is too broad and the tile turns amber.",
+    period: "range",
+    unit: "percent",
+    source: "recommendation where status = dismissed ÷ picks shown",
+  },
+
+  // ── Field Ops ────────────────────────────────────────────────
+  {
+    key: "fieldOps.liveCampaigns",
+    label: "Live campaigns",
+    short: "Campaigns that are running, paused or winding down.",
+    definition:
+      "Campaigns whose status is active, paused or winding down right now. Drafts and finished campaigns are not counted.",
+    period: "point-in-time",
+    unit: "count",
+    source: "fieldops_campaign where status in (active, paused, winding_down)",
+  },
+  {
+    key: "fieldOps.activeMembers",
+    label: "Active field members",
+    short: "People on live campaigns' teams right now.",
+    definition:
+      "Team members whose membership is active on a live campaign, added up across those campaigns. Invited and suspended members are not counted.",
+    period: "point-in-time",
+    unit: "count",
+    source: "fieldops_campaign_member where status = active, live campaigns",
+  },
+  {
+    key: "fieldOps.regions",
+    label: "Active regions",
+    short: "Regions set up for the programme.",
+    definition:
+      "Regions with the status active. A campaign runs in one region and covers its territories.",
+    period: "point-in-time",
+    unit: "count",
+    source: "fieldops_region where status = active",
+  },
+  {
+    key: "fieldOps.territories",
+    label: "Territories mapped",
+    short: "Towns and areas drawn on the map.",
+    definition:
+      "Territories (towns and areas, each a centre and radius or a polygon) that have not been retired, across all regions.",
+    period: "point-in-time",
+    unit: "count",
+    source: "fieldops_territory where status <> retired",
+  },
+  {
+    key: "fieldOps.awaitingLead",
+    label: "Waiting on a team lead",
+    short: "Onboardings sent in and not yet reviewed.",
+    definition:
+      "Onboardings a member has submitted that their team lead has not yet verified, returned or rejected. An admin can decide in the lead's place.",
+    period: "point-in-time",
+    unit: "count",
+    source: "fieldops_onboarding where status = submitted",
+  },
+  {
+    key: "fieldOps.awaitingAdmin",
+    label: "Waiting on an admin",
+    short: "Onboardings the sweep flagged for a person.",
+    definition:
+      "Verified onboardings the eligibility sweep would not pay on its own and has flagged for an admin to approve or reject, each with the reason.",
+    period: "point-in-time",
+    unit: "count",
+    source: "fieldops_onboarding where status = flagged",
+  },
+  {
+    key: "fieldOps.inHolding",
+    label: "Commissions in holding",
+    short: "Verified, inside the holding period.",
+    definition:
+      "Commissions earned on verified onboardings whose holding period is still running, so the sweep has not yet confirmed them. Nothing here can be paid yet.",
+    period: "point-in-time",
+    unit: "money",
+    source: "fieldops_commission where status = pending, summed per currency",
+  },
+  {
+    key: "fieldOps.readyToPay",
+    label: "Commissions ready to pay",
+    short: "Confirmed by the sweep, not yet in a batch.",
+    definition:
+      "Commissions the sweep has confirmed and that are waiting for someone to build a payout batch. The next batch is previewed under Payouts.",
+    period: "point-in-time",
+    unit: "money",
+    source: "fieldops_commission where status = approved, summed per currency",
+  },
+  {
+    key: "fieldOps.inPayoutBatch",
+    label: "Commissions in a payout batch",
+    short: "Built into a batch that has not been paid yet.",
+    definition:
+      "Commissions placed in a payout batch that is approved or still being paid. They leave this figure when each item is marked paid or failed.",
+    period: "point-in-time",
+    unit: "money",
+    source: "fieldops_commission where status = in_payout, summed per currency",
+  },
+  {
+    key: "fieldOps.paid",
+    label: "Commissions paid",
+    short: "Paid to members, net of reversals.",
+    definition:
+      "Everything the programme has ever paid its members, less the offsets written when a paid commission was reversed. A reversal never edits the original row; it adds a negative one.",
+    period: "all-time",
+    unit: "money",
+    source:
+      "fieldops_commission where status = paid, summed per currency (reversal offsets are negative rows)",
+  },
+  {
+    key: "fieldOps.coverage",
+    label: "Territory coverage",
+    short: "Share of the campaign's towns someone has worked.",
+    definition:
+      "Territories in the campaign's region that have been covered or completed, divided by all of them. A town counts as covered once a member has been assigned there and started.",
+    period: "point-in-time",
+    unit: "percent",
+    source: "fieldops_campaign_stats().territories",
+  },
+  {
+    key: "fieldOps.succeeded",
+    label: "Successful onboardings",
+    short: "Onboardings that passed every check.",
+    definition:
+      "Onboardings whose every eligibility check passed, so the commission was approved: the business is listed, its owner verified, and (if the rule asks) it did what the rule required. The same word is used on every Field Ops page for this state.",
+    period: "all-time",
+    unit: "count",
+    source: "fieldops_onboarding where status = succeeded",
+  },
+  {
+    key: "fieldOps.committed",
+    label: "Commissions committed",
+    short: "Approved, in a batch, or paid — money the programme owes or spent.",
+    definition:
+      "Commissions the campaign is committed to: ready to pay, in a payout batch, and already paid, added together. Commissions still in holding are not committed yet and are not in this figure.",
+    period: "all-time",
+    unit: "money",
+    source: "fieldops_campaign_stats().money: approved + in_payout + paid",
+  },
+  {
+    key: "fieldOps.costPerSuccess",
+    label: "Cost per successful onboarding",
+    short: "Committed commissions divided by successes.",
+    definition:
+      "Everything committed (ready to pay, in a batch and paid) divided by the number of successful onboardings. Not shown, rather than shown as zero, while nothing has succeeded.",
+    period: "all-time",
+    unit: "money",
+    source: "fieldops_campaign_stats().costPerSuccessMinor",
   },
 ];
 

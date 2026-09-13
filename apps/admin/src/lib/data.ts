@@ -1,6 +1,9 @@
 import { requireAdmin } from "@/lib/adminGuard";
 import { getServiceClient } from "@/lib/serviceClient";
-import { parseAdminRangeParams } from "@abonten/core/admin/adminDateRange";
+import {
+  type ResolvedAdminRange,
+  parseAdminRangeParams,
+} from "@abonten/core/admin/adminDateRange";
 import { getPlatformAnalyticsCore } from "@abonten/services/admin/analytics/analyticsAdminCore";
 import { listAuditLogCore } from "@abonten/services/admin/audit/listAuditLogCore";
 import {
@@ -411,12 +414,12 @@ export async function loadCreditAccounts(
 
 export async function loadReferrals(
   filters: Parameters<typeof listRewardEventsCore>[2],
-  sinceDays = 30,
+  range: ResolvedAdminRange,
 ) {
   const ctx = await requireAdmin();
   const svc = getServiceClient();
   const [summary, events] = await Promise.all([
-    getReferralSummaryCore(svc, ctx, sinceDays),
+    getReferralSummaryCore(svc, ctx, range),
     listRewardEventsCore(svc, ctx, {
       ...filters,
       ruleKeys: [
@@ -431,12 +434,12 @@ export async function loadReferrals(
 
 export async function loadRebates(
   filters: Parameters<typeof listRewardEventsCore>[2],
-  sinceDays = 90,
+  range: ResolvedAdminRange,
 ) {
   const ctx = await requireAdmin();
   const svc = getServiceClient();
   const [summary, events] = await Promise.all([
-    getRebateSummaryCore(svc, ctx, sinceDays),
+    getRebateSummaryCore(svc, ctx, range),
     listRewardEventsCore(svc, ctx, {
       ...filters,
       ruleKeys: [
@@ -452,12 +455,12 @@ export async function loadRebates(
 
 export async function loadPromoters(
   filters: Parameters<typeof listRewardEventsCore>[2],
-  sinceDays = 30,
+  range: ResolvedAdminRange,
 ) {
   const ctx = await requireAdmin();
   const svc = getServiceClient();
   const [summary, events] = await Promise.all([
-    getPromoterLoyaltySummaryCore(svc, ctx, sinceDays),
+    getPromoterLoyaltySummaryCore(svc, ctx, range),
     listRewardEventsCore(svc, ctx, {
       ...filters,
       ruleKeys: ["promoter_commission", "loyalty_fee_rebate"],

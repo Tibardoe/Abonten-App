@@ -1,3 +1,4 @@
+import type { ResolvedAdminRange } from "@abonten/core/admin/adminDateRange";
 import { logger } from "@abonten/core/logger";
 import {
   DEFAULT_EVENTS_PAGE_SIZE,
@@ -21,6 +22,7 @@ import {
   assertPermission,
   recordAdminAudit,
 } from "../adminContext";
+import { SUMMARY_ROW_CAP, truncation } from "../shared/capped";
 import { dbError, displayName, namesFor, readRules } from "./rewardsAdminCore";
 
 // Admin side of the reward engine (Phase 4): the shadow-mode projection,
@@ -194,14 +196,17 @@ export async function listRewardEventsCore(
 }
 
 /**
- * What the engine decided over the last `sinceDays`, for tuning rates before
- * shadow mode is switched off. Aggregated in memory: fine for the volumes
- * shadow mode sees; move to the daily rollup when volume grows.
+ * What the engine decided in the window, for tuning rates before shadow
+ * mode is switched off. The window is the console's shared calendar range
+ * (half-open [from, to)), so this page and the Rewards overview agree on
+ * what "last 30 days" means. Aggregated in memory under a stated row cap:
+ * fine for the volumes shadow mode sees, and the summary says when it hit
+ * the cap.
  */
 export async function getReferralSummaryCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  sinceDays = 30,
+  range: ResolvedAdminRange,
 ): Promise<AdminEnvelope<AdminReferralSummary>> {
   try {
     assertPermission(ctx, "rewards.view");
@@ -209,30 +214,35 @@ export async function getReferralSummaryCore(
     return denied(e);
   }
 
-  const since = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
   const [touches, checkouts, events, health, binds] = await Promise.all([
     supabase
       .from("referral_touch")
       .select("id", { count: "exact", head: true })
-      .gte("created_at", since),
+      .gte("created_at", range.from)
+      .lt("created_at", range.to),
     supabase
       .from("ticket_checkout")
       .select("id", { count: "exact", head: true })
       .not("referrer_user_id", "is", null)
       .eq("status", "paid")
-      .gte("completed_at", since),
+      .gte("completed_at", range.from)
+      .lt("completed_at", range.to),
     supabase
       .from("reward_event")
       .select(
         "rule_key, status, amount_minor, released_minor, risk_flags, basis, beneficiary_user_id",
+        { count: "exact" },
       )
-      .gte("created_at", since)
-      .limit(10_000),
+      .gte("created_at", range.from)
+      .lt("created_at", range.to)
+      .order("created_at", { ascending: true })
+      .limit(SUMMARY_ROW_CAP),
     supabase.rpc("rewards_health"),
     supabase
       .from("user_referral")
       .select("referee_user_id", { count: "exact", head: true })
-      .gte("bound_at", since),
+      .gte("bound_at", range.from)
+      .lt("bound_at", range.to),
   ]);
 
   if (events.error || health.error) {
@@ -324,7 +334,10 @@ export async function getReferralSummaryCore(
   return {
     status: 200,
     data: {
-      sinceDays,
+      sinceDays: range.days,
+      from: range.from,
+      to: range.to,
+      truncated: truncation(events.data?.length ?? 0, events.count),
       touches: touches.count ?? 0,
       attributedCheckouts: checkouts.count ?? 0,
       referredTicketRevenueMinor: revenue,

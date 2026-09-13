@@ -465,6 +465,7 @@ export type RewardEmailPreference = {
 /** Admin: how reward pushes and emails went over the last few days. */
 export type AdminNotificationDeliveryStats = {
   sinceDays: number;
+  truncated: AdminReadTruncation | null;
   dispatchConfigured: boolean;
   lastDispatchedAt: string | null;
   push: Record<"queued" | "sent" | "skipped" | "failed", number>;
@@ -656,8 +657,16 @@ export type AdminRewardEvent = {
 };
 
 /** Shadow-mode projection for tuning rates before anything is paid. */
+import type { AdminReadTruncation } from "./adminMetrics";
+
 export type AdminReferralSummary = {
+  /** Calendar days the window covers (today counted as one). */
   sinceDays: number;
+  /** Half-open window [from, to), ISO. */
+  from: string;
+  to: string;
+  /** Set when the decisions read hit the row cap; the sums are then partial. */
+  truncated: AdminReadTruncation | null;
   touches: number;
   attributedCheckouts: number;
   referredTicketRevenueMinor: number;
@@ -733,6 +742,9 @@ export type AdminRebateRun = {
 /** Admin › Rewards › Rebates. */
 export type AdminRebateSummary = {
   sinceDays: number;
+  from: string;
+  to: string;
+  truncated: AdminReadTruncation | null;
   shadowMode: boolean;
   liveRules: MonthlyRewardRuleKey[];
   runs: AdminRebateRun[];
@@ -762,6 +774,9 @@ export type AdminRebateSummary = {
 /** Admin › Rewards › Promoters & loyalty (Phase 8). */
 export type AdminPromoterLoyaltySummary = {
   sinceDays: number;
+  from: string;
+  to: string;
+  truncated: AdminReadTruncation | null;
   shadowMode: boolean;
   liveRules: ("promoter_commission" | "loyalty_fee_rebate")[];
   /** Events with a commission on offer right now. */

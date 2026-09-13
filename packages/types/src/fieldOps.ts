@@ -192,12 +192,14 @@ export type FieldOpsAdminOverview = {
   regionCount: number;
   territoryCount: number;
   liveRuleCount: number;
-  /** Phase 3: what the programme owes, and what needs a human. */
-  money: {
-    pendingMinor: number;
-    approvedMinor: number;
-    paidMinor: number;
-    currency: string;
+  /**
+   * What the programme owes and has paid, summed in SQL
+   * (admin_fieldops_commission_totals) — exact, and per currency. The first
+   * currency is the one with most commissions; anything else is listed
+   * separately and never added to it.
+   */
+  money: FieldOpsCommissionTotals & {
+    otherCurrencies: FieldOpsCommissionTotals[];
   };
   awaitingReview: number;
   flagged: number;
@@ -619,6 +621,20 @@ export type FieldOpsCommissionEvent = {
   actorName: string | null;
   reason: string | null;
   createdAt: string;
+};
+
+/** fieldops_commission amount_minor summed per status for one currency. */
+export type FieldOpsCommissionTotals = {
+  currency: string;
+  /** Rows summed, so a page can say "from N commissions". */
+  rows: number;
+  pendingMinor: number;
+  approvedMinor: number;
+  inPayoutMinor: number;
+  /** Net of reversal offsets (a reversal is a negative row). */
+  paidMinor: number;
+  rejectedMinor: number;
+  reversedMinor: number;
 };
 
 /** Money totals in minor units for one member or one campaign. */

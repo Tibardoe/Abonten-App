@@ -1,6 +1,7 @@
 "use client";
 
 import { StepUpButton } from "@/components/StepUpButton";
+import { CapNotice } from "@/components/metrics/CapNotice";
 import { Button, Card, cn } from "@/components/ui";
 import { updateRewardsSettings } from "@/server/actions";
 import type {
@@ -368,6 +369,13 @@ export function SettingsForm({
               ? ""
               : " Sending isn't set up on this server yet (no delivery address)."}
           </p>
+        ) : null}
+        {delivery?.truncated ? (
+          <CapNotice
+            fetched={delivery.truncated.fetched}
+            total={delivery.truncated.total}
+            noun="reward notices"
+          />
         ) : null}
       </Card>
 

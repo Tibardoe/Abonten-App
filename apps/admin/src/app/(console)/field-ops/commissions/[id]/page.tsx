@@ -1,8 +1,9 @@
-import { Badge, Card, EmptyState, PageHeader, cn } from "@/components/ui";
+import { StatusBadge } from "@/components/metrics/StatusBadge";
+import { Card, EmptyState, PageHeader, cn } from "@/components/ui";
 import { loadFieldOpsCommission } from "@/lib/data";
 import Link from "next/link";
 import { FieldOpsTabs } from "../../FieldOpsTabs";
-import { commissionMoney, commissionTone } from "../page";
+import { commissionMoney } from "../page";
 import { ReversePanel } from "./ReversePanel";
 
 export default async function FieldOpsCommissionPage({
@@ -48,9 +49,7 @@ export default async function FieldOpsCommissionPage({
                 Status
               </dt>
               <dd className="mt-1">
-                <Badge tone={commissionTone(c.status)}>
-                  {c.status.replace("_", " ")}
-                </Badge>
+                <StatusBadge family="fieldOpsCommission" value={c.status} />
               </dd>
             </div>
             <div>

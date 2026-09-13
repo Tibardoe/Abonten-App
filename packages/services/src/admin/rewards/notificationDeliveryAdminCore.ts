@@ -7,6 +7,7 @@ import {
   adminError,
   assertPermission,
 } from "../adminContext";
+import { truncation } from "../shared/capped";
 
 // How reward pushes and emails went (notification_delivery, migration
 // 20260911152213). Read-only; shown under the notification switches on
@@ -30,9 +31,10 @@ export async function getNotificationDeliveryStatsCore(
   const [rows, config] = await Promise.all([
     supabase
       .from("notification_delivery")
-      .select("channel, status")
+      .select("channel, status", { count: "exact" })
       .eq("source", "rewards")
       .gte("created_at", since)
+      .order("created_at", { ascending: false })
       .limit(20_000),
     supabase
       .from("notification_delivery_config")
@@ -60,6 +62,7 @@ export async function getNotificationDeliveryStatsCore(
     status: 200,
     data: {
       sinceDays,
+      truncated: truncation(rows.data?.length ?? 0, rows.count),
       dispatchConfigured: !!config.data?.dispatch_url,
       lastDispatchedAt: config.data?.last_dispatched_at ?? null,
       push,

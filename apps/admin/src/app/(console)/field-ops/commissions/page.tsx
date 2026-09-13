@@ -1,47 +1,40 @@
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
-  Badge,
   EmptyState,
   PageHeader,
-  Stat,
   Table,
   Td,
   Th,
   cn,
+  money,
   timeAgo,
 } from "@/components/ui";
 import { loadFieldOpsCommissions } from "@/lib/data";
+import { statusLabel } from "@abonten/core/admin/statusLabels";
 import type { FieldOpsCommissionStatus } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "../FieldOpsTabs";
 
-const STATUSES: { key: FieldOpsCommissionStatus | "all"; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "pending", label: "In holding" },
-  { key: "approved", label: "Ready to pay" },
-  { key: "in_payout", label: "In a batch" },
-  { key: "paid", label: "Paid" },
-  { key: "rejected", label: "Rejected" },
-  { key: "reversed", label: "Reversed" },
+// One label per status, from the shared registry, so the filter, the badge
+// and the tiles all say "In holding" for `pending`.
+const STATUS_KEYS: (FieldOpsCommissionStatus | "all")[] = [
+  "all",
+  "pending",
+  "approved",
+  "in_payout",
+  "paid",
+  "rejected",
+  "reversed",
 ];
+const STATUSES = STATUS_KEYS.map((key) => ({
+  key,
+  label: key === "all" ? "All" : statusLabel("fieldOpsCommission", key),
+}));
 
 export const commissionMoney = (minor: number, currency: string) =>
   `${currency} ${(minor / 100).toFixed(2)}`;
-
-export function commissionTone(s: string) {
-  switch (s) {
-    case "approved":
-    case "paid":
-      return "success" as const;
-    case "pending":
-    case "in_payout":
-      return "info" as const;
-    case "rejected":
-    case "reversed":
-      return "danger" as const;
-    default:
-      return "neutral" as const;
-  }
-}
+const cedis = (minor: number) => minor / 100;
 
 export default async function FieldOpsCommissionsPage({
   searchParams,
@@ -67,7 +60,9 @@ export default async function FieldOpsCommissionsPage({
     return `/field-ops/commissions?${q.toString()}`;
   };
   const totals = commissions.status === 200 ? commissions.data?.totals : null;
-  const currency = commissions.data?.items[0]?.currency ?? "GHS";
+  const currency = commissions.data?.currency ?? "GHS";
+  const otherCurrencies = commissions.data?.otherCurrencies ?? [];
+  const scope = sp.campaign ? "this campaign" : "every campaign";
 
   return (
     <div>
@@ -78,27 +73,52 @@ export default async function FieldOpsCommissionsPage({
       <FieldOpsTabs active="/field-ops/commissions" />
 
       {totals ? (
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat
-            label="In holding"
-            value={commissionMoney(totals.pending, currency)}
-            hint="Verified, waiting for the sweep"
-          />
-          <Stat
-            label="Ready to pay"
-            value={commissionMoney(totals.approved, currency)}
-            hint="Confirmed by the sweep"
-          />
-          <Stat
-            label="In a payout batch"
-            value={commissionMoney(totals.in_payout, currency)}
-            hint="Built into a batch, not yet sent"
-          />
-          <Stat
-            label="Paid"
-            value={commissionMoney(totals.paid, currency)}
-            hint="Net of reversal offsets"
-          />
+        <div className="mb-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <MetricCard
+              metric="fieldOps.inHolding"
+              value={cedis(totals.pending)}
+              format="money"
+              currency={currency}
+              period="Right now"
+              secondary={`Across ${scope}`}
+            />
+            <MetricCard
+              metric="fieldOps.readyToPay"
+              value={cedis(totals.approved)}
+              format="money"
+              currency={currency}
+              period="Right now"
+              secondary={`Across ${scope}`}
+            />
+            <MetricCard
+              metric="fieldOps.inPayoutBatch"
+              value={cedis(totals.in_payout)}
+              format="money"
+              currency={currency}
+              period="Right now"
+              secondary={`Across ${scope}`}
+            />
+            <MetricCard
+              metric="fieldOps.paid"
+              value={cedis(totals.paid)}
+              format="money"
+              currency={currency}
+              period="All time"
+              secondary={`Across ${scope}`}
+            />
+          </div>
+          {otherCurrencies.length > 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Other currencies, kept apart:{" "}
+              {otherCurrencies
+                .map(
+                  (o) =>
+                    `${o.currency} — in holding ${money(cedis(o.totals.pending), o.currency)}, ready ${money(cedis(o.totals.approved), o.currency)}, in a batch ${money(cedis(o.totals.in_payout), o.currency)}, paid ${money(cedis(o.totals.paid), o.currency)}`,
+                )
+                .join(" · ")}
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -124,6 +144,7 @@ export default async function FieldOpsCommissionsPage({
             <input type="hidden" name="status" value={status} />
             <select
               name="campaign"
+              aria-label="Campaign"
               defaultValue={sp.campaign ?? ""}
               className="rounded border border-border bg-background px-2 py-1"
             >
@@ -205,9 +226,7 @@ export default async function FieldOpsCommissionsPage({
                   {commissionMoney(c.amountMinor, c.currency)}
                 </Td>
                 <Td>
-                  <Badge tone={commissionTone(c.status)}>
-                    {c.status.replace("_", " ")}
-                  </Badge>
+                  <StatusBadge family="fieldOpsCommission" value={c.status} />
                 </Td>
                 <Td className="whitespace-nowrap text-muted-foreground">
                   {timeAgo(c.earnedAt)}

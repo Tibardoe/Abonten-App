@@ -1,56 +1,23 @@
-import {
-  Badge,
-  Card,
-  EmptyState,
-  PageHeader,
-  Stat,
-  Table,
-  Td,
-  Th,
-} from "@/components/ui";
+import { ChartCard } from "@/components/metrics/ChartCard";
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { SectionHeading } from "@/components/metrics/SectionHeading";
+import { TimeSeriesChart } from "@/components/metrics/charts/TimeSeriesChart";
+import { Badge, EmptyState, PageHeader, Table, Td, Th } from "@/components/ui";
 import { loadFieldOpsCampaignAnalytics } from "@/lib/data";
+import { formatAccraDate } from "@/lib/format";
+import { describeSeries } from "@abonten/core/admin/describeSeries";
+import type { FieldOpsDailyPoint } from "@abonten/types/fieldOps";
 import Link from "next/link";
 import { FieldOpsTabs } from "../../../FieldOpsTabs";
 import { ExportTeamCsv } from "./ExportTeamCsv";
 
-const money = (minor: number, currency: string) =>
-  `${currency} ${(minor / 100).toFixed(2)}`;
+const cedis = (minor: number) => minor / 100;
+const DAYS = 30;
+const PERIOD = `Last ${DAYS} days`;
 
-/** Same plain-CSS bars the Analytics module uses; no chart library. */
-function Bars({
-  series,
-  pick,
-  label,
-  currency,
-}: {
-  series: { day: string; [k: string]: string | number }[];
-  pick: string;
-  label: string;
-  currency?: string;
-}) {
-  const max = Math.max(1, ...series.map((p) => Number(p[pick])));
-  return (
-    <Card className="p-3">
-      <p className="mb-2 text-xs font-medium text-muted-foreground">{label}</p>
-      <div className="flex h-24 items-end gap-[2px] overflow-x-auto">
-        {series.map((p) => {
-          const v = Number(p[pick]);
-          return (
-            <div
-              key={p.day}
-              title={`${p.day}: ${currency ? money(v, currency) : v}`}
-              className="w-2 shrink-0 rounded-t bg-primary/70"
-              style={{ height: `${Math.max(2, (v / max) * 100)}%` }}
-            />
-          );
-        })}
-      </div>
-      <p className="mt-1 text-right text-[10px] text-muted-foreground">
-        peak {currency ? money(max, currency) : max}
-      </p>
-    </Card>
-  );
-}
+// One vocabulary for the state that matters most: an onboarding that passed
+// every check is "succeeded" here, on the list, on the overview and in the
+// glossary — not "listed", "stood up" or "successful" depending on the page.
 
 export default async function FieldOpsCampaignAnalyticsPage({
   params,
@@ -70,15 +37,62 @@ export default async function FieldOpsCampaignAnalyticsPage({
     );
   }
   const { campaign, stats, members, territories, daily } = analytics.data;
+  const currency = stats.currency;
   const committed =
     stats.money.approved_minor +
     stats.money.in_payout_minor +
     stats.money.paid_minor;
 
+  const chart = (
+    title: string,
+    pick: keyof Omit<FieldOpsDailyPoint, "day">,
+    opts: { money?: boolean; definition?: string } = {},
+  ) => {
+    const points = daily.map((p) => ({
+      bucketStart: `${p.day}T00:00:00Z`,
+      value: opts.money ? cedis(Number(p[pick])) : Number(p[pick]),
+    }));
+    const total = points.reduce((n, p) => n + p.value, 0);
+    return (
+      <ChartCard
+        title={title}
+        unit={opts.money ? `${currency} per day` : "per day"}
+        caption={`${PERIOD}, rolling to now`}
+        definition={opts.definition ? { text: opts.definition } : undefined}
+        state={total > 0 ? "ok" : "empty"}
+        summary={describeSeries(points, {
+          label: title,
+          rangeLabel: PERIOD,
+          formatBucket: formatAccraDate,
+          format: opts.money ? (v) => `${currency} ${v.toFixed(2)}` : undefined,
+        })}
+        table={{
+          caption: `${title} per day, ${PERIOD.toLowerCase()}`,
+          columns: ["Day", title],
+          rows: points.map((p) => [
+            formatAccraDate(p.bucketStart),
+            opts.money ? p.value.toFixed(2) : p.value,
+          ]),
+        }}
+      >
+        <TimeSeriesChart
+          data={points.map((p) => ({
+            label: formatAccraDate(p.bucketStart),
+            value: p.value,
+          }))}
+          valueLabel={title}
+          format={opts.money ? "money" : "count"}
+          currency={currency}
+          height={160}
+        />
+      </ChartCard>
+    );
+  };
+
   return (
     <div>
       <PageHeader
-        title={`${campaign.name} - figures`}
+        title={`${campaign.name} · figures`}
         description="Counted live from the work itself. Nothing on this page can be typed in."
       />
       <FieldOpsTabs active="/field-ops/campaigns" />
@@ -97,52 +111,64 @@ export default async function FieldOpsCampaignAnalyticsPage({
         ) : null}
       </div>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Coverage"
-          value={`${stats.territories.coveragePct}%`}
-          hint={`${stats.territories.covered + stats.territories.completed} of ${stats.territories.total} towns`}
+      <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricCard
+          metric="fieldOps.coverage"
+          value={stats.territories.coveragePct / 100}
+          format="percent"
+          period="Right now"
+          secondary={`${stats.territories.covered + stats.territories.completed} of ${stats.territories.total} towns`}
         />
-        <Stat
-          label="Listed and stood up"
+        <MetricCard
+          metric="fieldOps.succeeded"
           value={stats.onboardings.succeeded}
-          hint={`${stats.onboardings.rejected} rejected · ${stats.onboardings.flagged} flagged`}
+          period="All time"
+          secondary={`${stats.onboardings.rejected} rejected · ${stats.onboardings.flagged} flagged`}
         />
-        <Stat
-          label="Committed"
-          value={money(committed, stats.currency)}
-          hint={`${money(stats.money.paid_minor, stats.currency)} paid`}
+        <MetricCard
+          metric="fieldOps.committed"
+          value={cedis(committed)}
+          format="money"
+          currency={currency}
+          period="All time"
+          secondary={`${currency} ${cedis(stats.money.paid_minor).toFixed(2)} of it paid`}
         />
-        <Stat
-          label="Cost per success"
+        <MetricCard
+          metric="fieldOps.costPerSuccess"
           value={
             stats.costPerSuccessMinor === null
-              ? "—"
-              : money(stats.costPerSuccessMinor, stats.currency)
+              ? null
+              : cedis(stats.costPerSuccessMinor)
           }
-          hint={
-            stats.costPerSuccessMinor === null
-              ? "nothing has succeeded yet"
-              : "committed ÷ successes"
-          }
+          format="money"
+          currency={currency}
+          period="All time"
+          stateNote="Nothing has succeeded yet"
         />
       </div>
 
+      <SectionHeading title="Per day" />
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Bars series={daily} pick="submitted" label="Sent in, per day" />
-        <Bars series={daily} pick="verified" label="Verified, per day" />
-        <Bars series={daily} pick="succeeded" label="Stood up, per day" />
-        <Bars
-          series={daily}
-          pick="earnedMinor"
-          label="Earned, per day"
-          currency={stats.currency}
-        />
+        {chart("Sent in", "submitted", {
+          definition:
+            "Onboardings members submitted for their team lead's review that day.",
+        })}
+        {chart("Verified", "verified", {
+          definition:
+            "Onboardings the team lead verified that day; the holding period starts here.",
+        })}
+        {chart("Succeeded", "succeeded", {
+          definition:
+            "Onboardings whose every check passed that day, so the commission was approved.",
+        })}
+        {chart("Earned", "earnedMinor", {
+          money: true,
+          definition:
+            "Commission amounts earned that day, at the rule version in force when the lead verified.",
+        })}
       </div>
 
-      <h2 className="mb-2 text-sm font-semibold text-muted-foreground">
-        The team
-      </h2>
+      <SectionHeading title="The team" />
       <Table>
         <thead>
           <tr>
@@ -151,7 +177,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
             <Th>Days out</Th>
             <Th>Found</Th>
             <Th>Sent in</Th>
-            <Th>Stood up</Th>
+            <Th>Succeeded</Th>
             <Th>Rejected</Th>
             <Th>Content</Th>
             <Th>Earned</Th>
@@ -177,7 +203,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
               <Td className="tabular-nums">{m.rejected}</Td>
               <Td className="tabular-nums">{m.contentApproved}</Td>
               <Td className="whitespace-nowrap tabular-nums">
-                {money(m.earnedMinor, stats.currency)}
+                {currency} {cedis(m.earnedMinor).toFixed(2)}
               </Td>
               <Td className="tabular-nums text-muted-foreground">
                 {m.medianReviewHours === null ? "—" : `${m.medianReviewHours}h`}
@@ -191,9 +217,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
         before the lead reviews it — a lead problem, not a member one.
       </p>
 
-      <h2 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
-        Towns
-      </h2>
+      <SectionHeading title="Towns" className="mt-6" />
       <Table>
         <thead>
           <tr>
@@ -202,7 +226,7 @@ export default async function FieldOpsCampaignAnalyticsPage({
             <Th>Found</Th>
             <Th>Spoken to</Th>
             <Th>Sent in</Th>
-            <Th>Listed</Th>
+            <Th>Succeeded</Th>
             <Th>Rejected</Th>
           </tr>
         </thead>
@@ -211,21 +235,13 @@ export default async function FieldOpsCampaignAnalyticsPage({
             <tr key={t.territoryId} className="hover:bg-muted/40">
               <Td>{t.name}</Td>
               <Td>
-                <Badge
-                  tone={
-                    t.status === "completed"
-                      ? "success"
-                      : t.covered
-                        ? "info"
-                        : "warning"
-                  }
-                >
-                  {t.status === "completed"
-                    ? "done"
-                    : t.covered
-                      ? "covered"
-                      : "nobody there"}
-                </Badge>
+                {t.status === "completed" ? (
+                  <Badge tone="success">Done</Badge>
+                ) : t.covered ? (
+                  <Badge tone="info">Covered</Badge>
+                ) : (
+                  <Badge tone="warning">Nobody there yet</Badge>
+                )}
               </Td>
               <Td className="tabular-nums">{t.prospects}</Td>
               <Td className="tabular-nums">{t.contacted}</Td>

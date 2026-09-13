@@ -62,6 +62,13 @@ function render(definitions) {
     demo: "Who uses Abonten",
     attention: "Needs attention",
     health: "Needs attention",
+    referrals: "Rewards › Referrals",
+    rebates: "Rewards › Rebates",
+    promoters: "Rewards › Promoters & loyalty",
+    loyalty: "Rewards › Promoters & loyalty",
+    search: "Discovery",
+    recommendations: "Discovery",
+    fieldOps: "Field Ops",
   };
 
   const sections = new Map();
@@ -97,9 +104,9 @@ function render(definitions) {
 title: Admin › Metric definitions
 purpose: What every figure in the admin console means, the period it covers and the rows it is read from.
 audience: All admin roles
-scope: /, /analytics, /finance
+scope: /, /analytics, /finance, /rewards/*, /discovery, /field-ops/*
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder

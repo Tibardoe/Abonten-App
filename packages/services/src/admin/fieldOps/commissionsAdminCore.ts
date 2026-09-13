@@ -3,6 +3,7 @@ import type {
   FieldOpsCommission,
   FieldOpsCommissionDetail,
   FieldOpsCommissionStatus,
+  FieldOpsCommissionTotals,
 } from "@abonten/types/fieldOps";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
@@ -17,6 +18,7 @@ import {
   assertPermission,
   recordAdminAudit,
 } from "../adminContext";
+import { loadCommissionTotals } from "./commissionTotals";
 import { type RequestMeta, dbError, denied } from "./fieldOpsAdminShared";
 
 // Admin > Field Ops > Commissions: the ledger view and the one destructive
@@ -39,7 +41,14 @@ export async function listCommissionsAdminCore(
   AdminEnvelope<{
     items: (FieldOpsCommission & { campaignName: string })[];
     nextCursor: string | null;
+    /** Per-status sums in `currency`, exact (SQL), for the chosen campaign or all. */
     totals: Record<FieldOpsCommissionStatus, number>;
+    currency: string;
+    /** The same sums for any other currency, never added to the first. */
+    otherCurrencies: {
+      currency: string;
+      totals: Record<FieldOpsCommissionStatus, number>;
+    }[];
   }>
 > {
   try {
@@ -58,35 +67,31 @@ export async function listCommissionsAdminCore(
   if (filters.status) q = q.eq("status", filters.status);
   if (filters.cursor) q = q.lt("earned_at", filters.cursor);
 
-  const [{ data, error }, { data: allRows }] = await Promise.all([
+  const [{ data, error }, totalsRes] = await Promise.all([
     q,
-    // Small volumes (a team of 12 per campaign), so the status totals are
-    // summed live rather than kept in a rollup table.
-    supabase
-      .from("fieldops_commission")
-      .select("status, amount_minor, campaign_id")
-      .limit(5000),
+    // Summed in SQL per status and currency — exact, whatever the volume.
+    loadCommissionTotals(supabase, { campaignId: filters.campaignId }),
   ]);
   if (error) return dbError(error, "Could not load commissions");
+  if (totalsRes.error) {
+    return { status: 500, message: "Could not total the commissions" };
+  }
 
   const rows = (data ?? []) as unknown as (CommissionRow & {
     fieldops_campaign: { name: string } | null;
   })[];
   const page = rows.slice(0, PAGE);
 
-  const totals: Record<FieldOpsCommissionStatus, number> = {
-    pending: 0,
-    approved: 0,
-    in_payout: 0,
-    paid: 0,
-    rejected: 0,
-    reversed: 0,
-  };
-  for (const r of allRows ?? []) {
-    if (filters.campaignId && r.campaign_id !== filters.campaignId) continue;
-    const key = r.status as FieldOpsCommissionStatus;
-    if (key in totals) totals[key] += Number(r.amount_minor ?? 0);
-  }
+  const asRecord = (
+    t: FieldOpsCommissionTotals,
+  ): Record<FieldOpsCommissionStatus, number> => ({
+    pending: t.pendingMinor,
+    approved: t.approvedMinor,
+    in_payout: t.inPayoutMinor,
+    paid: t.paidMinor,
+    rejected: t.rejectedMinor,
+    reversed: t.reversedMinor,
+  });
 
   return {
     status: 200,
@@ -97,7 +102,12 @@ export async function listCommissionsAdminCore(
       })),
       nextCursor:
         rows.length > PAGE ? (page[page.length - 1]?.earned_at ?? null) : null,
-      totals,
+      totals: asRecord(totalsRes.primary),
+      currency: totalsRes.primary.currency,
+      otherCurrencies: totalsRes.others.map((t) => ({
+        currency: t.currency,
+        totals: asRecord(t),
+      })),
     },
   };
 }

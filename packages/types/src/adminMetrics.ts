@@ -3,6 +3,14 @@
 // The SQL returns snake_case jsonb; the service maps it into these types
 // once, so pages never touch a database word.
 
+/**
+ * A summary computed from a capped read says how far it got. Null when every
+ * row in the period was read; otherwise the page must say the figures are
+ * incomplete (apps/admin CapNotice) rather than present a partial sum as
+ * the whole.
+ */
+export type AdminReadTruncation = { fetched: number; total: number };
+
 export type AdminRangeMetrics = {
   newUsers: number;
   newEvents: number;
