@@ -14,7 +14,7 @@ complianceReviewRequired: no
 
 # Abonten Weekly
 
-**State (2026-09-13): built, switched off.** `weekly_program_setting.enabled = false`, audience `staff`, plus the `WEEKLY_KILL_SWITCH` env flag on the web deployment. With the programme off, the `/weekly` pages show an "on its way" state with upcoming events, the Explore teaser and menu links are hidden on web and mobile, and the admin module works normally. Rollout: §10 and [admin/weekly.md](../admin/weekly.md).
+**State (2026-09-13, evening): switched on for staff only.** `weekly_program_setting.enabled = true`, audience `staff` (the founder is the only active admin), `WEEKLY_KILL_SWITCH` not set. Two staff test editions exist for Ghana, built from the founder's own test places: "Staff preview: this week" (week of 2026-09-07, published) and "Staff preview: next week" (week of 2026-09-14, scheduled for 06:00 on Monday 14 September, which also exercises `weekly-publish-due`). Everyone else still sees nothing. To go back to fully off, untick "Abonten Weekly switched on" in Settings. With the programme off, the `/weekly` pages show an "on its way" state with upcoming events, the Explore teaser and menu links are hidden on web and mobile, and the admin module works normally. Rollout: §10 and [admin/weekly.md](../admin/weekly.md).
 
 ## 1. What it is
 
