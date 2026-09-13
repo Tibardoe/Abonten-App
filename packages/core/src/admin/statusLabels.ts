@@ -45,7 +45,19 @@ export type StatusFamily =
   | "ticket"
   | "event"
   | "moderation"
-  | "userAccount";
+  | "userAccount"
+  // Discovery (search + recommendations)
+  | "searchMode"
+  | "platform"
+  | "searchResultType"
+  | "subscriptionKind"
+  | "subscriptionSource"
+  | "suppressReason"
+  | "digestSkipReason"
+  | "deliveryStatus"
+  // Field Ops
+  | "fieldOpsCommission"
+  | "fieldOpsOnboarding";
 
 const TRANSACTION: Record<string, StatusMeta> = {
   successful: { label: "Paid", tone: "success", icon: "check" },
@@ -337,7 +349,155 @@ const USER_ACCOUNT: Record<string, StatusMeta> = {
   Deleted: { label: "Deleted", tone: "neutral", icon: "x" },
 };
 
+// ── Discovery ─────────────────────────────────────────────────
+// Descriptive keys rather than states: a neutral tone and a plain dot, so
+// the breakdowns read as lists of words, not as a wall of warnings.
+
+const plain = (label: string, description?: string): StatusMeta => ({
+  label,
+  tone: "neutral",
+  icon: "dot",
+  description,
+});
+
+const SEARCH_MODE: Record<string, StatusMeta> = {
+  text: plain("Typed search"),
+  organizer: plain("@organizer search"),
+  browse: plain("Browse (no query)"),
+};
+
+const PLATFORM: Record<string, StatusMeta> = {
+  web: plain("Web"),
+  ios: plain("iOS"),
+  android: plain("Android"),
+  unknown: plain("Not recorded"),
+};
+
+const SEARCH_RESULT_TYPE: Record<string, StatusMeta> = {
+  event: plain("Event"),
+  place: plain("Place"),
+  organizer: plain("Organizer"),
+};
+
+const SUBSCRIPTION_KIND: Record<string, StatusMeta> = {
+  organizer: plain("An organizer's new events"),
+  place: plain("A place's updates"),
+  similar_events: plain("Similar events nearby"),
+  similar_places: plain("Similar places nearby"),
+};
+
+const SUBSCRIPTION_SOURCE: Record<string, StatusMeta> = {
+  purchase_prompt: plain("Prompt after a purchase"),
+  rsvp_prompt: plain("Prompt after an RSVP"),
+  place_prompt: plain("Prompt at a place"),
+  profile: plain("Bell on a profile"),
+  search: plain("Bell on a search result"),
+  settings: plain("Settings page"),
+};
+
+const SUPPRESS_REASON: Record<string, StatusMeta> = {
+  attending: plain("Already attending"),
+  saved: plain("Already saved it"),
+  reminded: plain("Already reminded"),
+  visited: plain("Already visited"),
+  own_subject: plain("Their own listing"),
+  not_visible: plain("Listing no longer visible"),
+  ended: plain("Event already ended"),
+  inactive_user: plain("Account not active"),
+  unsubscribed: plain("Unsubscribed since"),
+  opted_out: plain("Turned notices off"),
+  ttl: plain("Expired before a digest went out"),
+  unknown: plain("No reason recorded"),
+};
+
+const DIGEST_SKIP_REASON: Record<string, StatusMeta> = {
+  daily_cap: plain("Daily cap reached"),
+  weekly_cap: plain("Weekly cap reached"),
+  paused: plain("Notices paused"),
+  ignored: plain("Auto-paused: digests going unopened"),
+  opted_out: plain("Turned notices off"),
+  cooldown: plain("Cooldown after a recent notice"),
+  no_items: plain("Nothing new to send"),
+};
+
+const DELIVERY_STATUS: Record<string, StatusMeta> = {
+  queued: { label: "Waiting to send", tone: "info", icon: "clock" },
+  sending: { label: "Sending", tone: "info", icon: "clock" },
+  pending: { label: "Waiting to send", tone: "info", icon: "clock" },
+  sent: { label: "Sent", tone: "success", icon: "check" },
+  skipped: {
+    label: "Skipped",
+    tone: "neutral",
+    icon: "pause",
+    description: "No app or address, unsubscribed, paused or switched off.",
+  },
+  failed: { label: "Failed", tone: "danger", icon: "x" },
+  shadow: {
+    label: "Shadow (not sent)",
+    tone: "neutral",
+    icon: "dot",
+    description: "Recorded in shadow mode; nothing went out.",
+  },
+};
+
+// ── Field Ops ─────────────────────────────────────────────────
+
+const FIELD_OPS_COMMISSION: Record<string, StatusMeta> = {
+  pending: {
+    label: "In holding",
+    tone: "info",
+    icon: "clock",
+    description: "Verified by the lead; the holding period is still running.",
+  },
+  approved: {
+    label: "Ready to pay",
+    tone: "success",
+    icon: "check",
+    description: "Confirmed by the sweep, waiting for a payout batch.",
+  },
+  in_payout: { label: "In a payout batch", tone: "info", icon: "clock" },
+  paid: { label: "Paid", tone: "success", icon: "check" },
+  rejected: { label: "Rejected", tone: "danger", icon: "x" },
+  reversed: {
+    label: "Reversed",
+    tone: "danger",
+    icon: "undo",
+    description: "A paid commission taken back with an offsetting entry.",
+  },
+};
+
+const FIELD_OPS_ONBOARDING: Record<string, StatusMeta> = {
+  draft: { label: "Draft", tone: "neutral", icon: "dot" },
+  submitted: { label: "Awaiting review", tone: "warning", icon: "clock" },
+  verified: { label: "Verified", tone: "success", icon: "check" },
+  needs_changes: { label: "Returned for changes", tone: "info", icon: "undo" },
+  flagged: {
+    label: "Flagged for an admin",
+    tone: "warning",
+    icon: "flag",
+    description: "The sweep would not pay this without a person looking.",
+  },
+  succeeded: {
+    label: "Succeeded",
+    tone: "success",
+    icon: "check",
+    description: "Every check passed; the commission was approved.",
+  },
+  rejected: { label: "Rejected", tone: "danger", icon: "x" },
+  withdrawn: { label: "Withdrawn", tone: "neutral", icon: "x" },
+};
+
 export const STATUS_LABELS: Record<StatusFamily, Record<string, StatusMeta>> = {
+  searchMode: SEARCH_MODE,
+  platform: PLATFORM,
+  searchResultType: SEARCH_RESULT_TYPE,
+  subscriptionKind: SUBSCRIPTION_KIND,
+  subscriptionSource: SUBSCRIPTION_SOURCE,
+  suppressReason: SUPPRESS_REASON,
+  digestSkipReason: DIGEST_SKIP_REASON,
+  deliveryStatus: DELIVERY_STATUS,
+  fieldOpsCommission: FIELD_OPS_COMMISSION,
+  fieldOpsOnboarding: FIELD_OPS_ONBOARDING,
   transaction: TRANSACTION,
   checkout: CHECKOUT,
   payout: PAYOUT,
@@ -362,6 +522,14 @@ export const STATUS_LABELS: Record<StatusFamily, Record<string, StatusMeta>> = {
 export function humanizeStatus(raw: string): string {
   const words = raw.replace(/[._]/g, " ").trim();
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** Just the word, for a list or a breakdown row. */
+export function statusLabel(
+  family: StatusFamily,
+  raw: string | number | null | undefined,
+): string {
+  return statusMeta(family, raw).label;
 }
 
 export function statusMeta(

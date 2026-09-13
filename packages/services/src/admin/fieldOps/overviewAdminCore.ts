@@ -4,11 +4,12 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { isFieldOpsKillSwitchOn } from "../../fieldOps/shared/killSwitch";
 import { type AdminEnvelope, assertPermission } from "../adminContext";
 import { listCampaignsCore } from "./campaignsAdminCore";
+import { loadCommissionTotals } from "./commissionTotals";
 import { denied, readSettings } from "./fieldOpsAdminShared";
 
 // Admin > Field Ops overview: the programme's switches, live campaigns, a
-// few counts, and what the commission ledger owes. Charts and per-campaign
-// series join in Phase 7.
+// few counts, and what the commission ledger owes — the money summed in SQL
+// per currency (admin_fieldops_commission_totals), never under a row cap.
 
 export async function getFieldOpsOverviewCore(
   supabase: ServiceRoleClient,
@@ -25,7 +26,6 @@ export async function getFieldOpsOverviewCore(
     regions,
     territories,
     rules,
-    commissions,
     submitted,
     flagged,
     succeeded,
@@ -46,9 +46,6 @@ export async function getFieldOpsOverviewCore(
       .select("id", { count: "exact", head: true })
       .eq("is_active", true),
     supabase
-      .from("fieldops_commission")
-      .select("status, amount_minor, currency"),
-    supabase
       .from("fieldops_onboarding")
       .select("id", { count: "exact", head: true })
       .eq("status", "submitted"),
@@ -67,11 +64,12 @@ export async function getFieldOpsOverviewCore(
     return { status: campaigns.status, message: campaigns.message };
   }
 
-  const rows = commissions.data ?? [];
-  const sumOf = (status: string) =>
-    rows
-      .filter((r) => r.status === status)
-      .reduce((t, r) => t + Number(r.amount_minor ?? 0), 0);
+  const totals = await loadCommissionTotals(supabase, {
+    fallbackCurrency: campaigns.data[0]?.currency ?? "GHS",
+  });
+  if (totals.error) {
+    return { status: 500, message: "Couldn't total the commissions." };
+  }
   const h = (health.data ?? {}) as Record<string, number | boolean>;
 
   return {
@@ -83,12 +81,7 @@ export async function getFieldOpsOverviewCore(
       regionCount: regions.count ?? 0,
       territoryCount: territories.count ?? 0,
       liveRuleCount: rules.count ?? 0,
-      money: {
-        pendingMinor: sumOf("pending"),
-        approvedMinor: sumOf("approved"),
-        paidMinor: sumOf("paid"),
-        currency: rows[0]?.currency ?? campaigns.data[0]?.currency ?? "GHS",
-      },
+      money: { ...totals.primary, otherCurrencies: totals.others },
       awaitingReview: submitted.count ?? 0,
       flagged: flagged.count ?? 0,
       succeeded: succeeded.count ?? 0,

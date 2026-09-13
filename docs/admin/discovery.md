@@ -25,7 +25,7 @@ Discovery is the unified search (events, places and organizers, with `@handle`) 
 
 ## Overview
 
-Pick 7, 14, 30 or 90 days at the top.
+Pick the last 7, 14, 30 or 90 days at the top. Unlike the rest of the console this is a **rolling window ending now**, not whole calendar days, and there is no comparison with the period before — the caption under the tabs says so. Every tile carries its definition behind the ⓘ (`docs/admin/metrics.md`, "Discovery"); rates are shown as "Not enough data" under 20 searches rather than as a percentage of nothing.
 
 **Status** repeats the switches in one line, including whether either deploy-level kill switch is set.
 
@@ -51,11 +51,13 @@ The log holds no user, device or IP identifiers and is deleted after the retenti
 | Prompts | Times shown, accepted, dismissed ("Not now"). |
 | Live / Shadow digests | Digests created. Shadow ones were counted but not sent. |
 | Open rate | Delivered digests someone opened. "—" until a push has actually been delivered. |
-| Not interested | Picks dismissed out of all picks people could see. Above 25% it turns amber: the matching is too broad. |
+| Picks marked not interested | Picks dismissed out of all picks people could see. Above 25% it turns amber: the matching is too broad. |
 | Per-person digests | p50, p95 and maximum digests per person in the range. |
 | Why candidates were held back | Already attending, saved, reminded, visited, own listing, listing no longer visible, event ended, account inactive, turned off. |
 | Digests skipped | Daily cap, weekly cap, paused, ignored (auto-paused after unopened digests), cooldown, opted out. |
-| Push delivery | Recommendation pushes queued, sent, skipped, failed. |
+| Push delivery | Recommendation pushes waiting, sent, skipped, failed. Read from the shared delivery queue (recommendation rows only); if the read hits its row cap the page says the figures are incomplete. |
+
+Breakdown keys (why candidates were held back, digests skipped, subscription kinds and sources, search kinds, platforms) are shown as words from `@abonten/core/admin/statusLabels`, never as database values.
 
 ## Changing settings
 

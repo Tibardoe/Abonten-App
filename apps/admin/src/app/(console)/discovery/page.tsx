@@ -1,16 +1,24 @@
+import { CapNotice } from "@/components/metrics/CapNotice";
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { SectionHeading } from "@/components/metrics/SectionHeading";
 import {
   Badge,
   Card,
   EmptyState,
   PageHeader,
-  Stat,
   Table,
   Td,
   Th,
+  cn,
   timeAgo,
 } from "@/components/ui";
 import { requirePermissionPage } from "@/lib/adminGuard";
 import { loadDiscoveryOverview } from "@/lib/data";
+import { ratioState } from "@abonten/core/admin/smallSample";
+import {
+  type StatusFamily,
+  statusLabel,
+} from "@abonten/core/admin/statusLabels";
 import Link from "next/link";
 import { DiscoveryTabs } from "./DiscoveryTabs";
 
@@ -18,19 +26,23 @@ import { DiscoveryTabs } from "./DiscoveryTabs";
 // recommendation notices useful rather than noisy? Shadow-mode projections
 // sit next to live numbers so the programme can be judged before any push
 // goes out.
+//
+// The two SQL functions behind this page take a number of days, so the
+// window is a rolling one ending now — not the console's calendar-day range.
+// The caption says so rather than pretending otherwise.
 
 const RANGES = [7, 14, 30, 90];
-
-const pct = (n: number | null | undefined) =>
-  n == null ? "—" : `${(n * 100).toFixed(1)}%`;
-
-function ratio(part: number, whole: number) {
-  return whole === 0 ? "—" : `${((part / whole) * 100).toFixed(1)}%`;
-}
+// Below this many searches a rate would be a coin toss.
+const MIN_SEARCHES_FOR_A_RATE = 20;
 
 function KeyValues({
   rows,
-}: { rows: Record<string, number> | null | undefined }) {
+  family,
+}: {
+  rows: Record<string, number> | null | undefined;
+  /** How to turn each key into a word an operator uses. */
+  family: StatusFamily;
+}) {
   const entries = Object.entries(rows ?? {}).sort((a, b) => b[1] - a[1]);
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground">Nothing yet.</p>;
@@ -40,9 +52,9 @@ function KeyValues({
       {entries.map(([k, v]) => (
         <li key={k} className="flex justify-between gap-4">
           <span className="text-muted-foreground">
-            {k.replaceAll("_", " ")}
+            {statusLabel(family, k)}
           </span>
-          <span className="tabular-nums">{v}</span>
+          <span className="tabular-nums">{v.toLocaleString("en-GH")}</span>
         </li>
       ))}
     </ul>
@@ -57,6 +69,7 @@ export default async function DiscoveryPage({
   await requirePermissionPage("discovery.view");
   const { days: daysParam } = await searchParams;
   const days = RANGES.includes(Number(daysParam)) ? Number(daysParam) : 14;
+  const period = `Last ${days} days`;
   const { overview } = await loadDiscoveryOverview(days);
 
   if (overview.status !== 200 || !overview.data) {
@@ -76,7 +89,8 @@ export default async function DiscoveryPage({
     killSwitches,
     search,
     recommendations: rec,
-    deliveryBySource,
+    recommendationDelivery,
+    deliveryTruncated,
   } = overview.data;
   const totals = search.totals ?? {
     searches: 0,
@@ -85,13 +99,21 @@ export default async function DiscoveryPage({
     p50_ms: null,
     p95_ms: null,
   };
-  const recDelivery = deliveryBySource.recommendations ?? {};
   const liveDigests = rec.digestsDaily.reduce((n, d) => n + d.live, 0);
   const shadowDigests = rec.digestsDaily.reduce((n, d) => n + d.shadow, 0);
   const activeSubs = Object.values(rec.subscriptions).reduce(
     (n, s) => n + s.active,
     0,
   );
+  const rateState = ratioState(
+    totals.zero_results,
+    totals.searches,
+    MIN_SEARCHES_FOR_A_RATE,
+  );
+  const rateNote =
+    rateState === "no-data"
+      ? `No searches in ${period.toLowerCase()}`
+      : `Fewer than ${MIN_SEARCHES_FOR_A_RATE} searches, too few for a rate`;
 
   return (
     <div className="space-y-6">
@@ -99,20 +121,30 @@ export default async function DiscoveryPage({
         title="Discovery"
         description={`Unified search and opt-in recommendation notices. Settings last changed ${timeAgo(settings.updatedAt)}.`}
         actions={
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {RANGES.map((r) => (
               <Link
                 key={r}
                 href={`/discovery?days=${r}`}
-                className={`rounded px-2.5 py-1 text-xs ${r === days ? "bg-primary text-primary-foreground" : "border border-border hover:bg-muted"}`}
+                aria-current={r === days ? "page" : undefined}
+                className={cn(
+                  "rounded px-2 py-1 text-xs",
+                  r === days
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-border hover:bg-muted",
+                )}
               >
-                {r}d
+                Last {r} days
               </Link>
             ))}
           </div>
         }
       />
       <DiscoveryTabs active="/discovery" />
+      <p className="-mt-3 text-xs text-muted-foreground">
+        {period} · a rolling window ending now, not whole calendar days ·
+        Africa/Accra · no comparison with the period before
+      </p>
 
       <Card className="flex flex-wrap items-center gap-2 p-3 text-sm">
         <span className="font-medium">Status</span>
@@ -125,7 +157,7 @@ export default async function DiscoveryPage({
         >
           Search{" "}
           {killSwitches.search
-            ? "killed (env)"
+            ? "off by kill switch"
             : settings.searchV2Enabled
               ? `on · ${settings.searchAudience}`
               : "off"}
@@ -143,7 +175,7 @@ export default async function DiscoveryPage({
         >
           Recommendations{" "}
           {killSwitches.recommendations
-            ? "killed (env)"
+            ? "off by kill switch"
             : settings.recommendationsEnabled
               ? `${settings.recommendationsShadowMode ? "shadow" : "live"} · ${settings.recommendationsAudience}`
               : "off"}
@@ -158,38 +190,51 @@ export default async function DiscoveryPage({
       </Card>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Search
-        </h2>
+        <SectionHeading title="Search" className="mb-0" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <Stat
-            label="Searches"
+          <MetricCard
+            metric="search.searches"
             value={totals.searches}
-            hint={`last ${days} days`}
+            period={period}
           />
-          <Stat
-            label="Zero results"
-            value={ratio(totals.zero_results, totals.searches)}
-            hint={`${totals.zero_results} searches`}
+          <MetricCard
+            metric="search.zeroResultRate"
+            value={
+              totals.searches > 0 ? totals.zero_results / totals.searches : null
+            }
+            format="percent"
+            period={period}
+            state={rateState === "ok" ? undefined : rateState}
+            stateNote={rateNote}
+            secondary={`${totals.zero_results.toLocaleString("en-GH")} searches found nothing`}
             tone={
-              totals.searches > 20 &&
-              totals.zero_results / totals.searches > 0.3
+              rateState === "ok" && totals.zero_results / totals.searches > 0.3
                 ? "warning"
                 : undefined
             }
           />
-          <Stat
-            label="Click-through"
-            value={ratio(totals.clicks, totals.searches)}
-            hint={`${totals.clicks} opened a result`}
+          <MetricCard
+            metric="search.clickThroughRate"
+            value={totals.searches > 0 ? totals.clicks / totals.searches : null}
+            format="percent"
+            period={period}
+            state={rateState === "ok" ? undefined : rateState}
+            stateNote={rateNote}
+            secondary={`${totals.clicks.toLocaleString("en-GH")} opened a result`}
           />
-          <Stat
-            label="Latency p50"
-            value={totals.p50_ms == null ? "—" : `${totals.p50_ms} ms`}
+          <MetricCard
+            metric="search.latencyP50"
+            value={totals.p50_ms}
+            format="ms"
+            period={period}
+            stateNote={`No searches in ${period.toLowerCase()}`}
           />
-          <Stat
-            label="Latency p95"
-            value={totals.p95_ms == null ? "—" : `${totals.p95_ms} ms`}
+          <MetricCard
+            metric="search.latencyP95"
+            value={totals.p95_ms}
+            format="ms"
+            period={period}
+            stateNote={`No searches in ${period.toLowerCase()}`}
             tone={(totals.p95_ms ?? 0) > 800 ? "warning" : undefined}
           />
         </div>
@@ -198,7 +243,7 @@ export default async function DiscoveryPage({
             <p className="mb-2 text-sm font-semibold">Top searches</p>
             {search.topQueries.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No searches recorded yet.
+                No searches recorded in {period.toLowerCase()}.
               </p>
             ) : (
               <Table>
@@ -206,8 +251,8 @@ export default async function DiscoveryPage({
                   <tr>
                     <Th>Query</Th>
                     <Th className="text-right">Searches</Th>
-                    <Th className="text-right">CTR</Th>
-                    <Th className="text-right">No results</Th>
+                    <Th className="text-right">Opened a result</Th>
+                    <Th className="text-right">Found nothing</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -216,7 +261,9 @@ export default async function DiscoveryPage({
                       <Td className="font-mono text-xs">{q.query_norm}</Td>
                       <Td className="text-right tabular-nums">{q.searches}</Td>
                       <Td className="text-right tabular-nums">
-                        {ratio(q.clicks, q.searches)}
+                        {q.searches > 0
+                          ? `${Math.round((q.clicks / q.searches) * 100)}%`
+                          : "—"}
                       </Td>
                       <Td className="text-right tabular-nums">
                         {q.zero_results}
@@ -236,7 +283,9 @@ export default async function DiscoveryPage({
               spelling, or wording to add.
             </p>
             {search.zeroResultQueries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">None.</p>
+              <p className="text-sm text-muted-foreground">
+                None in {period.toLowerCase()}.
+              </p>
             ) : (
               <ul className="space-y-1 text-sm">
                 {search.zeroResultQueries.map((q) => (
@@ -251,23 +300,27 @@ export default async function DiscoveryPage({
             )}
           </Card>
           <Card className="p-4">
-            <p className="mb-2 text-sm font-semibold">
-              Searches by kind and platform
+            <p className="mb-2 text-sm font-semibold">Searches by kind</p>
+            <KeyValues
+              family="searchMode"
+              rows={Object.fromEntries(
+                search.byMode.map((m) => [m.mode, m.searches]),
+              )}
+            />
+            <p className="mb-2 mt-4 text-sm font-semibold">
+              Searches by platform
             </p>
             <KeyValues
-              rows={Object.fromEntries([
-                ...search.byMode.map(
-                  (m) => [`mode ${m.mode}`, m.searches] as const,
-                ),
-                ...search.byPlatform.map(
-                  (p) => [`platform ${p.platform}`, p.searches] as const,
-                ),
-              ])}
+              family="platform"
+              rows={Object.fromEntries(
+                search.byPlatform.map((p) => [p.platform, p.searches]),
+              )}
             />
           </Card>
           <Card className="p-4">
             <p className="mb-2 text-sm font-semibold">Opened results by type</p>
             <KeyValues
+              family="searchResultType"
               rows={Object.fromEntries(
                 search.clicksByType.map((c) => [c.clicked_type, c.clicks]),
               )}
@@ -277,35 +330,57 @@ export default async function DiscoveryPage({
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Recommendations
-        </h2>
+        <SectionHeading title="Recommendations" className="mb-0" />
+        {deliveryTruncated ? (
+          <CapNotice
+            fetched={deliveryTruncated.fetched}
+            total={deliveryTruncated.total}
+            noun="recommendation pushes"
+          />
+        ) : null}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          <Stat label="Active subscriptions" value={activeSubs} />
-          <Stat
-            label="Live digests"
+          <MetricCard
+            metric="recommendations.activeSubscriptions"
+            value={activeSubs}
+            period="Right now"
+          />
+          <MetricCard
+            metric="recommendations.liveDigests"
             value={liveDigests}
-            hint={`last ${days} days`}
+            period={period}
           />
-          <Stat
-            label="Shadow digests"
+          <MetricCard
+            metric="recommendations.shadowDigests"
             value={shadowDigests}
-            hint="would have been sent"
+            period={period}
+            secondary="Would have been sent"
           />
-          <Stat label="Open rate" value={pct(rec.openRate)} />
-          <Stat
-            label="Not interested"
-            value={pct(rec.dismissRate)}
+          <MetricCard
+            metric="recommendations.openRate"
+            value={rec.openRate}
+            format="percent"
+            period={period}
+            stateNote="No push delivered yet"
+          />
+          <MetricCard
+            metric="recommendations.dismissRate"
+            value={rec.dismissRate}
+            format="percent"
+            period={period}
+            stateNote="No picks shown yet"
             tone={(rec.dismissRate ?? 0) > 0.25 ? "warning" : undefined}
           />
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           <Card className="p-4">
-            <p className="mb-2 text-sm font-semibold">Subscriptions</p>
+            <p className="mb-2 text-sm font-semibold">
+              Active subscriptions, by kind
+            </p>
             <KeyValues
+              family="subscriptionKind"
               rows={Object.fromEntries(
                 Object.entries(rec.subscriptions).map(([k, v]) => [
-                  `${k} (active)`,
+                  k,
                   v.active,
                 ]),
               )}
@@ -313,29 +388,41 @@ export default async function DiscoveryPage({
             <p className="mb-2 mt-4 text-sm font-semibold">
               New, by where they came from
             </p>
-            <KeyValues rows={rec.subscriptionsBySource} />
+            <KeyValues
+              family="subscriptionSource"
+              rows={rec.subscriptionsBySource}
+            />
           </Card>
           <Card className="p-4">
-            <p className="mb-2 text-sm font-semibold">Prompts</p>
-            <KeyValues
-              rows={{
-                shown: rec.prompts?.shown ?? 0,
-                accepted: rec.prompts?.accepted ?? 0,
-                dismissed: rec.prompts?.dismissed ?? 0,
-              }}
-            />
+            <p className="mb-2 text-sm font-semibold">Opt-in prompts</p>
+            <ul className="space-y-1 text-sm">
+              {(
+                [
+                  ["Shown", rec.prompts?.shown ?? 0],
+                  ["Accepted", rec.prompts?.accepted ?? 0],
+                  ["Dismissed (“Not now”)", rec.prompts?.dismissed ?? 0],
+                ] as const
+              ).map(([label, value]) => (
+                <li key={label} className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="tabular-nums">{value}</span>
+                </li>
+              ))}
+            </ul>
             <p className="mb-2 mt-4 text-sm font-semibold">
-              Per-person digests
+              Digests per person
             </p>
             <ul className="space-y-1 text-sm">
               {(["live", "shadow"] as const).map((k) => {
                 const d = rec.perUserDigests?.[k];
                 return (
                   <li key={k} className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">{k}</span>
+                    <span className="text-muted-foreground">
+                      {k === "live" ? "Live" : "Shadow"}
+                    </span>
                     <span className="tabular-nums">
-                      {d?.users ?? 0} people · p50 {d?.p50 ?? "—"} · p95{" "}
-                      {d?.p95 ?? "—"} · max {d?.max ?? "—"}
+                      {d?.users ?? 0} people · median {d?.p50 ?? "—"} · p95{" "}
+                      {d?.p95 ?? "—"} · most {d?.max ?? "—"}
                     </span>
                   </li>
                 );
@@ -346,20 +433,20 @@ export default async function DiscoveryPage({
             <p className="mb-2 text-sm font-semibold">
               Why candidates were held back
             </p>
-            <KeyValues rows={rec.suppressedByReason} />
+            <KeyValues family="suppressReason" rows={rec.suppressedByReason} />
             <p className="mb-2 mt-4 text-sm font-semibold">Digests skipped</p>
-            <KeyValues rows={rec.skipsByReason} />
+            <KeyValues family="digestSkipReason" rows={rec.skipsByReason} />
             <p className="mb-2 mt-4 text-sm font-semibold">
               Push delivery (recommendations)
             </p>
-            <KeyValues rows={recDelivery} />
+            <KeyValues family="deliveryStatus" rows={recommendationDelivery} />
           </Card>
         </div>
         <Card className="p-4">
           <p className="mb-2 text-sm font-semibold">Digests per day</p>
           {rec.digestsDaily.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No digests in this period.
+              No digests in {period.toLowerCase()}.
             </p>
           ) : (
             <Table>
@@ -368,7 +455,7 @@ export default async function DiscoveryPage({
                   <Th>Date</Th>
                   <Th className="text-right">Live</Th>
                   <Th className="text-right">Shadow</Th>
-                  <Th className="text-right">Items</Th>
+                  <Th className="text-right">Picks</Th>
                   <Th className="text-right">Opened</Th>
                 </tr>
               </thead>
@@ -388,7 +475,7 @@ export default async function DiscoveryPage({
           <p className="mt-3 text-xs text-muted-foreground">
             Before leaving shadow mode: p95 digests per person per week at or
             below the weekly cap, the same event rarely offered twice, and
-            candidates held back for “not visible” under 5%.
+            candidates held back for “listing no longer visible” under 5%.
           </p>
         </Card>
       </section>

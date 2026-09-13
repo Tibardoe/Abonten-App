@@ -1,16 +1,25 @@
 import { StepUpButton } from "@/components/StepUpButton";
+import { CapNotice } from "@/components/metrics/CapNotice";
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
+import { SectionHeading } from "@/components/metrics/SectionHeading";
 import {
   Badge,
   Card,
   EmptyState,
   PageHeader,
-  Stat,
   Table,
   Td,
   Th,
   timeAgo,
 } from "@/components/ui";
 import { loadRebates } from "@/lib/data";
+import {
+  adminRangeQuery,
+  parseAdminRangeParams,
+  resolveAdminRange,
+} from "@abonten/core/admin/adminDateRange";
+import type { MetricKey } from "@abonten/core/admin/metricDefinitions";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { AdminRebateRun } from "@abonten/types/rewards";
@@ -26,12 +35,23 @@ const RULE_TITLES = {
   place_visits: "Place visits",
 } as const;
 
+const RULE_METRIC: Record<keyof typeof RULE_TITLES, MetricKey> = {
+  organizer_rebate: "rebates.organizer",
+  venue_rebate: "rebates.venue",
+  organizer_milestone: "rebates.milestone",
+  place_visits: "rebates.placeVisits",
+};
+
+const cedis = (minor: number) => minor / 100;
+
+// Month names in a fixed locale and zone: the page is server-rendered and
+// must not follow the server's locale.
 const monthLabel = (period: string) =>
-  new Date(`${period}T00:00:00Z`).toLocaleDateString(undefined, {
+  new Intl.DateTimeFormat("en-GB", {
     month: "long",
     year: "numeric",
-    timeZone: "UTC",
-  });
+    timeZone: "Africa/Accra",
+  }).format(new Date(`${period}T00:00:00Z`));
 
 // The last six months that have started (this month first).
 function recentMonths(): { value: string; label: string }[] {
@@ -59,16 +79,19 @@ function runLine(run: AdminRebateRun): string {
 
 // Monthly organizer / venue rebates and milestones: what each run decided,
 // what they cost, and who earned most. Promotion credit only -- it can't be
-// spent on tickets or withdrawn.
+// spent on tickets or withdrawn. Rebates are monthly, so the page opens on
+// the last 90 days rather than the console's usual 30.
 export default async function RebatesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const { ctx, summary, events } = await loadRebates({
-    cursor: sp.cursor ?? null,
-  });
+  const range = sp.range ? parseAdminRangeParams(sp) : resolveAdminRange("90d");
+  const { ctx, summary, events } = await loadRebates(
+    { cursor: sp.cursor ?? null },
+    range,
+  );
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
     Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
@@ -80,8 +103,10 @@ export default async function RebatesPage({
       <PageHeader
         title="Rebates"
         description="Each month (the 3rd, 03:00) organizers get promotion credit for events that ended the month before, venue owners for other organizers' events at their verified place, organizers a one-off milestone bonus, and verified places credit for the different people who checked in there (decided once the month is over). Event rebates are priced from the cash Abonten kept on each event's sales."
+        actions={<RangePicker basePath="/rewards/rebates" range={range} />}
       />
       <RewardsTabs active="/rewards/rebates" />
+      <RangeCaption range={range} className="mb-3" />
 
       {summary.status !== 200 || !s ? (
         <EmptyState>
@@ -89,6 +114,15 @@ export default async function RebatesPage({
         </EmptyState>
       ) : (
         <>
+          {s.truncated ? (
+            <CapNotice
+              className="mb-3"
+              fetched={s.truncated.fetched}
+              total={s.truncated.total}
+              noun="rebate decisions"
+            />
+          ) : null}
+
           <Card className="mb-4 flex flex-wrap items-start justify-between gap-3 p-4 text-sm">
             <div className="space-y-1">
               <div className="flex flex-wrap gap-1">
@@ -104,7 +138,7 @@ export default async function RebatesPage({
                   ),
                 )}
                 {s.shadowMode ? (
-                  <Badge tone="warning">shadow mode</Badge>
+                  <Badge tone="warning">Shadow mode</Badge>
                 ) : null}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -135,38 +169,46 @@ export default async function RebatesPage({
             )}
           </Card>
 
-          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {(Object.keys(RULE_TITLES) as (keyof typeof RULE_TITLES)[]).map(
-              (key) => {
-                const r = s.byRule[key];
-                return (
-                  <Stat
-                    key={key}
-                    label={`${RULE_TITLES[key]} (last ${s.sinceDays} days)`}
-                    value={formatCredit(r?.amountMinor ?? 0)}
-                    hint={`${r?.count ?? 0} paid or pending · ${r?.rejected ?? 0} refused${
-                      r?.shadowAmountMinor
-                        ? ` · ${formatCredit(r.shadowAmountMinor)} in shadow`
-                        : ""
-                    }`}
-                  />
-                );
-              },
-            )}
-            <Stat
-              label="Cash net revenue behind them"
-              value={formatCredit(s.netRevenueMinor)}
-              hint="What Abonten kept on the counted sales (fee minus Paystack)."
-            />
-          </div>
+          <section className="mb-4">
+            <SectionHeading title="Decided in the period" />
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+              {(Object.keys(RULE_TITLES) as (keyof typeof RULE_TITLES)[]).map(
+                (key) => {
+                  const r = s.byRule[key];
+                  return (
+                    <MetricCard
+                      key={key}
+                      metric={RULE_METRIC[key]}
+                      value={cedis(r?.amountMinor ?? 0)}
+                      format="money"
+                      period={range.label}
+                      secondary={`${r?.count ?? 0} paid or pending · ${r?.rejected ?? 0} refused${
+                        r?.shadowAmountMinor
+                          ? ` · ${formatCredit(r.shadowAmountMinor)} in shadow`
+                          : ""
+                      }`}
+                    />
+                  );
+                },
+              )}
+              <MetricCard
+                metric="rebates.netRevenueBasis"
+                value={cedis(s.netRevenueMinor)}
+                format="money"
+                period={range.label}
+              />
+            </div>
+          </section>
 
           <div className="mb-4 grid gap-3 lg:grid-cols-2">
             <Card className="p-4">
               <p className="mb-2 text-sm font-semibold">
-                Top earners (live and shadow)
+                Top earners (live and shadow) · {range.label.toLowerCase()}
               </p>
               {s.top.length === 0 ? (
-                <p className="text-sm text-muted-foreground">None yet.</p>
+                <p className="text-sm text-muted-foreground">
+                  None in {range.label.toLowerCase()}.
+                </p>
               ) : (
                 <ul className="space-y-1 text-sm">
                   {s.top.map((t) => (
@@ -201,7 +243,9 @@ export default async function RebatesPage({
                 Why events got nothing
               </p>
               {s.rejectReasons.length === 0 ? (
-                <p className="text-sm text-muted-foreground">None.</p>
+                <p className="text-sm text-muted-foreground">
+                  No refusals in {range.label.toLowerCase()}.
+                </p>
               ) : (
                 <ul className="space-y-1 text-sm">
                   {s.rejectReasons.map((r) => (
@@ -215,9 +259,12 @@ export default async function RebatesPage({
             </Card>
           </div>
 
-          <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            Runs
-          </h3>
+          <SectionHeading
+            title="Runs"
+            tip={{
+              text: "The twelve most recent monthly runs, whatever the period above: scheduled on the 3rd, or started by hand from this page.",
+            }}
+          />
           {s.runs.length === 0 ? (
             <EmptyState>No runs yet. The first one is on the 3rd.</EmptyState>
           ) : (
@@ -267,9 +314,7 @@ export default async function RebatesPage({
         </>
       )}
 
-      <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-        Decisions
-      </h3>
+      <SectionHeading title="Decisions" />
       {events.status !== 200 ? (
         <EmptyState>
           {events.message ?? "Couldn't load the decisions."}
@@ -284,7 +329,7 @@ export default async function RebatesPage({
           <RewardEventTable events={events.data} />
           {events.hasNextPage && events.nextCursor ? (
             <Link
-              href={`/rewards/rebates?cursor=${encodeURIComponent(events.nextCursor)}`}
+              href={`/rewards/rebates?cursor=${encodeURIComponent(events.nextCursor)}&${adminRangeQuery(range)}`}
               className="mt-3 inline-block text-sm text-primary hover:underline"
             >
               Older →

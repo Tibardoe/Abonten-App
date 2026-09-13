@@ -2,9 +2,9 @@
 title: Admin › Metric definitions
 purpose: What every figure in the admin console means, the period it covers and the rows it is read from.
 audience: All admin roles
-scope: /, /analytics, /finance
+scope: /, /analytics, /finance, /rewards/*, /discovery, /field-ops/*
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -373,3 +373,358 @@ Read from: `health_check_result, newest row per check key`
 
 Watch out:
 - A probe that stopped running keeps showing its last result; check the time beside it.
+
+## Rewards › Referrals
+
+### referrals.linkVisits
+
+**Link visits** · Selected period
+
+How many times an event link carrying a referral code was opened in the period. The same person opening the same link twice counts twice; it measures reach, not people.
+
+Read from: `referral_touch.created_at in range`
+
+### referrals.attributedCheckouts
+
+**Referred paid checkouts** · Selected period
+
+Ticket checkouts that were paid in the period and carried a referrer, whether or not the reward engine ended up paying anything for them.
+
+Read from: `ticket_checkout where referrer_user_id is set, status = paid, completed_at in range`
+
+### referrals.referredTicketSales
+
+**Referred ticket sales** · Selected period
+
+The ticket price (before the service fee, before any refund) of every sale the event-referral rule made a decision on in the period, including the ones it refused.
+
+Read from: `reward_event.basis.ticket_revenue_minor, event_referral rule`
+
+Watch out:
+- In shadow mode the sale is real but the reward beside it is a projection.
+
+### referrals.rewards
+
+**Referral rewards** · Selected period
+
+Credit decided for people who referred a ticket sale in the period: pending, held for review and released, added together. Refused, voided, deferred and clawed-back decisions are listed separately and are not in this figure.
+
+Read from: `reward_event where rule_key = event_referral and status in (pending, held, released)`
+
+Watch out:
+- In shadow mode this is what would have been paid; no credit was posted.
+
+### referrals.costShare
+
+**Referral cost share** · Selected period
+
+Referral rewards divided by the cash Abonten kept (service fee minus Paystack cost) on the same referred sales. The rule caps each reward at a share of its own sale's net revenue, so this only exceeds the cap if rewards were adjusted by hand.
+
+Read from: `referral rewards ÷ net revenue on the referred sales`
+
+### referrals.friendsJoined
+
+**Friends who joined** · Selected period
+
+People who created an account with a friend's invite code or link in the period. A person can be bound to one inviter only, and only while their account is new.
+
+Read from: `user_referral.bound_at in range`
+
+### referrals.friendsQualified
+
+**Friends who qualified** · Selected period
+
+Invited friends whose action earned their inviter a decision in the period: a first ticket order, a ticket sold on their own event, or an approved place claim. Each friend counts once per path.
+
+Read from: `reward_event, friend_referral_referrer rule, by basis.path`
+
+### referrals.inviterRewards
+
+**Inviter rewards** · Selected period
+
+Credit decided for inviters in the period: pending, held and released together. Refused and voided decisions are shown beside it.
+
+Read from: `reward_event where rule_key = friend_referral_referrer and status in (pending, held, released)`
+
+### referrals.welcomeCredit
+
+**Welcome credit granted** · Selected period
+
+Credit actually released to invited friends in the period, once their phone was verified and their first order went through. Friends refused for having bought before, or for sharing a device with the inviter, are counted beside it.
+
+Read from: `reward_event where rule_key = friend_referral_referee and status = released`
+
+## Rewards › Rebates
+
+### rebates.organizer
+
+**Organizer rebates** · Selected period
+
+Promotion-only credit the monthly run decided for organizers in the period: 20% of the cash Abonten kept on their settled events. Paid or pending; when shadow mode is on, the shadow total is shown beside it and nothing was posted.
+
+Read from: `reward_event where rule_key = organizer_rebate, by created_at, status not in (rejected, voided)`
+
+### rebates.venue
+
+**Venue rebates** · Selected period
+
+Promotion-only credit decided for the owner of a verified place in the period: 5% of the cash Abonten kept on other organizers' events held there. Held for review when the owner and the organizer look like the same person.
+
+Read from: `reward_event where rule_key = venue_rebate, by created_at`
+
+### rebates.milestone
+
+**Organizer milestones** · Selected period
+
+One-off promotion credit decided in the period for organizers who crossed a milestone in settled sales. Each organizer can earn it once.
+
+Read from: `reward_event where rule_key = organizer_milestone, by created_at`
+
+### rebates.placeVisits
+
+**Place-visit rebates** · Selected period
+
+Promotion-only credit decided in the period for verified place owners, per different person who checked in with the place's QR code during the month. Decided once the month is over.
+
+Read from: `reward_event where rule_key = place_visits, by created_at`
+
+### rebates.netRevenueBasis
+
+**Net revenue behind rebates** · Selected period
+
+The service fee minus Paystack's cost on the settled sales that the counted rebates were calculated from, live and shadow together. Rebates are a share of this, so it says what the programme is giving back relative to what it kept.
+
+Read from: `reward_event.basis.net_revenue_minor, rebate rules`
+
+## Rewards › Promoters & loyalty
+
+### promoters.activeOffers
+
+**Events offering a commission** · Right now
+
+Events with an active promoter commission set by their organizer at this moment. The organizer chooses the rate per event; a sale through a promoter's link on one of these events earns the promoter credit.
+
+Read from: `event_promoter_commission where is_active`
+
+### promoters.sales
+
+**Promoter sales** · Selected period
+
+The ticket price of the orders that arrived through a promoter's link and were not refused, in the period. Live decisions only; shadow-mode projections are shown separately.
+
+Read from: `reward_event.basis.ticket_revenue_minor where rule_key = promoter_commission, live, status not in (rejected, voided)`
+
+### promoters.commission
+
+**Promoter commission** · Selected period
+
+Credit decided for promoters in the period (pending, held and released together). The organizer is charged the same amount against their payout at once; what organizers were actually charged, net of reversals, is shown beside it and can differ when a sale is later refunded.
+
+Read from: `reward_event where rule_key = promoter_commission and status in (pending, held, released), live`
+
+### loyalty.feeRebates
+
+**Loyalty fee rebates** · Selected period
+
+Credit decided in the period for buyers whose fifth ticket order on a different event earned their cash service fee back (pending, held and released together). Refused decisions are counted beside it.
+
+Read from: `reward_event where rule_key = loyalty_fee_rebate and status in (pending, held, released), live`
+
+## Discovery
+
+### search.searches
+
+**Searches** · Selected period
+
+How many searches returned a first page of results in the period. Type-ahead suggestions and scrolling to later pages are not counted. The log holds no user, device or IP identifiers.
+
+Read from: `search_query_log.created_at in the last N days`
+
+Watch out:
+- A rolling window ending now, not whole calendar days.
+
+### search.zeroResultRate
+
+**Zero-result rate** · Selected period
+
+Searches that returned no results, divided by all searches in the period. The list beside it shows what people looked for and could not find: missing listings, spellings, or wording organizers should use.
+
+Read from: `search_query_log where zero_results ÷ all searches`
+
+### search.clickThroughRate
+
+**Search click-through** · Selected period
+
+Searches after which the person opened one of the results, divided by all searches in the period. Opening nothing can mean the answer was already on the page, so read it with the zero-result rate.
+
+Read from: `search_query_log where clicked_at is set ÷ all searches`
+
+### search.latencyP50
+
+**Search time (median)** · Selected period
+
+The server-measured time to run a search, in milliseconds, at the median: half the searches in the period were faster. It excludes the network, so a person's wait is longer.
+
+Read from: `search_query_log.duration_ms, 50th percentile`
+
+### search.latencyP95
+
+**Search time (p95)** · Selected period
+
+The server-measured time to run a search, in milliseconds, at the 95th percentile: nineteen in twenty searches in the period were faster. Above 800 ms it turns amber.
+
+Read from: `search_query_log.duration_ms, 95th percentile`
+
+### recommendations.activeSubscriptions
+
+**Active alert subscriptions** · Right now
+
+Subscriptions people have turned on and not paused or turned off: an organizer's new events, a place's updates, or similar listings nearby. One person can hold several.
+
+Read from: `notification_subscription where status = active`
+
+### recommendations.liveDigests
+
+**Live digests** · Selected period
+
+Digests the builder created for real delivery in the period — at most one a day and three a week per person. Whether the push actually went out is under Push delivery.
+
+Read from: `recommendation_digest where not is_shadow, by digest_date`
+
+### recommendations.shadowDigests
+
+**Shadow digests** · Selected period
+
+Digests the builder recorded while shadow mode was on. Nobody received them; they show what the programme would send if it were live.
+
+Read from: `recommendation_digest where is_shadow, by digest_date`
+
+### recommendations.openRate
+
+**Digest open rate** · Selected period
+
+Digests that were delivered and then opened, divided by digests delivered, in the period. Shown as not available until a push has actually been delivered.
+
+Read from: `recommendation_digest where opened_at is set ÷ delivery_status = sent`
+
+### recommendations.dismissRate
+
+**Picks marked not interested** · Selected period
+
+Picks a person marked as not interested, divided by all picks they could see in the period. Above a quarter the matching is too broad and the tile turns amber.
+
+Read from: `recommendation where status = dismissed ÷ picks shown`
+
+## Field Ops
+
+### fieldOps.liveCampaigns
+
+**Live campaigns** · Right now
+
+Campaigns whose status is active, paused or winding down right now. Drafts and finished campaigns are not counted.
+
+Read from: `fieldops_campaign where status in (active, paused, winding_down)`
+
+### fieldOps.activeMembers
+
+**Active field members** · Right now
+
+Team members whose membership is active on a live campaign, added up across those campaigns. Invited and suspended members are not counted.
+
+Read from: `fieldops_campaign_member where status = active, live campaigns`
+
+### fieldOps.regions
+
+**Active regions** · Right now
+
+Regions with the status active. A campaign runs in one region and covers its territories.
+
+Read from: `fieldops_region where status = active`
+
+### fieldOps.territories
+
+**Territories mapped** · Right now
+
+Territories (towns and areas, each a centre and radius or a polygon) that have not been retired, across all regions.
+
+Read from: `fieldops_territory where status <> retired`
+
+### fieldOps.awaitingLead
+
+**Waiting on a team lead** · Right now
+
+Onboardings a member has submitted that their team lead has not yet verified, returned or rejected. An admin can decide in the lead's place.
+
+Read from: `fieldops_onboarding where status = submitted`
+
+### fieldOps.awaitingAdmin
+
+**Waiting on an admin** · Right now
+
+Verified onboardings the eligibility sweep would not pay on its own and has flagged for an admin to approve or reject, each with the reason.
+
+Read from: `fieldops_onboarding where status = flagged`
+
+### fieldOps.inHolding
+
+**Commissions in holding** · Right now
+
+Commissions earned on verified onboardings whose holding period is still running, so the sweep has not yet confirmed them. Nothing here can be paid yet.
+
+Read from: `fieldops_commission where status = pending, summed per currency`
+
+### fieldOps.readyToPay
+
+**Commissions ready to pay** · Right now
+
+Commissions the sweep has confirmed and that are waiting for someone to build a payout batch. The next batch is previewed under Payouts.
+
+Read from: `fieldops_commission where status = approved, summed per currency`
+
+### fieldOps.inPayoutBatch
+
+**Commissions in a payout batch** · Right now
+
+Commissions placed in a payout batch that is approved or still being paid. They leave this figure when each item is marked paid or failed.
+
+Read from: `fieldops_commission where status = in_payout, summed per currency`
+
+### fieldOps.paid
+
+**Commissions paid** · All time
+
+Everything the programme has ever paid its members, less the offsets written when a paid commission was reversed. A reversal never edits the original row; it adds a negative one.
+
+Read from: `fieldops_commission where status = paid, summed per currency (reversal offsets are negative rows)`
+
+### fieldOps.coverage
+
+**Territory coverage** · Right now
+
+Territories in the campaign's region that have been covered or completed, divided by all of them. A town counts as covered once a member has been assigned there and started.
+
+Read from: `fieldops_campaign_stats().territories`
+
+### fieldOps.succeeded
+
+**Successful onboardings** · All time
+
+Onboardings whose every eligibility check passed, so the commission was approved: the business is listed, its owner verified, and (if the rule asks) it did what the rule required. The same word is used on every Field Ops page for this state.
+
+Read from: `fieldops_onboarding where status = succeeded`
+
+### fieldOps.committed
+
+**Commissions committed** · All time
+
+Commissions the campaign is committed to: ready to pay, in a payout batch, and already paid, added together. Commissions still in holding are not committed yet and are not in this figure.
+
+Read from: `fieldops_campaign_stats().money: approved + in_payout + paid`
+
+### fieldOps.costPerSuccess
+
+**Cost per successful onboarding** · All time
+
+Everything committed (ready to pay, in a batch and paid) divided by the number of successful onboardings. Not shown, rather than shown as zero, while nothing has succeeded.
+
+Read from: `fieldops_campaign_stats().costPerSuccessMinor`

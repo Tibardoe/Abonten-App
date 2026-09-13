@@ -1,3 +1,4 @@
+import type { ResolvedAdminRange } from "@abonten/core/admin/adminDateRange";
 import { logger } from "@abonten/core/logger";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
@@ -12,6 +13,7 @@ import {
   assertPermission,
   recordAdminAudit,
 } from "../adminContext";
+import { SUMMARY_ROW_CAP, truncation } from "../shared/capped";
 import { dbError, displayName, namesFor } from "./rewardsAdminCore";
 
 // Admin side of the monthly rebates (Abonten Rewards Phase 6, + place visits
@@ -100,7 +102,7 @@ function mapRun(
 export async function getRebateSummaryCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  sinceDays = 90,
+  range: ResolvedAdminRange,
 ): Promise<AdminEnvelope<AdminRebateSummary>> {
   try {
     assertPermission(ctx, "rewards.view");
@@ -108,7 +110,6 @@ export async function getRebateSummaryCore(
     return denied(e);
   }
 
-  const since = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
   const [runs, events, settings, live] = await Promise.all([
     supabase
       .from("reward_rebate_run")
@@ -121,10 +122,13 @@ export async function getRebateSummaryCore(
       .from("reward_event")
       .select(
         "rule_key, status, status_reason, is_shadow, amount_minor, released_minor, basis, beneficiary_user_id",
+        { count: "exact" },
       )
       .in("rule_key", RULE_KEYS)
-      .gte("created_at", since)
-      .limit(10_000),
+      .gte("created_at", range.from)
+      .lt("created_at", range.to)
+      .order("created_at", { ascending: true })
+      .limit(SUMMARY_ROW_CAP),
     supabase
       .from("reward_program_setting")
       .select("shadow_mode")
@@ -208,7 +212,10 @@ export async function getRebateSummaryCore(
   return {
     status: 200,
     data: {
-      sinceDays,
+      sinceDays: range.days,
+      from: range.from,
+      to: range.to,
+      truncated: truncation(events.data?.length ?? 0, events.count),
       shadowMode: settings.data?.shadow_mode !== false,
       liveRules: (live.data ?? []).map((r) => r.rule_key as RuleKey),
       runs: ((runs.data ?? []) as unknown as RunRow[]).map((r) =>

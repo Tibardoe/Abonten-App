@@ -507,15 +507,26 @@ export async function listRefundsCore(
   }
 
   const rows = data ?? [];
-  const refundableById = new Map<string, number>();
-  await Promise.all(
-    rows.map(async (r) => {
-      const { data: amt } = await supabase.rpc(
-        "get_transaction_refundable_amount",
-        { p_transaction_id: r.id },
-      );
-      refundableById.set(r.id, num(amt));
-    }),
+  // One round trip for the whole page: the RPC evaluates the same
+  // get_transaction_refundable_amount() per id inside a single statement.
+  // A failure here is a 500, not a page of "GH₵0.00" that reads as "nothing
+  // to refund".
+  const { data: amounts, error: amountsError } = await supabase.rpc(
+    "admin_transaction_refundable_amounts",
+    { p_transaction_ids: rows.map((r) => r.id) },
+  );
+  if (amountsError) {
+    logger.error(`listRefundsCore refundable failed: ${amountsError.message}`);
+    return {
+      status: 500,
+      data: [],
+      nextCursor: null,
+      hasNextPage: false,
+      message: "Couldn't work out the refundable amounts.",
+    };
+  }
+  const refundableById = new Map<string, number>(
+    (amounts ?? []).map((a) => [a.transaction_id, num(a.refundable)]),
   );
 
   const mapped: RefundListItem[] = rows.map((r) => ({

@@ -193,9 +193,12 @@ export function Sidebar({
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const nav = (
+  // The same list is rendered twice — as the fixed column and inside the
+  // drawer — so each copy needs its own id, or the page carries a duplicate
+  // id and the toggle's aria-controls points at the hidden copy.
+  const nav = (id: string) => (
     <nav
-      id="console-nav"
+      id={id}
       aria-label="Console sections"
       className="flex h-full w-56 shrink-0 flex-col gap-1 border-r border-border bg-card px-3 py-4"
     >
@@ -243,7 +246,7 @@ export function Sidebar({
   return (
     <>
       {/* Wide screens: always visible. */}
-      <div className="hidden h-full lg:block">{nav}</div>
+      <div className="hidden h-full lg:block">{nav("console-nav")}</div>
 
       {/* Narrow screens: a button in the header and an off-canvas drawer. */}
       <button
@@ -252,7 +255,7 @@ export function Sidebar({
         onClick={() => setOpen(true)}
         aria-label="Open navigation"
         aria-expanded={open}
-        aria-controls="console-nav"
+        aria-controls="console-nav-drawer"
         className="fixed left-3 top-2 z-40 rounded-md border border-border bg-card p-1.5 text-muted-foreground shadow-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
       >
         <Menu className="h-4 w-4" aria-hidden="true" />
@@ -266,7 +269,7 @@ export function Sidebar({
             aria-hidden="true"
           />
           <div className="relative h-full motion-safe:animate-in motion-safe:slide-in-from-left motion-safe:duration-150">
-            {nav}
+            {nav("console-nav-drawer")}
           </div>
         </div>
       ) : null}

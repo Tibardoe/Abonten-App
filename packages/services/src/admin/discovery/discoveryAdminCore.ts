@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import type { AdminReadTruncation } from "@abonten/types/adminMetrics";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
   DiscoveryAudience,
@@ -19,6 +20,7 @@ import {
   assertPermission,
   recordAdminAudit,
 } from "../adminContext";
+import { truncation } from "../shared/capped";
 
 // Admin › Discovery: search analytics, recommendation metrics (including
 // shadow-mode projections), subscription and prompt counts, and the
@@ -104,7 +106,10 @@ export type DiscoveryOverview = {
   killSwitches: { search: boolean; recommendations: boolean };
   search: SearchInsights;
   recommendations: RecommendationMetrics;
-  deliveryBySource: Record<string, Record<string, number>>;
+  /** Recommendation pushes by delivery status, from the shared queue. */
+  recommendationDelivery: Record<string, number>;
+  /** Set when the delivery read hit its row cap. */
+  deliveryTruncated: AdminReadTruncation | null;
 };
 
 export async function getDiscoveryOverviewCore(
@@ -124,10 +129,14 @@ export async function getDiscoveryOverviewCore(
     readDiscoverySettings(supabase, { fresh: true }),
     supabase.rpc("admin_search_insights", { p_days: days }),
     supabase.rpc("admin_recommendation_metrics", { p_days: days }),
+    // Only the recommendation source is shown; reading every source under a
+    // cap could push the rows that matter past it.
     supabase
       .from("notification_delivery")
-      .select("source, status")
+      .select("status", { count: "exact" })
+      .eq("source", "recommendations")
       .gte("created_at", since)
+      .order("created_at", { ascending: false })
       .limit(50_000),
   ]);
 
@@ -138,11 +147,10 @@ export async function getDiscoveryOverviewCore(
     return { status: 500, message: "Couldn't load discovery data." };
   }
 
-  const deliveryBySource: Record<string, Record<string, number>> = {};
+  const recommendationDelivery: Record<string, number> = {};
   for (const d of delivery.data ?? []) {
-    const bucket = deliveryBySource[d.source] ?? {};
-    bucket[d.status] = (bucket[d.status] ?? 0) + 1;
-    deliveryBySource[d.source] = bucket;
+    recommendationDelivery[d.status] =
+      (recommendationDelivery[d.status] ?? 0) + 1;
   }
 
   return {
@@ -155,7 +163,8 @@ export async function getDiscoveryOverviewCore(
       },
       search: search.data as unknown as SearchInsights,
       recommendations: recs.data as unknown as RecommendationMetrics,
-      deliveryBySource,
+      recommendationDelivery,
+      deliveryTruncated: truncation(delivery.data?.length ?? 0, delivery.count),
     },
   };
 }

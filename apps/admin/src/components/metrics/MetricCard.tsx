@@ -185,9 +185,17 @@ export function MetricCard({
     }
   })();
 
+  // A drill-down card is not a link wrapped around the tile: the ⓘ inside
+  // would then sit inside the anchor, and pressing it would open the
+  // definition *and* navigate (a driven-browser check caught exactly that).
+  // Instead the link is an overlay under the content, and the ⓘ stays above
+  // it, so each control does one thing.
   const inner = (
     <Card
-      className={cn("h-full p-4", href && "transition-colors hover:bg-muted")}
+      className={cn(
+        "relative h-full p-4",
+        href && "transition-colors group-hover:bg-muted",
+      )}
     >
       <div className="flex items-center gap-1.5">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -200,6 +208,7 @@ export function MetricCard({
             caveats={tip.caveats}
             source={tip.source}
             period={period}
+            className="z-10"
           />
         ) : null}
       </div>
@@ -223,9 +232,15 @@ export function MetricCard({
   );
 
   return href ? (
-    <Link href={href} className="block h-full">
+    <div className="group relative h-full">
       {inner}
-    </Link>
+      <Link
+        href={href}
+        className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="sr-only">Go to {title}</span>
+      </Link>
+    </div>
   ) : (
     inner
   );

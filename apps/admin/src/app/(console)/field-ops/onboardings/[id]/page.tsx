@@ -127,11 +127,11 @@ export default async function FieldOpsOnboardingDetailPage({
                   <span
                     className={
                       c.ok === true
-                        ? "text-emerald-600"
+                        ? "text-success"
                         : c.ok === false
                           ? c.severity === "hard"
                             ? "text-destructive"
-                            : "text-amber-600"
+                            : "text-warning"
                           : "text-muted-foreground"
                     }
                   >

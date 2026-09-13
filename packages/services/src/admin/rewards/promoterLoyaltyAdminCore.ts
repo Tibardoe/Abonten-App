@@ -1,3 +1,4 @@
+import type { ResolvedAdminRange } from "@abonten/core/admin/adminDateRange";
 import { logger } from "@abonten/core/logger";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type {
@@ -10,6 +11,7 @@ import {
   adminError,
   assertPermission,
 } from "../adminContext";
+import { SUMMARY_ROW_CAP, truncation, worstTruncation } from "../shared/capped";
 import { displayName, namesFor } from "./rewardsAdminCore";
 
 // Admin side of Rewards Phase 8's per-sale rewards: organizer-funded
@@ -29,7 +31,7 @@ type Bucket = Partial<
 export async function getPromoterLoyaltySummaryCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  sinceDays = 30,
+  range: ResolvedAdminRange,
 ): Promise<AdminEnvelope<AdminPromoterLoyaltySummary>> {
   try {
     assertPermission(ctx, "rewards.view");
@@ -37,26 +39,30 @@ export async function getPromoterLoyaltySummaryCore(
     return adminError(e) as AdminEnvelope<never>;
   }
 
-  const since = new Date(Date.now() - sinceDays * 86_400_000).toISOString();
   const [events, offers, ledger, settings, live] = await Promise.all([
     supabase
       .from("reward_event")
       .select(
         "rule_key, status, is_shadow, amount_minor, released_minor, basis, beneficiary_user_id",
+        { count: "exact" },
       )
       .in("rule_key", ["promoter_commission", "loyalty_fee_rebate"])
-      .gte("created_at", since)
-      .limit(10_000),
+      .gte("created_at", range.from)
+      .lt("created_at", range.to)
+      .order("created_at", { ascending: true })
+      .limit(SUMMARY_ROW_CAP),
     supabase
       .from("event_promoter_commission")
       .select("event_id", { count: "exact", head: true })
       .eq("is_active", true),
     supabase
       .from("organizer_ledger_entry")
-      .select("amount")
+      .select("amount", { count: "exact" })
       .in("entry_type", ["promoter_commission", "promoter_commission_reversal"])
-      .gte("created_at", since)
-      .limit(10_000),
+      .gte("created_at", range.from)
+      .lt("created_at", range.to)
+      .order("created_at", { ascending: true })
+      .limit(SUMMARY_ROW_CAP),
     supabase
       .from("reward_program_setting")
       .select("shadow_mode")
@@ -132,7 +138,13 @@ export async function getPromoterLoyaltySummaryCore(
   return {
     status: 200,
     data: {
-      sinceDays,
+      sinceDays: range.days,
+      from: range.from,
+      to: range.to,
+      truncated: worstTruncation(
+        truncation(events.data?.length ?? 0, events.count),
+        truncation(ledger.data?.length ?? 0, ledger.count),
+      ),
       shadowMode: settings.data?.shadow_mode !== false,
       liveRules: (live.data ?? []).map(
         (r) => r.rule_key as "promoter_commission" | "loyalty_fee_rebate",

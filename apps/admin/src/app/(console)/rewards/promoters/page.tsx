@@ -1,12 +1,18 @@
-import { Badge, Card, EmptyState, PageHeader, Stat } from "@/components/ui";
+import { CapNotice } from "@/components/metrics/CapNotice";
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
+import { SectionHeading } from "@/components/metrics/SectionHeading";
+import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
 import { loadPromoters } from "@/lib/data";
+import {
+  adminRangeQuery,
+  parseAdminRangeParams,
+} from "@abonten/core/admin/adminDateRange";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { RewardEventStatus } from "@abonten/types/rewards";
 import Link from "next/link";
 import { RewardEventTable } from "../RewardEventTable";
 import { RewardsTabs } from "../RewardsTabs";
-
-const RANGES = [7, 30, 90];
 
 type Buckets = Partial<
   Record<RewardEventStatus, { count: number; amountMinor: number }>
@@ -19,6 +25,7 @@ const sum = (b: Buckets, statuses: RewardEventStatus[]) =>
     }),
     { count: 0, amountMinor: 0 },
   );
+const cedis = (minor: number) => minor / 100;
 
 // Rewards Phase 8's per-sale rewards: commissions organizers pay promoters
 // (in Abonten Credit, charged to the organizer's payout) and the loyalty fee
@@ -30,36 +37,23 @@ export default async function PromotersPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const days = RANGES.includes(Number(sp.days)) ? Number(sp.days) : 30;
+  const range = parseAdminRangeParams(sp);
   const { summary, events } = await loadPromoters(
     { cursor: sp.cursor ?? null },
-    days,
+    range,
   );
   const s = summary.data;
+  const decided = (b: Buckets) => sum(b, ["pending", "held", "released"]);
 
   return (
     <div>
       <PageHeader
         title="Promoters & loyalty"
         description="Commissions organizers pay the people whose links sell their tickets (as Abonten Credit, charged to the organizer's payout, outside the reward budget), and the loyalty fee rebate: the service fee back on every 5th ticket order to a different event."
+        actions={<RangePicker basePath="/rewards/promoters" range={range} />}
       />
       <RewardsTabs active="/rewards/promoters" />
-
-      <div className="mb-3 flex flex-wrap gap-1 text-xs">
-        {RANGES.map((d) => (
-          <Link
-            key={d}
-            href={`/rewards/promoters${d === 30 ? "" : `?days=${d}`}`}
-            className={
-              d === days
-                ? "rounded bg-primary px-2 py-1 text-primary-foreground"
-                : "rounded border border-border px-2 py-1 hover:bg-muted"
-            }
-          >
-            Last {d} days
-          </Link>
-        ))}
-      </div>
+      <RangeCaption range={range} className="mb-3" />
 
       {summary.status !== 200 || !s ? (
         <EmptyState>
@@ -67,7 +61,16 @@ export default async function PromotersPage({
         </EmptyState>
       ) : (
         <>
-          <Card className="mb-4 flex flex-wrap gap-1 p-4 text-sm">
+          {s.truncated ? (
+            <CapNotice
+              className="mb-3"
+              fetched={s.truncated.fetched}
+              total={s.truncated.total}
+              noun="decisions and ledger entries"
+            />
+          ) : null}
+
+          <Card className="mb-4 flex flex-wrap items-center gap-1 p-4 text-sm">
             <Badge
               tone={
                 s.liveRules.includes("promoter_commission")
@@ -88,43 +91,43 @@ export default async function PromotersPage({
               Loyalty fee rebate:{" "}
               {s.liveRules.includes("loyalty_fee_rebate") ? "live" : "off"}
             </Badge>
-            {s.shadowMode ? <Badge tone="warning">shadow mode</Badge> : null}
+            {s.shadowMode ? <Badge tone="warning">Shadow mode</Badge> : null}
             <span className="ml-1 text-xs text-muted-foreground">
-              Commissions also need “Capture referral links” on in Program
+              Commissions also need “Capture referral links” on in Programme
               settings.
             </span>
           </Card>
 
-          <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Stat
-              label="Events offering a commission"
-              value={String(s.activeOffers)}
-              hint="Right now."
+          <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <MetricCard
+              metric="promoters.activeOffers"
+              value={s.activeOffers}
+              period="Right now"
             />
-            <Stat
-              label={`Promoter sales (last ${s.sinceDays} days)`}
-              value={formatCredit(s.commission.revenueMinor)}
-              hint={`${sum(s.commission.byStatus, ["pending", "held", "released"]).count} order(s) through promoters' links`}
+            <MetricCard
+              metric="promoters.sales"
+              value={cedis(s.commission.revenueMinor)}
+              format="money"
+              period={range.label}
+              secondary={`${decided(s.commission.byStatus).count} order${decided(s.commission.byStatus).count === 1 ? "" : "s"} through promoters' links`}
             />
-            <Stat
-              label="Commission (pending + paid)"
-              value={formatCredit(
-                sum(s.commission.byStatus, ["pending", "held", "released"])
-                  .amountMinor,
-              )}
-              hint={`${formatCredit(s.commission.organizerChargedMinor)} charged to organizers, net of what was given back${
+            <MetricCard
+              metric="promoters.commission"
+              value={cedis(decided(s.commission.byStatus).amountMinor)}
+              format="money"
+              period={range.label}
+              secondary={`${formatCredit(s.commission.organizerChargedMinor)} charged to organizers, net of what was given back${
                 s.commission.shadow.count > 0
                   ? ` · ${formatCredit(s.commission.shadow.amountMinor)} in shadow`
                   : ""
               }`}
             />
-            <Stat
-              label="Loyalty fee rebates"
-              value={formatCredit(
-                sum(s.loyalty.byStatus, ["pending", "held", "released"])
-                  .amountMinor,
-              )}
-              hint={`${sum(s.loyalty.byStatus, ["pending", "held", "released"]).count} order(s) · ${s.loyalty.byStatus.rejected?.count ?? 0} refused${
+            <MetricCard
+              metric="loyalty.feeRebates"
+              value={cedis(decided(s.loyalty.byStatus).amountMinor)}
+              format="money"
+              period={range.label}
+              secondary={`${decided(s.loyalty.byStatus).count} order${decided(s.loyalty.byStatus).count === 1 ? "" : "s"} · ${s.loyalty.byStatus.rejected?.count ?? 0} refused${
                 s.loyalty.shadow.count > 0
                   ? ` · ${formatCredit(s.loyalty.shadow.amountMinor)} in shadow`
                   : ""
@@ -133,9 +136,13 @@ export default async function PromotersPage({
           </div>
 
           <Card className="mb-6 p-4">
-            <p className="mb-2 text-sm font-semibold">Top promoters (live)</p>
+            <p className="mb-2 text-sm font-semibold">
+              Top promoters (live) · {range.label.toLowerCase()}
+            </p>
             {s.topPromoters.length === 0 ? (
-              <p className="text-sm text-muted-foreground">None yet.</p>
+              <p className="text-sm text-muted-foreground">
+                None in {range.label.toLowerCase()}.
+              </p>
             ) : (
               <ul className="space-y-1 text-sm">
                 {s.topPromoters.map((p) => (
@@ -158,9 +165,7 @@ export default async function PromotersPage({
         </>
       )}
 
-      <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-        Decisions
-      </h3>
+      <SectionHeading title="Decisions" />
       {events.status !== 200 ? (
         <EmptyState>
           {events.message ?? "Couldn't load the decisions."}
@@ -175,7 +180,7 @@ export default async function PromotersPage({
           <RewardEventTable events={events.data} />
           {events.hasNextPage && events.nextCursor ? (
             <Link
-              href={`/rewards/promoters?cursor=${encodeURIComponent(events.nextCursor)}${days === 30 ? "" : `&days=${days}`}`}
+              href={`/rewards/promoters?cursor=${encodeURIComponent(events.nextCursor)}&${adminRangeQuery(range)}`}
               className="mt-3 inline-block text-sm text-primary hover:underline"
             >
               Older →
