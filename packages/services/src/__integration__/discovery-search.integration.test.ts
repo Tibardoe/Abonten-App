@@ -385,6 +385,17 @@ describe("unified search", () => {
     });
     expect(exactHandle.data?.[0]?.username).toBe(`${TOKEN}_hub`);
     expect(exactHandle.data?.[0]?.organizer_verified).toBe(true);
+
+    // A word start in the display name also counts; the middle of a word
+    // does not.
+    const byName = await anon.rpc("search_organizers", { p_query: "@collec" });
+    expect((byName.data ?? []).map((r) => r.id)).toContain(quietOrganizer.id);
+    const midWord = await anon.rpc("search_organizers", {
+      p_query: "@ollective",
+    });
+    expect((midWord.data ?? []).map((r) => r.id)).not.toContain(
+      quietOrganizer.id,
+    );
   });
 
   it("hides suspended organizers even on an exact handle", async () => {

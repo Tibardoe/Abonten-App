@@ -766,6 +766,69 @@ describe("recommendation engine", () => {
     expect(count).toBe(0);
   });
 
+  it("builds the day's digests in batches without repeating anyone", async () => {
+    const first = await newUser();
+    const second = await newUser();
+    const capped = await newUser();
+    for (const u of [first, second, capped]) {
+      await subscribeCore(
+        svc,
+        u.id,
+        { kind: "organizer", organizerId: organizer.id },
+        "profile",
+      );
+    }
+    const today = new Date();
+    for (let d = 1; d <= 3; d++) {
+      await svc.from("recommendation_digest").insert({
+        user_id: capped.id,
+        digest_date: new Date(today.getTime() - d * 86_400_000)
+          .toISOString()
+          .slice(0, 10),
+        is_shadow: false,
+        item_count: 1,
+        top_subject_type: "event",
+        top_subject_id: crypto.randomUUID(),
+        delivery_status: "sent",
+        opened_at: new Date().toISOString(),
+      } as never);
+    }
+    const e = await makeEvent("Batched Premiere");
+    await ageEvents([e]);
+    await setSettings({
+      generate_watermark: new Date(Date.now() - 11 * 60_000).toISOString(),
+    } as Partial<SettingsRow>);
+    await svc.rpc("recommendations_generate", { p_limit: 1000 });
+
+    // One person per run, until nobody is left for today.
+    let runs = 0;
+    for (; runs < 500; runs++) {
+      const { data, error } = await svc.rpc("recommendations_build_digest", {
+        p_limit: 1,
+        p_force: true,
+      });
+      expect(error).toBeNull();
+      const users = (data as { users: number }).users;
+      expect(users).toBeLessThanOrEqual(1);
+      if (users === 0) break;
+    }
+    expect(runs).toBeLessThan(500);
+
+    for (const u of [first, second]) {
+      const { count } = await svc
+        .from("notification")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", u.id)
+        .eq("type", "recommendation_digest");
+      expect(count).toBe(1);
+    }
+    const { data: skips } = await svc
+      .from("recommendation_digest_skip")
+      .select("reason")
+      .eq("user_id", capped.id);
+    expect((skips ?? []).map((s) => s.reason)).toEqual(["weekly_cap"]);
+  });
+
   it("in shadow mode records projections and sends nothing", async () => {
     await setSettings({ recommendations_shadow_mode: true });
     const person = await newUser();
