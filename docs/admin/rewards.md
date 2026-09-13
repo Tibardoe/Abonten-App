@@ -24,9 +24,11 @@ Source: `packages/services/src/admin/rewards/*` (`rewardsAdminCore`, `referralAd
 | **Accounts** / **[userId]** | Credit balance by scope, lots and expiries, activity, reservations, referral code, reward decisions with **risk flags and reasons** (staff-only) | **Freeze / Unfreeze** (`rewards.freeze`); **Adjust credit** (`finance.adjust`, step-up; ≥ GH₵ 500 needs a second admin to execute); **Goodwill** (`rewards.goodwill`, ≤ GH₵ 50/user/month); **Disable / enable referral code** (`rewards.freeze`) |
 | **Review queue** | Reward events held for human review (score 30–69) with flags explained | **Approve / Reject** (`rewards.review`) |
 | **Rules** | Versioned rules per key (event_referral, friend_referral_*, loyalty_fee_rebate, promoter_commission, organizer_rebate, venue_rebate, milestone, place_visits) with shadow/live | **Publish version**, **Activate / Deactivate** (`rewards.configure`, step-up) |
-| **Referrals** | Codes, touches, binds, attributions; abuse patterns | disable code |
-| **Promoters & loyalty** | Promoter commission events and organizer charges; loyalty cycles | — |
-| **Rebates** | Monthly runs, per-event decisions, failures | **Run a month now** (`rewards.configure`, step-up) |
+| **Referrals** | Over the console's period control (whole calendar days, today included): link visits, referred paid checkouts, referred ticket sales, referral rewards, cost share; friends who joined / qualified, inviter rewards, welcome credit; risk flags, top referrers; the decisions list | disable code |
+| **Promoters & loyalty** | Same period control: events offering a commission (right now), promoter sales, promoter commission with what organizers were charged, loyalty fee rebates; top promoters; the decisions list | — |
+| **Rebates** | Same period control, opening on the last 90 days: what each rule decided, the net revenue behind it, top earners, why events got nothing; the last twelve runs whatever the period; the decisions list | **Run a month now** (`rewards.configure`, step-up) |
+
+Every tile on these three pages carries its definition behind the ⓘ (`docs/admin/metrics.md`, "Rewards"). Their summaries are added up from the decisions in the period under a stated row cap; when a period holds more decisions than the cap the page says the figures are incomplete instead of presenting a partial sum as the whole.
 | **Settings** | Programme switch, audience (`staff`/`beta`/`all`), beta users, budget, risk weights, notification switches, delivery statistics (sent / waiting / skipped / failed, 7 days) | edit (`rewards.configure`, step-up) |
 
 ## Common procedures

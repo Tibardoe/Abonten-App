@@ -67,6 +67,8 @@ Every figure the console shows is defined in [metrics.md](metrics.md) — what i
 - A **trend** line compares the value with the equivalent earlier window (the caption says which). Green is good and red is bad for that metric — more refunds is red even though the number went up. "New" means the earlier window had nothing to compare against.
 - A grey **0** says what it means: "None in last 30 days", "Nothing right now" or "Nothing yet". "Not enough data" means the figure exists but the sample is too small to state honestly (under five people). "Not available" means it is not collected.
 - Statuses read as words everywhere — "Refund deducted", "Waiting on the applicant", "Clawed back" — with an icon, so colour is never the only signal.
+- An amber **"Incomplete figures"** notice above a summary means the page read more rows than it was willing to add up; choose a shorter period for exact numbers.
+- **Appearance**: the sun / moon / laptop button in the top bar switches the console between light, dark and the device's own setting. The choice is remembered on that browser.
 
 The top-bar **search** (`/search?q=`) finds users, events, places, transactions and reports by name, title, event code, Paystack reference, email or exact UUID — you only see groups you have permission to open.
 
