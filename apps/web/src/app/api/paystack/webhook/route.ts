@@ -101,9 +101,18 @@ export async function POST(req: Request) {
       // confirmation — a retried webhook delivery, or one that arrives after
       // this was already resolved another way, is a no-op rather than
       // clobbering a later state.
+      // A failed refund also releases the in-flight refund claim
+      // (claim_transaction_refund) so the customer or an admin can retry
+      // straight away instead of waiting for the claim to expire.
       const { data: updated, error: updateError } = await supabase
         .from("transaction")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString(),
+          ...(event.event === "refund.failed"
+            ? { refund_claimed_at: null }
+            : {}),
+        })
         .eq("paystack_reference", reference)
         .eq("status", "refund_pending")
         .select("id, user_id, credit_refunded_amount")

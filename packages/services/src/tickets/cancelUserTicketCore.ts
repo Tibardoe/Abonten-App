@@ -76,15 +76,32 @@ export async function cancelUserTicketCore(
     };
   }
 
-  const { error: updateStatusError } = await getSupabaseServiceClient()
-    .from("ticket")
-    .update({ status: "cancelled", updated_at: new Date().toISOString() })
-    .eq("id", ticketId)
-    .eq("user_id", userId);
+  // Compare-and-set: only the caller that actually flips the row from a
+  // live status to 'cancelled' goes on to release inventory and request the
+  // refund. The read above is not enough on its own -- two requests fired
+  // together (a double tap, a client retry) both see 'active' and would both
+  // release a seat and both start a refund.
+  const { data: flipped, error: updateStatusError } =
+    await getSupabaseServiceClient()
+      .from("ticket")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", ticketId)
+      .eq("user_id", userId)
+      .neq("status", "cancelled")
+      .select("id");
 
   if (updateStatusError) {
     logger.error(`Error updating ticket status:${updateStatusError.message}`);
     return { status: 500, message: "Something went wrong!" };
+  }
+
+  if (!flipped || flipped.length === 0) {
+    return {
+      status: 200,
+      message: "Ticket cancelled successfully",
+      eventId: eventId ?? undefined,
+      eventCode: eventCode ?? undefined,
+    };
   }
 
   let refundMessage: string | null = null;

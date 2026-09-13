@@ -462,9 +462,11 @@ describe("paying for tickets with credit", () => {
       );
     };
     const failCashRefund = async () => {
+      // Mirrors the webhook's refund.failed branch: back to successful and
+      // the in-flight refund claim released so a retry is allowed at once.
       await service
         .from("transaction")
-        .update({ status: "successful" })
+        .update({ status: "successful", refund_claimed_at: null })
         .eq("id", txn?.id as string)
         .eq("status", "refund_pending");
       const { error } = await service.rpc("record_refund_release", {
