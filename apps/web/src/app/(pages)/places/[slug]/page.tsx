@@ -6,6 +6,8 @@ import StarRatingDisplay from "@/components/atoms/Rating";
 import ReportButton from "@/components/atoms/ReportButton";
 import EventCard from "@/components/molecules/EventCard";
 import LocationMapPreview from "@/components/molecules/LocationMapPreview";
+import SubscribeBell from "@/discovery/molecules/SubscribeBell";
+import PlacePromptHost from "@/discovery/organisms/PlacePromptHost";
 import PlaceViewLogger from "@/places/atoms/PlaceViewLogger";
 import AddPlaceToFavoriteButton from "@/places/molecules/AddPlaceToFavoriteButton";
 import ClaimPlaceButton from "@/places/molecules/ClaimPlaceButton";
@@ -154,6 +156,7 @@ export default async function page({
   return (
     <div className="bg-background">
       <PlaceViewLogger placeId={place.id} />
+      <PlacePromptHost placeId={place.id} />
 
       {/* Hero Section */}
       <div className="relative h-72 md:h-[500px] bg-muted">
@@ -182,6 +185,14 @@ export default async function page({
                 ownerId={place.owner_id}
               />
               <AddPlaceToFavoriteButton placeId={place.id} compact />
+              <SubscribeBell
+                kind="place"
+                targetId={place.id}
+                ownerId={place.owner_id}
+                label={place.name}
+                compact
+                className="border-white/40 bg-black/20 text-white hover:bg-black/30"
+              />
               <ReportButton
                 targetType="place"
                 targetId={place.id}

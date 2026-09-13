@@ -12,6 +12,7 @@ import Higlight from "../molecules/Highlight";
 import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
 import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerified";
+import SubscribeBell from "@/discovery/molecules/SubscribeBell";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 type LayoutUserProp = {
   username: string;
@@ -91,6 +92,14 @@ export default async function ProfileDetails({
             </div>
           ) : (
             <div className="flex items-center gap-3">
+              {Number(data?.total_posts ?? 0) > 0 ? (
+                <SubscribeBell
+                  kind="organizer"
+                  targetId={userDetails.data.user_id}
+                  ownerId={userDetails.data.user_id}
+                  label={`@${data?.username ?? username}`}
+                />
+              ) : null}
               <AddReviewButton username={username} />
               <ReportButton
                 targetType="user"
@@ -201,6 +210,14 @@ export default async function ProfileDetails({
               </div>
             ) : (
               <div className="col-span-2 flex items-center gap-3 font-bold">
+                {Number(data?.total_posts ?? 0) > 0 ? (
+                  <SubscribeBell
+                    kind="organizer"
+                    targetId={userDetails.data.user_id}
+                    ownerId={userDetails.data.user_id}
+                    label={`@${data?.username ?? username}`}
+                  />
+                ) : null}
                 <AddReviewButton username={username} />
                 <ReportButton
                   targetType="user"

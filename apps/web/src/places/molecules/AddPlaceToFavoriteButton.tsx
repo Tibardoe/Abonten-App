@@ -3,6 +3,7 @@
 import { addPlaceToFavorite } from "@/actions/addPlaceToFavorite";
 import { checkIfPlaceIsFavorited } from "@/actions/checkIfPlaceIsFavorited";
 import { removePlaceFromFavorite } from "@/actions/removePlaceFromFavorite";
+import { announcePlaceInteraction } from "@/discovery/placeInteraction";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -75,6 +76,13 @@ export default function AddPlaceToFavoriteButton({
         context?.previousState,
       );
       toast.error("Something went wrong. Please try again later.");
+    },
+
+    onSuccess: (response) => {
+      // Adding (not removing) a favorite may lead to a "Like this place?" prompt.
+      if (!isFavorite && response && response.status === 200) {
+        announcePlaceInteraction({ placeId, trigger: "favorite" });
+      }
     },
 
     onSettled: () => {

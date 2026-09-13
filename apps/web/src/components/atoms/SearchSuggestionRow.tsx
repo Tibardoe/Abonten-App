@@ -9,6 +9,8 @@ type SearchSuggestionRowProps = {
   subtitle?: string;
   imageSrc?: string;
   icon?: ReactNode;
+  /** Small trailing mark next to the title, e.g. a Verified tick. */
+  badge?: ReactNode;
   highlighted: boolean;
   onSelect: () => void;
   onMouseEnter: () => void;
@@ -25,6 +27,7 @@ export default function SearchSuggestionRow({
   subtitle,
   imageSrc,
   icon,
+  badge,
   highlighted,
   onSelect,
   onMouseEnter,
@@ -58,8 +61,9 @@ export default function SearchSuggestionRow({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium text-popover-foreground">
-          {title}
+        <span className="flex items-center gap-1 text-sm font-medium text-popover-foreground">
+          <span className="truncate">{title}</span>
+          {badge ? <span className="shrink-0">{badge}</span> : null}
         </span>
         {subtitle && (
           <span className="block truncate text-xs text-muted-foreground">

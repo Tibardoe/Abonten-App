@@ -1,9 +1,19 @@
+import { getDiscoveryProgram } from "@/actions/discovery/getDiscoveryProgram";
+import { searchDiscovery } from "@/actions/discovery/searchDiscovery";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
+import DiscoveryResults from "@/discovery/organisms/DiscoveryResults";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { parseFilters } from "@abonten/core/parseFilterModalQueries";
+import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
 import Link from "next/link";
 import SearchResultsList from "./SearchResultsList";
+
+const MODES: SearchMode[] = ["all", "events", "places", "organizers"];
+
+function one(value: string | string[] | undefined): string {
+  return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+}
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -15,6 +25,53 @@ export default async function page({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const queryParams = await searchParams;
+
+  // Unified search (Discovery). Only when the programme is on for this
+  // visitor and there is something to search; otherwise the filter-only
+  // page below is unchanged.
+  const q = one(queryParams.q);
+  const organizerId = one(queryParams.organizer);
+  const { data: program } = await getDiscoveryProgram();
+  if (program.searchV2 && (q || organizerId)) {
+    const typeParam = one(queryParams.type) as SearchMode;
+    const filters = parseFilters(queryParams);
+    const request: SearchRequest = {
+      q,
+      mode: organizerId
+        ? "events"
+        : MODES.includes(typeParam)
+          ? typeParam
+          : "all",
+      organizerId: organizerId || null,
+      category: one(queryParams.category) || null,
+      types: one(queryParams.types)
+        ? one(queryParams.types).split(",").filter(Boolean)
+        : null,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
+      minRating: filters.minRating,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+      lat: filters.lat,
+      lng: filters.lng,
+      radiusKm: one(queryParams.distance) ? filters.maxDistanceKm : null,
+    };
+    const initial = await searchDiscovery(request);
+    const by = one(queryParams.by);
+    return (
+      <div className="space-y-5">
+        <FilterSearchBar />
+        <DiscoveryResults
+          key={JSON.stringify(request)}
+          request={request}
+          initial={initial}
+          organizerLabel={by ? `@${by}` : null}
+          showPlaces={program.placeSearch}
+          showOrganizers={program.organizerSearch}
+        />
+      </div>
+    );
+  }
 
   // FilterModalPopup writes the Type selection under the plural `types` key
   // (comma-joined) -- getQueriedEvents' `type` param expects an array.

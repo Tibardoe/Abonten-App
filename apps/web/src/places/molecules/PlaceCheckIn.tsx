@@ -2,6 +2,7 @@
 
 import { recordPlaceVisit } from "@/actions/recordPlaceVisit";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { announcePlaceInteraction } from "@/discovery/placeInteraction";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -51,6 +52,9 @@ export default function PlaceCheckIn({
           lng: pos.coords.longitude,
           accuracyM: pos.coords.accuracy,
         });
+        if (res.status === 200) {
+          announcePlaceInteraction({ placeId, trigger: "visit" });
+        }
         setState({
           kind: "done",
           ok: res.status === 200,

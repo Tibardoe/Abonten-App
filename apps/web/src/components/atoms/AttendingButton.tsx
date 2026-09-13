@@ -4,6 +4,7 @@ import cancelUserTicket from "@/actions/cancelUserTicket";
 import { getEventAttendanceCount } from "@/actions/getAttendace";
 import getUserFreeRegistrationStatus from "@/actions/getUserFreeRegistrationStatus";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
+import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -13,6 +14,7 @@ import {
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { FiCheck } from "react-icons/fi";
 
 type AttendingButtonProps = {
@@ -44,6 +46,9 @@ export default function AttendingButton({
 
   const requireAuth = useRequireAuth();
   const queryClient = useQueryClient();
+  // Set only by an RSVP made in this visit, so the opt-in never appears for
+  // someone who was already attending when the page loaded.
+  const [justRegistered, setJustRegistered] = useState(false);
 
   const { data: registrationStatus } = useQuery({
     queryKey: ["free-registration-status", eventId],
@@ -123,6 +128,7 @@ export default function AttendingButton({
     },
 
     onSuccess: (response) => {
+      if (response.status === 200 && !isAttending) setJustRegistered(true);
       if (response.status !== 200) {
         toast.error(
           response.message ?? "Something went wrong. Please try again.",
@@ -205,6 +211,10 @@ export default function AttendingButton({
           {isPending ? "Registering..." : "I'm Attending"}
         </button>
       )}
+
+      {justRegistered && isAttending ? (
+        <RecommendationPromptCard context={{ context: "rsvp", eventId }} />
+      ) : null}
 
       {attendanceCount !== null && (
         <p className="text-sm text-muted-foreground text-center">

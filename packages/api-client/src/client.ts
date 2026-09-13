@@ -1,4 +1,22 @@
 import type {
+  DiscoveryProgram,
+  NotificationPreferences,
+  NotificationPreferencesPatch,
+  NotificationSubscription,
+  PromptContext,
+  PromptOffer,
+  PromptResponse,
+  RecommendationItem,
+  SubscriptionSource,
+  SubscriptionStatusResult,
+  SubscriptionTarget,
+} from "@abonten/types/discoveryType";
+import type {
+  SearchClickInput,
+  SearchRequest,
+  SearchResults,
+} from "@abonten/types/searchType";
+import type {
   AddMomoWalletBody,
   AddPayoutAccountBody,
   AddPayoutAccountResult,
@@ -2004,6 +2022,130 @@ export function createApiClient(options: ApiClientOptions) {
             { method: "POST", body, auth: true },
           );
         },
+      },
+    },
+
+    /**
+     * Discovery (PROJECT.md §31): unified search across events, places and
+     * organizers. Submitted searches only; type-ahead calls the
+     * search_suggest RPC directly. Works signed out.
+     */
+    search: {
+      query(params: SearchRequest) {
+        const qs = new URLSearchParams();
+        for (const [key, value] of Object.entries(params)) {
+          if (value === undefined || value === null || value === "") continue;
+          qs.set(key, Array.isArray(value) ? value.join(",") : String(value));
+        }
+        return request<SearchResults>(`/api/mobile/search?${qs.toString()}`, {
+          method: "GET",
+          auth: true,
+        });
+      },
+      click(body: SearchClickInput) {
+        return request<ApiEnvelope<never>>("/api/mobile/search/click", {
+          method: "POST",
+          body,
+          auth: false,
+        });
+      },
+    },
+
+    discovery: {
+      /** Which Discovery features the caller may use. Ships all-off. */
+      program() {
+        return request<ApiEnvelope<DiscoveryProgram>>(
+          "/api/mobile/discovery/program",
+          { method: "GET", auth: true },
+        );
+      },
+    },
+
+    alerts: {
+      preferences() {
+        return request<ApiEnvelope<NotificationPreferences>>(
+          "/api/mobile/notifications/preferences",
+          { method: "GET", auth: true },
+        );
+      },
+      updatePreferences(body: NotificationPreferencesPatch) {
+        return request<ApiEnvelope<NotificationPreferences>>(
+          "/api/mobile/notifications/preferences",
+          { method: "PUT", body, auth: true },
+        );
+      },
+      subscriptions() {
+        return request<ApiEnvelope<NotificationSubscription[]>>(
+          "/api/mobile/notifications/subscriptions",
+          { method: "GET", auth: true },
+        );
+      },
+      subscribe(
+        target: SubscriptionTarget,
+        source: Extract<
+          SubscriptionSource,
+          "profile" | "search" | "settings"
+        > = "profile",
+      ) {
+        return request<ApiEnvelope<{ subscriptionId: string }>>(
+          "/api/mobile/notifications/subscriptions",
+          { method: "POST", body: { target, source }, auth: true },
+        );
+      },
+      unsubscribe(subscriptionId: string) {
+        return request<ApiEnvelope<{ subscriptionId: string }>>(
+          `/api/mobile/notifications/subscriptions/${encodeURIComponent(subscriptionId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      status(kind: "organizer" | "place", targetId: string) {
+        const qs = new URLSearchParams({ kind, targetId }).toString();
+        return request<ApiEnvelope<SubscriptionStatusResult>>(
+          `/api/mobile/notifications/subscriptions/status?${qs}`,
+          { method: "GET", auth: true },
+        );
+      },
+      prompt(context: PromptContext) {
+        const qs = new URLSearchParams(
+          context as unknown as Record<string, string>,
+        ).toString();
+        return request<ApiEnvelope<PromptOffer>>(
+          `/api/mobile/notifications/prompt?${qs}`,
+          { method: "GET", auth: true },
+        );
+      },
+      promptShown(context: PromptContext) {
+        return request<ApiEnvelope<{ recorded: boolean }>>(
+          "/api/mobile/notifications/prompt/shown",
+          { method: "POST", body: context, auth: true },
+        );
+      },
+      respondToPrompt(body: PromptResponse) {
+        return request<ApiEnvelope<{ subscribed: string[] }>>(
+          "/api/mobile/notifications/prompt/respond",
+          { method: "POST", body, auth: true },
+        );
+      },
+    },
+
+    recommendations: {
+      list() {
+        return request<ApiEnvelope<RecommendationItem[]>>(
+          "/api/mobile/recommendations",
+          { method: "GET", auth: true },
+        );
+      },
+      dismiss(subjectType: "event" | "place", subjectId: string) {
+        return request<ApiEnvelope<{ dismissed: boolean; paused: boolean }>>(
+          "/api/mobile/recommendations/dismiss",
+          { method: "POST", body: { subjectType, subjectId }, auth: true },
+        );
+      },
+      opened(subjectType: "event" | "place", subjectId: string) {
+        return request<ApiEnvelope<never>>(
+          "/api/mobile/recommendations/opened",
+          { method: "POST", body: { subjectType, subjectId }, auth: true },
+        );
       },
     },
 

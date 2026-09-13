@@ -2,6 +2,8 @@
 
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { useDiscoveryProgram } from "@/hooks/useDiscoveryProgram";
+import { useDiscoverySuggestions } from "@/hooks/useDiscoverySuggestions";
 import {
   MIN_SUGGESTION_QUERY_LENGTH,
   useSearchSuggestions,
@@ -14,6 +16,7 @@ import {
   removeRecentSearch,
 } from "@/utils/recentSearches";
 import { generateSlug } from "@abonten/core/geerateSlug";
+import { parseSearchQuery } from "@abonten/core/search/parseSearchQuery";
 import type {
   SuggestionItem,
   SuggestionSection,
@@ -243,10 +246,31 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
   }).length;
   const hasActiveFilters = activeFilterCount > 0;
 
-  const buildSearchHref = (text: string) =>
-    activeTab === "places"
+  // Unified search (Discovery), when the programme is on for this visitor:
+  // one /search?q= page for events, places and organizers, with "@handle"
+  // narrowing to organizers. Otherwise the legacy routes below.
+  const { program } = useDiscoveryProgram();
+  const unified = program.searchV2;
+
+  const buildSearchHref = (text: string) => {
+    if (unified) {
+      const params = new URLSearchParams({ q: text });
+      if (isExplorePage && activeTab === "places" && program.placeSearch) {
+        params.set("type", "places");
+      }
+      return `/search?${params.toString()}`;
+    }
+    return activeTab === "places"
       ? `/explore/${locationSlug}?tab=places&q=${encodeURIComponent(text)}`
       : `/search/${generateSlug(text) ?? ""}`;
+  };
+
+  // The query lives in the URL on the unified results page: show it in the
+  // box instead of an empty field after a search or a refresh.
+  const urlQuery = pathname === "/search" ? (searchParams.get("q") ?? "") : "";
+  useEffect(() => {
+    if (urlQuery) setSearchText(urlQuery);
+  }, [urlQuery]);
 
   const searchHref = buildSearchHref(searchText);
 
@@ -277,13 +301,13 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
   const rawTrimmedQuery = searchText.trim();
   const isTyping = rawTrimmedQuery.length >= MIN_SUGGESTION_QUERY_LENGTH;
 
-  const {
-    events,
-    places,
-    placeCategories,
-    isLoading: isLoadingSuggestions,
-    query: debouncedQuery,
-  } = useSearchSuggestions(searchText, includePlaces);
+  const legacy = useSearchSuggestions(unified ? "" : searchText, includePlaces);
+  const discovery = useDiscoverySuggestions(searchText, unified);
+  const { events, places, placeCategories } = legacy;
+  const isLoadingSuggestions = unified ? discovery.isLoading : legacy.isLoading;
+  const debouncedQuery = unified ? discovery.query : legacy.query;
+  const organizerQuery =
+    unified && parseSearchQuery(searchText).kind === "organizer";
 
   const sections: SuggestionSection[] = [];
   let noMatches = false;
@@ -310,6 +334,61 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
       }));
       sections.push({ label: "Browse categories", items: shortcutItems });
     }
+  } else if (unified) {
+    const hits = (list: typeof discovery.events): SuggestionItem[] =>
+      list.map((hit) => ({
+        kind: "hit",
+        key: `${hit.entityType}:${hit.id}`,
+        hit,
+      }));
+    const eventHits = organizerQuery ? [] : hits(discovery.events);
+    const placeHits = organizerQuery ? [] : hits(discovery.places);
+    const organizerHits = hits(discovery.organizers);
+    const categoryItems: SuggestionItem[] = organizerQuery
+      ? []
+      : matchCategoryNames(
+          rawTrimmedQuery,
+          EVENT_CATEGORY_NAMES,
+          EVENT_CATEGORY_SUGGESTION_LIMIT,
+        ).map((category) => ({
+          kind: "eventCategory" as const,
+          key: `cat:event:${encodeURIComponent(category)}`,
+          category,
+        }));
+
+    if (organizerHits.length > 0 && organizerQuery)
+      sections.push({ label: "Organizers", items: organizerHits });
+    if (eventHits.length > 0)
+      sections.push({ label: "Events", items: eventHits });
+    if (placeHits.length > 0)
+      sections.push({ label: "Places", items: placeHits });
+    if (organizerHits.length > 0 && !organizerQuery)
+      sections.push({ label: "Organizers", items: organizerHits });
+    if (categoryItems.length > 0)
+      sections.push({ label: "Categories", items: categoryItems });
+
+    const stillDebouncing =
+      debouncedQuery !== parseSearchQuery(searchText).normalized;
+    noMatches =
+      !isLoadingSuggestions &&
+      !stillDebouncing &&
+      eventHits.length +
+        placeHits.length +
+        organizerHits.length +
+        categoryItems.length ===
+        0;
+
+    sections.push({
+      label: "",
+      items: [
+        {
+          kind: "literal",
+          key: "literal",
+          text: rawTrimmedQuery,
+          organizers: organizerQuery,
+        },
+      ],
+    });
   } else {
     const eventItems: SuggestionItem[] = events.map((event) => ({
       kind: "event",
@@ -389,6 +468,21 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
 
   const handleSelectItem = (item: SuggestionItem) => {
     switch (item.kind) {
+      case "hit": {
+        const { hit } = item;
+        setIsOpen(false);
+        if (hit.entityType === "organizer") {
+          recordRecentSearch(`@${hit.label}`);
+          router.push(`/user/${hit.slug ?? hit.label}/posts`);
+        } else if (hit.entityType === "place") {
+          recordRecentSearch(hit.label);
+          router.push(`/places/${hit.slug}`);
+        } else {
+          recordRecentSearch(hit.label);
+          router.push(`/events/${(hit.eventCode ?? "").toLowerCase()}`);
+        }
+        return;
+      }
       case "event":
         recordRecentSearch(item.event.title);
         setIsOpen(false);
@@ -531,7 +625,11 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
           aria-activedescendant={highlightedKey ?? undefined}
           aria-autocomplete="list"
           autoComplete="off"
-          placeholder="Search events, places, restaurants, activities..."
+          placeholder={
+            unified
+              ? "Search events, places, organizers or @handle"
+              : "Search events, places, restaurants, activities..."
+          }
           value={searchText}
           onChange={(e) => {
             setSearchText(e.target.value);
