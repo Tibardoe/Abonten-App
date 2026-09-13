@@ -1,4 +1,5 @@
 import { StepUpButton } from "@/components/StepUpButton";
+import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
 import {
   Badge,
   Card,
@@ -12,29 +13,13 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadRewardsOverview } from "@/lib/data";
+import { parseAdminRangeParams } from "@abonten/core/admin/adminDateRange";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import type { CreditJournalType } from "@abonten/types/rewards";
 import Link from "next/link";
 import { AdjustmentDecision } from "./AdjustmentDecision";
 import { RewardsTabs } from "./RewardsTabs";
-
-const RANGES = [
-  { key: "today", label: "Today", days: 0 },
-  { key: "7d", label: "7 days", days: 7 },
-  { key: "30d", label: "30 days", days: 30 },
-  { key: "90d", label: "90 days", days: 90 },
-] as const;
-
-// Accra is UTC+0 all year, so UTC day boundaries are local ones.
-function rangeBounds(key: string): { from: string; to: string } {
-  const range = RANGES.find((r) => r.key === key) ?? RANGES[2];
-  const to = new Date();
-  const from = new Date();
-  from.setUTCHours(0, 0, 0, 0);
-  if (range.days > 0) from.setUTCDate(from.getUTCDate() - range.days + 1);
-  return { from: from.toISOString(), to: to.toISOString() };
-}
 
 const FLOW_LABEL: Partial<Record<CreditJournalType, string>> = {
   "reward.accrue": "Rewards earned (pending)",
@@ -89,10 +74,8 @@ export default async function RewardsOverviewPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const rangeKey: string = RANGES.find((r) => r.key === sp.range)?.key ?? "30d";
-  const { ctx, overview, pending } = await loadRewardsOverview(
-    rangeBounds(rangeKey),
-  );
+  const range = parseAdminRangeParams(sp);
+  const { ctx, overview, pending } = await loadRewardsOverview(range);
   const canAdjust = ctx.permissions.includes("finance.adjust");
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
@@ -103,26 +86,10 @@ export default async function RewardsOverviewPage({
       <PageHeader
         title="Rewards"
         description="Abonten Credit: outstanding liability, credit movement and ledger health."
-        actions={
-          <div className="flex gap-1">
-            {RANGES.map((r) => (
-              <Link
-                key={r.key}
-                href={`/rewards?range=${r.key}`}
-                className={cn(
-                  "rounded px-2 py-1 text-xs",
-                  rangeKey === r.key
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border hover:bg-muted",
-                )}
-              >
-                {r.label}
-              </Link>
-            ))}
-          </div>
-        }
+        actions={<RangePicker basePath="/rewards" range={range} />}
       />
       <RewardsTabs active="/rewards" />
+      <RangeCaption range={range} className="mb-3" />
 
       {overview.status !== 200 || !overview.data ? (
         <EmptyState>
@@ -224,7 +191,7 @@ export default async function RewardsOverviewPage({
           </div>
 
           <h3 className="mb-2 mt-5 text-sm font-semibold text-muted-foreground">
-            Credit movement in this range
+            Credit movement · {range.label.toLowerCase()}
           </h3>
           {Object.keys(overview.data.flows).length === 0 ? (
             <EmptyState>No credit moved in this range.</EmptyState>

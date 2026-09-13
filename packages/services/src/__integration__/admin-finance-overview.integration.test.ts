@@ -58,6 +58,16 @@ const to = new Date(Date.now() + 60 * 60 * 1000).toISOString();
 type Overview = NonNullable<
   Awaited<ReturnType<typeof getFinanceOverviewCore>>["data"]
 >;
+// The window the fixtures live in. Resolved per call so its end is always
+// "now": a range captured earlier would exclude rows written since.
+const fixtureRange = () => ({
+  ...resolveAdminRange("30d"),
+  key: "custom" as const,
+  from,
+  to,
+  prevFrom: from,
+  prevTo: from,
+});
 type Kpis = NonNullable<
   Awaited<ReturnType<typeof getDashboardCore>>["data"]
 >["current"];
@@ -65,27 +75,16 @@ let baseOverview: Overview;
 let baseKpis: Kpis;
 
 async function overview(): Promise<Overview> {
-  const res = await getFinanceOverviewCore(service, ctx, {
-    range: "custom",
-    from,
-    to,
-  });
+  const res = await getFinanceOverviewCore(service, ctx, fixtureRange());
   expect(res.status).toBe(200);
   if (!res.data) throw new Error(res.message ?? "no data");
   return res.data;
 }
 
 async function kpis(): Promise<Kpis> {
-  const res = await getDashboardCore(service, ctx, {
-    ...resolveAdminRange("30d"),
-    key: "custom",
-    from,
-    to,
-    // The dashboard compares against the previous window; this fixture only
-    // cares about the current one, so point the comparison at itself.
-    prevFrom: from,
-    prevTo: from,
-  });
+  // The dashboard compares against the previous window; this fixture only
+  // cares about the current one, so the comparison points at itself.
+  const res = await getDashboardCore(service, ctx, fixtureRange());
   expect(res.status).toBe(200);
   if (!res.data) throw new Error(res.message ?? "no data");
   return res.data.current;
@@ -310,19 +309,28 @@ describe("admin finance overview", () => {
 
     // 200 + 100 from the two `fee` rows. The -200 refund mirror must not be
     // folded in, or "gross" would silently mean "net of refunds".
-    expect(d.ticketRevenue - baseOverview.ticketRevenue).toBe(300);
-    expect(d.serviceFeeRevenue - baseOverview.serviceFeeRevenue).toBe(15);
-    expect(d.totalCustomerPayments - baseOverview.totalCustomerPayments).toBe(
+    expect(d.current.ticketRevenue - baseOverview.current.ticketRevenue).toBe(
+      300,
+    );
+    expect(
+      d.current.serviceFeeRevenue - baseOverview.current.serviceFeeRevenue,
+    ).toBe(15);
+    expect(d.current.totalCharged - baseOverview.current.totalCharged).toBe(
       315,
     );
 
     // Only the row whose processing cost Paystack reported contributes: the
     // NULL-cost one is unknown, not zero.
-    expect(d.netPlatformRevenue - baseOverview.netPlatformRevenue).toBe(7);
-    expect(d.processingCost - baseOverview.processingCost).toBe(3);
-    expect(d.feeEntries - baseOverview.feeEntries).toBe(2);
     expect(
-      d.feeEntriesWithKnownCost - baseOverview.feeEntriesWithKnownCost,
+      d.current.netPlatformRevenue - baseOverview.current.netPlatformRevenue,
+    ).toBe(7);
+    expect(d.current.processingCost - baseOverview.current.processingCost).toBe(
+      3,
+    );
+    expect(d.current.feeEntries - baseOverview.current.feeEntries).toBe(2);
+    expect(
+      d.current.feeEntriesWithKnownCost -
+        baseOverview.current.feeEntriesWithKnownCost,
     ).toBe(1);
   });
 
@@ -332,8 +340,10 @@ describe("admin finance overview", () => {
     // One refund issued, 200 sent back: the 10 service fee is retained and
     // the charge was 210, so the old "sum transaction.amount" reading of 210
     // would have been wrong.
-    expect(d.refundsCompleted - baseOverview.refundsCompleted).toBe(1);
-    expect(d.refundsCompletedAmount - baseOverview.refundsCompletedAmount).toBe(
+    expect(d.current.refundsIssued - baseOverview.current.refundsIssued).toBe(
+      1,
+    );
+    expect(d.current.cashRefunded - baseOverview.current.cashRefunded).toBe(
       200,
     );
 
@@ -360,6 +370,25 @@ describe("admin finance overview", () => {
     expect(d.outstanding).toBe(-250);
   });
 
+  it("splits what is payable today from what is still settling", async () => {
+    const res = await getOrganizerFinanceCore(service, ctx, organizer.id);
+    const d = res.data;
+    if (!d) throw new Error("no data");
+
+    // The fixture's event is in the future, so nothing has settled: every
+    // penny is pending and none of it can be paid out yet.
+    expect(d.pendingSettlement).toBe(0);
+    expect(d.available).toBe(-250);
+    // What an organizer may withdraw is checked against exactly this figure.
+    const { data: allowed } = await service.rpc("admin_organizer_balance", {
+      p_organizer_id: organizer.id,
+    });
+    const ghs = (allowed as { currency: string; available: number }[]).find(
+      (r) => r.currency === "GHS",
+    );
+    expect(ghs?.available).toBe(d.available);
+  });
+
   it("matches the organizer's own finance figures", async () => {
     // get_organizer_finance_overview() runs as the organizer (auth.uid()) and
     // is what they see on their own Finances page. The admin console must
@@ -378,6 +407,10 @@ describe("admin finance overview", () => {
     // total_earnings is the whole earning family, the same set the admin
     // "earned" figure sums (earnings + refund deductions + holds).
     expect(Number(ghs.total_earnings)).toBe(d.earned - d.held);
+    // And the two halves the console now shows separately come from the same
+    // rule, so the organizer and the admin can never read different numbers.
+    expect(Number(ghs.pending_balance)).toBe(d.pendingSettlement);
+    expect(Number(ghs.available_balance)).toBe(d.available);
   });
 });
 

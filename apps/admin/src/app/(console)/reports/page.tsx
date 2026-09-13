@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   EmptyState,
@@ -6,8 +7,6 @@ import {
   Td,
   Th,
   cn,
-  priorityTone,
-  reportStatusTone,
   timeAgo,
 } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
@@ -155,14 +154,10 @@ export default async function ReportsPage({
                       </span>
                     </Td>
                     <Td>
-                      <Badge tone={priorityTone(r.priority)}>
-                        {r.priority}
-                      </Badge>
+                      <StatusBadge family="reportPriority" value={r.priority} />
                     </Td>
                     <Td>
-                      <Badge tone={reportStatusTone(r.status)}>
-                        {r.status.replace("_", " ")}
-                      </Badge>
+                      <StatusBadge family="report" value={r.status} />
                     </Td>
                     <Td className="tabular-nums">{r.targetReportCount}</Td>
                     <Td className="whitespace-nowrap text-muted-foreground">
@@ -223,9 +218,10 @@ export default async function ReportsPage({
                   <Td className="tabular-nums">{g.openCount}</Td>
                   <Td className="tabular-nums">{g.reportCount}</Td>
                   <Td>
-                    <Badge tone={priorityTone(g.highestPriority)}>
-                      {g.highestPriority}
-                    </Badge>
+                    <StatusBadge
+                      family="reportPriority"
+                      value={g.highestPriority}
+                    />
                   </Td>
                   <Td className="text-xs text-muted-foreground">
                     {g.categories

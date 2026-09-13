@@ -10725,9 +10725,22 @@ export type Database = {
         Returns: Json;
       };
       admin_effective_permissions: { Args: never; Returns: string[] };
+      admin_finance_overview: {
+        Args: {
+          p_from: string;
+          p_prev_from: string;
+          p_prev_to: string;
+          p_to: string;
+        };
+        Returns: Json;
+      };
       admin_has_permission: {
         Args: { p_permission: string };
         Returns: boolean;
+      };
+      admin_organizer_balance: {
+        Args: { p_organizer_id?: string };
+        Returns: Json;
       };
       admin_platform_analytics: {
         Args: {

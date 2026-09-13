@@ -567,6 +567,8 @@ export type Incident = {
   updatedAt: string;
 };
 
+import type { AdminOrganizerBalance } from "./adminMetrics";
+
 // ─────────────────────────────────────────────────────────────
 // Dashboard
 // ─────────────────────────────────────────────────────────────
@@ -1102,11 +1104,24 @@ export type PayoutReviewEvent = {
 export type OrganizerFinanceSummary = {
   organizerId: string;
   organizerName: string | null;
+  /** The organizer's primary currency; anything else is in otherCurrencies. */
   currency: string;
+  /** Ticket sales before refunds, plus promoter commission. */
   earned: number;
+  /** Refunds taken back, from the moment each was requested. */
   held: number;
+  /** Paid out, plus anything reserved for a payout in flight. */
   paidOut: number;
+  /** earned - refunds - paid out. Negative after a post-payout refund. */
   outstanding: number;
+  /** Earned but not payable yet: an event settles 48 hours after it ends. */
+  pendingSettlement: number;
+  /** Payable right now — what a payout is checked against. */
+  available: number;
+  payoutsInFlight: number;
+  payoutsInFlightAmount: number;
+  /** Money in any currency other than the primary one, never summed with it. */
+  otherCurrencies: AdminOrganizerBalance[];
   payoutAccounts: {
     id: string;
     accountType: string | null;

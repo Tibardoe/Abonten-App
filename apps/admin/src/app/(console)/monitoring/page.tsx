@@ -9,6 +9,7 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadMonitoring } from "@/lib/data";
+import { healthCheckLabel } from "@abonten/core/admin/statusLabels";
 import type { HealthCheckSnapshot } from "@abonten/types/adminTypes";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { ErrorGroupRow } from "./ErrorGroupRow";
@@ -16,20 +17,6 @@ import { IncidentPanel } from "./IncidentPanel";
 import { SentryCheckButton } from "./SentryCheckButton";
 
 // Friendly labels for the health check keys (the raw keys are terse).
-const HEALTH_LABELS: Record<string, string> = {
-  self: "Endpoint reachability",
-  db: "Database",
-  auth: "Auth",
-  storage: "Storage",
-  paystack: "Paystack",
-  resend: "Resend (email)",
-  hubtel: "Hubtel (SMS/OTP)",
-  cloudinary: "Cloudinary",
-  push: "Expo push",
-  rewards: "Rewards engine",
-  fieldops: "Field Ops sweep",
-  weekly: "Abonten Weekly schedule",
-};
 
 // Pull the human-readable failure cause out of a down check's detail blob.
 function failureNote(detail: Record<string, unknown> | null): string | null {
@@ -127,9 +114,7 @@ export default async function MonitoringPage() {
                 <Card key={h.key} className="flex flex-col gap-1.5 p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-medium">
-                        {HEALTH_LABELS[h.key] ?? h.key}
-                      </p>
+                      <p className="font-medium">{healthCheckLabel(h.key)}</p>
                       <p className="text-xs text-muted-foreground">
                         {h.latencyMs != null ? `${h.latencyMs}ms · ` : ""}
                         {timeAgo(h.checkedAt)}

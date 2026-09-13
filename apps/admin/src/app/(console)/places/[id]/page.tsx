@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   Card,
@@ -42,7 +43,7 @@ export default async function PlaceDetailPage({
         }
         actions={
           <div className="flex items-center gap-2">
-            <Badge tone="neutral">{p.status}</Badge>
+            <StatusBadge family="moderation" value="visible" />
             {p.claimed ? <Badge tone="info">claimed</Badge> : null}
             {p.moderationState ? (
               <Badge tone={modTone(p.moderationState)}>

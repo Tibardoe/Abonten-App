@@ -1,3 +1,4 @@
+import type { ResolvedAdminRange } from "@abonten/core/admin/adminDateRange";
 import { logger } from "@abonten/core/logger";
 import { maskAccountNumber } from "@abonten/core/maskAccountNumber";
 import {
@@ -6,6 +7,11 @@ import {
   encodeCursor,
   splitPage,
 } from "@abonten/core/pagination";
+import type {
+  AdminFinanceOverview,
+  AdminFinanceWindow,
+  AdminOrganizerBalance,
+} from "@abonten/types/adminMetrics";
 import type {
   AdminContext,
   DashboardRange,
@@ -92,201 +98,86 @@ function round2(n: number): number {
 // Overview
 // ─────────────────────────────────────────────────────────────
 
+function toFinanceWindow(raw: unknown): AdminFinanceWindow {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return {
+    ticketRevenue: num(r.ticket_revenue),
+    totalCharged: num(r.total_charged),
+    serviceFeeRevenue: num(r.service_fee_revenue),
+    processingCost: num(r.processing_cost),
+    netPlatformRevenue: num(r.net_platform_revenue),
+    feeEntries: num(r.fee_entries),
+    feeEntriesWithKnownCost: num(r.fee_entries_with_known_cost),
+    creditApplied: num(r.credit_applied),
+    ordersUsingCredit: num(r.orders_using_credit),
+    refundsIssued: num(r.refunds_issued),
+    cashRefunded: num(r.cash_refunded),
+    paymentsSuccessful: num(r.payments_successful),
+  };
+}
+
+export function toOrganizerBalances(raw: unknown): AdminOrganizerBalance[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((row) => {
+    const r = (row ?? {}) as Record<string, unknown>;
+    return {
+      currency: typeof r.currency === "string" ? r.currency : "GHS",
+      booked: num(r.booked),
+      refundsDeducted: num(r.refundsDeducted),
+      totalEarnings: num(r.totalEarnings),
+      pendingSettlement: num(r.pendingSettlement),
+      available: num(r.available),
+      paidOut: num(r.paidOut),
+      payoutsInFlight: num(r.payoutsInFlight),
+      payoutsInFlightAmount: num(r.payoutsInFlightAmount),
+    };
+  });
+}
+
+export type FinanceOverviewV2 = AdminFinanceOverview & {
+  range: ResolvedAdminRange;
+};
+
+/**
+ * Customer money for the window, refunds waiting right now, and organizer
+ * money per currency — all from `admin_finance_overview`, which uses the same
+ * ledger rules as the organizer's own Finances page.
+ */
 export async function getFinanceOverviewCore(
   supabase: ServiceRoleClient,
   ctx: AdminContext,
-  opts: { range: DashboardRange; from?: string; to?: string },
-): Promise<AdminEnvelope<FinanceOverview>> {
+  range: ResolvedAdminRange,
+): Promise<AdminEnvelope<FinanceOverviewV2>> {
   try {
     assertPermission(ctx, "finance.view");
   } catch (e) {
     return { status: 403, message: (e as Error).message };
   }
 
-  const { from, to } = resolveRange(opts.range, opts.from, opts.to);
+  const { data, error } = await supabase.rpc("admin_finance_overview", {
+    p_from: range.from,
+    p_to: range.to,
+    p_prev_from: range.prevFrom ?? range.from,
+    p_prev_to: range.prevTo ?? range.from,
+  });
 
-  const [
-    { data: feeRows },
-    { count: successfulCount },
-    { data: pendingRefundTxns },
-    { data: earnRows },
-    { data: payoutRows },
-    { data: cfg },
-  ] = await Promise.all([
-    supabase
-      .from("platform_fee_entry")
-      .select(
-        "entry_type, ticket_revenue, service_fee, total_customer_payment, processing_cost, net_revenue, currency, created_at",
-      )
-      .gte("created_at", from)
-      .lte("created_at", to)
-      .limit(20000),
-    supabase
-      .from("transaction")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "successful")
-      .gte("created_at", from)
-      .lte("created_at", to),
-    // Refunds waiting to be issued are a "right now" figure, not a range one:
-    // an admin needs to see every open request whenever the sale happened.
-    supabase
-      .from("transaction")
-      .select("id, amount")
-      .eq("status", "refund_pending")
-      .limit(20000),
-    supabase
-      .from("organizer_ledger_entry")
-      .select("entry_type, amount, payout_id, currency")
-      .limit(20000),
-    supabase.from("payout").select("status, amount, currency").limit(20000),
-    supabase
-      .from("platform_fee_config")
-      .select("fee_rate, currency, is_active")
-      .eq("is_active", true)
-      .maybeSingle(),
-  ]);
-
-  let currency = cfg?.currency ?? "GHS";
-
-  // Only `fee` rows describe a sale. `fee_refund_adjustment` rows are the
-  // negative mirror written when a refund is issued (ticket revenue only —
-  // the service fee is retained), so summing both would silently turn
-  // "gross" into "net of refunds". Keep the two apart.
-  let ticketRevenue = 0;
-  let serviceFeeRevenue = 0;
-  let processingCost = 0;
-  let netPlatformRevenue = 0;
-  let totalCustomerPayments = 0;
-  let feeEntries = 0;
-  let feeEntriesWithKnownCost = 0;
-  let refundsCompleted = 0;
-  let refundsCompletedAmount = 0;
-  for (const f of feeRows ?? []) {
-    if (f.currency) currency = f.currency;
-    if (f.entry_type === "fee_refund_adjustment") {
-      refundsCompleted += 1;
-      refundsCompletedAmount += -num(f.ticket_revenue);
-      continue;
-    }
-    feeEntries += 1;
-    ticketRevenue += num(f.ticket_revenue);
-    serviceFeeRevenue += num(f.service_fee);
-    totalCustomerPayments += num(f.total_customer_payment);
-    // processing_cost / net_revenue are NULL when Paystack did not report a
-    // fee (credit-only orders never reach Paystack). Those rows must not be
-    // read as "zero cost" — count how many are known so the UI can say so.
-    if (f.net_revenue != null) {
-      feeEntriesWithKnownCost += 1;
-      processingCost += num(f.processing_cost);
-      netPlatformRevenue += num(f.net_revenue);
-    }
+  if (error) {
+    logger.error(`getFinanceOverviewCore failed: ${error.message}`);
+    return { status: 500, message: "Couldn't load the finance figures." };
   }
 
-  const transactionsSuccessful = successfulCount ?? 0;
-
-  // What can still be sent back for each open request: the ticket revenue
-  // recorded on the sale's fee entry (the retained fee is excluded), or the
-  // full charge for a pre-fee-model transaction with no fee entry.
-  const pendingIds = (pendingRefundTxns ?? []).map((t) => t.id);
-  const refundableByTxn = new Map<string, number>();
-  if (pendingIds.length > 0) {
-    const { data: pendingFees } = await supabase
-      .from("platform_fee_entry")
-      .select("transaction_id, ticket_revenue")
-      .eq("entry_type", "fee")
-      .in("transaction_id", pendingIds);
-    for (const f of pendingFees ?? [])
-      refundableByTxn.set(f.transaction_id, num(f.ticket_revenue));
-  }
-  let refundsPending = 0;
-  let refundsPendingAmount = 0;
-  for (const t of pendingRefundTxns ?? []) {
-    refundsPending += 1;
-    refundsPendingAmount += refundableByTxn.get(t.id) ?? num(t.amount);
-  }
-
-  // Same entry families as get_organizer_finance_overview() — the number
-  // the organizer sees on their own Finances page. Anything counted here
-  // that the organizer function does not count (or vice versa) is a bug.
-  let organizerEarningsBooked = 0;
-  let organizerEarningsHeld = 0;
-  let organizerEarningsPaidOut = 0;
-  for (const l of earnRows ?? []) {
-    const a = num(l.amount);
-    if (
-      l.entry_type === "earning" ||
-      l.entry_type === "refund_adjustment" ||
-      l.entry_type === "promoter_commission" ||
-      l.entry_type === "promoter_commission_reversal"
-    ) {
-      // earning is positive; refund_adjustment is the negative deduction
-      // written when a refund is confirmed; a promoter commission (Rewards
-      // Phase 8) is stored NEGATIVE against the sale it was earned on, its
-      // reversal positive. All four change what the organizer is owed.
-      organizerEarningsBooked += a;
-    } else if (
-      l.entry_type === "refund_hold" ||
-      l.entry_type === "refund_release"
-    ) {
-      // refund_hold is stored NEGATIVE (money withheld pending a refund);
-      // refund_release is its exact positive mirror, inserted only if the
-      // refund attempt later fails and the hold is reversed. Summing both
-      // gives the net amount still withheld right now.
-      organizerEarningsHeld -= a;
-    } else if (
-      l.entry_type === "payout_hold" ||
-      l.entry_type === "payout_release"
-    ) {
-      // Same shape as refund_hold/refund_release: payout_hold is stored
-      // NEGATIVE the moment a payout is originated, payout_release is its
-      // positive mirror if the payout later fails/is cancelled. Net amount
-      // is money currently paid out (or reserved for an in-flight payout).
-      organizerEarningsPaidOut -= a;
-    }
-  }
-  // Held and paid-out amounts are not payable. A negative result is a real
-  // signal (refunds confirmed after a payout) and must stay visible — never
-  // clamp it to zero.
-  const organizerEarningsOutstanding =
-    organizerEarningsBooked - organizerEarningsHeld - organizerEarningsPaidOut;
-
-  // payout.status is CHECK-constrained to processing/completed/failed/
-  // cancelled — "processing" is the only in-flight state.
-  let payoutsPending = 0;
-  let payoutsPendingAmount = 0;
-  for (const p of payoutRows ?? []) {
-    if (p.status === "processing") {
-      payoutsPending += 1;
-      payoutsPendingAmount += num(p.amount);
-    }
-  }
-
+  const d = (data ?? {}) as Record<string, unknown>;
   return {
     status: 200,
     data: {
-      range: opts.range,
-      from,
-      to,
-      currency,
-      activeFeeRate: cfg?.fee_rate != null ? num(cfg.fee_rate) : null,
-      totalCustomerPayments: round2(totalCustomerPayments),
-      ticketRevenue: round2(ticketRevenue),
-      serviceFeeRevenue: round2(serviceFeeRevenue),
-      processingCost: round2(processingCost),
-      netPlatformRevenue: round2(netPlatformRevenue),
-      feeEntries,
-      feeEntriesWithKnownCost,
-      transactionsSuccessful,
-      refundsPending,
-      refundsPendingAmount: round2(refundsPendingAmount),
-      refundsCompleted,
-      refundsCompletedAmount: round2(refundsCompletedAmount),
-      organizerEarningsBooked: round2(organizerEarningsBooked),
-      organizerEarningsHeld: round2(organizerEarningsHeld),
-      organizerEarningsPaidOut: round2(organizerEarningsPaidOut),
-      organizerEarningsOutstanding: round2(organizerEarningsOutstanding),
-      payoutsPending,
-      payoutsPendingAmount: round2(payoutsPendingAmount),
+      range,
+      current: toFinanceWindow(d.current),
+      previous: toFinanceWindow(d.previous),
+      refundsPending: num(d.refundsPending),
+      refundsPendingAmount: num(d.refundsPendingAmount),
+      organizerMoney: toOrganizerBalances(d.organizerMoney),
+      activeFeeRate: d.activeFeeRate == null ? null : num(d.activeFeeRate),
+      currency: typeof d.currency === "string" ? d.currency : "GHS",
     },
   };
 }
@@ -786,72 +677,51 @@ export async function getOrganizerFinanceCore(
     return { status: 403, message: (e as Error).message };
   }
 
-  const [{ data: ledger }, { data: accts }, { data: payouts }, names] =
-    await Promise.all([
-      supabase
-        .from("organizer_ledger_entry")
-        .select(
-          "id, entry_type, amount, gross_amount, fee_amount, currency, organizer_id, event_id, payout_id, created_at",
-        )
-        .eq("organizer_id", organizerId)
-        .order("created_at", { ascending: false })
-        .limit(2000),
-      supabase
-        .from("payout_account")
-        .select(
-          "id, account_type, provider, account_holder_name, account_number, is_default, status",
-        )
-        .eq("organizer_id", organizerId),
-      supabase
-        .from("payout")
-        .select(
-          "id, organizer_id, payout_account_id, amount, currency, status, reference, failure_reason, requested_at, processed_at, created_at, review_status, review_details, payout_account(account_type, provider, account_number)",
-        )
-        .eq("organizer_id", organizerId)
-        .order("created_at", { ascending: false })
-        .limit(25),
-      orgNames(supabase, [organizerId]),
-    ]);
+  const [
+    { data: balancesRaw, error: balanceError },
+    { data: ledger },
+    { data: accts },
+    { data: payouts },
+    names,
+  ] = await Promise.all([
+    supabase.rpc("admin_organizer_balance", { p_organizer_id: organizerId }),
+    supabase
+      .from("organizer_ledger_entry")
+      .select(
+        "id, entry_type, amount, gross_amount, fee_amount, currency, organizer_id, event_id, payout_id, created_at",
+      )
+      .eq("organizer_id", organizerId)
+      .order("created_at", { ascending: false })
+      .limit(2000),
+    supabase
+      .from("payout_account")
+      .select(
+        "id, account_type, provider, account_holder_name, account_number, is_default, status",
+      )
+      .eq("organizer_id", organizerId),
+    supabase
+      .from("payout")
+      .select(
+        "id, organizer_id, payout_account_id, amount, currency, status, reference, failure_reason, requested_at, processed_at, created_at, review_status, review_details, payout_account(account_type, provider, account_number)",
+      )
+      .eq("organizer_id", organizerId)
+      .order("created_at", { ascending: false })
+      .limit(25),
+    orgNames(supabase, [organizerId]),
+  ]);
 
-  let currency = "GHS";
-  let earned = 0;
-  let held = 0;
-  let paidOut = 0;
-  for (const l of ledger ?? []) {
-    if (l.currency) currency = l.currency;
-    const a = num(l.amount);
-    if (
-      l.entry_type === "earning" ||
-      l.entry_type === "refund_adjustment" ||
-      l.entry_type === "promoter_commission" ||
-      l.entry_type === "promoter_commission_reversal"
-    ) {
-      // The same earning family get_organizer_finance_overview() sums for
-      // the organizer's own Finances page: refund deductions and promoter
-      // commissions (negative) and their reversals change what was earned.
-      earned += a;
-    } else if (
-      l.entry_type === "refund_hold" ||
-      l.entry_type === "refund_release"
-    ) {
-      // refund_hold is stored NEGATIVE (money withheld pending a refund);
-      // refund_release is its exact positive mirror, inserted only if the
-      // refund attempt later fails and the hold is reversed. Summing both
-      // gives the net amount still withheld right now.
-      held -= a;
-    } else if (
-      l.entry_type === "payout_hold" ||
-      l.entry_type === "payout_release"
-    ) {
-      // Same shape: payout_hold goes NEGATIVE the moment a payout is
-      // originated, payout_release is its positive mirror if the payout
-      // later fails/is cancelled. Net amount is money currently paid out
-      // (or reserved for an in-flight payout).
-      paidOut -= a;
-    }
+  if (balanceError) {
+    logger.error(`getOrganizerFinanceCore failed: ${balanceError.message}`);
+    return { status: 500, message: "Couldn't load this organizer's figures." };
   }
-  // Negative means refunds were confirmed after money went out — show it.
-  const outstanding = earned - paidOut - held;
+
+  // One row per currency, straight from the ledger rules the organizer's own
+  // page and the payout guard use. The primary row drives the headline
+  // figures; anything else is reported separately rather than summed across
+  // currencies.
+  const balances = toOrganizerBalances(balancesRaw);
+  const primary = balances[0] ?? null;
+  const currency = primary?.currency ?? "GHS";
 
   const ledgerView: LedgerEntryView[] = (ledger ?? [])
     .slice(0, 25)
@@ -900,10 +770,15 @@ export async function getOrganizerFinanceCore(
       organizerId,
       organizerName: names.get(organizerId) ?? null,
       currency,
-      earned: round2(earned),
-      held: round2(held),
-      paidOut: round2(paidOut),
-      outstanding: round2(outstanding),
+      earned: primary?.booked ?? 0,
+      held: primary?.refundsDeducted ?? 0,
+      paidOut: primary?.paidOut ?? 0,
+      outstanding: primary ? primary.totalEarnings - primary.paidOut : 0,
+      pendingSettlement: primary?.pendingSettlement ?? 0,
+      available: primary?.available ?? 0,
+      payoutsInFlight: primary?.payoutsInFlight ?? 0,
+      payoutsInFlightAmount: primary?.payoutsInFlightAmount ?? 0,
+      otherCurrencies: balances.slice(1),
       payoutAccounts: (accts ?? []).map((a) => ({
         id: a.id,
         accountType: a.account_type ?? null,

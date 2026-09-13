@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge, Button, Td, timeAgo } from "@/components/ui";
+import { StatusBadge } from "@/components/metrics/StatusBadge";
+import { Button, Td, timeAgo } from "@/components/ui";
 import { setErrorGroupStatus } from "@/server/actions";
 import type { ErrorGroup } from "@abonten/types/adminTypes";
 import Link from "next/link";
@@ -49,17 +50,7 @@ export function ErrorGroupRow({
         {timeAgo(group.lastSeen)}
       </Td>
       <Td>
-        <Badge
-          tone={
-            group.status === "open"
-              ? "danger"
-              : group.status === "resolved"
-                ? "success"
-                : "neutral"
-          }
-        >
-          {group.status}
-        </Badge>
+        <StatusBadge family="errorGroup" value={group.status} />
       </Td>
       {canManage && (
         <Td>

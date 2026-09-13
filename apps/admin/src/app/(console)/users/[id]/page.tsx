@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   Card,
@@ -52,7 +53,7 @@ export default async function UserDetailPage({
                 Credit account →
               </Link>
             ) : null}
-            <Badge tone={tone}>{u.status}</Badge>
+            <StatusBadge family="userAccount" value={u.status} />
           </>
         }
       />

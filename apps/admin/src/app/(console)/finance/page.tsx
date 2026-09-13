@@ -1,20 +1,15 @@
-import { Card, EmptyState, PageHeader, Stat, cn, money } from "@/components/ui";
+import { MetricCard } from "@/components/metrics/MetricCard";
+import { RangeCaption, RangePicker } from "@/components/metrics/RangePicker";
+import { SectionHeading } from "@/components/metrics/SectionHeading";
+import { Card, EmptyState, PageHeader, money } from "@/components/ui";
 import { loadFinanceOverview } from "@/lib/data";
-import { formatAccraDate } from "@/lib/format";
-import type { DashboardRange } from "@abonten/types/adminTypes";
-import Link from "next/link";
+import { computeTrend } from "@abonten/core/admin/computeTrend";
 import { FinanceTabs } from "./FinanceTabs";
 
-const RANGES: { key: DashboardRange; label: string }[] = [
-  { key: "today", label: "Today" },
-  { key: "7d", label: "Last 7 days" },
-  { key: "30d", label: "Last 30 days" },
-  { key: "90d", label: "Last 90 days" },
-];
-
-const RANGE_LABEL: Record<string, string> = Object.fromEntries(
-  RANGES.map((r) => [r.key, r.label]),
-);
+// Finance answers three questions in order: what did customers pay us, what
+// did we give back, and what do we owe organizers. The first two move with
+// the selected period; the third is a standing balance, and the page says so
+// rather than letting an operator read an all-time figure as this month's.
 
 export default async function FinancePage({
   searchParams,
@@ -22,153 +17,234 @@ export default async function FinancePage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const range = (
-    RANGES.some((r) => r.key === sp.range) ? sp.range : "30d"
-  ) as DashboardRange;
-  const res = await loadFinanceOverview(range);
+  const res = await loadFinanceOverview(sp);
+
+  if (res.status !== 200 || !res.data) {
+    return (
+      <div>
+        <PageHeader title="Finance" />
+        <FinanceTabs active="/finance" />
+        <EmptyState>
+          {res.message ?? "Couldn't load the finance figures."}
+        </EmptyState>
+      </div>
+    );
+  }
+
+  const f = res.data;
+  const { range, current, previous } = f;
+  const currency = f.currency;
+  const comparison = range.comparisonLabel;
+  // One row per currency. The first is the platform's own; anything else is
+  // reported separately, never added to it.
+  const primary = f.organizerMoney.find((m) => m.currency === currency) ??
+    f.organizerMoney[0] ?? {
+      currency,
+      booked: 0,
+      refundsDeducted: 0,
+      totalEarnings: 0,
+      pendingSettlement: 0,
+      available: 0,
+      paidOut: 0,
+      payoutsInFlight: 0,
+      payoutsInFlightAmount: 0,
+    };
+  const otherCurrencies = f.organizerMoney.filter(
+    (m) => m.currency !== primary.currency,
+  );
+  const stillOwed = primary.totalEarnings - primary.paidOut;
 
   return (
     <div>
       <PageHeader
         title="Finance"
         description="Reconciliation and investigation. Refunds and payouts are issued from the Transactions and Payouts tabs."
-        actions={
-          <div className="flex gap-1">
-            {RANGES.map((r) => (
-              <Link
-                key={r.key}
-                href={`/finance?range=${r.key}`}
-                className={cn(
-                  "rounded px-2 py-1 text-xs",
-                  range === r.key
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-border hover:bg-muted",
-                )}
-              >
-                {r.label}
-              </Link>
-            ))}
-          </div>
-        }
+        actions={<RangePicker basePath="/finance" range={range} />}
       />
-
       <FinanceTabs active="/finance" />
+      <RangeCaption range={range} className="mb-3" />
+      {f.activeFeeRate != null ? (
+        <p className="mb-3 text-xs text-muted-foreground">
+          Service fee in force: {(f.activeFeeRate * 100).toFixed(1)}% of the
+          ticket price, charged to the customer on top.
+        </p>
+      ) : null}
 
-      {res.status !== 200 || !res.data ? (
-        <EmptyState>
-          {res.message ?? "Couldn't load finance overview."}
-        </EmptyState>
-      ) : (
-        <>
-          <p className="mb-2 text-xs text-muted-foreground">
-            {RANGE_LABEL[range] ?? range} · {formatAccraDate(res.data.from)} –{" "}
-            {formatAccraDate(res.data.to)} · Africa/Accra
-            {res.data.activeFeeRate != null
-              ? ` · active service fee ${(res.data.activeFeeRate * 100).toFixed(1)}%`
-              : ""}
+      <section className="mb-6">
+        <SectionHeading
+          title="Customer payments"
+          tip={{
+            label: "Customer payments",
+            text: "What customers paid for tickets in this period, before any refund. Promotions and subscriptions are not included — they have no fee entry.",
+          }}
+        />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <MetricCard
+            metric="money.totalCharged"
+            value={current.totalCharged}
+            format="money"
+            currency={currency}
+            period={range.label}
+            trend={{
+              result: computeTrend(current.totalCharged, previous.totalCharged),
+              comparisonLabel: comparison,
+            }}
+            secondary={`${current.paymentsSuccessful} successful payment${current.paymentsSuccessful === 1 ? "" : "s"}`}
+          />
+          <MetricCard
+            metric="money.grossTicketSales"
+            value={current.ticketRevenue}
+            format="money"
+            currency={currency}
+            period={range.label}
+            trend={{
+              result: computeTrend(
+                current.ticketRevenue,
+                previous.ticketRevenue,
+              ),
+              comparisonLabel: comparison,
+            }}
+            secondary={
+              current.creditApplied > 0
+                ? `${money(current.creditApplied, currency)} of it paid with Abonten Credit`
+                : undefined
+            }
+          />
+          <MetricCard
+            metric="money.serviceFeeRevenue"
+            value={current.serviceFeeRevenue}
+            format="money"
+            currency={currency}
+            period={range.label}
+            trend={{
+              result: computeTrend(
+                current.serviceFeeRevenue,
+                previous.serviceFeeRevenue,
+              ),
+              comparisonLabel: comparison,
+            }}
+          />
+          <MetricCard
+            metric="money.netPlatformRevenue"
+            value={current.netPlatformRevenue}
+            format="money"
+            currency={currency}
+            period={range.label}
+            trend={{
+              result: computeTrend(
+                current.netPlatformRevenue,
+                previous.netPlatformRevenue,
+              ),
+              comparisonLabel: comparison,
+            }}
+            secondary={
+              current.feeEntries > 0 &&
+              current.feeEntriesWithKnownCost < current.feeEntries
+                ? `After ${money(current.processingCost, currency)} Paystack cost, known for ${current.feeEntriesWithKnownCost} of ${current.feeEntries} payments`
+                : `After ${money(current.processingCost, currency)} Paystack cost`
+            }
+          />
+        </div>
+      </section>
+
+      <section className="mb-6">
+        <SectionHeading title="Refunds" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <MetricCard
+            metric="refunds.pendingCount"
+            value={f.refundsPending}
+            period="Right now"
+            tone={f.refundsPending > 0 ? "warning" : undefined}
+            secondary={`${money(f.refundsPendingAmount, currency)} still refundable`}
+            href="/finance/refunds"
+          />
+          <MetricCard
+            metric="refunds.cashRefunded"
+            value={current.cashRefunded}
+            format="money"
+            currency={currency}
+            period={range.label}
+            trend={{
+              result: computeTrend(current.cashRefunded, previous.cashRefunded),
+              comparisonLabel: comparison,
+              goodDirection: "down",
+            }}
+            secondary={`${current.refundsIssued} refund${current.refundsIssued === 1 ? "" : "s"} issued`}
+            href="/finance/refunds"
+          />
+        </div>
+      </section>
+
+      <section>
+        <SectionHeading
+          title="Organizer money"
+          tip={{
+            label: "Organizer money",
+            text: "What Abonten owes organizers, as it stands right now. These are standing balances over all time, not figures for the selected period.",
+          }}
+        />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <MetricCard
+            metric="organizerMoney.booked"
+            value={primary.booked}
+            format="money"
+            currency={primary.currency}
+            period="All time"
+          />
+          <MetricCard
+            metric="organizerMoney.deducted"
+            value={primary.refundsDeducted}
+            format="money"
+            currency={primary.currency}
+            period="All time"
+            tone={primary.refundsDeducted > 0 ? "warning" : undefined}
+          />
+          <MetricCard
+            metric="organizerMoney.paidOut"
+            value={primary.paidOut}
+            format="money"
+            currency={primary.currency}
+            period="All time"
+          />
+          <MetricCard
+            metric="organizerMoney.stillOwed"
+            value={stillOwed}
+            format="money"
+            currency={primary.currency}
+            period="Right now"
+            tone={stillOwed < 0 ? "danger" : undefined}
+            secondary={`${money(primary.available, primary.currency)} payable today · ${money(primary.pendingSettlement, primary.currency)} still settling`}
+          />
+          <MetricCard
+            metric="organizerMoney.payoutsInFlight"
+            value={primary.payoutsInFlight}
+            period="Right now"
+            tone={primary.payoutsInFlight > 0 ? "warning" : undefined}
+            secondary={`${money(primary.payoutsInFlightAmount, primary.currency)} being processed`}
+            href="/finance/payouts"
+          />
+        </div>
+
+        {otherCurrencies.length > 0 ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Also owed in other currencies, never added to the figures above:{" "}
+            {otherCurrencies
+              .map((m) => money(m.totalEarnings - m.paidOut, m.currency))
+              .join(", ")}
+            .
           </p>
+        ) : null}
 
-          <h3 className="mb-2 mt-3 text-sm font-semibold text-muted-foreground">
-            Customer payments · {(RANGE_LABEL[range] ?? range).toLowerCase()}
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <Stat
-              label="Total charged"
-              value={money(res.data.totalCustomerPayments, res.data.currency)}
-              hint={`${res.data.transactionsSuccessful} successful payment${res.data.transactionsSuccessful === 1 ? "" : "s"} · before refunds`}
-            />
-            <Stat
-              label="Ticket revenue"
-              value={money(res.data.ticketRevenue, res.data.currency)}
-              hint="owed to organizers · before refunds"
-            />
-            <Stat
-              label="Service fee revenue"
-              value={money(res.data.serviceFeeRevenue, res.data.currency)}
-              hint="Abonten's share · kept when a ticket is refunded"
-            />
-            <Stat
-              label="Net platform revenue"
-              value={money(res.data.netPlatformRevenue, res.data.currency)}
-              hint={
-                res.data.feeEntriesWithKnownCost === res.data.feeEntries
-                  ? `service fee minus ${money(res.data.processingCost, res.data.currency)} Paystack cost`
-                  : `service fee minus ${money(res.data.processingCost, res.data.currency)} Paystack cost · cost known for ${res.data.feeEntriesWithKnownCost} of ${res.data.feeEntries} payments`
-              }
-            />
-          </div>
-
-          <h3 className="mb-2 mt-5 text-sm font-semibold text-muted-foreground">
-            Refunds
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <Stat
-              label="Awaiting a refund"
-              value={res.data.refundsPending}
-              hint={`right now · ${money(res.data.refundsPendingAmount, res.data.currency)} still refundable`}
-              tone={res.data.refundsPending > 0 ? "warning" : undefined}
-              href="/finance/refunds"
-            />
-            <Stat
-              label="Refunds issued"
-              value={res.data.refundsCompleted}
-              hint={`${(RANGE_LABEL[range] ?? range).toLowerCase()} · ${money(res.data.refundsCompletedAmount, res.data.currency)} sent back`}
-            />
-          </div>
-
-          <h3 className="mb-2 mt-5 text-sm font-semibold text-muted-foreground">
-            Organizer money · all time, right now
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <Stat
-              label="Earnings booked"
-              value={money(res.data.organizerEarningsBooked, res.data.currency)}
-              hint="ticket sales, less refunds and promoter commission"
-            />
-            <Stat
-              label="Refunds deducted"
-              value={money(res.data.organizerEarningsHeld, res.data.currency)}
-              tone={res.data.organizerEarningsHeld > 0 ? "warning" : undefined}
-              hint="taken off as soon as a refund is requested"
-            />
-            <Stat
-              label="Paid out"
-              value={money(
-                res.data.organizerEarningsPaidOut,
-                res.data.currency,
-              )}
-              hint="sent to organizers or reserved for a payout"
-            />
-            <Stat
-              label="Still owed"
-              value={money(
-                res.data.organizerEarningsOutstanding,
-                res.data.currency,
-              )}
-              tone={
-                res.data.organizerEarningsOutstanding < 0 ? "danger" : undefined
-              }
-              hint="booked − held − paid out · not all of it is payable yet"
-            />
-            <Stat
-              label="Payouts in flight"
-              value={res.data.payoutsPending}
-              hint={`${money(res.data.payoutsPendingAmount, res.data.currency)} being processed`}
-              tone={res.data.payoutsPending > 0 ? "warning" : undefined}
-              href="/finance/payouts"
-            />
-          </div>
-
-          <Card className="mt-5 p-3 text-xs text-muted-foreground">
-            Customer payments and refunds come from the platform fee ledger;
-            organizer money from the organizer ledger — the same entries an
-            organizer sees on their own Finances page. Live queries, no
-            estimates. An organizer&apos;s earnings only become payable 48 hours
-            after their event ends, so &ldquo;still owed&rdquo; is more than
-            what can be paid today; open an organizer to see the split.
-          </Card>
-        </>
-      )}
+        <Card className="mt-4 p-3 text-xs text-muted-foreground">
+          Customer payments and refunds come from the platform fee ledger.
+          Organizer money comes from the organizer ledger, using the same rules
+          as the organizer&apos;s own Finances page and the payout guard — so
+          what shows as payable here is exactly what a payout will allow. An
+          organizer&apos;s earnings become payable 48 hours after their event
+          ends, which is why &ldquo;still owed&rdquo; is larger than what can be
+          paid today. Live queries, no estimates.
+        </Card>
+      </section>
     </div>
   );
 }

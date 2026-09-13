@@ -60,3 +60,46 @@ export type AdminDashboardKpis = {
   health: AdminHealthRow[];
   needsAttention: Record<string, number>;
 };
+
+/** Organizer money for one currency, from admin_organizer_balance(). */
+export type AdminOrganizerBalance = {
+  currency: string;
+  /** Earned from ticket sales before refunds, plus promoter commission. */
+  booked: number;
+  /** Taken back by refunds, from the moment each refund was requested. */
+  refundsDeducted: number;
+  /** booked − refundsDeducted: what get_organizer_finance_overview calls total earnings. */
+  totalEarnings: number;
+  /** Earned but not payable yet: the event settles 48 hours after it ends. */
+  pendingSettlement: number;
+  /** Payable right now — the figure a payout is checked against. */
+  available: number;
+  paidOut: number;
+  payoutsInFlight: number;
+  payoutsInFlightAmount: number;
+};
+
+export type AdminFinanceWindow = {
+  ticketRevenue: number;
+  totalCharged: number;
+  serviceFeeRevenue: number;
+  processingCost: number;
+  netPlatformRevenue: number;
+  feeEntries: number;
+  feeEntriesWithKnownCost: number;
+  creditApplied: number;
+  ordersUsingCredit: number;
+  refundsIssued: number;
+  cashRefunded: number;
+  paymentsSuccessful: number;
+};
+
+export type AdminFinanceOverview = {
+  current: AdminFinanceWindow;
+  previous: AdminFinanceWindow;
+  refundsPending: number;
+  refundsPendingAmount: number;
+  organizerMoney: AdminOrganizerBalance[];
+  activeFeeRate: number | null;
+  currency: string;
+};

@@ -70,6 +70,15 @@ function formatValue(
   }
 }
 
+// "Zero" means different things depending on what the tile measures: no
+// sales this month, nothing waiting right now, nothing ever. Saying "none in
+// this period" under an all-time figure is simply wrong.
+function zeroNote(period: string | undefined): string {
+  if (period === "Right now") return "Nothing right now";
+  if (period === "All time") return "Nothing yet";
+  return period ? `None in ${period.toLowerCase()}` : "None";
+}
+
 function resolveState(
   value: number | null,
   explicit: MetricState | undefined,
@@ -129,7 +138,7 @@ export function MetricCard({
               {formatValue(0, format, currency)}
             </p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {stateNote ?? "None in this period"}
+              {stateNote ?? zeroNote(period)}
             </p>
           </>
         );

@@ -1,3 +1,4 @@
+import { StatusBadge } from "@/components/metrics/StatusBadge";
 import {
   Badge,
   EmptyState,
@@ -169,9 +170,7 @@ export default async function VerificationPage({
                 <Td>{c.requesterName ?? c.requesterId.slice(0, 8)}</Td>
                 <Td className="tabular-nums">{c.evidenceCount}</Td>
                 <Td>
-                  <Badge tone={VERIFICATION_STATUS_TONE[c.status]}>
-                    {c.status.replace("_", " ")}
-                  </Badge>
+                  <StatusBadge family="verification" value={c.status} />
                 </Td>
                 <Td className="whitespace-nowrap text-muted-foreground">
                   {c.submittedAt ? timeAgo(c.submittedAt) : "—"}
