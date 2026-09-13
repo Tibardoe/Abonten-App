@@ -11,6 +11,7 @@ import { createSsrClient } from "@/lib/supabaseServer";
 import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
+import { updateDiscoverySettingsCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
 import { exportCampaignStatsCsvCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
   setCampaignStatusCore,
@@ -113,6 +114,7 @@ import {
   creditAdjustmentDecisionSchema,
   creditAdjustmentSchema,
   decideVerificationSchema,
+  discoverySettingsSchema,
   errorGroupStatusSchema,
   goodwillCreditSchema,
   grantAdminRoleSchema,
@@ -1155,6 +1157,31 @@ export async function updateRewardsSettings(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "updateRewardsSettings");
+  }
+}
+
+// ── Discovery (search + recommendation notifications) ───────
+// discovery.configure is in STEP_UP_PERMISSIONS.
+
+export async function updateDiscoverySettings(input: unknown) {
+  const parsed = discoverySettingsSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await updateDiscoverySettingsCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/discovery");
+      revalidatePath("/discovery/settings");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "updateDiscoverySettings");
   }
 }
 
