@@ -10,6 +10,8 @@ import type { Database } from "@abonten/types/database.types";
 import type { NotificationType } from "@abonten/types/notificationType";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServiceClient } from "../supabase/serviceClient";
+import { markRecommendationOpenedCore } from "./recommendationsCore";
 
 // Post-auth query bodies for the signed-in user's notifications, shared by
 // the Server Actions (src/actions/getUserNotifications.ts etc., cookie
@@ -95,15 +97,28 @@ export async function markNotificationReadFor(
   userId: string,
   notificationId: string,
 ): Promise<{ status: number; message?: string }> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("notification")
     .update({ read_at: new Date().toISOString() })
     .eq("id", notificationId)
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .select("type, data")
+    .maybeSingle();
 
   if (error) {
     logger.error(`Failed marking notification read: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
+  }
+
+  // Opening a recommendation notice is the signal the digest caps and the
+  // admin open rate are built on. Best-effort; never fails the read.
+  if (data?.type === "recommendation_digest") {
+    const target = (data.data ?? {}) as { eventId?: string; placeId?: string };
+    await markRecommendationOpenedCore(getSupabaseServiceClient(), userId, {
+      notificationId,
+      subjectType: target.eventId ? "event" : target.placeId ? "place" : null,
+      subjectId: target.eventId ?? target.placeId ?? null,
+    }).catch(() => {});
   }
 
   return { status: 200 };

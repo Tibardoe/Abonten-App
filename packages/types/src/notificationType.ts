@@ -2,7 +2,7 @@
 // Manual interface, same style as src/types/placeType.ts — no generated
 // Supabase types exist in this repo (see PROJECT.md). Field names/shapes
 // here must match supabase/migrations/20260823090000_add_notifications.sql
-// + 20260905090000_add_notification_metadata.sql exactly.
+// + 20260903091032_add_notification_metadata.sql exactly.
 
 // The structured target of a notification — preferred over parsing `link`.
 // `kind` drives routing + which thumbnail to show.
@@ -20,7 +20,8 @@ export type NotificationEntityKind =
   | "message"
   | "rewards"
   | "fieldops"
-  | "verification";
+  | "verification"
+  | "recommendation";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -36,6 +37,8 @@ export type NotificationData = {
   ticketsSection?: "cancelled" | "refunds";
   reviewId?: string;
   conversationId?: string;
+  /** With kind "recommendation": the digest this notice announced. */
+  digestId?: string;
 };
 
 export type NotificationType = {

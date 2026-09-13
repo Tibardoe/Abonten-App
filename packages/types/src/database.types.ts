@@ -11740,10 +11740,15 @@ export type Database = {
       get_organizer_dashboard: {
         Args: {
           p_bucket: string;
-          p_end: string;
-          p_prev_end: string;
-          p_prev_start: string;
-          p_start: string;
+          // The four timestamps stay nullable: the function is not STRICT
+          // (confirmed via pg_proc.proisstrict on 2026-09-12) and
+          // organizerDashboardQuery.ts passes null for "all time". A newer
+          // generator drops the `| null`; kept by hand so regeneration does
+          // not break that caller.
+          p_end: string | null;
+          p_prev_end: string | null;
+          p_prev_start: string | null;
+          p_start: string | null;
         };
         Returns: Json;
       };

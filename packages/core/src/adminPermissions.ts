@@ -84,6 +84,8 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "fieldops.verify",
   "fieldops.commissions.approve",
   "fieldops.commissions.pay",
+  "discovery.view",
+  "discovery.configure",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -179,6 +181,7 @@ const ANALYST: AdminPermissionKey[] = [
   "audit.view",
   "rewards.view",
   "fieldops.view",
+  "discovery.view",
 ];
 
 // Runs the regional promotion programme (Field Ops): campaigns, teams,
@@ -297,6 +300,7 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "fieldops.rules",
   "fieldops.commissions.approve",
   "fieldops.commissions.pay",
+  "discovery.configure",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
