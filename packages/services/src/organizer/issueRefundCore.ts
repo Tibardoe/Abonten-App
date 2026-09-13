@@ -21,7 +21,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
 
 export type IssueRefundResult = {
-  status: 200 | 400 | 404 | 500;
+  status: 200 | 400 | 404 | 409 | 500;
   message: string;
 };
 
@@ -154,6 +154,34 @@ export async function issueRefundCore(
     return { status: 400, message: "No payment reference on this transaction" };
   }
 
+  // One request at a time. Paystack is asked for the refund BEFORE
+  // record_refund_hold moves the transaction to refund_pending, so two
+  // callers arriving together (a double-tapped cancel, or a customer and an
+  // admin at once) could otherwise both pass the status check above and
+  // both send Paystack a partial refund -- and Paystack accepts several
+  // partial refunds up to the full charge. claim_transaction_refund is an
+  // atomic compare-and-set on refund_claimed_at (service role only); the
+  // loser stops here. The claim is released when the Paystack call fails
+  // (below) or when a refund fails after acceptance (webhook), and expires
+  // after two minutes in any case.
+  const { data: claimed, error: claimError } =
+    await getSupabaseServiceClient().rpc("claim_transaction_refund", {
+      p_transaction_id: transaction.id,
+    });
+  if (claimError) {
+    logger.error(
+      `Failed claiming refund for transaction ${transaction.id}: ${claimError.message}`,
+    );
+    return { status: 500, message: "Something went wrong! Try again" };
+  }
+  if (!claimed) {
+    return {
+      status: 409,
+      message:
+        "A refund for this payment was requested moments ago. Please wait a couple of minutes before trying again.",
+    };
+  }
+
   // Ticket-revenue-only amount to send back — the service fee stays with
   // Abonten.
   const { data: refundableAmount, error: refundableError } = await supabase.rpc(
@@ -213,18 +241,21 @@ export async function issueRefundCore(
     } catch (error) {
       logger.error(`Refund failed for transaction ${transaction.id}: ${error}`);
 
-      // Still record that a request was actually made — refund_requested_at
-      // is what lets the UI tell "attempted and failed" apart from "not
-      // requested yet" for a transaction stuck at status=successful. Service
-      // role: clients can't write `transaction`.
+      // The claim above stamped refund_requested_at, which is what lets the
+      // UI tell "attempted and failed" apart from "not requested yet" for a
+      // transaction stuck at status=successful. The in-flight lock itself
+      // is released so the customer or an admin can retry at once.
       await getSupabaseServiceClient()
-        .from("transaction")
-        .update({
-          refund_requested_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+        .rpc("release_transaction_refund_claim", {
+          p_transaction_id: transaction.id,
         })
-        .eq("id", transaction.id)
-        .is("refund_requested_at", null);
+        .then(({ error: releaseError }) => {
+          if (releaseError) {
+            logger.error(
+              `Failed releasing refund claim for transaction ${transaction.id}: ${releaseError.message}`,
+            );
+          }
+        });
 
       return {
         status: 500,

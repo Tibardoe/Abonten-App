@@ -2016,6 +2016,45 @@ export type Database = {
           },
         ];
       };
+      event_reminder_sent: {
+        Row: {
+          event_id: string;
+          kind: string;
+          sent_at: string;
+          session_starts_at: string;
+          user_id: string;
+        };
+        Insert: {
+          event_id: string;
+          kind: string;
+          sent_at?: string;
+          session_starts_at: string;
+          user_id: string;
+        };
+        Update: {
+          event_id?: string;
+          kind?: string;
+          sent_at?: string;
+          session_starts_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "event_reminder_sent_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "event";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "event_reminder_sent_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       event_review: {
         Row: {
           comment: string | null;
@@ -8596,6 +8635,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      storage_purge_config: {
+        Row: {
+          dispatch_url: string | null;
+          id: boolean;
+          last_dispatched_at: string | null;
+          token: string;
+          updated_at: string;
+        };
+        Insert: {
+          dispatch_url?: string | null;
+          id?: boolean;
+          last_dispatched_at?: string | null;
+          token?: string;
+          updated_at?: string;
+        };
+        Update: {
+          dispatch_url?: string | null;
+          id?: boolean;
+          last_dispatched_at?: string | null;
+          token?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      storage_purge_queue: {
+        Row: {
+          attempts: number;
+          bucket_id: string;
+          claimed_at: string | null;
+          created_at: string;
+          detail: string | null;
+          finished_at: string | null;
+          id: number;
+          object_path: string;
+          reason: string;
+          status: string;
+        };
+        Insert: {
+          attempts?: number;
+          bucket_id: string;
+          claimed_at?: string | null;
+          created_at?: string;
+          detail?: string | null;
+          finished_at?: string | null;
+          id?: never;
+          object_path: string;
+          reason: string;
+          status?: string;
+        };
+        Update: {
+          attempts?: number;
+          bucket_id?: string;
+          claimed_at?: string | null;
+          created_at?: string;
+          detail?: string | null;
+          finished_at?: string | null;
+          id?: never;
+          object_path?: string;
+          reason?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
       story: {
         Row: {
           content: string;
@@ -9106,6 +9208,7 @@ export type Database = {
           paystack_reference: string;
           phone_number: string | null;
           reason: string;
+          refund_claimed_at: string | null;
           refund_requested_at: string | null;
           status: string;
           transaction_date: string;
@@ -9127,6 +9230,7 @@ export type Database = {
           paystack_reference: string;
           phone_number?: string | null;
           reason: string;
+          refund_claimed_at?: string | null;
           refund_requested_at?: string | null;
           status: string;
           transaction_date?: string;
@@ -9148,6 +9252,7 @@ export type Database = {
           paystack_reference?: string;
           phone_number?: string | null;
           reason?: string;
+          refund_claimed_at?: string | null;
           refund_requested_at?: string | null;
           status?: string;
           transaction_date?: string;
@@ -10585,6 +10690,7 @@ export type Database = {
       _search_trgm_thresholds: { Args: never; Returns: undefined };
       _search_web_tsquery: { Args: { p_norm: string }; Returns: unknown };
       _weekly_document_has_content: { Args: { p_doc: Json }; Returns: boolean };
+      account_deletion_blockers: { Args: { p_user_id: string }; Returns: Json };
       admin_clear_payout_review: {
         Args: { p_admin_id: string; p_note: string; p_payout_id: string };
         Returns: string;
@@ -10624,6 +10730,7 @@ export type Database = {
         };
         Returns: string;
       };
+      anonymize_deleted_account: { Args: { p_user_id: string }; Returns: Json };
       apply_moderation_action: {
         Args: {
           p_action: string;
@@ -10666,6 +10773,10 @@ export type Database = {
           transaction_amount: number;
           transaction_currency: string;
         }[];
+      };
+      claim_transaction_refund: {
+        Args: { p_transaction_id: string };
+        Returns: boolean;
       };
       cleanup_expired_drafts: { Args: never; Returns: undefined };
       cleanup_rate_limit_buckets: { Args: never; Returns: undefined };
@@ -10950,6 +11061,7 @@ export type Database = {
         Returns: undefined;
       };
       ensure_future_review_partitions: { Args: never; Returns: undefined };
+      event_reminders_enqueue: { Args: never; Returns: number };
       expire_stale_event_promotion_checkouts: {
         Args: never;
         Returns: {
@@ -12576,6 +12688,11 @@ export type Database = {
       run_financial_reconciliation: { Args: never; Returns: Json };
       run_notification_delivery: { Args: never; Returns: undefined };
       run_scheduled_health_check: { Args: never; Returns: undefined };
+      release_transaction_refund_claim: {
+        Args: { p_transaction_id: string };
+        Returns: undefined;
+      };
+      run_storage_purge_dispatch: { Args: never; Returns: undefined };
       search_events: {
         Args: {
           p_as_of?: string;
@@ -12773,6 +12890,22 @@ export type Database = {
           p_user_id: string;
         };
         Returns: string;
+      };
+      storage_purge_claim: {
+        Args: { p_limit?: number };
+        Returns: {
+          bucket_id: string;
+          object_path: string;
+          purge_id: number;
+        }[];
+      };
+      storage_purge_enqueue: {
+        Args: { p_bucket: string; p_path: string; p_reason: string };
+        Returns: undefined;
+      };
+      storage_purge_finish: {
+        Args: { p_detail?: string; p_ids: number[]; p_status: string };
+        Returns: number;
       };
       toggle_message_reaction: {
         Args: { p_emoji: string; p_message_id: string };

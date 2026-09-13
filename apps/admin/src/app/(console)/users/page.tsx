@@ -11,12 +11,15 @@ import { loadUsers } from "@/lib/data";
 import type { UserAccountStatus } from "@abonten/types/adminTypes";
 import Link from "next/link";
 
-const STATUS_TONE: Record<UserAccountStatus, "success" | "warning" | "danger"> =
-  {
-    Active: "success",
-    Suspended: "warning",
-    Banned: "danger",
-  };
+const STATUS_TONE: Record<
+  UserAccountStatus,
+  "success" | "warning" | "danger" | "neutral"
+> = {
+  Active: "success",
+  Suspended: "warning",
+  Banned: "danger",
+  Deleted: "neutral",
+};
 
 export default async function UsersPage({
   searchParams,

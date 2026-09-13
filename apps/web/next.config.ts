@@ -42,11 +42,33 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // The Apple App Site Association file is extension-less; iOS requires it be
-  // served as application/json. (assetlinks.json already gets the right type
-  // from its extension.)
   async headers() {
     return [
+      // Baseline browser hardening on every response. No Content-Security-
+      // Policy yet: the Paystack inline script and Google Maps need an
+      // allow-list that has to be tested first (docs/security). Clickjacking
+      // is closed with X-Frame-Options; nothing legitimately frames the site
+      // (the app opens pages in the system browser, not a WebView).
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value:
+              "camera=(self), microphone=(self), geolocation=(self), payment=(self), usb=(), interest-cohort=()",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains",
+          },
+        ],
+      },
+      // The Apple App Site Association file is extension-less; iOS requires
+      // it be served as application/json. (assetlinks.json already gets the
+      // right type from its extension.)
       {
         source: "/.well-known/apple-app-site-association",
         headers: [{ key: "Content-Type", value: "application/json" }],

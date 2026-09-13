@@ -9,14 +9,19 @@ import ThemeProvider from "@/providers/ThemeProvider";
 import ToastProvider from "@/providers/ToastProvider";
 import InviteBinder from "@/rewards/atoms/InviteBinder";
 import ReferralTouchLogger from "@/rewards/atoms/ReferralTouchLogger";
+import { PUBLIC_SITE_ORIGIN } from "@abonten/core/brand/socialLinks";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
 export const metadata: Metadata = {
+  // Absolute base for every relative Open Graph / canonical URL the pages
+  // declare, so shared links carry a full https URL.
+  metadataBase: new URL(PUBLIC_SITE_ORIGIN),
   title: "Abonten Hub | Connecting people to experiences",
-  description: "Explore and attend real-time events",
+  description:
+    "Discover events and places around you in Ghana, buy tickets and find your next experience on Abonten Hub.",
   icons: {
     icon: "/assets/images/abonten-logo-only-white.svg",
     shortcut: "/assets/images/abonten-logo-only-white.svg",

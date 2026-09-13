@@ -54,10 +54,10 @@ Direct-to-Cloudinary uploads with **server-signed** parameters scoped to the use
 
 - **CSRF:** Next.js Server Actions require the framework's action id and same-origin checks; the admin console additionally requires step-up for sensitive actions. Webhook endpoints verify provider signatures.
 - **XSS:** React rendering; the Markdown renderer for public documents produces React elements, never HTML strings; user content is rendered as text.
-- **Clickjacking / indexing:** admin sends `X-Robots-Tag: noindex, nofollow`. (No CSP or frame-ancestors header is configured — improvement item.)
+- **Clickjacking / indexing / headers (2026-09-13):** web and admin send `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, a `Permissions-Policy` (web allows camera, microphone, geolocation and payment to itself only; admin denies all) and `Strict-Transport-Security` (two years, subdomains) on every response (`next.config.ts` `headers()`); admin additionally sends `X-Robots-Tag: noindex, nofollow`. No Content-Security-Policy yet — the Paystack inline script and Google Maps need an allow-list that has to be tested first (improvement item). Web serves `/robots.txt` and `/sitemap.xml`; both are outside the session proxy.
 - **Secrets in the browser:** only `NEXT_PUBLIC_*` / `EXPO_PUBLIC_*` values ship; `@abonten/services` is server-only and never imported from client components.
 - **Error reporting:** Sentry `sendDefaultPii:false`; admin `beforeSend` scrubs cookies, headers, tokens, card-like fields; self-hosted error ingest authenticated by `OBSERVABILITY_INGEST_SECRET`.
 
 ## Improvement items
 
-CSP / security headers on web and admin; MFA for admins beyond re-authentication; regression tests for SECURITY DEFINER authorization; purge of media for deleted accounts.
+Content-Security-Policy on web and admin (the other security headers shipped 2026-09-13); MFA for admins beyond re-authentication; regression tests for SECURITY DEFINER authorization; purge of Cloudinary media for deleted accounts.

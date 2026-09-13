@@ -66,7 +66,7 @@ export default function Security() {
           onPress: () => {
             Alert.alert(
               "Are you sure?",
-              "Your tickets, places, reviews and bookings will be gone for good.",
+              "Your profile, favourites and saved payment details are removed and you are signed out everywhere. Tickets you bought and payment records are kept for accounting. Places you own stay listed, unclaimed.",
               [
                 { text: "Keep my account", style: "cancel" },
                 {

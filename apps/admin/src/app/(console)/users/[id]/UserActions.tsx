@@ -30,6 +30,17 @@ export function UserActions({
   );
   const can = (p: AdminPermissionKey) => permissions.includes(p);
 
+  // A deleted account is an anonymised shell: nothing to suspend, ban or
+  // restore (setUserStatusCore refuses too).
+  if (status === "Deleted") {
+    return (
+      <Card className="p-3 text-sm text-muted-foreground">
+        This account was deleted by its owner. The profile is anonymised and the
+        financial record is kept; no account actions apply.
+      </Card>
+    );
+  }
+
   function act(next: UserAccountStatus) {
     if (!reason.trim()) {
       setMsg({ tone: "err", text: "A reason is required." });

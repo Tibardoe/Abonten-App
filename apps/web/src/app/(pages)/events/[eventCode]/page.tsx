@@ -34,6 +34,8 @@ import { IoLocationOutline } from "react-icons/io5";
 import { MdOutlineDateRange } from "react-icons/md";
 import { PiTicketBold } from "react-icons/pi";
 
+import JsonLd from "@/components/atoms/JsonLd";
+import { eventJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -237,6 +239,7 @@ export default async function page({
 
   return (
     <div className="bg-background">
+      <JsonLd data={eventJsonLd(event)} />
       {/* Hero Section */}
       <div className="relative h-72 md:h-[500px] bg-muted">
         <Image

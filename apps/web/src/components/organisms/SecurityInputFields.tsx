@@ -114,9 +114,21 @@ export default function SecurityInputFields({
   }, [initialCallingCode]);
 
   const handleDeleteUser = async () => {
+    if (
+      !window.confirm(
+        "Delete your account? This cannot be undone. Tickets you bought and payment records are kept for accounting; your profile is removed.",
+      )
+    ) {
+      return;
+    }
     const response = await deleteUser();
     if (response.status === 200) {
       toast.success(response.message);
+      // The account is gone server-side (sessions revoked); drop the local
+      // session too and leave the signed-in area instead of staying on a
+      // settings page that can no longer load anything.
+      await supabase.auth.signOut().catch(() => {});
+      window.location.assign("/");
     } else {
       toast.error(response.message);
     }

@@ -16,6 +16,16 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-13 — Platform audit: deletion keeps the financial record, storage purges work, refund race closed, reminders, headers, SEO
+
+- **Behaviour change — account deletion** (`20260913200100`): deletion is refused (409) while an organizer still has attendees on an upcoming event, a payout in progress or unpaid earnings; otherwise the profile is anonymised and the Auth user is *soft*-deleted, so transactions, tickets, ledger entries, payouts and other people's tickets are never cascaded away (they were until now). Places stay listed, unclaimed. New `user_status` 4 "Deleted". Updated `privacy/data-retention-and-deletion.md` §1–2, `privacy/privacy-rights-operations.md` §3, help `account/deleting-your-account`.
+- **Fix — retention purges** (`20260913200000`): `purge-reviewed-claim-documents` and `purge-verification-evidence` had failed on every run (Supabase refuses direct deletes from `storage.objects`, which never removed the files anyway). They now enqueue objects in `storage_purge_queue`; the new `storage-purge-dispatch` cron has `POST /api/maintenance/storage-purge` delete them through the Storage API (token in `storage_purge_config`). Updated `operations/scheduled-jobs.md`.
+- **Fix — double refund** (`20260913200200`): `claim_transaction_refund()` makes the refund request one-at-a-time per transaction; `cancelUserTicketCore` flips the ticket with a compare-and-set. Two simultaneous cancel or admin-refund calls could previously both send Paystack a partial refund.
+- **New — day-before event reminders** (`20260913200200`): hourly `event-reminders` cron writes "Tomorrow: …" notices (in-app + queued push) to active ticket holders, once per person per session, skipping people with their own app reminder. Updated `operations/scheduled-jobs.md`.
+- **Security headers** on web and admin (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS). Updated `security/application-security.md`.
+- **SEO**: `/robots.txt`, `/sitemap.xml` (published events and places, static pages), schema.org `Event` / `LocalBusiness` JSON-LD on the listing pages, `metadataBase`.
+- **Audit report**: [audit/03-holistic-audit-2026-09-13.md](../audit/03-holistic-audit-2026-09-13.md).
+
 ## 2026-09-13 — Abonten Weekly: full-bleed rotating banners
 
 - **Production state**: Abonten Weekly switched on for staff only, with two staff test editions (this week published, next week scheduled). App JavaScript published as EAS Update `29527d17` on the `preview` channel; Android preview build `0b3dd3fb` finished; the `/weekly` App Link is verified on a device. Updated `architecture/weekly-highlights.md`, `admin/weekly.md`, `operations/open-items.md` (K1), `mobile/release-verification.md`.

@@ -108,7 +108,15 @@ export async function updateSession(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
 
-    if (statusRow && (statusRow.status_id === 2 || statusRow.status_id === 3)) {
+    // status_id 4 is a deleted (anonymised) account -- its sessions are
+    // revoked on deletion, this only closes the window before the JWT
+    // expires.
+    if (
+      statusRow &&
+      (statusRow.status_id === 2 ||
+        statusRow.status_id === 3 ||
+        statusRow.status_id === 4)
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/account-restricted";
       url.search = "";
