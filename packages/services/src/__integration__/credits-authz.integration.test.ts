@@ -174,7 +174,23 @@ describe("credit ledger authorization", () => {
   });
 
   it("signed-out visitors can read the public program terms but not a balance", async () => {
+    // Other files switch the programme on for their own fixtures; on a
+    // re-used stack the seed default cannot be assumed, so pin it here and
+    // put it back afterwards.
+    const { data: before } = await service
+      .from("reward_program_setting")
+      .select("rewards_enabled")
+      .eq("id", 1)
+      .single();
+    await service
+      .from("reward_program_setting")
+      .update({ rewards_enabled: false })
+      .eq("id", 1);
     const program = await anon.rpc("get_rewards_program_public");
+    await service
+      .from("reward_program_setting")
+      .update({ rewards_enabled: before?.rewards_enabled ?? false })
+      .eq("id", 1);
     expect(program.error).toBeNull();
     expect((program.data as { enabled: boolean }).enabled).toBe(false);
 
