@@ -8,10 +8,14 @@ import { weeklyParagraphs } from "@abonten/core/weekly/editorialText";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import type { WeeklyItem, WeeklySection } from "@abonten/types/weeklyType";
 import { AppText, Icon, PressableScale } from "@abonten/ui-native";
-import { shadow, useCarouselCardWidth } from "@abonten/ui-native/theme";
+import {
+  shadow,
+  useCarouselCardWidth,
+  useThemeColors,
+} from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { FlatList, StyleSheet, View, useWindowDimensions } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
@@ -69,6 +73,7 @@ const WHITE_85 = "rgba(255,255,255,0.85)";
 function HeroItem({ item }: { item: WeeklyItem }) {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const [imageFailed, setImageFailed] = useState(false);
   const event = item.event;
   const place = item.place;
   if (!event && !place) return null;
@@ -117,7 +122,7 @@ function HeroItem({ item }: { item: WeeklyItem }) {
       style={[shadow.card, { height }]}
       className="overflow-hidden rounded-3xl bg-slate-950"
     >
-      {imageId ? (
+      {imageId && !imageFailed ? (
         <Image
           source={{
             uri: buildCloudinaryUrl(imageId, imageVersion ?? undefined, {
@@ -128,8 +133,11 @@ function HeroItem({ item }: { item: WeeklyItem }) {
           contentFit="cover"
           transition={200}
           accessibilityIgnoresInvertColors
+          onError={() => setImageFailed(true)}
         />
-      ) : null}
+      ) : (
+        <HeroBrandBackdrop />
+      )}
       <HeroScrim />
 
       <View className="flex-1 justify-between p-5">
@@ -245,6 +253,34 @@ function MetaLine({
         {children}
       </AppText>
     </View>
+  );
+}
+
+// Shown when a listing has no photo or it fails to load.
+function HeroBrandBackdrop() {
+  const c = useThemeColors();
+  return (
+    <Svg
+      pointerEvents="none"
+      style={StyleSheet.absoluteFill}
+      width="100%"
+      height="100%"
+    >
+      <Defs>
+        <LinearGradient id="weekly-hero-brand" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={c.primary} stopOpacity="1" />
+          <Stop offset="0.55" stopColor="#115e59" stopOpacity="1" />
+          <Stop offset="1" stopColor="#05080d" stopOpacity="1" />
+        </LinearGradient>
+      </Defs>
+      <Rect
+        x="0"
+        y="0"
+        width="100%"
+        height="100%"
+        fill="url(#weekly-hero-brand)"
+      />
+    </Svg>
   );
 }
 

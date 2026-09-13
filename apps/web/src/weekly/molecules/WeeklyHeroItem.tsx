@@ -4,9 +4,9 @@ import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { getEventCardDateTime } from "@abonten/core/dateFormatter";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { WeeklyItem } from "@abonten/types/weeklyType";
-import Image from "next/image";
 import Link from "next/link";
 import { FiArrowRight, FiCalendar, FiMapPin, FiStar } from "react-icons/fi";
+import WeeklyCoverImage from "../atoms/WeeklyCoverImage";
 
 // The listing a "hero" section gives the most room: its own photo fills the
 // card and the text sits over it, like the banners at the top of the page.
@@ -66,7 +66,8 @@ export default function WeeklyHeroItem({
     >
       <div aria-hidden className="absolute inset-0 -z-10">
         {imageId ? (
-          <Image
+          <WeeklyCoverImage
+            fallback={<HeroBrandBackdrop />}
             src={buildCloudinaryUrl(imageId, imageVersion, { width: 1100 })}
             alt=""
             fill
@@ -80,7 +81,7 @@ export default function WeeklyHeroItem({
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-teal-800 to-slate-950" />
+          <HeroBrandBackdrop />
         )}
         <div
           className={cn(
@@ -187,5 +188,12 @@ export default function WeeklyHeroItem({
         </div>
       </div>
     </article>
+  );
+}
+
+// Shown when a listing has no photo or it fails to load.
+function HeroBrandBackdrop() {
+  return (
+    <div className="absolute inset-0 bg-gradient-to-br from-primary via-teal-800 to-slate-950" />
   );
 }

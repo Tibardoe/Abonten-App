@@ -21,6 +21,7 @@ import {
   FiArrowUpRight,
   FiChevronLeft,
   FiChevronRight,
+  FiImage,
   FiPause,
   FiPlay,
 } from "react-icons/fi";
@@ -80,6 +81,12 @@ export default function WeeklyBanner({
   const [mounted, setMounted] = useState<Set<number>>(
     () => new Set(count > 1 ? [0, 1] : [0]),
   );
+  // Slides whose image failed to load show the brand backdrop instead of a
+  // black box or the browser's broken-image icon.
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
+  const markFailed = useCallback((key: string) => {
+    setFailed((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+  }, []);
   const [userPaused, setUserPaused] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -231,17 +238,22 @@ export default function WeeklyBanner({
                       running || i !== index ? "running" : "paused",
                   }}
                 >
-                  <Image
-                    src={buildCloudinaryUrl(s.publicId, s.version, {
-                      width: 1100,
-                    })}
-                    alt=""
-                    fill
-                    priority={priority && i === 0}
-                    quality={90}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1200px"
-                    className="object-cover"
-                  />
+                  {failed.has(s.key) ? (
+                    <BrandBackdrop />
+                  ) : (
+                    <Image
+                      src={buildCloudinaryUrl(s.publicId, s.version, {
+                        width: 1100,
+                      })}
+                      alt=""
+                      fill
+                      priority={priority && i === 0}
+                      quality={90}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 1200px"
+                      className="object-cover"
+                      onError={() => markFailed(s.key)}
+                    />
+                  )}
                 </div>
               </div>
             ) : null,
@@ -307,18 +319,23 @@ export default function WeeklyBanner({
                   draggable={false}
                   className="group/caption flex items-center gap-3 rounded-2xl bg-white/10 p-2 pr-3 ring-1 ring-white/15 backdrop-blur-md transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
-                  <span className="relative hidden h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white/10 sm:block">
-                    <Image
-                      key={slide.key}
-                      src={buildCloudinaryUrl(slide.publicId, slide.version, {
-                        width: 48,
-                        height: 48,
-                      })}
-                      alt=""
-                      fill
-                      sizes="48px"
-                      className="object-cover animate-in fade-in duration-500"
-                    />
+                  <span className="relative hidden h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-white/10 sm:grid">
+                    {failed.has(slide.key) ? (
+                      <FiImage aria-hidden className="h-5 w-5 text-white/60" />
+                    ) : (
+                      <Image
+                        key={slide.key}
+                        src={buildCloudinaryUrl(slide.publicId, slide.version, {
+                          width: 48,
+                          height: 48,
+                        })}
+                        alt=""
+                        fill
+                        sizes="48px"
+                        className="object-cover animate-in fade-in duration-500"
+                        onError={() => markFailed(slide.key)}
+                      />
+                    )}
                   </span>
                   <span
                     key={slide.key}
