@@ -132,10 +132,14 @@ export const config = {
      *   even after a webhook URL was configured in the Paystack dashboard)
      * - api/notifications (the notification-delivery pg_cron job calling
      *   /api/notifications/deliver with its token, no cookie either)
+     * - api/maintenance (the storage-purge-dispatch pg_cron job calling
+     *   /api/maintenance/storage-purge with its token -- same as above)
+     * - robots.txt / sitemap.xml (crawlers carry no cookie; both are
+     *   public metadata routes)
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|favicon.ico|api/mobile|api/observability|api/notifications|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
