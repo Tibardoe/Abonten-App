@@ -49,12 +49,14 @@ export function Card({
 
 // ── Badge / status ──────────────────────────────────────────
 type Tone = "neutral" | "info" | "success" | "warning" | "danger";
+// Light tints (10%) under the tone's own text colour: badge text is 11px, so
+// the pair has to reach 4.5:1 in both themes — checked with axe.
 const TONE: Record<Tone, string> = {
   neutral: "bg-muted text-muted-foreground",
-  info: "bg-primary/15 text-primary",
-  success: "bg-success/15 text-success",
-  warning: "bg-warning/20 text-warning",
-  danger: "bg-destructive/15 text-destructive",
+  info: "bg-primary/10 text-primary",
+  success: "bg-success/10 text-success",
+  warning: "bg-warning/10 text-warning",
+  danger: "bg-destructive/10 text-destructive",
 };
 export function Badge({
   tone = "neutral",

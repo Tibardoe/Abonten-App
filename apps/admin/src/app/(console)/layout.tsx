@@ -1,5 +1,6 @@
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { Sidebar } from "@/components/Sidebar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { requireAdmin } from "@/lib/adminGuard";
 import { signOut } from "@/server/actions";
 import { Suspense } from "react";
@@ -34,7 +35,10 @@ export default async function ConsoleLayout({
             </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">{ctx.email}</span>
+            <ThemeToggle />
+            <span className="hidden text-muted-foreground sm:inline">
+              {ctx.email}
+            </span>
             <form action={signOut}>
               <button
                 type="submit"

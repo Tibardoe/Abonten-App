@@ -11,16 +11,19 @@
     --card-foreground: 220 25% 12%;
     --muted: 220 14% 95%;
     --muted-foreground: 220 10% 42%;
-    --primary: 171 65% 40%;
+    /* The teal, success, warning and destructive tones are used as small
+       text (links, badges, the active nav item), so each one is dark enough
+       to reach 4.5:1 on white and on the muted tint — checked with axe. */
+    --primary: 171 65% 27%;
     --primary-foreground: 0 0% 100%;
     --border: 220 14% 88%;
-    --ring: 171 65% 45%;
-    --destructive: 0 72% 48%;
+    --ring: 171 65% 33%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 55% 36%;
+    --success: 152 55% 27%;
     --success-foreground: 0 0% 100%;
-    --warning: 32 90% 42%;
-    --warning-foreground: 32 40% 12%;
+    --warning: 32 95% 29%;
+    --warning-foreground: 0 0% 100%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 12%;
     /* Chart series, in the order the console assigns them. Distinguishable
@@ -32,10 +35,16 @@
     --chart-4: 32 90% 42%;
     --chart-5: 340 62% 52%;
     --radius: 0.5rem;
+    /* Native controls, scrollbars and form fields follow the theme too. */
+    color-scheme: light;
   }
 
+  /* Dark: chosen by the operator (ThemeToggle → next-themes sets `dark` on
+     <html>) or inherited from the device. Same tokens, darker values; the
+     chart series are lifted a little so they keep their contrast. */
   :root[data-theme="dark"],
   .dark {
+    color-scheme: dark;
     --background: 222 24% 9%;
     --foreground: 210 20% 92%;
     --card: 222 22% 12%;
@@ -46,8 +55,8 @@
     --primary-foreground: 171 40% 10%;
     --border: 220 14% 22%;
     --ring: 171 60% 45%;
-    --destructive: 0 62% 52%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 70% 64%;
+    --destructive-foreground: 0 45% 8%;
     --success: 152 45% 46%;
     --success-foreground: 152 40% 10%;
     --warning: 36 80% 55%;
@@ -68,5 +77,12 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "tnum" 1;
+  }
+  /* A link inside running text is told apart by more than its colour, which
+     a colour-blind reader (or a colour-only rule check) cannot rely on.
+     Links that stand alone — in tables, lists of names, tabs — stay clean. */
+  p a {
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
   }
 }

@@ -50,23 +50,37 @@ export function InfoTip({
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [placement, setPlacement] = useState<"bottom" | "top">("bottom");
-  const [align, setAlign] = useState<"start" | "end">("start");
+  // Horizontal nudge, in px, that keeps the panel inside the viewport.
+  const [shift, setShift] = useState(0);
   const wrapperRef = useRef<HTMLSpanElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  // Set while we move focus back to the button ourselves, so the focus
+  // handler does not reopen the tip we have just closed.
+  const restoringFocus = useRef(false);
 
   const close = useCallback(() => {
     setOpen(false);
     setPinned(false);
+    setShift(0);
   }, []);
 
   // Escape closes wherever focus is, and a click anywhere else dismisses a
-  // pinned tip — the behaviour people already expect from a popover.
+  // pinned tip — the behaviour people already expect from a popover. Focus
+  // returns to the button only when it was in this tip (or nowhere), so a
+  // pinned tip closing does not steal focus from wherever the person went.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        close();
+      if (e.key !== "Escape") return;
+      const activeEl = document.activeElement;
+      const focusWasHere =
+        !activeEl ||
+        activeEl === document.body ||
+        wrapperRef.current?.contains(activeEl) === true;
+      close();
+      if (focusWasHere && activeEl !== buttonRef.current) {
+        restoringFocus.current = true;
         buttonRef.current?.focus();
       }
     };
@@ -81,15 +95,39 @@ export function InfoTip({
     };
   }, [open, close]);
 
-  // Flip the panel when it would run off the screen. Measured after paint so
-  // the server render and the first client render are identical.
+  // Keep the panel on screen: flip above the button when it would run off
+  // the bottom, and nudge it sideways when it would run off either edge (a
+  // 400px phone cannot fit a 256px panel to the right of a button near the
+  // right edge, nor to the left of one near the left edge). Measured after
+  // paint so the server render and the first client render are identical.
   useLayoutEffect(() => {
-    if (!open || !panelRef.current) return;
-    const rect = panelRef.current.getBoundingClientRect();
-    const viewportHeight = document.documentElement.clientHeight;
-    const viewportWidth = document.documentElement.clientWidth;
-    setPlacement(rect.bottom > viewportHeight - 8 ? "top" : "bottom");
-    setAlign(rect.right > viewportWidth - 8 ? "end" : "start");
+    if (!open) return;
+    const place = () => {
+      const panel = panelRef.current;
+      const anchor = wrapperRef.current;
+      if (!panel || !anchor) return;
+      // Measure against the button, not the panel's current position, so
+      // the answer is the same whatever nudge or flip is already applied.
+      const a = anchor.getBoundingClientRect();
+      const height = panel.offsetHeight;
+      const width = panel.offsetWidth;
+      const viewportHeight = document.documentElement.clientHeight;
+      const viewportWidth = document.documentElement.clientWidth;
+      const margin = 8;
+      const gap = 6;
+      const fitsBelow = a.bottom + gap + height <= viewportHeight - margin;
+      const fitsAbove = a.top - gap - height >= margin;
+      setPlacement(fitsBelow || !fitsAbove ? "bottom" : "top");
+      let nudge = 0;
+      if (a.left + width > viewportWidth - margin) {
+        nudge = viewportWidth - margin - (a.left + width);
+      }
+      if (a.left + nudge < margin) nudge = margin - a.left;
+      setShift(Math.round(nudge));
+    };
+    place();
+    window.addEventListener("resize", place);
+    return () => window.removeEventListener("resize", place);
   }, [open]);
 
   return (
@@ -112,11 +150,21 @@ export function InfoTip({
         aria-expanded={pinned}
         aria-controls={open ? id : undefined}
         aria-describedby={open ? id : undefined}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          if (restoringFocus.current) {
+            restoringFocus.current = false;
+            return;
+          }
+          setOpen(true);
+        }}
         onBlur={() => {
           if (!pinned) setOpen(false);
         }}
-        onClick={() => {
+        onClick={(e) => {
+          // Never let the press reach whatever the button sits in (a card's
+          // drill-down link, a form): opening a definition is all it does.
+          e.preventDefault();
+          e.stopPropagation();
           const next = !pinned;
           setPinned(next);
           setOpen(next || true);
@@ -133,11 +181,13 @@ export function InfoTip({
           role="tooltip"
           data-placement={placement}
           className={cn(
-            "absolute z-30 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-popover p-3 text-xs font-normal leading-relaxed text-popover-foreground shadow-lg",
+            "absolute left-0 z-30 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-border bg-popover p-3 text-xs font-normal leading-relaxed text-popover-foreground shadow-lg",
             "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-100",
             placement === "bottom" ? "top-full mt-1.5" : "bottom-full mb-1.5",
-            align === "start" ? "left-0" : "right-0",
           )}
+          // `left`, not a transform: the enter animation owns `transform`
+          // for its first 100ms and would override a nudge set there.
+          style={shift ? { left: shift } : undefined}
         >
           <p className="font-medium text-foreground">{label}</p>
           <p className="mt-1">{definition}</p>
