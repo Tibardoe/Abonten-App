@@ -1,9 +1,16 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
+import { WeeklyBanner } from "@/components/weekly/WeeklyBanner";
 import { WeeklySectionView } from "@/components/weekly/WeeklySectionView";
+import {
+  WeeklyChip,
+  weeklyListingPath,
+} from "@/components/weekly/weeklyBannerParts";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useWeeklyEdition } from "@/features/weekly/useWeekly";
+import { hapticLight } from "@/lib/haptics";
 import { shareLink, weeklyShareUrl } from "@/lib/share";
+import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import {
   WEEKLY_PRODUCT_NAME,
   WEEKLY_TAGLINE,
@@ -15,12 +22,13 @@ import type { WeeklyEditionDocument } from "@abonten/types/weeklyType";
 import {
   AppText,
   EmptyState,
+  Icon,
   Refresher,
   ScreenError,
   Skeleton,
 } from "@abonten/ui-native";
 import { useRouter } from "expo-router";
-import { ScrollView, View } from "react-native";
+import { ScrollView, View, useWindowDimensions } from "react-native";
 
 // Abonten Weekly in the app: this week's edition for the explored area (or a
 // scope / dated edition from a shared link), laid out section by section.
@@ -28,7 +36,13 @@ import { ScrollView, View } from "react-native";
 // shown; never a dead end when nothing is out.
 
 function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
   const e = doc.edition;
+  const slides = weeklyBannerSlides(doc.sections);
+  const intro = weeklyParagraphs(e.intro);
+  const pickCount = doc.sections.reduce((n, s) => n + s.items.length, 0);
+  const height = Math.round(Math.min(Math.max(width * 1.15, 420), 560));
   const notices = [
     doc.isFallbackScope
       ? "There is no edition for your area this week, so these are Ghana-wide picks."
@@ -42,26 +56,66 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
   ].filter((n): n is string => !!n);
 
   return (
-    <View className="mx-4 gap-2 rounded-2xl border border-border bg-card p-5">
-      <AppText variant="overline" tone="brand">
-        ✨ {WEEKLY_PRODUCT_NAME} · {e.scopeName}
-      </AppText>
-      <AppText variant="pageTitle" accessibilityRole="header">
-        {e.title}
-      </AppText>
-      <AppText variant="meta">{formatWeekRange(e.weekStart)}</AppText>
-      <AppText variant="bodyLg">{e.subtitle ?? WEEKLY_TAGLINE}</AppText>
-      {weeklyParagraphs(e.intro).map((p) => (
-        <AppText key={p} variant="muted">
-          {p}
+    <View className="gap-4">
+      <WeeklyBanner
+        slides={slides}
+        height={height}
+        onSlidePress={(slide) => {
+          hapticLight();
+          router.push(weeklyListingPath(slide));
+        }}
+        eyebrow={
+          <>
+            <WeeklyChip strong>
+              ✨ {WEEKLY_PRODUCT_NAME} · {e.scopeName}
+            </WeeklyChip>
+            <WeeklyChip>{formatWeekRange(e.weekStart)}</WeeklyChip>
+          </>
+        }
+      >
+        <AppText
+          accessibilityRole="header"
+          className="text-[34px] font-extrabold leading-[37px] text-white"
+          numberOfLines={3}
+        >
+          {e.title}
         </AppText>
-      ))}
+        <AppText
+          className="mt-2 text-[15px] leading-[21px]"
+          style={{ color: "rgba(255,255,255,0.86)" }}
+          numberOfLines={3}
+        >
+          {e.subtitle ?? WEEKLY_TAGLINE}
+        </AppText>
+        <AppText
+          className="mt-3 text-[12px] font-semibold uppercase tracking-widest"
+          style={{ color: "rgba(255,255,255,0.7)" }}
+        >
+          {pickCount} {pickCount === 1 ? "pick" : "picks"} this week
+        </AppText>
+      </WeeklyBanner>
+
+      {intro.length > 0 ? (
+        <View className="mx-4 gap-2 rounded-3xl border border-border bg-card p-5">
+          <AppText variant="overline" tone="brand">
+            From the editors
+          </AppText>
+          {intro.map((p) => (
+            <AppText key={p} variant="bodyLg">
+              {p}
+            </AppText>
+          ))}
+        </View>
+      ) : null}
       {notices.map((n) => (
         <View
           key={n}
-          className="mt-1 self-start rounded-full bg-muted px-3 py-1"
+          className="mx-4 flex-row items-start gap-2.5 rounded-2xl border border-border bg-muted p-3.5"
         >
-          <AppText variant="caption">{n}</AppText>
+          <Icon name="information-circle-outline" size={18} tone="primary" />
+          <AppText variant="body" className="flex-1">
+            {n}
+          </AppText>
         </View>
       ))}
     </View>
@@ -71,11 +125,8 @@ function Masthead({ doc }: { doc: WeeklyEditionDocument }) {
 function WeeklySkeleton() {
   return (
     <View className="gap-6 pt-4" accessibilityLabel="Loading Abonten Weekly">
-      <View className="mx-4 gap-3 rounded-2xl border border-border p-5">
-        <Skeleton width={140} height={12} />
-        <Skeleton width="80%" height={28} />
-        <Skeleton width={120} height={14} />
-        <Skeleton width="95%" height={18} />
+      <View className="mx-4 overflow-hidden rounded-3xl">
+        <Skeleton width="100%" height={440} radius={24} />
       </View>
       <View className="gap-3 px-4">
         <Skeleton width={180} height={20} />

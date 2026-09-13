@@ -200,6 +200,26 @@
   }
 }
 
+/* Abonten Weekly banners: the slow drift on the active background image. */
+@keyframes weeklyKenBurns {
+  0% {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  100% {
+    transform: scale(1.12) translate3d(-1.5%, -1%, 0);
+  }
+}
+
+.animate-weekly-kenburns {
+  animation: weeklyKenBurns 9s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-weekly-kenburns {
+    animation: none;
+  }
+}
+
 .animate-floatFast {
   animation: floatFast 4s ease-in-out infinite;
 }

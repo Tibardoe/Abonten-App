@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import { weeklyEditionPath } from "@abonten/core/weekly/copy";
 import { weekEndFor, weekStartFor } from "@abonten/core/weekly/week";
 import type { UserPostType } from "@abonten/types/postsType";
@@ -224,23 +225,13 @@ export async function getWeeklyTeaserCore(
     }
 
     const items = doc.sections.flatMap((s) => s.items);
-    const images: WeeklyTeaser["images"] = [];
-    for (const item of items) {
-      if (images.length >= 3) break;
-      if (item.event?.flyer_public_id) {
-        images.push({
-          publicId: item.event.flyer_public_id,
-          version: item.event.flyer_version ?? null,
-          alt: item.event.title,
-        });
-      } else if (item.place?.cover_public_id) {
-        images.push({
-          publicId: item.place.cover_public_id,
-          version: item.place.cover_version ?? null,
-          alt: item.place.name,
-        });
-      }
-    }
+    const slides = weeklyBannerSlides(doc.sections);
+    // Older app builds still read `images`; they show the first two or three.
+    const images: WeeklyTeaser["images"] = slides.slice(0, 3).map((s) => ({
+      publicId: s.publicId,
+      version: s.version,
+      alt: s.title,
+    }));
 
     return {
       status: 200,
@@ -253,6 +244,7 @@ export async function getWeeklyTeaserCore(
         isFallbackScope: doc.isFallbackScope,
         itemCount: items.length,
         images,
+        slides,
         href: weeklyEditionPath(doc.edition.scopeSlug, doc.edition.weekStart),
       },
     };

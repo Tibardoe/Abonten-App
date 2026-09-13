@@ -644,6 +644,13 @@ describe("scopes and fallbacks", () => {
     expect(teaser.data?.scopeSlug).toBe(scopeSlug);
     expect(teaser.data?.href).toBe(`/weekly/${scopeSlug}/${THIS_MONDAY}`);
     expect(teaser.data?.images[0]?.publicId).toBe("test/flyer");
+    expect(teaser.data?.slides).toHaveLength(1);
+    expect(teaser.data?.slides[0]).toMatchObject({
+      subjectType: "event",
+      subjectId: eventId,
+      publicId: "test/flyer",
+    });
+    expect(teaser.data?.slides[0]?.webPath).toMatch(/^\/events\/[a-z0-9]+$/);
 
     await setSettings({ teaser_enabled: false });
     expect(
