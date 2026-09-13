@@ -561,6 +561,13 @@ describe("recommendation engine", () => {
     });
     await attend(attendee.id, fresh);
     await ageEvents([fresh, fresh2], 7);
+    // The first run above moved the watermark to the newest event it saw.
+    // On a shared stack that can be another suite's event published more
+    // recently than "7 minutes ago", which would hide the two fresh events
+    // from this run; pin the watermark behind them, as the later tests do.
+    await setSettings({
+      generate_watermark: new Date(Date.now() - 11 * 60_000).toISOString(),
+    } as Partial<SettingsRow>);
 
     const gen = await svc.rpc("recommendations_generate", { p_limit: 1000 });
     expect(gen.error).toBeNull();
