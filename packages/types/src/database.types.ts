@@ -10729,6 +10729,16 @@ export type Database = {
         Args: { p_permission: string };
         Returns: boolean;
       };
+      admin_platform_analytics: {
+        Args: {
+          p_bucket: string;
+          p_from: string;
+          p_prev_from: string;
+          p_prev_to: string;
+          p_to: string;
+        };
+        Returns: Json;
+      };
       admin_recommendation_metrics: {
         Args: { p_days?: number };
         Returns: Json;
@@ -10745,6 +10755,15 @@ export type Database = {
           p_status: string;
         };
         Returns: string;
+      };
+      admin_user_demographics: {
+        Args: {
+          p_from: string;
+          p_prev_from: string;
+          p_prev_to: string;
+          p_to: string;
+        };
+        Returns: Json;
       };
       anonymize_deleted_account: { Args: { p_user_id: string }; Returns: Json };
       apply_moderation_action: {

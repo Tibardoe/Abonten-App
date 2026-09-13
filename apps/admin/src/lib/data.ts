@@ -346,12 +346,14 @@ export async function loadErrorGroup(fingerprint: string) {
 }
 
 export async function loadAnalytics(
-  range: DashboardRange,
-  from?: string,
-  to?: string,
+  searchParams: Record<string, string | string[] | undefined>,
 ) {
   const ctx = await requireAdmin();
-  return getPlatformAnalyticsCore(getServiceClient(), ctx, { range, from, to });
+  return getPlatformAnalyticsCore(
+    getServiceClient(),
+    ctx,
+    parseAdminRangeParams(searchParams),
+  );
 }
 
 // ── Phase 5: global search ─────────────────────────────────

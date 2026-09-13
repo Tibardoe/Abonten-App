@@ -80,6 +80,14 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+// Money arrives as Postgres `numeric` (exact) and is summed here as a
+// JavaScript float (not exact), so a few hundred rows of pesewas drift into
+// values like 6.999999999999886. Round every total back to the pesewa before
+// it leaves this module, so the console and the ledger agree.
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Overview
 // ─────────────────────────────────────────────────────────────
@@ -261,24 +269,24 @@ export async function getFinanceOverviewCore(
       to,
       currency,
       activeFeeRate: cfg?.fee_rate != null ? num(cfg.fee_rate) : null,
-      totalCustomerPayments,
-      ticketRevenue,
-      serviceFeeRevenue,
-      processingCost,
-      netPlatformRevenue,
+      totalCustomerPayments: round2(totalCustomerPayments),
+      ticketRevenue: round2(ticketRevenue),
+      serviceFeeRevenue: round2(serviceFeeRevenue),
+      processingCost: round2(processingCost),
+      netPlatformRevenue: round2(netPlatformRevenue),
       feeEntries,
       feeEntriesWithKnownCost,
       transactionsSuccessful,
       refundsPending,
-      refundsPendingAmount,
+      refundsPendingAmount: round2(refundsPendingAmount),
       refundsCompleted,
-      refundsCompletedAmount,
-      organizerEarningsBooked,
-      organizerEarningsHeld,
-      organizerEarningsPaidOut,
-      organizerEarningsOutstanding,
+      refundsCompletedAmount: round2(refundsCompletedAmount),
+      organizerEarningsBooked: round2(organizerEarningsBooked),
+      organizerEarningsHeld: round2(organizerEarningsHeld),
+      organizerEarningsPaidOut: round2(organizerEarningsPaidOut),
+      organizerEarningsOutstanding: round2(organizerEarningsOutstanding),
       payoutsPending,
-      payoutsPendingAmount,
+      payoutsPendingAmount: round2(payoutsPendingAmount),
     },
   };
 }
@@ -892,10 +900,10 @@ export async function getOrganizerFinanceCore(
       organizerId,
       organizerName: names.get(organizerId) ?? null,
       currency,
-      earned,
-      held,
-      paidOut,
-      outstanding,
+      earned: round2(earned),
+      held: round2(held),
+      paidOut: round2(paidOut),
+      outstanding: round2(outstanding),
       payoutAccounts: (accts ?? []).map((a) => ({
         id: a.id,
         accountType: a.account_type ?? null,
