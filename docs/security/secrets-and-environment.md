@@ -35,14 +35,15 @@ complianceReviewRequired: no
 | `RESEND_API_KEY` | secret | Transactional email | emails skipped (code is env-gated) |
 | `OBSERVABILITY_INGEST_SECRET` | secret | `/api/observability/*` auth; must equal `observability_config.secret` in the DB | health/error ingest 401 |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `SENTRY_AUTH_TOKEN` | DSN public; token secret | Error monitoring; source-map upload (CI/Vercel only) | no Sentry events / no source maps |
-| `REWARDS_KILL_SWITCH`, `FIELD_OPS_KILL_SWITCH` | flag | Emergency off switches | programmes follow DB settings |
+| `REWARDS_KILL_SWITCH`, `FIELD_OPS_KILL_SWITCH`, `VERIFICATION_KILL_SWITCH` | flag | Emergency off switches | programmes follow DB settings |
+| `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` | flag | Discovery emergency stops: old search everywhere; no prompts, alerts, For you or new subscriptions | Discovery follows `discovery_program_setting` |
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |
 | `NEXTAUTH_SECRET`, `NEXTAUTH_URL` | vestigial | No `next-auth` dependency; safe to remove (LOW-008) | — |
 
 ## apps/admin (Vercel project `abonten-app-admin`, CI `build-admin`)
 
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` (for admin refund/payout actions via services), `PAYSTACK_TRANSFERS_ENABLED`, `GOOGLE_MAPS_API_KEY` (territory geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, **`ADMIN_EMAIL_ALLOWLIST`** (comma-separated emails; empty disables the gate — never leave empty in production), `NEXT_PUBLIC_ADMIN_URL`, `NEXT_PUBLIC_SENTRY_DSN` (admin project), `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `OBSERVABILITY_INGEST_SECRET`, `PAYSTACK_SECRET_KEY` (for admin refund/payout actions via services), `PAYSTACK_TRANSFERS_ENABLED`, `GOOGLE_MAPS_API_KEY` (territory geocoding), `FIELD_OPS_KILL_SWITCH`, `REWARDS_KILL_SWITCH`, `SEARCH_V2_KILL_SWITCH` and `RECOMMENDATIONS_KILL_SWITCH` (display only in Admin › Discovery; the web deployment enforces them).
 
 ## apps/mobile (EAS environments development / preview / production; local `apps/mobile/.env` mirror)
 

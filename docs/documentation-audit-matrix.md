@@ -27,7 +27,8 @@ Legend: ✅ exists · 🟡 partial · ❌ absent · — not applicable. "Documen
 | Delete account | ✅ | ✅ | ❌ (no admin tool) | `deleteAccountCore` | ✅ | ✅ | Events not cancelled on deletion; Cloudinary media not purged; no grace period (O5) |
 | Suspend / ban / restore | — | — | ✅ | `setUserStatusCore` | ✅ | ✅ | No RLS keyed on status (session revocation load-bearing) |
 | Discovery (explore, filters, nearby) | ✅ | ✅ | read | 7 RPCs | ✅ | ✅ | — |
-| Search | ✅ | ✅ | ✅ global search | matview | ✅ | ✅ | Results list is events-only (places in suggestions) |
+| Search | ✅ | ✅ | ✅ global search; Discovery insights | ranked `search_*` RPCs | ✅ | ✅ | Unified events, places and organizers ship switched off; until then the old events-only results list applies |
+| Alerts, prompts, For you, notification preferences | ✅ | ✅ | ✅ Discovery settings and metrics | `recommendation*`, `notification_subscription` | ✅ | ✅ | Ships switched off (shadow mode); email digests do not exist |
 | Maps | ✅ Google JS | ✅ RN maps | ✅ territories | geocode proxy | ✅ | ✅ | Not keyboard-navigable (a11y gap) |
 | Event detail, favourite, share | ✅ | ✅ | — | ✅ | ✅ | ✅ | — |
 | Event reminders | ❌ | ✅ local | — | — | ✅ | ✅ | Mobile-only, device-local |

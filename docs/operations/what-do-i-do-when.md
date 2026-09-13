@@ -46,7 +46,9 @@ Each entry: **first check → do → then**. Keywords in bold help search.
 
 **…an image violates policy** → Content › Hide/Remove the item (highlight, photo's listing, review with photo); Cloudinary media stays until cleanup — engineering can destroy the asset if it is illegal → `content-moderation-policy.md`, `../incident-response/malicious-content-and-uploads.md`.
 
-**…an event is missing from search** (*not appearing*) → is it `published`? `moderation_state` visible? within the searched location/date? `event_search` matview refreshes every 15 min → `../troubleshooting/README.md`.
+**…an event is missing from search** (*not appearing*) → is it `published`? `moderation_state` visible? within the searched location/date? search reads the listing directly, with no refresh delay; if unified search is off for them they get the older events-only search → `../troubleshooting/README.md`.
+
+**…someone gets too many (or unwanted) recommendation notices** → check their subscriptions and prompt history; they can stop each alert in Settings › Notifications; if volume is wrong for everyone, untick the engine in Admin › Discovery → `../admin/discovery.md`.
 
 **…a user requests account deletion** → self-service in Settings › Security; if they cannot sign in, follow the privacy procedure → `../privacy/privacy-rights-operations.md` §3.
 

@@ -113,6 +113,17 @@ Shipped 2026-09-12, switched **off**. Design: [architecture/trust-and-verificati
 | V6 | When to open the programme, and to whom | `verification_program_setting.place_requests_enabled` / `organizer_requests_enabled` / `audience`; `VERIFICATION_KILL_SWITCH` | Both switches off, audience `staff`. Nothing is visible to owners. | Open places to `staff` first and verify one real place end to end, then `all`. Open organizers once the place queue is comfortable. | Open |
 
 
+## Discovery: search, alerts and recommendation notices
+
+Shipped 2026-09-13, switched **off**. Design: [architecture/discovery-search-and-recommendations.md](architecture/discovery-search-and-recommendations.md). Operator handbook: [admin/discovery.md](admin/discovery.md).
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| N1 | When to open unified search and recommendation notices, and to whom | `discovery_program_setting` switches and audiences; `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH` | Search off, recommendations off with shadow on, prompts off, both audiences `staff`. | Search: staff, then beta, then all. Recommendations: shadow for staff, then prompts and shadow for beta, then live for beta and all once the shadow exit criteria in `admin/discovery.md` hold. | Open |
+| N2 | Notice volume: daily and weekly caps, digest hour, organizer cooldown, auto-pause | `daily_push_cap`, `weekly_push_cap`, `digest_hour_local`, `organizer_cooldown_hours`, `ignore_pause_after` / `ignore_pause_days` | 1 a day, 3 a week, 18:00 Accra, 72 hours, pause 14 days after 3 unopened digests. Settings, not constants. | Keep until live data shows open and "Not interested" rates; lower the weekly cap before raising anything. | Open |
+| N3 | Retention of search analytics and recommendation history | `search_log_retention_days`, `recommendation_retention_days`; `search-log-purge`, `recommendations-purge` jobs | Search log 90 days (no user identifiers). Picks 90 days, digests 180 days, skip records 30 days. Prompt history (consent record) and subscriptions have no purge. | Keep the search log at 90 days. Decide with legal G3 whether prompt history is kept for as long as the account exists. | Open (depends on legal G3) |
+| N4 | How often people may be asked to opt in | `prompt_cooldown_days`, `prompt_dismiss_days`, `prompt_max_shows` | At most one prompt a week per person, never within 30 days of "Not now", at most 3 showings per topic. | Keep. Asking less often is always safe. | Open |
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |

@@ -10127,6 +10127,10 @@ export type Database = {
         Args: { p_reason: string; p_user: string };
         Returns: boolean;
       };
+      _recommendation_subject_suppression: {
+        Args: { p_subject_id: string; p_subject_type: string };
+        Returns: string;
+      };
       _recommendation_suppression: {
         Args: { p_subject_id: string; p_subject_type: string; p_user: string };
         Returns: string;
