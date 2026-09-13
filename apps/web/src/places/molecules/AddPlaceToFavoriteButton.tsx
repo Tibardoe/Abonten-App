@@ -44,15 +44,18 @@ export default function AddPlaceToFavoriteButton({
   const isFavorite = data?.status === 200 ? data.isFavorited : false;
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async () => {
+    // The action is fixed at press time: onMutate flips the cached flag, and
+    // the callbacks below are re-created on that render, so reading
+    // isFavorite there would see the optimistic value.
+    mutationFn: async (adding: boolean) => {
       if (!placeId) return;
 
-      return isFavorite
+      return !adding
         ? await removePlaceFromFavorite(placeId)
         : await addPlaceToFavorite(placeId);
     },
 
-    onMutate: async () => {
+    onMutate: async (adding) => {
       await queryClient.cancelQueries({
         queryKey: ["place-favorited", placeId],
       });
@@ -64,7 +67,7 @@ export default function AddPlaceToFavoriteButton({
 
       queryClient.setQueryData(["place-favorited", placeId], {
         ...previousState,
-        isFavorited: !isFavorite,
+        isFavorited: adding,
       });
 
       return { previousState };
@@ -78,9 +81,9 @@ export default function AddPlaceToFavoriteButton({
       toast.error("Something went wrong. Please try again later.");
     },
 
-    onSuccess: (response) => {
+    onSuccess: (response, adding) => {
       // Adding (not removing) a favorite may lead to a "Like this place?" prompt.
-      if (!isFavorite && response && response.status === 200) {
+      if (adding && response && response.status === 200) {
         announcePlaceInteraction({ placeId, trigger: "favorite" });
       }
     },
@@ -97,7 +100,7 @@ export default function AddPlaceToFavoriteButton({
   const buttonText = isFavorite ? "Remove Favorited" : "Add to Favorite";
 
   const handleClick = async () => {
-    if (await requireAuth()) mutate();
+    if (await requireAuth()) mutate(!isFavorite);
   };
 
   return (

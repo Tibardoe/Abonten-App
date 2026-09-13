@@ -247,12 +247,18 @@ export default function DiscoveryResults({
     organizers: initial.organizers.items.length,
   };
   const total = counts.events + counts.places + counts.organizers;
+  // Any non-200 answer (rate limit, invalid input, programme off, outage)
+  // is an error the person should see, never an empty "No results".
   const failed =
-    initial.status >= 500 ||
+    initial.status !== 200 ||
     (initial.events.error && initial.places.error && initial.organizers.error);
+  const failureMessage =
+    initial.status === 429 && initial.message
+      ? initial.message
+      : "Search is unavailable right now.";
 
   const summary = failed
-    ? "Search is unavailable right now."
+    ? failureMessage
     : total === 0
       ? "No results."
       : [
@@ -319,7 +325,7 @@ export default function DiscoveryResults({
 
       {failed ? (
         <InlineErrorRetry
-          message="Search is unavailable right now."
+          message={failureMessage}
           onRetry={() => window.location.reload()}
         />
       ) : total === 0 ? (

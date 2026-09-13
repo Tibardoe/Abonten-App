@@ -1,3 +1,4 @@
+import { useSession } from "@/auth/SessionProvider";
 import { api } from "@/lib/api";
 import {
   DISABLED_DISCOVERY_PROGRAM,
@@ -8,7 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 // Which Discovery features this person may use right now: the unified
 // search, organizer and place search, alerts and opt-in prompts. Rolls out
 // by audience and fails closed, so every entry point hides while this is
-// loading, offline without a cached answer, or switched off.
+// loading, offline without a cached answer, or switched off. The answer
+// depends on who is asking (audience, and alerts need an account), so it is
+// cached per person: signing in must not keep showing the signed-out answer.
 export const DISCOVERY_PROGRAM_KEY = [
   "mobile",
   "discovery",
@@ -16,8 +19,9 @@ export const DISCOVERY_PROGRAM_KEY = [
 ] as const;
 
 export function useDiscoveryProgram() {
+  const { session } = useSession();
   const query = useQuery({
-    queryKey: DISCOVERY_PROGRAM_KEY,
+    queryKey: [...DISCOVERY_PROGRAM_KEY, session?.user.id ?? null],
     queryFn: async (): Promise<DiscoveryProgram> => {
       const res = await api.discovery.program();
       return res.status === 200 && res.data

@@ -101,17 +101,18 @@ function SuggestionRow({
       onPress={onPress}
       className="min-h-[52px] flex-row items-center gap-3 rounded-lg px-1 py-2 active:opacity-70"
     >
-      {imageUri ? (
-        <Image
-          source={{ uri: imageUri }}
-          style={{ width: 40, height: 40, borderRadius: 8 }}
-          contentFit="cover"
-        />
-      ) : (
-        <View className="h-10 w-10 items-center justify-center rounded-lg bg-muted">
-          <Icon name={icon} size={18} tone="muted" />
-        </View>
-      )}
+      {/* The icon stays underneath, so a missing or failed image still
+          shows a tile instead of an empty gap. */}
+      <View className="h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-muted">
+        <Icon name={icon} size={18} tone="muted" />
+        {imageUri ? (
+          <Image
+            source={{ uri: imageUri }}
+            style={{ position: "absolute", width: 40, height: 40 }}
+            contentFit="cover"
+          />
+        ) : null}
+      </View>
       <View className="flex-1">
         <View className="flex-row items-center gap-1">
           <AppText variant="body" numberOfLines={1} className="shrink">
@@ -252,7 +253,7 @@ export function UnifiedSearch() {
         ? [{ key: "places" as const, label: "Places" }]
         : []),
       ...(program.organizerSearch
-        ? [{ key: "organizers" as const, label: "People" }]
+        ? [{ key: "organizers" as const, label: "Organizers" }]
         : []),
     ];
     return parseSearchQuery(submitted ?? "").kind === "organizer"

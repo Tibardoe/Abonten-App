@@ -111,7 +111,7 @@ export function RecommendationPromptCard({
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Not now"
+          accessibilityLabel="Dismiss"
           hitSlop={10}
           disabled={respond.isPending}
           onPress={() => send("dismissed")}

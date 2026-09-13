@@ -4,9 +4,11 @@ import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import DiscoveryResults from "@/discovery/organisms/DiscoveryResults";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
+import { generateSlug } from "@abonten/core/geerateSlug";
 import { parseFilters } from "@abonten/core/parseFilterModalQueries";
 import type { SearchMode, SearchRequest } from "@abonten/types/searchType";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import SearchResultsList from "./SearchResultsList";
 
 const MODES: SearchMode[] = ["all", "events", "places", "organizers"];
@@ -71,6 +73,16 @@ export default async function page({
         />
       </div>
     );
+  }
+
+  // Unified search off for this visitor (not rolled out to them, switched
+  // off, or rolled back): a shared /search?q= link still finds events
+  // through the text-search page it replaced, instead of silently showing
+  // unfiltered results.
+  const legacySlug =
+    q && !organizerId ? generateSlug(q.replace(/^@/, "")) : null;
+  if (legacySlug) {
+    redirect(`/search/${legacySlug}`);
   }
 
   // FilterModalPopup writes the Type selection under the plural `types` key

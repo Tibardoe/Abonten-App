@@ -82,6 +82,7 @@ export function OrganizerRow({
           targetId={organizer.id}
           ownerId={organizer.id}
           label={`@${organizer.username}`}
+          source="search"
         />
       </View>
     </View>

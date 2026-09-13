@@ -121,7 +121,7 @@ export default function RecommendationPromptCard({
     >
       <button
         type="button"
-        aria-label="Not now"
+        aria-label="Dismiss"
         onClick={() => respond.mutate("dismissed")}
         disabled={respond.isPending}
         className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground hover:bg-accent hover:text-foreground"

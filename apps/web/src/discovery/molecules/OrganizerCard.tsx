@@ -107,6 +107,7 @@ export default function OrganizerCard({
           targetId={organizer.id}
           ownerId={organizer.id}
           label={`@${organizer.username}`}
+          source="search"
         />
       </div>
     </li>

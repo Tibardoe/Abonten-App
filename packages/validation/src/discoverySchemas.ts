@@ -32,12 +32,14 @@ const optionalDate = z.preprocess(
 
 const stringList = z.preprocess(
   (v) =>
-    typeof v === "string"
-      ? v
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-      : v,
+    v === null || v === ""
+      ? undefined
+      : typeof v === "string"
+        ? v
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : v,
   z.array(z.string().min(1).max(80)).max(20).optional(),
 );
 

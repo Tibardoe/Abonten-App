@@ -20,6 +20,7 @@ import Link from "next/link";
 import {
   IoCalendarOutline,
   IoLockClosedOutline,
+  IoPersonOutline,
   IoStorefrontOutline,
 } from "react-icons/io5";
 
@@ -158,6 +159,8 @@ function SubscriptionRow({
             sizes="40px"
             className="object-cover"
           />
+        ) : sub.kind === "organizer" ? (
+          <IoPersonOutline aria-hidden />
         ) : sub.kind === "similar_places" || sub.kind === "place" ? (
           <IoStorefrontOutline aria-hidden />
         ) : (

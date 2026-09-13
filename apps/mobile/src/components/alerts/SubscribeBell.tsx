@@ -20,6 +20,7 @@ export function SubscribeBell({
   label,
   compact = false,
   onSurface = false,
+  source = "profile",
 }: {
   kind: "organizer" | "place";
   targetId: string | undefined;
@@ -27,13 +28,15 @@ export function SubscribeBell({
   label: string;
   compact?: boolean;
   onSurface?: boolean;
+  /** Where the bell is shown, recorded on the subscription for analytics. */
+  source?: "profile" | "search";
 }) {
   const { session } = useSession();
   const { program } = useDiscoveryProgram();
   const router = useRouter();
   const pathname = usePathname();
   const status = useSubscriptionStatus(kind, targetId);
-  const toggle = useToggleSubscription(kind, targetId, label);
+  const toggle = useToggleSubscription(kind, targetId, label, source);
 
   if (!program.personalization || !targetId) return null;
   if (session && ownerId && session.user.id === ownerId) return null;
@@ -59,8 +62,8 @@ export function SubscribeBell({
       accessibilityState={{ selected: on, busy: toggle.isPending }}
       accessibilityLabel={
         on
-          ? `Stop new-event alerts from ${label}`
-          : `Get new-event alerts from ${label}`
+          ? `Notifying you about new posts from ${label}`
+          : `Notify me about new posts from ${label}`
       }
       hitSlop={8}
       disabled={toggle.isPending}

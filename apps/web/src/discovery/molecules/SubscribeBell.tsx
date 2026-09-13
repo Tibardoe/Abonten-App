@@ -24,6 +24,7 @@ export default function SubscribeBell({
   ownerId,
   className,
   compact = false,
+  source = "profile",
 }: {
   kind: "organizer" | "place";
   targetId: string;
@@ -33,6 +34,8 @@ export default function SubscribeBell({
   ownerId?: string | null;
   className?: string;
   compact?: boolean;
+  /** Where the bell is shown, recorded on the subscription for analytics. */
+  source?: "profile" | "search";
 }) {
   const { program } = useDiscoveryProgram();
   const { data: user } = useCurrentUser();
@@ -60,7 +63,7 @@ export default function SubscribeBell({
           kind === "organizer"
             ? { kind, organizerId: targetId }
             : { kind, placeId: targetId };
-        return subscribeToAlerts({ target, source: "profile" });
+        return subscribeToAlerts({ target, source });
       }
       return unsubscribeFromAlerts({
         subscriptionId: status?.subscriptionId,
@@ -111,10 +114,10 @@ export default function SubscribeBell({
     <button
       type="button"
       aria-pressed={on}
+      // Compact bells have no visible text, so they need a label; otherwise
+      // the visible words start the accessible name (WCAG 2.5.3).
       aria-label={
-        on
-          ? `Stop new-event alerts from ${label}`
-          : `Get new-event alerts from ${label}`
+        compact ? `Notify me about new posts from ${label}` : undefined
       }
       disabled={toggle.isPending}
       onClick={async (e) => {
@@ -136,7 +139,12 @@ export default function SubscribeBell({
       ) : (
         <IoNotificationsOutline aria-hidden className="text-base" />
       )}
-      {compact ? null : text}
+      {compact ? null : (
+        <>
+          {text}
+          <span className="sr-only"> about new posts from {label}</span>
+        </>
+      )}
     </button>
   );
 }

@@ -79,6 +79,7 @@ export function useToggleSubscription(
   kind: "organizer" | "place",
   targetId: string | undefined,
   label: string,
+  source: "profile" | "search" = "profile",
 ) {
   const qc = useQueryClient();
   const toast = useToast();
@@ -102,7 +103,7 @@ export function useToggleSubscription(
           kind === "organizer"
             ? { kind, organizerId: targetId }
             : { kind, placeId: targetId },
-          "profile",
+          source,
         );
       }
       if (!vars.subscriptionId) throw new Error("missing subscription");

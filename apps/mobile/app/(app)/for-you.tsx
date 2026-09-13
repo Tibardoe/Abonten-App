@@ -7,7 +7,13 @@ import { api } from "@/lib/api";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { formatDateWithSuffix } from "@abonten/core/dateFormatter";
 import type { RecommendationItem } from "@abonten/types/discoveryType";
-import { AppText, EmptyState, Refresher, Skeleton } from "@abonten/ui-native";
+import {
+  AppText,
+  EmptyState,
+  Icon,
+  Refresher,
+  Skeleton,
+} from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { FlatList, Pressable, View } from "react-native";
@@ -63,20 +69,25 @@ function PickRow({
         accessibilityLabel={`Open ${title}`}
         onPress={open}
       >
-        {imageId ? (
-          <Image
-            source={{
-              uri: buildCloudinaryUrl(imageId, imageVersion ?? undefined, {
-                width: 96,
-                height: 96,
-              }),
-            }}
-            style={{ width: 88, height: 88, borderRadius: 12 }}
-            contentFit="cover"
+        <View className="h-[88px] w-[88px] items-center justify-center overflow-hidden rounded-xl bg-muted">
+          <Icon
+            name={isEvent ? "calendar-outline" : "storefront-outline"}
+            size={24}
+            tone="muted"
           />
-        ) : (
-          <View className="h-[88px] w-[88px] rounded-xl bg-muted" />
-        )}
+          {imageId ? (
+            <Image
+              source={{
+                uri: buildCloudinaryUrl(imageId, imageVersion ?? undefined, {
+                  width: 112,
+                  height: 112,
+                }),
+              }}
+              style={{ position: "absolute", width: 88, height: 88 }}
+              contentFit="cover"
+            />
+          ) : null}
+        </View>
       </Pressable>
       <View className="flex-1 gap-1">
         <AppText variant="caption" tone="brand" className="font-semibold">

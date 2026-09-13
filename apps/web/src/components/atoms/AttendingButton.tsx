@@ -75,8 +75,12 @@ export default function AttendingButton({
     : null;
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async () => {
-      if (isAttending) {
+    // The action is fixed when the button is pressed. Reading isAttending
+    // inside the callbacks would see the optimistic value set in onMutate
+    // (the options are refreshed on every render), so a fresh RSVP would
+    // look like a cancellation.
+    mutationFn: async (action: "register" | "cancel") => {
+      if (action === "cancel") {
         if (!ticketId) return { status: 500, message: "Something went wrong" };
         return await cancelUserTicket(ticketId, null);
       }
@@ -84,7 +88,7 @@ export default function AttendingButton({
       return await registerForFreeEvent(eventId, occurrenceId);
     },
 
-    onMutate: async () => {
+    onMutate: async (action) => {
       await queryClient.cancelQueries({
         queryKey: ["free-registration-status", eventId],
       });
@@ -101,14 +105,14 @@ export default function AttendingButton({
 
       queryClient.setQueryData(["free-registration-status", eventId], {
         status: 200,
-        isAttending: !isAttending,
+        isAttending: action === "register",
         ticketId: previousStatus?.ticketId ?? null,
       });
 
       if (hasAttendanceCount(previousCount)) {
         queryClient.setQueryData(["attendance-count", eventId], {
           status: 200,
-          count: previousCount.count + (isAttending ? -1 : 1),
+          count: previousCount.count + (action === "cancel" ? -1 : 1),
         });
       }
 
@@ -127,8 +131,8 @@ export default function AttendingButton({
       toast.error("Something went wrong. Please try again.");
     },
 
-    onSuccess: (response) => {
-      if (response.status === 200 && !isAttending) setJustRegistered(true);
+    onSuccess: (response, action) => {
+      if (response.status === 200) setJustRegistered(action === "register");
       if (response.status !== 200) {
         toast.error(
           response.message ?? "Something went wrong. Please try again.",
@@ -153,7 +157,7 @@ export default function AttendingButton({
 
   const handleClick = async () => {
     if (!isAttending && !(await requireAuth())) return;
-    mutate();
+    mutate(isAttending ? "cancel" : "register");
   };
 
   // A free RSVP, like a paid ticket, can only be taken while a strictly
