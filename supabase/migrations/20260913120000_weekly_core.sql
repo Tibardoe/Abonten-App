@@ -1177,6 +1177,45 @@ begin
 end;
 $$;
 
+-- For Admin > Monitoring (the "weekly" health check). A switched-off
+-- programme is healthy by definition. When it is on, it is unhealthy if a
+-- scheduled edition is more than 15 minutes late (the job failed or refused
+-- it), or if no Ghana-wide edition is published for this week by 09:00 Accra
+-- on Monday.
+create or replace function public.weekly_health()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  with now_accra as (
+    select (now() at time zone 'Africa/Accra') as ts
+  ), wk as (
+    select ts::date - (extract(isodow from ts)::int - 1) as monday,
+           extract(epoch from ts - date_trunc('week', ts)) / 3600 as hours_into_week
+    from now_accra
+  )
+  select jsonb_build_object(
+    'enabled', coalesce((select s.enabled from public.weekly_program_setting s where s.id = 1), false),
+    'audience', (select s.audience from public.weekly_program_setting s where s.id = 1),
+    'week_start', (select monday from wk),
+    'hours_into_week', round((select hours_into_week from wk)::numeric, 1),
+    'national_published', exists (
+      select 1 from public.weekly_edition e
+      join public.weekly_scope s on s.id = e.scope_id
+      where s.centre is null and s.status = 'active'
+        and e.week_start = (select monday from wk)
+        and e.status = 'published'),
+    'scheduled_overdue', (
+      select count(*) from public.weekly_edition e
+      where e.status = 'scheduled' and e.scheduled_for < now() - interval '15 minutes'),
+    'open_incidents', (
+      select count(*) from public.incident i
+      where i.component = 'weekly' and i.status <> 'resolved')
+  );
+$$;
+
 -- ---------------------------------------------------------------------
 -- 9. Grants, permissions, schedules
 -- ---------------------------------------------------------------------
@@ -1204,7 +1243,8 @@ begin
     'public.weekly_edition_validation(uuid, timestamptz)',
     'public.weekly_edition_transition(uuid, text[], uuid, text, integer, timestamptz, text, jsonb)',
     'public.weekly_publish_due()',
-    'public.weekly_housekeeping()'
+    'public.weekly_housekeeping()',
+    'public.weekly_health()'
   ] loop
     execute format('revoke all on function %s from public, anon, authenticated', fn);
     execute format('grant execute on function %s to service_role', fn);

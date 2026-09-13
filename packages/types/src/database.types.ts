@@ -12832,6 +12832,7 @@ export type Database = {
         Args: { p_as_of?: string; p_scope_slug: string; p_week_start?: string };
         Returns: Json;
       };
+      weekly_health: { Args: never; Returns: Json };
       weekly_housekeeping: { Args: never; Returns: Json };
       weekly_item_move: {
         Args: { p_item_id: string; p_to_section_id: string };
