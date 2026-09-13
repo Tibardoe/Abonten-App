@@ -13,6 +13,7 @@ import { FeaturedEventsCarousel } from "@/components/explore/FeaturedEventsCarou
 import { FeaturedPlacesCarousel } from "@/components/explore/FeaturedPlacesCarousel";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { ExploreSkeleton } from "@/components/skeletons";
+import { WeeklyTeaserCard } from "@/components/weekly/WeeklyTeaserCard";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
@@ -310,6 +311,8 @@ export default function Explore() {
 
   const listHeader = (
     <View>
+      <WeeklyTeaserCard />
+
       <ActiveFilterChips
         chips={activeChips}
         onRemove={removeChip}

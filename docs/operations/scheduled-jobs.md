@@ -41,6 +41,8 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `recommendations-generate` | */15 min | `recommendations_generate(200)` | Turn newly published events and places into picks for people who opted in (no-op while the engine is off) | New listings never reach alerts or For you |
 | `recommendations-digest` | */10 min | `recommendations_build_digest(20000, false)` | In the digest hour (18:00 Accra) build at most one capped digest per person and queue its push; each run continues where the last stopped | No recommendation notices |
 | `recommendations-purge` | 03:40 | `recommendations_purge()` | Delete picks after 90 days, digests after 180, skip records after 30 | Tables grow; retention promise broken |
+| `weekly-publish-due` | */5 min | `weekly_publish_due()` | Publish scheduled Abonten Weekly editions whose time has come; one that fails its checks stays scheduled and opens an incident | Scheduled editions never go out; `weekly` health check down after 15 minutes |
+| `weekly-housekeeping` | 02:45 | `weekly_housekeeping()` | Remove edition listings whose event or place was deleted; archive editions older than `edition_retention_weeks` (104) | Orphan rows (hidden from readers anyway); old editions stay unarchived |
 | `cleanupExpiredEvents` | 00:00 | `net.http_get` → edge function `delete-expired-events` → `archive_or_delete_expired_event` | Archive/delete ended events; destroy flyers of hard-deleted ones | Ended events linger (harmless); **SEC-004: the service-role JWT is inline in this cron command — move to Vault (roadmap)** |
 
 ## Operating notes

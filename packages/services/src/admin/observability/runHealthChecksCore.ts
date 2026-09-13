@@ -236,6 +236,27 @@ export async function runHealthChecksCore(
     fh ?? undefined,
   );
 
+  // weekly: Abonten Weekly is keeping to its schedule. A switched-off
+  // programme is healthy by definition. When it is on: down if a scheduled
+  // edition is over 15 minutes late (the job failed or refused it) or if no
+  // Ghana-wide edition is published for this week by 09:00 Accra on Monday.
+  const weekly = await timed(async () => {
+    const { data, error } = await serviceClient.rpc("weekly_health");
+    if (error) throw new Error(error.message);
+    return (data ?? {}) as Record<string, number | boolean | string | null>;
+  });
+  const wh = weekly.value;
+  push(
+    "weekly",
+    weekly,
+    !!wh &&
+      (wh.enabled !== true ||
+        (Number(wh.scheduled_overdue ?? 0) === 0 &&
+          (wh.national_published === true ||
+            Number(wh.hours_into_week ?? 0) < 9))),
+    wh ?? undefined,
+  );
+
   // `self` = "the health endpoint ran to completion". Written here so the
   // Admin Monitor shows Endpoint reachability = ok whenever this function
   // finishes — independent of whether the pg_cron caller's HTTP client

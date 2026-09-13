@@ -28,6 +28,7 @@ const HEALTH_LABELS: Record<string, string> = {
   push: "Expo push",
   rewards: "Rewards engine",
   fieldops: "Field Ops sweep",
+  weekly: "Abonten Weekly schedule",
 };
 
 // Pull the human-readable failure cause out of a down check's detail blob.

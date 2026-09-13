@@ -1,6 +1,9 @@
 import { validatePolygon } from "@abonten/core/fieldOps/territory";
 import { logger } from "@abonten/core/logger";
-import type { AdminContext } from "@abonten/types/adminTypes";
+import type {
+  AdminContext,
+  AdminPermissionKey,
+} from "@abonten/types/adminTypes";
 import type {
   FieldOpsRegion,
   FieldOpsTerritory,
@@ -331,9 +334,11 @@ export async function geocodeQueryCore(
   ctx: AdminContext,
   query: string,
   fetchImpl: typeof fetch = fetch,
+  // Abonten Weekly areas reuse this lookup under their own permission.
+  permission: AdminPermissionKey = "fieldops.manage",
 ): Promise<AdminEnvelope<{ lat: number; lng: number; label: string }>> {
   try {
-    assertPermission(ctx, "fieldops.manage");
+    assertPermission(ctx, permission);
   } catch (e) {
     return denied(e);
   }

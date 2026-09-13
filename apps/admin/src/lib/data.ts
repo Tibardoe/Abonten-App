@@ -122,6 +122,14 @@ import {
   listVerificationCasesCore,
   verificationOverviewCore,
 } from "@abonten/services/admin/verification/verificationAdminCore";
+import {
+  getWeeklyEditionAdminCore,
+  listWeeklyEditionsCore,
+} from "@abonten/services/admin/weekly/weeklyAdminCore";
+import {
+  getWeeklySettingsCore,
+  listWeeklyScopesCore,
+} from "@abonten/services/admin/weekly/weeklySettingsAdminCore";
 import type { DashboardRange } from "@abonten/types/adminTypes";
 
 const REPORT_ATTACH_TTL = 300;
@@ -649,4 +657,44 @@ export async function loadDiscoveryOverview(days = 14) {
     days,
   });
   return { ctx, overview };
+}
+
+// ── Abonten Weekly ──────────────────────────────────────────
+
+export async function loadWeeklyEditions(
+  filters: {
+    status?: "draft" | "scheduled" | "published" | "archived";
+    scopeId?: string;
+  } = {},
+) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [editions, scopes, settings] = await Promise.all([
+    listWeeklyEditionsCore(svc, ctx, { ...filters, limit: 100 }),
+    listWeeklyScopesCore(svc, ctx),
+    getWeeklySettingsCore(svc, ctx),
+  ]);
+  return { ctx, editions, scopes, settings };
+}
+
+export async function loadWeeklyEdition(editionId: string) {
+  const ctx = await requireAdmin();
+  const svc = getServiceClient();
+  const [edition, settings] = await Promise.all([
+    getWeeklyEditionAdminCore(svc, ctx, editionId),
+    getWeeklySettingsCore(svc, ctx),
+  ]);
+  return { ctx, edition, settings };
+}
+
+export async function loadWeeklyScopes() {
+  const ctx = await requireAdmin();
+  const scopes = await listWeeklyScopesCore(getServiceClient(), ctx);
+  return { ctx, scopes };
+}
+
+export async function loadWeeklySettings() {
+  const ctx = await requireAdmin();
+  const settings = await getWeeklySettingsCore(getServiceClient(), ctx);
+  return { ctx, settings };
 }

@@ -53,6 +53,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/user/") ||
     pathname.startsWith("/reviews") ||
     pathname.startsWith("/search") ||
+    // Abonten Weekly editions and preview links. Visibility is decided by
+    // the programme switch in @abonten/services, not by signing in.
+    pathname.startsWith("/weekly") ||
     pathname.startsWith("/auth") ||
     // Friend invite landing (Abonten Rewards) -- for people who aren't
     // signed up yet.

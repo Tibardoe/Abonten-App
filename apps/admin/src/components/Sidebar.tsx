@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   MapPinned,
+  Newspaper,
   ScrollText,
   Settings,
   ShieldAlert,
@@ -115,6 +116,12 @@ const ITEMS: Item[] = [
     label: "Discovery",
     icon: Compass,
     permission: "discovery.view",
+  },
+  {
+    href: "/weekly",
+    label: "Abonten Weekly",
+    icon: Newspaper,
+    permission: "weekly.view",
   },
   {
     href: "/notifications",

@@ -12,16 +12,18 @@ export function useEventShare({
   eventId,
   title,
   url,
+  text,
 }: {
   eventId?: string;
   title: string;
   url: string;
+  text?: string;
 }) {
   const code = useReferralCode();
   const shareUrl = withReferralCode(url, code);
 
   return async () => {
-    const channel = await handleShare({ title, url: shareUrl });
+    const channel = await handleShare({ title, url: shareUrl, text });
     if (channel && eventId && code) {
       recordEventShare({ eventId, channel, referralCode: code }).catch(
         () => {},

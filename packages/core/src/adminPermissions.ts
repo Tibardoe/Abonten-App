@@ -86,6 +86,10 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "fieldops.commissions.pay",
   "discovery.view",
   "discovery.configure",
+  "weekly.view",
+  "weekly.edit",
+  "weekly.publish",
+  "weekly.configure",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -112,6 +116,8 @@ const MODERATOR: AdminPermissionKey[] = [
   "verification.evidence",
   "verification.review",
   "monitoring.view",
+  "weekly.view",
+  "weekly.edit",
 ];
 
 const FINANCE_ADMIN: AdminPermissionKey[] = [
@@ -160,6 +166,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "support.respond",
   "rewards.view",
   "rewards.goodwill",
+  "weekly.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -182,6 +189,7 @@ const ANALYST: AdminPermissionKey[] = [
   "rewards.view",
   "fieldops.view",
   "discovery.view",
+  "weekly.view",
 ];
 
 // Runs the regional promotion programme (Field Ops): campaigns, teams,
@@ -201,6 +209,7 @@ const FIELD_OPS_MANAGER: AdminPermissionKey[] = [
   "organizers.view",
   "verification.view",
   "audit.view",
+  "weekly.view",
 ];
 
 // operations = everything except financial mutations / admin management /
@@ -301,6 +310,8 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "fieldops.commissions.approve",
   "fieldops.commissions.pay",
   "discovery.configure",
+  "weekly.publish",
+  "weekly.configure",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

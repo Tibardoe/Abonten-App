@@ -18,7 +18,7 @@ Source: `packages/services/src/admin/observability/*`. Incident procedures: `../
 
 ## Health
 
-Real probes run every 2 minutes (pg_cron `abonten-health-check` → `run_scheduled_health_check()` → `GET /api/observability/health` on the web deployment, authenticated by a shared secret): `db`, `auth`, `storage`, `paystack` (`/bank`), `resend` (`/domains`), `hubtel` (auth ping), `cloudinary` (ping), `expo` (push API), plus the programme checks `rewards_health` and `fieldops`, and the synthetic **`self`** row written from the HTTP status the cron got back. A red `self` means the pipeline itself is broken (unreachable endpoint or a 401 from a mismatched `OBSERVABILITY_INGEST_SECRET`); fix that before trusting anything else.
+Real probes run every 2 minutes (pg_cron `abonten-health-check` → `run_scheduled_health_check()` → `GET /api/observability/health` on the web deployment, authenticated by a shared secret): `db`, `auth`, `storage`, `paystack` (`/bank`), `resend` (`/domains`), `hubtel` (auth ping), `cloudinary` (ping), `expo` (push API), plus the programme checks `rewards_health`, `fieldops` and `weekly` ("Abonten Weekly schedule": down when a scheduled edition is over 15 minutes late, or no Ghana edition is out by 09:00 Monday while the programme is on; a failed scheduled publish also opens an incident with component `weekly`), and the synthetic **`self`** row written from the HTTP status the cron got back. A red `self` means the pipeline itself is broken (unreachable endpoint or a 401 from a mismatched `OBSERVABILITY_INGEST_SECRET`); fix that before trusting anything else.
 
 ## Errors
 

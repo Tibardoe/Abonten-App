@@ -9963,6 +9963,302 @@ export type Database = {
         };
         Relationships: [];
       };
+      weekly_edition: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          duplicated_from_edition_id: string | null;
+          id: string;
+          intro: string | null;
+          published_at: string | null;
+          published_by: string | null;
+          scheduled_for: string | null;
+          scope_id: string;
+          status: string;
+          subtitle: string | null;
+          title: string;
+          unpublished_at: string | null;
+          updated_at: string;
+          version: number;
+          week_start: string;
+        };
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          duplicated_from_edition_id?: string | null;
+          id?: string;
+          intro?: string | null;
+          published_at?: string | null;
+          published_by?: string | null;
+          scheduled_for?: string | null;
+          scope_id: string;
+          status?: string;
+          subtitle?: string | null;
+          title: string;
+          unpublished_at?: string | null;
+          updated_at?: string;
+          version?: number;
+          week_start: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          duplicated_from_edition_id?: string | null;
+          id?: string;
+          intro?: string | null;
+          published_at?: string | null;
+          published_by?: string | null;
+          scheduled_for?: string | null;
+          scope_id?: string;
+          status?: string;
+          subtitle?: string | null;
+          title?: string;
+          unpublished_at?: string | null;
+          updated_at?: string;
+          version?: number;
+          week_start?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_edition_duplicated_from_edition_id_fkey";
+            columns: ["duplicated_from_edition_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_edition";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_edition_scope_id_fkey";
+            columns: ["scope_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_scope";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_item: {
+        Row: {
+          added_by: string | null;
+          blurb: string | null;
+          created_at: string;
+          edition_id: string;
+          headline: string | null;
+          id: string;
+          pinned: boolean;
+          position: number;
+          score: number | null;
+          score_breakdown: Json | null;
+          section_id: string;
+          source: string;
+          subject_id: string;
+          subject_type: string;
+          updated_at: string;
+        };
+        Insert: {
+          added_by?: string | null;
+          blurb?: string | null;
+          created_at?: string;
+          edition_id: string;
+          headline?: string | null;
+          id?: string;
+          pinned?: boolean;
+          position: number;
+          score?: number | null;
+          score_breakdown?: Json | null;
+          section_id: string;
+          source?: string;
+          subject_id: string;
+          subject_type: string;
+          updated_at?: string;
+        };
+        Update: {
+          added_by?: string | null;
+          blurb?: string | null;
+          created_at?: string;
+          edition_id?: string;
+          headline?: string | null;
+          id?: string;
+          pinned?: boolean;
+          position?: number;
+          score?: number | null;
+          score_breakdown?: Json | null;
+          section_id?: string;
+          source?: string;
+          subject_id?: string;
+          subject_type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_item_edition_id_fkey";
+            columns: ["edition_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_edition";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_item_section_id_fkey";
+            columns: ["section_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_section";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      weekly_program_setting: {
+        Row: {
+          audience: string;
+          beta_user_ids: string[];
+          default_publish_hour_local: number;
+          edition_retention_weeks: number;
+          enabled: boolean;
+          exposure_lookback_editions: number;
+          id: number;
+          max_items_per_section: number;
+          max_per_organizer_per_section: number;
+          teaser_enabled: boolean;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          audience?: string;
+          beta_user_ids?: string[];
+          default_publish_hour_local?: number;
+          edition_retention_weeks?: number;
+          enabled?: boolean;
+          exposure_lookback_editions?: number;
+          id?: number;
+          max_items_per_section?: number;
+          max_per_organizer_per_section?: number;
+          teaser_enabled?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          audience?: string;
+          beta_user_ids?: string[];
+          default_publish_hour_local?: number;
+          edition_retention_weeks?: number;
+          enabled?: boolean;
+          exposure_lookback_editions?: number;
+          id?: number;
+          max_items_per_section?: number;
+          max_per_organizer_per_section?: number;
+          teaser_enabled?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      weekly_scope: {
+        Row: {
+          centre: unknown;
+          centre_lat: number | null;
+          centre_lng: number | null;
+          country_code: string;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          position: number;
+          radius_km: number | null;
+          slug: string;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          centre?: unknown;
+          centre_lat?: number | null;
+          centre_lng?: number | null;
+          country_code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          position?: number;
+          radius_km?: number | null;
+          slug: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          centre?: unknown;
+          centre_lat?: number | null;
+          centre_lng?: number | null;
+          country_code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          position?: number;
+          radius_km?: number | null;
+          slug?: string;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      weekly_section: {
+        Row: {
+          body: string | null;
+          config: Json;
+          created_at: string;
+          edition_id: string;
+          icon_key: string | null;
+          id: string;
+          is_visible: boolean;
+          kind: string;
+          layout: string;
+          position: number;
+          subject_scope: string;
+          subtitle: string | null;
+          title: string;
+          updated_at: string;
+        };
+        Insert: {
+          body?: string | null;
+          config?: Json;
+          created_at?: string;
+          edition_id: string;
+          icon_key?: string | null;
+          id?: string;
+          is_visible?: boolean;
+          kind?: string;
+          layout?: string;
+          position: number;
+          subject_scope?: string;
+          subtitle?: string | null;
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string | null;
+          config?: Json;
+          created_at?: string;
+          edition_id?: string;
+          icon_key?: string | null;
+          id?: string;
+          is_visible?: boolean;
+          kind?: string;
+          layout?: string;
+          position?: number;
+          subject_scope?: string;
+          subtitle?: string | null;
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weekly_section_edition_id_fkey";
+            columns: ["edition_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_edition";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       admin_report_group: {
@@ -10288,6 +10584,7 @@ export type Database = {
       _search_prefix_tsquery: { Args: { p_norm: string }; Returns: unknown };
       _search_trgm_thresholds: { Args: never; Returns: undefined };
       _search_web_tsquery: { Args: { p_norm: string }; Returns: unknown };
+      _weekly_document_has_content: { Args: { p_doc: Json }; Returns: boolean };
       admin_clear_payout_review: {
         Args: { p_admin_id: string; p_note: string; p_payout_id: string };
         Returns: string;
@@ -12493,6 +12790,79 @@ export type Database = {
           p_reason?: string;
         };
         Returns: Json;
+      };
+      weekly_claim_edit: {
+        Args: { p_edition_id: string; p_expected_version: number };
+        Returns: number;
+      };
+      weekly_edition_create: {
+        Args: {
+          p_actor: string;
+          p_duplicate_from?: string;
+          p_intro?: string;
+          p_scope_id: string;
+          p_subtitle?: string;
+          p_title: string;
+          p_week_start: string;
+        };
+        Returns: string;
+      };
+      weekly_edition_document: {
+        Args: { p_admin?: boolean; p_as_of?: string; p_edition_id: string };
+        Returns: Json;
+      };
+      weekly_edition_transition: {
+        Args: {
+          p_action: string;
+          p_actor: string;
+          p_actor_roles: string[];
+          p_edition_id: string;
+          p_expected_version: number;
+          p_reason?: string;
+          p_request_meta?: Json;
+          p_scheduled_for?: string;
+        };
+        Returns: Json;
+      };
+      weekly_edition_validation: {
+        Args: { p_as_of?: string; p_edition_id: string };
+        Returns: Json;
+      };
+      weekly_edition_view: {
+        Args: { p_as_of?: string; p_scope_slug: string; p_week_start?: string };
+        Returns: Json;
+      };
+      weekly_health: { Args: never; Returns: Json };
+      weekly_housekeeping: { Args: never; Returns: Json };
+      weekly_item_move: {
+        Args: { p_item_id: string; p_to_section_id: string };
+        Returns: undefined;
+      };
+      weekly_items_reorder: {
+        Args: { p_item_ids: string[]; p_section_id: string };
+        Returns: undefined;
+      };
+      weekly_publish_due: { Args: never; Returns: Json };
+      weekly_resolve_scope: {
+        Args: { p_lat: number; p_lng: number };
+        Returns: {
+          is_national: boolean;
+          name: string;
+          slug: string;
+        }[];
+      };
+      weekly_sections_reorder: {
+        Args: { p_edition_id: string; p_section_ids: string[] };
+        Returns: undefined;
+      };
+      weekly_subject_validity: {
+        Args: {
+          p_allow_ended?: boolean;
+          p_as_of?: string;
+          p_subject_id: string;
+          p_subject_type: string;
+        };
+        Returns: string;
       };
     };
     Enums: {

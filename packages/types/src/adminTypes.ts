@@ -86,7 +86,11 @@ export type AdminPermissionKey =
   | "fieldops.commissions.approve"
   | "fieldops.commissions.pay"
   | "discovery.view"
-  | "discovery.configure";
+  | "discovery.configure"
+  | "weekly.view"
+  | "weekly.edit"
+  | "weekly.publish"
+  | "weekly.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 
@@ -516,6 +520,9 @@ export type HealthCheckKey =
   // Field Ops: eligibility-sweep lag and failures, overdue holding periods,
   // successful onboardings with no commission behind them.
   | "fieldops"
+  // Abonten Weekly: scheduled editions running late, or no Ghana-wide
+  // edition published by Monday 09:00 Accra while the programme is on.
+  | "weekly"
   // synthetic: written by the pg_cron job itself from the HTTP status it
   // gets back calling /api/observability/health, so a rejected/unreachable
   // endpoint is visible instead of the dashboard just looking empty.
