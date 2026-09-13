@@ -413,7 +413,9 @@ export type ReportModeratableTargetType =
 // Users
 // ─────────────────────────────────────────────────────────────
 
-export type UserAccountStatus = "Active" | "Suspended" | "Banned";
+// "Deleted" is the anonymised shell left behind by account deletion
+// (status_id 4); it cannot sign in and admin status actions do not apply.
+export type UserAccountStatus = "Active" | "Suspended" | "Banned" | "Deleted";
 
 export type AdminUserListItem = {
   id: string;

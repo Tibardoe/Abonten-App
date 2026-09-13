@@ -29,7 +29,9 @@ export default async function UserDetailPage({
       ? "success"
       : u.status === "Suspended"
         ? "warning"
-        : "danger";
+        : u.status === "Deleted"
+          ? "neutral"
+          : "danger";
 
   return (
     <div>

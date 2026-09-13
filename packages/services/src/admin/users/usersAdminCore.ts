@@ -29,11 +29,13 @@ const STATUS_ID: Record<UserAccountStatus, number> = {
   Active: 1,
   Suspended: 2,
   Banned: 3,
+  Deleted: 4,
 };
 const STATUS_NAME: Record<number, UserAccountStatus> = {
   1: "Active",
   2: "Suspended",
   3: "Banned",
+  4: "Deleted",
 };
 
 export type ListUsersFilters = {
@@ -356,6 +358,13 @@ export async function setUserStatusCore(
   }
   if (currentStatus === input.status) {
     return { status: 200, message: `Account is already ${input.status}.` };
+  }
+  if (currentStatus === "Deleted" || input.status === "Deleted") {
+    return {
+      status: 400,
+      message:
+        "This account was deleted by its owner; it can no longer be suspended, banned or restored.",
+    };
   }
   if (current.is_admin && input.status !== "Active") {
     return {

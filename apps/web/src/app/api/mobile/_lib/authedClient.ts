@@ -177,7 +177,14 @@ export async function getMobileAuth(req: Request): Promise<MobileAuth> {
       ? await statusPromise
       : await readAccountStatus(supabase, user.id).catch(() => null);
 
-  if (statusRow && (statusRow.status_id === 2 || statusRow.status_id === 3)) {
+  // status_id 4 is a deleted (anonymised) account whose sessions were
+  // revoked on deletion; this closes the window before the JWT expires.
+  if (
+    statusRow &&
+    (statusRow.status_id === 2 ||
+      statusRow.status_id === 3 ||
+      statusRow.status_id === 4)
+  ) {
     return {
       supabase: null,
       user: null,
