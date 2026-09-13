@@ -1,5 +1,6 @@
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { withReferralCode } from "@abonten/core/rewards/referralCode";
+import { weeklyEditionPath } from "@abonten/core/weekly/copy";
 import { Share } from "react-native";
 
 // Native share — the mobile stand-in for the web share buttons. The web
@@ -31,6 +32,11 @@ export function eventShareUrl(
 
 export function placeShareUrl(slug: string): string {
   return `${SITE}/places/${slug}`;
+}
+
+/** The dated Abonten Weekly edition link (the edition's canonical address). */
+export function weeklyShareUrl(scopeSlug: string, weekStart: string): string {
+  return `${SITE}${weeklyEditionPath(scopeSlug, weekStart)}`;
 }
 
 /** Opens the share sheet; resolves true when the user actually shared. */

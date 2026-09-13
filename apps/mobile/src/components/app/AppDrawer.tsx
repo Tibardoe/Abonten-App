@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
+import { useWeeklyProgram } from "@/features/weekly/useWeekly";
 import {
   HELP_URL,
   LEGAL_LINK_ROWS,
@@ -114,6 +115,7 @@ export function AppDrawer() {
   const { data: profile } = useProfile();
   const isOrganizer = useIsOrganizer();
   const isPlaceOwner = useIsPlaceOwner();
+  const { program: weekly } = useWeeklyProgram();
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
@@ -313,6 +315,14 @@ export function AppDrawer() {
             }}
             showsVerticalScrollIndicator={false}
           >
+            {/* Abonten Weekly, for everyone it is switched on for (signed in or not). */}
+            {weekly.enabled ? (
+              <Row
+                icon="sparkles-outline"
+                label="Abonten Weekly"
+                onPress={() => go("/(app)/weekly")}
+              />
+            ) : null}
             {session ? (
               <>
                 <Pressable

@@ -72,6 +72,21 @@ export async function redirectSystemPath({
       }
       return id ? `/(app)/place/${id}` : "/(app)/(tabs)";
     }
+    // Abonten Weekly: /weekly (this week, Ghana or the explored area),
+    // /weekly/<area> (this week for that area) and /weekly/<area>/<monday>.
+    // The segments are validated by the API; nothing is looked up here.
+    if (parts[0] === "weekly") {
+      const area = parts[1] ? decodeURIComponent(parts[1]) : null;
+      const week = parts[2] ? decodeURIComponent(parts[2]) : null;
+      const slug = /^[a-z0-9-]{1,40}$/;
+      if (area && week && slug.test(area) && /^\d{4}-\d{2}-\d{2}$/.test(week)) {
+        return `/(app)/weekly/${area}/${week}`;
+      }
+      if (area && slug.test(area) && area !== "preview") {
+        return `/(app)/weekly?scope=${area}`;
+      }
+      return "/(app)/weekly";
+    }
     // Conversation deep links (notification tap / cross-device). The segment
     // is already a conversation id — no lookup needed; RLS gates the screen.
     if (parts[0] === "messages") {
