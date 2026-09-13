@@ -4,7 +4,7 @@ purpose: Explain each panel and metric on the console dashboard and what to do a
 audience: All admin roles
 scope: /
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -14,15 +14,18 @@ complianceReviewRequired: no
 
 # Admin › Dashboard
 
-Permission: `dashboard.view`. Source: `packages/services/src/admin/dashboard/getDashboardCore.ts` (`admin_dashboard_counts` RPC + health and incidents).
+Permission: `dashboard.view`. Source: `packages/services/src/admin/dashboard/getDashboardCore.ts`, one call to `admin_dashboard_kpis()` (which includes `admin_dashboard_counts()` and the latest health rows).
+
+The period control offers today, the last 7, 30 and 90 days, this year and a custom range. Windows are whole calendar days in Africa/Accra, today included and marked as still in progress; the caption under the heading names the exact dates and the equivalent earlier window every trend is measured against. A figure with no earlier data reads "New" rather than a percentage; a figure that is exactly zero says whether that means "nothing in this period", "nothing right now" or "nothing yet".
 
 ## Panels
 
 | Panel | What it shows | Source of truth |
 |---|---|---|
-| **Needs attention** | Open, urgent and unassigned reports; pending place claims; pending verifications; open error groups; failing health checks; payments stuck over 30 minutes; refunds and payouts waiting. Each tile opens the queue it counts | `admin_dashboard_counts()` — live counts |
-| **Platform overview** (time range selectable) | Active users (and all accounts), new users in range, organizers, events published (and all), places, tickets sold and free registrations in range, gross ticket sales, service-fee revenue and cash refunded in range | Counts on `user_info`, `event`, `place`, `ticket`; money from `platform_fee_entry` |
-| **Dependency health** | Latest result per health-check key: `self` (is the cron reaching the web app at all), `db`, `auth`, `storage`, `paystack`, `resend`, `hubtel`, `cloudinary`, `expo`, `rewards_health`, `fieldops` | `health_check_result` (probe every 2 min) |
+| **Needs attention** | Open, urgent and unassigned reports; place claims; verification requests; open error groups; failing health checks; payments stuck over 30 minutes; refunds to issue; payouts in flight. Each tile opens the queue it counts, and an empty queue says "Nothing waiting" | `admin_dashboard_counts()` — live counts, right now |
+| **Activity** (period control) | Tickets sold (with later cancellations), gross ticket sales (with orders that used Abonten Credit), net platform revenue (with how many payments have a known Paystack cost), cash refunded, new users, free registrations, new events, organizers who sold — each against the equivalent earlier window | `admin_dashboard_kpis()` over `ticket`, `platform_fee_entry`, `user_info`, `event`, `place` |
+| **Platform totals** | Active users (and all accounts), organizers (and place owners), events published (and all), places — as they stand today | `admin_dashboard_kpis()` snapshot |
+| **Dependency health** | Latest result per probe, named in English (`self` is "Web endpoint"), with how long ago it ran; a probe silent for 15 minutes shows **stale** rather than disappearing | `health_check_result`, newest row per key |
 
 ## What the figures mean
 

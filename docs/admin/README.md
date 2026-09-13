@@ -4,7 +4,7 @@ purpose: Explain the Abonten admin console (admin.abontenhub.com) — signing in
 audience: Abonten staff with admin access; the founder; engineers supporting them
 scope: apps/admin, the admin service layer in packages/services/src/admin, the RBAC tables
 status: Approved
-version: 1.1
+version: 1.2
 lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -59,6 +59,14 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Admin Settings | `settings.view` | [settings-and-rbac.md](settings-and-rbac.md) |
 
 Every figure the console shows is defined in [metrics.md](metrics.md) — what it counts, the period it covers and the rows it is read from. The same wording appears beside the figure in the console.
+
+## Reading a figure
+
+- The **ⓘ** beside a label opens its definition: hover or focus shows it, a click or tap keeps it open, Escape closes it.
+- Under the value: the **period** it covers. "Right now" is the state at page load; "All time" is everything ever recorded; a period name means the window chosen in the period control. Windows are whole calendar days in Africa/Accra, today included.
+- A **trend** line compares the value with the equivalent earlier window (the caption says which). Green is good and red is bad for that metric — more refunds is red even though the number went up. "New" means the earlier window had nothing to compare against.
+- A grey **0** says what it means: "None in last 30 days", "Nothing right now" or "Nothing yet". "Not enough data" means the figure exists but the sample is too small to state honestly (under five people). "Not available" means it is not collected.
+- Statuses read as words everywhere — "Refund deducted", "Waiting on the applicant", "Clawed back" — with an icon, so colour is never the only signal.
 
 The top-bar **search** (`/search?q=`) finds users, events, places, transactions and reports by name, title, event code, Paystack reference, email or exact UUID — you only see groups you have permission to open.
 
