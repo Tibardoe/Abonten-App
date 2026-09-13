@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   MapPinned,
+  Menu,
   Newspaper,
   ScrollText,
   Settings,
@@ -24,9 +25,11 @@ import {
   Store,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "./ui";
 
 type Item = {
@@ -45,7 +48,7 @@ const ITEMS: Item[] = [
   },
   {
     href: "/reports",
-    label: "Reports & Moderation",
+    label: "Reports & moderation",
     icon: Flag,
     permission: "reports.view",
   },
@@ -143,31 +146,75 @@ const ITEMS: Item[] = [
   },
   {
     href: "/audit",
-    label: "Audit Logs",
+    label: "Audit logs",
     icon: ScrollText,
     permission: "audit.view",
   },
   {
     href: "/settings",
-    label: "Admin Settings",
+    label: "Admin settings",
     icon: Settings,
     permission: "settings.view",
   },
 ];
 
-const SOON: string[] = [];
+// The console's navigation. On a wide screen it is a fixed column; under
+// `lg` it folds behind a button in the header and slides in over the page,
+// so the console is usable on a phone — an operator checking a stuck payment
+// from the road should not have to pinch-zoom a 224px sidebar out of the way.
+//
+// Escape closes it and returns focus to the button that opened it, and the
+// page behind is marked inert while it is open, so keyboard and
+// screen-reader users are not left tabbing through hidden content.
 
 export function Sidebar({
   permissions,
 }: { permissions: AdminPermissionKey[] }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const visible = ITEMS.filter((i) => permissions.includes(i.permission));
 
-  return (
-    <nav className="flex h-full w-56 shrink-0 flex-col gap-1 border-r border-border bg-card px-3 py-4">
-      <div className="mb-3 flex items-center gap-2 px-2">
-        <ClipboardList className="h-5 w-5 text-primary" />
-        <span className="font-semibold">Abonten Admin</span>
+  // Navigating closes the drawer; so does Escape.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname change is the trigger
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const nav = (
+    <nav
+      id="console-nav"
+      aria-label="Console sections"
+      className="flex h-full w-56 shrink-0 flex-col gap-1 border-r border-border bg-card px-3 py-4"
+    >
+      <div className="mb-3 flex items-center justify-between gap-2 px-2">
+        <span className="flex items-center gap-2 font-semibold">
+          <ClipboardList className="h-5 w-5 text-primary" aria-hidden="true" />
+          Abonten Admin
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            toggleRef.current?.focus();
+          }}
+          aria-label="Close navigation"
+          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
       </div>
       {visible.map((item) => {
         const active =
@@ -177,35 +224,52 @@ export function Sidebar({
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               active
                 ? "bg-primary/10 font-medium text-primary"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-4 w-4" aria-hidden="true" />
             {item.label}
           </Link>
         );
       })}
-
-      {SOON.length > 0 && (
-        <div className="mt-4 border-t border-border pt-3">
-          <p className="px-2.5 pb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
-            Later phases
-          </p>
-          {SOON.map((s) => (
-            <div
-              key={s}
-              className="flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm text-muted-foreground/50"
-            >
-              {s}
-              <span className="text-[9px]">soon</span>
-            </div>
-          ))}
-        </div>
-      )}
     </nav>
+  );
+
+  return (
+    <>
+      {/* Wide screens: always visible. */}
+      <div className="hidden h-full lg:block">{nav}</div>
+
+      {/* Narrow screens: a button in the header and an off-canvas drawer. */}
+      <button
+        ref={toggleRef}
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="Open navigation"
+        aria-expanded={open}
+        aria-controls="console-nav"
+        className="fixed left-3 top-2 z-40 rounded-md border border-border bg-card p-1.5 text-muted-foreground shadow-sm hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+      >
+        <Menu className="h-4 w-4" aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          {/* biome-ignore lint/a11y/useKeyWithClickEvents: Escape is handled at the document level */}
+          <div
+            className="absolute inset-0 bg-foreground/30 motion-safe:animate-in motion-safe:fade-in"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="relative h-full motion-safe:animate-in motion-safe:slide-in-from-left motion-safe:duration-150">
+            {nav}
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }

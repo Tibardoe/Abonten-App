@@ -9,6 +9,7 @@ import {
 } from "@/components/ui";
 import { requireAdmin } from "@/lib/adminGuard";
 import { loadUserDetail } from "@/lib/data";
+import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import Link from "next/link";
 import { UserActions } from "./UserActions";
 
@@ -148,7 +149,7 @@ export default async function UserDetailPage({
             permissions={ctx.permissions}
             stepUpFresh={
               !!ctx.reauthenticatedAt &&
-              Date.now() - ctx.reauthenticatedAt < 10 * 60 * 1000
+              Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS
             }
           />
         </div>
