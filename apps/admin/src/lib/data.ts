@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/adminGuard";
 import { getServiceClient } from "@/lib/serviceClient";
+import { parseAdminRangeParams } from "@abonten/core/admin/adminDateRange";
 import { getPlatformAnalyticsCore } from "@abonten/services/admin/analytics/analyticsAdminCore";
 import { listAuditLogCore } from "@abonten/services/admin/audit/listAuditLogCore";
 import {
@@ -158,13 +159,18 @@ async function signVerificationEvidence(path: string): Promise<string | null> {
   return data?.signedUrl ?? null;
 }
 
+// Pages hand their raw search params straight in: the range is parsed and
+// validated in one place (@abonten/core/admin/adminDateRange), so a bad link
+// shows a sensible 30-day view instead of an error.
 export async function loadDashboard(
-  range: DashboardRange,
-  from?: string,
-  to?: string,
+  searchParams: Record<string, string | string[] | undefined>,
 ) {
   const ctx = await requireAdmin();
-  return getDashboardCore(getServiceClient(), ctx, { range, from, to });
+  return getDashboardCore(
+    getServiceClient(),
+    ctx,
+    parseAdminRangeParams(searchParams),
+  );
 }
 
 export async function loadReports(filters: ListReportsFilters) {

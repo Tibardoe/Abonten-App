@@ -2053,6 +2053,13 @@ export type Database = {
             referencedRelation: "user_info";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "event_reminder_sent_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
         ];
       };
       event_review: {
@@ -10708,6 +10715,15 @@ export type Database = {
         }[];
       };
       admin_dashboard_counts: { Args: never; Returns: Json };
+      admin_dashboard_kpis: {
+        Args: {
+          p_from: string;
+          p_prev_from: string;
+          p_prev_to: string;
+          p_to: string;
+        };
+        Returns: Json;
+      };
       admin_effective_permissions: { Args: never; Returns: string[] };
       admin_has_permission: {
         Args: { p_permission: string };
@@ -12635,6 +12651,10 @@ export type Database = {
       };
       referral_resolve_code: { Args: { p_code: string }; Returns: Json };
       referral_stats: { Args: { p_user_id: string }; Returns: Json };
+      release_transaction_refund_claim: {
+        Args: { p_transaction_id: string };
+        Returns: undefined;
+      };
       request_organizer_payout: {
         Args: {
           p_amount: number;
@@ -12688,10 +12708,6 @@ export type Database = {
       run_financial_reconciliation: { Args: never; Returns: Json };
       run_notification_delivery: { Args: never; Returns: undefined };
       run_scheduled_health_check: { Args: never; Returns: undefined };
-      release_transaction_refund_claim: {
-        Args: { p_transaction_id: string };
-        Returns: undefined;
-      };
       run_storage_purge_dispatch: { Args: never; Returns: undefined };
       search_events: {
         Args: {

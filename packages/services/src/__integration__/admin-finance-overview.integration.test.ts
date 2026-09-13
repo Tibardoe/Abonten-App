@@ -1,3 +1,4 @@
+import { resolveAdminRange } from "@abonten/core/admin/adminDateRange";
 import type { AdminContext } from "@abonten/types/adminTypes";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -59,7 +60,7 @@ type Overview = NonNullable<
 >;
 type Kpis = NonNullable<
   Awaited<ReturnType<typeof getDashboardCore>>["data"]
->["kpis"];
+>["current"];
 let baseOverview: Overview;
 let baseKpis: Kpis;
 
@@ -76,13 +77,18 @@ async function overview(): Promise<Overview> {
 
 async function kpis(): Promise<Kpis> {
   const res = await getDashboardCore(service, ctx, {
-    range: "custom",
+    ...resolveAdminRange("30d"),
+    key: "custom",
     from,
     to,
+    // The dashboard compares against the previous window; this fixture only
+    // cares about the current one, so point the comparison at itself.
+    prevFrom: from,
+    prevTo: from,
   });
   expect(res.status).toBe(200);
   if (!res.data) throw new Error(res.message ?? "no data");
-  return res.data.kpis;
+  return res.data.current;
 }
 
 beforeAll(async () => {
@@ -380,10 +386,13 @@ describe("admin dashboard money figures", () => {
     const k = await kpis();
 
     expect(k.grossTicketSales - baseKpis.grossTicketSales).toBe(300);
-    expect(k.platformFeeRevenue - baseKpis.platformFeeRevenue).toBe(15);
+    expect(k.serviceFeeRevenue - baseKpis.serviceFeeRevenue).toBe(15);
     // Cash refunded is positive money that went back out, read from the
     // refund mirror, never the pending request and never the retained fee.
-    expect(k.refunds - baseKpis.refunds).toBe(200);
-    expect(k.refundsCount - baseKpis.refundsCount).toBe(1);
+    expect(k.cashRefunded - baseKpis.cashRefunded).toBe(200);
+    expect(k.refundsIssued - baseKpis.refundsIssued).toBe(1);
+    // A paid ticket has a payment behind it; the fixture issues none, so the
+    // count must not move just because money did.
+    expect(k.paidTickets - baseKpis.paidTickets).toBe(0);
   });
 });
