@@ -16,7 +16,7 @@ complianceReviewRequired: no
 
 Abonten Weekly is a weekly edition of events and places worth discovering, for Ghana or for one area such as Accra. Design: [architecture/weekly-highlights.md](../architecture/weekly-highlights.md).
 
-**Current state: switched off in production.** Nobody outside the console sees editions until Settings says otherwise.
+**Current state: switched on for staff only in production (2026-09-13).** Only active admins see editions. Two staff test editions exist ("Staff preview: this week" published, "Staff preview: next week" scheduled for Monday 14 September, 06:00). Archive them once real editions exist.
 
 ## Prerequisites
 

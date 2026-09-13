@@ -70,6 +70,13 @@ Two device set-ups were used on 2026-09-12 (tester: engineering, driven over `ad
 | Settings hub rows (Help centre, Legal) | Yes | Yes | **DEVICE VERIFICATION PENDING** — the Settings hub requires a signed-in session and no test account could be signed in on either emulator (no Google account on the device; phone and email codes go to real inboxes) | Not applicable yet |
 | i18n keys (six locales) | Yes (JSON valid, typecheck) | Yes | **DEVICE VERIFICATION PENDING** — English only was exercised; translations also await native review (decision D3) | Not applicable yet |
 
+## Abonten Weekly banners (2026-09-13)
+
+| Change | SOURCE VERIFIED | BUILD VERIFIED | DEVICE VERIFIED | PRODUCTION VERIFIED |
+|---|---|---|---|---|
+| Explore teaser and edition masthead as rotating full-bleed banners; hero cards; image-failure fallback | Yes — typecheck, Biome, unit and integration tests | Update `29527d17` published to the `preview` channel (Android, runtime 0.2.0). New Android preview build `0b3dd3fb` (version code 2) finished and installed on AVD `abonten_a35`: `pm get-app-links` shows `abontenhub.com: verified`, and opening `https://abontenhub.com/weekly/ghana/2026-09-07` launched the app's Abonten Weekly screen (signed out, so it correctly showed "This edition isn't available") | **Yes (A)** on Android, against a local stack (rotation, swipe, caption and banner taps, one image, failed image, no image, "Remove animations" on) and against production signed in as the founder (teaser, edition, hero, listing) | **Web: yes** (abontenhub.com, staff session, desktop and 390 px). App: the JavaScript ran against production through the dev client; no production app build exists |
+| iOS | Yes | No iOS build exists (preview profile builds an iOS simulator app; the Apple account is blocked on a D-U-N-S number) | **DEVICE VERIFICATION PENDING** — cannot be run from this Windows machine | Not applicable yet |
+
 ## What "production" means here, and why nothing was published to it
 
 The `production` channel has no build listening to it (see the facts table). Publishing an EAS Update there would be a no-op, and producing the first production build (`eas build --profile production`, `autoIncrement`) is the first step of a store release — a business decision (Google Play listing, Data safety form: legal F2; iOS: decision D2), not a documentation task. **Decision required before any production release: none was made on 2026-09-12 and no production artefact was created.**

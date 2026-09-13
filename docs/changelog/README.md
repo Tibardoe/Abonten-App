@@ -18,6 +18,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 ## 2026-09-13 — Abonten Weekly: full-bleed rotating banners
 
+- **Production state**: Abonten Weekly switched on for staff only, with two staff test editions (this week published, next week scheduled). App JavaScript published as EAS Update `29527d17` on the `preview` channel; Android preview build `0b3dd3fb` finished; the `/weekly` App Link is verified on a device. Updated `architecture/weekly-highlights.md`, `admin/weekly.md`, `operations/open-items.md` (K1), `mobile/release-verification.md`.
 - **Follow-up**: a listing photo that fails to load now shows the brand gradient and a placeholder icon, instead of a black box or the browser's broken-image icon (banners and hero cards, web and app). The weekly integration suite no longer fails when a Ghana-wide edition is published on the local stack.
 
 - **Behaviour change (visible only where Abonten Weekly is on)**: the Explore teaser and the edition masthead on web and in the app are now large banners with the edition's listings rotating behind the text, a caption linking to the listing on show, progress segments, swipe and a pause button; hero listings fill their card with the photo. The teaser API adds a `slides` field. Updated [architecture/weekly-highlights.md](../architecture/weekly-highlights.md) §8.
