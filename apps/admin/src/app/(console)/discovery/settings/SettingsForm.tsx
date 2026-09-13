@@ -147,16 +147,19 @@ function Toggle({
 }
 
 function AudienceSelect({
+  id,
   value,
   disabled,
   onChange,
 }: {
+  id: string;
   value: DiscoveryAudience;
   disabled: boolean;
   onChange: (v: DiscoveryAudience) => void;
 }) {
   return (
     <select
+      id={id}
       value={value}
       disabled={disabled}
       onChange={(e) => onChange(e.target.value as DiscoveryAudience)}
@@ -285,9 +288,12 @@ export function SettingsForm({
           disabled={!editable}
           onChange={(v) => set("searchV2Enabled", v)}
         />
-        <label className="block text-sm">
-          <span className="block font-medium">Who gets the new search</span>
+        <div className="block text-sm">
+          <label htmlFor="search-audience" className="block font-medium">
+            Who gets the new search
+          </label>
           <AudienceSelect
+            id="search-audience"
             value={s.searchAudience}
             disabled={!editable}
             onChange={(v) => set("searchAudience", v)}
@@ -295,7 +301,7 @@ export function SettingsForm({
           <span className="mt-1 block text-xs text-muted-foreground">
             Signed-out visitors only see it when this is Everyone.
           </span>
-        </label>
+        </div>
         <Toggle
           label="Organizer search (including @handle)"
           checked={s.organizerSearchEnabled}
@@ -333,14 +339,20 @@ export function SettingsForm({
           disabled={!editable}
           onChange={(v) => set("recommendationsShadowMode", v)}
         />
-        <label className="block text-sm">
-          <span className="block font-medium">Who gets alerts and picks</span>
+        <div className="block text-sm">
+          <label
+            htmlFor="recommendations-audience"
+            className="block font-medium"
+          >
+            Who gets alerts and picks
+          </label>
           <AudienceSelect
+            id="recommendations-audience"
             value={s.recommendationsAudience}
             disabled={!editable}
             onChange={(v) => set("recommendationsAudience", v)}
           />
-        </label>
+        </div>
         <Toggle
           label="Opt-in prompts"
           hint="“Enjoy events like this?” after a ticket or RSVP, and “Like this place?” after a favorite, review or second check-in."
