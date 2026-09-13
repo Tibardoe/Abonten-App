@@ -10,6 +10,7 @@ import {
   money,
 } from "@/components/ui";
 import { loadAnalytics } from "@/lib/data";
+import { formatAccraDate } from "@/lib/format";
 import type {
   AnalyticsSeriesPoint,
   DashboardRange,
@@ -17,10 +18,14 @@ import type {
 import Link from "next/link";
 
 const RANGES: { key: DashboardRange; label: string }[] = [
-  { key: "7d", label: "7 days" },
-  { key: "30d", label: "30 days" },
-  { key: "90d", label: "90 days" },
+  { key: "7d", label: "Last 7 days" },
+  { key: "30d", label: "Last 30 days" },
+  { key: "90d", label: "Last 90 days" },
 ];
+
+const RANGE_LABEL: Record<string, string> = Object.fromEntries(
+  RANGES.map((r) => [r.key, r.label]),
+);
 
 const SERIES_METRICS: {
   key: keyof Omit<AnalyticsSeriesPoint, "date">;
@@ -31,7 +36,7 @@ const SERIES_METRICS: {
   { key: "newEvents", label: "New events" },
   { key: "newPlaces", label: "New places" },
   { key: "ticketsIssued", label: "Tickets issued" },
-  { key: "grossRevenue", label: "Gross revenue", money: true },
+  { key: "grossTicketSales", label: "Gross ticket sales", money: true },
 ];
 
 function Bars({
@@ -89,7 +94,7 @@ export default async function AnalyticsPage({
     <div>
       <PageHeader
         title="Platform Analytics"
-        description="Growth and revenue trends. Live aggregates over the selected window."
+        description="Growth and ticket-sales trends, live over the selected window. Money figures cover ticket sales only."
         actions={
           <div className="flex gap-1">
             {RANGES.map((r) => (
@@ -114,51 +119,65 @@ export default async function AnalyticsPage({
         All time
       </h3>
       <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Users" value={a.totals.users.toLocaleString()} />
-        <Stat label="Organizers" value={a.totals.organizers.toLocaleString()} />
+        <Stat
+          label="Active users"
+          value={a.totals.users.toLocaleString()}
+          hint="excludes suspended, banned and deleted accounts"
+        />
+        <Stat
+          label="Organizers"
+          value={a.totals.organizers.toLocaleString()}
+          hint="published or cancelled at least one event"
+        />
         <Stat
           label="Events"
-          value={a.totals.eventsTotal.toLocaleString()}
-          hint={`${a.totals.eventsPublished.toLocaleString()} published`}
+          value={a.totals.eventsPublished.toLocaleString()}
+          hint={`published · ${a.totals.eventsTotal.toLocaleString()} incl. drafts`}
         />
         <Stat label="Places" value={a.totals.places.toLocaleString()} />
         <Stat
           label="Tickets issued"
           value={a.totals.ticketsIssuedAllTime.toLocaleString()}
+          hint="paid and free, excluding cancelled"
         />
         <Stat
-          label="Gross customer payments"
-          value={money(a.totals.grossCustomerPaymentsAllTime, a.currency)}
+          label="Gross ticket sales"
+          value={money(a.totals.grossTicketSalesAllTime, a.currency)}
+          hint="ticket price only, before refunds"
         />
         <Stat
           label="Net platform revenue"
           value={money(a.totals.netPlatformRevenueAllTime, a.currency)}
+          hint="service fee minus Paystack cost, where the cost is known"
         />
       </div>
 
       <h3 className="mb-2 mt-6 text-sm font-semibold text-muted-foreground">
-        In range · {new Date(a.from).toLocaleDateString()} –{" "}
-        {new Date(a.to).toLocaleDateString()}
+        {RANGE_LABEL[range] ?? range} · {formatAccraDate(a.from)} –{" "}
+        {formatAccraDate(a.to)} · Africa/Accra
       </h3>
       <div className="grid gap-3 sm:grid-cols-4">
         <Stat label="New users" value={a.inRange.newUsers.toLocaleString()} />
         <Stat label="New events" value={a.inRange.newEvents.toLocaleString()} />
         <Stat label="New places" value={a.inRange.newPlaces.toLocaleString()} />
         <Stat
-          label="Active organizers"
-          value={a.inRange.activeOrganizers.toLocaleString()}
+          label="Organizers who added an event"
+          value={a.inRange.organizersWithNewEvents.toLocaleString()}
         />
         <Stat
           label="Tickets issued"
           value={a.inRange.ticketsIssued.toLocaleString()}
+          hint="paid and free, excluding cancelled"
         />
         <Stat
-          label="Gross revenue"
-          value={money(a.inRange.grossRevenue, a.currency)}
+          label="Gross ticket sales"
+          value={money(a.inRange.grossTicketSales, a.currency)}
+          hint="ticket price only, before refunds"
         />
         <Stat
           label="Net platform revenue"
           value={money(a.inRange.netPlatformRevenue, a.currency)}
+          hint="service fee minus Paystack cost"
         />
       </div>
 
@@ -183,7 +202,7 @@ export default async function AnalyticsPage({
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <div>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            Top events (tickets issued in range)
+            Top events · tickets issued in range
           </h3>
           {a.topEvents.length === 0 ? (
             <EmptyState>No ticketed events in this window.</EmptyState>
@@ -220,7 +239,7 @@ export default async function AnalyticsPage({
 
         <div>
           <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-            Top organizers (gross in range)
+            Top organizers · gross ticket sales in range
           </h3>
           {a.topOrganizers.length === 0 ? (
             <EmptyState>No organizer revenue in this window.</EmptyState>
@@ -229,7 +248,7 @@ export default async function AnalyticsPage({
               <thead>
                 <tr>
                   <Th>Organizer</Th>
-                  <Th>Gross</Th>
+                  <Th>Gross ticket sales</Th>
                 </tr>
               </thead>
               <tbody>
@@ -244,7 +263,7 @@ export default async function AnalyticsPage({
                       </Link>
                     </Td>
                     <Td className="tabular-nums">
-                      {money(o.grossRevenue, o.currency)}
+                      {money(o.grossTicketSales, o.currency)}
                     </Td>
                   </tr>
                 ))}

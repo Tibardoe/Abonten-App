@@ -99,7 +99,8 @@ export async function getFinanceOverviewCore(
 
   const [
     { data: feeRows },
-    { data: txRows },
+    { count: successfulCount },
+    { data: pendingRefundTxns },
     { data: earnRows },
     { data: payoutRows },
     { data: cfg },
@@ -114,9 +115,16 @@ export async function getFinanceOverviewCore(
       .limit(20000),
     supabase
       .from("transaction")
-      .select("status, amount, currency, created_at, refund_requested_at")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "successful")
       .gte("created_at", from)
-      .lte("created_at", to)
+      .lte("created_at", to),
+    // Refunds waiting to be issued are a "right now" figure, not a range one:
+    // an admin needs to see every open request whenever the sale happened.
+    supabase
+      .from("transaction")
+      .select("id, amount")
+      .eq("status", "refund_pending")
       .limit(20000),
     supabase
       .from("organizer_ledger_entry")
@@ -132,37 +140,66 @@ export async function getFinanceOverviewCore(
 
   let currency = cfg?.currency ?? "GHS";
 
+  // Only `fee` rows describe a sale. `fee_refund_adjustment` rows are the
+  // negative mirror written when a refund is issued (ticket revenue only —
+  // the service fee is retained), so summing both would silently turn
+  // "gross" into "net of refunds". Keep the two apart.
   let ticketRevenue = 0;
   let serviceFeeRevenue = 0;
   let processingCost = 0;
   let netPlatformRevenue = 0;
   let totalCustomerPayments = 0;
-  for (const f of feeRows ?? []) {
-    if (f.currency) currency = f.currency;
-    ticketRevenue += num(f.ticket_revenue);
-    serviceFeeRevenue += num(f.service_fee);
-    processingCost += num(f.processing_cost);
-    netPlatformRevenue += num(f.net_revenue);
-    totalCustomerPayments += num(f.total_customer_payment);
-  }
-
-  let transactionsSuccessful = 0;
-  let refundsPending = 0;
-  let refundsPendingAmount = 0;
+  let feeEntries = 0;
+  let feeEntriesWithKnownCost = 0;
   let refundsCompleted = 0;
   let refundsCompletedAmount = 0;
-  for (const t of txRows ?? []) {
-    if (t.status === "successful") transactionsSuccessful += 1;
-    if (t.status === "refund_pending") {
-      refundsPending += 1;
-      refundsPendingAmount += num(t.amount);
-    }
-    if (t.status === "refunded") {
+  for (const f of feeRows ?? []) {
+    if (f.currency) currency = f.currency;
+    if (f.entry_type === "fee_refund_adjustment") {
       refundsCompleted += 1;
-      refundsCompletedAmount += num(t.amount);
+      refundsCompletedAmount += -num(f.ticket_revenue);
+      continue;
+    }
+    feeEntries += 1;
+    ticketRevenue += num(f.ticket_revenue);
+    serviceFeeRevenue += num(f.service_fee);
+    totalCustomerPayments += num(f.total_customer_payment);
+    // processing_cost / net_revenue are NULL when Paystack did not report a
+    // fee (credit-only orders never reach Paystack). Those rows must not be
+    // read as "zero cost" — count how many are known so the UI can say so.
+    if (f.net_revenue != null) {
+      feeEntriesWithKnownCost += 1;
+      processingCost += num(f.processing_cost);
+      netPlatformRevenue += num(f.net_revenue);
     }
   }
 
+  const transactionsSuccessful = successfulCount ?? 0;
+
+  // What can still be sent back for each open request: the ticket revenue
+  // recorded on the sale's fee entry (the retained fee is excluded), or the
+  // full charge for a pre-fee-model transaction with no fee entry.
+  const pendingIds = (pendingRefundTxns ?? []).map((t) => t.id);
+  const refundableByTxn = new Map<string, number>();
+  if (pendingIds.length > 0) {
+    const { data: pendingFees } = await supabase
+      .from("platform_fee_entry")
+      .select("transaction_id, ticket_revenue")
+      .eq("entry_type", "fee")
+      .in("transaction_id", pendingIds);
+    for (const f of pendingFees ?? [])
+      refundableByTxn.set(f.transaction_id, num(f.ticket_revenue));
+  }
+  let refundsPending = 0;
+  let refundsPendingAmount = 0;
+  for (const t of pendingRefundTxns ?? []) {
+    refundsPending += 1;
+    refundsPendingAmount += refundableByTxn.get(t.id) ?? num(t.amount);
+  }
+
+  // Same entry families as get_organizer_finance_overview() — the number
+  // the organizer sees on their own Finances page. Anything counted here
+  // that the organizer function does not count (or vice versa) is a bug.
   let organizerEarningsBooked = 0;
   let organizerEarningsHeld = 0;
   let organizerEarningsPaidOut = 0;
@@ -170,12 +207,14 @@ export async function getFinanceOverviewCore(
     const a = num(l.amount);
     if (
       l.entry_type === "earning" ||
+      l.entry_type === "refund_adjustment" ||
       l.entry_type === "promoter_commission" ||
       l.entry_type === "promoter_commission_reversal"
     ) {
-      // A promoter commission (Rewards Phase 8) is stored NEGATIVE against
-      // the sale it was earned on, its reversal positive: both change what
-      // the organizer is owed.
+      // earning is positive; refund_adjustment is the negative deduction
+      // written when a refund is confirmed; a promoter commission (Rewards
+      // Phase 8) is stored NEGATIVE against the sale it was earned on, its
+      // reversal positive. All four change what the organizer is owed.
       organizerEarningsBooked += a;
     } else if (
       l.entry_type === "refund_hold" ||
@@ -197,16 +236,18 @@ export async function getFinanceOverviewCore(
       organizerEarningsPaidOut -= a;
     }
   }
-  // held and paid-out amounts are not payable until released
-  const organizerEarningsOutstanding = Math.max(
-    0,
-    organizerEarningsBooked - organizerEarningsHeld - organizerEarningsPaidOut,
-  );
+  // Held and paid-out amounts are not payable. A negative result is a real
+  // signal (refunds confirmed after a payout) and must stay visible — never
+  // clamp it to zero.
+  const organizerEarningsOutstanding =
+    organizerEarningsBooked - organizerEarningsHeld - organizerEarningsPaidOut;
 
+  // payout.status is CHECK-constrained to processing/completed/failed/
+  // cancelled — "processing" is the only in-flight state.
   let payoutsPending = 0;
   let payoutsPendingAmount = 0;
   for (const p of payoutRows ?? []) {
-    if (["requested", "pending", "processing"].includes(String(p.status))) {
+    if (p.status === "processing") {
       payoutsPending += 1;
       payoutsPendingAmount += num(p.amount);
     }
@@ -225,6 +266,8 @@ export async function getFinanceOverviewCore(
       serviceFeeRevenue,
       processingCost,
       netPlatformRevenue,
+      feeEntries,
+      feeEntriesWithKnownCost,
       transactionsSuccessful,
       refundsPending,
       refundsPendingAmount,
@@ -232,6 +275,7 @@ export async function getFinanceOverviewCore(
       refundsCompletedAmount,
       organizerEarningsBooked,
       organizerEarningsHeld,
+      organizerEarningsPaidOut,
       organizerEarningsOutstanding,
       payoutsPending,
       payoutsPendingAmount,
@@ -770,11 +814,13 @@ export async function getOrganizerFinanceCore(
     const a = num(l.amount);
     if (
       l.entry_type === "earning" ||
+      l.entry_type === "refund_adjustment" ||
       l.entry_type === "promoter_commission" ||
       l.entry_type === "promoter_commission_reversal"
     ) {
-      // Promoter commissions (negative) and their reversals change what the
-      // organizer earned net.
+      // The same earning family get_organizer_finance_overview() sums for
+      // the organizer's own Finances page: refund deductions and promoter
+      // commissions (negative) and their reversals change what was earned.
       earned += a;
     } else if (
       l.entry_type === "refund_hold" ||
@@ -796,7 +842,8 @@ export async function getOrganizerFinanceCore(
       paidOut -= a;
     }
   }
-  const outstanding = Math.max(0, earned - paidOut - held);
+  // Negative means refunds were confirmed after money went out — show it.
+  const outstanding = earned - paidOut - held;
 
   const ledgerView: LedgerEntryView[] = (ledger ?? [])
     .slice(0, 25)

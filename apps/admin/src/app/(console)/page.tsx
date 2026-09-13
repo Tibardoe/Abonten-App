@@ -8,11 +8,20 @@ import {
   timeAgo,
 } from "@/components/ui";
 import { loadDashboard } from "@/lib/data";
+import { formatAccraDate } from "@/lib/format";
 import type { DashboardRange } from "@abonten/types/adminTypes";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 
 const RANGES: DashboardRange[] = ["today", "yesterday", "7d", "30d", "90d"];
+
+const RANGE_LABEL: Record<string, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  "90d": "Last 90 days",
+};
 
 export default async function DashboardPage({
   searchParams,
@@ -31,6 +40,8 @@ export default async function DashboardPage({
     );
   }
   const { kpis, health, needsAttention: na } = res.data;
+  const rangeLabel = RANGE_LABEL[range] ?? range;
+  const rangeHint = rangeLabel.toLowerCase();
 
   const attention: {
     label: string;
@@ -78,15 +89,23 @@ export default async function DashboardPage({
       href: "/monitoring",
       danger: na.stuckPayments > 0,
     },
-    { label: "Refunds pending", value: na.pendingRefunds, href: "/monitoring" },
-    { label: "Payouts pending", value: na.pendingPayouts, href: "/monitoring" },
+    {
+      label: "Refunds pending",
+      value: na.pendingRefunds,
+      href: "/finance/refunds",
+    },
+    {
+      label: "Payouts pending",
+      value: na.pendingPayouts,
+      href: "/finance/payouts",
+    },
   ];
 
   return (
     <div>
       <PageHeader
         title="Operations Dashboard"
-        description={`Range: ${range} · ${new Date(res.data.from).toLocaleDateString()} – ${new Date(res.data.to).toLocaleDateString()} (Africa/Accra)`}
+        description={`${rangeLabel} · ${formatAccraDate(res.data.from)} – ${formatAccraDate(res.data.to)} · Africa/Accra`}
         actions={
           <div className="flex gap-1">
             {RANGES.map((r) => (
@@ -95,7 +114,7 @@ export default async function DashboardPage({
                 href={`/?range=${r}`}
                 className={`rounded px-2 py-1 text-xs ${r === range ? "bg-primary text-primary-foreground" : "border border-border hover:bg-muted"}`}
               >
-                {r}
+                {RANGE_LABEL[r] ?? r}
               </Link>
             ))}
           </div>
@@ -124,34 +143,55 @@ export default async function DashboardPage({
           Platform overview
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          <Stat label="Total users" value={kpis.totalUsers.toLocaleString()} />
+          <Stat
+            label="Active users"
+            value={kpis.totalUsers.toLocaleString()}
+            hint={`all time · ${kpis.allAccounts.toLocaleString()} accounts incl. suspended and deleted`}
+          />
           <Stat
             label="New users"
             value={kpis.newUsers.toLocaleString()}
-            hint={`in ${range}`}
+            hint={rangeHint}
           />
-          <Stat label="Organizers" value={kpis.organizers.toLocaleString()} />
-          <Stat label="Events" value={kpis.events.toLocaleString()} />
-          <Stat label="Places" value={kpis.places.toLocaleString()} />
+          <Stat
+            label="Organizers"
+            value={kpis.organizers.toLocaleString()}
+            hint="all time · published or cancelled an event"
+          />
+          <Stat
+            label="Events"
+            value={kpis.eventsPublished.toLocaleString()}
+            hint={`published · ${kpis.events.toLocaleString()} incl. drafts`}
+          />
+          <Stat
+            label="Places"
+            value={kpis.places.toLocaleString()}
+            hint="all time"
+          />
           <Stat
             label="Tickets sold"
             value={kpis.ticketsSold.toLocaleString()}
-            hint={`in ${range}`}
+            hint={`${rangeHint} · paid, excluding cancelled`}
+          />
+          <Stat
+            label="Free registrations"
+            value={kpis.freeRegistrations.toLocaleString()}
+            hint={`${rangeHint} · excluding cancelled`}
           />
           <Stat
             label="Gross ticket sales"
             value={money(kpis.grossTicketSales, kpis.currency)}
-            hint={`in ${range}`}
+            hint={`${rangeHint} · before refunds`}
           />
           <Stat
-            label="Platform fee revenue"
+            label="Service fee revenue"
             value={money(kpis.platformFeeRevenue, kpis.currency)}
-            hint={`in ${range}`}
+            hint={`${rangeHint} · kept even when a ticket is refunded`}
           />
           <Stat
-            label="Refunds"
+            label="Cash refunded"
             value={money(kpis.refunds, kpis.currency)}
-            hint={`in ${range}`}
+            hint={`${rangeHint} · ${kpis.refundsCount} refund${kpis.refundsCount === 1 ? "" : "s"} issued, ticket price only`}
           />
         </div>
       </section>
@@ -195,10 +235,21 @@ export default async function DashboardPage({
         )}
       </section>
 
-      <p className="mt-6 flex items-center gap-1.5 text-xs text-muted-foreground">
-        <AlertTriangle className="h-3.5 w-3.5" />
-        KPIs are live aggregates over the production database. Health rows come
-        from real dependency probes. Nothing here is placeholder data.
+      <p className="mt-6 flex items-start gap-1.5 text-xs text-muted-foreground">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <span>
+          Live figures read straight from the production database; health rows
+          come from real dependency probes. Money figures count ticket sales
+          only — promotions and subscriptions are not included. See{" "}
+          <Link href="/analytics" className="text-primary hover:underline">
+            Analytics
+          </Link>{" "}
+          for trends and{" "}
+          <Link href="/finance" className="text-primary hover:underline">
+            Finance
+          </Link>{" "}
+          for the full money picture.
+        </span>
       </p>
     </div>
   );

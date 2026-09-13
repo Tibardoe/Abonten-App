@@ -4,8 +4,8 @@ purpose: Explain each panel and metric on the console dashboard and what to do a
 audience: All admin roles
 scope: /
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -20,10 +20,24 @@ Permission: `dashboard.view`. Source: `packages/services/src/admin/dashboard/get
 
 | Panel | What it shows | Source of truth |
 |---|---|---|
-| **KPIs** (time range selectable) | New users, events published, tickets issued, gross customer payments, reports opened | Head-counts on `user_info`, `event`, `ticket`, `platform_fee_entry`, `report` |
+| **Needs attention** | Open, urgent and unassigned reports; pending place claims; pending verifications; open error groups; failing health checks; payments stuck over 30 minutes; refunds and payouts waiting. Each tile opens the queue it counts | `admin_dashboard_counts()` — live counts |
+| **Platform overview** (time range selectable) | Active users (and all accounts), new users in range, organizers, events published (and all), places, tickets sold and free registrations in range, gross ticket sales, service-fee revenue and cash refunded in range | Counts on `user_info`, `event`, `place`, `ticket`; money from `platform_fee_entry` |
 | **Dependency health** | Latest result per health-check key: `self` (is the cron reaching the web app at all), `db`, `auth`, `storage`, `paystack`, `resend`, `hubtel`, `cloudinary`, `expo`, `rewards_health`, `fieldops` | `health_check_result` (probe every 2 min) |
-| **Needs attention** | Open reports by priority, open incidents, payouts awaiting settlement or review, pending claims, rewards held for review | Live counts |
-| **Recent activity** | Latest audit-log rows | `admin_audit_log` |
+
+## What the figures mean
+
+| Figure | Definition |
+|---|---|
+| Active users | Accounts with status Active. Suspended, banned and deleted accounts are reported beside it as "all accounts" |
+| New users | Accounts created in the range, whatever their status became afterwards |
+| Organizers | People who have published or cancelled at least one event. A draft does not make someone an organizer. Place owners are counted by "Places", not here |
+| Events | Published events, with the all-statuses total (including drafts) beside it |
+| Tickets sold | Paid tickets issued in the range, minus the ones later cancelled. Free registrations are counted separately |
+| Gross ticket sales | What buyers paid for tickets in the range, **before refunds** (`platform_fee_entry` rows of type `fee`) |
+| Service fee revenue | Abonten's fee on those sales. It is retained when a ticket is refunded |
+| Cash refunded | Money actually sent back in the range — ticket price only, from the `fee_refund_adjustment` mirror rows. A refund that is only *requested* appears under "Refunds pending", not here |
+
+Promotions and subscriptions are not in these money figures; they have no fee entry. Finance › Overview is the full picture.
 
 ## Reading the health panel
 

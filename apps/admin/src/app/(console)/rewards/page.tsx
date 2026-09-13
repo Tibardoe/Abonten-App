@@ -394,9 +394,9 @@ export default async function RewardsOverviewPage({
             </tbody>
           </Table>
           <p className="mt-2 text-xs text-muted-foreground">
-            Rules pay nothing until the reward engine ships (Phase 4); they are
-            recorded here so every reward can point to the exact terms it was
-            calculated under.
+            A rule only pays when it has a live version, the programme is on and
+            shadow mode is off. Every version is kept so a reward can always
+            point to the exact terms it was calculated under.
           </p>
         </>
       )}

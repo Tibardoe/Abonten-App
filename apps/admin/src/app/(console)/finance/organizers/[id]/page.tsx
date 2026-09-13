@@ -63,17 +63,27 @@ export default async function OrganizerFinancePage({
       />
 
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
-        <Stat label="Earned" value={money(f.earned, f.currency)} />
         <Stat
-          label="Held"
+          label="Earned"
+          value={money(f.earned, f.currency)}
+          hint="ticket sales before refunds"
+        />
+        <Stat
+          label="Refunds deducted"
           value={money(f.held, f.currency)}
           tone={f.held > 0 ? "warning" : undefined}
+          hint="taken off as soon as a refund is requested"
         />
-        <Stat label="Paid out" value={money(f.paidOut, f.currency)} />
         <Stat
-          label="Outstanding"
+          label="Paid out"
+          value={money(f.paidOut, f.currency)}
+          hint="sent out or reserved for a payout in flight"
+        />
+        <Stat
+          label="Still owed"
           value={money(f.outstanding, f.currency)}
-          hint="earned − paid out − held"
+          tone={f.outstanding < 0 ? "danger" : undefined}
+          hint="earned − refunds − paid out · not all payable yet"
         />
       </div>
 

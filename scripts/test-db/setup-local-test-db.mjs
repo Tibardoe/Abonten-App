@@ -18,6 +18,15 @@
 //
 // Usage: node scripts/test-db/setup-local-test-db.mjs
 // Writes connection info for the copy to .env.test.local at the repo root.
+//
+// SUPABASE_TEST_PORT_OFFSET shifts every local port in the disposable copy's
+// config.toml. Windows reserves blocks of high ports for Hyper-V/WSL
+// (`netsh int ipv4 show excludedportrange protocol=tcp`), and the Supabase
+// defaults (54321-54329) can land inside one, which fails the start with
+// "ports are not available ... An attempt was made to access a socket in a
+// way forbidden by its access permissions". Pick an offset that moves them
+// clear of every reserved block, e.g. SUPABASE_TEST_PORT_OFFSET=-1000.
+// Default 0 -- CI and machines without reservations are unaffected.
 
 import { execFileSync } from "node:child_process";
 import {
@@ -205,6 +214,33 @@ function patchBaselineForFreshLocalPostgres(migrationsDir) {
   );
 }
 
+// Only the local stack's own ports live in this range; shifting them changes
+// nothing about the schema under test.
+function applyPortOffset(supabaseDir) {
+  const offset = Number.parseInt(
+    process.env.SUPABASE_TEST_PORT_OFFSET ?? "0",
+    10,
+  );
+  if (!Number.isFinite(offset) || offset === 0) return;
+
+  const configPath = join(supabaseDir, "config.toml");
+  const config = readFileSync(configPath, "utf8");
+  let moved = 0;
+  const next = config.replace(
+    /^(\s*(?:shadow_|inspector_)?port\s*=\s*)(\d+)/gm,
+    (whole, prefix, digits) => {
+      const port = Number.parseInt(digits, 10);
+      if (port < 54000 || port > 54999) return whole;
+      moved += 1;
+      return `${prefix}${port + offset}`;
+    },
+  );
+  writeFileSync(configPath, next);
+  console.log(
+    `[test-db] Shifted ${moved} local port(s) by ${offset} (copy only).`,
+  );
+}
+
 function main() {
   const workdir = mkdtempSync(join(tmpdir(), "abonten-test-supabase-"));
   const supabaseSrc = join(ROOT, "supabase");
@@ -222,6 +258,7 @@ function main() {
   neutralizeIrreducibleStatements(migrationsDir);
   skipProductionOnlyMigrations(migrationsDir);
   patchBaselineForFreshLocalPostgres(migrationsDir);
+  applyPortOffset(supabaseDest);
   // supabase/seed.sql (user_status reference rows) is copied along with
   // everything else above -- no separate step needed now that it's real.
 

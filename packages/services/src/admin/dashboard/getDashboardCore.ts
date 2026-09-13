@@ -102,37 +102,56 @@ export async function getDashboardCore(
 
   const [
     totalUsers,
+    allAccounts,
     newUsers,
     events,
+    eventsPublished,
     places,
     ticketsSold,
+    freeRegistrations,
     { data: feeRows },
-    { data: refundTxns },
     { data: organizerRows },
     { data: healthRows },
     { data: counts },
   ] = await Promise.all([
+    // "Users" means people who can use Abonten today. Suspended, banned and
+    // deleted accounts are reported separately rather than inflating it.
+    count(supabase, "user_info", (q) => q.eq("status_id", 1)),
     count(supabase, "user_info"),
     count(supabase, "user_info", (q) =>
       q.gte("created_at", from).lte("created_at", to),
     ),
     count(supabase, "event"),
+    count(supabase, "event", (q) => q.eq("status", "published")),
     count(supabase, "place"),
+    // A sale is a paid ticket that still exists: a ticket with a transaction
+    // behind it, minus the ones later cancelled. Free registrations are real
+    // attendance but not sales, so they are counted on their own.
     count(supabase, "ticket", (q) =>
-      q.gte("issued_at", from).lte("issued_at", to),
+      q
+        .gte("issued_at", from)
+        .lte("issued_at", to)
+        .not("transaction_id", "is", null)
+        .neq("status", "cancelled"),
+    ),
+    count(supabase, "ticket", (q) =>
+      q
+        .gte("issued_at", from)
+        .lte("issued_at", to)
+        .is("transaction_id", null)
+        .neq("status", "cancelled"),
     ),
     supabase
       .from("platform_fee_entry")
-      .select("service_fee, ticket_revenue, currency, created_at")
+      .select("entry_type, service_fee, ticket_revenue, currency, created_at")
       .gte("created_at", from)
       .lte("created_at", to),
+    // An organizer is someone who has put an event in front of the public;
+    // a draft is not that. Same definition as Analytics and /organizers.
     supabase
-      .from("transaction")
-      .select("amount, currency")
-      .in("status", ["refunded", "refund_pending"])
-      .gte("updated_at", from)
-      .lte("updated_at", to),
-    supabase.from("event").select("organizer_id"),
+      .from("event")
+      .select("organizer_id")
+      .neq("status", "draft"),
     supabase
       .from("health_check_result")
       .select("check_key, ok, latency_ms, detail, checked_at")
@@ -141,16 +160,25 @@ export async function getDashboardCore(
     supabase.rpc("admin_dashboard_counts"),
   ]);
 
+  // `fee` rows are sales; `fee_refund_adjustment` rows are the negative
+  // mirror written when a refund is issued (ticket revenue only — the
+  // service fee is retained). Summing both would make "gross" mean "net of
+  // refunds" while the refund tile shows the same money again.
   let grossTicketSales = 0;
   let platformFeeRevenue = 0;
+  let refunds = 0;
+  let refundsCount = 0;
   let currency = "GHS";
   for (const row of feeRows ?? []) {
+    if (row.currency) currency = row.currency;
+    if (row.entry_type === "fee_refund_adjustment") {
+      refundsCount += 1;
+      refunds += -Number(row.ticket_revenue ?? 0);
+      continue;
+    }
     grossTicketSales += Number(row.ticket_revenue ?? 0);
     platformFeeRevenue += Number(row.service_fee ?? 0);
-    if (row.currency) currency = row.currency;
   }
-  let refunds = 0;
-  for (const row of refundTxns ?? []) refunds += Number(row.amount ?? 0);
 
   const organizers = new Set((organizerRows ?? []).map((r) => r.organizer_id))
     .size;
@@ -192,14 +220,18 @@ export async function getDashboardCore(
       to,
       kpis: {
         totalUsers,
+        allAccounts,
         newUsers,
         organizers,
         events,
+        eventsPublished,
         places,
         ticketsSold,
+        freeRegistrations,
         grossTicketSales,
         platformFeeRevenue,
         refunds,
+        refundsCount,
         currency,
       },
       health,

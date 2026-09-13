@@ -170,7 +170,7 @@ export default async function EventDetailPage({
             >
               Content tab
             </Link>{" "}
-            or an open report. Financial detail lives in Finance (later phase).
+            or an open report. Financial detail lives in Finance.
           </Card>
         </div>
       </div>

@@ -91,14 +91,16 @@ export async function getPlatformAnalyticsCore(
     { data: feeAll },
     { data: cfg },
   ] = await Promise.all([
-    headCount(supabase, "user_info"),
+    // Active accounts only - suspended, banned and deleted people are not
+    // users of the platform today.
+    headCount(supabase, "user_info", (q) => q.eq("status_id", 1)),
     headCount(supabase, "place"),
     headCount(supabase, "event"),
     headCount(supabase, "event", (q) => q.eq("status", "published")),
-    headCount(supabase, "ticket"),
+    headCount(supabase, "ticket", (q) => q.neq("status", "cancelled")),
     supabase
       .from("platform_fee_entry")
-      .select("total_customer_payment, net_revenue, currency")
+      .select("entry_type, ticket_revenue, net_revenue, currency")
       .limit(SERIES_ROW_CAP),
     supabase
       .from("platform_fee_config")
@@ -107,27 +109,31 @@ export async function getPlatformAnalyticsCore(
       .maybeSingle(),
   ]);
 
+  // Gross ticket sales = what buyers paid for tickets, before refunds, from
+  // `fee` rows only (`fee_refund_adjustment` rows are the negative refund
+  // mirror). Net revenue skips rows whose processing cost Paystack never
+  // reported - those are unknown, not zero.
   let currency = cfg?.currency ?? "GHS";
   let grossAllTime = 0;
   let netAllTime = 0;
   for (const f of feeAll ?? []) {
     if (f.currency) currency = f.currency;
-    grossAllTime += num(f.total_customer_payment);
-    netAllTime += num(f.net_revenue);
+    if (f.entry_type !== "fee") continue;
+    grossAllTime += num(f.ticket_revenue);
+    if (f.net_revenue != null) netAllTime += num(f.net_revenue);
   }
 
-  // organizers = distinct users who organize an event OR own a place
-  const [{ data: evOrg }, { data: plOwn }] = await Promise.all([
-    supabase
-      .from("event")
-      .select("organizer_id, created_at")
-      .limit(SERIES_ROW_CAP),
-    supabase.from("place").select("owner_id, created_at").limit(SERIES_ROW_CAP),
-  ]);
+  // An organizer is someone who has put an event in front of the public -
+  // the same definition the dashboard and /organizers use. Place owners are
+  // counted by the `places` total, not folded in here.
+  const { data: evOrg } = await supabase
+    .from("event")
+    .select("organizer_id, created_at")
+    .neq("status", "draft")
+    .limit(SERIES_ROW_CAP);
   const organizerIds = new Set<string>();
   for (const r of evOrg ?? [])
     if (r.organizer_id) organizerIds.add(r.organizer_id);
-  for (const r of plOwn ?? []) if (r.owner_id) organizerIds.add(r.owner_id);
 
   // ── in-range raw rows for the series ─────────────────────
   const [
@@ -155,15 +161,18 @@ export async function getPlatformAnalyticsCore(
       .gte("created_at", from)
       .lte("created_at", to)
       .limit(SERIES_ROW_CAP),
+    // issued_at is when the ticket reached its holder - the same column the
+    // dashboard counts by. Cancelled tickets are not activity.
     supabase
       .from("ticket")
-      .select("created_at, ticket_type_id")
-      .gte("created_at", from)
-      .lte("created_at", to)
+      .select("issued_at, ticket_type_id")
+      .gte("issued_at", from)
+      .lte("issued_at", to)
+      .neq("status", "cancelled")
       .limit(SERIES_ROW_CAP),
     supabase
       .from("platform_fee_entry")
-      .select("total_customer_payment, net_revenue, event_id, created_at")
+      .select("entry_type, ticket_revenue, net_revenue, event_id, created_at")
       .gte("created_at", from)
       .lte("created_at", to)
       .limit(SERIES_ROW_CAP),
@@ -184,7 +193,7 @@ export async function getPlatformAnalyticsCore(
         newEvents: 0,
         newPlaces: 0,
         ticketsIssued: 0,
-        grossRevenue: 0,
+        grossTicketSales: 0,
       } satisfies AnalyticsSeriesPoint);
     (b[field] as number) += by;
     buckets.set(key, b);
@@ -192,20 +201,23 @@ export async function getPlatformAnalyticsCore(
   for (const r of uRows ?? []) bump(dayKey(r.created_at), "newUsers");
   for (const r of eRows ?? []) bump(dayKey(r.created_at), "newEvents");
   for (const r of pRows ?? []) bump(dayKey(r.created_at), "newPlaces");
-  for (const r of tRows ?? []) bump(dayKey(r.created_at), "ticketsIssued");
-  for (const r of feeRange ?? [])
-    bump(dayKey(r.created_at), "grossRevenue", num(r.total_customer_payment));
+  for (const r of tRows ?? []) bump(dayKey(r.issued_at), "ticketsIssued");
+  for (const r of feeRange ?? []) {
+    if (r.entry_type !== "fee") continue;
+    bump(dayKey(r.created_at), "grossTicketSales", num(r.ticket_revenue));
+  }
 
   const series = [...buckets.values()].sort((a, b) =>
     a.date < b.date ? -1 : 1,
   );
 
-  const grossRange = (feeRange ?? []).reduce(
-    (s, f) => s + num(f.total_customer_payment),
+  const saleFees = (feeRange ?? []).filter((f) => f.entry_type === "fee");
+  const grossRange = saleFees.reduce((s, f) => s + num(f.ticket_revenue), 0);
+  const netRange = saleFees.reduce(
+    (s, f) => (f.net_revenue == null ? s : s + num(f.net_revenue)),
     0,
   );
-  const netRange = (feeRange ?? []).reduce((s, f) => s + num(f.net_revenue), 0);
-  const activeOrganizers = new Set(
+  const organizersWithNewEvents = new Set(
     (eRows ?? []).map((e) => e.organizer_id).filter(Boolean),
   ).size;
 
@@ -257,11 +269,11 @@ export async function getPlatformAnalyticsCore(
 
   // ── top organizers (by gross in range) ──────────────────
   const grossByEvent = new Map<string, number>();
-  for (const f of feeRange ?? [])
+  for (const f of saleFees)
     if (f.event_id)
       grossByEvent.set(
         f.event_id,
-        (grossByEvent.get(f.event_id) ?? 0) + num(f.total_customer_payment),
+        (grossByEvent.get(f.event_id) ?? 0) + num(f.ticket_revenue),
       );
   // need organizer for every event with gross
   const grossEventIds = [...grossByEvent.keys()];
@@ -314,7 +326,7 @@ export async function getPlatformAnalyticsCore(
         eventsTotal,
         places,
         ticketsIssuedAllTime: ticketsAllTime,
-        grossCustomerPaymentsAllTime: grossAllTime,
+        grossTicketSalesAllTime: grossAllTime,
         netPlatformRevenueAllTime: netAllTime,
       },
       inRange: {
@@ -322,9 +334,9 @@ export async function getPlatformAnalyticsCore(
         newEvents: (eRows ?? []).length,
         newPlaces: (pRows ?? []).length,
         ticketsIssued: (tRows ?? []).length,
-        grossRevenue: grossRange,
+        grossTicketSales: grossRange,
         netPlatformRevenue: netRange,
-        activeOrganizers,
+        organizersWithNewEvents,
       },
       series,
       topEvents: topEventIds.map(([id, tickets]) => ({
@@ -339,7 +351,7 @@ export async function getPlatformAnalyticsCore(
       topOrganizers: topOrgIds.map(([id, gross]) => ({
         id,
         name: names.get(id) ?? null,
-        grossRevenue: gross,
+        grossTicketSales: gross,
         currency,
       })),
     },
