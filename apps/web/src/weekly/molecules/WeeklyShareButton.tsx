@@ -13,11 +13,14 @@ export default function WeeklyShareButton({
   scopeName,
   weekStart,
   title,
+  tone = "default",
 }: {
   scopeSlug: string;
   scopeName: string;
   weekStart: string;
   title: string;
+  /** "onImage" for use over a banner photo. */
+  tone?: "default" | "onImage";
 }) {
   const origin =
     typeof window === "undefined"
@@ -33,7 +36,11 @@ export default function WeeklyShareButton({
     <button
       type="button"
       onClick={share}
-      className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+      className={
+        tone === "onImage"
+          ? "inline-flex h-11 items-center gap-2 rounded-full bg-white/15 px-5 text-sm font-semibold text-white ring-1 ring-white/25 backdrop-blur-md transition hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          : "inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+      }
     >
       <IoShareSocialOutline aria-hidden className="text-lg" />
       Share

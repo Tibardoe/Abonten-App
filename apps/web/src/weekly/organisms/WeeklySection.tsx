@@ -62,15 +62,26 @@ export default function WeeklySection({
     <section aria-labelledby={headingId}>
       {header}
       {section.layout === "hero" ? (
-        <div className="space-y-4">
-          {section.items.map((item, i) => (
-            <WeeklyHeroItem
-              key={item.id}
-              item={item}
-              priority={eager && i === 0}
-            />
-          ))}
-        </div>
+        section.items.length === 1 ? (
+          <WeeklyHeroItem item={section.items[0]} priority={eager} />
+        ) : (
+          // Several heroes share a row; with an odd count the first one
+          // keeps the full width.
+          <div className="grid gap-4 md:grid-cols-2">
+            {section.items.map((item, i) => {
+              const wide = i === 0 && section.items.length % 2 === 1;
+              return (
+                <div key={item.id} className={wide ? "md:col-span-2" : ""}>
+                  <WeeklyHeroItem
+                    item={item}
+                    priority={eager && i === 0}
+                    size={wide ? "large" : "medium"}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )
       ) : section.layout === "grid" ? (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {section.items.map((item, i) => (

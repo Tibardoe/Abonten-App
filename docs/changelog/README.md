@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-13 — Abonten Weekly: full-bleed rotating banners
+
+- **Behaviour change (visible only where Abonten Weekly is on)**: the Explore teaser and the edition masthead on web and in the app are now large banners with the edition's listings rotating behind the text, a caption linking to the listing on show, progress segments, swipe and a pause button; hero listings fill their card with the photo. The teaser API adds a `slides` field. Updated [architecture/weekly-highlights.md](../architecture/weekly-highlights.md) §8.
+
 ## 2026-09-13 — Abonten Weekly: editorial weekly editions (switched off)
 
 - **New capability**: staff build a weekly edition of events and places for Ghana (and later for areas such as Accra) in Admin › Abonten Weekly, preview it, schedule or publish it; it appears at `/weekly`, in a teaser on Explore and in the app. Listings are re-checked on every read, so a cancelled, hidden, restricted, ended or permanently closed listing drops out on its own.

@@ -1,66 +1,68 @@
-import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { WEEKLY_PRODUCT_NAME, WEEKLY_TAGLINE } from "@abonten/core/weekly/copy";
 import { weeklySectionIcon } from "@abonten/core/weekly/sectionIcons";
 import { formatWeekRange } from "@abonten/core/weekly/week";
 import type { WeeklyTeaser } from "@abonten/types/weeklyType";
-import Image from "next/image";
-import Link from "next/link";
+import { FiArrowRight, FiCalendar } from "react-icons/fi";
+import WeeklyBanner from "../organisms/WeeklyBanner";
 
-// The compact "Abonten Weekly" card at the top of Explore. One link, three
-// small images, and the edition's own title. Only rendered while this week's
+// The "Abonten Weekly" banner at the top of Explore. This week's listings
+// rotate behind the edition's title; the whole banner opens the edition and
+// the caption opens the listing on show. Only rendered while this week's
 // edition is out for this visitor.
 export default function WeeklyTeaserCard({ teaser }: { teaser: WeeklyTeaser }) {
+  const area = teaser.isFallbackScope ? "Ghana" : teaser.scopeName;
+  const week = formatWeekRange(teaser.weekStart);
+  const picks = `${teaser.itemCount} ${teaser.itemCount === 1 ? "pick" : "picks"}`;
+
   return (
-    <Link
+    <WeeklyBanner
+      variant="teaser"
+      slides={teaser.slides ?? []}
       href={teaser.href}
-      className="group flex flex-col gap-4 rounded-2xl border border-border bg-gradient-to-r from-primary/10 via-card to-card p-4 transition-colors hover:border-primary/40 sm:flex-row sm:items-center md:p-5"
+      label={`${WEEKLY_PRODUCT_NAME}, ${area}`}
+      linkLabel={`Open ${WEEKLY_PRODUCT_NAME} for ${area}: ${teaser.title}, ${week}, ${picks}`}
+      priority
+      eyebrow={
+        <>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-white ring-1 ring-white/20 backdrop-blur-md">
+            <span aria-hidden>{weeklySectionIcon("sparkles")}</span>
+            {WEEKLY_PRODUCT_NAME}
+            <span aria-hidden className="text-white/50">
+              ·
+            </span>
+            <span>{area}</span>
+          </span>
+          {teaser.isFallbackScope ? (
+            <span className="rounded-full bg-black/35 px-3 py-1.5 text-[11px] font-medium text-white/90 ring-1 ring-white/15 backdrop-blur-md">
+              Ghana-wide picks
+            </span>
+          ) : null}
+        </>
+      }
     >
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          <span aria-hidden className="mr-1">
-            {weeklySectionIcon("sparkles")}
-          </span>
-          {WEEKLY_PRODUCT_NAME}
-          {teaser.isFallbackScope ? " · Ghana" : ` · ${teaser.scopeName}`}
-        </p>
-        <p className="mt-1 line-clamp-1 text-lg font-semibold">
-          {teaser.title}
-        </p>
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {teaser.subtitle ?? WEEKLY_TAGLINE}{" "}
-          {formatWeekRange(teaser.weekStart)}.
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        {teaser.images.length > 0 ? (
-          <div className="flex -space-x-3" aria-hidden>
-            {teaser.images.map((img) => (
-              <div
-                key={img.publicId}
-                className="relative h-12 w-12 overflow-hidden rounded-lg border-2 border-card bg-muted md:h-14 md:w-14"
-              >
-                <Image
-                  src={buildCloudinaryUrl(img.publicId, img.version, {
-                    width: 56,
-                    height: 56,
-                  })}
-                  alt=""
-                  fill
-                  sizes="56px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        ) : null}
-        <span className="whitespace-nowrap text-sm font-medium text-primary group-hover:underline">
-          See all
-          <span className="sr-only">
-            {" "}
-            {teaser.itemCount} picks in {WEEKLY_PRODUCT_NAME}
-          </span>
+      <p className="inline-flex items-center gap-1.5 text-xs font-medium text-white/80 sm:text-sm">
+        <FiCalendar aria-hidden className="h-3.5 w-3.5" />
+        <time dateTime={teaser.weekStart}>{week}</time>
+        <span aria-hidden className="text-white/40">
+          •
         </span>
-      </div>
-    </Link>
+        {picks}
+      </p>
+      <h2 className="mt-2 line-clamp-2 text-balance text-3xl font-extrabold leading-[1.05] tracking-tight drop-shadow-sm sm:text-4xl lg:text-5xl">
+        {teaser.title}
+      </h2>
+      <p className="mt-3 line-clamp-2 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">
+        {teaser.subtitle ?? WEEKLY_TAGLINE}
+      </p>
+      <span
+        aria-hidden
+        className="mt-5 inline-flex items-center gap-3 rounded-full bg-white py-1.5 pl-5 pr-1.5 text-sm font-semibold text-slate-950 shadow-lg shadow-black/20 transition-colors group-hover/banner:bg-primary group-hover/banner:text-primary-foreground"
+      >
+        See this week&apos;s picks
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-950 text-white transition-transform duration-300 group-hover/banner:translate-x-1 motion-reduce:transition-none">
+          <FiArrowRight className="h-4 w-4" />
+        </span>
+      </span>
+    </WeeklyBanner>
   );
 }

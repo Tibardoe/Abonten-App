@@ -140,6 +140,27 @@ export type WeeklyEditionResult = {
   fallbackEvents: UserPostType[];
 };
 
+/**
+ * One rotating background of an Abonten Weekly banner: a listing from the
+ * edition that has an image, with just enough text for a caption.
+ */
+export type WeeklyBannerSlide = {
+  /** The weekly_item id (stable React key). */
+  key: string;
+  subjectType: WeeklySubjectType;
+  /** event.id or place.id, for app navigation. */
+  subjectId: string;
+  title: string;
+  /** The editor's headline for this listing, if any. */
+  headline: string | null;
+  /** "Sat, 20 Sep · 7:00 PM" for events, "Restaurant · 4.6 ★" for places. */
+  meta: string | null;
+  publicId: string;
+  version: string | null;
+  /** Web path of the listing (/events/<code> or /places/<slug>). */
+  webPath: string;
+};
+
 export type WeeklyTeaser = {
   scopeSlug: string;
   scopeName: string;
@@ -148,8 +169,13 @@ export type WeeklyTeaser = {
   subtitle: string | null;
   isFallbackScope: boolean;
   itemCount: number;
-  /** Up to three images for the teaser strip. */
+  /**
+   * Up to three images. Kept for app builds released before `slides`
+   * existed; new clients use `slides`.
+   */
   images: { publicId: string; version: string | null; alt: string }[];
+  /** Up to six listings with images, in edition order, for the banner. */
+  slides: WeeklyBannerSlide[];
   href: string;
 };
 
