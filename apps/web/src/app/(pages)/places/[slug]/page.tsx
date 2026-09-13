@@ -2,6 +2,7 @@ import { getNearByPlaces } from "@/actions/getNearByPlaces";
 import { getPlaceBySlug } from "@/actions/getPlaceBySlug";
 import { getPlaceReviews } from "@/actions/getPlaceReviews";
 import { getPlaceUpcomingEvents } from "@/actions/getPlaceUpcomingEvents";
+import JsonLd from "@/components/atoms/JsonLd";
 import StarRatingDisplay from "@/components/atoms/Rating";
 import ReportButton from "@/components/atoms/ReportButton";
 import EventCard from "@/components/molecules/EventCard";
@@ -18,6 +19,7 @@ import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
 import PlaceActionButtons from "@/places/organisms/PlaceActionButtons";
 import PlaceReviewsSection from "@/places/organisms/PlaceReviewsSection";
+import { placeJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -155,6 +157,7 @@ export default async function page({
 
   return (
     <div className="bg-background">
+      <JsonLd data={placeJsonLd({ ...place, lat: placeLat, lng: placeLng })} />
       <PlaceViewLogger placeId={place.id} />
       <PlacePromptHost placeId={place.id} />
 
