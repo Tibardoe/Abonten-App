@@ -12,6 +12,13 @@ import { notFound } from "next/navigation";
 // address people share and the canonical URL of an edition.
 export const revalidate = 60;
 
+// No editions are built ahead of time. Returning an empty list (rather than
+// omitting this) is what makes Next.js cache each address on first request and
+// refresh it every `revalidate` seconds, instead of rendering every request.
+export function generateStaticParams() {
+  return [];
+}
+
 type Params = Promise<{ scope: string; week: string }>;
 
 export async function generateMetadata({
