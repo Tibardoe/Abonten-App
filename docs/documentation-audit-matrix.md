@@ -29,6 +29,7 @@ Legend: ✅ exists · 🟡 partial · ❌ absent · — not applicable. "Documen
 | Discovery (explore, filters, nearby) | ✅ | ✅ | read | 7 RPCs | ✅ | ✅ | — |
 | Search | ✅ | ✅ | ✅ global search; Discovery insights | ranked `search_*` RPCs | ✅ | ✅ | Unified events, places and organizers ship switched off; until then the old events-only results list applies |
 | Alerts, prompts, For you, notification preferences | ✅ | ✅ | ✅ Discovery settings and metrics | `recommendation*`, `notification_subscription` | ✅ | ✅ | Ships switched off (shadow mode); email digests do not exist |
+| Abonten Weekly | ✅ | ✅ | ✅ editions, areas, settings | `weekly_*` service-role functions | ✅ | ✅ | Ships switched off; editions are manual (no suggestions yet); iOS unverified |
 | Maps | ✅ Google JS | ✅ RN maps | ✅ territories | geocode proxy | ✅ | ✅ | Not keyboard-navigable (a11y gap) |
 | Event detail, favourite, share | ✅ | ✅ | — | ✅ | ✅ | ✅ | — |
 | Event reminders | ❌ | ✅ local | — | — | ✅ | ✅ | Mobile-only, device-local |

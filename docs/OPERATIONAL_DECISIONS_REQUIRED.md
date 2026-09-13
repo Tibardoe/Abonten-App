@@ -124,6 +124,17 @@ Shipped 2026-09-13, switched **off**. Design: [architecture/discovery-search-and
 | N3 | Retention of search analytics and recommendation history | `search_log_retention_days`, `recommendation_retention_days`; `search-log-purge`, `recommendations-purge` jobs | Search log 90 days (no user identifiers). Picks 90 days, digests 180 days, skip records 30 days. Prompt history (consent record) and subscriptions have no purge. | Keep the search log at 90 days. Decide with legal G3 whether prompt history is kept for as long as the account exists. | Open (depends on legal G3) |
 | N4 | How often people may be asked to opt in | `prompt_cooldown_days`, `prompt_dismiss_days`, `prompt_max_shows` | At most one prompt a week per person, never within 30 days of "Not now", at most 3 showings per topic. | Keep. Asking less often is always safe. | Open |
 
+## Abonten Weekly
+
+Built 2026-09-13, switched **off**. Design: [architecture/weekly-highlights.md](architecture/weekly-highlights.md). Operator handbook: [admin/weekly.md](admin/weekly.md).
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| K1 | When to open Abonten Weekly, and to whom | `weekly_program_setting.enabled` / `audience` / `beta_user_ids`; `WEEKLY_KILL_SWITCH` | Off, audience `staff`. | Staff for two editions, beta for one, then Everyone. Update the public help page only when the audience is Everyone. | Open |
+| K2 | Which regional areas to add, and when | `weekly_scope` rows (Admin › Abonten Weekly › Areas) | Ghana only. | Ghana at launch. Add Accra (about 35 km) once there is enough to fill an edition each week without repeating listings. | Open |
+| K3 | Diversity warnings and section size | `max_items_per_section`, `max_per_organizer_per_section`, `exposure_lookback_editions` | 12 listings per section; warn above 1 event per organizer per section; warn about listings in the last 2 editions. Warnings never block. | Keep until the first editions show whether editors find the warnings useful. | Open |
+| K4 | How long editions are kept | `edition_retention_weeks`; `weekly-housekeeping` | Editions archived after 104 weeks, never deleted. They hold no personal data. | Keep. | Open |
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |

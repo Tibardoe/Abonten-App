@@ -51,6 +51,10 @@ The schema is defined only by `supabase/migrations/`. There are **no Postgres en
 
 Search reads generated `search_tsv` columns on `event`, `place` and `user_info`. Opt-ins and notices: `notification_subscription`, `notification_prompt_state`, `recommendation`, `recommendation_digest`, `recommendation_digest_skip`; settings in `discovery_program_setting`; anonymous analytics in `search_query_log`. See [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md).
 
+## Abonten Weekly
+
+`weekly_program_setting` (one row), `weekly_scope` (Ghana seeded; regional centre + radius), `weekly_edition` (one per scope per Monday, `version` for concurrency), `weekly_section`, `weekly_item` (polymorphic `subject_type` + `subject_id`, no foreign key; validity computed at read time). All service-role only. See [weekly-highlights.md](weekly-highlights.md).
+
 ## Where to look
 
 Full column-level detail: `PROJECT.md §7` and the migration files. Discrepancy register: `PROJECT.md §7.6`. Replay fingerprint (tables/policies/functions/columns) is compared to production after every migration batch.

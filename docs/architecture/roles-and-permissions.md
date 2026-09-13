@@ -28,7 +28,7 @@ Account status: `user_info.status_id` → `user_status` (1 Active, 2 Suspended, 
 
 ## Admin RBAC
 
-Tables `admin_role`, `admin_permission`, `admin_role_permission` (live matrix), `admin_user`, `admin_user_role` — all service-role only. `resolveAdminContext` (services) reads the matrix per request with fallbacks to the compiled seed (`@abonten/core/adminPermissions.ts`). 55 keys, 7 roles, 13 step-up permissions — full lists in `../admin/settings-and-rbac.md`. Step-up token: `admin/stepUpToken.ts` (HMAC over `userId:ms`, purpose `admin-stepup:v1`, 10 min).
+Tables `admin_role`, `admin_permission`, `admin_role_permission` (live matrix), `admin_user`, `admin_user_role` — all service-role only. `resolveAdminContext` (services) reads the matrix per request with fallbacks to the compiled seed (`@abonten/core/adminPermissions.ts`). 65 keys, 7 roles, 17 step-up permissions — full lists in `../admin/settings-and-rbac.md`. Step-up token: `admin/stepUpToken.ts` (HMAC over `userId:ms`, purpose `admin-stepup:v1`, 10 min).
 
 
 ### Verification permissions (2026-09-12)
@@ -43,6 +43,17 @@ Four keys, deliberately separated so triaging a queue does not hand every admin 
 | `verification.revoke` | Removing a live badge — in `STEP_UP_PERMISSIONS` | operations |
 
 super_admin holds all four by rule. Detail: [trust-and-verification.md](trust-and-verification.md); who *should* hold them is decision V2.
+
+### Abonten Weekly permissions
+
+| Key | Grants | Seeded to |
+|---|---|---|
+| `weekly.view` | The module, editions, areas, settings, preview links | operations, moderator, support_admin, analyst, field_ops_manager |
+| `weekly.edit` | Create, copy and edit editions, sections and listings; archive and restore | operations, moderator |
+| `weekly.publish` | Schedule, cancel a schedule, publish, unpublish — in `STEP_UP_PERMISSIONS` | operations |
+| `weekly.configure` | Areas and programme settings — in `STEP_UP_PERMISSIONS` | operations |
+
+Detail: [weekly-highlights.md](weekly-highlights.md).
 ## Field roles
 
 `team_lead`, `content_creator`, `offline_member`, `online_member`; membership status `invited/active/suspended/left`. Boundaries in `../field-operations/roles-and-permissions.md`.
@@ -94,6 +105,7 @@ super_admin holds all four by rule. Detail: [trust-and-verification.md](trust-an
 | `fieldops_assignment`, `fieldops_prospect`, `fieldops_onboarding*`, `fieldops_commission*`, `fieldops_content*` | self / lead / campaign (briefs) | none | none | none (commission: no DELETE even for service role; events append-only) |
 | `fieldops_payout_item` | self | none | none | none |
 | `fieldops_program_setting`, `fieldops_commission_rule`, `fieldops_job_run`, `fieldops_payout_batch` | deny-all policy | — | — | — |
+| `weekly_program_setting`, `weekly_scope`, `weekly_edition`, `weekly_section`, `weekly_item` | none (RLS on, no policy, no client grants) | service role | service role | service role |
 | `admin_*`, `admin_audit_log`, `rate_limit_bucket`, `phone_otp_*`, `app_error_*`, `app_request_metric`, `health_check_result`, `incident`, `observability_config`, `notification_delivery*` | service role only | service role | (audit log: none) | (audit log: none) |
 
 Partitioned tables (`favorite`, `payment_method`, `review`, `user_image_history`, `wallet`, `event_media`, `story`, `event_share`, `media_audit`) inherit their parent's policies; leaves have none of their own.

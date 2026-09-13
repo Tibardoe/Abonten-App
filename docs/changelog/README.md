@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-12
+lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,16 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-13 — Abonten Weekly: editorial weekly editions (switched off)
+
+- **New capability**: staff build a weekly edition of events and places for Ghana (and later for areas such as Accra) in Admin › Abonten Weekly, preview it, schedule or publish it; it appears at `/weekly`, in a teaser on Explore and in the app. Listings are re-checked on every read, so a cancelled, hidden, restricted, ended or permanently closed listing drops out on its own.
+- **New permissions**: `weekly.view`, `weekly.edit`, `weekly.publish` (step-up), `weekly.configure` (step-up).
+- **New env flags**: `WEEKLY_KILL_SWITCH` (web; also on admin to show the badge); optional admin `WEB_BASE_URL` for preview links.
+- **New scheduled jobs**: `weekly-publish-due` (every 5 minutes), `weekly-housekeeping` (02:45). New health check `weekly` ("Abonten Weekly schedule").
+- **New docs**: [architecture/weekly-highlights.md](../architecture/weekly-highlights.md), [admin/weekly.md](../admin/weekly.md). Updated: `architecture/{README,feature-inventory,data-model-overview,roles-and-permissions,observability}.md`, `admin/{README,settings-and-rbac,monitoring-and-incidents}.md`, `operations/{scheduled-jobs,open-items}.md`, `security/secrets-and-environment.md`, `journeys/customer.md`, both matrices, `INDEX.md`.
+- **Corrections**: the permission lists said 55 keys and 13 step-up permissions; the code has 65 and 17. `verification.revoke`, `discovery.configure` and the Discovery keys were missing from the lists and are now included.
+- **New registers**: operational decisions **K1–K4** (launch audience, regional areas, diversity warnings, retention). No public help page until the audience is Everyone.
 
 ## 2026-09-13 — Discovery: unified search and opt-in recommendations (switched off)
 
