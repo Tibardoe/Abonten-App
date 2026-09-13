@@ -1,6 +1,7 @@
 import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { FilterSheet } from "@/components/explore/FilterSheet";
+import { UnifiedSearch } from "@/components/search/UnifiedSearch";
 import {
   EMPTY_EVENT_FILTERS,
   EMPTY_PLACE_FILTERS,
@@ -9,6 +10,7 @@ import {
   countActiveEventFilters,
   describeEventFilters,
 } from "@/features/discovery/exploreFilters";
+import { useDiscoveryProgram } from "@/features/discovery/useDiscoveryProgram";
 import { useRecentSearches } from "@/features/search/recentSearches";
 import { useEventSearch } from "@/features/search/useEventSearch";
 import { useSearchSuggestions } from "@/features/search/useSearchSuggestions";
@@ -131,7 +133,7 @@ function SectionHeader({
   );
 }
 
-export default function Search() {
+function LegacySearch() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const c = useThemeColors();
@@ -452,4 +454,11 @@ export default function Search() {
       />
     </View>
   );
+}
+
+// Unified search (Discovery) when the programme is on for this person;
+// otherwise the events-only screen above, unchanged.
+export default function Search() {
+  const { program } = useDiscoveryProgram();
+  return program.searchV2 ? <UnifiedSearch /> : <LegacySearch />;
 }

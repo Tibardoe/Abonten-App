@@ -5,7 +5,7 @@ import type {
 
 // Resolves a notification to the native route it should open. Prefers the
 // structured `data` (kind + entity ids, populated by createNotificationCore
-// since 20260905090000) and falls back to translating the legacy web `link`
+// since 20260903091032) and falls back to translating the legacy web `link`
 // path. Returns null when there's nothing safe to open — the caller still
 // marks the row read, it just doesn't navigate (never to a broken screen).
 
@@ -89,6 +89,11 @@ function targetFromData(
       return data.placeId
         ? `/(app)/organizer/places/${data.placeId}/verification`
         : "/(app)/organizer/verification";
+    case "recommendation":
+      // One pick opens it; several open the For-you list.
+      if (data.eventId) return `/(app)/event/${data.eventId}`;
+      if (data.placeId) return `/(app)/place/${data.placeId}`;
+      return "/(app)/for-you";
     default:
       return null;
   }

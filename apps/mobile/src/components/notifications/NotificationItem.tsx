@@ -24,6 +24,7 @@ const KIND_ICON: Record<NotificationEntityKind, IoniconName> = {
   rewards: "gift-outline",
   fieldops: "briefcase-outline",
   verification: "ribbon-outline",
+  recommendation: "sparkles-outline",
 };
 
 function fallbackIcon(kind?: NotificationEntityKind): IoniconName {

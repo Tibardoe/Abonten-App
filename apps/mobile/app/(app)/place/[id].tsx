@@ -4,6 +4,8 @@ import { EventCard } from "@/components/EventCard";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { PlaceCard } from "@/components/PlaceCard";
 import { ReportSheet } from "@/components/ReportSheet";
+import { PlacePromptHost } from "@/components/alerts/PlacePromptHost";
+import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { AppHeader } from "@/components/app/AppHeader";
 import {
   MapConfigured,
@@ -18,6 +20,7 @@ import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { PlaceDetailSkeleton } from "@/components/skeletons";
 import { VerifiedPill } from "@/components/verification/VerifiedPill";
+import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import { useOpenConversation } from "@/features/messaging/useOpenConversation";
 import { useNearbyPlaces } from "@/features/places/useNearbyPlaces";
 import { usePlaceClaimState } from "@/features/places/usePlaceClaim";
@@ -207,6 +210,9 @@ export default function PlaceDetailScreen() {
         if (outcome.ok) {
           setCheckedIn(true);
           toast.success(outcome.message);
+          if (place?.id) {
+            announcePlaceInteraction({ placeId: place.id, trigger: "visit" });
+          }
         } else {
           toast.error("Couldn't check you in", {
             description: outcome.message,
@@ -226,22 +232,31 @@ export default function PlaceDetailScreen() {
       title={place?.name ?? "Place"}
       backFallback="/(app)"
       rightAccessory={
-        <DetailHeaderActions
-          kind="place"
-          id={id}
-          shareTitle={place?.name ?? "Place"}
-          shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
-          onReport={
-            session && place?.owner_id && place.owner_id !== session.user.id
-              ? () =>
-                  setReportTarget({
-                    targetType: "place",
-                    targetId: place.id,
-                    label: place.name,
-                  })
-              : undefined
-          }
-        />
+        <View className="flex-row items-center gap-1">
+          <SubscribeBell
+            kind="place"
+            targetId={place?.id}
+            ownerId={place?.owner_id}
+            label={place?.name ?? "this place"}
+            compact
+          />
+          <DetailHeaderActions
+            kind="place"
+            id={id}
+            shareTitle={place?.name ?? "Place"}
+            shareUrl={placeSlug ? placeShareUrl(placeSlug) : null}
+            onReport={
+              session && place?.owner_id && place.owner_id !== session.user.id
+                ? () =>
+                    setReportTarget({
+                      targetType: "place",
+                      targetId: place.id,
+                      label: place.name,
+                    })
+                : undefined
+            }
+          />
+        </View>
       }
     />
   );
@@ -908,6 +923,8 @@ export default function PlaceDetailScreen() {
             </Pressable>
           ) : null}
         </View>
+
+        <PlacePromptHost placeId={place?.id} />
 
         <PlaceCheckInSheet
           open={scanOpen}

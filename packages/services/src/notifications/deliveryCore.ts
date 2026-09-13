@@ -90,11 +90,16 @@ export async function isDeliveryTokenValid(
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
+// `notificationId` rides along so a tap can mark the in-app row read (which
+// is also how a recommendation digest counts as opened).
 const singlePush = (row: ClaimedRow) => ({
   title: row.title,
   body: row.body,
   link: row.link,
-  data: (row.data ?? {}) as Record<string, unknown>,
+  data: {
+    ...((row.data ?? {}) as Record<string, unknown>),
+    notificationId: row.notification_id,
+  },
 });
 
 /** Several reward notices for one person in a run go out as one push. */

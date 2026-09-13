@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { RecommendationPromptCard } from "@/components/alerts/RecommendationPromptCard";
 import { useFreeRsvp } from "@/features/checkout/useFreeRsvp";
 import type { EventDetail } from "@/features/discovery/useEventDetail";
 import { setPendingRedirect } from "@/lib/authRedirect";
@@ -42,6 +43,8 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
       ? pickedOccurrenceId
       : (occurrenceState.nextPurchasable?.id ?? null);
   const [done, setDone] = useState(false);
+  // Only an RSVP made just now (not an existing ticket) offers alerts.
+  const [justRsvped, setJustRsvped] = useState(false);
 
   async function onRsvp() {
     if (!session) {
@@ -54,6 +57,7 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
 
     if (res.status === 200) {
       setDone(true);
+      setJustRsvped(true);
       return;
     }
     if (res.status === 300) {
@@ -70,18 +74,25 @@ export function FreeRsvpCard({ event }: { event: EventDetail }) {
 
   if (done) {
     return (
-      <View className="items-center gap-2 rounded-xl border border-border bg-card p-5">
-        <AppText className="text-base font-bold text-success">
-          You're going
-        </AppText>
-        <Pressable
-          onPress={() => router.push("/(app)/tickets")}
-          className="rounded-lg bg-primary px-4 py-2.5"
-        >
-          <AppText className="text-sm font-semibold text-primary-foreground">
-            View my ticket
+      <View className="gap-3">
+        <View className="items-center gap-2 rounded-xl border border-border bg-card p-5">
+          <AppText className="text-base font-bold text-success">
+            You're going
           </AppText>
-        </Pressable>
+          <Pressable
+            onPress={() => router.push("/(app)/tickets")}
+            className="rounded-lg bg-primary px-4 py-2.5"
+          >
+            <AppText className="text-sm font-semibold text-primary-foreground">
+              View my ticket
+            </AppText>
+          </Pressable>
+        </View>
+        {justRsvped ? (
+          <RecommendationPromptCard
+            context={{ context: "rsvp", eventId: event.id }}
+          />
+        ) : null}
       </View>
     );
   }

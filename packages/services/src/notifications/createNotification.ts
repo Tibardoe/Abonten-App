@@ -35,16 +35,20 @@ export async function createNotificationCore(
     db = supabase;
   }
 
-  const { error } = await db.from("notification").insert({
-    user_id: input.userId,
-    type: input.type,
-    title: input.title,
-    body: input.body ?? null,
-    link: input.link ?? null,
-    data: input.data ?? {},
-    image_public_id: input.imagePublicId ?? null,
-    image_version: input.imageVersion ?? null,
-  });
+  const { data: inserted, error } = await db
+    .from("notification")
+    .insert({
+      user_id: input.userId,
+      type: input.type,
+      title: input.title,
+      body: input.body ?? null,
+      link: input.link ?? null,
+      data: input.data ?? {},
+      image_public_id: input.imagePublicId ?? null,
+      image_version: input.imageVersion ?? null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logger.error(`Failed creating notification: ${error.message}`);
@@ -71,7 +75,7 @@ export async function createNotificationCore(
     title: input.title,
     body: input.body ?? null,
     link: input.link ?? null,
-    data: input.data ?? {},
+    data: { ...(input.data ?? {}), notificationId: inserted?.id },
   }).catch(() => {});
 
   return { status: 200 };

@@ -19,12 +19,14 @@ type CheckoutRow = {
   checkout_session_id: string;
   total_price: number;
   discount: number;
+  event_id: string;
   event: { title: string } | null;
   ticket_type: { currency: string } | null;
 };
 
 export type PreparedCheckoutSession = {
   checkoutSessionId: string;
+  eventId: string;
   eventTitle: string;
   subtotal: number;
   discount: number;
@@ -62,7 +64,7 @@ export async function prepareCheckoutPayment(
   const { data, error } = await supabase
     .from("ticket_checkout")
     .select(
-      "checkout_session_id, total_price, discount, event:event_id(title), ticket_type:ticket_type_id(currency)",
+      "checkout_session_id, total_price, discount, event_id, event:event_id(title), ticket_type:ticket_type_id(currency)",
     )
     .in("checkout_session_id", uniqueIds)
     .eq("user_id", userId)
@@ -83,6 +85,7 @@ export async function prepareCheckoutPayment(
     if (!session) {
       session = {
         checkoutSessionId: row.checkout_session_id,
+        eventId: row.event_id,
         eventTitle: row.event?.title ?? "",
         subtotal: 0,
         discount: 0,
