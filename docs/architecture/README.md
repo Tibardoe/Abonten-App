@@ -20,6 +20,8 @@ complianceReviewRequired: no
 | [feature-inventory.md](feature-inventory.md) | Every feature with app, role, entry point, tables, services/actions/API, permissions, notifications, payments, failure states |
 | [roles-and-permissions.md](roles-and-permissions.md) | End-user roles (derived), admin RBAC, field roles, suspension, RLS map |
 | [trust-and-verification.md](trust-and-verification.md) | Place and organizer verification: model, state machine, evidence storage, permissions |
+| [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md) | Unified search and ranking, `@handle`, opt-in alerts, recommendation digests, preference centre, switches |
+| [perf/discovery-2026-09.md](perf/discovery-2026-09.md) | Measured search and recommendation cost on a 100,000-event synthetic catalogue |
 | [data-model-overview.md](data-model-overview.md) | Table groups, key relationships, status columns, partitions, unused tables |
 | [integrations.md](integrations.md) | Each external service: what, where in code, config, failure behaviour |
 | [observability.md](observability.md) | Self-hosted error/health/metric pipeline, Sentry projects, where to look, gaps |

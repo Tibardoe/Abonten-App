@@ -1,4 +1,5 @@
 import { ImageViewer } from "@/components/ImageViewer";
+import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { HighlightsRow } from "@/components/profile/HighlightsRow";
 import {
   VerifiedPill,
@@ -87,6 +88,15 @@ export function ProfileHeader({
           variant="outline"
           onPress={() => router.push("/(app)/settings/edit-profile")}
         />
+      ) : profile.total_posts > 0 ? (
+        <View className="flex-row">
+          <SubscribeBell
+            kind="organizer"
+            targetId={profile.user_id}
+            ownerId={profile.user_id}
+            label={`@${profile.username}`}
+          />
+        </View>
       ) : null}
 
       <HighlightsRow

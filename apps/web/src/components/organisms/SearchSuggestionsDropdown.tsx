@@ -8,7 +8,9 @@ import type {
 } from "@abonten/types/searchSuggestionType";
 import {
   IoCalendarOutline,
+  IoCheckmarkCircle,
   IoClose,
+  IoPersonCircleOutline,
   IoPricetagOutline,
   IoSearchOutline,
   IoStorefrontOutline,
@@ -26,8 +28,45 @@ type SearchSuggestionsDropdownProps = {
   noMatches: boolean;
 };
 
+function hitImage(publicId: string | null, version: string | null) {
+  return publicId
+    ? buildCloudinaryUrl(publicId, version ?? undefined, {
+        width: 40,
+        height: 40,
+      })
+    : undefined;
+}
+
 function rowContent(item: SuggestionItem) {
   switch (item.kind) {
+    case "hit": {
+      const { hit } = item;
+      if (hit.entityType === "organizer") {
+        return {
+          title: `@${hit.label}`,
+          subtitle: hit.sublabel ?? "Organizer",
+          imageSrc: hitImage(hit.imagePublicId, hit.imageVersion),
+          icon: <IoPersonCircleOutline />,
+          badge: hit.verified ? (
+            <IoCheckmarkCircle aria-label="Verified" className="text-primary" />
+          ) : undefined,
+        };
+      }
+      return {
+        title: hit.label,
+        subtitle:
+          hit.entityType === "place"
+            ? (hit.sublabel ?? "Place")
+            : (hit.sublabel ?? undefined),
+        imageSrc: hitImage(hit.imagePublicId, hit.imageVersion),
+        icon:
+          hit.entityType === "place" ? (
+            <IoStorefrontOutline />
+          ) : (
+            <IoCalendarOutline />
+          ),
+      };
+    }
     case "event":
       return {
         title: item.event.title,
@@ -67,7 +106,12 @@ function rowContent(item: SuggestionItem) {
     case "recent":
       return { title: item.text, icon: <IoTimeOutline /> };
     case "literal":
-      return { title: `Search for "${item.text}"`, icon: <IoSearchOutline /> };
+      return {
+        title: item.organizers
+          ? `Search organizers for "${item.text}"`
+          : `Search for "${item.text}"`,
+        icon: <IoSearchOutline />,
+      };
   }
 }
 
@@ -126,7 +170,9 @@ export default function SearchSuggestionsDropdown({
           )}
           <ul>
             {section.items.map((item) => {
-              const { title, subtitle, imageSrc, icon } = rowContent(item);
+              const content = rowContent(item);
+              const { title, subtitle, imageSrc, icon } = content;
+              const badge = "badge" in content ? content.badge : undefined;
               return (
                 <li key={item.key} className="group relative">
                   <SearchSuggestionRow
@@ -135,6 +181,7 @@ export default function SearchSuggestionsDropdown({
                     subtitle={subtitle}
                     imageSrc={imageSrc}
                     icon={icon}
+                    badge={badge}
                     highlighted={item.key === highlightedKey}
                     onSelect={() => onSelect(item)}
                     onMouseEnter={() => onHighlight(item.key)}
@@ -161,7 +208,7 @@ export default function SearchSuggestionsDropdown({
 
       {noMatches && (
         <div className="px-3 pb-2 pt-1 text-sm text-muted-foreground">
-          No matching events or places
+          No matches. Press Enter to search anyway.
         </div>
       )}
     </div>

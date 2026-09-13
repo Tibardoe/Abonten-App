@@ -221,6 +221,19 @@ export default function FilterModalPopup({
       lng,
     });
 
+    // On the unified results page, filters refine the current text search
+    // rather than replacing it.
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname === "/search"
+    ) {
+      const current = new URLSearchParams(window.location.search);
+      const q = current.get("q");
+      if (q) query.set("q", q);
+      const type = current.get("type");
+      if (q && (type === "events" || type === "all")) query.set("type", type);
+    }
+
     handlePopup(false);
     router.push(`/search?${query.toString()}`);
   };

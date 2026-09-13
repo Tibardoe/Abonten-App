@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { announcePlaceInteraction } from "@/discovery/placeInteraction";
 import { useReviewPhotoUpload } from "@/hooks/useReviewPhotoUpload";
 import { useToast } from "@/hooks/useToast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -131,6 +132,9 @@ export default function PlaceReviewModal({
           queryKey: ["own-place-review", placeId],
         });
         onReviewSubmitted?.();
+        if (!existingReview) {
+          announcePlaceInteraction({ placeId, trigger: "review" });
+        }
       } else if (response.message) {
         toast.error(response.message);
       }

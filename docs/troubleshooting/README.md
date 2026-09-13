@@ -71,13 +71,18 @@ Search tip: every entry heading is the phrase a user or colleague would say. Mon
 ## Discovery and content
 
 ### Event or place not appearing
-- **Causes:** not `published`; `moderation_state` hidden/removed; outside the searched location or date; `event_search` matview not yet refreshed (15 min); event already ended/archived.
+- **Causes:** not `published`; `moderation_state` hidden/removed; outside the searched location or date; event already ended/archived. Search reads the listing directly, so there is no refresh delay.
 - **Checks:** Events/Places detail in admin (status, moderation); ask which location the user explores.
-- **Resolution:** publish; wait for refresh; restore moderation if wrong.
+- **Resolution:** publish; restore moderation if wrong.
 
 ### Search returns nothing relevant
-- **Causes:** typo; matview stale; place results only appear in suggestions (results list is events).
-- **Checks:** `refresh_search` cron active (`cron.job`).
+- **Causes:** unified search is off for this person, so they get the old events-only search (Admin › Discovery › Status; `SEARCH_V2_KILL_SWITCH`); the words are not in the title, category, address or description; a typo too far from any title; rate limit after 60 searches a minute.
+- **Checks:** Admin › Discovery "Searches with no results" for the query; in the SQL editor run `select title, score from search_events('the query')`.
+
+### Recommendation notice not received
+- **Causes:** programme off, shadow mode on, or the person outside the audience; no matching subscription; caps reached, paused, or already notified today; the listing was published before the engine's starting point; push skipped at send time (`opted_out`, `channel_off`).
+- **Checks:** `recommendation` and `recommendation_digest_skip` rows for the user id; `notification_delivery` rows with `source = 'recommendations'`; Admin › Discovery panels.
+- **Resolution:** usually none; the caps are doing their job. See [admin/discovery.md](../admin/discovery.md).
 
 ### Map not loading
 - **Causes:** Google Maps key missing/restricted on the deployment (web) or in the EAS environment (mobile `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`); browser blocking Google scripts; no network.

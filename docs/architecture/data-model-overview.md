@@ -45,7 +45,11 @@ The schema is defined only by `supabase/migrations/`. There are **no Postgres en
 
 ## Views and materialised views
 
-`user_profile_details` (public profile view), `event_search` (matview, refreshed every 15 min), `app_request_metric_hourly`.
+`user_profile_details` (public profile view), `app_request_metric_hourly`. Earlier documents mention an `event_search` materialised view; it never existed in this database, and the job that tried to refresh it was removed on 2026-09-13.
+
+## Discovery
+
+Search reads generated `search_tsv` columns on `event`, `place` and `user_info`. Opt-ins and notices: `notification_subscription`, `notification_prompt_state`, `recommendation`, `recommendation_digest`, `recommendation_digest_skip`; settings in `discovery_program_setting`; anonymous analytics in `search_query_log`. See [discovery-search-and-recommendations.md](discovery-search-and-recommendations.md).
 
 ## Where to look
 

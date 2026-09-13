@@ -12,6 +12,7 @@ import CollapsiblePaymentPanel from "@/components/organisms/CollapsiblePaymentPa
 import PaymentMethodSelector, {
   type PaymentSelectorStatus,
 } from "@/components/organisms/PaymentMethodSelector";
+import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
 import { useServiceFeeRate } from "@/hooks/useServiceFeeRate";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -67,6 +68,7 @@ export default function PendingCheckoutsBasket({
   // success message on screen instead of the basket just silently shrinking.
   const [completedCheckout, setCompletedCheckout] = useState<{
     sessionIds: string[];
+    eventIds: string[];
   } | null>(null);
 
   // Purely a UI affordance — separate from selectedIds/quantities/payment
@@ -482,7 +484,10 @@ export default function PendingCheckoutsBasket({
   if (sessions.length === 0) {
     if (completedCheckout) {
       return (
-        <TicketPurchaseSuccessPanel sessionIds={completedCheckout.sessionIds} />
+        <TicketPurchaseSuccessPanel
+          sessionIds={completedCheckout.sessionIds}
+          eventIds={completedCheckout.eventIds}
+        />
       );
     }
     return (
@@ -495,7 +500,10 @@ export default function PendingCheckoutsBasket({
   return (
     <div className="space-y-5 pb-36 md:pb-0">
       {completedCheckout && (
-        <TicketPurchaseSuccessPanel sessionIds={completedCheckout.sessionIds} />
+        <TicketPurchaseSuccessPanel
+          sessionIds={completedCheckout.sessionIds}
+          eventIds={completedCheckout.eventIds}
+        />
       )}
 
       <div className="flex items-center justify-between gap-3">
@@ -594,7 +602,12 @@ export default function PendingCheckoutsBasket({
               onInvalidSessions={handleInvalidSessions}
               onStatusChange={setPaymentStatus}
               onPurchaseSucceeded={() =>
-                setCompletedCheckout({ sessionIds: [...selectedIds] })
+                setCompletedCheckout({
+                  sessionIds: [...selectedIds],
+                  eventIds: sessions
+                    .filter((s) => selectedIds.has(s.checkoutSessionId))
+                    .map((s) => s.eventId),
+                })
               }
             />
           </div>
@@ -618,19 +631,34 @@ export default function PendingCheckoutsBasket({
  * decoupled from the `sessions` list itself so it stays visible even after
  * the paid session(s) drop out of that list on invalidation.
  */
-function TicketPurchaseSuccessPanel({ sessionIds }: { sessionIds: string[] }) {
+function TicketPurchaseSuccessPanel({
+  sessionIds,
+  eventIds,
+}: {
+  sessionIds: string[];
+  eventIds: string[];
+}) {
   return (
-    <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-6 text-center">
-      <p className="text-lg font-semibold">Payment successful</p>
-      <p className="text-sm text-muted-foreground">
-        Your ticket{sessionIds.length === 1 ? " is" : "s are"} ready.
-      </p>
-      <Link
-        href="/manage/my-events"
-        className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-      >
-        View tickets
-      </Link>
+    <div className="space-y-4">
+      <div className="space-y-3 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-6 text-center">
+        <p className="text-lg font-semibold">Payment successful</p>
+        <p className="text-sm text-muted-foreground">
+          Your ticket{sessionIds.length === 1 ? " is" : "s are"} ready.
+        </p>
+        <Link
+          href="/manage/my-events"
+          className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+        >
+          View tickets
+        </Link>
+      </div>
+      {/* Below the confirmation, never in its way; renders nothing unless the
+        server says an opt-in may be offered. */}
+      {eventIds[0] ? (
+        <RecommendationPromptCard
+          context={{ context: "purchase", eventId: eventIds[0] }}
+        />
+      ) : null}
     </div>
   );
 }

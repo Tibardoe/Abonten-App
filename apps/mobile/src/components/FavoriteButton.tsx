@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import {
   useIsFavorited,
   useToggleFavorite,
@@ -58,7 +59,14 @@ export function FavoriteButton({
     if (!toggle.isPending) {
       hapticSelection();
       pop();
-      toggle.mutate(!favorited);
+      const next = !favorited;
+      toggle.mutate(next, {
+        onSuccess: () => {
+          if (next && kind === "place" && id) {
+            announcePlaceInteraction({ placeId: id, trigger: "favorite" });
+          }
+        },
+      });
     }
   }
 

@@ -4,6 +4,7 @@ import cancelUserTicket from "@/actions/cancelUserTicket";
 import { getEventAttendanceCount } from "@/actions/getAttendace";
 import getUserFreeRegistrationStatus from "@/actions/getUserFreeRegistrationStatus";
 import registerForFreeEvent from "@/actions/registerForFreeEvent";
+import RecommendationPromptCard from "@/discovery/organisms/RecommendationPromptCard";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -13,6 +14,7 @@ import {
 import { resolveOccurrenceState } from "@abonten/core/eventPurchaseEligibility";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { FiCheck } from "react-icons/fi";
 
 type AttendingButtonProps = {
@@ -44,6 +46,9 @@ export default function AttendingButton({
 
   const requireAuth = useRequireAuth();
   const queryClient = useQueryClient();
+  // Set only by an RSVP made in this visit, so the opt-in never appears for
+  // someone who was already attending when the page loaded.
+  const [justRegistered, setJustRegistered] = useState(false);
 
   const { data: registrationStatus } = useQuery({
     queryKey: ["free-registration-status", eventId],
@@ -70,8 +75,12 @@ export default function AttendingButton({
     : null;
 
   const { mutate, isPending } = useMutation({
-    mutationFn: async () => {
-      if (isAttending) {
+    // The action is fixed when the button is pressed. Reading isAttending
+    // inside the callbacks would see the optimistic value set in onMutate
+    // (the options are refreshed on every render), so a fresh RSVP would
+    // look like a cancellation.
+    mutationFn: async (action: "register" | "cancel") => {
+      if (action === "cancel") {
         if (!ticketId) return { status: 500, message: "Something went wrong" };
         return await cancelUserTicket(ticketId, null);
       }
@@ -79,7 +88,7 @@ export default function AttendingButton({
       return await registerForFreeEvent(eventId, occurrenceId);
     },
 
-    onMutate: async () => {
+    onMutate: async (action) => {
       await queryClient.cancelQueries({
         queryKey: ["free-registration-status", eventId],
       });
@@ -96,14 +105,14 @@ export default function AttendingButton({
 
       queryClient.setQueryData(["free-registration-status", eventId], {
         status: 200,
-        isAttending: !isAttending,
+        isAttending: action === "register",
         ticketId: previousStatus?.ticketId ?? null,
       });
 
       if (hasAttendanceCount(previousCount)) {
         queryClient.setQueryData(["attendance-count", eventId], {
           status: 200,
-          count: previousCount.count + (isAttending ? -1 : 1),
+          count: previousCount.count + (action === "cancel" ? -1 : 1),
         });
       }
 
@@ -122,7 +131,8 @@ export default function AttendingButton({
       toast.error("Something went wrong. Please try again.");
     },
 
-    onSuccess: (response) => {
+    onSuccess: (response, action) => {
+      if (response.status === 200) setJustRegistered(action === "register");
       if (response.status !== 200) {
         toast.error(
           response.message ?? "Something went wrong. Please try again.",
@@ -147,7 +157,7 @@ export default function AttendingButton({
 
   const handleClick = async () => {
     if (!isAttending && !(await requireAuth())) return;
-    mutate();
+    mutate(isAttending ? "cancel" : "register");
   };
 
   // A free RSVP, like a paid ticket, can only be taken while a strictly
@@ -205,6 +215,10 @@ export default function AttendingButton({
           {isPending ? "Registering..." : "I'm Attending"}
         </button>
       )}
+
+      {justRegistered && isAttending ? (
+        <RecommendationPromptCard context={{ context: "rsvp", eventId }} />
+      ) : null}
 
       {attendanceCount !== null && (
         <p className="text-sm text-muted-foreground text-center">

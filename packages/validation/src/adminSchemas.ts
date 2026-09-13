@@ -381,6 +381,45 @@ export const rewardsSettingsSchema = z.object({
     .partial(),
 });
 
+// Discovery programme (search, recommendation notifications, prompts).
+export const discoverySettingsSchema = z.object({
+  expectedUpdatedAt: z.string().min(1),
+  reason: z
+    .string()
+    .trim()
+    .min(5, "Give a short reason for this change")
+    .max(500),
+  resetWatermark: z.boolean().optional(),
+  patch: z
+    .object({
+      searchV2Enabled: z.boolean(),
+      searchAudience: z.enum(["staff", "beta", "all"]),
+      organizerSearchEnabled: z.boolean(),
+      placeSearchEnabled: z.boolean(),
+      searchLoggingEnabled: z.boolean(),
+      searchLogRetentionDays: z.number().int().min(7).max(730),
+      recommendationsEnabled: z.boolean(),
+      recommendationsShadowMode: z.boolean(),
+      recommendationsAudience: z.enum(["staff", "beta", "all"]),
+      promptsEnabled: z.boolean(),
+      betaUserIds: z.array(z.string().uuid()).max(500),
+      dailyPushCap: z.number().int().min(0).max(5),
+      weeklyPushCap: z.number().int().min(0).max(14),
+      organizerCooldownHours: z.number().int().min(0).max(720),
+      similarDefaultRadiusKm: z.number().min(1).max(200),
+      candidateTtlDays: z.number().int().min(1).max(30),
+      ignorePauseAfter: z.number().int().min(1).max(20),
+      ignorePauseDays: z.number().int().min(1).max(90),
+      digestHourLocal: z.number().int().min(8).max(20),
+      promptCooldownDays: z.number().int().min(0).max(90),
+      promptDismissDays: z.number().int().min(1).max(365),
+      promptMaxShows: z.number().int().min(1).max(20),
+      recommendationRetentionDays: z.number().int().min(7).max(730),
+    })
+    .strict()
+    .partial(),
+});
+
 // Held rewards (risk review). The note is audited and stored on the reward.
 export const rewardReviewSchema = z.object({
   rewardEventId: z.string().uuid(),

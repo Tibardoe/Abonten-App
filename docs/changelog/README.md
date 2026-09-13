@@ -16,6 +16,17 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-13 — Discovery: unified search and opt-in recommendations (switched off)
+
+- **New capability**: one ranked search across events, places and organizers with `@handle` for organizers; a private "Notify me" on organizers and places; opt-in prompts after a ticket, RSVP, favorite, review or second check-in; capped recommendation digests (push and in-app only); For you; Settings › Notifications on web and mobile; Admin › Discovery. Ten migrations `20260913090000`–`20260913090900` applied to production via the Supabase MCP. Ships **off**: search and recommendations for nobody, shadow mode on, prompts off.
+- **Behaviour change (already live)**: the two old suggestion RPCs no longer return hidden, removed or archived listings. The failing `refresh_search` job was removed; the `event_search` materialised view it refreshed never existed, and five documents described it.
+- **Behaviour change (on deploy, whatever the switches)**: the `/search` filter page no longer multiplies distance by 1,000 and no longer drops free events whenever the price filter is at "Any". `notification_preference.social_push` (default on) now decides whether messages, reviews, replies and booking updates push; the in-app row is always written.
+- **New permissions**: `discovery.view` (operations, analyst), `discovery.configure` (operations, step-up).
+- **New env flags**: `SEARCH_V2_KILL_SWITCH`, `RECOMMENDATIONS_KILL_SWITCH`. The existing `VERIFICATION_KILL_SWITCH` was missing from the secrets inventory and is now listed.
+- **New scheduled jobs**: `search-log-purge`, `recommendations-generate`, `recommendations-digest` (every 10 minutes, acting in the digest hour), `recommendations-purge`.
+- **New docs**: [architecture/discovery-search-and-recommendations.md](../architecture/discovery-search-and-recommendations.md), [architecture/perf/discovery-2026-09.md](../architecture/perf/discovery-2026-09.md), [admin/discovery.md](../admin/discovery.md). Updated: `operations/scheduled-jobs.md`, `operations/notifications-and-email-operations.md`, `security/secrets-and-environment.md`, `architecture/{README,data-model-overview,feature-inventory}.md`, `troubleshooting/README.md`, `operations/{what-do-i-do-when,open-items}.md`, `journeys/{customer,organizer}.md`, `admin/README.md`, `INDEX.md`, `documentation-audit-matrix.md`, `documentation-coverage-matrix.md`.
+- **New registers**: operational decisions **N1–N4**, legal item **G3** (promotional push consent and how long the opt-in record is kept). Caps, digest hour and retention periods are working defaults, not approved policy.
+
 ## 2026-09-12 — Verification device pass: the mobile badges
 
 - **Device pass** on the Android emulator against production closed open item **M2**. The whole lifecycle was driven on the device (start → upload → submit → admin asks for more → resubmit → approve → badge), with the programme switched on for the `staff` audience only.

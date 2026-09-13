@@ -1,4 +1,5 @@
 import { UploadProgress } from "@/components/UploadProgress";
+import { announcePlaceInteraction } from "@/features/alerts/placeInteraction";
 import {
   type OwnPlaceReview,
   type PlaceReviewPhotoInput,
@@ -180,6 +181,9 @@ export function PlaceReviewSheet({
     const onDone = () => {
       progress.reset();
       onSubmitted?.();
+      if (!isEditing && placeId) {
+        announcePlaceInteraction({ placeId, trigger: "review" });
+      }
       onClose();
       toast.success(isEditing ? "Review updated" : "Review posted", {
         description: "Thanks — it is on the place page now.",

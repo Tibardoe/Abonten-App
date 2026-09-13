@@ -2,6 +2,7 @@ import { useSession } from "@/auth/SessionProvider";
 import { getActiveConversation } from "@/features/messaging/activeConversation";
 import { notificationTarget } from "@/features/notifications/notificationLink";
 import { api } from "@/lib/api";
+import { queryClient } from "@/lib/queryClient";
 import type { NotificationData } from "@abonten/types/notificationType";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
@@ -105,8 +106,23 @@ export function usePushRegistration() {
     const sub = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         const payload = response.notification.request.content.data as
-          | (NotificationData & { link?: string | null })
+          | (NotificationData & {
+              link?: string | null;
+              notificationId?: string;
+            })
           | undefined;
+        // Opening a push is reading it (and, for a recommendation digest,
+        // what counts as opened). Best-effort.
+        if (payload?.notificationId) {
+          api.notifications
+            .markRead(payload.notificationId)
+            .then(() =>
+              queryClient.invalidateQueries({
+                queryKey: ["mobile", "notifications"],
+              }),
+            )
+            .catch(() => {});
+        }
         const href = notificationTarget({
           link: payload?.link ?? null,
           data: payload ?? null,

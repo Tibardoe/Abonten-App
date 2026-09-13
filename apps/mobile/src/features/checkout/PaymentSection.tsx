@@ -32,10 +32,13 @@ export function PaymentSection({
   currency,
   total,
   eventTitle,
+  eventId,
   creditQuote,
   onCreditRefused,
 }: {
   sessionId: string;
+  /** For the opt-in prompt on the success screen. */
+  eventId?: string;
   currency: string;
   total: number;
   eventTitle?: string;
@@ -117,6 +120,7 @@ export function PaymentSection({
         mode: ps ? ps.mode : "direct",
         deepLink: `abonten://checkout/${sessionId}`,
         contextTitle: eventTitle ?? "Your order",
+        ...(eventId ? { eventId } : {}),
         amountLabel: ps
           ? formatMoney(currency, payAmount)
           : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0)} credit`,

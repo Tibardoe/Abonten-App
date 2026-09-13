@@ -1,3 +1,5 @@
+import type { SearchSuggestion } from "./searchType";
+
 // Row shapes returned by get_event_suggestions / get_place_suggestions (see
 // supabase/migrations/20260902090000_add_search_suggestions.sql). Deliberately
 // narrower than UserPostType/PlaceType — only the fields the autocomplete
@@ -33,6 +35,8 @@ export type SearchSuggestionsResult = {
 // group so keyboard navigation (arrow up/down, Enter) can walk a single flat
 // list while SearchSuggestionsDropdown.tsx still renders them grouped.
 export type SuggestionItem =
+  /** Unified search (Discovery): an event, place or organizer suggestion. */
+  | { kind: "hit"; key: string; hit: SearchSuggestion }
   | { kind: "event"; key: string; event: EventSuggestion }
   | { kind: "place"; key: string; place: PlaceSuggestion }
   | { kind: "eventCategory"; key: string; category: string }
@@ -42,7 +46,7 @@ export type SuggestionItem =
       category: { id: number; name: string };
     }
   | { kind: "recent"; key: string; text: string }
-  | { kind: "literal"; key: string; text: string };
+  | { kind: "literal"; key: string; text: string; organizers?: boolean };
 
 export type SuggestionSection = {
   label: string;

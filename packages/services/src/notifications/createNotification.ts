@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { notificationCategory } from "@abonten/core/notifications/categories";
 import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import type { Database } from "@abonten/types/database.types";
 import type { CreateNotificationInput } from "@abonten/types/notificationType";
@@ -34,20 +35,36 @@ export async function createNotificationCore(
     db = supabase;
   }
 
-  const { error } = await db.from("notification").insert({
-    user_id: input.userId,
-    type: input.type,
-    title: input.title,
-    body: input.body ?? null,
-    link: input.link ?? null,
-    data: input.data ?? {},
-    image_public_id: input.imagePublicId ?? null,
-    image_version: input.imageVersion ?? null,
-  });
+  const { data: inserted, error } = await db
+    .from("notification")
+    .insert({
+      user_id: input.userId,
+      type: input.type,
+      title: input.title,
+      body: input.body ?? null,
+      link: input.link ?? null,
+      data: input.data ?? {},
+      image_public_id: input.imagePublicId ?? null,
+      image_version: input.imageVersion ?? null,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logger.error(`Failed creating notification: ${error.message}`);
     return { status: 500, message: "Something went wrong!" };
+  }
+
+  // Social notices (messages, reviews, booking updates) respect the
+  // person's "social_push" choice; the in-app row above is always written.
+  // Transactional notices always push.
+  if (notificationCategory(input.type) === "social") {
+    const { data: pref } = await db
+      .from("notification_preference")
+      .select("social_push")
+      .eq("user_id", input.userId)
+      .maybeSingle();
+    if (pref && pref.social_push === false) return { status: 200 };
   }
 
   // Best-effort mobile push for the same event. Never blocks or fails the
@@ -58,7 +75,7 @@ export async function createNotificationCore(
     title: input.title,
     body: input.body ?? null,
     link: input.link ?? null,
-    data: input.data ?? {},
+    data: { ...(input.data ?? {}), notificationId: inserted?.id },
   }).catch(() => {});
 
   return { status: 200 };

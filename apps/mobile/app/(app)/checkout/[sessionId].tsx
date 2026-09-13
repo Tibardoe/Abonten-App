@@ -223,6 +223,7 @@ export default function CheckoutReviewScreen() {
           currency={currency}
           total={session.total}
           eventTitle={session.eventTitle}
+          eventId={session.eventId}
           creditQuote={credit}
           onCreditRefused={() => refetch()}
         />

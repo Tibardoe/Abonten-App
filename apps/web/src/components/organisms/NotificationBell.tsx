@@ -220,8 +220,13 @@ export default function NotificationBell({
 
     setOpen(false);
 
-    if (notification.link) {
-      router.push(notification.link);
+    // Web routes on `link`; a recommendation digest without one opens the
+    // For-you list (the native app routes on `data` instead).
+    const href =
+      notification.link ??
+      (notification.data?.kind === "recommendation" ? "/for-you" : null);
+    if (href) {
+      router.push(href);
     }
   };
 

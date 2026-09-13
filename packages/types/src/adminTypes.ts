@@ -84,7 +84,9 @@ export type AdminPermissionKey =
   | "fieldops.rules"
   | "fieldops.verify"
   | "fieldops.commissions.approve"
-  | "fieldops.commissions.pay";
+  | "fieldops.commissions.pay"
+  | "discovery.view"
+  | "discovery.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 

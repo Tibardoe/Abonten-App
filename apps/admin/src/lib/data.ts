@@ -24,6 +24,7 @@ import {
   listModeratableContentCore,
 } from "@abonten/services/admin/content/contentBrowseCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
+import { getDiscoveryOverviewCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
 import { getCampaignAnalyticsCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
   type ListCampaignsFilters,
@@ -638,4 +639,14 @@ export async function loadVerificationCaseDetail(id: string) {
 export async function loadVerificationOverview() {
   const ctx = await requireAdmin();
   return verificationOverviewCore(getServiceClient(), ctx);
+}
+
+// ── Discovery (search + recommendations) ────────────────────
+
+export async function loadDiscoveryOverview(days = 14) {
+  const ctx = await requireAdmin();
+  const overview = await getDiscoveryOverviewCore(getServiceClient(), ctx, {
+    days,
+  });
+  return { ctx, overview };
 }

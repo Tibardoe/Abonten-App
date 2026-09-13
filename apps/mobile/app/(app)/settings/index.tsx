@@ -35,6 +35,12 @@ const ITEMS: {
     labelKey: "nav.security",
   },
   {
+    key: "notifications",
+    route: "/(app)/settings/notifications",
+    icon: "notifications-outline",
+    labelKey: "nav.notifications",
+  },
+  {
     key: "switch-appearance",
     route: "/(app)/settings/switch-appearance",
     icon: "contrast-outline",

@@ -1,17 +1,17 @@
+import { getDiscoveryProgram } from "@/actions/discovery/getDiscoveryProgram";
 import { getQueriedEvents } from "@/actions/getQueriedEvents";
 import FilterSearchBar from "@/components/molecules/FilterSearchBar";
 import NoEventsFound from "@/events/molecules/NoEventsFound";
 import { undoSlug } from "@abonten/core/geerateSlug";
+import { redirect } from "next/navigation";
 import SearchTitleResultsList from "./SearchTitleResultsList";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
 // export const instant = false;
 
-// This route only depends on the [searchTitle] segment (no query-string
-// filters), and getQueriedEvents is now a public, cookie-free read, so it
-// can be statically rendered and revalidated periodically (ISR).
-export const revalidate = 60;
+// No ISR: whether this page redirects to unified search depends on the
+// visitor (the Discovery programme rolls out by audience).
 
 export default async function page({
   params,
@@ -21,6 +21,12 @@ export default async function page({
   const { searchTitle } = await params;
 
   const formattedSearchTitle = undoSlug(searchTitle);
+
+  // With unified search on, old slug links land on the one search page.
+  const { data: program } = await getDiscoveryProgram();
+  if (program.searchV2) {
+    redirect(`/search?q=${encodeURIComponent(formattedSearchTitle)}`);
+  }
   const filters = { searchText: formattedSearchTitle };
 
   const firstPage = await getQueriedEvents(filters);

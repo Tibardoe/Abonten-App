@@ -28,6 +28,13 @@ export default async function SettingsDesktopSideBar() {
       />
 
       <SettingsNavLinks
+        href="/settings/notifications"
+        imgUrl="/assets/images/notifications.svg"
+        arrowUrl="/assets/images/arrowRight.svg"
+        text={t("nav.notifications")}
+      />
+
+      <SettingsNavLinks
         href="/settings/switch-appearance"
         imgUrl="/assets/images/lightMode.svg"
         arrowUrl="/assets/images/arrowRight.svg"

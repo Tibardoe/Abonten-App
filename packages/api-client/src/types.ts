@@ -453,6 +453,7 @@ export type EventCreateResult =
 
 export type PreparedCheckoutSession = {
   checkoutSessionId: string;
+  eventId: string;
   eventTitle: string;
   subtotal: number;
   discount: number;

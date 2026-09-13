@@ -1,3 +1,4 @@
+import { RecommendationPromptCard } from "@/components/alerts/RecommendationPromptCard";
 import { AppHeader } from "@/components/app/AppHeader";
 import {
   type PaymentKind,
@@ -25,6 +26,8 @@ type Params = {
   amountLabel?: string;
   successHref?: string;
   successCtaLabel?: string;
+  /** Set for ticket purchases: lets the success state offer alerts. */
+  eventId?: string;
 };
 
 export default function PaymentVerificationScreen() {
@@ -134,6 +137,12 @@ export default function PaymentVerificationScreen() {
               onPress={goSuccess}
             />
           </View>
+        ) : null}
+
+        {state.status === "succeeded" && p.kind === "ticket" && p.eventId ? (
+          <RecommendationPromptCard
+            context={{ context: "purchase", eventId: p.eventId }}
+          />
         ) : null}
 
         {state.status === "pending" ? (

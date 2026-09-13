@@ -9,6 +9,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
+  Compass,
   Flag,
   Gift,
   LayoutDashboard,
@@ -108,6 +109,12 @@ const ITEMS: Item[] = [
     label: "Field Ops",
     icon: MapPinned,
     permission: "fieldops.view",
+  },
+  {
+    href: "/discovery",
+    label: "Discovery",
+    icon: Compass,
+    permission: "discovery.view",
   },
   {
     href: "/notifications",
