@@ -579,6 +579,16 @@ export type DashboardRange =
   | "90d"
   | "custom";
 
+/**
+ * The console's period control. Replaces DashboardRange as surfaces move to
+ * `@abonten/core/admin/adminDateRange`, which resolves each key to a
+ * calendar-aligned window plus the equivalent previous one.
+ */
+export type AdminRangeKey = "today" | "7d" | "30d" | "90d" | "ytd" | "custom";
+
+/** How a time series is bucketed for a given range. */
+export type AdminBucket = "hour" | "day" | "week";
+
 export type DashboardKpis = {
   /** Accounts with status Active (excludes suspended, banned, deleted). */
   totalUsers: number;

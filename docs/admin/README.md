@@ -4,8 +4,8 @@ purpose: Explain the Abonten admin console (admin.abontenhub.com) — signing in
 audience: Abonten staff with admin access; the founder; engineers supporting them
 scope: apps/admin, the admin service layer in packages/services/src/admin, the RBAC tables
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-13
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -57,6 +57,8 @@ The live matrix is the `admin_role_permission` table (editable in Admin Settings
 | Analytics | `analytics.view` | [analytics.md](analytics.md) |
 | Audit Logs | `audit.view` | [audit-logs.md](audit-logs.md) |
 | Admin Settings | `settings.view` | [settings-and-rbac.md](settings-and-rbac.md) |
+
+Every figure the console shows is defined in [metrics.md](metrics.md) — what it counts, the period it covers and the rows it is read from. The same wording appears beside the figure in the console.
 
 The top-bar **search** (`/search?q=`) finds users, events, places, transactions and reports by name, title, event code, Paystack reference, email or exact UUID — you only see groups you have permission to open.
 
