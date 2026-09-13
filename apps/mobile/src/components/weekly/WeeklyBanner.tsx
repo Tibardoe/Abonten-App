@@ -283,20 +283,7 @@ export function WeeklyBanner({
                   borderColor: GLASS_BORDER,
                 }}
               >
-                <View className="h-11 w-11 overflow-hidden rounded-xl bg-white/10">
-                  <Image
-                    source={{
-                      uri: buildCloudinaryUrl(
-                        slide.publicId,
-                        slide.version ?? undefined,
-                        { width: 44, height: 44 },
-                      ),
-                    }}
-                    style={{ width: 44, height: 44 }}
-                    contentFit="cover"
-                    transition={250}
-                  />
-                </View>
+                <CaptionThumb slide={slide} />
                 <View className="flex-1">
                   <AppText
                     className="text-[10px] font-bold uppercase tracking-widest"
@@ -395,21 +382,56 @@ function SlideLayer({
     transform: [{ scale: scale.value }],
   }));
 
+  // An image that fails to load shows the brand backdrop, not a black box.
+  const [failed, setFailed] = useState(false);
+
   return (
     <Animated.View style={[StyleSheet.absoluteFill, style]}>
-      <Image
-        source={{
-          uri: buildCloudinaryUrl(slide.publicId, slide.version ?? undefined, {
-            width: 540,
-          }),
-        }}
-        style={{ width: "100%", height: "100%" }}
-        contentFit="cover"
-        transition={200}
-        cachePolicy="memory-disk"
-        recyclingKey={slide.key}
-      />
+      {failed ? (
+        <BrandBackdrop />
+      ) : (
+        <Image
+          source={{
+            uri: buildCloudinaryUrl(
+              slide.publicId,
+              slide.version ?? undefined,
+              { width: 540 },
+            ),
+          }}
+          style={{ width: "100%", height: "100%" }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={slide.key}
+          onError={() => setFailed(true)}
+        />
+      )}
     </Animated.View>
+  );
+}
+
+function CaptionThumb({ slide }: { slide: WeeklyBannerSlide }) {
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  return (
+    <View className="h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white/10">
+      {failedKey === slide.key ? (
+        <Icon name="image-outline" size={18} color={WHITE_80} />
+      ) : (
+        <Image
+          source={{
+            uri: buildCloudinaryUrl(
+              slide.publicId,
+              slide.version ?? undefined,
+              { width: 44, height: 44 },
+            ),
+          }}
+          style={{ width: 44, height: 44 }}
+          contentFit="cover"
+          transition={250}
+          onError={() => setFailedKey(slide.key)}
+        />
+      )}
+    </View>
   );
 }
 

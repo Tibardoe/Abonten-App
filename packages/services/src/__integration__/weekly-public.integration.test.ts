@@ -66,6 +66,10 @@ let original: SettingsRow;
 let scopeId: string;
 const scopeSlug = `it-tamale-${TOKEN}`;
 const editionIds: string[] = [];
+// Ghana-wide editions a developer published on this stack for this week or
+// last week. They would win the fallback and make "nothing is out" cases
+// fail, so the suite sets them aside and puts them back afterwards.
+const parkedNationalEditionIds: string[] = [];
 const eventIds: string[] = [];
 const placeIds: string[] = [];
 
@@ -206,6 +210,27 @@ beforeAll(async () => {
     .single();
   original = settings as SettingsRow;
 
+  const { data: national } = await svc
+    .from("weekly_scope")
+    .select("id")
+    .is("centre", null);
+  const { data: parked } = await svc
+    .from("weekly_edition")
+    .select("id")
+    .in(
+      "scope_id",
+      (national ?? []).map((s) => s.id),
+    )
+    .in("week_start", [THIS_MONDAY, LAST_MONDAY])
+    .eq("status", "published");
+  for (const row of parked ?? []) {
+    parkedNationalEditionIds.push(row.id);
+    await svc
+      .from("weekly_edition")
+      .update({ status: "draft" } as never)
+      .eq("id", row.id);
+  }
+
   const { data: scope, error } = await svc
     .from("weekly_scope")
     .insert({
@@ -224,6 +249,11 @@ afterAll(async () => {
   if (editionIds.length)
     await svc.from("weekly_edition").delete().in("id", editionIds);
   if (scopeId) await svc.from("weekly_scope").delete().eq("id", scopeId);
+  if (parkedNationalEditionIds.length)
+    await svc
+      .from("weekly_edition")
+      .update({ status: "published" } as never)
+      .in("id", parkedNationalEditionIds);
   if (placeIds.length) await svc.from("place").delete().in("id", placeIds);
   if (eventIds.length) await svc.from("event").delete().in("id", eventIds);
   if (original) {
@@ -615,20 +645,15 @@ describe("scopes and fallbacks", () => {
       { type: "event", id: eventId },
     ]);
     const res = await getWeeklyEditionCore(svc, null, { scope: scopeSlug });
-    // A Ghana-wide edition for this week (if a developer published one on
-    // this local stack) legitimately wins over last week's regional one.
-    if (res.data?.edition?.isFallbackScope) {
-      expect(res.data.edition.edition.scopeSlug).toBe("ghana");
-    } else {
-      expect(res.data?.edition?.isPreviousWeek).toBe(true);
-      expect(res.data?.edition?.edition.weekStart).toBe(LAST_MONDAY);
-      // The teaser only ever means this week.
-      const teaser = await getWeeklyTeaserCore(svc, null, {
-        lat: LAT,
-        lng: LNG,
-      });
-      expect(teaser.data).toBeNull();
-    }
+    expect(res.data?.edition?.isFallbackScope).toBe(false);
+    expect(res.data?.edition?.isPreviousWeek).toBe(true);
+    expect(res.data?.edition?.edition.weekStart).toBe(LAST_MONDAY);
+    // The teaser only ever means this week.
+    const teaser = await getWeeklyTeaserCore(svc, null, {
+      lat: LAT,
+      lng: LNG,
+    });
+    expect(teaser.data).toBeNull();
   });
 
   it("prefers this week's edition and builds a teaser from it", async () => {

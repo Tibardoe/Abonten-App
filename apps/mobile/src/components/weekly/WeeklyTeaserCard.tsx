@@ -42,7 +42,7 @@ export function WeeklyTeaserCard() {
   };
 
   return (
-    <View className="mt-3">
+    <View className="mb-2 mt-3">
       <WeeklyBanner
         slides={teaser.slides ?? []}
         height={height}
