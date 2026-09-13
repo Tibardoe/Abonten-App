@@ -76,25 +76,32 @@ export function NewEditionForm({
             ))}
           </select>
         </label>
-        <label className="block text-sm">
-          <span className="font-medium">Week</span>
+        <div className="block text-sm">
+          <label htmlFor="weekly-week" className="font-medium">
+            Week
+          </label>
           <input
+            id="weekly-week"
             type="date"
             value={week}
+            aria-describedby="weekly-week-hint"
             onChange={(e) => setWeek(e.target.value)}
             className={cn(input, "mt-1")}
           />
-          <span className="mt-1 block text-xs text-muted-foreground">
+          <span
+            id="weekly-week-hint"
+            className="mt-1 block text-xs text-muted-foreground"
+          >
             {weekStart
               ? `Monday to Sunday: ${formatWeekRange(weekStart)}`
               : "Pick any day; the edition covers its Monday to Sunday."}
           </span>
           {taken ? (
-            <span className="mt-1 block text-xs text-destructive">
+            <span role="alert" className="mt-1 block text-xs text-destructive">
               This area already has an edition for that week.
             </span>
           ) : null}
-        </label>
+        </div>
       </div>
 
       <label className="block text-sm">

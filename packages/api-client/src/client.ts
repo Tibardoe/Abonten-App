@@ -17,6 +17,11 @@ import type {
   SearchResults,
 } from "@abonten/types/searchType";
 import type {
+  WeeklyEditionResult,
+  WeeklyProgram,
+  WeeklyTeaser,
+} from "@abonten/types/weeklyType";
+import type {
   AddMomoWalletBody,
   AddPayoutAccountBody,
   AddPayoutAccountResult,
@@ -2048,6 +2053,52 @@ export function createApiClient(options: ApiClientOptions) {
           body,
           auth: false,
         });
+      },
+    },
+
+    weekly: {
+      /** Whether Abonten Weekly is on for the caller. Ships off. */
+      program() {
+        return request<ApiEnvelope<WeeklyProgram>>(
+          "/api/mobile/weekly/program",
+          { method: "GET", auth: true },
+        );
+      },
+      /**
+       * An edition: `week` (a Monday, yyyy-mm-dd) for an exact one, otherwise
+       * the current one for `scope` or for the area containing `lat`/`lng`.
+       * Status 404 when that edition or area is not available.
+       */
+      edition(params: {
+        scope?: string;
+        week?: string;
+        lat?: number;
+        lng?: number;
+      }) {
+        const qs = new URLSearchParams();
+        for (const [key, value] of Object.entries(params)) {
+          if (value === undefined || value === null || value === "") continue;
+          qs.set(key, String(value));
+        }
+        const query = qs.toString();
+        return request<
+          ApiEnvelope<
+            WeeklyEditionResult & { visibility: "public" | "personal" }
+          >
+        >(`/api/mobile/weekly${query ? `?${query}` : ""}`, {
+          method: "GET",
+          auth: true,
+        });
+      },
+      /** The Explore teaser, or data: null. */
+      teaser(params: { lat?: number; lng?: number }) {
+        const qs = new URLSearchParams();
+        if (params.lat != null) qs.set("lat", String(params.lat));
+        if (params.lng != null) qs.set("lng", String(params.lng));
+        return request<ApiEnvelope<WeeklyTeaser | null>>(
+          `/api/mobile/weekly/teaser?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
       },
     },
 

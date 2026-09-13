@@ -4,6 +4,8 @@ import { isExploreTab } from "@/places/exploreTab";
 import ExploreTabs from "@/places/organisms/ExploreTabs";
 import PlacesTabContent from "@/places/organisms/PlacesTabContent";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
+import WeeklyTeaser from "@/weekly/organisms/WeeklyTeaser";
+import { Suspense } from "react";
 
 // TODO: Cache Components adoption. Refactor this route so this opt-out can be removed.
 // See: https://nextjs.org/docs/app/guides/migrating-to-cache-components
@@ -80,6 +82,12 @@ export default async function page({
       <h1 className="text-xl md:text-2xl font-bold">Explore</h1>
 
       <LocationAndFilterSection />
+
+      {/* Abonten Weekly for this area, when it is on for the visitor and this
+          week's edition is out. Streams in without holding up the page. */}
+      <Suspense fallback={null}>
+        <WeeklyTeaser lat={lat ?? null} lng={lng ?? null} />
+      </Suspense>
 
       <ExploreTabs
         initialTab={initialTab}

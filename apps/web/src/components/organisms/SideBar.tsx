@@ -14,6 +14,7 @@ import CreateMenu from "@/places/molecules/CreateMenu";
 import PlaceUploadModal from "@/places/organisms/PlaceUploadModal";
 import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
+import WeeklyNavLink from "@/weekly/atoms/WeeklyNavLink";
 import { logger } from "@abonten/core/logger";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -125,6 +126,8 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
               triggerClassName="hover:text-primary transition-colors"
             />
 
+            <WeeklyNavLink onNavigate={onNavigate} />
+
             <RewardsNavLink onNavigate={onNavigate} />
 
             <FieldOpsNavLink onNavigate={onNavigate} />
@@ -155,6 +158,11 @@ export default function SideBar({ onPostSuccess, onNavigate }: SideBarProps) {
             <Link href="/auth/signin" onClick={onNavigate}>
               {t("signUp")}
             </Link>
+
+            <WeeklyNavLink
+              onNavigate={onNavigate}
+              className="flex items-center gap-1 font-normal transition-colors hover:text-primary"
+            />
           </div>
         )}
 

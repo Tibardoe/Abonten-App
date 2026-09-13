@@ -55,8 +55,11 @@ export function ItemPicker({ section }: { section: WeeklyAdminSection }) {
       >
         <label htmlFor={inputId} className="block min-w-[12rem] flex-1 text-xs">
           <span className="font-medium">
-            Add{" "}
-            {subjectType === "any" ? "an event or place" : `a ${subjectType}`}
+            {subjectType === "any"
+              ? "Add an event or place"
+              : subjectType === "event"
+                ? "Add an event"
+                : "Add a place"}
           </span>
           <input
             id={inputId}

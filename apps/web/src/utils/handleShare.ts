@@ -2,6 +2,8 @@ import { logger } from "@abonten/core/logger";
 type ShareData = {
   title: string;
   url: string;
+  /** Message shown with the link in the share sheet. */
+  text?: string;
 };
 
 /**
@@ -12,10 +14,11 @@ type ShareData = {
 export async function handleShare({
   title,
   url,
+  text,
 }: ShareData): Promise<"native" | "copy" | null> {
   const shareData = {
     title,
-    text: `Check out this event: ${title}`,
+    text: text ?? `Check out this event: ${title}`,
     url,
   };
 
