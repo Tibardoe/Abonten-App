@@ -1,6 +1,7 @@
 import { generateEventCode } from "@abonten/core/eventCodeGenerator";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
+import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -87,10 +88,7 @@ export async function postEventCore(
 
   const eventCode = generateEventCode(input.title);
 
-  const formattedTitle = input.title
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  const formattedTitle = formatTitle(input.title);
 
   // generateSlug(title) alone collides for same-titled events; eventCode
   // carries a random suffix, so appending it keeps the slug unique without

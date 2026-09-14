@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { formatTitle } from "@abonten/core/titleCase";
 
 type FormDataType = {
   title: string;
@@ -92,10 +93,7 @@ export async function postReview(formData: FormDataType) {
     };
   }
 
-  const formattedTitle = title
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  const formattedTitle = formatTitle(title);
 
   const { error: insertEror } = await supabase.from("review").insert({
     created_at: new Date().toISOString(),

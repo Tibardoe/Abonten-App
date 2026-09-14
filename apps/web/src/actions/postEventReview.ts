@@ -3,6 +3,7 @@
 import { createClient } from "@/config/supabase/server";
 import { resolveEventEndDate } from "@abonten/core/dateFormatter";
 import { logger } from "@abonten/core/logger";
+import { formatTitle } from "@abonten/core/titleCase";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -143,14 +144,7 @@ export async function postEventReview(formData: PostEventReviewInput) {
     };
   }
 
-  const formattedTitle = title
-    ? title
-        .split(" ")
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        )
-        .join(" ")
-    : null;
+  const formattedTitle = title ? formatTitle(title) : null;
 
   const { data: review, error: insertError } = await supabase
     .from("event_review")
