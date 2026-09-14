@@ -1,3 +1,7 @@
+import {
+  QUEUED_WRITE_LABEL,
+  QueuedWriteNotice,
+} from "@/components/QueuedWriteNotice";
 import { UploadProgress } from "@/components/UploadProgress";
 import {
   type ReviewPhotoInput,
@@ -186,17 +190,22 @@ export function AddReviewSheet({
       onClose={onClose}
       title="Add review"
       footer={
-        <Button
-          title={
-            uploading
-              ? "Uploading photos…"
-              : post.isPending
-                ? "Submitting…"
-                : "Submit review"
-          }
-          onPress={submit}
-          disabled={busy}
-        />
+        <View className="gap-2">
+          {post.isPaused ? <QueuedWriteNotice /> : null}
+          <Button
+            title={
+              uploading
+                ? "Uploading photos…"
+                : post.isPaused
+                  ? QUEUED_WRITE_LABEL
+                  : post.isPending
+                    ? "Submitting…"
+                    : "Submit review"
+            }
+            onPress={submit}
+            disabled={busy}
+          />
+        </View>
       }
     >
       <View className="gap-4">

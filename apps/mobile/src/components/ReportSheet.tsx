@@ -1,4 +1,8 @@
 import { useSession } from "@/auth/SessionProvider";
+import {
+  QUEUED_WRITE_LABEL,
+  QueuedWriteNotice,
+} from "@/components/QueuedWriteNotice";
 import { useSubmitReport } from "@/features/reports/useSubmitReport";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
@@ -209,13 +213,16 @@ export function ReportSheet({
                 </AppText>
               </View>
             ) : null}
+            {report.isPaused ? <QueuedWriteNotice /> : null}
             <Button
               title={
                 uploading
                   ? "Uploading…"
-                  : report.isPending
-                    ? "Submitting…"
-                    : "Submit report"
+                  : report.isPaused
+                    ? QUEUED_WRITE_LABEL
+                    : report.isPending
+                      ? "Submitting…"
+                      : "Submit report"
               }
               onPress={submit}
               disabled={busy}
