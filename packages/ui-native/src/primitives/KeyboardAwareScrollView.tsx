@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import {
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   type ScrollViewProps,
@@ -16,11 +17,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 //   • iOS  — `automaticallyAdjustKeyboardInsets` makes the scroll view inset
 //            its content by the keyboard height and reveal the focused field.
 //            No KeyboardAvoidingView (which would double-count against it).
-//   • Android — the Expo app runs with `adjustResize`, so the whole screen
-//            shrinks when the keyboard opens and RN's focus responder
-//            scrolls the focused TextInput into the smaller viewport. The
-//            generous `paddingBottom` below guarantees there's always room
-//            to scroll the last field clear of the keyboard.
+//   • Android — the app runs edge-to-edge
+//            (android/gradle.properties edgeToEdgeEnabled=true), and an
+//            edge-to-edge window is NOT resized by the IME the way
+//            windowSoftInputMode=adjustResize used to be. Nothing moved on
+//            its own: on an Android 15 device the keyboard simply covered
+//            the bottom of the screen, leaving submit buttons unreachable.
+//            So the scroll view is wrapped in a KeyboardAvoidingView with
+//            behavior="padding", which shrinks its viewport by the measured
+//            keyboard height; RN then scrolls the focused TextInput into
+//            what is left, and the `paddingBottom` below keeps headroom for
+//            the last field.
 //
 // `keyboardShouldPersistTaps="handled"` keeps taps on buttons/other fields
 // working with the keyboard up; `keyboardDismissMode` lets a drag dismiss it.
@@ -55,7 +62,7 @@ export const KeyboardAwareScrollView = forwardRef<
 ) {
   const insets = useSafeAreaInsets();
 
-  return (
+  const scroller = (
     <ScrollView
       ref={ref}
       keyboardShouldPersistTaps={keyboardShouldPersistTaps}
@@ -70,5 +77,16 @@ export const KeyboardAwareScrollView = forwardRef<
     >
       {children}
     </ScrollView>
+  );
+
+  // iOS already insets the scroll view itself via
+  // automaticallyAdjustKeyboardInsets; wrapping it as well would
+  // double-count the keyboard.
+  if (Platform.OS === "ios") return scroller;
+
+  return (
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+      {scroller}
+    </KeyboardAvoidingView>
   );
 });

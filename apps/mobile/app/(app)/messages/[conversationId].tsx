@@ -66,7 +66,6 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
-  Platform,
   TextInput,
   View,
 } from "react-native";
@@ -424,7 +423,16 @@ export default function ConversationScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        // "padding" on Android too, not just iOS. The app runs
+        // edge-to-edge (android/gradle.properties edgeToEdgeEnabled=true),
+        // and an edge-to-edge window is NOT resized by the IME the way
+        // windowSoftInputMode=adjustResize used to do — so leaving this
+        // undefined made the whole thing a no-op and the composer stayed
+        // pinned to the bottom of the screen, completely behind the
+        // keyboard. Measured on an Android 15 device: composer at
+        // y=2266..2373 on a 2400px screen with the keyboard covering
+        // everything below ~1524, so you could not see what you typed.
+        behavior="padding"
         keyboardVerticalOffset={0}
       >
         {notFound ? (
