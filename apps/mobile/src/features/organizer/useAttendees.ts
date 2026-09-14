@@ -37,7 +37,10 @@ export function useCheckInTicket(eventId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (v: { ticketId: string; checkedIn: boolean }) =>
-      api.organizer.checkInTicket(v.ticketId, v.checkedIn),
+      // eventId scopes the scan to this event's gate: without it an
+      // organizer running two events could mark a ticket for the other one
+      // used (see checkInTicketCore).
+      api.organizer.checkInTicket(v.ticketId, v.checkedIn, eventId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: [...KEY, eventId] });
       qc.invalidateQueries({

@@ -1280,12 +1280,21 @@ export function createApiClient(options: ApiClientOptions) {
        * same transition as the web attendee list's Check in / undo buttons.
        * 403 unless the caller owns the ticket's event.
        */
-      checkInTicket(ticketId: string, checkedIn: boolean) {
+      checkInTicket(
+        ticketId: string,
+        checkedIn: boolean,
+        eventId?: string | null,
+      ) {
         return request<CheckInTicketResult>(
           `/api/mobile/organizer/tickets/${encodeURIComponent(
             ticketId,
           )}/check-in`,
-          { method: "POST", body: { checkedIn }, auth: true },
+          {
+            method: "POST",
+            // Scopes the scan to the gate doing it — see checkInTicketCore.
+            body: eventId ? { checkedIn, eventId } : { checkedIn },
+            auth: true,
+          },
         );
       },
       /**
