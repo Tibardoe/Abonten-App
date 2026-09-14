@@ -5,6 +5,7 @@ import {
   isEventAwaitingReview,
 } from "@abonten/core/eventReviewEligibility";
 import { keysetOlderThan } from "@abonten/core/pagination";
+import { formatTitle } from "@abonten/core/titleCase";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import {
@@ -307,13 +308,6 @@ export function useUserEventReviews() {
   });
 }
 
-function titleCase(s: string): string {
-  return s
-    .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
-
 export function usePostEventReview() {
   const qc = useQueryClient();
   const { session } = useSession();
@@ -334,7 +328,7 @@ export function usePostEventReview() {
           event_id: input.eventId,
           reviewer_id: userId,
           rating: input.rating,
-          title: input.title ? titleCase(input.title) : null,
+          title: input.title ? formatTitle(input.title) : null,
           comment: input.comment?.trim() ? input.comment.trim() : null,
           status: "approved",
           is_verified_attendee: true,
