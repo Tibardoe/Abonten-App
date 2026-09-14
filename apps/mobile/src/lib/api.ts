@@ -30,8 +30,16 @@ export const api = createApiClient({
     const response = await fetch(input, init);
 
     if (response.status === 401) {
+      // Only the token this request actually used may condemn the session.
+      // A 401 for an OLDER token can land after a NEWER session exists — a
+      // background poll fired while signed out, answering just after the
+      // user finished signing in — and signing out on that would tear down
+      // the session they had only just created.
+      const sent = new Headers(init?.headers).get("authorization");
       const { data } = await supabase.auth.getSession();
-      if (data.session) handleAuthExpiry();
+      const current = data.session?.access_token;
+
+      if (current && sent === `Bearer ${current}`) handleAuthExpiry();
     }
 
     return response;
