@@ -343,6 +343,51 @@ api/user-profile                                   /api/user-profile
   - `review` (`RANGE` on `created_at`) has exactly 5 monthly partitions, covering **1 June 2025 through 31 October 2025 only**. There is no partition for any date outside that window (including the current system date). Inserting a review today would fail unless additional partitions have been added outside this migration file.
   - This does not necessarily mean these tables are broken in production — `supabase db pull` can miss objects added via the dashboard or a different migration path — but as literally captured in this file, it is a real risk worth verifying directly against the live database.
 
+### 7.5b Money-path and integrity guards added by the 2026-09-14 Android audit
+
+Three database-level changes came out of the launch-readiness audit. Each
+replaced a rule that existed only in application code, or a constraint that
+enforced the wrong thing.
+
+- **`create_ticket_checkout` — one pending checkout SESSION, not one row**
+  (`20260914203000`). The unique index
+  `ticket_checkout_one_pending_per_user_event` on
+  `(user_id, event_id) WHERE status = 'pending'` was added in
+  `20260904134536` to stop a user opening two pending checkouts for one
+  event. But the function writes **one row per ticket type**, so the index
+  also rejected the second line of a single multi-tier basket: buying a
+  Regular and a VIP together was impossible, and the shopper was told
+  "You already have a pending ticket checkout for this event" when none
+  existed. Reproduced on device (2 tiers → 409, 1 tier → 200). The index is
+  replaced by `ticket_checkout_one_pending_line_per_type`
+  (`(user_id, event_id, ticket_type_id) WHERE status = 'pending'`), and the
+  session rule moved into the function behind
+  `pg_advisory_xact_lock(hash(user||event))`, checked **before** the
+  reservation loop so a rejected attempt never touches
+  `ticket_type.quantity`.
+
+- **`enforce_event_review_eligibility()` — `BEFORE INSERT` on `event_review`**
+  (`20260914213000`). `event_review_reviewer_insert` only checked
+  `auth.uid() = reviewer_id`, and mobile writes reviews as a direct
+  PostgREST table write, so any signed-in account could review **any**
+  event: stored `approved` and, because `is_verified_attendee` defaulted to
+  `true`, badged as a verified attendee. The trigger now mirrors
+  `postEventReview.ts` exactly (not the organizer, event not cancelled,
+  event ended, reviewer holds a `used` ticket) and sets
+  `is_verified_attendee` itself; the column default is now `false`.
+  `service_role` (`auth.uid() IS NULL`) stays trusted. `place_review` is
+  deliberately **not** gated — `postPlaceReview.ts` documents that any
+  authenticated user may review any place.
+
+- **Ticket cancellation refuses a checked-in ticket** (service layer, no
+  migration). `cancelUserTicketCore` guarded only against an already
+  `cancelled` ticket, so `POST /api/mobile/tickets/cancel` would flip a
+  `used` ticket to `cancelled`, release the seat and queue the Paystack
+  refund — confirmed against the running API with a ticket scanned in
+  seconds earlier. `used` is now a 409, the compare-and-set excludes it, and
+  the zero-rows branch re-reads rather than reporting a cancellation that
+  did not happen.
+
 ### 7.6 ⚠️ Discrepancies between application code and the actual schema (confirmed, not guessed)
 
 1. **`user_profile_details` vs `user_profile_detail` — now resolved.** The real database object is the view **`user_profile_details`** (plural), matching what [getUserProfileDetails.ts](src/actions/getUserProfileDetails.ts) queries. However, [src/app/api/user-profile/route.tsx](src/app/api/user-profile/route.tsx) queries **`user_profile_detail`** (singular) — **this object does not exist anywhere in the schema.** That route's query will fail at runtime (Postgres/PostgREST "relation does not exist"). This is a confirmed bug, not a naming-convention nitpick.
