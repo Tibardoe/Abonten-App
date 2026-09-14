@@ -22,17 +22,34 @@ function isAuthExpiryError(error: unknown): boolean {
 
 let handlingExpiry = false;
 
+/**
+ * Drop the dead session so onAuthStateChange("SIGNED_OUT") clears the cache
+ * and bounces to the auth stack.
+ *
+ * Exported because React Query's onError below only sees this for calls that
+ * THROW — direct Supabase reads. The typed /api/mobile client deliberately
+ * does not throw on an HTTP error status (it returns `{ status }` for the
+ * caller to branch on), so a 401 there never reached this handler and the
+ * app sat in a signed-in-looking state where every screen showed its
+ * "couldn't load, pull down to try again" error forever. lib/api.ts calls
+ * this from its fetch wrapper.
+ */
+export function handleAuthExpiry(): void {
+  if (handlingExpiry) return;
+  handlingExpiry = true;
+  supabase.auth
+    .signOut()
+    .catch(() => {})
+    .finally(() => {
+      handlingExpiry = false;
+    });
+}
+
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
-      if (handlingExpiry || !isAuthExpiryError(error)) return;
-      handlingExpiry = true;
-      supabase.auth
-        .signOut()
-        .catch(() => {})
-        .finally(() => {
-          handlingExpiry = false;
-        });
+      if (!isAuthExpiryError(error)) return;
+      handleAuthExpiry();
     },
   }),
   defaultOptions: {
