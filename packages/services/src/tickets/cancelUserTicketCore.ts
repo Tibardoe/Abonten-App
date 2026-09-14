@@ -60,6 +60,23 @@ export async function cancelUserTicketCore(
   const eventId = ticket.ticket_type?.event_id;
   const eventCode = ticket.ticket_type?.event?.event_code;
 
+  // A checked-in ticket has already been used to enter the event, so
+  // cancelling it would refund someone who attended and hand their seat
+  // back to inventory. The attendee list hides "Cancel" once a ticket is
+  // checked in, but that is only the UI: POST /api/mobile/tickets/cancel
+  // (and the web action) are callable directly, and before this guard they
+  // happily flipped a 'used' ticket to 'cancelled' and queued the refund.
+  // Confirmed by calling the endpoint with a scanned-in ticket, 2026-09-14.
+  if (ticket.status === "used") {
+    return {
+      status: 409,
+      message:
+        "This ticket has already been checked in and can no longer be cancelled.",
+      eventId: eventId ?? undefined,
+      eventCode: eventCode ?? undefined,
+    };
+  }
+
   // Idempotency guard: this whole function releases a real reserved
   // inventory unit and (conditionally) requests a real refund — neither of
   // which is safe to repeat. Without this, a retried call (a client-side
@@ -88,6 +105,9 @@ export async function cancelUserTicketCore(
       .eq("id", ticketId)
       .eq("user_id", userId)
       .neq("status", "cancelled")
+      // Also excludes 'used': the read above can race a gate scan, and a
+      // ticket that got checked in in between must not be cancelled.
+      .neq("status", "used")
       .select("id");
 
   if (updateStatusError) {
@@ -96,6 +116,27 @@ export async function cancelUserTicketCore(
   }
 
   if (!flipped || flipped.length === 0) {
+    // Zero rows now has two possible meanings: another concurrent call
+    // already cancelled this ticket (idempotent success), or a gate scan
+    // checked it in between the read and this write (must NOT be reported
+    // as cancelled). Re-read to tell them apart rather than guess.
+    const { data: settled } = await getSupabaseServiceClient()
+      .from("ticket")
+      .select("status")
+      .eq("id", ticketId)
+      .eq("user_id", userId)
+      .maybeSingle<{ status: string }>();
+
+    if (settled?.status === "used") {
+      return {
+        status: 409,
+        message:
+          "This ticket has already been checked in and can no longer be cancelled.",
+        eventId: eventId ?? undefined,
+        eventCode: eventCode ?? undefined,
+      };
+    }
+
     return {
       status: 200,
       message: "Ticket cancelled successfully",
