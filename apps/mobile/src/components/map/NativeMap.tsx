@@ -59,11 +59,31 @@ export const Marker = maps?.Marker ?? null;
 export const PROVIDER_GOOGLE = maps?.PROVIDER_GOOGLE ?? undefined;
 export const MapAvailable = maps != null;
 
-// Is a Google Maps API key actually present in the config that produced
-// this binary? `expoConfig` reflects the resolved app.config.js at build
-// time, so a missing key here means the native manifest has no key and
-// mounting a Google-provider MapView would hard-crash.
+// Is a Google Maps API key actually present in the binary this JS is running
+// in? A missing key means the native manifest has no key either, and mounting
+// a Google-provider MapView would hard-crash rather than fail politely.
+//
+// This must NOT be read from `Constants.expoConfig`. That worked in the dev
+// client, where Metro serves the whole resolved config, and silently failed
+// in every release build: expo-constants strips `android.config` out of the
+// config it embeds, so the key the app.config.js wrote into the manifest is
+// simply not in `assets/app.config` at runtime. Verified on an EAS preview
+// APK — AndroidManifest.xml carried com.google.android.geo.API_KEY while the
+// embedded config had `android.config: null`. Every map in the app (explore,
+// the social map, event and place detail, the location picker) therefore
+// showed "Map needs the latest app" to real users, permanently, no matter
+// how many times they updated.
+//
+// `EXPO_PUBLIC_*` is the mechanism that does survive: Metro inlines it into
+// the bundle at build time, and it is the same variable app.config.js reads
+// to write the manifest, so the two can never disagree. Confirmed inlined by
+// finding the key literal inside assets/index.android.bundle.
 function readMapsApiKey(): string | undefined {
+  const fromEnv = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (fromEnv) return fromEnv;
+
+  // Fallback for any context where the config is served whole (the dev
+  // client, Expo Go) but the env var was not defined at bundling time.
   // biome-ignore lint/suspicious/noExplicitAny: expo-config typings don't surface the nested googleMaps block
   const cfg = Constants.expoConfig as any;
   if (Platform.OS === "android") {
