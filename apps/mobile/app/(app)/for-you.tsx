@@ -131,12 +131,7 @@ export default function ForYou() {
         data={items}
         keyExtractor={(i) => i.id}
         contentContainerClassName="gap-3 p-4 pb-16"
-        refreshControl={
-          <Refresher
-            refreshing={recs.isRefetching}
-            onRefresh={() => recs.refetch()}
-          />
-        }
+        refreshControl={<Refresher onRefresh={() => recs.refetch()} />}
         renderItem={({ item }) => (
           <PickRow item={item} onDismiss={() => dismiss.mutate(item)} />
         )}

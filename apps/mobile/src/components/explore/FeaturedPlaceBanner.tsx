@@ -43,8 +43,16 @@ function Scrim() {
   );
 }
 
-export function FeaturedPlaceBanner({ place }: { place: PlaceType }) {
+export function FeaturedPlaceBanner({
+  place,
+  height = BANNER_HEIGHT,
+}: {
+  place: PlaceType;
+  /** Override the hero height (DiscoveryHero's compact row). */
+  height?: number;
+}) {
   const router = useRouter();
+  const compact = height < BANNER_HEIGHT;
 
   const cover =
     place.cover_public_id && place.cover_version
@@ -62,7 +70,7 @@ export function FeaturedPlaceBanner({ place }: { place: PlaceType }) {
       accessibilityLabel={`Featured place: ${place.name}`}
       onPress={() => router.push(`/(app)/place/${place.id}`)}
       className="overflow-hidden rounded-2xl bg-muted active:opacity-95"
-      style={{ height: BANNER_HEIGHT }}
+      style={{ height }}
     >
       {cover ? (
         <Image
@@ -123,14 +131,16 @@ export function FeaturedPlaceBanner({ place }: { place: PlaceType }) {
           ) : null}
         </View>
 
-        <View className="mt-1 flex-row">
-          <View className="flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5">
-            <AppText className="text-[13px] font-semibold text-primary-foreground">
-              View place
-            </AppText>
-            <Icon name="arrow-forward" size={13} tone="inverse" />
+        {compact ? null : (
+          <View className="mt-1 flex-row">
+            <View className="flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5">
+              <AppText className="text-[13px] font-semibold text-primary-foreground">
+                View place
+              </AppText>
+              <Icon name="arrow-forward" size={13} tone="inverse" />
+            </View>
           </View>
-        </View>
+        )}
       </View>
     </Pressable>
   );

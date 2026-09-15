@@ -111,3 +111,19 @@ export function replaceMessageInCache(
     },
   );
 }
+
+/** The cached row for a message id, if any loaded page holds it. */
+export function findMessageInCache(
+  qc: QueryClient,
+  conversationId: string,
+  messageId: string,
+): MessageRow | null {
+  const cached = qc.getQueryData<MessagesCache>(
+    messagingKeys.messages(conversationId),
+  );
+  for (const page of cached?.pages ?? []) {
+    const hit = page.data.find((m) => m.id === messageId);
+    if (hit) return hit;
+  }
+  return null;
+}

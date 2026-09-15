@@ -276,12 +276,7 @@ export default function PlaceReviewsScreen() {
       contentContainerClassName="gap-3 p-4 pb-16"
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      refreshControl={
-        <Refresher
-          refreshing={q.isRefetching && !q.isFetchingNextPage}
-          onRefresh={() => q.refetch()}
-        />
-      }
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
         q.isLoading ? (
           <ActivityIndicator className="mt-10" />

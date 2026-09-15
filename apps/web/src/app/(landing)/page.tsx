@@ -1,5 +1,5 @@
-import LandingAuthLinks from "@/landing Page/molecules/LandingAuthLinks";
-import LandingLocationSearch from "@/landing Page/organisms/LandingLocationSearch";
+import LandingAuthLinks from "@/landingPage/molecules/LandingAuthLinks";
+import LandingLocationSearch from "@/landingPage/organisms/LandingLocationSearch";
 import Image from "next/image";
 import Link from "next/link";
 

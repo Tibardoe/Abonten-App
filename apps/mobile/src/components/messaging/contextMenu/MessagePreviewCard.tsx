@@ -1,3 +1,4 @@
+import { LinkText } from "@/components/LinkText";
 import {
   classifyEmojiOnly,
   emojiOnlyFontSize,
@@ -5,9 +6,16 @@ import {
 import { clockTime } from "@/features/messaging/messagingTime";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { View } from "react-native";
 import { ChatImage } from "../ChatImage";
 import { FileAttachmentCard } from "../FileAttachmentCard";
+import {
+  DeletedTombstone,
+  ON_PRIMARY_DIM,
+  StatusTicks,
+  bubbleShapeClass,
+} from "../MessageBubble";
 import { ReplyQuote } from "../ReplyQuote";
 
 // A gesture-free, playback-free clone of a message bubble, shown "lifted" in
@@ -61,7 +69,10 @@ export function MessagePreviewCard({
   /** Mirrors the bubble's read state so the clone shows the same tick. */
   seen?: boolean;
 }) {
+  const c = useThemeColors();
   const deleted = !!message.deleted_at;
+  const footerColor =
+    isMine && !deleted ? ON_PRIMARY_DIM : c["muted-foreground"];
   const isAudio = message.message_type === "audio";
   const isImage =
     message.message_type === "image" && message.attachments.length > 0;
@@ -91,23 +102,14 @@ export function MessagePreviewCard({
   return (
     <View className={isMine ? "items-end" : "items-start"}>
       <View
-        className={`min-w-[52px] max-w-full rounded-[18px] px-3.5 py-2 ${
-          isMine
-            ? "rounded-br-[5px] bg-primary"
-            : "rounded-bl-[5px] bg-secondary"
-        }`}
+        className={`min-w-[52px] max-w-full ${bubbleShapeClass(isMine, deleted)}`}
       >
         {message.reply_to ? (
           <ReplyQuote reply={message.reply_to} onPrimary={isMine} />
         ) : null}
 
         {deleted ? (
-          <AppText
-            variant="body"
-            className={`italic ${isMine ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-          >
-            This message was deleted
-          </AppText>
+          <DeletedTombstone isMine={isMine} />
         ) : isAudio ? (
           <AudioPreview isMine={isMine} />
         ) : isImage ? (
@@ -136,41 +138,35 @@ export function MessagePreviewCard({
         ) : null}
 
         {message.content && !deleted ? (
-          <AppText
+          <LinkText
+            text={message.content}
             variant="body"
             className={`text-[16px] leading-[22px] ${
               isMine ? "text-primary-foreground" : ""
             }`}
-          >
-            {message.content}
-          </AppText>
+            linkStyle={isMine ? undefined : { color: c.primary }}
+          />
         ) : null}
 
         {/* Same footer the bubble draws, ticks included. Dropping them made
             the lifted clone a few px narrower than the message it replaced,
             so the bubble visibly re-flowed on long-press and again on
             dismiss. */}
-        <View className="mt-0.5 flex-row items-center justify-end gap-1">
+        <View className="mt-1 flex-row items-center justify-end gap-1">
           {message.edited_at && !deleted ? (
-            <AppText
-              variant="caption"
-              className={isMine ? "text-primary-foreground/70" : undefined}
-            >
-              edited
+            <AppText variant="caption" style={{ color: footerColor }}>
+              edited ·
             </AppText>
           ) : null}
           <AppText
             variant="caption"
-            className={isMine ? "text-primary-foreground/70" : undefined}
+            className="font-medium"
+            style={{ color: footerColor }}
           >
             {clockTime(message.created_at)}
           </AppText>
           {isMine && !deleted ? (
-            <Icon
-              name={seen ? "checkmark-done" : "checkmark"}
-              size={14}
-              tone={seen ? "primary" : "muted"}
-            />
+            <StatusTicks seen={seen} onPrimary onRetry={noop} />
           ) : null}
         </View>
       </View>

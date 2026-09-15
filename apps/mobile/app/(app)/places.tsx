@@ -65,12 +65,7 @@ export default function Places() {
         contentContainerClassName="gap-4 px-4 pb-16 pt-4"
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        refreshControl={
-          <Refresher
-            refreshing={q.isRefetching && !q.isFetchingNextPage}
-            onRefresh={() => q.refetch()}
-          />
-        }
+        refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
           <EmptyState
             icon="location-outline"

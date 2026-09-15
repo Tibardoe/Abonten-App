@@ -148,7 +148,7 @@ src/
   data/                    Static/dummy data + local lookup tables (languages, plans, event categories, etc.)
   types/                   Hand-written TypeScript types (no DB-generated types)
   i18n/                    next-intl routing/navigation/request config (active — see §16)
-  events/, wallet/, settings/, userAccount/, "landing Page"/
+  events/, wallet/, settings/, userAccount/, landingPage/
                            Feature-specific atomic-design folders (atoms/molecules/organisms/templates),
                            separate from the shared src/components tree
   utils/                   Helpers: zod schemas (eventSchema, receivingAcountSchema), slug/code generators,
@@ -157,7 +157,7 @@ messages/en.json           next-intl message catalogue (active — see §16)
 cache/*.json               Precomputed per-locality "daily event" JSON snapshots
 ```
 
-**Note (verified, not fixed by me):** the folder `src/landing Page` contains a literal space in its name.
+**Note:** the folder was `src/landing Page` (literal space) until 2026-09-15; it is now `src/landingPage`.
 
 **Needs Investigation**
 - How/whether `cache/*.json` files are regenerated (no cron job or generation script was found in this pass).
@@ -572,7 +572,7 @@ A third end-user sign-in option — **"Continue with email"** — alongside Goog
 - Custom font: "Euclid Circular B" loaded via local `@font-face` (`public/fonts/*.woff2`) at weights 300–700; also imports Google Fonts "Inter" but the `body` font-family is set to Euclid Circular B, and `geist` is a dependency but not obviously wired into `body`.
 - shadcn/ui component generation config in [components.json](components.json): style `"new-york"`, base color `"neutral"`, RSC-enabled, icon library `lucide` (`lucide-react`).
 - Custom keyframe animations (`slideIn`, `slideOut`, `story`/progress-fill, `floatFast`, `floatFastReverse`, `floatMid`) for modals/stories/decorative motion, plus `framer-motion` as a dependency for richer animation.
-- Component organization follows atomic design (`atoms/molecules/organisms/[templates]`), both in the shared `src/components` tree and duplicated per-feature (`src/wallet`, `src/settings`, `src/userAccount`, `src/events`, `src/landing Page`).
+- Component organization follows atomic design (`atoms/molecules/organisms/[templates]`), both in the shared `src/components` tree and duplicated per-feature (`src/wallet`, `src/settings`, `src/userAccount`, `src/events`, `src/landingPage`).
 
 ---
 
@@ -628,13 +628,13 @@ A third end-user sign-in option — **"Continue with email"** — alongside Goog
 6. **No generated Supabase types.** All queries are untyped against the schema; several places use `as unknown as X` casts to work around this (`generateTicket.ts`, `validateCheckout.ts`).
 6a. **Resolved 2026-08-25.** The pulled baseline schema (2026-08-10) had no Row Level Security policies — every table was schema-wide `GRANT ALL`-ed to `anon`/`authenticated`/`service_role` with no `ENABLE ROW LEVEL SECURITY`/`CREATE POLICY` statements. RLS has since been enabled on most tables via the `20260825105233_enable_rls_ticketing_batch1.sql` through `..._batch7...sql` migrations plus `20260825110112_enable_rls_wallet.sql`. Access control today is RLS **and** the application-layer `auth.getUser()` checks together, not application-layer-only. See §7.1's RLS note.
 6b. **Several tables have no partitions and may not accept inserts.** `event_media`, `wallet`, `story`, `event_share`, and `media_audit` are declared as partitioned tables with zero partitions defined in the pulled schema; `review`'s partitions only cover June–October 2025. See §7.5 for details — this may be a pull artifact rather than a real production issue, but is worth verifying. **`payment_method` is no longer in this list** — `20260816150312_add_wallet_and_payment_attempt.sql` (2026-08-16) gave it 4 real partitions; inserts work today (see §7.2's table entry).
-6c. **`useUserProfile.ts` reads non-existent columns.** It reads `data.displayName`, `data.email`, `data.phone`, `data.createdAt`, `data.lastSignInAt` from a `user_info` row, but none of those columns exist on the real `user_info` table (see §7.6 discrepancy #3). These fields are always `undefined` in practice.
+6c. **Resolved (2026-09-15 check): `useUserProfile.ts` no longer exists** — the hook was removed with the profile rework; nothing reads those columns any more. Was: **`useUserProfile.ts` reads non-existent columns.** It reads `data.displayName`, `data.email`, `data.phone`, `data.createdAt`, `data.lastSignInAt` from a `user_info` row, but none of those columns exist on the real `user_info` table (see §7.6 discrepancy #3). These fields are always `undefined` in practice.
 7. **Resolved.** `pathname.startsWith("/auth")` was previously listed twice in the public-route array in `updateSession()`; the duplicate is removed and the `/user` prefix was tightened to `/user/` (see §8).
-8. **Unintended prefix overlap**: `/user-account` matches the `/user` public-route prefix in the middleware, so it is treated as public even though it may be intended to require auth.
-9. **Confirmed table/view-name bug**: `getUserProfileDetails` action correctly queries the real view `user_profile_details` (plural), but `api/user-profile/route.tsx` queries `user_profile_detail` (singular), which **does not exist** in the database at all (confirmed against the real schema — see §7.6 discrepancy #1). That API route will fail whenever it's called.
+8. **Resolved (see §8 / item 7)**: the public prefix is `/user/` with the trailing slash, so `/user-account` (Settings) needs auth as intended. Was: **Unintended prefix overlap**: `/user-account` matches the `/user` public-route prefix in the middleware, so it is treated as public even though it may be intended to require auth.
+9. **Resolved**: `api/user-profile/route.tsx` now queries the real `user_profile_details` view (the code comments record the fix). Was: **Confirmed table/view-name bug**: `getUserProfileDetails` action correctly queries the real view `user_profile_details` (plural), but `api/user-profile/route.tsx` queries `user_profile_detail` (singular), which **does not exist** in the database at all (confirmed against the real schema — see §7.6 discrepancy #1). That API route will fail whenever it's called.
 10. **Resolved 2026-08-23 — was: two OTP providers in use for different flows.** The Twilio-based phone-update flow (`sendOtpForPhoneUpdate.ts`, `verifyOtpAndUpdatePhone.ts`) was deleted; Settings → Security's phone add/change now shares the same Hubtel-based flow as sign-in (`requestPhoneVerification.ts` + `updateVerifiedPhone.ts`).
-11. **Literal space in a directory name**: `src/landing Page/` — atypical and can cause friction with some shell tooling/scripts.
-12. **Boilerplate README**: [README.md](README.md) is still the unmodified `create-next-app` default and does not describe this project.
+11. **Resolved 2026-09-15**: `src/landing Page/` was renamed to `src/landingPage/`. Was: literal space in a directory name.
+12. **Resolved**: [README.md](README.md) now describes the monorepo (apps, packages, how to run and test). Was: boilerplate `create-next-app` README.
 13. **Correction from an earlier version of this document**: it was previously assumed (from `useUserProfile.ts`'s field mapping) that `user_info` had camelCase columns like `displayName`/`createdAt`/`lastSignInAt` alongside snake_case ones. The real schema shows this was wrong — `user_info` is consistently snake_case (`status_id`, `avatar_public_id`, `avatar_version`, `updated_at`, plus `username`, `full_name`, `bio`, `website`), and the camelCase fields simply don't exist in the database (see item 6c above and §7.6 discrepancy #3).
 13a. **New: `audit_log` function has no matching table or trigger.** The database function `log_user_changes()` inserts into a table called `audit_log`, but no such table is created anywhere in the pulled schema, and no trigger currently invokes this function. It would error if called. See §7.5.
 13b. **New: `ticket.ticket_code` is not unique at the database level**, `ticket_type` has no price/quantity/type CHECK constraints, and `promo_code.discount_percentage` has no 0–100 range check — all of this validation exists only in application code (Zod schemas, manual checks), not enforced by the database. See §7.6 discrepancies #4–#5.

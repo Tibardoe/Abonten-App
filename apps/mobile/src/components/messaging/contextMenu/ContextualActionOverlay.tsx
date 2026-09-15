@@ -1,4 +1,9 @@
-import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  type IoniconName,
+  runAfterModalDismissal,
+} from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import {
@@ -104,7 +109,11 @@ export function ContextualActionOverlay({
     const fn = afterClose.current;
     afterClose.current = null;
     onDismiss();
-    fn?.();
+    // `after` typically opens another modal (the emoji picker). This
+    // overlay is itself a Modal that unmounts on dismiss, so the follow-up
+    // must wait for the native dismissal to finish or the two presentations
+    // race on iOS (see useModalHandoff.ts).
+    if (fn) runAfterModalDismissal(fn);
   }, [onDismiss]);
 
   const close = useCallback<DismissFn>(

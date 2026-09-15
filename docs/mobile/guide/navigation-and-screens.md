@@ -4,8 +4,8 @@ purpose: Every screen in the Android app, how it is reached, and what it does.
 audience: Support, QA, product
 scope: apps/mobile/app (Expo Router)
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -55,6 +55,26 @@ Profile, Settings, Notifications, My Tickets, Transactions, Rewards (when enable
 ## Gestures and feedback
 
 Edge-swipe drawer; pull-to-refresh on lists; infinite scroll (16 hooks with `useInfiniteQuery`); haptics on key actions (`expo-haptics`); toasts instead of blocking alerts (app-wide, 2026-09); skeleton loaders.
+
+Since 2026-09-15 (iOS TestFlight QA round 1):
+
+- **Pull-to-refresh** shows the spinner only for the person's own pull (`<Refresher>` owns the state); background refetches never unfurl it.
+- **Keyboard**: every form on `KeyboardAwareScrollView` scrolls the focused `<Input>` fully into view above the keyboard, including a growing multiline field; the chat composer resets its height on send.
+- **Modals** hand off in sequence — a sheet or menu that opens another modal (location sheet → map picker, "…" menu → Report, message actions → emoji picker, highlight viewer → Report) closes fully first (`useModalHandoff` / `runAfterModalDismissal` in `@abonten/ui-native`).
+- **Connection pill** under the status bar: Reconnecting… (amber, first 6 s of a drop), You're offline (red), Back online (green); offline is debounced 1.5 s so a return from the background never flashes it.
+- **Side menu**: the identity card opens the public profile; tab rows switch tabs; any route change closes the drawer.
+
+## Explore hero and status badges
+
+One promotional slot (`DiscoveryHero`): when an Abonten Weekly edition is out for the area it is the hero and Featured events/places follow as a compact peeking row; otherwise the Featured carousel is the hero. Featured (paid placement) is never removed by the filter sheet. Event cards carry one bottom-left status pill (Cancelled / Sold out / Ongoing / Ended) instead of a full-image wash. Map clusters that share one spot open a "N at this spot" list on tap.
+
+## Chat
+
+Own-message ticks are drawn in the bubble's foreground colour (single = sent, double = read, clock = sending, "Tap to retry" = failed); deleted messages are dashed, muted tombstones with no ticks; http(s)/www links are tappable (own abontenhub.com event / place / weekly / invite / messages links open in the app, everything else in the in-app browser).
+
+## Events at a place
+
+The event wizard's Location step lets a place owner pin the event to one of their published places (sends `placeId`); Manage Place lists the place's upcoming events with **Add event**, which opens the wizard with the venue pre-selected. Pinned events appear under "Upcoming events here" on the public place page.
 
 ## Forms
 

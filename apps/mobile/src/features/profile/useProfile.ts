@@ -12,6 +12,7 @@ export type MyProfile = {
   username: string | null;
   full_name: string | null;
   bio: string | null;
+  website: string | null;
   avatar_public_id: string | null;
   avatar_version: string | null;
   total_posts: number;
@@ -40,6 +41,7 @@ export function useProfile() {
         username: str(d.username),
         full_name: str(d.full_name),
         bio: str(d.bio),
+        website: str(d.website),
         avatar_public_id: str(d.avatar_public_id),
         avatar_version: str(d.avatar_version),
         total_posts: num(d.total_posts),

@@ -1,4 +1,3 @@
-import { CardStatusOverlay } from "@/components/CardStatusOverlay";
 import { EventCardMenu } from "@/components/EventCardMenu";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { CardImageScrim } from "@/components/cards/CardImageScrim";
@@ -12,7 +11,13 @@ import {
 } from "@abonten/core/getEventSoldOutStatus";
 import { getEventStatusOverlay } from "@abonten/core/getEventStatusOverlay";
 import type { UserPostType } from "@abonten/types/postsType";
-import { AppText, Icon, PressableScale, Skeleton } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  PressableScale,
+  Skeleton,
+  StatusPill,
+} from "@abonten/ui-native";
 import { shadow } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -45,9 +50,15 @@ function GlassButton({
 }
 
 // Native EventCard. The flyer stays image-first — only a favourite toggle + a
-// ⋯ menu (top-right), a "You're going" badge (top-left) and the
-// canceled / sold-out / ended status wash sit over it. Everything factual
-// lives in the body, in a fixed hierarchy so a glance ranks it:
+// ⋯ menu (top-right), a "You're going" badge (top-left) and, when the event
+// is not simply upcoming, one status pill (bottom-left, over the scrim):
+// Cancelled / Sold out / Ongoing / Ended. The pill replaced a full-image
+// dark wash: the wash hid the flyer — the one thing that sells the event —
+// to say something a small badge says just as clearly, and it made every
+// past event on a profile read as a block of red or black. A cancelled or
+// ended event also dims its flyer slightly so the card's state is obvious
+// at a glance without hiding anything. Everything factual lives in the
+// body, in a fixed hierarchy so a glance ranks it:
 //   title (16/700)  ·  date+time (14/600)  ·  venue (13)  ·  price (14/600)
 //   ·  attendance + spots (13, "few left" turns amber)
 //
@@ -78,26 +89,29 @@ function spotsLeft(event: UserPostType, attendees: number): number | null {
   });
 }
 
-// Same precedence as the web centerOverlay: canceled wins, then sold-out,
-// then the lifecycle overlay (Ongoing / Event Ended).
-function statusOverlay(event: UserPostType): {
-  label: string;
-  canceled: boolean;
-} | null {
+// Same precedence as the web centerOverlay: cancelled wins, then sold-out,
+// then the lifecycle state (Ongoing / Ended). The raw status string is fed
+// to the shared <StatusPill> registry so the card's "Ongoing" is the same
+// pill as the organizer dashboard's.
+type CardStatus = { status: string; inactive: boolean } | null;
+
+function statusFor(event: UserPostType): CardStatus {
   if (event.status === "canceled")
-    return { label: "Event canceled", canceled: true };
+    return { status: "cancelled", inactive: true };
   const soldOut = getEventSoldOutStatus({
     capacity: event.capacity,
     attendeeCount: event.attendanceCount ?? event.attendance_count ?? 0,
     ticketTypes: event.ticket_type,
   });
-  if (soldOut) return { label: "Sold out", canceled: false };
+  if (soldOut) return { status: "sold_out", inactive: false };
   const lifecycle = getEventStatusOverlay(
     event.starts_at,
     event.ends_at,
     event.occurrences,
   );
-  return lifecycle ? { label: lifecycle, canceled: false } : null;
+  if (lifecycle === "Ongoing") return { status: "ongoing", inactive: false };
+  if (lifecycle) return { status: "ended", inactive: true };
+  return null;
 }
 
 export function EventCard({ event }: { event: UserPostType }) {
@@ -114,7 +128,7 @@ export function EventCard({ event }: { event: UserPostType }) {
         })
       : null;
   const showImage = flyer != null && !imageFailed;
-  const overlay = statusOverlay(event);
+  const cardStatus = statusFor(event);
   const dt = getEventCardDateTime(
     event.starts_at,
     event.ends_at,
@@ -147,7 +161,11 @@ export function EventCard({ event }: { event: UserPostType }) {
         {showImage ? (
           <Image
             source={{ uri: flyer }}
-            style={{ width: "100%", height: "100%" }}
+            style={{
+              width: "100%",
+              height: "100%",
+              opacity: cardStatus?.inactive ? 0.72 : 1,
+            }}
             contentFit="cover"
             transition={150}
             recyclingKey={event.id}
@@ -182,11 +200,10 @@ export function EventCard({ event }: { event: UserPostType }) {
           />
         </View>
 
-        {overlay ? (
-          <CardStatusOverlay
-            label={overlay.label}
-            canceled={overlay.canceled}
-          />
+        {cardStatus ? (
+          <View className="absolute bottom-2.5 left-2.5">
+            <StatusPill status={cardStatus.status} variant="plain" />
+          </View>
         ) : null}
       </View>
 

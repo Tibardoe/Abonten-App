@@ -54,6 +54,7 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
         <Row label="Category" value={w.category ?? "—"} />
         <Row label="Types" value={w.types.join(", ")} />
         <Row label="When" value={when} />
+        {w.venuePlace ? <Row label="Venue" value={w.venuePlace.name} /> : null}
         <Row label="Location" value={w.address} />
         {w.capacity ? <Row label="Capacity" value={w.capacity} /> : null}
         <Row label="Ticketing" value={ticketing} />

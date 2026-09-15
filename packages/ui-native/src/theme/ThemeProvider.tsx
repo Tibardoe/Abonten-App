@@ -27,6 +27,12 @@ type ThemeContextValue = {
   preference: ThemePreference;
   /** The concrete scheme in effect right now ("system" resolved against the OS). */
   scheme: ColorScheme;
+  /**
+   * False until the saved preference has been read back. The root holds the
+   * branded splash until this is true, so a person who chose Dark never
+   * sees a light first frame (or the reverse) before the preference lands.
+   */
+  ready: boolean;
   /** Concrete `hsl(...)` colour map for `scheme`, for the rare non-className need. */
   colors: ThemeColors;
   setPreference: (next: ThemePreference) => void;
@@ -37,6 +43,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { colorScheme, setColorScheme } = useNativewindColorScheme();
   const [preference, setPreferenceState] = useState<ThemePreference>("system");
+  const [ready, setReady] = useState(false);
 
   // Restore the saved preference once on mount.
   useEffect(() => {
@@ -53,6 +60,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         // No stored preference / SecureStore unavailable — stay on "system".
+      } finally {
+        if (!cancelled) setReady(true);
       }
     })();
     return () => {
@@ -72,8 +81,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const scheme: ColorScheme = colorScheme === "dark" ? "dark" : "light";
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ preference, scheme, colors: themeColors(scheme), setPreference }),
-    [preference, scheme, setPreference],
+    () => ({
+      preference,
+      scheme,
+      ready,
+      colors: themeColors(scheme),
+      setPreference,
+    }),
+    [preference, scheme, ready, setPreference],
   );
 
   return (

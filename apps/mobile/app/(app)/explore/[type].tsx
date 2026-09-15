@@ -139,12 +139,7 @@ export default function ExploreSectionScreen() {
           keyExtractor={(e) => e.id}
           renderItem={({ item }) => <EventCard event={item} />}
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
-          refreshControl={
-            <Refresher
-              refreshing={query.isRefetching}
-              onRefresh={() => query.refetch()}
-            />
-          }
+          refreshControl={<Refresher onRefresh={() => query.refetch()} />}
           ListEmptyComponent={
             <EmptyState
               icon="calendar-outline"
@@ -169,12 +164,7 @@ export default function ExploreSectionScreen() {
           keyExtractor={(p) => p.id}
           renderItem={({ item }) => <PlaceCard place={item} />}
           contentContainerClassName="gap-4 px-4 pb-16 pt-3"
-          refreshControl={
-            <Refresher
-              refreshing={query.isRefetching}
-              onRefresh={() => query.refetch()}
-            />
-          }
+          refreshControl={<Refresher onRefresh={() => query.refetch()} />}
           ListEmptyComponent={
             <EmptyState
               icon="location-outline"

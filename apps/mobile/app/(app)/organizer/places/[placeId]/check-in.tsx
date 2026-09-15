@@ -45,9 +45,7 @@ export default function PlaceCheckInScreen() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-5 p-4 pb-16"
-      refreshControl={
-        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
-      }
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
     >
       {q.isLoading ? (
         <View className="items-center py-12">

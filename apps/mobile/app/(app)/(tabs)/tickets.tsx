@@ -73,12 +73,7 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
       contentContainerClassName="gap-3 px-4 pb-16 pt-3"
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
-      refreshControl={
-        <Refresher
-          refreshing={q.isRefetching && !q.isFetchingNextPage}
-          onRefresh={() => q.refetch()}
-        />
-      }
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
         <EmptyState
           icon={q.isError ? "cloud-offline-outline" : "receipt-outline"}

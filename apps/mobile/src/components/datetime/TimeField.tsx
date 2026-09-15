@@ -62,16 +62,43 @@ function Wheel<T>({
 }) {
   const c = useThemeColors();
   const ref = useRef<ScrollView>(null);
-  // Keep the wheel aligned when the value changes from outside a drag.
+  // The index this wheel last reported from its own scrolling, so the
+  // "align to an external value" effect below can tell a programmatic
+  // change (open the sheet on 6:05) from the echo of its own report.
+  const reported = useRef(index);
+  // A drag released with no fling never fires onMomentumScrollEnd; a drag
+  // released WITH a fling fires it later. The settle timer covers the first
+  // case and is cancelled by onMomentumScrollBegin for the second.
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
+    if (reported.current === index) return;
+    reported.current = index;
     ref.current?.scrollTo({ y: index * ITEM_H, animated: false });
   }, [index]);
 
-  function settle(e: NativeSyntheticEvent<NativeScrollEvent>) {
-    const raw = Math.round(e.nativeEvent.contentOffset.y / ITEM_H);
+  useEffect(
+    () => () => {
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+    },
+    [],
+  );
+
+  // Commit whichever row the wheel has come to rest on. Only ever called
+  // once the scroll has genuinely stopped: settling from onScrollEndDrag
+  // while a fling was still in flight used to call scrollTo mid-momentum,
+  // and the two motions fought — the wheel shot off at full speed and could
+  // not be caught until the sheet was reopened.
+  function settle(offsetY: number) {
+    const raw = Math.round(offsetY / ITEM_H);
     const next = Math.max(0, Math.min(data.length - 1, raw));
-    if (next !== index) onIndex(next);
-    ref.current?.scrollTo({ y: next * ITEM_H, animated: true });
+    if (next !== reported.current) {
+      reported.current = next;
+      onIndex(next);
+    }
+    if (Math.abs(offsetY - next * ITEM_H) > 0.5) {
+      ref.current?.scrollTo({ y: next * ITEM_H, animated: true });
+    }
   }
 
   return (
@@ -80,10 +107,25 @@ function Wheel<T>({
       style={{ width, height: VISIBLE * ITEM_H }}
       showsVerticalScrollIndicator={false}
       snapToInterval={ITEM_H}
+      snapToAlignment="start"
       decelerationRate="fast"
-      onMomentumScrollEnd={settle}
-      onScrollEndDrag={settle}
+      bounces={false}
+      overScrollMode="never"
+      onMomentumScrollBegin={() => {
+        if (settleTimer.current) clearTimeout(settleTimer.current);
+        settleTimer.current = null;
+      }}
+      onMomentumScrollEnd={(e) => settle(e.nativeEvent.contentOffset.y)}
+      onScrollEndDrag={(e) => {
+        const y = e.nativeEvent.contentOffset.y;
+        if (settleTimer.current) clearTimeout(settleTimer.current);
+        settleTimer.current = setTimeout(() => {
+          settleTimer.current = null;
+          settle(y);
+        }, 160);
+      }}
       contentContainerStyle={{ paddingVertical: PAD }}
+      contentOffset={{ x: 0, y: index * ITEM_H }}
     >
       {data.map((v, i) => (
         <View

@@ -1,4 +1,9 @@
-import { AppText, Icon, type IoniconName } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  type IoniconName,
+  runAfterModalDismissal,
+} from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useEffect } from "react";
 import {
@@ -157,7 +162,10 @@ export function AnchoredMenu({
                   accessibilityLabel={item.label}
                   onPress={() => {
                     onClose();
-                    item.onPress();
+                    // The menu is a Modal that unmounts on close; an item
+                    // that opens a sheet (Report) must wait for that
+                    // dismissal or the two modals race on iOS.
+                    runAfterModalDismissal(item.onPress);
                   }}
                   android_ripple={{ color: c.accent }}
                   style={({ pressed }) => ({

@@ -245,15 +245,13 @@ export default function OrganizerFinanceScreen() {
       onEndReachedThreshold={0.5}
       refreshControl={
         <Refresher
-          refreshing={
-            (finance.isRefetching || ledger.isRefetching) &&
-            !ledger.isFetchingNextPage
+          onRefresh={() =>
+            Promise.all([
+              finance.refetch(),
+              ledger.refetch(),
+              promotionCredit.refetch(),
+            ])
           }
-          onRefresh={() => {
-            finance.refetch();
-            ledger.refetch();
-            promotionCredit.refetch();
-          }}
         />
       }
       ListEmptyComponent={

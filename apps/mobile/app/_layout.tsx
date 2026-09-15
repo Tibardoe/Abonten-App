@@ -18,7 +18,7 @@ import { Sentry, initSentry, navigationIntegration } from "@/lib/sentry";
 import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { ToastProvider } from "@abonten/ui-native";
 import { I18nProvider } from "@abonten/ui-native/i18n";
-import { ThemeProvider } from "@abonten/ui-native/theme";
+import { ThemeProvider, useTheme } from "@abonten/ui-native/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import {
@@ -31,6 +31,7 @@ import {
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -96,20 +97,30 @@ function useProtectedRoute() {
 
 function RootNavigator() {
   const initializing = useProtectedRoute();
+  const { ready: themeReady, colors } = useTheme();
+  const booting = initializing || !themeReady;
 
   useEffect(() => {
-    if (!initializing) SplashScreen.hideAsync().catch(() => {});
-  }, [initializing]);
+    if (!booting) SplashScreen.hideAsync().catch(() => {});
+  }, [booting]);
 
-  if (initializing) {
+  if (booting) {
     return <BrandedSplash />;
   }
 
+  // The themed ground under every navigator. React Navigation's containers
+  // and react-native-screens only paint a screen's own content; during a
+  // fast push/pop, a tab switch or an interrupted swipe-back the frame
+  // between two screens shows whatever is underneath — the bare RN root
+  // view, which is white. In dark mode that is a white flash; in light mode
+  // it is pure white against the off-white `background` token, a visibly
+  // wrong flash. Every navigator below also sets its own content style, but
+  // this one view is what guarantees the gap is never unpainted.
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Slot />
       <OfflineBanner />
-    </>
+    </View>
   );
 }
 

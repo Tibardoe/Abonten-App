@@ -1,3 +1,4 @@
+import { LinkText } from "@/components/LinkText";
 import {
   classifyEmojiOnly,
   emojiOnlyFontSize,
@@ -72,39 +73,96 @@ type Props = {
   onRetry: (clientGeneratedId: string) => void;
 };
 
-function StatusTicks({
+// Delivery state for an own message. Lives on a PRIMARY (teal) bubble, so
+// every glyph is drawn in the bubble's foreground colour — the previous
+// "primary" tint for a read receipt was teal-on-teal and effectively
+// invisible, and "muted" grey sat at ~2:1 against the fill. Read state is
+// carried by the double tick AND full opacity, unsent by the clock glyph,
+// failed by wording — never by colour alone.
+//   • sending  → clock, dimmed
+//   • sent     → single tick, dimmed
+//   • read     → double tick, full strength
+//   • failed   → alert + "Tap to retry" in the bubble's error colour
+const ON_PRIMARY = "rgba(255,255,255,0.92)";
+export const ON_PRIMARY_DIM = "rgba(255,255,255,0.62)";
+const ON_PRIMARY_ERROR = "#FFD9D9";
+
+export function StatusTicks({
   pending,
   seen,
   onRetry,
+  onPrimary,
 }: {
   pending?: OutboxMessage;
   seen: boolean;
   onRetry: () => void;
+  /** Rendered on the teal own-message bubble (true) or on a bare surface. */
+  onPrimary: boolean;
 }) {
+  const c = useThemeColors();
   if (pending?.status === "failed") {
+    const errorColor = onPrimary ? ON_PRIMARY_ERROR : c.destructive;
     return (
       <Pressable
         onPress={onRetry}
         hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel="Message not sent. Tap to retry"
         className="flex-row items-center gap-1"
       >
-        <Icon name="alert-circle" size={13} tone="destructive" />
-        <AppText variant="caption" tone="error" className="font-semibold">
+        <Icon name="alert-circle" size={14} color={errorColor} />
+        <AppText
+          variant="caption"
+          className="font-semibold"
+          style={{ color: errorColor }}
+        >
           Tap to retry
         </AppText>
       </Pressable>
     );
   }
+  const dim = onPrimary ? ON_PRIMARY_DIM : c["muted-foreground"];
+  const strong = onPrimary ? ON_PRIMARY : c.primary;
   if (pending?.status === "sending") {
-    return <Icon name="time-outline" size={13} tone="muted" />;
+    return (
+      <View accessible accessibilityLabel="Sending">
+        <Icon name="time-outline" size={14} color={dim} />
+      </View>
+    );
   }
   return (
-    <Icon
-      name={seen ? "checkmark-done" : "checkmark"}
-      size={14}
-      tone={seen ? "primary" : "muted"}
-    />
+    <View accessible accessibilityLabel={seen ? "Read" : "Sent"}>
+      <Icon
+        name={seen ? "checkmark-done" : "checkmark"}
+        size={16}
+        color={seen ? strong : dim}
+      />
+    </View>
   );
+}
+
+/** What a soft-deleted message shows in place of its content. */
+export function DeletedTombstone({ isMine }: { isMine: boolean }) {
+  return (
+    <View className="flex-row items-center gap-1.5 py-0.5">
+      <Icon name="ban-outline" size={15} tone="muted" />
+      <AppText variant="small" tone="muted" className="italic">
+        {isMine ? "You deleted this message" : "This message was deleted"}
+      </AppText>
+    </View>
+  );
+}
+
+/** Bubble geometry shared with the lifted clone (MessagePreviewCard). */
+export function bubbleShapeClass(isMine: boolean, deleted: boolean): string {
+  if (deleted) {
+    return `rounded-[18px] border border-dashed border-border bg-transparent px-3.5 py-2 ${
+      isMine ? "rounded-br-[5px]" : "rounded-bl-[5px]"
+    }`;
+  }
+  return `rounded-[18px] px-3.5 py-2 ${
+    isMine ? "rounded-br-[5px] bg-primary" : "rounded-bl-[5px] bg-secondary"
+  }`;
 }
 
 // Exposed to assistive tech as the accessible equivalent of a long press.
@@ -192,7 +250,7 @@ export const MessageBubble = memo(function MessageBubble({
   // What VoiceOver / TalkBack reads for the bubble. Attachment-only messages
   // have no text, so name the kind instead of announcing an empty bubble.
   const a11yLabel = deleted
-    ? "Deleted message"
+    ? `${isMine ? "You" : "They"} deleted a message, ${clockTime(message.created_at)}`
     : `${isMine ? "You" : "Them"}: ${
         message.content ||
         (isAudio
@@ -274,6 +332,11 @@ export const MessageBubble = memo(function MessageBubble({
     };
   });
 
+  // Timestamp / "edited" colour: dimmed white on the teal bubble, the
+  // muted token everywhere else (incoming bubbles and deleted tombstones).
+  const footerColor =
+    isMine && !deleted ? ON_PRIMARY_DIM : c["muted-foreground"];
+
   const bubbleBody = (
     <>
       {message.reply_to ? (
@@ -289,12 +352,7 @@ export const MessageBubble = memo(function MessageBubble({
       ) : null}
 
       {deleted ? (
-        <AppText
-          variant="body"
-          className={`italic ${isMine ? "text-primary-foreground/80" : "text-muted-foreground"}`}
-        >
-          This message was deleted
-        </AppText>
+        <DeletedTombstone isMine={isMine} />
       ) : isAudio ? (
         pending ? (
           <View
@@ -381,14 +439,17 @@ export const MessageBubble = memo(function MessageBubble({
           ) : null}
 
           {message.content ? (
-            <AppText
+            <LinkText
+              text={message.content}
               variant="body"
               className={`text-[16px] leading-[22px] ${
                 isMine ? "text-primary-foreground " : ""
               }${hasImages ? "mt-1.5" : ""}`}
-            >
-              {message.content}
-            </AppText>
+              // A link on the teal bubble stays white (underlined) so it is
+              // legible on the fill; on the grey bubble it takes the brand
+              // colour like every other link in the app.
+              linkStyle={isMine ? undefined : { color: c.primary }}
+            />
           ) : null}
         </>
       )}
@@ -399,18 +460,16 @@ export const MessageBubble = memo(function MessageBubble({
         beside the timestamp — without wrapping it clipped to "Tap to", hiding
         the one instruction that recovers the message.
       */}
-      <View className="mt-0.5 flex-row flex-wrap items-center justify-end gap-1">
+      <View className="mt-1 flex-row flex-wrap items-center justify-end gap-1">
         {message.edited_at && !deleted ? (
-          <AppText
-            variant="caption"
-            className={isMine ? "text-primary-foreground/70" : undefined}
-          >
-            edited
+          <AppText variant="caption" style={{ color: footerColor }}>
+            edited ·
           </AppText>
         ) : null}
         <AppText
           variant="caption"
-          className={isMine ? "text-primary-foreground/70" : undefined}
+          className="font-medium"
+          style={{ color: footerColor }}
         >
           {clockTime(message.created_at)}
         </AppText>
@@ -418,6 +477,7 @@ export const MessageBubble = memo(function MessageBubble({
           <StatusTicks
             pending={pending}
             seen={seen}
+            onPrimary
             onRetry={() => onRetry(message.client_generated_id ?? message.id)}
           />
         ) : null}
@@ -444,6 +504,7 @@ export const MessageBubble = memo(function MessageBubble({
           <StatusTicks
             pending={pending}
             seen={seen}
+            onPrimary={false}
             onRetry={() => onRetry(message.client_generated_id ?? message.id)}
           />
         ) : null}
@@ -454,11 +515,12 @@ export const MessageBubble = memo(function MessageBubble({
   // iMessage bubble geometry: continuous ~18px corners, a small 5px "tail"
   // corner on the sender's side, ~14/8 padding, and — for incoming — a flat
   // grey fill with NO border and NO shadow.
+  // A deleted message is a tombstone, not a message: it loses the sender's
+  // fill on BOTH sides and reads as a dashed, muted placeholder so it can
+  // never be mistaken for something someone actually said.
   const bubbleClassName = emoji.emojiOnly
     ? "max-w-[88%] px-1 py-0.5"
-    : `min-w-[52px] max-w-[85%] rounded-[18px] px-3.5 py-2 ${
-        isMine ? "rounded-br-[5px] bg-primary" : "rounded-bl-[5px] bg-secondary"
-      }`;
+    : `min-w-[52px] max-w-[85%] ${bubbleShapeClass(isMine, deleted)}`;
 
   const body = emoji.emojiOnly ? emojiBody : bubbleBody;
 

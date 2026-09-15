@@ -408,15 +408,7 @@ export default function Rewards() {
         renderItem={({ item }) => <ActivityRow item={item} />}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        refreshControl={
-          <Refresher
-            refreshing={
-              (summary.isRefetching || activity.isRefetching) &&
-              !activity.isFetchingNextPage
-            }
-            onRefresh={refresh}
-          />
-        }
+        refreshControl={<Refresher onRefresh={refresh} />}
         ListEmptyComponent={
           activity.isLoading ? null : (
             <AppText variant="muted" className="py-8 text-center">

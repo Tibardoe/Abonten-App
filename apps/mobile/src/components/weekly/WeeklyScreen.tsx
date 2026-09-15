@@ -188,12 +188,7 @@ export function WeeklyScreen({
       ) : (
         <ScrollView
           contentContainerClassName="gap-7 pt-4 pb-16"
-          refreshControl={
-            <Refresher
-              refreshing={query.isRefetching}
-              onRefresh={() => query.refetch()}
-            />
-          }
+          refreshControl={<Refresher onRefresh={() => query.refetch()} />}
         >
           {doc ? (
             <>

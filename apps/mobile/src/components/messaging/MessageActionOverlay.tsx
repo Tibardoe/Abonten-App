@@ -107,9 +107,11 @@ export function MessageActionOverlay({
         onDismiss={onDismiss}
         actions={actions}
         align={isMine ? "end" : "start"}
-        // Safety clamp only — real bubbles are max-80% so the lifted clone keeps
-        // the bubble's exact width and horizontal position (spec §8).
-        maxPreviewWidth={screen.width * 0.94}
+        // Real bubbles are max-w-[85%] of the thread's inner width (screen
+        // minus the 12px row padding each side); the clone gets the same cap
+        // so its text wraps identically and it keeps the bubble's exact
+        // width and horizontal position (spec §8).
+        maxPreviewWidth={(screen.width - 24) * 0.85}
         a11yPreviewLabel="Selected message"
         renderAccessory={
           message

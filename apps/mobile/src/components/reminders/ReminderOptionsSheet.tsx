@@ -11,6 +11,7 @@ import { Pressable, View } from "react-native";
 export function ReminderOptionsSheet({
   open,
   onClose,
+  onDismiss,
   offsets,
   saving,
   onSave,
@@ -18,6 +19,8 @@ export function ReminderOptionsSheet({
 }: {
   open: boolean;
   onClose: () => void;
+  /** Forwarded to <Sheet> — fires once the sheet has fully left the screen. */
+  onDismiss?: () => void;
   offsets: number[];
   saving: boolean;
   onSave: (draft: number[]) => void;
@@ -37,7 +40,12 @@ export function ReminderOptionsSheet({
   const active = offsets.length > 0;
 
   return (
-    <Sheet open={open} onClose={onClose} title="Remind me">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      onDismiss={onDismiss}
+      title="Remind me"
+    >
       <View className="gap-2">
         <AppText variant="muted">
           Pick when to be reminded. Notifications fire even if the app is

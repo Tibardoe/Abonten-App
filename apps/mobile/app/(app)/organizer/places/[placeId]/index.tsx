@@ -1,12 +1,29 @@
+import { EventCard, EventCardSkeleton } from "@/components/EventCard";
 import { usePlaceInsights } from "@/features/organizer/useOrganizerPlaces";
+import { usePlaceUpcomingEvents } from "@/features/places/usePlaceExtras";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
-import { AppText, Overline, Refresher } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  Overline,
+  Refresher,
+  SectionTitle,
+} from "@abonten/ui-native";
+import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Link, useLocalSearchParams } from "expo-router";
-import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 // Per-place management landing — the Insights tab of the web ManagePlaceView
-// (ManagePlaceInsightsSection stat tiles), plus links to the other tabs as
-// they land.
+// (ManagePlaceInsightsSection stat tiles), the place's upcoming events with
+// an "Add an event here" entry into the event wizard (the web view's
+// "+ Add Upcoming Event", which opens EventUploadModal with the place
+// pre-selected), plus links to the other tabs.
 
 const TILES: { key: string; label: string }[] = [
   { key: "view", label: "Place Views" },
@@ -35,13 +52,18 @@ export default function PlaceManageScreen() {
 
   const result = q.data;
   const insights = result && result.status === 200 ? result.data : null;
+  const upcoming = usePlaceUpcomingEvents(id || undefined);
+  const upcomingEvents = upcoming.data ?? [];
+  const cardWidth = useCarouselCardWidth();
 
   return (
     <ScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-6 p-4 pb-16"
       refreshControl={
-        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
+        <Refresher
+          onRefresh={() => Promise.all([q.refetch(), upcoming.refetch()])}
+        />
       }
     >
       {q.isLoading ? (
@@ -74,6 +96,57 @@ export default function PlaceManageScreen() {
           ))}
         </View>
       )}
+
+      {id ? (
+        <View className="gap-3">
+          <View className="flex-row items-center justify-between">
+            <SectionTitle>Upcoming events</SectionTitle>
+            <Link
+              href={{ pathname: "/(app)/event/new", params: { placeId: id } }}
+              asChild
+            >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add an event at this place"
+                className="min-h-[36px] flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5 active:opacity-90"
+              >
+                <Icon name="add" size={16} tone="inverse" />
+                <AppText className="text-[13px] font-semibold text-primary-foreground">
+                  Add event
+                </AppText>
+              </Pressable>
+            </Link>
+          </View>
+          {upcoming.isLoading ? (
+            <View style={{ width: cardWidth }}>
+              <EventCardSkeleton />
+            </View>
+          ) : upcomingEvents.length > 0 ? (
+            <FlatList
+              horizontal
+              data={upcomingEvents}
+              keyExtractor={(e) => e.id}
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName="gap-3"
+              renderItem={({ item }) => (
+                <View style={{ width: cardWidth }}>
+                  <EventCard event={item} />
+                </View>
+              )}
+            />
+          ) : (
+            <View className="gap-1 rounded-xl border border-dashed border-border p-4">
+              <AppText variant="bodyStrong">
+                No upcoming events here yet
+              </AppText>
+              <AppText variant="muted">
+                Events you or other organizers pin to this place show up on its
+                public page. Tap Add event to post one.
+              </AppText>
+            </View>
+          )}
+        </View>
+      ) : null}
 
       {id ? (
         <View className="gap-2">

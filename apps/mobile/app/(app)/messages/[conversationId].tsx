@@ -432,6 +432,13 @@ export default function ConversationScreen() {
         // keyboard. Measured on an Android 15 device: composer at
         // y=2266..2373 on a 2400px screen with the keyboard covering
         // everything below ~1524, so you could not see what you typed.
+        //
+        // KAV measures its own frame against the keyboard's screen Y on
+        // every frame change (will-change-frame on iOS, did-show on
+        // Android), which is what keeps this right under edge-to-edge and
+        // the gesture bar. The "blank band above the keyboard after a long
+        // paste was sent" was the composer's TextInput keeping its grown
+        // height, fixed in Composer.tsx, not KAV.
         behavior="padding"
         keyboardVerticalOffset={0}
       >
@@ -482,9 +489,6 @@ export default function ConversationScreen() {
               }}
               refreshControl={
                 <Refresher
-                  refreshing={
-                    messagesQ.isRefetching && !messagesQ.isFetchingNextPage
-                  }
                   onRefresh={() => messagesQ.refetch()}
                   tintColor={c["muted-foreground"]}
                 />

@@ -257,16 +257,32 @@ export function useUploadHighlights(
   });
 }
 
+// Optimistic: the group leaves the strip the moment Delete is confirmed
+// (the request itself takes a second or two — Cloudinary asset destruction
+// runs server-side), and comes back only if the server refuses. A refetch
+// then reconciles either way.
 export function useDeleteHighlightGroup(userId: string | undefined) {
   const qc = useQueryClient();
+  const key = ["profile", "highlights", userId] as const;
   return useMutation({
     mutationFn: async (groupId: string) => {
       const res = await api.highlights.deleteGroup(groupId);
       if (res.status !== 200) throw new Error(res.message);
       return res;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["profile", "highlights", userId] });
+    onMutate: async (groupId) => {
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<HighlightGroup[]>(key);
+      qc.setQueryData<HighlightGroup[]>(key, (groups) =>
+        groups?.filter((g) => g[0]?.group_id !== groupId),
+      );
+      return { previous };
+    },
+    onError: (_e, _groupId, ctx) => {
+      if (ctx?.previous) qc.setQueryData(key, ctx.previous);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: key });
     },
   });
 }

@@ -29,9 +29,15 @@ import { useToast } from "@abonten/ui-native";
 // All state, validation and submit logic for the native event-creation
 // wizard — the mobile echo of the web useEventUploadForm hook. Publishes an
 // event, and (WP-4g-2) saves / resumes a draft against the same
-// drafts/event_drafts rows the web saveEventDraft action writes. The
-// optional Abonten-Place venue picker is deferred (placeId stays null, as
-// it is for most web events).
+// drafts/event_drafts rows the web saveEventDraft action writes.
+//
+// Venue: like the web form's PlaceSearchSelect, the Location step can pin
+// the event to one of the organizer's own Abonten Places (`venuePlace`),
+// which fills the address + coordinates and sends `placeId` so the event
+// appears under "Upcoming events here" on that place's page. Opened from
+// Manage Place › "Add an event here", the place is pre-selected. Every
+// event created from this wizard used to send `placeId: null`, so a place
+// owner's own events never showed on their place.
 
 const isRemote = (uri: string | null): boolean =>
   !!uri && /^https?:/i.test(uri);
@@ -86,7 +92,18 @@ export type EventWizardTextErrors = Partial<
   Record<"title" | "description" | "website_url" | "capacity", string>
 >;
 
-export function useEventWizard(resumeDraftId?: string) {
+export type VenuePlace = {
+  id: string;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+};
+
+export function useEventWizard(
+  resumeDraftId?: string,
+  options: { preselectedPlace?: VenuePlace | null } = {},
+) {
   const toast = useToast();
   const autocomplete = usePlacesAutocomplete();
   const create = useEventCreate();
@@ -153,6 +170,9 @@ export function useEventWizard(resumeDraftId?: string) {
     null,
   );
   const [resolvingLocation, setResolvingLocation] = useState(false);
+  // The Abonten Place this event happens at, if any (see the header note).
+  const [venuePlace, setVenuePlaceState] = useState<VenuePlace | null>(null);
+  const preselectApplied = useRef(false);
 
   // tickets
   const [ticketMode, setTicketMode] = useState<TicketMode>("single");
@@ -240,6 +260,7 @@ export function useEventWizard(resumeDraftId?: string) {
   }
 
   async function pickSuggestion(placeId: string) {
+    setVenuePlaceState(null);
     setResolvingLocation(true);
     const resolved = await autocomplete.resolvePlace(placeId);
     setResolvingLocation(false);
@@ -253,6 +274,7 @@ export function useEventWizard(resumeDraftId?: string) {
   }
 
   async function useCurrentLocation() {
+    setVenuePlaceState(null);
     setResolvingLocation(true);
     try {
       const perm = await Location.requestForegroundPermissionsAsync();
@@ -282,7 +304,29 @@ export function useEventWizard(resumeDraftId?: string) {
     }
   }
 
+  // Pinning a venue fills the address from the place; changing the address
+  // any other way (typing, map, GPS) unpins it, so the two can never
+  // disagree — same rule as the web form's clearSelectedPlace.
+  function setVenuePlace(place: VenuePlace | null) {
+    setVenuePlaceState(place);
+    if (place) {
+      setAddress(place.address);
+      autocomplete.setQuery(place.address);
+      autocomplete.clear();
+      setCoords({ lat: place.lat, lng: place.lng });
+    }
+  }
+
+  const preselectedPlace = options.preselectedPlace ?? null;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the preselected venue is applied exactly once, by id; setVenuePlace is a stable closure over state setters
+  useEffect(() => {
+    if (!preselectedPlace || preselectApplied.current) return;
+    preselectApplied.current = true;
+    setVenuePlace(preselectedPlace);
+  }, [preselectedPlace?.id]);
+
   function setMapLocation(loc: { lat: number; lng: number; label: string }) {
+    setVenuePlaceState(null);
     applyLocation(loc.lat, loc.lng, loc.label);
   }
 
@@ -739,7 +783,7 @@ export function useEventWizard(resumeDraftId?: string) {
         specificDates: schedule.specificDates ?? null,
         ...tickets.body,
         promoCodes: buildPromos(),
-        placeId: null,
+        placeId: venuePlace?.id ?? null,
       });
     } finally {
       uploadProgress.reset();
@@ -876,6 +920,8 @@ export function useEventWizard(resumeDraftId?: string) {
     pickSuggestion,
     useCurrentLocation,
     setMapLocation,
+    venuePlace,
+    setVenuePlace,
     // tickets
     ticketMode,
     setTicketMode,

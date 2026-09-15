@@ -45,8 +45,16 @@ function Scrim() {
   );
 }
 
-export function FeaturedEventBanner({ event }: { event: UserPostType }) {
+export function FeaturedEventBanner({
+  event,
+  height = BANNER_HEIGHT,
+}: {
+  event: UserPostType;
+  /** Override the hero height (DiscoveryHero's compact row). */
+  height?: number;
+}) {
   const router = useRouter();
+  const compact = height < BANNER_HEIGHT;
 
   const flyer =
     event.flyer_public_id && event.flyer_version
@@ -68,7 +76,7 @@ export function FeaturedEventBanner({ event }: { event: UserPostType }) {
       accessibilityLabel={`Featured event: ${event.title}`}
       onPress={() => router.push(`/(app)/event/${event.id}`)}
       className="overflow-hidden rounded-2xl bg-muted active:opacity-95"
-      style={{ height: BANNER_HEIGHT }}
+      style={{ height }}
     >
       {flyer ? (
         <Image
@@ -93,14 +101,16 @@ export function FeaturedEventBanner({ event }: { event: UserPostType }) {
 
       <View className="absolute inset-x-0 bottom-0 gap-2 p-4">
         {/* Web Banner's "Most Anticipated" tag above the title. */}
-        <View
-          className="self-start rounded-full px-2.5 py-1"
-          style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
-        >
-          <AppText className="text-[11px] font-medium text-white">
-            Most Anticipated
-          </AppText>
-        </View>
+        {compact ? null : (
+          <View
+            className="self-start rounded-full px-2.5 py-1"
+            style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
+          >
+            <AppText className="text-[11px] font-medium text-white">
+              Most Anticipated
+            </AppText>
+          </View>
+        )}
 
         <AppText
           className="text-[17px] font-bold leading-[22px] text-white"
@@ -145,12 +155,14 @@ export function FeaturedEventBanner({ event }: { event: UserPostType }) {
               {priceLabel(event)}
             </AppText>
           </View>
-          <View className="flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5">
-            <AppText className="text-[13px] font-semibold text-primary-foreground">
-              View details
-            </AppText>
-            <Icon name="arrow-forward" size={13} tone="inverse" />
-          </View>
+          {compact ? null : (
+            <View className="flex-row items-center gap-1 rounded-lg bg-primary px-3 py-1.5">
+              <AppText className="text-[13px] font-semibold text-primary-foreground">
+                View details
+              </AppText>
+              <Icon name="arrow-forward" size={13} tone="inverse" />
+            </View>
+          )}
         </View>
       </View>
     </Pressable>

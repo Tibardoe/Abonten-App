@@ -44,9 +44,7 @@ export default function PayoutsScreen() {
       keyExtractor={(r) => r.id}
       renderItem={({ item }) => <PayoutRow row={item} />}
       contentContainerClassName="gap-3 p-4 pb-16"
-      refreshControl={
-        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
-      }
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
         <AppText className="mt-10 text-center text-sm text-muted-foreground">
           {failed ? "Couldn't load payouts." : "No withdrawals yet."}

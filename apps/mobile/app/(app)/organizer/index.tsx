@@ -234,11 +234,7 @@ export default function OrganizerDashboard() {
       contentContainerClassName="gap-5 p-4 pb-12"
       refreshControl={
         <Refresher
-          refreshing={q.isRefetching || widgetsQuery.isRefetching}
-          onRefresh={() => {
-            q.refetch();
-            widgetsQuery.refetch();
-          }}
+          onRefresh={() => Promise.all([q.refetch(), widgetsQuery.refetch()])}
         />
       }
     >

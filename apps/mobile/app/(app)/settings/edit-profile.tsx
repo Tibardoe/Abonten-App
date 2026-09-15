@@ -77,13 +77,16 @@ export default function EditProfile() {
     }
   }
 
-  // Seed the form once the profile loads.
+  // Seed the form once the profile loads. `website` is seeded too: it used
+  // to start empty regardless of what was saved, so the field never showed
+  // an existing website and every save from the app wrote "" over one that
+  // had been set on the web.
   useEffect(() => {
     if (profile) {
       setForm({
         username: profile.username ?? "",
         full_name: profile.full_name ?? "",
-        website: "",
+        website: profile.website ?? "",
         bio: profile.bio ?? "",
       });
     }
@@ -95,7 +98,7 @@ export default function EditProfile() {
       form.username !== (profile.username ?? "") ||
       form.full_name !== (profile.full_name ?? "") ||
       form.bio !== (profile.bio ?? "") ||
-      form.website !== ""
+      form.website !== (profile.website ?? "")
     );
   }, [form, profile]);
 
