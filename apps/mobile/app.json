@@ -137,7 +137,7 @@
           "locationWhenInUsePermission": "Abonten uses your location to show events and places near you, to help you pick a venue on the map, and to record a visit when you check in at a place.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": false
+          "motionUsagePermission": "Abonten does not use motion and fitness data. This description is required because the location component the app is built with includes optional motion-activity support, which Abonten never turns on."
         }
       ],
       "expo-video",
