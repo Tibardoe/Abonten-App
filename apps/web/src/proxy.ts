@@ -136,10 +136,13 @@ export const config = {
      *   /api/maintenance/storage-purge with its token -- same as above)
      * - robots.txt / sitemap.xml (crawlers carry no cookie; both are
      *   public metadata routes)
+     * - push-sw.js (the web push service worker: browsers refuse a
+     *   redirected worker script, and re-check it signed out too -- a
+     *   redirect to /auth/signin broke registration and updates)
      * Feel free to modify this pattern to include more paths.
      */
     // "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|push-sw.js|api/mobile|api/observability|api/notifications|api/maintenance|api/paystack/webhook|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff2)$).*)",
     //  '/((?!api|trpc|_next|_vercel|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
