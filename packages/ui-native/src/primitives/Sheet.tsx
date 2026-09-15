@@ -62,6 +62,13 @@ import { useKeyboardHeight } from "./useKeyboard";
 export type SheetProps = {
   open: boolean;
   onClose: () => void;
+  /**
+   * Fires once the sheet has FULLY left the screen (the native dismissal
+   * has finished). Open another modal / sheet / viewer from here, never from
+   * `onClose` — see useModalHandoff.ts for why presenting one modal while
+   * another is still dismissing freezes the app on iOS.
+   */
+  onDismiss?: () => void;
   title?: string;
   /** When set, a back chevron shows left of the title (multi-step sheets). */
   onBack?: () => void;
@@ -81,6 +88,7 @@ export type SheetProps = {
 export function Sheet({
   open,
   onClose,
+  onDismiss,
   title,
   onBack,
   footer,
@@ -108,6 +116,21 @@ export function Sheet({
     // reopen already pushed off the bottom of the screen.
     else dragY.value = 0;
   }, [open, dragY]);
+
+  // `Modal.onDismiss` is iOS-only. On Android the dialog is gone the moment
+  // `visible` flips, so report the dismissal after the slide-out animation
+  // has had time to finish — same contract for callers on both platforms.
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (Platform.OS === "ios") return;
+    const closing = wasOpen.current && !open;
+    wasOpen.current = open;
+    if (!closing) return;
+    const t = setTimeout(() => onDismissRef.current?.(), 260);
+    return () => clearTimeout(t);
+  }, [open]);
 
   const dragStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: dragY.value }],
@@ -176,6 +199,7 @@ export function Sheet({
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      onDismiss={Platform.OS === "ios" ? onDismiss : undefined}
       statusBarTranslucent
     >
       <GestureHandlerRootView style={{ flex: 1, justifyContent: "flex-end" }}>

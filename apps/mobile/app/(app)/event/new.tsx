@@ -12,6 +12,7 @@ import { EventWizardTickets } from "@/components/events/EventWizardTickets";
 import { FormSkeleton } from "@/components/skeletons";
 import { useEventDrafts } from "@/features/events/useEventDrafts";
 import { useEventWizard } from "@/features/events/useEventWizard";
+import { useVenuePlaces } from "@/features/events/useVenuePlaces";
 import {
   AppText,
   Hero,
@@ -57,9 +58,18 @@ const BASICS_STEP = 1;
 
 export default function CreateEventScreen() {
   const router = useRouter();
-  const { draftId } = useLocalSearchParams<{ draftId?: string }>();
+  const { draftId, placeId } = useLocalSearchParams<{
+    draftId?: string;
+    placeId?: string;
+  }>();
   const toast = useToast();
-  const w = useEventWizard(draftId);
+  // Opened from Manage Place › "Add an event here": pre-pin that venue once
+  // the organizer's own places have loaded.
+  const venues = useVenuePlaces(!!placeId);
+  const preselectedPlace = placeId
+    ? (venues.find((v) => v.id === placeId) ?? null)
+    : null;
+  const w = useEventWizard(draftId, { preselectedPlace });
   const draftsList = useEventDrafts();
   const draftCount =
     draftsList.data?.status === 200 ? draftsList.data.data.length : 0;

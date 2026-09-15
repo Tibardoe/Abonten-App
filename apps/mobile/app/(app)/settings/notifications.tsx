@@ -99,11 +99,7 @@ export default function NotificationSettings() {
         contentContainerClassName="gap-4 p-4 pb-16"
         refreshControl={
           <Refresher
-            refreshing={prefs.isRefetching || subs.isRefetching}
-            onRefresh={() => {
-              prefs.refetch();
-              subs.refetch();
-            }}
+            onRefresh={() => Promise.all([prefs.refetch(), subs.refetch()])}
           />
         }
       >

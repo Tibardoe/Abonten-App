@@ -7,7 +7,11 @@ import type {
 } from "@abonten/api-client";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { applyReactionToCache } from "./cache";
+import {
+  applyReactionToCache,
+  findMessageInCache,
+  replaceMessageInCache,
+} from "./cache";
 import {
   adjustUnreadBadge,
   applyConversationPatch,
@@ -50,10 +54,32 @@ export function useEditMessage(conversationId: string) {
   });
 }
 
+// Optimistic: the bubble becomes its tombstone the moment Delete is
+// confirmed (the server round trip took several seconds on a slow link and
+// the message just sat there, so people tapped Delete again). A refused
+// delete restores the row; the refetch reconciles either way.
 export function useDeleteMessage(conversationId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (messageId: string) => api.messaging.remove({ messageId }),
+    onMutate: async (messageId) => {
+      const key = messagingKeys.messages(conversationId);
+      await qc.cancelQueries({ queryKey: key });
+      const previous = findMessageInCache(qc, conversationId, messageId);
+      if (previous) {
+        replaceMessageInCache(qc, conversationId, {
+          ...previous,
+          deleted_at: new Date().toISOString(),
+          content: null,
+          reactions: [],
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous)
+        replaceMessageInCache(qc, conversationId, ctx.previous);
+    },
     onSuccess: () => {
       qc.invalidateQueries({
         queryKey: messagingKeys.messages(conversationId),

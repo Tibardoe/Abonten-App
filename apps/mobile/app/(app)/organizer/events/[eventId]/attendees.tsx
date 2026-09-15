@@ -173,12 +173,7 @@ export default function EventAttendeesScreen() {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
-        refreshControl={
-          <Refresher
-            refreshing={q.isRefetching && !q.isFetchingNextPage}
-            onRefresh={() => q.refetch()}
-          />
-        }
+        refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
           <AppText className="mt-10 text-center text-sm text-muted-foreground">
             {failed

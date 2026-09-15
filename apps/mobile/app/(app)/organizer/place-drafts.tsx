@@ -102,9 +102,7 @@ export default function PlaceDraftsScreen() {
           Place drafts
         </AppText>
       }
-      refreshControl={
-        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
-      }
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
       ListEmptyComponent={
         q.isLoading ? (
           <ActivityIndicator className="mt-10" />

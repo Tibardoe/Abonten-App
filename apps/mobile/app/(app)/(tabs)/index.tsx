@@ -4,16 +4,14 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { ActiveFilterChips } from "@/components/explore/ActiveFilterChips";
 import { CategoryChipsRow } from "@/components/explore/CategoryChipsRow";
 import { ChangeLocationSheet } from "@/components/explore/ChangeLocationSheet";
+import { DiscoveryHero } from "@/components/explore/DiscoveryHero";
 import { ExploreMap } from "@/components/explore/ExploreMap";
 import {
   EventSliderRow,
   PlaceSliderRow,
 } from "@/components/explore/ExploreSliderRow";
-import { FeaturedEventsCarousel } from "@/components/explore/FeaturedEventsCarousel";
-import { FeaturedPlacesCarousel } from "@/components/explore/FeaturedPlacesCarousel";
 import { FilterSheet } from "@/components/explore/FilterSheet";
 import { ExploreSkeleton } from "@/components/skeletons";
-import { WeeklyTeaserCard } from "@/components/weekly/WeeklyTeaserCard";
 import { useExploreFilters } from "@/features/discovery/ExploreFiltersProvider";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import {
@@ -105,6 +103,11 @@ export default function Explore() {
   // is hidden further down; when a rating filter is set — a dimension the
   // events payload can't express — the whole curated block collapses and the
   // rating-aware "All" list carries the screen.
+  //
+  // Featured (paid placement) is the one exception: it is not a search
+  // result, so it is never filtered and is rendered by <DiscoveryHero> from
+  // the unfiltered slider data — a filter that matches nothing used to take
+  // the Featured banner down with it.
   const eventFilterCount = countActiveEventFilters(eventFilters);
   const placeFilterCount = countActivePlaceFilters(placeFilters);
   const curatedEventsSuppressed = eventFiltersNeedServerData(eventFilters);
@@ -115,7 +118,7 @@ export default function Explore() {
     const f = (list: UserPostType[]) =>
       filterEventList(list, eventFilters, coords);
     return {
-      featured: f(d.featured),
+      featured: d.featured,
       aroundYou: f(d.aroundYou),
       topRatedOrganizers: f(d.topRatedOrganizers),
       happeningToday: f(d.happeningToday),
@@ -129,7 +132,7 @@ export default function Explore() {
     if (placeFilterCount === 0) return d;
     const f = (list: PlaceType[]) => filterPlaceList(list, placeFilters);
     return {
-      featured: f(d.featured),
+      featured: d.featured,
       aroundYou: f(d.aroundYou),
       openNow: f(d.openNow),
       topRated: f(d.topRated),
@@ -185,7 +188,6 @@ export default function Explore() {
   const eventCuratedEmpty =
     eventFilterCount > 0 &&
     !curatedEventsSuppressed &&
-    eventSlidersFiltered.featured.length === 0 &&
     eventSlidersFiltered.aroundYou.length === 0 &&
     eventSlidersFiltered.topRatedOrganizers.length === 0 &&
     eventSlidersFiltered.happeningToday.length === 0 &&
@@ -194,7 +196,6 @@ export default function Explore() {
 
   const placeCuratedEmpty =
     placeFilterCount > 0 &&
-    placeSlidersFiltered.featured.length === 0 &&
     placeSlidersFiltered.aroundYou.length === 0 &&
     placeSlidersFiltered.openNow.length === 0 &&
     placeSlidersFiltered.topRated.length === 0;
@@ -207,12 +208,6 @@ export default function Explore() {
         </Caption>
       ) : eventCuratedEmpty ? null : (
         <View>
-          {eventSlidersFiltered.featured.length > 0 ? (
-            <View className="gap-2 pt-4">
-              <SectionTitle className="px-4">Featured</SectionTitle>
-              <FeaturedEventsCarousel events={eventSlidersFiltered.featured} />
-            </View>
-          ) : null}
           <EventSliderRow
             title="Around you"
             events={eventSlidersFiltered.aroundYou}
@@ -250,12 +245,6 @@ export default function Explore() {
       )
     ) : placeCuratedEmpty ? null : (
       <View>
-        {placeSlidersFiltered.featured.length > 0 ? (
-          <View className="gap-2 pt-4">
-            <SectionTitle className="px-4">Featured</SectionTitle>
-            <FeaturedPlacesCarousel places={placeSlidersFiltered.featured} />
-          </View>
-        ) : null}
         <PlaceSliderRow
           title="Around you"
           places={placeSlidersFiltered.aroundYou}
@@ -311,7 +300,11 @@ export default function Explore() {
 
   const listHeader = (
     <View>
-      <WeeklyTeaserCard />
+      <DiscoveryHero
+        tab={tab}
+        featuredEvents={eventSliders.data.featured}
+        featuredPlaces={placeSliders.data.featured}
+      />
 
       <ActiveFilterChips
         chips={activeChips}
@@ -452,13 +445,9 @@ export default function Explore() {
           onEndReachedThreshold={0.5}
           refreshControl={
             <Refresher
-              refreshing={
-                eventsQuery.isRefetching && !eventsQuery.isFetchingNextPage
+              onRefresh={() =>
+                Promise.all([eventsQuery.refetch(), eventSliders.refetch()])
               }
-              onRefresh={() => {
-                eventsQuery.refetch();
-                eventSliders.refetch();
-              }}
             />
           }
           ListEmptyComponent={
@@ -494,13 +483,9 @@ export default function Explore() {
           onEndReachedThreshold={0.5}
           refreshControl={
             <Refresher
-              refreshing={
-                placesQuery.isRefetching && !placesQuery.isFetchingNextPage
+              onRefresh={() =>
+                Promise.all([placesQuery.refetch(), placeSliders.refetch()])
               }
-              onRefresh={() => {
-                placesQuery.refetch();
-                placeSliders.refetch();
-              }}
             />
           }
           ListEmptyComponent={

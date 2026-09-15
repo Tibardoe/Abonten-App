@@ -43,6 +43,29 @@ type Ctx = {
 
 const STORAGE_KEY = "abonten.explore-location";
 const FALLBACK_LABEL = "Accra";
+// A cold GPS fix indoors, or a device with location services in a bad
+// state, can leave getCurrentPositionAsync pending for a very long time —
+// seen at ~40 s on a fresh emulator — and the whole Explore screen sat on
+// its skeleton until it resolved. Past this, fall back to Accra (the person
+// can still set a location by hand or tap "Use my current location").
+const FIRST_FIX_TIMEOUT_MS = 8000;
+const GEOCODE_TIMEOUT_MS = 5000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("location-timeout")), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e);
+      },
+    );
+  });
+}
 
 const ExploreLocationContext = createContext<Ctx | null>(null);
 
@@ -113,13 +136,34 @@ export function ExploreLocationProvider({
           return;
         }
 
-        const pos = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        const label = await labelForCoords(
-          pos.coords.latitude,
-          pos.coords.longitude,
+        // The OS's last known position is instant and usually within a few
+        // hundred metres of a fresh fix — good enough to open Explore on.
+        // The fresh fix below then refines it in the background.
+        const last = await Location.getLastKnownPositionAsync({
+          maxAge: 15 * 60 * 1000,
+        }).catch(() => null);
+        if (last && !cancelled) {
+          setLocation({
+            label: await withTimeout(
+              labelForCoords(last.coords.latitude, last.coords.longitude),
+              GEOCODE_TIMEOUT_MS,
+            ).catch(() => "Near you"),
+            lat: last.coords.latitude,
+            lng: last.coords.longitude,
+            isFallback: false,
+          });
+          setResolving(false);
+        }
+        const pos = await withTimeout(
+          Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          }),
+          FIRST_FIX_TIMEOUT_MS,
         );
+        const label = await withTimeout(
+          labelForCoords(pos.coords.latitude, pos.coords.longitude),
+          GEOCODE_TIMEOUT_MS,
+        ).catch(() => "Selected location");
         if (!cancelled) {
           setLocation({
             label,
@@ -129,13 +173,18 @@ export function ExploreLocationProvider({
           });
         }
       } catch {
+        // Keep a last-known position already shown; only fall back to Accra
+        // when nothing at all could be read.
         if (!cancelled) {
-          setLocation({
-            label: FALLBACK_LABEL,
-            lat: FALLBACK_COORDS.lat,
-            lng: FALLBACK_COORDS.lng,
-            isFallback: true,
-          });
+          setLocation(
+            (current) =>
+              current ?? {
+                label: FALLBACK_LABEL,
+                lat: FALLBACK_COORDS.lat,
+                lng: FALLBACK_COORDS.lng,
+                isFallback: true,
+              },
+          );
         }
       } finally {
         if (!cancelled) setResolving(false);

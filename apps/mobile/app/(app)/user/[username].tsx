@@ -289,12 +289,7 @@ export default function UserProfileScreen() {
           }}
           onEndReached={onEndReached}
           onEndReachedThreshold={0.5}
-          refreshControl={
-            <Refresher
-              refreshing={active.isRefetching && !active.isFetchingNextPage}
-              onRefresh={() => active.refetch()}
-            />
-          }
+          refreshControl={<Refresher onRefresh={() => active.refetch()} />}
           ListEmptyComponent={
             showTabLoader ? (
               <Spinner className="mt-6" />

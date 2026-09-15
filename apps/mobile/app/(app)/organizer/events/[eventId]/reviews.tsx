@@ -251,12 +251,7 @@ export default function ManageEventReviewsScreen() {
         keyExtractor={(r) => r.id}
         renderItem={({ item }) => <ReviewCard review={item} eventId={id} />}
         contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
-        refreshControl={
-          <Refresher
-            refreshing={q.isRefetching && !q.isFetchingNextPage}
-            onRefresh={() => q.refetch()}
-          />
-        }
+        refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={

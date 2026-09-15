@@ -191,9 +191,7 @@ export default function WalletScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-4 p-4 pb-10"
-        refreshControl={
-          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
-        }
+        refreshControl={<Refresher onRefresh={() => refetch()} />}
       >
         {methods.length === 0 ? (
           <View className="items-center gap-2 rounded-xl border border-dashed border-border bg-card px-6 py-10">

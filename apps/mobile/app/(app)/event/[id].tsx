@@ -337,9 +337,7 @@ export default function EventDetailScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="pb-12"
-        refreshControl={
-          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
-        }
+        refreshControl={<Refresher onRefresh={() => refetch()} />}
       >
         {/* Hero */}
         <View className="relative h-72 bg-muted">
@@ -550,6 +548,12 @@ export default function EventDetailScreen() {
                       Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
                     }
                     pointerEvents="none"
+                    // Google's lite mode renders a static bitmap: genuinely
+                    // non-interactive, cheap, and it never registers gesture
+                    // recognisers that could linger over the screen. iOS
+                    // (Apple Maps) has no equivalent; the gesture props
+                    // below keep it static there.
+                    liteMode={Platform.OS === "android"}
                     scrollEnabled={false}
                     zoomEnabled={false}
                     rotateEnabled={false}
@@ -591,9 +595,7 @@ export default function EventDetailScreen() {
                   size="sm"
                   leftIcon="storefront-outline"
                   className="flex-1"
-                  onPress={() =>
-                    router.push(`/(app)/place/${event.place?.slug}`)
-                  }
+                  onPress={() => router.push(`/(app)/place/${event.place?.id}`)}
                 />
               ) : null}
             </View>

@@ -7,6 +7,7 @@ import {
   Icon,
   Input,
   Sheet,
+  useModalHandoff,
 } from "@abonten/ui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -15,6 +16,13 @@ import { MapPickerSheet } from "./MapPickerSheet";
 // Native echo of the web ChangeLocationModal ("Set your location"): Google
 // Places autocomplete on the address field, a raw-text forward-geocode
 // fallback, "Choose on map" (the MapPicker), and "Use my current location".
+//
+// "Choose on map" hands off between two modals: this sheet closes first and
+// the full-screen map picker opens only from the sheet's `onDismiss`, once
+// the native dismissal has finished. Opening the picker on top of the still
+// -open sheet and then closing both at once left the app unresponsive on
+// iOS until it was force-quit (see useModalHandoff.ts). The picker owns its
+// own open state so it can be up while the parent's `open` is false.
 
 export function ChangeLocationSheet({
   open,
@@ -29,6 +37,7 @@ export function ChangeLocationSheet({
   const [busy, setBusy] = useState<"typed" | "current" | "pick" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
+  const handoff = useModalHandoff();
 
   async function pickPrediction(placeId: string) {
     if (busy) return;
@@ -72,11 +81,20 @@ export function ChangeLocationSheet({
       setError("Location permission is off, or the position is unavailable.");
   }
 
+  function chooseOnMap() {
+    handoff.after(() => setMapOpen(true));
+    onClose();
+  }
+
   return (
     <>
       <Sheet
         open={open}
-        onClose={onClose}
+        onClose={() => {
+          handoff.cancel();
+          onClose();
+        }}
+        onDismiss={handoff.onDismiss}
         title="Set your location"
         minHeightRatio={0.62}
       >
@@ -137,8 +155,8 @@ export function ChangeLocationSheet({
 
           <Pressable
             accessibilityRole="button"
-            onPress={() => setMapOpen(true)}
-            className="flex-row items-center gap-2 py-1 active:opacity-70"
+            onPress={chooseOnMap}
+            className="min-h-[44px] flex-row items-center gap-2 py-1 active:opacity-70"
           >
             <Icon name="map-outline" size={20} tone="primary" />
             <AppText variant="bodyStrong">Choose on map</AppText>
@@ -147,7 +165,7 @@ export function ChangeLocationSheet({
           <Pressable
             accessibilityRole="button"
             onPress={submitCurrent}
-            className="flex-row items-center gap-2 py-1 active:opacity-70"
+            className="min-h-[44px] flex-row items-center gap-2 py-1 active:opacity-70"
           >
             <Icon name="locate-outline" size={20} tone="primary" />
             <AppText variant="bodyStrong">
@@ -165,10 +183,7 @@ export function ChangeLocationSheet({
 
       <MapPickerSheet
         open={mapOpen}
-        onClose={() => {
-          setMapOpen(false);
-          onClose();
-        }}
+        onClose={() => setMapOpen(false)}
         initial={location ? { lat: location.lat, lng: location.lng } : null}
       />
     </>

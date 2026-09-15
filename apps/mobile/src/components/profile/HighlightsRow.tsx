@@ -6,7 +6,7 @@ import {
   useDeleteHighlightGroup,
   useHighlights,
 } from "@/features/profile/useHighlights";
-import { Icon, useToast } from "@abonten/ui-native";
+import { Icon, runAfterModalDismissal, useToast } from "@abonten/ui-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -45,22 +45,30 @@ export function HighlightsRow({
   const hasGroups = !!groups && groups.length > 0;
   if (!hasGroups && !isOwn) return null;
 
+  // The group disappears from the strip at once (optimistic, see
+  // useDeleteHighlightGroup), confirmed by a toast; on failure it comes back
+  // and the toast offers a retry — the UI is never left claiming a delete
+  // that did not happen.
   function confirmDeleteGroup(groupId: string) {
     Alert.alert("Delete highlight?", "This removes every slide in it.", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
         style: "destructive",
-        onPress: () =>
-          deleteGroup.mutate(groupId, {
-            onError: (e) =>
-              toast.error("Couldn't delete", {
-                description:
-                  e instanceof Error ? e.message : "Please try again.",
-              }),
-          }),
+        onPress: () => runDelete(groupId),
       },
     ]);
+  }
+
+  function runDelete(groupId: string) {
+    deleteGroup.mutate(groupId, {
+      onSuccess: () => toast.success("Highlight deleted"),
+      onError: (e) =>
+        toast.error("Couldn't delete highlight", {
+          description: e instanceof Error ? e.message : "Please try again.",
+          action: { label: "Retry", onPress: () => runDelete(groupId) },
+        }),
+    });
   }
 
   return (
@@ -127,8 +135,10 @@ export function HighlightsRow({
           onReport={
             !isOwn && session
               ? (slideId) => {
+                  // The viewer is a full-screen Modal; open the report sheet
+                  // only once it has left the screen (useModalHandoff.ts).
                   setOpenIndex(null);
-                  setReportSlideId(slideId);
+                  runAfterModalDismissal(() => setReportSlideId(slideId));
                 }
               : undefined
           }

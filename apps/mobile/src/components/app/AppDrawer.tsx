@@ -24,8 +24,8 @@ import {
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
-import { useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
+import { usePathname, useRouter, useSegments } from "expo-router";
+import { useEffect, useRef } from "react";
 import {
   BackHandler,
   Linking,
@@ -123,6 +123,7 @@ export function AppDrawer() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const segments = useSegments();
+  const pathname = usePathname();
   // The edge-swipe-to-open only lives on the tab root screens. On a pushed
   // screen (event/place detail, organizer, settings, the wizards…) the left
   // edge belongs to the native stack's back-swipe, so opening the drawer
@@ -163,6 +164,19 @@ export function AppDrawer() {
     });
     return () => sub.remove();
   }, [open, setOpen]);
+
+  // The drawer is mounted once above the whole stack, so it is not torn down
+  // by navigation. If the route changes for any reason while it is open — a
+  // push notification tap, a deep link, a tab press landing under the panel
+  // — the panel would otherwise stay up over the new screen. Any route
+  // change closes it, and the edge-swipe progress is reset with it so a
+  // half-dragged panel can't be left hanging either.
+  const lastPath = useRef(pathname);
+  useEffect(() => {
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
+    if (open) setOpen(false);
+  }, [pathname, open, setOpen]);
 
   const panelStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: tx.value }],
@@ -222,9 +236,20 @@ export function AppDrawer() {
     });
 
   const close = () => setOpen(false);
+  // Close first, navigate on the next frame: pushing while the panel is
+  // still fully open ran the slide-out and the screen push in the same
+  // frame, and on iOS the push animation could start with the drawer still
+  // covering the incoming screen. The frame's delay lets the close begin,
+  // so the new screen slides in from under a drawer that is already going.
   const go = (path: string) => {
     close();
-    router.push(path);
+    requestAnimationFrame(() => router.push(path));
+  };
+  // Tab destinations switch the tab in place rather than pushing a second
+  // copy of the tabs group on top of the stack.
+  const goTab = (path: string) => {
+    close();
+    requestAnimationFrame(() => router.navigate(path));
   };
   const openExternal = (url: string) => {
     close();
@@ -327,7 +352,19 @@ export function AppDrawer() {
               <>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => go("/(app)/account")}
+                  accessibilityLabel={
+                    profile?.username
+                      ? `View your profile, @${profile.username}`
+                      : "Your account"
+                  }
+                  // The identity card is the person, so it opens their public
+                  // profile (the same screen the Account tab's header card
+                  // opens). The Account tab itself is one tab press away.
+                  onPress={() =>
+                    profile?.username
+                      ? go(`/(app)/user/${profile.username}`)
+                      : goTab("/(app)/account")
+                  }
                   className="mb-2 min-h-[56px] flex-row items-center gap-3 rounded-xl border border-border bg-card p-3 active:opacity-80"
                 >
                   <Avatar
@@ -394,7 +431,7 @@ export function AppDrawer() {
                 <Row
                   icon="receipt-outline"
                   label={t("myEvents")}
-                  onPress={() => go("/(app)/tickets")}
+                  onPress={() => goTab("/(app)/tickets")}
                 />
                 <Row
                   icon="card-outline"

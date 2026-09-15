@@ -7,6 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
+    "backgroundColor": "#121410",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -85,10 +86,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
-          "resizeMode": "cover",
+          "image": "./assets/splash-mark.png",
+          "resizeMode": "contain",
+          "imageWidth": 192,
           "backgroundColor": "#121410",
           "dark": {
+            "image": "./assets/splash-mark.png",
             "backgroundColor": "#121410"
           }
         }

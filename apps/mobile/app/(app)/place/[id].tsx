@@ -347,9 +347,7 @@ export default function PlaceDetailScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="pb-12"
-        refreshControl={
-          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
-        }
+        refreshControl={<Refresher onRefresh={() => refetch()} />}
       >
         {/* Hero */}
         <View className="relative h-72 bg-muted">
@@ -591,6 +589,12 @@ export default function PlaceDetailScreen() {
                       Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
                     }
                     pointerEvents="none"
+                    // Google's lite mode renders a static bitmap: genuinely
+                    // non-interactive, cheap, and it never registers gesture
+                    // recognisers that could linger over the screen. iOS
+                    // (Apple Maps) has no equivalent; the gesture props
+                    // below keep it static there.
+                    liteMode={Platform.OS === "android"}
                     scrollEnabled={false}
                     zoomEnabled={false}
                     rotateEnabled={false}

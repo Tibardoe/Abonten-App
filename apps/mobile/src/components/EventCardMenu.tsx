@@ -13,7 +13,13 @@ import { setPendingRedirect } from "@/lib/authRedirect";
 import { shareEvent } from "@/lib/share";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import type { UserPostType } from "@abonten/types/postsType";
-import { AppText, Icon, type IoniconName, Sheet } from "@abonten/ui-native";
+import {
+  AppText,
+  Icon,
+  type IoniconName,
+  Sheet,
+  useModalHandoff,
+} from "@abonten/ui-native";
 import { usePathname, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Linking, Pressable, View } from "react-native";
@@ -57,12 +63,20 @@ function ReminderMenuRow({
   );
   const [open, setOpen] = useState(false);
   const active = offsets.length > 0;
+  // The reminder sheet sits on top of the menu sheet. Close it first and
+  // let the menu close from its onDismiss — two sheets dismissed in one
+  // render race on iOS (see useModalHandoff.ts).
+  const handoff = useModalHandoff();
+
+  function closeBoth() {
+    handoff.after(onClose);
+    setOpen(false);
+  }
 
   async function onSave(draft: number[]) {
     const res = await save(draft, { eventTitle: event.title, startsAtIso });
     if (res.ok) {
-      setOpen(false);
-      onClose();
+      closeBoth();
       return;
     }
     if (res.reason === "permission") {
@@ -79,8 +93,7 @@ function ReminderMenuRow({
 
   async function onTurnOff() {
     await save([], { eventTitle: event.title, startsAtIso });
-    setOpen(false);
-    onClose();
+    closeBoth();
   }
 
   return (
@@ -92,7 +105,11 @@ function ReminderMenuRow({
       />
       <ReminderOptionsSheet
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          handoff.cancel();
+          setOpen(false);
+        }}
+        onDismiss={handoff.onDismiss}
         offsets={offsets}
         saving={saving}
         onSave={onSave}

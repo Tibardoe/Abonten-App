@@ -4,8 +4,8 @@ purpose: State exactly how far each mobile change on the documentation branch ha
 audience: Engineering, QA, founder
 scope: apps/mobile (Android; iOS has never been built) and the shared packages it bundles (@abonten/core brand constants, @abonten/i18n messages)
 status: Draft
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -76,6 +76,16 @@ Two device set-ups were used on 2026-09-12 (tester: engineering, driven over `ad
 |---|---|---|---|---|
 | Explore teaser and edition masthead as rotating full-bleed banners; hero cards; image-failure fallback | Yes — typecheck, Biome, unit and integration tests | Update `29527d17` published to the `preview` channel (Android, runtime 0.2.0). New Android preview build `0b3dd3fb` (version code 2) finished and installed on AVD `abonten_a35`: `pm get-app-links` shows `abontenhub.com: verified`, and opening `https://abontenhub.com/weekly/ghana/2026-09-07` launched the app's Abonten Weekly screen (signed out, so it correctly showed "This edition isn't available") | **Yes (A)** on Android, against a local stack (rotation, swipe, caption and banner taps, one image, failed image, no image, "Remove animations" on) and against production signed in as the founder (teaser, edition, hero, listing) | **Web: yes** (abontenhub.com, staff session, desktop and 390 px). App: the JavaScript ran against production through the dev client; no production app build exists |
 | iOS | Yes | No iOS build exists (preview profile builds an iOS simulator app; the Apple account is blocked on a D-U-N-S number) | **DEVICE VERIFICATION PENDING** — cannot be run from this Windows machine | Not applicable yet |
+
+## iOS TestFlight QA round 1 (2026-09-15)
+
+The owner's real-device iOS TestFlight test (build 0.2.0 (6)) reported 19 issues; every one was fixed on branch `fix/ios-testflight-qa-round-1` (see the changelog entry of the same date). Verification for that round:
+
+| What | Level |
+|---|---|
+| Typecheck (11 workspaces), Biome on `apps/mobile`, `@abonten/core` 421 tests, `@abonten/services` 115 tests, API parity (180 routes), docs check | SOURCE VERIFIED |
+| Android dev client on the Pixel emulator: sign-in by email code, chat send / delete / link tap / composer growth, drawer identity card, Edit Profile keyboard, time-picker fling, full create-event wizard with a pinned venue through to a published event visible under the place, Manage Place › Upcoming events, map clusters and pan after returning from a detail, location sheet → map picker × 3, offline pill phases, light and dark | DEVICE VERIFIED (Android) |
+| The same on an iPhone (the screenshots the round was based on came from one) | **DEVICE VERIFICATION PENDING** — no iOS device or simulator can be driven from this Windows machine; needs the next TestFlight build |
 
 ## What "production" means here, and why nothing was published to it
 

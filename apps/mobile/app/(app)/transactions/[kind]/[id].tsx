@@ -105,9 +105,7 @@ export default function TransactionDetailScreen() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-4 p-4 pb-16"
-      refreshControl={
-        <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
-      }
+      refreshControl={<Refresher onRefresh={() => refetch()} />}
     >
       <View className="flex-row items-center justify-between rounded-xl bg-muted p-4">
         <AppText variant="bodyStrong" className="text-muted-foreground">

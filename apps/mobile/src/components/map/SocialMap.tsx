@@ -5,7 +5,7 @@ import {
   Marker,
   PROVIDER_GOOGLE,
 } from "@/components/map/NativeMap";
-import { AppText, EmptyState, Icon } from "@abonten/ui-native";
+import { AppText, EmptyState, Icon, Sheet } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -61,6 +61,14 @@ type Cluster =
     };
 
 const GRID = 5; // cells per axis — bounds rendered markers to <=25
+// Zooming into a cluster stops at this span (~1 km). A cluster still intact
+// here is a set of pins at (nearly) the same spot — the same venue, a
+// place and its events — and no amount of zoom will split it, so a tap
+// opens the list instead. Before this, three places sharing one point
+// clustered forever and could never be opened from the map.
+const MIN_DELTA = 0.01;
+// Points closer than this are "the same spot" regardless of zoom.
+const SAME_SPOT_DEG = 0.0004; // ~45 m
 
 function clusterize(items: SocialMapItem[], region: Region): Cluster[] {
   if (items.length <= 1) {
@@ -330,6 +338,78 @@ function PreviewCard({
   );
 }
 
+// The list behind a cluster that shares one spot: every pin, tappable.
+function StackedItemsSheet({
+  items,
+  onClose,
+}: {
+  items: SocialMapItem[] | null;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const open = !!items && items.length > 0;
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={items ? `${items.length} at this spot` : ""}
+    >
+      <View className="gap-2">
+        {(items ?? []).map((item) => (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={`Open ${item.title}`}
+            onPress={() => {
+              onClose();
+              router.push(
+                item.kind === "event"
+                  ? `/(app)/event/${item.id}`
+                  : `/(app)/place/${item.id}`,
+              );
+            }}
+            className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-3 active:opacity-80"
+          >
+            <View className="h-14 w-14 overflow-hidden rounded-xl bg-muted">
+              {item.imageUrl ? (
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={{ width: "100%", height: "100%" }}
+                  contentFit="cover"
+                />
+              ) : (
+                <View className="flex-1 items-center justify-center">
+                  <Icon
+                    name={item.kind === "event" ? "ticket" : "location"}
+                    size={18}
+                    tone="muted"
+                  />
+                </View>
+              )}
+            </View>
+            <View className="flex-1 gap-0.5">
+              <AppText variant="bodyStrong" numberOfLines={1}>
+                {item.title}
+              </AppText>
+              {item.lines.slice(0, 2).map((line, i) => (
+                <AppText
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed preview lines
+                  key={i}
+                  variant={i === 0 ? "metaStrong" : "meta"}
+                  numberOfLines={1}
+                >
+                  {line}
+                </AppText>
+              ))}
+            </View>
+            <Icon name="chevron-forward" size={18} tone="muted" />
+          </Pressable>
+        ))}
+      </View>
+    </Sheet>
+  );
+}
+
 export function SocialMap({
   items,
   center,
@@ -343,6 +423,10 @@ export function SocialMap({
   // biome-ignore lint/suspicious/noExplicitAny: react-native-maps ref has no types through the shim
   const mapRef = useRef<any>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Items of a cluster that cannot be split by zooming (see MIN_DELTA).
+  const [stackedItems, setStackedItems] = useState<SocialMapItem[] | null>(
+    null,
+  );
   // A marker press on Android also bubbles a MapView onPress right after —
   // without this guard the map's "tap empty space to dismiss" handler fires
   // immediately and the preview card never appears.
@@ -403,14 +487,32 @@ export function SocialMap({
     );
   }
 
-  function zoomInto(lat: number, lng: number) {
+  function spansOneSpot(items: SocialMapItem[]): boolean {
+    let minLat = Number.POSITIVE_INFINITY;
+    let maxLat = Number.NEGATIVE_INFINITY;
+    let minLng = Number.POSITIVE_INFINITY;
+    let maxLng = Number.NEGATIVE_INFINITY;
+    for (const i of items) {
+      minLat = Math.min(minLat, i.point.lat);
+      maxLat = Math.max(maxLat, i.point.lat);
+      minLng = Math.min(minLng, i.point.lng);
+      maxLng = Math.max(maxLng, i.point.lng);
+    }
+    return maxLat - minLat < SAME_SPOT_DEG && maxLng - minLng < SAME_SPOT_DEG;
+  }
+
+  function openCluster(cl: Extract<Cluster, { kind: "cluster" }>) {
     setSelectedId(null);
+    if (region.latitudeDelta <= MIN_DELTA * 1.05 || spansOneSpot(cl.items)) {
+      setStackedItems(cl.items);
+      return;
+    }
     mapRef.current?.animateToRegion(
       {
-        latitude: lat,
-        longitude: lng,
-        latitudeDelta: Math.max(region.latitudeDelta / 2.5, 0.01),
-        longitudeDelta: Math.max(region.longitudeDelta / 2.5, 0.01),
+        latitude: cl.lat,
+        longitude: cl.lng,
+        latitudeDelta: Math.max(region.latitudeDelta / 2.5, MIN_DELTA),
+        longitudeDelta: Math.max(region.longitudeDelta / 2.5, MIN_DELTA),
       },
       280,
     );
@@ -464,7 +566,7 @@ export function SocialMap({
                 tracksViewChanges={false}
                 onPress={() => {
                   markerTapAt.current = Date.now();
-                  zoomInto(cl.lat, cl.lng);
+                  openCluster(cl);
                 }}
                 anchor={{ x: 0.5, y: 0.5 }}
               >
@@ -482,6 +584,11 @@ export function SocialMap({
             bottomInset={insets.bottom}
           />
         ) : null}
+
+        <StackedItemsSheet
+          items={stackedItems}
+          onClose={() => setStackedItems(null)}
+        />
       </View>
     </MapErrorBoundary>
   );

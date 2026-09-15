@@ -183,12 +183,7 @@ export default function InviteFriends() {
       ) : (
         <ScrollView
           contentContainerClassName="gap-4 p-4 pb-16"
-          refreshControl={
-            <Refresher
-              refreshing={invite.isRefetching}
-              onRefresh={() => invite.refetch()}
-            />
-          }
+          refreshControl={<Refresher onRefresh={() => invite.refetch()} />}
         >
           {data.enabled && data.code && data.inviteUrl ? (
             <Card elevated className="items-center gap-3">

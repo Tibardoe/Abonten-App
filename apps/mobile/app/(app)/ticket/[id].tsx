@@ -138,9 +138,7 @@ export default function TicketDetailScreen() {
       <ScrollView
         className="flex-1 bg-background"
         contentContainerClassName="gap-5 p-4 pb-10"
-        refreshControl={
-          <Refresher refreshing={isRefetching} onRefresh={() => refetch()} />
-        }
+        refreshControl={<Refresher onRefresh={() => refetch()} />}
       >
         {/* Flyer hero — makes the ticket recognisable at a glance */}
         <View className="overflow-hidden rounded-2xl border border-border bg-card">

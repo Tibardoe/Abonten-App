@@ -263,6 +263,8 @@ export type ProfileData = {
   avatar_public_id: string | null;
   avatar_version: string | null;
   bio: string | null;
+  /** user_info.website — the route selects the whole row. */
+  website?: string | null;
   total_posts: number | string | null;
   total_favorites: number | string | null;
   average_rating: number | string | null;

@@ -1,5 +1,9 @@
 export { Icon, type IconProps, type IconTone, type IoniconName } from "./Icon";
-export { AbontenLogo, type AbontenLogoProps } from "./AbontenLogo";
+export {
+  AbontenLogo,
+  ABONTEN_MARK_PATHS,
+  type AbontenLogoProps,
+} from "./AbontenLogo";
 export {
   AbontenWordmark,
   type AbontenWordmarkProps,
@@ -110,6 +114,8 @@ export { SheetOption, type SheetOptionProps } from "./SheetOption";
 export {
   KeyboardAwareScrollView,
   type KeyboardAwareScrollViewProps,
+  useRevealInput,
 } from "./KeyboardAwareScrollView";
+export { useModalHandoff, runAfterModalDismissal } from "./useModalHandoff";
 export { BottomBar, type BottomBarProps } from "./BottomBar";
 export { useKeyboardHeight, useKeyboardVisible } from "./useKeyboard";

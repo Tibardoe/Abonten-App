@@ -82,6 +82,9 @@ export default function TabsLayout() {
         // Subtle content shift on tab change — fast, interruptible, and the
         // OS reduce-motion setting disables it automatically.
         animation: "shift",
+        // The scene behind each tab's screen. Without it the tab-switch
+        // shift reveals the container's default (white) between scenes.
+        sceneStyle: { backgroundColor: c.background },
         tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c["muted-foreground"],
         // Brand font + a legible weight on the bottom nav; 11px is the

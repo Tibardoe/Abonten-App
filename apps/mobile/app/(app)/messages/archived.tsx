@@ -126,12 +126,7 @@ export default function ArchivedMessages() {
         onEndReached={onEndReached}
         onEndReachedThreshold={0.5}
         keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <Refresher
-            refreshing={q.isRefetching && !q.isFetchingNextPage}
-            onRefresh={() => q.refetch()}
-          />
-        }
+        refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
           q.isLoading ? (
             <View className="items-center py-16">

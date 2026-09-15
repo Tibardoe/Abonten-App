@@ -201,14 +201,9 @@ export default function Transactions() {
       onEndReachedThreshold={0.5}
       refreshControl={
         <Refresher
-          refreshing={
-            (summaryQuery.isRefetching || historyQuery.isRefetching) &&
-            !historyQuery.isFetchingNextPage
+          onRefresh={() =>
+            Promise.all([summaryQuery.refetch(), historyQuery.refetch()])
           }
-          onRefresh={() => {
-            summaryQuery.refetch();
-            historyQuery.refetch();
-          }}
         />
       }
       ListEmptyComponent={

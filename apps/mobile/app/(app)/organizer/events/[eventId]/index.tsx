@@ -434,9 +434,7 @@ export default function EventInsightsScreen() {
     <ScrollView
       className="flex-1 bg-background"
       contentContainerClassName="gap-6 p-4 pb-16"
-      refreshControl={
-        <Refresher refreshing={q.isRefetching} onRefresh={() => q.refetch()} />
-      }
+      refreshControl={<Refresher onRefresh={() => q.refetch()} />}
     >
       <View>
         <AppText variant="screenTitle">
