@@ -12,6 +12,7 @@
 // Warnings never fail the run: draft/review status counts, POLICY DECISION
 // REQUIRED occurrences, skipped external links.
 
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -259,6 +260,23 @@ for (const file of allMarkdown) {
 
 // ---- rule: code references (backticked repo paths) --------------------------
 
+// Local-only files the docs rightly tell people to create (apps/web/.env.local,
+// apps/mobile/.env) are gitignored: they exist on a developer's machine and
+// never in CI's fresh checkout, which is why this rule passed locally and
+// failed in CI. A path git itself ignores is a valid reference; any other
+// missing path still fails.
+function isGitIgnored(p) {
+  try {
+    execFileSync("git", ["check-ignore", "-q", "--no-index", p], {
+      cwd: ROOT,
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 const CODE_REF =
   /`((?:apps|packages|scripts|supabase|docs|\.github)\/[^`\s]+)`/g;
 for (const file of docFiles) {
@@ -270,7 +288,7 @@ for (const file of docFiles) {
       let p = m[1];
       if (/[*{}]/.test(p) || p.includes("…") || p.includes("<")) continue;
       p = p.replace(/:\d+(-\d+)?$/, "").replace(/\/$/, "");
-      if (!existsSync(join(ROOT, p))) {
+      if (!existsSync(join(ROOT, p)) && !isGitIgnored(p)) {
         fail("code-references", r, i + 1, `path does not exist: ${m[1]}`);
       }
     }
