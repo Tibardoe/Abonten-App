@@ -364,14 +364,22 @@ function toSuggestion(row: SuggestRow): SearchSuggestion {
   };
 }
 
+/**
+ * Type-ahead. With `log`, each request that reaches the database is recorded
+ * in search_query_log as surface "suggest" (no identity, same as a search),
+ * and its id comes back so the suggestion opened can be attributed.
+ */
 export async function suggestCore(
   client: SupabaseClient<Database>,
   input: { q: string; lat?: number | null; lng?: number | null },
   program: DiscoveryProgram,
+  log?: { platform: SearchPlatform; loggingEnabled: boolean },
 ): Promise<SearchSuggestionsResponse> {
+  const started = Date.now();
   const query = parseSearchQuery(input.q);
   const empty: SearchSuggestionsResponse = {
     status: 200,
+    searchId: null,
     query,
     events: [],
     places: [],
@@ -404,12 +412,26 @@ export async function suggestCore(
     };
   }
   const rows = ((data ?? []) as SuggestRow[]).map(toSuggestion);
-  return {
-    ...empty,
-    events: rows.filter((r) => r.entityType === "event"),
-    places: rows.filter((r) => r.entityType === "place"),
-    organizers: rows.filter((r) => r.entityType === "organizer"),
-  };
+  const events = rows.filter((r) => r.entityType === "event");
+  const places = rows.filter((r) => r.entityType === "place");
+  const organizers = rows.filter((r) => r.entityType === "organizer");
+  const searchId =
+    log?.loggingEnabled === true
+      ? await logSearch({
+          platform: log.platform,
+          surface: "suggest",
+          query,
+          hasLocation: lat !== null && lng !== null,
+          hasFilters: false,
+          counts: {
+            events: events.length,
+            places: places.length,
+            organizers: organizers.length,
+          },
+          latencyMs: Date.now() - started,
+        })
+      : null;
+  return { ...empty, searchId, events, places, organizers };
 }
 
 export async function logSearch(input: {

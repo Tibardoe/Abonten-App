@@ -14,6 +14,11 @@ export type DiscoveryProgram = {
   /** Prompts, "Notify me", the preference centre's follow sections, For you. */
   personalization: boolean;
   prompts: boolean;
+  /**
+   * May opt in to the recommendation digest by email. Off until legal item
+   * G1 is Decided (discovery_program_setting.recommendations_email_enabled).
+   */
+  recommendationEmail: boolean;
 };
 
 export const DISABLED_DISCOVERY_PROGRAM: DiscoveryProgram = {
@@ -22,6 +27,7 @@ export const DISABLED_DISCOVERY_PROGRAM: DiscoveryProgram = {
   placeSearch: false,
   personalization: false,
   prompts: false,
+  recommendationEmail: false,
 };
 
 /** Optional categories a person controls. Transactional notices have no key. */
@@ -31,6 +37,8 @@ export type NotificationPreferences = {
   placeUpdatesPush: boolean;
   socialPush: boolean;
   rewardEmails: boolean;
+  /** The recommendation digest by email (all three email reasons together). */
+  recommendationEmails: boolean;
   /** ISO time until which optional notifications are held, or null. */
   pausedUntil: string | null;
   /** The account's email, null for phone-only accounts. */
@@ -45,6 +53,7 @@ export type NotificationPreferencesPatch = Partial<
     | "placeUpdatesPush"
     | "socialPush"
     | "rewardEmails"
+    | "recommendationEmails"
   >
 > & {
   /** "two_weeks" pauses optional notifications; "resume" clears a pause. */
@@ -190,6 +199,8 @@ export type DiscoverySettings = {
   recommendationsShadowMode: boolean;
   recommendationsAudience: DiscoveryAudience;
   promptsEnabled: boolean;
+  /** Blocked by legal item G1: stays false until G1 is Decided. */
+  recommendationsEmailEnabled: boolean;
   betaUserIds: string[];
   dailyPushCap: number;
   weeklyPushCap: number;

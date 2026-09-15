@@ -8,6 +8,7 @@ import InlineErrorRetry from "@/components/molecules/InlineErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDiscoveryProgram } from "@/hooks/useDiscoveryProgram";
 import { useToast } from "@/hooks/useToast";
+import { needsHomeScreenInstall, useWebPush } from "@/hooks/useWebPush";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import type {
   NotificationPreferences,
@@ -194,6 +195,37 @@ function SubscriptionRow({
         Stop alerts
       </button>
     </div>
+  );
+}
+
+function BrowserPushSection() {
+  const push = useWebPush();
+  if (push.state === "loading" || push.state === "unavailable") return null;
+
+  const description =
+    push.state === "unsupported"
+      ? needsHomeScreenInstall()
+        ? "On iPhone and iPad, add Abonten Hub to your Home Screen from Safari's Share menu, then open it from there to turn this on."
+        : "This browser can't show notifications. Try a recent Chrome, Edge, Firefox or Safari."
+      : push.state === "denied"
+        ? "Notifications are blocked for this site. Allow them in your browser's site settings, then come back here."
+        : "Get the same notifications as the app on this computer or browser, even when the site isn't open. The switches above still apply.";
+
+  return (
+    <Section title="This browser">
+      <Row
+        id="browser-push"
+        title="Browser notifications"
+        description={push.error ?? description}
+        checked={push.state === "on"}
+        disabled={
+          push.pending ||
+          push.state === "unsupported" ||
+          push.state === "denied"
+        }
+        onChange={(v) => void (v ? push.enable() : push.disable())}
+      />
+    </Section>
   );
 }
 
@@ -388,7 +420,27 @@ export default function NotificationPreferencesPanel() {
           disabled={save.isPending || !p.email}
           onChange={(v) => save.mutate({ rewardEmails: v })}
         />
+        {program.recommendationEmail || p.recommendationEmails ? (
+          <Row
+            id="recommendation-emails"
+            title="Email me picks and alerts"
+            description={
+              p.email
+                ? `The same picks as the push, to ${p.email}. At most one a day. Unsubscribe from any of these emails at any time.`
+                : "Your account has no email address, so you'll get picks in the app only."
+            }
+            checked={p.recommendationEmails && !!p.email}
+            disabled={
+              save.isPending ||
+              (!p.recommendationEmails &&
+                (!p.email || !program.recommendationEmail))
+            }
+            onChange={(v) => save.mutate({ recommendationEmails: v })}
+          />
+        ) : null}
       </Section>
+
+      <BrowserPushSection />
 
       <section className="rounded-xl border border-border bg-muted/40 p-5">
         <div className="flex items-start gap-3">

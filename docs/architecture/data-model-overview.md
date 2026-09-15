@@ -20,7 +20,7 @@ The schema is defined only by `supabase/migrations/`. There are **no Postgres en
 
 | Domain | Core tables | Key relationships |
 |---|---|---|
-| Identity | `auth.users` (Supabase), `user_info`, `user_status`, `user_image_history`, `phone_otp_state`, `phone_otp_send_log`, `device_token`, `device_install` | `user_info.id = auth.users.id` (cascade) |
+| Identity | `auth.users` (Supabase), `user_info`, `user_status`, `user_image_history`, `phone_otp_state`, `phone_otp_send_log`, `device_token`, `push_receipt`, `web_push_subscription`, `device_install` | `user_info.id = auth.users.id` (cascade) |
 | Events | `event`, `event_occurrence`, `ticket_type`, `event_drafts`, `drafts`, `draft_asset_cleanup_queue`, `event_reminder`, `event_share`, `event_media` (unused) | `ticket_type.event_id`; `event.organizer_id → user_info` |
 | Ticketing & payments | `ticket_checkout`, `payment_attempt`, `transaction`, `transaction_status` (lookup), `ticket`, `attendance`, `promo_code`, `promo_code_usage`, `payment_method` (partitioned), `payment_dispute` | `ticket.transaction_id`, `ticket.ticket_checkout_id`; `transaction.paystack_reference` UNIQUE |
 | Organizer finance | `organizer_ledger_entry`, `payout`, `payout_account`, `receiving_account` (legacy), `platform_fee_entry`, `platform_fee_config` | ledger entries reference checkouts/transactions/payouts |

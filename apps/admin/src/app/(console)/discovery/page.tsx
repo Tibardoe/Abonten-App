@@ -99,6 +99,13 @@ export default async function DiscoveryPage({
     p50_ms: null,
     p95_ms: null,
   };
+  const suggest = search.suggestions?.totals ?? {
+    requests: 0,
+    zero_results: 0,
+    opened: 0,
+    p50_ms: null,
+    p95_ms: null,
+  };
   const liveDigests = rec.digestsDaily.reduce((n, d) => n + d.live, 0);
   const shadowDigests = rec.digestsDaily.reduce((n, d) => n + d.shadow, 0);
   const activeSubs = Object.values(rec.subscriptions).reduce(
@@ -182,6 +189,22 @@ export default async function DiscoveryPage({
         </Badge>
         <Badge tone={settings.promptsEnabled ? "success" : "neutral"}>
           Prompts {settings.promptsEnabled ? "on" : "off"}
+        </Badge>
+        <Badge
+          tone={
+            killSwitches.recommendationEmail
+              ? "danger"
+              : settings.recommendationsEmailEnabled
+                ? "success"
+                : "neutral"
+          }
+        >
+          Recommendation email{" "}
+          {killSwitches.recommendationEmail
+            ? "off by kill switch"
+            : settings.recommendationsEmailEnabled
+              ? "on"
+              : "off"}
         </Badge>
         <span className="text-muted-foreground">
           Caps: {settings.dailyPushCap}/day, {settings.weeklyPushCap}/week ·
@@ -323,6 +346,62 @@ export default async function DiscoveryPage({
               family="searchResultType"
               rows={Object.fromEntries(
                 search.clicksByType.map((c) => [c.clicked_type, c.clicks]),
+              )}
+            />
+          </Card>
+        </div>
+        <SectionHeading title="Type-ahead" className="mb-0 mt-2" />
+        <div className="grid gap-3 md:grid-cols-3">
+          <MetricCard
+            metric="search.suggestRequests"
+            value={suggest.requests}
+            period={period}
+          />
+          <MetricCard
+            metric="search.suggestOpenRate"
+            value={
+              suggest.requests > 0 ? suggest.opened / suggest.requests : null
+            }
+            format="percent"
+            period={period}
+            stateNote={`No suggestions in ${period.toLowerCase()}`}
+            secondary={`${suggest.opened.toLocaleString("en-GH")} opened a suggestion`}
+          />
+          <MetricCard
+            metric="search.suggestLatencyP95"
+            value={suggest.p95_ms}
+            format="ms"
+            period={period}
+            stateNote={`No suggestions in ${period.toLowerCase()}`}
+            tone={(suggest.p95_ms ?? 0) > 300 ? "warning" : undefined}
+          />
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Card className="p-4">
+            <p className="mb-2 text-sm font-semibold">
+              Suggestion lists by platform
+            </p>
+            <KeyValues
+              family="platform"
+              rows={Object.fromEntries(
+                (search.suggestions?.byPlatform ?? []).map((p) => [
+                  p.platform,
+                  p.requests,
+                ]),
+              )}
+            />
+          </Card>
+          <Card className="p-4">
+            <p className="mb-2 text-sm font-semibold">
+              Opened suggestions by type
+            </p>
+            <KeyValues
+              family="searchResultType"
+              rows={Object.fromEntries(
+                (search.suggestions?.openedByType ?? []).map((c) => [
+                  c.clicked_type,
+                  c.opened,
+                ]),
               )}
             />
           </Card>

@@ -71,6 +71,19 @@ export const searchSuggestSchema = z.object({
   lng: optionalNumber(-180, 180),
 });
 
+export const webPushSubscriptionSchema = z.object({
+  endpoint: z.string().url().max(1024),
+  keys: z.object({
+    p256dh: z.string().min(16).max(200),
+    auth: z.string().min(8).max(100),
+  }),
+  userAgent: z.string().max(300).optional().nullable(),
+});
+
+export const webPushEndpointSchema = z.object({
+  endpoint: z.string().url().max(1024),
+});
+
 export const searchClickSchema = z.object({
   searchId: z.coerce.number().int().positive(),
   entityType: z.enum(["event", "place", "organizer"]),
@@ -85,6 +98,7 @@ export const notificationPreferencesPatchSchema = z
     placeUpdatesPush: z.boolean().optional(),
     socialPush: z.boolean().optional(),
     rewardEmails: z.boolean().optional(),
+    recommendationEmails: z.boolean().optional(),
     pause: z.enum(["two_weeks", "resume"]).optional(),
   })
   .strict();

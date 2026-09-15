@@ -47,6 +47,12 @@ select * from (
          format('select count(*) from public.search_places(%L)', (select w from perf_mid where n = 42))
   union all select 32, 'places     · category name',
          format('select count(*) from public.search_places(%L, 5.6, -0.19)', 'restaurant')
+  union all select 33, 'places     · common amenity (5% of services)',
+         format('select count(*) from public.search_places(%L, 5.6, -0.19)', 'sauna')
+  union all select 34, 'places     · amenity + mid word',
+         format('select count(*) from public.search_places(%L)', 'pool ' || (select w from perf_mid where n = 42))
+  union all select 10, 'suggest    · common amenity',
+         format('select count(*) from public.search_suggest(%L)', 'massage')
   union all select 40, 'organizers · mid word',
          format('select count(*) from public.search_organizers(%L)', (select w from perf_mid where n = 91))
   union all select 41, 'organizers · @handle prefix',
@@ -117,6 +123,11 @@ where p.status = 'published'
   and p.moderation_state is distinct from 'hidden'
   and p.moderation_state is distinct from 'removed'
   and p.search_tsv @@ public._search_prefix_tsquery((select w from perf_mid where n = 42));
+
+explain (analyze, costs off, timing off, summary on)
+select s.place_id
+from public.place_service s
+where s.search_tsv @@ public._search_prefix_tsquery('sauna');
 
 explain (analyze, costs off, timing off, summary on)
 select u.id

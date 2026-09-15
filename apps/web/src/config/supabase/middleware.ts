@@ -60,9 +60,12 @@ export async function updateSession(request: NextRequest) {
     // Friend invite landing (Abonten Rewards) -- for people who aren't
     // signed up yet.
     pathname.startsWith("/invite/") ||
-    // The unsubscribe page linked from Abonten Rewards emails -- works
-    // without signing in (the link carries a signed token).
+    // The unsubscribe pages linked from Abonten Rewards and recommendation
+    // emails -- work without signing in (the link carries a signed token).
     pathname.startsWith("/unsubscribe/") ||
+    // Push-click and email-link landing: marks the notification read when
+    // signed in, then redirects; the target page applies its own rules.
+    pathname === "/notifications/open" ||
     // Public policies and the help centre. The mobile sign-in screen, the
     // footers and every email link here for people who are not signed in,
     // and the legal documents must be readable before someone agrees to them.

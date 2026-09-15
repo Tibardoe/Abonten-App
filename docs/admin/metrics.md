@@ -575,6 +575,33 @@ The server-measured time to run a search, in milliseconds, at the 95th percentil
 
 Read from: `search_query_log.duration_ms, 95th percentile`
 
+### search.suggestRequests
+
+**Type-ahead requests** · Selected period
+
+How many type-ahead suggestion lists the server returned in the period, on web and in the app. Each pause while typing can make one, so one search often makes several; read it as load and reach, not as a number of searches. Like searches, no user, device or IP identifiers are kept.
+
+Read from: `search_query_log where surface = suggest, last N days`
+
+Watch out:
+- App builds from before 2026-09-15 fetch suggestions directly from the database and are not counted.
+
+### search.suggestOpenRate
+
+**Suggestion opened** · Selected period
+
+Suggestion lists after which the person opened one of the suggestions directly, divided by all suggestion lists in the period. Low because most lists are replaced by the next keystroke before anyone chooses.
+
+Read from: `search_query_log where surface = suggest and clicked_at is set ÷ all suggestion rows`
+
+### search.suggestLatencyP95
+
+**Type-ahead time (p95)** · Selected period
+
+The server-measured time to build a suggestion list, in milliseconds, at the 95th percentile. Type-ahead should feel instant, so above 300 ms it turns amber.
+
+Read from: `search_query_log.latency_ms where surface = suggest, 95th percentile`
+
 ### recommendations.activeSubscriptions
 
 **Active alert subscriptions** · Right now

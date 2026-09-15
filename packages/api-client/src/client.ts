@@ -15,6 +15,7 @@ import type {
   SearchClickInput,
   SearchRequest,
   SearchResults,
+  SearchSuggestionsResponse,
 } from "@abonten/types/searchType";
 import type {
   WeeklyEditionResult,
@@ -2041,8 +2042,7 @@ export function createApiClient(options: ApiClientOptions) {
 
     /**
      * Discovery (PROJECT.md §31): unified search across events, places and
-     * organizers. Submitted searches only; type-ahead calls the
-     * search_suggest RPC directly. Works signed out.
+     * organizers, and type-ahead suggestions. Works signed out.
      */
     search: {
       query(params: SearchRequest) {
@@ -2056,6 +2056,19 @@ export function createApiClient(options: ApiClientOptions) {
           auth: true,
         });
       },
+      /** Type-ahead: rate-limited and logged without identity. */
+      suggest(params: { q: string; lat?: number; lng?: number }) {
+        const qs = new URLSearchParams({ q: params.q });
+        if (params.lat != null && params.lng != null) {
+          qs.set("lat", String(params.lat));
+          qs.set("lng", String(params.lng));
+        }
+        return request<SearchSuggestionsResponse>(
+          `/api/mobile/search/suggest?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** The first result or suggestion opened (searchId from either call). */
       click(body: SearchClickInput) {
         return request<ApiEnvelope<never>>("/api/mobile/search/click", {
           method: "POST",

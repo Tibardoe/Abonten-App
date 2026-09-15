@@ -28,7 +28,7 @@ Declining any permission leaves the rest of the app usable (e.g. type a location
 
 ## Push notifications
 
-On sign-in the app requests permission, obtains an Expo push token (`getExpoPushTokenAsync` with the EAS project id) and registers it via `POST /api/mobile/devices/register` (`device_token`). Android uses a notification channel; the icon and accent colour are set in `app.json`. Sign-out calls `/devices/unregister`. Delivery: `packages/services/src/notifications/sendPushNotification.ts` → Expo push API → FCM (`google-services.json` client config). Tapping a notification routes via `notificationLink.ts` to the related screen. Dead tokens are pruned when Expo reports `DeviceNotRegistered`.
+On sign-in the app requests permission, obtains an Expo push token (`getExpoPushTokenAsync` with the EAS project id) and registers it via `POST /api/mobile/devices/register` (`device_token`). Android uses a notification channel; the icon and accent colour are set in `app.json`. Sign-out calls `/devices/unregister`. Delivery: `packages/services/src/notifications/sendPushNotification.ts` → Expo push API → FCM (`google-services.json` client config). Tapping a notification routes via `notificationLink.ts` to the related screen. Dead tokens are pruned when Expo reports `DeviceNotRegistered`, either in the send ticket or in the receipt the delivery route reads about 15 minutes later (`push_receipt`).
 
 ## Local reminders
 

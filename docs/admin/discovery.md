@@ -2,10 +2,10 @@
 title: Admin — Discovery
 purpose: How to read the Discovery overview, change the programme settings safely, roll search and recommendation notices out in stages, and stop them in an emergency.
 audience: Operations, analysts
-scope: Admin › Discovery (Overview and Programme settings), the discovery.view and discovery.configure permissions, the SEARCH_V2_KILL_SWITCH and RECOMMENDATIONS_KILL_SWITCH deploy flags
+scope: Admin › Discovery (Overview and Programme settings), the discovery.view and discovery.configure permissions, the SEARCH_V2_KILL_SWITCH, RECOMMENDATIONS_KILL_SWITCH and RECOMMENDATION_EMAIL_KILL_SWITCH deploy flags
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-13
+version: 1.1
+lastReviewed: 2026-09-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -36,7 +36,8 @@ Pick the last 7, 14, 30 or 90 days at the top. Unlike the rest of the console th
 | Searches | First pages of searches in the range. Scrolling further is not counted. |
 | Zero results | Share of searches that found nothing. The table below lists the queries: missing listings, spellings, or wording organizers should use. |
 | Click-through | Share of searches where someone opened a result. |
-| Latency p50 / p95 | Server-measured time for the search, in milliseconds. Type-ahead suggestions are not logged on either platform. |
+| Latency p50 / p95 | Server-measured time for the search, in milliseconds. Type-ahead suggestions are counted separately below. |
+| Type-ahead requests, Suggestion opened, Type-ahead time (p95) | Suggestion lists served while people typed, on web and in the app (builds from 2026-09-15 on), the share where someone opened a suggestion, and how long a list took. One search usually makes several lists, so read requests as load, not searches. Above 300 ms the time turns amber. No top-queries list: type-ahead text is a half-typed prefix. |
 | Top searches | Most common normalised queries, with their click-through and no-result counts. |
 | Searches by kind and platform | Text, `@` organizer and browse searches; web, iOS, Android. |
 
@@ -102,6 +103,9 @@ Which dates and which audiences are the founder's decision (N1 in [OPERATIONAL_D
 - **Too many notices, or the wrong ones.** Untick "Recommendation engine switched on". Queued pushes are skipped at send time and the jobs stop at their next run. Shadow mode on stops sending but keeps counting.
 - **Search is broken or slow.** Untick "New search switched on" — everyone goes back to the old events-only search. If the admin console is unavailable, set `SEARCH_V2_KILL_SWITCH=true` on the web deployment and redeploy.
 - **Prompts or alerts must disappear at once.** Set `RECOMMENDATIONS_KILL_SWITCH=true` on the web deployment and redeploy, then also untick the engine switch here to stop the database jobs.
+- **Recommendation email must stop at once.** Untick "Recommendation email (legal item G1)"; queued emails are skipped as `channel_off` on the next minute. If the console is unavailable, set `RECOMMENDATION_EMAIL_KILL_SWITCH=true` on the web deployment and redeploy.
+
+**Recommendation email (legal item G1).** Built and off. Do not switch it on until legal item G1 is marked Decided in `docs/LEGAL_REVIEW_REQUIRED.md`: the console asks you to confirm that, and the server refuses the change without the confirmation. It needs the engine on and shadow mode off, and still sends nothing to anyone who has not switched "Email me picks and alerts" on themselves in Settings › Notifications. Every opt-in and opt-out is kept in `notification_consent_event`.
 - **Someone reports a notice they never asked for.** Look up their subscriptions (Supabase `notification_subscription` by user id) and their prompt history (`notification_prompt_state`): every subscription records where it came from and when. Escalate to engineering if a subscription exists with no matching accepted prompt or profile action.
 
 ## Escalation

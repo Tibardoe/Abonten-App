@@ -4,8 +4,10 @@ import { getSupabaseServiceClient } from "../supabase/serviceClient";
 import { type PushResult, sendPushToUser } from "./sendPushNotification";
 
 // Push + email delivery for notifications written in SQL: the reward
-// engine's notices (push + email, migrations 20260911152213 / 20260911163306)
-// and the "New review" / "Event cancelled" notices (push only). The
+// engine's notices (push + email, migrations 20260911152213 / 20260911163306),
+// the "New review" / "Event cancelled" notices (push only) and recommendation
+// digests (push, plus email for people who opted in once legal item G1
+// allows it to be switched on -- migration 20260915100300). The
 // `notification-delivery` pg_cron job calls POST /api/notifications/deliver
 // while anything is due; that route checks the token and runs this. The
 // database decides what is due (quiet hours, one email per 12 hours); this
@@ -25,6 +27,32 @@ export type RewardEmail = {
   items: RewardEmailItem[];
 };
 
+export type RecommendationEmailItem = {
+  subjectType: "event" | "place";
+  title: string;
+  /** Venue or place category / address. */
+  subtitle: string | null;
+  startsAt: string | null;
+  imagePublicId: string | null;
+  imageVersion: string | null;
+  /** Site path, e.g. /events/abc123 or /places/some-slug. */
+  path: string;
+  reason: string;
+  organizerUsername: string | null;
+};
+
+export type RecommendationEmail = {
+  /** For the signed unsubscribe link. */
+  userId: string;
+  to: string;
+  name: string | null;
+  /** Links go through /notifications/open so opening counts for the caps. */
+  notificationId: string;
+  /** The push title ("3 picks for you", "New event from @x"). */
+  headline: string;
+  items: RecommendationEmailItem[];
+};
+
 /** How the transport's email send went. `retry` = try again next run. */
 export type EmailSendResult =
   | { ok: true }
@@ -33,6 +61,14 @@ export type EmailSendResult =
 export type DeliveryDeps = {
   /** Renders and sends one reward email (React email + Resend, in the web app). */
   sendEmail: (email: RewardEmail) => Promise<EmailSendResult>;
+  /**
+   * Renders and sends one recommendation digest email. Omitted (or the
+   * web deployment's RECOMMENDATION_EMAIL_KILL_SWITCH set) = those emails
+   * are skipped, never sent.
+   */
+  sendRecommendationEmail?: (
+    email: RecommendationEmail,
+  ) => Promise<EmailSendResult>;
   /** Defaults to the Expo push sender. */
   sendPush?: (
     userId: string,
@@ -199,6 +235,41 @@ export async function deliverQueuedNotificationsCore(
         return;
       }
 
+      const isRecommendation = group[0].source === "recommendations";
+      if (isRecommendation && !deps.sendRecommendationEmail) {
+        await finish(ids, "skipped", "email_disabled");
+        return;
+      }
+      let recommendationItems: RecommendationEmailItem[] = [];
+      if (isRecommendation) {
+        const items = await service.rpc("recommendation_digest_email_items", {
+          p_notification_id: group[0].notification_id,
+        });
+        if (items.error) {
+          logger.error(
+            `recommendation_digest_email_items failed: ${items.error.message}`,
+          );
+          await finish(ids, "queued", "items_unavailable");
+          return;
+        }
+        recommendationItems = (items.data ?? []).map((row) => ({
+          subjectType: row.subject_type === "place" ? "place" : "event",
+          title: row.title,
+          subtitle: row.subtitle ?? null,
+          startsAt: row.starts_at ?? null,
+          imagePublicId: row.image_public_id ?? null,
+          imageVersion: row.image_version ?? null,
+          path: row.path,
+          reason: row.reason_kind,
+          organizerUsername: row.organizer_username ?? null,
+        }));
+        // Everything in it was cancelled, hidden or opted out since the build.
+        if (recommendationItems.length === 0) {
+          await finish(ids, "skipped", "not_visible");
+          return;
+        }
+      }
+
       const [authUser, profile] = await Promise.all([
         service.auth.admin.getUserById(userId),
         service
@@ -212,15 +283,30 @@ export async function deliverQueuedNotificationsCore(
         await finish(ids, "skipped", "no_email");
         return;
       }
-      const result = await deps.sendEmail({
-        userId,
-        to: email,
-        name: profile.data?.full_name || profile.data?.username || null,
-        items: group
-          .slice()
-          .sort((a, b) => a.created_at.localeCompare(b.created_at))
-          .map((r) => ({ title: r.title, body: r.body, at: r.created_at })),
-      });
+      const name = profile.data?.full_name || profile.data?.username || null;
+      const result =
+        isRecommendation && deps.sendRecommendationEmail
+          ? await deps.sendRecommendationEmail({
+              userId,
+              to: email,
+              name,
+              notificationId: group[0].notification_id,
+              headline: group[0].title,
+              items: recommendationItems,
+            })
+          : await deps.sendEmail({
+              userId,
+              to: email,
+              name,
+              items: group
+                .slice()
+                .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                .map((r) => ({
+                  title: r.title,
+                  body: r.body,
+                  at: r.created_at,
+                })),
+            });
       if (result.ok) {
         await finish(ids, "sent");
         summary.emailSent += 1;

@@ -1,3 +1,4 @@
+import { releaseWebPushOnSignOut } from "@/hooks/useWebPush";
 import { logger } from "@abonten/core/logger";
 import { supabase } from "../config/supabase/client";
 
@@ -76,6 +77,7 @@ export const linkGoogleIdentity = async (next?: string | null) => {
 // from the browser bundle.
 
 export const signOut = async () => {
+  await releaseWebPushOnSignOut();
   await supabase.auth.signOut();
   window.location.href = "/";
 };

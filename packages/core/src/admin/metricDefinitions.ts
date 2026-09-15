@@ -92,6 +92,9 @@ export type MetricKey =
   | "search.clickThroughRate"
   | "search.latencyP50"
   | "search.latencyP95"
+  | "search.suggestRequests"
+  | "search.suggestOpenRate"
+  | "search.suggestLatencyP95"
   | "recommendations.activeSubscriptions"
   | "recommendations.liveDigests"
   | "recommendations.shadowDigests"
@@ -809,6 +812,41 @@ const DEFINITIONS: MetricDefinition[] = [
     period: "range",
     unit: "ms",
     source: "search_query_log.duration_ms, 95th percentile",
+  },
+  {
+    key: "search.suggestRequests",
+    label: "Type-ahead requests",
+    short: "Suggestion lists served while people typed.",
+    definition:
+      "How many type-ahead suggestion lists the server returned in the period, on web and in the app. Each pause while typing can make one, so one search often makes several; read it as load and reach, not as a number of searches. Like searches, no user, device or IP identifiers are kept.",
+    period: "range",
+    unit: "count",
+    source: "search_query_log where surface = suggest, last N days",
+    caveats: [
+      "App builds from before 2026-09-15 fetch suggestions directly from the database and are not counted.",
+    ],
+  },
+  {
+    key: "search.suggestOpenRate",
+    label: "Suggestion opened",
+    short: "Share of suggestion lists where someone opened a suggestion.",
+    definition:
+      "Suggestion lists after which the person opened one of the suggestions directly, divided by all suggestion lists in the period. Low because most lists are replaced by the next keystroke before anyone chooses.",
+    period: "range",
+    unit: "percent",
+    source:
+      "search_query_log where surface = suggest and clicked_at is set ÷ all suggestion rows",
+  },
+  {
+    key: "search.suggestLatencyP95",
+    label: "Type-ahead time (p95)",
+    short: "Nineteen in twenty suggestion lists were faster than this.",
+    definition:
+      "The server-measured time to build a suggestion list, in milliseconds, at the 95th percentile. Type-ahead should feel instant, so above 300 ms it turns amber.",
+    period: "range",
+    unit: "ms",
+    source:
+      "search_query_log.latency_ms where surface = suggest, 95th percentile",
   },
   {
     key: "recommendations.activeSubscriptions",

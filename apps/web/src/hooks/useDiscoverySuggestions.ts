@@ -40,6 +40,8 @@ export function useDiscoverySuggestions(raw: string, enabled: boolean) {
     /** The normalised query these results belong to. */
     query: parsed.normalized,
     kind: parsed.kind,
+    /** search_query_log id of this suggestion request, for the click. */
+    searchId: ok ? (data.searchId ?? null) : null,
     events: ok ? data.events : [],
     places: ok ? data.places : [],
     organizers: ok ? data.organizers : [],

@@ -8,6 +8,7 @@ import type {
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import {
   type DiscoverySettingRow,
+  isRecommendationEmailKillSwitchOn,
   isRecommendationsKillSwitchOn,
   isSearchKillSwitchOn,
   mapDiscoverySettings,
@@ -59,6 +60,18 @@ export type SearchInsights = {
   byMode: { mode: string; searches: number; clicks: number }[];
   clicksByType: { clicked_type: string; clicks: number }[];
   byPlatform: { platform: string; searches: number }[];
+  /** Type-ahead requests (migration 20260915100100). */
+  suggestions: {
+    totals: {
+      requests: number;
+      zero_results: number;
+      opened: number;
+      p50_ms: number | null;
+      p95_ms: number | null;
+    } | null;
+    byPlatform: { platform: string; requests: number; opened: number }[];
+    openedByType: { clicked_type: string; opened: number }[];
+  } | null;
 };
 
 export type RecommendationMetrics = {
@@ -103,7 +116,11 @@ export type RecommendationMetrics = {
 
 export type DiscoveryOverview = {
   settings: DiscoverySettings;
-  killSwitches: { search: boolean; recommendations: boolean };
+  killSwitches: {
+    search: boolean;
+    recommendations: boolean;
+    recommendationEmail: boolean;
+  };
   search: SearchInsights;
   recommendations: RecommendationMetrics;
   /** Recommendation pushes by delivery status, from the shared queue. */
@@ -160,6 +177,7 @@ export async function getDiscoveryOverviewCore(
       killSwitches: {
         search: isSearchKillSwitchOn(),
         recommendations: isRecommendationsKillSwitchOn(),
+        recommendationEmail: isRecommendationEmailKillSwitchOn(),
       },
       search: search.data as unknown as SearchInsights,
       recommendations: recs.data as unknown as RecommendationMetrics,
@@ -185,6 +203,7 @@ const COLUMN: Record<keyof DiscoverySettingsPatch, keyof DiscoverySettingRow> =
     recommendationsShadowMode: "recommendations_shadow_mode",
     recommendationsAudience: "recommendations_audience",
     promptsEnabled: "prompts_enabled",
+    recommendationsEmailEnabled: "recommendations_email_enabled",
     betaUserIds: "beta_user_ids",
     dailyPushCap: "daily_push_cap",
     weeklyPushCap: "weekly_push_cap",
@@ -236,6 +255,11 @@ export async function updateDiscoverySettingsCore(
     reason: string;
     /** Start recommending only what is published from now on. */
     resetWatermark?: boolean;
+    /**
+     * Required to switch recommendation email on: the operator confirms
+     * legal item G1 is Decided. The server refuses without it.
+     */
+    confirmLegalG1?: boolean;
   },
   requestMeta?: RequestMeta,
 ): Promise<AdminEnvelope<DiscoverySettings>> {
@@ -272,6 +296,17 @@ export async function updateDiscoverySettingsCore(
     changed.push("generateWatermark");
   }
   if (changed.length === 0) return { status: 400, message: "Nothing changed." };
+
+  if (
+    update.recommendations_email_enabled === true &&
+    input.confirmLegalG1 !== true
+  ) {
+    return {
+      status: 400,
+      message:
+        "Recommendation email needs legal item G1 (consent for promotional email) to be Decided. Confirm that before switching it on.",
+    };
+  }
 
   // Turning recommendations on for the first time must not replay every
   // event published while they were off.

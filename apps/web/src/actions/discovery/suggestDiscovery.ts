@@ -18,6 +18,7 @@ function fallback(status: number, message: string): SearchSuggestionsResponse {
   return {
     status,
     message,
+    searchId: null,
     query: parseSearchQuery(""),
     events: [],
     places: [],
@@ -40,8 +41,14 @@ export async function suggestDiscovery(
     if (!(await checkRateLimit(key, 180, 60))) {
       return fallback(429, "Slow down a little.");
     }
-    const { program } = await resolveDiscoveryAccess(caller.svc, caller.userId);
-    return await suggestCore(publicSupabase, parsed.data, program);
+    const { program, settings } = await resolveDiscoveryAccess(
+      caller.svc,
+      caller.userId,
+    );
+    return await suggestCore(publicSupabase, parsed.data, program, {
+      platform: "web",
+      loggingEnabled: settings?.search_logging_enabled ?? false,
+    });
   } catch (error) {
     logger.error("suggestDiscovery failed", error);
     return fallback(500, "Suggestions are unavailable right now.");

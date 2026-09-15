@@ -232,6 +232,21 @@ export function UnifiedSearch() {
   );
 
   const openSuggestion = (s: SearchSuggestion) => {
+    const group =
+      s.entityType === "event"
+        ? suggest.events
+        : s.entityType === "place"
+          ? suggest.places
+          : suggest.organizers;
+    logSearchOpen(
+      suggest.searchId,
+      s.entityType,
+      s.id,
+      Math.max(
+        0,
+        group.findIndex((g) => g.id === s.id),
+      ),
+    );
     add(s.entityType === "organizer" ? `@${s.label}` : s.label);
     if (s.entityType === "event") router.push(`/(app)/event/${s.id}`);
     else if (s.entityType === "place") router.push(`/(app)/place/${s.id}`);

@@ -1280,6 +1280,7 @@ export type Database = {
           prompts_enabled: boolean;
           recommendation_retention_days: number;
           recommendations_audience: string;
+          recommendations_email_enabled: boolean;
           recommendations_enabled: boolean;
           recommendations_shadow_mode: boolean;
           search_audience: string;
@@ -1309,6 +1310,7 @@ export type Database = {
           prompts_enabled?: boolean;
           recommendation_retention_days?: number;
           recommendations_audience?: string;
+          recommendations_email_enabled?: boolean;
           recommendations_enabled?: boolean;
           recommendations_shadow_mode?: boolean;
           search_audience?: string;
@@ -1338,6 +1340,7 @@ export type Database = {
           prompts_enabled?: boolean;
           recommendation_retention_days?: number;
           recommendations_audience?: string;
+          recommendations_email_enabled?: boolean;
           recommendations_enabled?: boolean;
           recommendations_shadow_mode?: boolean;
           search_audience?: string;
@@ -4437,6 +4440,36 @@ export type Database = {
           },
         ];
       };
+      notification_consent_event: {
+        Row: {
+          action: string;
+          channel: string;
+          created_at: string;
+          id: number;
+          source: string;
+          topic: string;
+          user_id: string;
+        };
+        Insert: {
+          action: string;
+          channel: string;
+          created_at?: string;
+          id?: never;
+          source: string;
+          topic: string;
+          user_id: string;
+        };
+        Update: {
+          action?: string;
+          channel?: string;
+          created_at?: string;
+          id?: never;
+          source?: string;
+          topic?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       notification_delivery: {
         Row: {
           attempts: number;
@@ -6132,6 +6165,7 @@ export type Database = {
           position: number;
           price: number | null;
           price_unit: string | null;
+          search_tsv: unknown;
           show_price: boolean;
         };
         Insert: {
@@ -6143,6 +6177,7 @@ export type Database = {
           position?: number;
           price?: number | null;
           price_unit?: string | null;
+          search_tsv?: unknown;
           show_price?: boolean;
         };
         Update: {
@@ -6154,6 +6189,7 @@ export type Database = {
           position?: number;
           price?: number | null;
           price_unit?: string | null;
+          search_tsv?: unknown;
           show_price?: boolean;
         };
         Relationships: [
@@ -6436,6 +6472,27 @@ export type Database = {
             referencedColumns: ["user_id"];
           },
         ];
+      };
+      push_receipt: {
+        Row: {
+          check_after: string;
+          created_at: string;
+          ticket_id: string;
+          token: string;
+        };
+        Insert: {
+          check_after?: string;
+          created_at?: string;
+          ticket_id: string;
+          token: string;
+        };
+        Update: {
+          check_after?: string;
+          created_at?: string;
+          ticket_id?: string;
+          token?: string;
+        };
+        Relationships: [];
       };
       rate_limit_bucket: {
         Row: {
@@ -10071,6 +10128,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      web_push_subscription: {
+        Row: {
+          auth: string;
+          created_at: string;
+          endpoint: string;
+          id: string;
+          last_seen_at: string;
+          last_success_at: string | null;
+          p256dh: string;
+          user_agent: string | null;
+          user_id: string;
+        };
+        Insert: {
+          auth: string;
+          created_at?: string;
+          endpoint: string;
+          id?: string;
+          last_seen_at?: string;
+          last_success_at?: string | null;
+          p256dh: string;
+          user_agent?: string | null;
+          user_id: string;
+        };
+        Update: {
+          auth?: string;
+          created_at?: string;
+          endpoint?: string;
+          id?: string;
+          last_seen_at?: string;
+          last_success_at?: string | null;
+          p256dh?: string;
+          user_agent?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       weekly_edition: {
         Row: {
           archived_at: string | null;
@@ -10527,6 +10620,14 @@ export type Database = {
         Args: { p_delta_minor: number; p_reward_event_id: string };
         Returns: undefined;
       };
+      _recommendation_email_allowed: {
+        Args: { p_reason: string; p_user: string };
+        Returns: boolean;
+      };
+      _recommendation_push_allowed: {
+        Args: { p_reason: string; p_user: string };
+        Returns: boolean;
+      };
       _recommendation_reason_allowed: {
         Args: { p_reason: string; p_user: string };
         Returns: boolean;
@@ -10694,6 +10795,7 @@ export type Database = {
       _search_web_tsquery: { Args: { p_norm: string }; Returns: unknown };
       _weekly_document_has_content: { Args: { p_doc: Json }; Returns: boolean };
       account_deletion_blockers: { Args: { p_user_id: string }; Returns: Json };
+      account_is_restricted: { Args: never; Returns: boolean };
       admin_clear_payout_review: {
         Args: { p_admin_id: string; p_note: string; p_payout_id: string };
         Returns: string;
@@ -12594,6 +12696,21 @@ export type Database = {
       };
       purge_verification_evidence: { Args: never; Returns: Json };
       rebate_stats: { Args: { p_user_id: string }; Returns: Json };
+      recommendation_digest_email_items: {
+        Args: { p_notification_id: string };
+        Returns: {
+          image_public_id: string;
+          image_version: string;
+          organizer_username: string;
+          path: string;
+          reason_kind: string;
+          starts_at: string;
+          subject_id: string;
+          subject_type: string;
+          subtitle: string;
+          title: string;
+        }[];
+      };
       recommendation_dismiss: {
         Args: { p_subject_id: string; p_subject_type: string; p_user: string };
         Returns: Json;

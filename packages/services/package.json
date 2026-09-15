@@ -18,12 +18,14 @@
     "@abonten/validation": "*",
     "@supabase/supabase-js": "^2.49.1",
     "cloudinary": "^2.6.0",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@abonten/config": "*",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
+    "@types/web-push": "^3.6.4",
     "typescript": "^5",
     "vitest": "^3.2.7"
   }

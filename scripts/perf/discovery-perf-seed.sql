@@ -6,7 +6,7 @@
 -- holds real data.
 --
 -- Shape: 50,000 accounts (2,000 of them organizers), 100,000 events,
--- 20,000 places, ~60,000 attendance rows. Titles mix three vocabulary bands so timings can be read
+-- 20,000 places (100,000 services), ~60,000 attendance rows. Titles mix three vocabulary bands so timings can be read
 -- per band instead of from one unrealistic "every word is common" corpus:
 --   common  50 real words      each in ~6% of events   (worst case)
 --   mid     500 pseudo-words   each in ~0.2% of events
@@ -125,6 +125,27 @@ join perf_common c on c.n = (g * 11) % 50
 join perf_mid m    on m.n = (g * 17) % 500
 join perf_rare r   on r.n = (g * 3) % 20000;
 
+-- Five services per place (2026-09-15, place amenities search): one of 20
+-- amenity words (each in 5% of services, the common case) plus a mid-band
+-- pseudo-word, so both a common and a selective amenity query can be timed.
+create temp table perf_amenity(n int primary key, w text) on commit drop;
+insert into perf_amenity
+select row_number() over () - 1, w from unnest(array[
+  'wifi','parking','pool','sauna','massage','braids','barbing','buffet','takeaway','delivery',
+  'karaoke','shisha','projector','generator','aircon','playground','rooftop','terrace','valet','spa']) w;
+
+insert into public.place_service (place_id, name, description, price, position)
+select p.id,
+       initcap(a.w) || ' ' || m.w,
+       'Our ' || a.w || ' service.',
+       10 + (k * 5),
+       k
+from (select id, (row_number() over (order by slug))::int as n
+      from public.place where slug like 'perf-place-%') p
+cross join generate_series(0, 4) k
+join perf_amenity a on a.n = (p.n * 7 + k * 3) % 20
+join perf_mid m     on m.n = (p.n * 11 + k * 101) % 500;
+
 insert into public.attendance (user_id, event_id, number_of_tickets, status)
 select o.id, e.id, 1 + (random() * 3)::int, 'attending'
 from (select id, (row_number() over ())::int as n
@@ -133,6 +154,7 @@ join perf_orgs o on o.n = 1 + (e.n % 2000);
 
 analyze public.event;
 analyze public.place;
+analyze public.place_service;
 analyze public.user_info;
 analyze public.attendance;
 analyze public.event_occurrence;
@@ -146,6 +168,8 @@ select (select w from perf_common where n = 11) as common_word,
 select
   (select count(*) from public.event where slug like 'perf-event-%') as events,
   (select count(*) from public.place where slug like 'perf-place-%') as places,
+  (select count(*) from public.place_service s join public.place p on p.id = s.place_id
+    where p.slug like 'perf-place-%') as place_services,
   (select count(*) from perf_orgs) as organizers,
   (select count(*) from public.user_info) as accounts,
   (select count(*) from public.attendance) as attendance_rows;
