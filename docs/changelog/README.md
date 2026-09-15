@@ -20,6 +20,12 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
 - **Fix — missing `NSMotionUsageDescription`**: App Store Connect refused 0.2.0 (5) with ITMS-90683. The binary links `CMMotionActivityManager` through `expo-location` 57 (`LocationModule.swift`, `MotionActivityStreamer.swift` — the library's optional motion-activity API), and Apple requires a purpose string for any app that links it, whether or not it is called. The string was missing because the iOS-readiness change set the plugin's `motionUsagePermission: false`. It is now a truthful string stating Abonten does not use motion data and the permission comes from the location component; the app still never requests motion access, and no other permission, entitlement or Android setting changed (checked with `expo config --type introspect`). `expo-camera`'s `CMMotionManager` (photo orientation) needs no string. Takes effect from build 6. (`deployment/mobile-eas.md` 1.1 → 1.2)
 
+## 2026-09-15 — CI: lint and docs jobs green again
+
+- **Fix — `docs` job**: `check-docs` failed six `code-references` in CI while passing locally, because the docs name gitignored local files (`apps/web/.env.local`, `apps/admin/.env.local`, `apps/mobile/.env`) that exist on a developer's machine and never in CI's fresh checkout. A referenced path that git itself ignores now counts as valid (`git check-ignore`); any other missing path still fails.
+- **Fix — `lint` job**: Biome's `noControlCharactersInRegex` rejected the U+0000–U+00FF character range in `isValidReactionEmoji` (`packages/core/src/messagingReactions.ts`, since 2026-09-08). The same rule is now a code-point comparison; the 49 reaction tests are unchanged and pass.
+- Both jobs were reproduced in a clean Linux `node:22` container on the `main` commit before the change (6 docs failures, 1 lint error) and pass there after it.
+
 ## 2026-09-15 — Discovery: the five known limitations resolved
 
 - **New capability — place services are searchable** (`20260915100000`): `place_service.search_tsv` + GIN index and a services branch in `_search_place_pool`, so "sauna" or "braids" finds places that offer it, ranked below name and category matches. Perf harness gained 100,000 services. (`architecture/discovery-search-and-recommendations.md` 1.0 → 1.1, `architecture/perf/discovery-2026-09.md` 1.0 → 1.1)

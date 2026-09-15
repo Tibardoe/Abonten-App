@@ -177,5 +177,10 @@ export function isValidReactionEmoji(value: string): boolean {
   // At least one code unit above Latin-1, i.e. a multi-byte character:
   // blocks "12345", "!!!!", "<3" and friends, which the two rules above
   // would otherwise allow.
-  return /[^\u0000-\u00FF]/u.test(value);
+  // Compared by code point: a regex range starting at U+0000 is a lint
+  // error (noControlCharactersInRegex).
+  for (const ch of value) {
+    if ((ch.codePointAt(0) ?? 0) > 0xff) return true;
+  }
+  return false;
 }
