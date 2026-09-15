@@ -63,6 +63,7 @@ import {
   Alert,
   FlatList,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   View,
@@ -586,7 +587,9 @@ export default function PlaceDetailScreen() {
                 >
                   <MapView
                     style={{ flex: 1 }}
-                    provider={PROVIDER_GOOGLE}
+                    provider={
+                      Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
+                    }
                     pointerEvents="none"
                     scrollEnabled={false}
                     zoomEnabled={false}

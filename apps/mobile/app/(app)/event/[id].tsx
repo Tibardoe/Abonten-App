@@ -61,7 +61,14 @@ import { useCarouselCardWidth } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { FlatList, Linking, Pressable, ScrollView, View } from "react-native";
+import {
+  FlatList,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
 
 function priceRange(tickets: { price: number; currency: string }[]): string {
   if (tickets.length === 0) return "Free";
@@ -539,7 +546,9 @@ export default function EventDetailScreen() {
                 >
                   <MapView
                     style={{ flex: 1 }}
-                    provider={PROVIDER_GOOGLE}
+                    provider={
+                      Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
+                    }
                     pointerEvents="none"
                     scrollEnabled={false}
                     zoomEnabled={false}
