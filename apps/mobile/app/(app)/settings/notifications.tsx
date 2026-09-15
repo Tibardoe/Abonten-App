@@ -284,6 +284,23 @@ export default function NotificationSettings() {
                 disabled={save.isPending || !p.email}
                 onChange={(v) => save.mutate({ rewardEmails: v })}
               />
+              {program.recommendationEmail || p.recommendationEmails ? (
+                <Row
+                  title="Email me picks and alerts"
+                  description={
+                    p.email
+                      ? `The same picks as the push, to ${p.email}. At most one a day. Unsubscribe from any of these emails at any time.`
+                      : "Your account has no email address, so you'll get picks in the app only."
+                  }
+                  value={p.recommendationEmails && !!p.email}
+                  disabled={
+                    save.isPending ||
+                    (!p.recommendationEmails &&
+                      (!p.email || !program.recommendationEmail))
+                  }
+                  onChange={(v) => save.mutate({ recommendationEmails: v })}
+                />
+              ) : null}
             </Card>
 
             <Card className="flex-row gap-3 bg-muted">

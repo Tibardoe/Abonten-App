@@ -1,5 +1,6 @@
 "use client";
 
+import { logSearchClick } from "@/actions/discovery/logSearchClick";
 import { eventCategoriesAndTypes } from "@/data/eventCategoriesAndTypes";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import { useDiscoveryProgram } from "@/hooks/useDiscoveryProgram";
@@ -471,6 +472,23 @@ function FilterSearchBarContent({ filterOnly }: { filterOnly?: boolean }) {
       case "hit": {
         const { hit } = item;
         setIsOpen(false);
+        if (discovery.searchId) {
+          const group =
+            hit.entityType === "event"
+              ? discovery.events
+              : hit.entityType === "place"
+                ? discovery.places
+                : discovery.organizers;
+          void logSearchClick({
+            searchId: discovery.searchId,
+            entityType: hit.entityType,
+            entityId: hit.id,
+            rank: Math.max(
+              0,
+              group.findIndex((g) => g.id === hit.id),
+            ),
+          });
+        }
         if (hit.entityType === "organizer") {
           recordRecentSearch(`@${hit.label}`);
           router.push(`/user/${hit.slug ?? hit.label}/posts`);

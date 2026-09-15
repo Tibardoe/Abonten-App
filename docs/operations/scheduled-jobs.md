@@ -38,7 +38,7 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `rewards-notify-pending` | 18:00 | `rewards_notify_pending()` | Nudge notices for pending credit | — |
 | `rewards-monthly-rebates` | 03:00 on the 3rd | `rewards_run_monthly_rebates(null,null)` | Organizer/venue rebates, milestones, place visits | Run by hand from Admin › Rewards › Rebates |
 | `referral-touch-purge` | daily | `referral_purge_old_touches()` | 90-day retention on referral clicks | Retention promise broken |
-| `notification-delivery` | every minute | `run_notification_delivery()` → `POST /api/notifications/deliver` | Reward pushes/emails, app pushes for SQL-written notices, recommendation digests | Reward/review/cancellation/recommendation pushes stop |
+| `notification-delivery` | every minute | `run_notification_delivery()` → `POST /api/notifications/deliver` | Reward pushes/emails, app pushes for SQL-written notices, recommendation digests; reads due Expo push receipts and drops unread ones after a day | Reward/review/cancellation/recommendation pushes stop; retired device tokens are no longer pruned |
 | `fieldops-eligibility-sweep` | */15 min | `fieldops_run_eligibility_sweep(200); fieldops_sweep_content(200)` | Confirm field commissions after holding (no-op while the programme is off) | Field commissions never approve; `fieldops` health lag |
 | `fieldops-housekeeping` | 02:25 | `fieldops_run_housekeeping()` | Close stale reviews; count evidence due for purge | — |
 | `search-log-purge` | 03:35 | `search_log_purge()` | Delete search analytics older than `search_log_retention_days` (90) | Retention promise broken |

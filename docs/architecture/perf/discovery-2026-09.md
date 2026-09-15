@@ -2,10 +2,10 @@
 title: Discovery performance measurements (September 2026)
 purpose: Record what the search and recommendation functions cost on a large synthetic catalogue, what the measurements changed, and how to repeat them.
 audience: Engineering
-scope: search_suggest, search_events, search_places, search_organizers, recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
+scope: search_suggest, search_events, search_places (including place services), search_organizers, recommendations_generate, recommendations_build_digest, admin_recommendation_metrics. Local Docker Postgres only; not production latency.
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-13
+version: 1.1
+lastReviewed: 2026-09-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -60,6 +60,21 @@ The first run, with 2,000 accounts, looked fine. Growing accounts to 50,000 expo
 - The place candidate query (`text match OR category_id = any(...)`) scanned `place` even when no category matched.
 
 Migration `20260913090600` rewrites each OR as a UNION of indexed branches and finds display-name word starts through the A-weighted lexemes of `search_tsv`. What matches and how it scores did not change; the integration suite gained a test for display-name matching.
+
+### Place services (2026-09-15)
+
+Migration `20260915100000` adds a place-services branch to `_search_place_pool`. The seed now also writes five services per place (100,000 rows): one of 20 amenity words, each in 5% of services, plus a mid-frequency word. Same laptop, same method:
+
+| Case | Rows | p50 ms | p95 ms | max ms |
+|---|---|---|---|---|
+| places · common word, with location ("rooftop", now also an amenity word) | 21 | 41.9 | 51.9 | 56.2 |
+| places · mid-frequency word (also in about 200 services) | 21 | 12.4 | 14.8 | 15.8 |
+| places · category name ("restaurant", no service matches) | 21 | 20.2 | 23.4 | 29.2 |
+| places · common amenity ("sauna", 5,000 services) | 21 | 38.3 | 42.0 | 43.6 |
+| places · amenity + mid-frequency word | 21 | 8.0 | 9.0 | 9.1 |
+| suggest · common amenity ("massage") | 4 | 41.8 | 48.8 | 49.9 |
+
+Queries no service matches cost the same as before (category name 25.5 → 20.2 ms p50, events and organizers unchanged). Queries that do match services cost more in proportion to how many services match, because every matching place is scored before the top 400 are kept: "rooftop" went from 20.3 to 41.9 ms p50 once 5,000 services also contained it. That is the worst case the seed can produce and stays under the 68 ms p95 of the slowest suggestion shape. The services branch uses `idx_place_service_search_tsv` (5,000 matches in 1.7 ms). If a real amenity word ever matches tens of thousands of services, cap the services branch before scoring.
 
 ## Recommendation engine
 

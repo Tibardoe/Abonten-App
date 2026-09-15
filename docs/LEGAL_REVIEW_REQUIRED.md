@@ -86,9 +86,9 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 
 | # | Item | Affects | Decision needed | Status |
 |---|---|---|---|---|
-| G1 | If marketing emails or SMS are ever introduced: consent capture and opt-out under Act 843 | Privacy §8 | Decide before launch | Open |
+| G1 | If marketing emails or SMS are ever introduced: consent capture and opt-out under Act 843. **2026-09-15: a recommendation digest email is built and switched off** (`discovery_program_setting.recommendations_email_enabled = false`): opt-in only from settings, a consent record (`notification_consent_event`), a signed unsubscribe link, RFC 8058 one-click unsubscribe, the push's caps. Confirm this design meets Act 843 before the switch is turned on. | Privacy §8; `architecture/discovery-search-and-recommendations.md` §4.4 | Decide before the recommendation email switch is turned on | Open |
 | G2 | Reward-notice emails: confirm they are service messages, not marketing, given the existing opt-out | Privacy §8 | Confirm | Open |
-| G3 | Recommendation push notices and alerts (Discovery): confirm that an explicit in-app opt-in, a per-category switch, one-tap stop and a two-week pause meet Act 843 for promotional push; confirm how long the opt-in record (`notification_prompt_state`) must be kept. No recommendation email is sent; if one is ever added it falls under G1. | Privacy §8; `architecture/discovery-search-and-recommendations.md` §4 | Confirm before switching shadow mode off for anyone outside staff | Open |
+| G3 | Recommendation push notices and alerts (Discovery): confirm that an explicit in-app opt-in, a per-category switch, one-tap stop and a two-week pause meet Act 843 for promotional push; confirm how long the opt-in records (`notification_prompt_state`, and `notification_consent_event` for email) must be kept. Recommendation email is built but off; turning it on falls under G1. | Privacy §8; `architecture/discovery-search-and-recommendations.md` §4 | Confirm before switching shadow mode off for anyone outside staff | Open |
 
 ## H. Placeholders standing in for information not yet provided
 

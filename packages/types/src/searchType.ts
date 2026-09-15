@@ -130,6 +130,11 @@ export type SearchSuggestion = {
 export type SearchSuggestionsResponse = {
   status: number;
   message?: string;
+  /**
+   * search_query_log row for this suggestion request (surface "suggest"),
+   * reported back with the suggestion the person opens. Null when not logged.
+   */
+  searchId?: number | null;
   query: ParsedSearchQuery;
   events: SearchSuggestion[];
   places: SearchSuggestion[];

@@ -390,6 +390,7 @@ export const discoverySettingsSchema = z.object({
     .min(5, "Give a short reason for this change")
     .max(500),
   resetWatermark: z.boolean().optional(),
+  confirmLegalG1: z.boolean().optional(),
   patch: z
     .object({
       searchV2Enabled: z.boolean(),
@@ -402,6 +403,7 @@ export const discoverySettingsSchema = z.object({
       recommendationsShadowMode: z.boolean(),
       recommendationsAudience: z.enum(["staff", "beta", "all"]),
       promptsEnabled: z.boolean(),
+      recommendationsEmailEnabled: z.boolean(),
       betaUserIds: z.array(z.string().uuid()).max(500),
       dailyPushCap: z.number().int().min(0).max(5),
       weeklyPushCap: z.number().int().min(0).max(14),

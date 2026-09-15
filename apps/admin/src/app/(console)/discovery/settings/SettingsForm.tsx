@@ -192,7 +192,11 @@ export function SettingsForm({
   stepUpFresh,
 }: {
   settings: DiscoverySettings;
-  killSwitches: { search: boolean; recommendations: boolean };
+  killSwitches: {
+    search: boolean;
+    recommendations: boolean;
+    recommendationEmail: boolean;
+  };
   canConfigure: boolean;
   stepUpFresh: boolean;
 }) {
@@ -219,6 +223,9 @@ export function SettingsForm({
     !s.recommendationsShadowMode &&
     settings.recommendationsShadowMode;
 
+  const emailTurningOn =
+    s.recommendationsEmailEnabled && !settings.recommendationsEmailEnabled;
+
   const save = () =>
     start(async () => {
       setMsg(null);
@@ -230,10 +237,19 @@ export function SettingsForm({
       ) {
         return;
       }
+      if (
+        emailTurningOn &&
+        !window.confirm(
+          "Recommendation email is promotional email. Only continue if legal item G1 (consent and opt-out under Act 843) is marked Decided in docs/LEGAL_REVIEW_REQUIRED.md. People still have to switch the emails on themselves. Continue?",
+        )
+      ) {
+        return;
+      }
       const res = await updateDiscoverySettings({
         expectedUpdatedAt: settings.updatedAt,
         reason: reason.trim(),
         resetWatermark: resetWatermark || undefined,
+        confirmLegalG1: emailTurningOn || undefined,
         patch: {
           searchV2Enabled: s.searchV2Enabled,
           searchAudience: s.searchAudience,
@@ -244,6 +260,7 @@ export function SettingsForm({
           recommendationsShadowMode: s.recommendationsShadowMode,
           recommendationsAudience: s.recommendationsAudience,
           promptsEnabled: s.promptsEnabled,
+          recommendationsEmailEnabled: s.recommendationsEmailEnabled,
           betaUserIds: beta
             .split(/[\s,]+/)
             .map((v) => v.trim())
@@ -266,12 +283,16 @@ export function SettingsForm({
 
   return (
     <div className="space-y-4">
-      {killSwitches.search || killSwitches.recommendations ? (
+      {killSwitches.search ||
+      killSwitches.recommendations ||
+      killSwitches.recommendationEmail ? (
         <Card className="border-destructive/40 p-3 text-sm">
           A deploy-level kill switch is set (
           {[
             killSwitches.search && "SEARCH_V2_KILL_SWITCH",
             killSwitches.recommendations && "RECOMMENDATIONS_KILL_SWITCH",
+            killSwitches.recommendationEmail &&
+              "RECOMMENDATION_EMAIL_KILL_SWITCH",
           ]
             .filter(Boolean)
             .join(", ")}
@@ -372,6 +393,13 @@ export function SettingsForm({
           checked={s.promptsEnabled}
           disabled={!editable}
           onChange={(v) => set("promptsEnabled", v)}
+        />
+        <Toggle
+          label="Recommendation email (legal item G1)"
+          hint="Lets people in the audience switch on the same digest by email; nobody gets one unless they do. Needs the engine on and shadow mode off. Keep off until legal item G1 is Decided."
+          checked={s.recommendationsEmailEnabled}
+          disabled={!editable}
+          onChange={(v) => set("recommendationsEmailEnabled", v)}
         />
         {s.searchAudience === "beta" || s.recommendationsAudience === "beta" ? (
           <label className="block text-sm">

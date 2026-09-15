@@ -8,7 +8,8 @@ import { z } from "zod";
 
 // GET /api/mobile/notifications/preferences
 // PUT /api/mobile/notifications/preferences  { recommendationsPush?, organizerAlertsPush?,
-//   placeUpdatesPush?, socialPush?, rewardEmails?, pause?: "two_weeks" | "resume" }
+//   placeUpdatesPush?, socialPush?, rewardEmails?, recommendationEmails?,
+//   pause?: "two_weeks" | "resume" }
 // Same services as the web getNotificationPreferences / updateNotificationPreferences actions.
 export async function GET(req: Request) {
   return discoveryRoute(
@@ -29,6 +30,6 @@ export async function PUT(req: Request) {
       label: "PUT /notifications/preferences",
     },
     ({ svc, userId, data }) =>
-      updateNotificationPreferencesCore(svc, signedIn(userId), data),
+      updateNotificationPreferencesCore(svc, signedIn(userId), data, "app"),
   );
 }

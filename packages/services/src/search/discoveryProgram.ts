@@ -39,6 +39,14 @@ export function isRecommendationsKillSwitchOn(): boolean {
   return process.env.RECOMMENDATIONS_KILL_SWITCH === "true";
 }
 
+/**
+ * Emergency stop for recommendation email only: nobody can opt in and the
+ * delivery route skips queued digest emails. Push and in-app are untouched.
+ */
+export function isRecommendationEmailKillSwitchOn(): boolean {
+  return process.env.RECOMMENDATION_EMAIL_KILL_SWITCH === "true";
+}
+
 /** Test hook: forget the cached settings row. */
 export function resetDiscoverySettingsCache(): void {
   cached = null;
@@ -136,6 +144,13 @@ export async function resolveDiscoveryAccess(
       placeSearch: searchV2 && row.place_search_enabled,
       personalization,
       prompts: personalization && row.prompts_enabled,
+      // Email is the same digest as the push, so it needs the push to be
+      // live (not shadow). Legal item G1 gates the setting.
+      recommendationEmail:
+        personalization &&
+        !row.recommendations_shadow_mode &&
+        row.recommendations_email_enabled &&
+        !isRecommendationEmailKillSwitchOn(),
     },
   };
 }
@@ -162,6 +177,7 @@ export function mapDiscoverySettings(
     recommendationsShadowMode: row.recommendations_shadow_mode,
     recommendationsAudience: row.recommendations_audience as DiscoveryAudience,
     promptsEnabled: row.prompts_enabled,
+    recommendationsEmailEnabled: row.recommendations_email_enabled,
     betaUserIds: row.beta_user_ids ?? [],
     dailyPushCap: row.daily_push_cap,
     weeklyPushCap: row.weekly_push_cap,

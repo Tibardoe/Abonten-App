@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-13
+lastReviewed: 2026-09-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,14 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-15 — Discovery: the five known limitations resolved
+
+- **New capability — place services are searchable** (`20260915100000`): `place_service.search_tsv` + GIN index and a services branch in `_search_place_pool`, so "sauna" or "braids" finds places that offer it, ranked below name and category matches. Perf harness gained 100,000 services. (`architecture/discovery-search-and-recommendations.md` 1.0 → 1.1, `architecture/perf/discovery-2026-09.md` 1.0 → 1.1)
+- **Behaviour change — mobile type-ahead goes through the API**: `GET /api/mobile/search/suggest` (180 a minute per user or IP, programme switches) replaces the direct anon `search_suggest` call, reversing the earlier hybrid decision at the owner's request. Both platforms now log suggestion requests (`surface = 'suggest'`) and the suggestion opened; `admin_search_insights` reports them separately (`20260915100100`) and Admin › Discovery gains three type-ahead tiles (`admin/discovery.md` 1.0 → 1.1, `admin/metrics.md` regenerated). App builds from before this change keep the direct call until they update.
+- **New capability — Expo push receipts** (`20260915100200`): accepted tickets are kept in `push_receipt`; the minute delivery job reads receipts about 15 minutes later, deletes tokens reported `DeviceNotRegistered` and logs every other provider error. (`operations/notifications-and-email-operations.md` 1.0 → 1.1, `operations/scheduled-jobs.md`, privacy inventory and retention)
+- **New capability — web push**: browsers can turn on notifications in Settings › Notifications (`web_push_subscription`, `push-sw.js`, `webPushCore` with the `web-push` package); every notice that pushes to the app reaches them. Endpoints are limited to real push services; sign-out and account deletion remove subscriptions. Inactive until `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` and `WEB_PUSH_SUBJECT` are set on the web deployment. (`security/secrets-and-environment.md`, `apps/web/.env.example`)
+- **New capability, switched off — recommendation email** (`20260915100300`): the same digest by email for people who opt in, a consent record (`notification_consent_event`), signed and one-click unsubscribe, send-time checks, an admin switch that requires confirming legal item G1 and `RECOMMENDATION_EMAIL_KILL_SWITCH`. Must stay off until G1 is Decided. (`LEGAL_REVIEW_REQUIRED.md` G1/G3 updated)
 
 ## 2026-09-15 — iOS production readiness (Apple Developer enrolment complete)
 

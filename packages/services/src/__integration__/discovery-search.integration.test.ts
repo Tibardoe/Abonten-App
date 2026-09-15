@@ -50,6 +50,7 @@ const ON: DiscoveryProgram = {
   placeSearch: true,
   personalization: false,
   prompts: false,
+  recommendationEmail: false,
 };
 
 let organizer: TestUser;

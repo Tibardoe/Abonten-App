@@ -92,7 +92,7 @@ Legend — App: W web, A Android app, C admin console, B backend-only. Role: Cu 
 | Event reviews | W A | eligibility (checked-in, ended) | `event_review*`, `review_drafts` | actions `postEventReview`…; `reviews/*` | Content | help |
 | Reports | W A | 10 reasons × 10 targets; attachments; dedupe; 10/h | `report*` | `reports/submitReportCore`; action `submitReport`; API `reports` | Reports & Moderation (`reports.*`, `moderation.*`) | admin/reports; moderation policy |
 | Moderation | C | `apply_moderation_action` (idempotent) | `moderation_action`, `moderation_state` columns | `admin/moderation/*` | audit `moderation.*` | same |
-| Notifications | W A C | in-app; push (A); reward/app pushes via queue | `notification`, `device_token`, `notification_delivery*`, `notification_preference` | `notifications/*`; API `notifications/**`, `devices/*`; `/api/notifications/{deliver,unsubscribe}` | Notifications (resend/broadcast) | operations/notifications |
+| Notifications | W A C | in-app; push (A, and W browsers that opt in); reward/app pushes via queue; Expo receipts | `notification`, `device_token`, `web_push_subscription`, `push_receipt`, `notification_delivery*`, `notification_preference`, `notification_consent_event` | `notifications/*`; API `notifications/**`, `devices/*`; `/api/notifications/{deliver,unsubscribe}` | Notifications (resend/broadcast) | operations/notifications |
 
 ## Rewards (shadow) and field programme (off)
 
