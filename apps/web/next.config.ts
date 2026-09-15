@@ -66,6 +66,18 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // The web push service worker must never be served stale, or a fix to
+      // it would not reach browsers that already registered it.
+      {
+        source: "/push-sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache" },
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+        ],
+      },
       // The Apple App Site Association file is extension-less; iOS requires
       // it be served as application/json. (assetlinks.json already gets the
       // right type from its extension.)
