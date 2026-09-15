@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { supabase } from "@/lib/supabase";
+import { formatTitle } from "@abonten/core/titleCase";
 import { MAX_REVIEW_PHOTOS } from "@abonten/core/uploadLimits";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReviewPhotoRow } from "./useEventReviews";
@@ -28,13 +29,6 @@ export type PlaceReviewEligibility =
   | { canReview: false; reason: "signed_out" | "owner" }
   | { canReview: false; reason: "has_review"; ownReview: OwnPlaceReview }
   | { canReview: true };
-
-function titleCase(s: string): string {
-  return s
-    .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(" ");
-}
 
 // Native echo of insertReviewPhotos.ts: once the review row exists, attach
 // the caller's already-uploaded photos. A publicId outside the caller's own
@@ -142,7 +136,7 @@ export function usePostPlaceReview(placeId: string | undefined) {
           place_id: placeId,
           reviewer_id: userId,
           rating: input.rating,
-          title: input.title ? titleCase(input.title) : null,
+          title: input.title ? formatTitle(input.title) : null,
           comment: input.comment?.trim() ? input.comment.trim() : null,
           status: "approved",
         })
@@ -179,7 +173,7 @@ export function useUpdatePlaceReview(placeId: string | undefined) {
         .from("place_review")
         .update({
           rating: input.rating,
-          title: input.title ? titleCase(input.title) : null,
+          title: input.title ? formatTitle(input.title) : null,
           comment: input.comment?.trim() ? input.comment.trim() : null,
         })
         .eq("id", input.reviewId)

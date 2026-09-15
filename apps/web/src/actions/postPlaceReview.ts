@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { formatTitle } from "@abonten/core/titleCase";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -89,14 +90,7 @@ export async function postPlaceReview(formData: PostPlaceReviewInput) {
     return { status: 400, message: "You cannot review your own place" };
   }
 
-  const formattedTitle = title
-    ? title
-        .split(" ")
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        )
-        .join(" ")
-    : null;
+  const formattedTitle = title ? formatTitle(title) : null;
 
   const { data: review, error: insertError } = await supabase
     .from("place_review")

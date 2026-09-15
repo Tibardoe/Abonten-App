@@ -1,4 +1,8 @@
 import { useSession } from "@/auth/SessionProvider";
+import {
+  QUEUED_WRITE_LABEL,
+  QueuedWriteNotice,
+} from "@/components/QueuedWriteNotice";
 import { useSubmitReport } from "@/features/reports/useSubmitReport";
 import { supabase } from "@/lib/supabase";
 import { uuidv4 } from "@/lib/uuid";
@@ -196,17 +200,34 @@ export function ReportSheet({
         submitted ? (
           <Button title="Done" onPress={onClose} />
         ) : (
-          <Button
-            title={
-              uploading
-                ? "Uploading…"
-                : report.isPending
-                  ? "Submitting…"
-                  : "Submit report"
-            }
-            onPress={submit}
-            disabled={busy}
-          />
+          // The error belongs beside the button that triggers it. It used to
+          // render at the end of the scrolling content, below the attachment
+          // row and behind this sticky footer, so tapping "Submit report"
+          // with no reason picked looked like nothing happened at all.
+          <View className="gap-2">
+            {error ? (
+              <View className="flex-row items-center gap-1.5">
+                <Icon name="alert-circle" size={15} tone="destructive" />
+                <AppText variant="small" tone="error">
+                  {error}
+                </AppText>
+              </View>
+            ) : null}
+            {report.isPaused ? <QueuedWriteNotice /> : null}
+            <Button
+              title={
+                uploading
+                  ? "Uploading…"
+                  : report.isPaused
+                    ? QUEUED_WRITE_LABEL
+                    : report.isPending
+                      ? "Submitting…"
+                      : "Submit report"
+              }
+              onPress={submit}
+              disabled={busy}
+            />
+          </View>
         )
       }
     >
@@ -318,12 +339,6 @@ export function ReportSheet({
               />
             )}
           </View>
-
-          {error ? (
-            <AppText variant="small" tone="error">
-              {error}
-            </AppText>
-          ) : null}
         </View>
       )}
     </Sheet>

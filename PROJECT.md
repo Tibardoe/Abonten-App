@@ -343,6 +343,103 @@ api/user-profile                                   /api/user-profile
   - `review` (`RANGE` on `created_at`) has exactly 5 monthly partitions, covering **1 June 2025 through 31 October 2025 only**. There is no partition for any date outside that window (including the current system date). Inserting a review today would fail unless additional partitions have been added outside this migration file.
   - This does not necessarily mean these tables are broken in production — `supabase db pull` can miss objects added via the dashboard or a different migration path — but as literally captured in this file, it is a real risk worth verifying directly against the live database.
 
+### 7.5c Account restrictions and claim authorisation (2026-09-15 audit, round 2)
+
+Three more database-level changes, each closing a rule that lived only in
+application code or in one argument the caller supplied.
+
+- **`guard_restricted_account()` — restrictions enforced in the database**
+  (`20260915020000`). `getMobileAuth` refuses a suspended (2), banned (3) or
+  deleted (4) account on every `/api/mobile` route, and `setUserStatusCore`
+  revokes their Supabase sessions. Neither covers the **class-A** write path:
+  mobile writes reviews, highlights, places, events and more straight to
+  PostgREST under RLS, and no policy looked at `status_id`. Nor did
+  `send_message`, which is `EXECUTE`-able by `authenticated`. Verified
+  against production — a banned account still holding its pre-ban JWT posted
+  a `place_review` that landed `approved` and immediately public. A
+  `BEFORE INSERT OR UPDATE` trigger now sits on every table a person writes
+  as themselves that becomes visible to someone else, asks something of
+  staff, or decides where money goes. Writes with no `auth.uid()`
+  (service_role, `pg_cron`, migrations) are never blocked, or moderation and
+  the ban itself would break. Private-to-the-user rows (drafts, favourites,
+  device tokens, notification read-state) are deliberately **not** guarded.
+  The helper `account_is_restricted()` and the trigger function are both
+  revoked from `anon` and `authenticated`.
+
+- **`approve_place_claim` — the caller may no longer name the admin**
+  (`20260915030000`). The only path that reassigns a place's owner read
+  `is_admin` for the `p_admin_id` **the caller passed**, and `EXECUTE` was
+  granted to PUBLIC, while its sibling `approve_place_claim_and_verify` was
+  already service_role-only. `user_info.is_admin` is readable by anyone
+  through `user_info_public_select`, so a non-admin could pass a real admin's
+  id and walk past the check — confirmed against production, where only RLS
+  on the `SELECT ... FOR UPDATE` stopped it. `EXECUTE` is now service_role
+  only, and when `auth.uid()` is not null it must equal `p_admin_id`. The
+  admin console is unaffected (service-role client + pre-resolved
+  `AdminContext`).
+
+- **`record_organizer_earning` — earnings link to their charge**
+  (`20260915010000`). `organizer_ledger_entry.transaction_id` was null on
+  every `earning` row while `refund_hold` rows carried one, so reconciling an
+  earning back to the payment meant going through the checkout by hand. The
+  function now resolves the transaction from the tickets
+  `issue_tickets_for_checkout` inserted moments earlier in the same
+  transaction, which needs no new argument and leaves the signature, the
+  service_role-only grant and every caller untouched. Existing rows
+  backfilled. Amounts, the conflict key and the fee split are unchanged.
+
+A fourth change is code-only: a `place_booking` still `pending` after its
+`requested_time` has passed is treated as **lapsed** — derived in
+`@abonten/core/placeBooking`, never written — so it reads as expired on all
+four surfaces and `respondToPlaceBookingCore` refuses to answer it. There is
+no new status value and no sweep job; an unanswered request stays unanswered
+in the record.
+
+### 7.5b Money-path and integrity guards added by the 2026-09-14 Android audit
+
+Three database-level changes came out of the launch-readiness audit. Each
+replaced a rule that existed only in application code, or a constraint that
+enforced the wrong thing.
+
+- **`create_ticket_checkout` — one pending checkout SESSION, not one row**
+  (`20260914203000`). The unique index
+  `ticket_checkout_one_pending_per_user_event` on
+  `(user_id, event_id) WHERE status = 'pending'` was added in
+  `20260904134536` to stop a user opening two pending checkouts for one
+  event. But the function writes **one row per ticket type**, so the index
+  also rejected the second line of a single multi-tier basket: buying a
+  Regular and a VIP together was impossible, and the shopper was told
+  "You already have a pending ticket checkout for this event" when none
+  existed. Reproduced on device (2 tiers → 409, 1 tier → 200). The index is
+  replaced by `ticket_checkout_one_pending_line_per_type`
+  (`(user_id, event_id, ticket_type_id) WHERE status = 'pending'`), and the
+  session rule moved into the function behind
+  `pg_advisory_xact_lock(hash(user||event))`, checked **before** the
+  reservation loop so a rejected attempt never touches
+  `ticket_type.quantity`.
+
+- **`enforce_event_review_eligibility()` — `BEFORE INSERT` on `event_review`**
+  (`20260914213000`). `event_review_reviewer_insert` only checked
+  `auth.uid() = reviewer_id`, and mobile writes reviews as a direct
+  PostgREST table write, so any signed-in account could review **any**
+  event: stored `approved` and, because `is_verified_attendee` defaulted to
+  `true`, badged as a verified attendee. The trigger now mirrors
+  `postEventReview.ts` exactly (not the organizer, event not cancelled,
+  event ended, reviewer holds a `used` ticket) and sets
+  `is_verified_attendee` itself; the column default is now `false`.
+  `service_role` (`auth.uid() IS NULL`) stays trusted. `place_review` is
+  deliberately **not** gated — `postPlaceReview.ts` documents that any
+  authenticated user may review any place.
+
+- **Ticket cancellation refuses a checked-in ticket** (service layer, no
+  migration). `cancelUserTicketCore` guarded only against an already
+  `cancelled` ticket, so `POST /api/mobile/tickets/cancel` would flip a
+  `used` ticket to `cancelled`, release the seat and queue the Paystack
+  refund — confirmed against the running API with a ticket scanned in
+  seconds earlier. `used` is now a 409, the compare-and-set excludes it, and
+  the zero-rows branch re-reads rather than reporting a cancellation that
+  did not happen.
+
 ### 7.6 ⚠️ Discrepancies between application code and the actual schema (confirmed, not guessed)
 
 1. **`user_profile_details` vs `user_profile_detail` — now resolved.** The real database object is the view **`user_profile_details`** (plural), matching what [getUserProfileDetails.ts](src/actions/getUserProfileDetails.ts) queries. However, [src/app/api/user-profile/route.tsx](src/app/api/user-profile/route.tsx) queries **`user_profile_detail`** (singular) — **this object does not exist anywhere in the schema.** That route's query will fail at runtime (Postgres/PostgREST "relation does not exist"). This is a confirmed bug, not a naming-convention nitpick.

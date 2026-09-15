@@ -73,5 +73,23 @@ export function validateSpecificDates(
     };
   }
 
+  // Same start-before-end rule validateSingleDateRange applies. Without it
+  // an inverted occurrence reached the `occurrence_time_check` CHECK
+  // constraint (ends_at > starts_at) and surfaced as a generic
+  // "Something went wrong!" with nothing pointing at the date that caused
+  // it — the organizer had no way to know which entry to fix.
+  const invertedIndex = entries.findIndex(
+    (entry) => new Date(entry.start) >= new Date(entry.end),
+  );
+  if (invertedIndex !== -1) {
+    return {
+      ok: false,
+      message:
+        entries.length === 1
+          ? "Start time must be earlier than end time"
+          : `Date ${invertedIndex + 1}: start time must be earlier than end time`,
+    };
+  }
+
   return { ok: true };
 }

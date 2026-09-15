@@ -1,4 +1,5 @@
 import { logger } from "@abonten/core/logger";
+import { formatTitle } from "@abonten/core/titleCase";
 import { validateLocationInput } from "@abonten/core/validateLocationInput";
 import type { Database } from "@abonten/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -146,10 +147,7 @@ export async function updateEventCore(
     nextFlyerVersion = flyerVersion;
   }
 
-  const formattedTitle = title
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+  const formattedTitle = formatTitle(title);
 
   const eventStartDate = isSpecificEvent ? null : (starts_at ?? null);
   const eventEndDate = isSpecificEvent ? null : (ends_at ?? null);

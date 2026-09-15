@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 export default async function checkInTicket(
   ticketId: string,
   checkedIn: boolean,
+  expectedEventId?: string | null,
 ): Promise<CheckInTicketCoreResult | { status: 401; message: string }> {
   const supabase = await createClient();
 
@@ -30,6 +31,7 @@ export default async function checkInTicket(
     user.id,
     ticketId,
     checkedIn,
+    expectedEventId,
   );
 
   if (result.status === 200 && result.eventId) {

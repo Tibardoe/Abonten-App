@@ -61,6 +61,26 @@ export async function listPaymentMethodsCore(
   return { status: 200, data: (data ?? []) as unknown as PaymentMethodRow[] };
 }
 
+// Two saved methods are the same instrument when these agree. Brand case and
+// stray whitespace are normalised away because Paystack is not consistent
+// about either; the authorization code deliberately is NOT part of the key,
+// since re-verifying the same card is exactly what produces a new one.
+function cardKey(details: CardPaymentMethodDetails): string {
+  return [
+    (details.brand ?? "").trim().toLowerCase(),
+    (details.last4 ?? "").trim(),
+    details.expiryMonth,
+    details.expiryYear,
+  ].join("|");
+}
+
+function momoKey(details: MomoPaymentMethodDetails): string {
+  return [
+    (details.networkCode ?? "").trim().toUpperCase(),
+    (details.phone ?? "").trim(),
+  ].join("|");
+}
+
 export type AddPaymentMethodResult =
   | { status: 400 | 500; message: string }
   | { status: 200; data: PaymentMethodRow };
@@ -94,6 +114,28 @@ export async function addPaymentMethodCore(
   const type = parsedInput.type;
   let details: MomoPaymentMethodDetails | CardPaymentMethodDetails;
 
+  // Both branches below look for an existing active method that is the same
+  // instrument before inserting. Matching happens in JS against a normalised
+  // key rather than with PostgREST's `contains`, because `contains` is exact
+  // JSON containment: Paystack returns the brand with inconsistent case and
+  // trailing whitespace ("visa " and "Visa" are both in production), so an
+  // exact match silently failed to spot the duplicate it was written to
+  // catch.
+  const { data: existingMethods, error: existingError } = await supabase
+    .from("payment_method")
+    .select("id, method_type, details, is_default, created_at")
+    .eq("user_id", userId)
+    .eq("status", "active");
+
+  if (existingError) {
+    logger.error(
+      `Failed fetching existing payment methods: ${existingError.message}`,
+    );
+    return { status: 500, message: "Something went wrong!" };
+  }
+
+  const active = (existingMethods ?? []) as unknown as PaymentMethodRow[];
+
   if (parsedInput.type === "momo") {
     const { type: _momo, ...momo } = parsedInput;
     // Store one canonical form. The web PhoneInput already composes E.164;
@@ -105,6 +147,18 @@ export async function addPaymentMethodCore(
     if (!normalized.ok) {
       return { status: 400, message: normalized.error };
     }
+
+    // The same wallet saved twice is the same instrument, whatever label the
+    // second save carried. Nothing stopped that before, and a duplicated
+    // wallet in the checkout list invites paying from the wrong entry.
+    const duplicate = active.find(
+      (row) =>
+        row.method_type === "momo" &&
+        momoKey(row.details as MomoPaymentMethodDetails) ===
+          momoKey({ ...momo, phone: normalized.e164 }),
+    );
+    if (duplicate) return { status: 200, data: duplicate };
+
     details = { ...momo, phone: normalized.e164 };
   } else {
     const { type: _card, ...card } = parsedInput;
@@ -113,24 +167,17 @@ export async function addPaymentMethodCore(
     // Without this, every re-verification saved another identical row --
     // production held two "visa 4081" cards with the same expiry and bank.
     // Treat a matching active card as already saved and hand it back.
-    const { data: existing } = await supabase
-      .from("payment_method")
-      .select("id, method_type, details, is_default, created_at")
-      .eq("user_id", userId)
-      .eq("status", "active")
-      .eq("method_type", "card")
-      .contains("details", {
-        brand: card.brand,
-        last4: card.last4,
-        expiryMonth: card.expiryMonth,
-        expiryYear: card.expiryYear,
-      })
-      .limit(1)
-      .maybeSingle();
-    if (existing) {
-      return { status: 200, data: existing as unknown as PaymentMethodRow };
-    }
-    details = card;
+    const normalizedCard = { ...card, brand: card.brand.trim() };
+
+    const duplicate = active.find(
+      (row) =>
+        row.method_type === "card" &&
+        cardKey(row.details as CardPaymentMethodDetails) ===
+          cardKey(normalizedCard),
+    );
+    if (duplicate) return { status: 200, data: duplicate };
+
+    details = normalizedCard;
   }
 
   const { data, error } = await supabase

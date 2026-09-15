@@ -1,5 +1,9 @@
 import { useSession } from "@/auth/SessionProvider";
 import {
+  QUEUED_WRITE_LABEL,
+  QueuedWriteNotice,
+} from "@/components/QueuedWriteNotice";
+import {
   CLAIM_DOC_MAX_FILES,
   type StagedClaimDoc,
   guessMime,
@@ -276,17 +280,22 @@ export function ClaimPlaceSheet({
         phase === "done" ? (
           <Button title="Done" onPress={onClose} />
         ) : (
-          <Button
-            title={
-              submit.isPending
-                ? "Submitting…"
-                : uploadingBusy
-                  ? "Uploading documents…"
-                  : "Submit claim"
-            }
-            onPress={onSubmit}
-            disabled={submit.isPending || uploadingBusy}
-          />
+          <View className="gap-2">
+            {submit.isPaused ? <QueuedWriteNotice /> : null}
+            <Button
+              title={
+                submit.isPaused
+                  ? QUEUED_WRITE_LABEL
+                  : submit.isPending
+                    ? "Submitting…"
+                    : uploadingBusy
+                      ? "Uploading documents…"
+                      : "Submit claim"
+              }
+              onPress={onSubmit}
+              disabled={submit.isPending || uploadingBusy}
+            />
+          </View>
         )
       }
     >

@@ -1,6 +1,7 @@
 import { ImageCropModal } from "@/components/profile/ImageCropModal";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { AppText, Button, Icon } from "@abonten/ui-native";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { useState } from "react";
 import { View } from "react-native";
@@ -15,6 +16,7 @@ const isLocal = (uri: string | null): boolean =>
 // ImageCropper step. The section title/subtitle is drawn by the wizard
 // screen.
 export function EventWizardFlyer({ w }: { w: EventWizard }) {
+  const c = useThemeColors();
   const [editing, setEditing] = useState<{
     uri: string;
     width: number;
@@ -41,7 +43,17 @@ export function EventWizardFlyer({ w }: { w: EventWizard }) {
       {w.flyerUri ? (
         <Image
           source={{ uri: w.flyerUri }}
-          style={{ width: "100%", aspectRatio: FLYER_ASPECT, borderRadius: 12 }}
+          // An opaque backgroundColor, not just the image: a flyer that
+          // can't be decoded (a cache file evicted or replaced between
+          // picking and rendering) otherwise draws nothing, leaving a
+          // transparent hole the size of the whole preview with no hint
+          // that anything is wrong.
+          style={{
+            width: "100%",
+            aspectRatio: FLYER_ASPECT,
+            borderRadius: 12,
+            backgroundColor: c.muted,
+          }}
           contentFit="cover"
         />
       ) : (

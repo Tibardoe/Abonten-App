@@ -13,17 +13,12 @@ import {
   AppText,
   Button,
   Icon,
+  KeyboardAwareScrollView,
   OtpInput,
 } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  View,
-} from "react-native";
+import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Must not be shorter than the shortest interval either provider will
@@ -208,11 +203,8 @@ export default function Verify() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
+      <View className="flex-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back"
@@ -230,16 +222,13 @@ export default function Verify() {
           <Icon name="arrow-back" size={24} tone="foreground" />
         </Pressable>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
             paddingHorizontal: 24,
             paddingTop: insets.top + 56,
-            paddingBottom: 32,
           }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
         >
           <View className="gap-8">
             <View className="items-center gap-3">
@@ -321,8 +310,8 @@ export default function Verify() {
               </Pressable>
             </View>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

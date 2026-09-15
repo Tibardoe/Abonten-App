@@ -6,6 +6,7 @@ import {
   keysetOlderThan,
   splitPage,
 } from "@abonten/core/pagination";
+import { isBookingLapsed } from "@abonten/core/placeBooking";
 import type { Database } from "@abonten/types/database.types";
 import type { PaginatedResult, SimpleCursor } from "@abonten/types/pagination";
 import type {
@@ -145,7 +146,9 @@ export async function respondToPlaceBookingCore(
 ): Promise<RespondToPlaceBookingCoreResult> {
   const { data: booking, error: fetchError } = await supabase
     .from("place_booking")
-    .select("id, status, customer_id, place:place_id(owner_id, name, slug)")
+    .select(
+      "id, status, customer_id, requested_time, place:place_id(owner_id, name, slug)",
+    )
     .eq("id", bookingId)
     .maybeSingle();
 
@@ -174,6 +177,17 @@ export async function respondToPlaceBookingCore(
     return {
       status: 409,
       message: "This booking has already been responded to.",
+    };
+  }
+
+  // Nothing sweeps unanswered requests, so an owner opening a stale list
+  // could still "Accept" a table for a date that had already gone — which
+  // sent the customer "Booking accepted" for last Tuesday. A request whose
+  // time has passed can no longer be answered either way.
+  if (isBookingLapsed(booking.status, booking.requested_time)) {
+    return {
+      status: 409,
+      message: "This booking request expired — its date has already passed.",
     };
   }
 

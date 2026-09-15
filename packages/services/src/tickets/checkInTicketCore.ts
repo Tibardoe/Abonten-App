@@ -31,12 +31,20 @@ const TICKET_CODE_RE = /^TKT-[A-Z0-9]+$/i;
 /**
  * @param ticketRef  either the ticket's UUID (the attendee-list toggle) or
  *   its `TKT-…` code parsed out of a scanned QR (the organizer scanner).
+ * @param expectedEventId  the event whose gate is doing the scanning. The
+ *   organizer check below only proves the ticket belongs to ONE of the
+ *   caller's events — an organizer running two events on the same night
+ *   could otherwise scan a ticket for event A at event B's door and mark it
+ *   used, so the holder is then turned away at the event they actually paid
+ *   for. Omitted (undefined) keeps the old event-agnostic behaviour for any
+ *   caller that genuinely has no event in context.
  */
 export async function checkInTicketCore(
   supabase: SupabaseClient<Database>,
   userId: string,
   ticketRef: string,
   checkedIn: boolean,
+  expectedEventId?: string | null,
 ): Promise<CheckInTicketCoreResult> {
   const ref = ticketRef.trim();
   const byCode = TICKET_CODE_RE.test(ref);
@@ -63,6 +71,13 @@ export async function checkInTicketCore(
 
   if (!organizerId || organizerId !== userId) {
     return { status: 403, message: "Not authorized to check in this ticket" };
+  }
+
+  if (expectedEventId && ticket.ticket_type?.event?.id !== expectedEventId) {
+    return {
+      status: 404,
+      message: "That ticket is for a different event.",
+    };
   }
 
   if (checkedIn && ticket.status !== "active") {

@@ -5,6 +5,7 @@ import {
   useMyBookings,
 } from "@/features/places/usePlaceBooking";
 import { formatFullDateTimeRange } from "@abonten/core/dateFormatter";
+import { resolveBookingState } from "@abonten/core/placeBooking";
 import type { BookingStatus } from "@abonten/types/placeBookingType";
 import {
   AppText,
@@ -22,11 +23,17 @@ import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Alert, FlatList, View } from "react-native";
 
-const STATUS_META: Record<BookingStatus, { tone: BadgeTone; label: string }> = {
+// "Expired" is derived, not stored: a request the owner never answered
+// before its date arrived. It used to show as "Pending" with a live "Cancel
+// booking" button, so the customer had no way to tell whether to turn up.
+type BookingState = BookingStatus | "lapsed";
+
+const STATUS_META: Record<BookingState, { tone: BadgeTone; label: string }> = {
   pending: { tone: "warning", label: "Pending" },
   accepted: { tone: "success", label: "Accepted" },
   declined: { tone: "destructive", label: "Declined" },
   cancelled: { tone: "muted", label: "Cancelled" },
+  lapsed: { tone: "muted", label: "Expired" },
 };
 
 function BookingRow({
@@ -38,9 +45,12 @@ function BookingRow({
 }) {
   const toast = useToast();
   const cancel = useCancelBooking();
-  const meta = STATUS_META[booking.status];
-  const canCancel =
-    booking.status === "pending" || booking.status === "accepted";
+  const state = resolveBookingState(
+    booking.status,
+    booking.requested_time,
+  ) as BookingState;
+  const meta = STATUS_META[state];
+  const canCancel = state === "pending" || state === "accepted";
   const when = formatFullDateTimeRange(booking.requested_time, null);
 
   return (
@@ -72,6 +82,12 @@ function BookingRow({
         {booking.note ? (
           <AppText variant="caption" numberOfLines={2}>
             “{booking.note}”
+          </AppText>
+        ) : null}
+        {state === "lapsed" ? (
+          <AppText variant="caption" tone="muted">
+            {booking.place?.name ?? "The owner"} didn't respond before this
+            date. Nothing was reserved.
           </AppText>
         ) : null}
       </View>

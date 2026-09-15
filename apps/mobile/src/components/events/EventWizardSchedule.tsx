@@ -120,11 +120,21 @@ export function EventWizardSchedule({ w }: { w: EventWizard }) {
                   label="End time"
                   value={w.rangeEndTime}
                   onChange={w.setRangeEndTime}
-                  invalid={!TIME_RE.test(w.rangeEndTime)}
+                  invalid={
+                    !TIME_RE.test(w.rangeEndTime) || !!w.scheduleTimeError
+                  }
                 />
               </Field>
             </View>
           </View>
+
+          {/* Publish enforces this too, but showing it here stops the
+              organizer on the step that caused it rather than on Review. */}
+          {w.scheduleTimeError ? (
+            <AppText variant="small" tone="error">
+              {w.scheduleTimeError}
+            </AppText>
+          ) : null}
         </View>
       ) : (
         <View className="gap-3">

@@ -750,12 +750,40 @@ export function useEventWizard(resumeDraftId?: string) {
   // can be disabled. Step 0 (basics) always returns true here — it runs
   // validateBasics() on press instead, which surfaces field errors. These
   // gates used to live on each step component's own Next button.
+  // The same start-before-end rule buildSchedule() enforces at Publish,
+  // evaluated live so the organizer is stopped on the step where the times
+  // are entered instead of four steps later on Review. Compares the full
+  // datetimes (not just the clock times) so a range like Fri 6pm -> Sat 5pm
+  // stays valid. Null until there is enough input to judge.
+  const scheduleTimeError = useMemo(() => {
+    if (scheduleMode !== "single") return null;
+    if (!rangeStart) return null;
+    if (!TIME_RE.test(rangeStartTime) || !TIME_RE.test(rangeEndTime)) {
+      return null;
+    }
+    if (dateMode === "range" && !rangeEnd) return null;
+
+    const start = combineDateAndTime(rangeStart, rangeStartTime);
+    const end = combineDateAndTime(rangeEnd ?? rangeStart, rangeEndTime);
+    if (!start || !end) return null;
+
+    return start >= end ? "Start time must be earlier than end time" : null;
+  }, [
+    scheduleMode,
+    dateMode,
+    rangeStart,
+    rangeEnd,
+    rangeStartTime,
+    rangeEndTime,
+  ]);
+
   const scheduleValid =
     scheduleMode === "single"
       ? !!rangeStart &&
         (dateMode === "single" || !!rangeEnd) &&
         TIME_RE.test(rangeStartTime) &&
-        TIME_RE.test(rangeEndTime)
+        TIME_RE.test(rangeEndTime) &&
+        !scheduleTimeError
       : occurrences.length > 0;
 
   // Step order (see app/(app)/event/new.tsx): 0 Flyer · 1 Basics · 2 Schedule
@@ -837,6 +865,7 @@ export function useEventWizard(resumeDraftId?: string) {
     setRangeStartTime,
     rangeEndTime,
     setRangeEndTime,
+    scheduleTimeError,
     occurrences,
     setOccurrences,
     // location

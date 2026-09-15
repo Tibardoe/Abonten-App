@@ -2,6 +2,7 @@ import { prettyTime } from "@/components/datetime/TimeField";
 import type { EventWizard } from "@/features/events/useEventWizard";
 import { prettyDate } from "@/lib/datetime";
 import { AppText } from "@abonten/ui-native";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { View } from "react-native";
 
@@ -9,6 +10,7 @@ import { View } from "react-native";
 // web review/publish step. Publish is the header's "Publish" button
 // (app/(app)/event/new.tsx).
 export function EventWizardReview({ w }: { w: EventWizard }) {
+  const c = useThemeColors();
   const when =
     w.scheduleMode === "single"
       ? w.rangeStart
@@ -36,7 +38,13 @@ export function EventWizardReview({ w }: { w: EventWizard }) {
       {w.flyerUri ? (
         <Image
           source={{ uri: w.flyerUri }}
-          style={{ width: "100%", aspectRatio: 4 / 5, borderRadius: 12 }}
+          // Same opaque ground as the flyer step — see EventWizardFlyer.
+          style={{
+            width: "100%",
+            aspectRatio: 4 / 5,
+            borderRadius: 12,
+            backgroundColor: c.muted,
+          }}
           contentFit="cover"
         />
       ) : null}

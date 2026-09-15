@@ -10,11 +10,15 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.abonten.app",
-      "associatedDomains": ["applinks:abontenhub.com"]
+      "associatedDomains": [
+        "applinks:abontenhub.com"
+      ]
     },
     "android": {
       "package": "com.abonten.app",
@@ -49,7 +53,10 @@
               "pathPrefix": "/weekly"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -124,7 +131,8 @@
           "project": "abonten-mobile"
         }
       ],
-      "./plugins/withAndroidNativeBuildFix"
+      "./plugins/withAndroidNativeBuildFix",
+      "./plugins/withAndroidMinification"
     ],
     "experiments": {
       "typedRoutes": false

@@ -6,6 +6,7 @@ import {
 } from "@/features/organizer/usePlaceBookingsReviews";
 import type { BookingStatus, OwnerPlaceBooking } from "@abonten/api-client";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { resolveBookingState } from "@abonten/core/placeBooking";
 import { AppText, Chip, Refresher, useToast } from "@abonten/ui-native";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
@@ -30,18 +31,33 @@ const FILTERS: { id: BookingFilter; label: string }[] = [
   { id: "all", label: "All" },
 ];
 
-const BADGE_CLASS: Record<BookingStatus, string> = {
+// "expired" is derived, not stored: a request nobody answered before its
+// date arrived. Showing it as Pending with live Accept/Decline meant an
+// owner could confirm a table for a date that had already gone.
+type BookingState = BookingStatus | "lapsed";
+
+const BADGE_CLASS: Record<BookingState, string> = {
   pending: "bg-warning/10",
   accepted: "bg-primary/10",
   declined: "bg-destructive/10",
   cancelled: "bg-muted",
+  lapsed: "bg-muted",
 };
 
-const BADGE_TEXT_CLASS: Record<BookingStatus, string> = {
+const BADGE_TEXT_CLASS: Record<BookingState, string> = {
   pending: "text-warning",
   accepted: "text-primary",
   declined: "text-destructive",
   cancelled: "text-muted-foreground",
+  lapsed: "text-muted-foreground",
+};
+
+const BADGE_LABEL: Record<BookingState, string> = {
+  pending: "pending",
+  accepted: "accepted",
+  declined: "declined",
+  cancelled: "cancelled",
+  lapsed: "expired",
 };
 
 function BookingRow({
@@ -55,6 +71,10 @@ function BookingRow({
   const respond = useRespondToPlaceBooking(placeId);
   const { date, time } = formatSingleDateTime(booking.requested_time);
   const customer = booking.user_info?.username ?? "A customer";
+  const state = resolveBookingState(
+    booking.status,
+    booking.requested_time,
+  ) as BookingState;
 
   const send = (decision: "accept" | "decline") => {
     respond.mutate(
@@ -114,17 +134,17 @@ function BookingRow({
         </View>
 
         <View
-          className={`shrink-0 rounded-full px-2.5 py-1 ${BADGE_CLASS[booking.status]}`}
+          className={`shrink-0 rounded-full px-2.5 py-1 ${BADGE_CLASS[state]}`}
         >
           <AppText
-            className={`text-[13px] font-semibold capitalize ${BADGE_TEXT_CLASS[booking.status]}`}
+            className={`text-[13px] font-semibold capitalize ${BADGE_TEXT_CLASS[state]}`}
           >
-            {booking.status}
+            {BADGE_LABEL[state]}
           </AppText>
         </View>
       </View>
 
-      {booking.status === "pending" ? (
+      {state === "pending" ? (
         <View className="flex-row gap-2 pt-1">
           <Pressable
             disabled={respond.isPending}
@@ -143,6 +163,10 @@ function BookingRow({
             <AppText className="text-sm text-foreground">Decline</AppText>
           </Pressable>
         </View>
+      ) : state === "lapsed" ? (
+        <AppText variant="caption" className="pt-1">
+          This request expired — its date has passed.
+        </AppText>
       ) : null}
     </View>
   );

@@ -1,7 +1,7 @@
 import { getSimilarEvents } from "@/actions/getSimilarEvents";
 import EventCard from "@/components/molecules/EventCard";
 import { geocodeAddress } from "@/utils/geocodeServerSide";
-import { undoSlug } from "@abonten/core/geerateSlug";
+import { resolveEventCategoryLabel } from "@abonten/core/eventCategoryLabels";
 import { logger } from "@abonten/core/logger";
 import type { UserPostType } from "@abonten/types/postsType";
 
@@ -19,9 +19,13 @@ export default async function page({
   const { category = "" } = await searchParams;
   const { location = "" } = await params;
 
-  const formattedCategory = undoSlug(category);
-
-  // const formattedLocation = undoSlug(location);
+  // The slug in the URL is lossy — generateSlug strips "&" and commas, so
+  // de-slugging by hand turned "Music & Concerts" into "Music Concerts",
+  // which get_similar_events (it filters on lower(event_category)) matches
+  // against nothing. 18 of the 19 top-level categories were affected, so
+  // this page came back empty for almost every event. Resolve the slug
+  // against the canonical category list instead of guessing it back.
+  const formattedCategory = resolveEventCategoryLabel(category);
 
   const safeLocation = location ?? "";
 

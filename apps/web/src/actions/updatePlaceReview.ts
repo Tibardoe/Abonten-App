@@ -2,6 +2,7 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { formatTitle } from "@abonten/core/titleCase";
 import {
   type ReviewPhotoInput,
   insertReviewPhotos,
@@ -44,14 +45,7 @@ export async function updatePlaceReview(formData: UpdatePlaceReviewInput) {
     return { status: 400, message: "Comment must be 500 characters or fewer." };
   }
 
-  const formattedTitle = title
-    ? title
-        .split(" ")
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        )
-        .join(" ")
-    : null;
+  const formattedTitle = title ? formatTitle(title) : null;
 
   const { data: updated, error: updateError } = await supabase
     .from("place_review")

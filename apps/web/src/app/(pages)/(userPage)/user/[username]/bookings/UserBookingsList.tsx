@@ -5,6 +5,7 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useToast } from "@/hooks/useToast";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { resolveBookingState } from "@abonten/core/placeBooking";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
@@ -14,11 +15,25 @@ import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 
-const STATUS_STYLES: Record<BookingStatus, string> = {
+// "expired" is derived, not stored: the owner never answered before the
+// date arrived. It used to read "Pending" with a live Cancel button, so the
+// customer could not tell whether to turn up.
+type BookingState = BookingStatus | "lapsed";
+
+const STATUS_STYLES: Record<BookingState, string> = {
   pending: "bg-warning/10 text-warning",
   accepted: "bg-primary/10 text-primary",
   declined: "bg-destructive/10 text-destructive",
   cancelled: "bg-muted text-muted-foreground",
+  lapsed: "bg-muted text-muted-foreground",
+};
+
+const STATUS_LABELS: Record<BookingState, string> = {
+  pending: "pending",
+  accepted: "accepted",
+  declined: "declined",
+  cancelled: "cancelled",
+  lapsed: "expired",
 };
 
 export default function UserBookingsList({
@@ -67,8 +82,11 @@ export default function UserBookingsList({
         listClassName="flex flex-col gap-3"
         renderItem={(booking) => {
           const { date, time } = formatSingleDateTime(booking.requested_time);
-          const canCancel =
-            booking.status === "pending" || booking.status === "accepted";
+          const state = resolveBookingState(
+            booking.status,
+            booking.requested_time,
+          ) as BookingState;
+          const canCancel = state === "pending" || state === "accepted";
 
           return (
             <li
@@ -94,9 +112,9 @@ export default function UserBookingsList({
                 </div>
 
                 <span
-                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${STATUS_STYLES[booking.status]}`}
+                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${STATUS_STYLES[state]}`}
                 >
-                  {booking.status}
+                  {STATUS_LABELS[state]}
                 </span>
               </div>
 

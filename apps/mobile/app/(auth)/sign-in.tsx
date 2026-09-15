@@ -12,19 +12,12 @@ import {
   AppText,
   Button,
   Icon,
+  KeyboardAwareScrollView,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SignIn() {
@@ -93,11 +86,8 @@ export default function SignIn() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
+      <View className="flex-1">
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={router.canGoBack() ? "Back" : "Close"}
@@ -120,16 +110,13 @@ export default function SignIn() {
           />
         </Pressable>
 
-        <ScrollView
+        <KeyboardAwareScrollView
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
             paddingHorizontal: 24,
             paddingTop: insets.top + 56,
-            paddingBottom: 32,
           }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
         >
           <View className="gap-7">
             <View className="items-center gap-3">
@@ -254,8 +241,8 @@ export default function SignIn() {
               .
             </AppText>
           </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

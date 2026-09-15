@@ -5,6 +5,7 @@ import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import InfiniteList from "@/components/organisms/InfiniteList";
 import { useToast } from "@/hooks/useToast";
 import { formatSingleDateTime } from "@abonten/core/dateFormatter";
+import { resolveBookingState } from "@abonten/core/placeBooking";
 import type { PaginatedResult } from "@abonten/types/pagination";
 import type {
   BookingStatus,
@@ -23,11 +24,24 @@ const FILTERS: { id: StatusFilter; label: string }[] = [
   { id: "all", label: "All" },
 ];
 
-const STATUS_STYLES: Record<BookingStatus, string> = {
+// "expired" is derived, not stored: a request nobody answered before its
+// date arrived. It used to sit under Pending with live Accept/Decline.
+type BookingState = BookingStatus | "lapsed";
+
+const STATUS_STYLES: Record<BookingState, string> = {
   pending: "bg-warning/10 text-warning",
   accepted: "bg-primary/10 text-primary",
   declined: "bg-destructive/10 text-destructive",
   cancelled: "bg-muted text-muted-foreground",
+  lapsed: "bg-muted text-muted-foreground",
+};
+
+const STATUS_LABELS: Record<BookingState, string> = {
+  pending: "pending",
+  accepted: "accepted",
+  declined: "declined",
+  cancelled: "cancelled",
+  lapsed: "expired",
 };
 
 type ManagePlaceBookingsSectionProps = {
@@ -114,6 +128,10 @@ export default function ManagePlaceBookingsSection({
         }
         renderItem={(booking) => {
           const { date, time } = formatSingleDateTime(booking.requested_time);
+          const state = resolveBookingState(
+            booking.status,
+            booking.requested_time,
+          ) as BookingState;
 
           return (
             <li
@@ -146,13 +164,13 @@ export default function ManagePlaceBookingsSection({
                 </div>
 
                 <span
-                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${STATUS_STYLES[booking.status]}`}
+                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium capitalize ${STATUS_STYLES[state]}`}
                 >
-                  {booking.status}
+                  {STATUS_LABELS[state]}
                 </span>
               </div>
 
-              {booking.status === "pending" && (
+              {state === "pending" && (
                 <div className="flex gap-2 pt-1">
                   <button
                     type="button"
