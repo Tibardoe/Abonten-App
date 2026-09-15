@@ -343,6 +343,58 @@ api/user-profile                                   /api/user-profile
   - `review` (`RANGE` on `created_at`) has exactly 5 monthly partitions, covering **1 June 2025 through 31 October 2025 only**. There is no partition for any date outside that window (including the current system date). Inserting a review today would fail unless additional partitions have been added outside this migration file.
   - This does not necessarily mean these tables are broken in production — `supabase db pull` can miss objects added via the dashboard or a different migration path — but as literally captured in this file, it is a real risk worth verifying directly against the live database.
 
+### 7.5c Account restrictions and claim authorisation (2026-09-15 audit, round 2)
+
+Three more database-level changes, each closing a rule that lived only in
+application code or in one argument the caller supplied.
+
+- **`guard_restricted_account()` — restrictions enforced in the database**
+  (`20260915020000`). `getMobileAuth` refuses a suspended (2), banned (3) or
+  deleted (4) account on every `/api/mobile` route, and `setUserStatusCore`
+  revokes their Supabase sessions. Neither covers the **class-A** write path:
+  mobile writes reviews, highlights, places, events and more straight to
+  PostgREST under RLS, and no policy looked at `status_id`. Nor did
+  `send_message`, which is `EXECUTE`-able by `authenticated`. Verified
+  against production — a banned account still holding its pre-ban JWT posted
+  a `place_review` that landed `approved` and immediately public. A
+  `BEFORE INSERT OR UPDATE` trigger now sits on every table a person writes
+  as themselves that becomes visible to someone else, asks something of
+  staff, or decides where money goes. Writes with no `auth.uid()`
+  (service_role, `pg_cron`, migrations) are never blocked, or moderation and
+  the ban itself would break. Private-to-the-user rows (drafts, favourites,
+  device tokens, notification read-state) are deliberately **not** guarded.
+  The helper `account_is_restricted()` and the trigger function are both
+  revoked from `anon` and `authenticated`.
+
+- **`approve_place_claim` — the caller may no longer name the admin**
+  (`20260915030000`). The only path that reassigns a place's owner read
+  `is_admin` for the `p_admin_id` **the caller passed**, and `EXECUTE` was
+  granted to PUBLIC, while its sibling `approve_place_claim_and_verify` was
+  already service_role-only. `user_info.is_admin` is readable by anyone
+  through `user_info_public_select`, so a non-admin could pass a real admin's
+  id and walk past the check — confirmed against production, where only RLS
+  on the `SELECT ... FOR UPDATE` stopped it. `EXECUTE` is now service_role
+  only, and when `auth.uid()` is not null it must equal `p_admin_id`. The
+  admin console is unaffected (service-role client + pre-resolved
+  `AdminContext`).
+
+- **`record_organizer_earning` — earnings link to their charge**
+  (`20260915010000`). `organizer_ledger_entry.transaction_id` was null on
+  every `earning` row while `refund_hold` rows carried one, so reconciling an
+  earning back to the payment meant going through the checkout by hand. The
+  function now resolves the transaction from the tickets
+  `issue_tickets_for_checkout` inserted moments earlier in the same
+  transaction, which needs no new argument and leaves the signature, the
+  service_role-only grant and every caller untouched. Existing rows
+  backfilled. Amounts, the conflict key and the fee split are unchanged.
+
+A fourth change is code-only: a `place_booking` still `pending` after its
+`requested_time` has passed is treated as **lapsed** — derived in
+`@abonten/core/placeBooking`, never written — so it reads as expired on all
+four surfaces and `respondToPlaceBookingCore` refuses to answer it. There is
+no new status value and no sweep job; an unanswered request stays unanswered
+in the record.
+
 ### 7.5b Money-path and integrity guards added by the 2026-09-14 Android audit
 
 Three database-level changes came out of the launch-readiness audit. Each
