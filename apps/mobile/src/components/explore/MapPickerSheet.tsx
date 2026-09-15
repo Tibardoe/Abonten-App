@@ -11,6 +11,7 @@ import {
 import { AppText, BottomBar, Button, Icon } from "@abonten/ui-native";
 import { useRef, useState } from "react";
 import { Modal, Platform, Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Native echo of the web MapModal / MapPicker: a full-screen map with a
 // fixed centre pin. Pan the map under the pin, then "Use this location"
@@ -45,6 +46,7 @@ export function MapPickerSheet({
   }) => void | Promise<void>;
 }) {
   const { setPickedLocation } = useExploreLocation();
+  const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
   const centerRef = useRef<{ lat: number; lng: number }>({
     lat: initial?.lat ?? 5.6037,
@@ -76,8 +78,13 @@ export function MapPickerSheet({
   // boundary can't catch. So when maps aren't configured, never mount one:
   // show a message instead (the calling screen still has address search +
   // "use current location").
+  // A Modal fills the whole window under edge-to-edge, so the header has to
+  // clear the status bar itself — nothing above it does.
   const header = (
-    <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
+    <View
+      className="flex-row items-center gap-3 border-b border-border px-4 py-3"
+      style={{ paddingTop: insets.top + 12 }}
+    >
       <Pressable onPress={onClose} hitSlop={10}>
         <Icon name="close" size={24} tone="foreground" />
       </Pressable>
