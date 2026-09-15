@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.0
-lastReviewed: 2026-09-12
+version: 1.1
+lastReviewed: 2026-09-15
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -43,11 +43,13 @@ When to build vs update: a change to native modules, permissions (`app.json` plu
 
 ## Native config
 
-`app.json`: package `com.abonten.app`, scheme `abonten`, associated domains / intent filters for abontenhub.com, plugins (secure-store, web-browser, image, sharing, dev-client, splash, notifications, font, image-picker, camera, audio, video, Sentry, two local plugins). `app.config.js` layers the Maps key and the EAS Update URL. `google-services.json` (FCM client config) is tracked.
+`app.json`: package / bundle id `com.abonten.app` on both platforms, scheme `abonten`, associated domains / intent filters for abontenhub.com, plugins (secure-store, web-browser, image, sharing, dev-client, splash, notifications, font, image-picker, camera, audio, location, video, Sentry, two local plugins). `app.config.js` layers the Android Maps key and the EAS Update URL. Maps are Google on Android and Apple Maps on iOS (every `<MapView>` passes `PROVIDER_GOOGLE` only on Android); do not set `ios.config.googleMapsApiKey` — Expo's built-in Maps plugin then adds a `react-native-google-maps` pod that react-native-maps 1.x no longer has, and `pod install` fails. `google-services.json` (FCM client config) is tracked.
+
+iOS specifics (2026-09-15): `ios.appleTeamId` is `KDDBR5P4D6` (Abonten Hub Ltd's Apple Developer team — a public identifier, not a secret; it also appears in `apps/web/public/.well-known/apple-app-site-association` as `KDDBR5P4D6.com.abonten.app`). `ITSAppUsesNonExemptEncryption` is `false` (the app only uses HTTPS, so the export-compliance question is pre-answered). The `expo-audio` plugin has `enableBackgroundPlayback: false` and the `expo-location` plugin declares only the *when-in-use* permission string — the app never plays audio in the background and never needs "always" location, and Apple rejects unjustified background modes and unused permission strings. Required Apple capabilities are exactly the two EAS derives from the config: **Push Notifications** (`aps-environment`, expo-notifications) and **Associated Domains** (`applinks:abontenhub.com`). Signing credentials (distribution certificate, provisioning profile, APNs push key) are EAS-managed on the `@abonten-hub/abonten` project — nothing signing-related lives in the repository.
 
 ## Stores
 
-Android: Play listing not yet live (`ANDROID_APP_LISTED` false hides the store link on the invite page) — Data safety form must match the Privacy Policy (legal F2). iOS: blocked on Apple Developer enrolment (D-U-N-S); nothing submitted. Store submission steps: `../mobile/08-phase-6-release-prep.md` §9.
+Android: Play listing not yet live (`ANDROID_APP_LISTED` false hides the store link on the invite page) — Data safety form must match the Privacy Policy (legal F2). iOS: Apple Developer enrolment complete (2026-09-15, team `KDDBR5P4D6`); the first production build needs one interactive `eas build --platform ios --profile production` from a terminal so EAS can sign in to Apple (two-factor), register the App ID `com.abonten.app` with Push Notifications + Associated Domains and create the EAS-managed distribution certificate, provisioning profile and push key — after that non-interactive builds work. Apple sign-in needs eas-cli ≥ 24.5.0 (older versions fail with "iTunes service key is empty"). Nothing submitted yet. Store submission steps: `../mobile/08-phase-6-release-prep.md` §9.
 
 ## After an update
 

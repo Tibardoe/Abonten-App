@@ -10,8 +10,9 @@ import { Platform, View } from "react-native";
 // screen. Once the app is rebuilt the map renders normally.
 //
 // The Google Maps provider ALSO needs the API key baked into the native
-// AndroidManifest / Info.plist at build time (app.config.js reads it from
-// EXPO_PUBLIC_GOOGLE_MAPS_API_KEY). If the installed binary was built
+// AndroidManifest at build time (app.config.js reads it from
+// EXPO_PUBLIC_GOOGLE_MAPS_API_KEY). Google is Android-only: iOS uses Apple
+// Maps, so every MapView passes PROVIDER_GOOGLE only on Android. If the installed binary was built
 // without it, `<MapView provider={PROVIDER_GOOGLE}>` throws a *native*
 // IllegalStateException ("API key not found") during view attach — which a
 // JS error boundary CANNOT catch (it crashes the UI thread first). So the

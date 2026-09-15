@@ -16,9 +16,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.abonten.app",
+      "appleTeamId": "KDDBR5P4D6",
       "associatedDomains": [
         "applinks:abontenhub.com"
-      ]
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.abonten.app",
@@ -68,7 +72,12 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       "expo-web-browser",
       "expo-image",
       "expo-sharing",
@@ -118,7 +127,17 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "Abonten uses the microphone so you can record and send voice messages in chat."
+          "microphonePermission": "Abonten uses the microphone so you can record and send voice messages in chat.",
+          "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Abonten uses your location to show events and places near you, to help you pick a venue on the map, and to record a visit when you check in at a place.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": false
         }
       ],
       "expo-video",
