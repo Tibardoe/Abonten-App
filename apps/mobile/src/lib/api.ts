@@ -39,7 +39,9 @@ export const api = createApiClient({
       const { data } = await supabase.auth.getSession();
       const current = data.session?.access_token;
 
-      if (current && sent === `Bearer ${current}`) handleAuthExpiry();
+      // handleAuthExpiry confirms with the auth server before signing out,
+      // so a one-off 401 here costs a single extra call and nothing else.
+      if (current && sent === `Bearer ${current}`) void handleAuthExpiry();
     }
 
     return response;
