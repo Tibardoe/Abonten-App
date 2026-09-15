@@ -16,6 +16,10 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-15 — iOS: App Store Connect rejected build 5 (ITMS-90683)
+
+- **Fix — missing `NSMotionUsageDescription`**: App Store Connect refused 0.2.0 (5) with ITMS-90683. The binary links `CMMotionActivityManager` through `expo-location` 57 (`LocationModule.swift`, `MotionActivityStreamer.swift` — the library's optional motion-activity API), and Apple requires a purpose string for any app that links it, whether or not it is called. The string was missing because the iOS-readiness change set the plugin's `motionUsagePermission: false`. It is now a truthful string stating Abonten does not use motion data and the permission comes from the location component; the app still never requests motion access, and no other permission, entitlement or Android setting changed (checked with `expo config --type introspect`). `expo-camera`'s `CMMotionManager` (photo orientation) needs no string. Takes effect from build 6. (`deployment/mobile-eas.md` 1.1 → 1.2)
+
 ## 2026-09-15 — Discovery: the five known limitations resolved
 
 - **New capability — place services are searchable** (`20260915100000`): `place_service.search_tsv` + GIN index and a services branch in `_search_place_pool`, so "sauna" or "braids" finds places that offer it, ranked below name and category matches. Perf harness gained 100,000 services. (`architecture/discovery-search-and-recommendations.md` 1.0 → 1.1, `architecture/perf/discovery-2026-09.md` 1.0 → 1.1)
