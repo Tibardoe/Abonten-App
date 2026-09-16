@@ -9,7 +9,8 @@ import {
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
 import { useWeeklyEdition } from "@/features/weekly/useWeekly";
 import { hapticLight } from "@/lib/haptics";
-import { shareLink, weeklyShareUrl } from "@/lib/share";
+import { weeklyShareUrl } from "@/lib/share";
+import { useShareLink } from "@/lib/useShareLink";
 import { weeklyBannerSlides } from "@abonten/core/weekly/bannerSlides";
 import {
   WEEKLY_PRODUCT_NAME,
@@ -145,6 +146,7 @@ export function WeeklyScreen({
 }) {
   const router = useRouter();
   const { location } = useExploreLocation();
+  const shareLink = useShareLink();
   const query = useWeeklyEdition({
     scope,
     week,

@@ -1,5 +1,5 @@
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { shareLink } from "@/lib/share";
+import { useShareLink } from "@/lib/useShareLink";
 import { Icon } from "@abonten/ui-native";
 import { Pressable, View } from "react-native";
 
@@ -25,6 +25,7 @@ export function DetailHeaderActions({
   /** When set, a flag button is shown that opens the report sheet. */
   onReport?: () => void;
 }) {
+  const share = useShareLink();
   return (
     <View className="flex-row items-center gap-1">
       {onReport ? (
@@ -44,8 +45,8 @@ export function DetailHeaderActions({
           accessibilityLabel="Share"
           hitSlop={8}
           onPress={() =>
-            shareLink(shareTitle, shareUrl).then((shared) => {
-              if (shared) onShared?.();
+            share(shareTitle, shareUrl).then((outcome) => {
+              if (outcome.kind === "shared") onShared?.();
             })
           }
           className="p-1 active:opacity-70"

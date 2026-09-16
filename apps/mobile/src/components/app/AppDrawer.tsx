@@ -24,7 +24,12 @@ import {
 } from "@abonten/ui-native";
 import { useTranslations } from "@abonten/ui-native/i18n";
 import { useThemeColors } from "@abonten/ui-native/theme";
-import { usePathname, useRouter, useSegments } from "expo-router";
+import {
+  usePathname,
+  useRootNavigationState,
+  useRouter,
+  useSegments,
+} from "expo-router";
 import { useEffect, useRef } from "react";
 import {
   BackHandler,
@@ -71,6 +76,17 @@ const EDGE_WIDTH = 22;
 // menu button — that overlap was swallowing taps on the button (the swipe
 // still worked), so the menu "sometimes" didn't open.
 const HEADER_HEIGHT = 54;
+
+// How many screens the (app) stack holds right now — used to recognise
+// "came BACK to the screen the drawer was opened over" (same path, same
+// depth) as opposed to landing on that path some other way.
+type NavState = {
+  routes?: { name: string; state?: NavState }[];
+};
+function appStackDepth(state: NavState | undefined): number {
+  const app = state?.routes?.find((r) => r.name === "(app)");
+  return app?.state?.routes?.length ?? 0;
+}
 
 function Row({
   icon,
@@ -124,6 +140,10 @@ export function AppDrawer() {
   const { width } = useWindowDimensions();
   const segments = useSegments();
   const pathname = usePathname();
+  const rootState = useRootNavigationState() as NavState | undefined;
+  const depth = appStackDepth(rootState);
+  const depthRef = useRef(depth);
+  depthRef.current = depth;
   // The edge-swipe-to-open only lives on the tab root screens. On a pushed
   // screen (event/place detail, organizer, settings, the wizards…) the left
   // edge belongs to the native stack's back-swipe, so opening the drawer
@@ -159,6 +179,7 @@ export function AppDrawer() {
   useEffect(() => {
     if (!open) return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      returnTo.current = null;
       setOpen(false);
       return true;
     });
@@ -171,12 +192,27 @@ export function AppDrawer() {
   // — the panel would otherwise stay up over the new screen. Any route
   // change closes it, and the edge-swipe progress is reset with it so a
   // half-dragged panel can't be left hanging either.
+  //
+  // The one exception is coming BACK from a screen the drawer itself opened
+  // (Dashboard, Wallets, Notifications…): the drawer is a navigation context,
+  // so returning from one of its destinations lands on the drawer again,
+  // not on the screen underneath it. Closing the drawer explicitly (X,
+  // backdrop, swipe, Android back) forgets that and reveals the screen.
+  const returnTo = useRef<{ path: string; depth: number } | null>(null);
   const lastPath = useRef(pathname);
   useEffect(() => {
     if (lastPath.current === pathname) return;
     lastPath.current = pathname;
+    const origin = returnTo.current;
+    if (origin && pathname === origin.path && depth === origin.depth) {
+      returnTo.current = null;
+      setOpen(true);
+      return;
+    }
+    // Went below the screen the drawer was opened over — nothing to return to.
+    if (origin && depth < origin.depth) returnTo.current = null;
     if (open) setOpen(false);
-  }, [pathname, open, setOpen]);
+  }, [pathname, depth, open, setOpen]);
 
   const panelStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: tx.value }],
@@ -212,6 +248,11 @@ export function AppDrawer() {
       }
     });
 
+  const dismissFromGesture = () => {
+    returnTo.current = null;
+    setOpen(false);
+  };
+
   // Swipe the open panel left to CLOSE. Bails on a rightward drag so vertical
   // scrolling inside the panel is untouched.
   const closePan = Gesture.Pan()
@@ -226,7 +267,7 @@ export function AppDrawer() {
       const shouldClose = e.translationX < -width * 0.3 || e.velocityX < -600;
       if (shouldClose) {
         tx.value = withTiming(-width, { duration: 160 }, (finished) => {
-          if (finished) runOnJS(setOpen)(false);
+          if (finished) runOnJS(dismissFromGesture)();
         });
         progress.value = withTiming(0, { duration: 160 });
       } else {
@@ -236,23 +277,39 @@ export function AppDrawer() {
     });
 
   const close = () => setOpen(false);
+  // An explicit dismissal: the person is done with the drawer, so returning
+  // from an earlier destination must not bring it back.
+  const dismiss = () => {
+    returnTo.current = null;
+    close();
+  };
   // Close first, navigate on the next frame: pushing while the panel is
   // still fully open ran the slide-out and the screen push in the same
   // frame, and on iOS the push animation could start with the drawer still
   // covering the incoming screen. The frame's delay lets the close begin,
   // so the new screen slides in from under a drawer that is already going.
+  // Remember where we were, so Back from the destination reopens the drawer.
   const go = (path: string) => {
+    returnTo.current = { path: pathname, depth: depthRef.current };
     close();
     requestAnimationFrame(() => router.push(path));
   };
+  // Signing in leaves the app stack entirely and comes back through a
+  // redirect, not a Back — never reopen the drawer for it.
+  const goAuth = () => {
+    dismiss();
+    requestAnimationFrame(() => router.push("/(auth)/sign-in"));
+  };
   // Tab destinations switch the tab in place rather than pushing a second
-  // copy of the tabs group on top of the stack.
+  // copy of the tabs group on top of the stack — there is no "back" to the
+  // drawer from a tab, so nothing is remembered.
   const goTab = (path: string) => {
-    close();
+    dismiss();
     requestAnimationFrame(() => router.navigate(path));
   };
+  // External pages (legal, help, socials) open over the app; the drawer
+  // stays open underneath, so closing the browser returns straight to it.
   const openExternal = (url: string) => {
-    close();
     void openExternalLink(url);
   };
 
@@ -288,7 +345,7 @@ export function AppDrawer() {
           style={StyleSheet.absoluteFill}
           accessibilityRole="button"
           accessibilityLabel="Close menu"
-          onPress={close}
+          onPress={dismiss}
         />
       </Animated.View>
 
@@ -323,7 +380,7 @@ export function AppDrawer() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close menu"
-                onPress={close}
+                onPress={dismiss}
                 hitSlop={10}
                 className="h-11 w-11 items-center justify-center rounded-full active:opacity-60"
               >
@@ -459,12 +516,12 @@ export function AppDrawer() {
                 <Row
                   icon="log-in-outline"
                   label={t("signIn")}
-                  onPress={() => go("/(auth)/sign-in")}
+                  onPress={() => goAuth()}
                 />
                 <Row
                   icon="person-add-outline"
                   label={t("signUp")}
-                  onPress={() => go("/(auth)/sign-in")}
+                  onPress={() => goAuth()}
                 />
               </>
             )}
@@ -478,7 +535,7 @@ export function AppDrawer() {
                 variant="outline"
                 className="mt-5 border-destructive"
                 onPress={async () => {
-                  close();
+                  dismiss();
                   await unregisterPushToken();
                   await signOut();
                 }}

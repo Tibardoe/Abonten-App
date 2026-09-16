@@ -5,13 +5,7 @@ import { EventReminderButton } from "@/components/EventReminderButton";
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
 import { FreeRsvpCard } from "@/components/checkout/FreeRsvpCard";
-import {
-  MapConfigured,
-  MapErrorBoundary,
-  MapView,
-  Marker,
-  PROVIDER_GOOGLE,
-} from "@/components/map/NativeMap";
+import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { AddReviewSheet } from "@/components/reviews/AddReviewSheet";
 import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { EventDetailSkeleton } from "@/components/skeletons";
@@ -34,6 +28,7 @@ import {
   logEventShare,
   useReferralCode,
 } from "@/features/rewards/useReferralCode";
+import { openDirections as openMapsDirections } from "@/lib/directions";
 import { eventShareUrl } from "@/lib/share";
 import { useNowTick } from "@/lib/useNowTick";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -325,10 +320,14 @@ export default function EventDetailScreen() {
   const reviews = reviewsList.data?.pages.flatMap((p) => p.reviews) ?? [];
 
   const openDirections = () => {
-    const q = encodeURIComponent(address ?? event.title);
-    Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${q}`,
-    ).catch(() => {});
+    void openMapsDirections({ label: event.title, address, coords }).then(
+      (opened) => {
+        if (!opened)
+          toast.error("Couldn't open maps", {
+            description: "No maps app is available on this device.",
+          });
+      },
+    );
   };
 
   return (
@@ -526,57 +525,12 @@ export default function EventDetailScreen() {
               sub={event.capacity ? `Capacity ${event.capacity}` : undefined}
             />
 
-            {MapConfigured && MapView && coords ? (
-              <MapErrorBoundary fallback={null}>
-                {/*
-                  This map is a static preview — "Get directions" below is the
-                  only interaction. pointerEvents on the MapView itself is not
-                  enough on Android: the native Google view still swallowed
-                  vertical drags, so a finger landing anywhere on this band
-                  (most of the width, in the middle of the page) could not
-                  scroll the screen. Blocking touches on the RN wrapper is
-                  honoured reliably; the gesture props below make the intent
-                  explicit and cover the iOS side too.
-                */}
-                <View
-                  className="mt-1 h-40 overflow-hidden rounded-lg"
-                  pointerEvents="none"
-                >
-                  <MapView
-                    style={{ flex: 1 }}
-                    provider={
-                      Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
-                    }
-                    pointerEvents="none"
-                    // Google's lite mode renders a static bitmap: genuinely
-                    // non-interactive, cheap, and it never registers gesture
-                    // recognisers that could linger over the screen. iOS
-                    // (Apple Maps) has no equivalent; the gesture props
-                    // below keep it static there.
-                    liteMode={Platform.OS === "android"}
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    rotateEnabled={false}
-                    pitchEnabled={false}
-                    toolbarEnabled={false}
-                    initialRegion={{
-                      latitude: coords.lat,
-                      longitude: coords.lng,
-                      latitudeDelta: 0.02,
-                      longitudeDelta: 0.02,
-                    }}
-                  >
-                    {Marker ? (
-                      <Marker
-                        coordinate={{
-                          latitude: coords.lat,
-                          longitude: coords.lng,
-                        }}
-                      />
-                    ) : null}
-                  </MapView>
-                </View>
-              </MapErrorBoundary>
+            {coords ? (
+              <StaticMapPreview
+                coords={coords}
+                label={address ?? event.title}
+                onPress={openDirections}
+              />
             ) : null}
 
             <View className="flex-row gap-2 pt-1">

@@ -1,4 +1,5 @@
 import {
+  type ReactNode,
   createContext,
   forwardRef,
   useCallback,
@@ -17,6 +18,8 @@ import {
   ScrollView,
   type ScrollViewProps,
   type StyleProp,
+  TextInput,
+  View,
   type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -67,6 +70,11 @@ type Measurable = {
 export type KeyboardAwareContextValue = {
   /** Bring this field into view above the keyboard (called by <Input>). */
   revealInput: (node: Measurable | null) => void;
+  /**
+   * Register a <KeyboardRevealGroup>: a focused field inside its frame is
+   * revealed together with the whole group. Returns the unregister function.
+   */
+  registerGroup: (node: Measurable | null) => () => void;
 };
 
 export const KeyboardAwareContext =
@@ -121,37 +129,46 @@ export const KeyboardAwareScrollView = forwardRef<
   const kbRef = useRef(0);
   kbRef.current = kbHeight;
   const focusedRef = useRef<Measurable | null>(null);
+  const groupsRef = useRef<Set<Measurable>>(new Set());
 
-  const reveal = useCallback((node: Measurable | null) => {
+  const reveal = useCallback(async (node: Measurable | null) => {
     const scroller = scrollRef.current;
     const kb = kbRef.current;
     if (!node || !scroller || kb <= 0) return;
     const scrollerNode = scroller as unknown as Measurable;
-    node.measureInWindow((_x, y, _w, h) => {
-      scrollerNode.measureInWindow((_sx, sy, _sw, sh) => {
-        const windowH = Dimensions.get("window").height;
-        const keyboardTop = windowH - kb;
-        // The visible window of the scroller: its top edge down to whichever
-        // is higher, its own bottom or the keyboard's top.
-        const visibleTop = sy;
-        const visibleBottom = Math.min(sy + sh, keyboardTop);
-        const fieldTop = y;
-        const fieldBottom = y + h;
-        let delta = 0;
-        if (fieldBottom + REVEAL_MARGIN > visibleBottom) {
-          delta = fieldBottom + REVEAL_MARGIN - visibleBottom;
-        }
-        // A field taller than the visible window: favour its top so the
-        // label and first lines are readable, never the bottom edge alone.
-        if (fieldTop - delta < visibleTop + REVEAL_MARGIN) {
-          delta = fieldTop - (visibleTop + REVEAL_MARGIN);
-        }
-        if (Math.abs(delta) < 2) return;
-        scroller.scrollTo({
-          y: Math.max(0, offsetY.current + delta),
-          animated: true,
-        });
-      });
+    let { y, h } = await measure(node);
+    // Inside a registered group? Reveal the group (field + its action).
+    for (const group of groupsRef.current) {
+      const g = await measure(group);
+      const mid = y + h / 2;
+      if (g.h > 0 && mid >= g.y && mid <= g.y + g.h) {
+        y = g.y;
+        h = g.h;
+        break;
+      }
+    }
+    const view = await measure(scrollerNode);
+    const windowH = Dimensions.get("window").height;
+    const keyboardTop = windowH - kb;
+    // The visible window of the scroller: its top edge down to whichever is
+    // higher, its own bottom or the keyboard's top.
+    const visibleTop = view.y;
+    const visibleBottom = Math.min(view.y + view.h, keyboardTop);
+    const fieldTop = y;
+    const fieldBottom = y + h;
+    let delta = 0;
+    if (fieldBottom + REVEAL_MARGIN > visibleBottom) {
+      delta = fieldBottom + REVEAL_MARGIN - visibleBottom;
+    }
+    // A field taller than the visible window: favour its top so the label
+    // and first lines are readable, never the bottom edge alone.
+    if (fieldTop - delta < visibleTop + REVEAL_MARGIN) {
+      delta = fieldTop - (visibleTop + REVEAL_MARGIN);
+    }
+    if (Math.abs(delta) < 2) return;
+    scroller.scrollTo({
+      y: Math.max(0, offsetY.current + delta),
+      animated: true,
     });
   }, []);
 
@@ -165,7 +182,7 @@ export const KeyboardAwareScrollView = forwardRef<
       // padding land well after focus, so measure late enough to see the
       // final viewport (an early measure revealed only the field's top).
       const t = setTimeout(
-        () => reveal(node),
+        () => void reveal(node),
         Platform.OS === "ios" ? 80 : 280,
       );
       return () => clearTimeout(t);
@@ -179,15 +196,30 @@ export const KeyboardAwareScrollView = forwardRef<
   useEffect(() => {
     if (kbHeight <= 0) return;
     const t = setTimeout(
-      () => reveal(focusedRef.current),
+      () =>
+        void reveal(
+          // The field that has focus right now — found through the platform
+          // so a raw TextInput (which never reports focus) is covered —
+          // else the last <Input> that reported it.
+          (TextInput.State.currentlyFocusedInput() as unknown as Measurable | null) ??
+            focusedRef.current,
+        ),
       Platform.OS === "ios" ? 60 : 220,
     );
     return () => clearTimeout(t);
   }, [kbHeight, reveal]);
 
+  const registerGroup = useCallback((node: Measurable | null) => {
+    if (!node) return () => {};
+    groupsRef.current.add(node);
+    return () => {
+      groupsRef.current.delete(node);
+    };
+  }, []);
+
   const ctx = useMemo<KeyboardAwareContextValue>(
-    () => ({ revealInput }),
-    [revealInput],
+    () => ({ revealInput, registerGroup }),
+    [revealInput, registerGroup],
   );
 
   const scroller = (
@@ -234,3 +266,49 @@ export function useRevealInput(): KeyboardAwareContextValue["revealInput"] {
 }
 
 function noop() {}
+
+function measure(node: Measurable): Promise<{ y: number; h: number }> {
+  return new Promise((resolve) => {
+    try {
+      node.measureInWindow((_x, y, _w, h) => resolve({ y, h }));
+    } catch {
+      resolve({ y: 0, h: 0 });
+    }
+  });
+}
+
+/**
+ * Keeps a whole GROUP above the keyboard — a field together with the button
+ * that submits it — rather than just the focused field.
+ *
+ * iOS's own nudge and the per-field reveal both stop at the field's bottom
+ * edge, so a form whose action sits under its input (sign-in's "Send code",
+ * the OTP screen's "Verify") left that action half behind the keyboard.
+ * Whenever the scroll view reveals a focused field — an <Input>, or a raw
+ * TextInput / the OTP cells found through the platform's focused-input
+ * lookup — and that field lies inside a group, the whole group is kept in
+ * view instead. Fields outside every group are revealed on their own.
+ */
+export function KeyboardRevealGroup({
+  children,
+  className,
+  style,
+}: {
+  children: ReactNode;
+  className?: string;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const parent = useContext(KeyboardAwareContext);
+  const ref = useRef<View>(null);
+
+  useEffect(() => {
+    if (!parent) return;
+    return parent.registerGroup(ref.current as unknown as Measurable);
+  }, [parent]);
+
+  return (
+    <View ref={ref} className={className} style={style} collapsable={false}>
+      {children}
+    </View>
+  );
+}

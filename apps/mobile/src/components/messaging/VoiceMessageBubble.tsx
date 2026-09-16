@@ -1,7 +1,7 @@
 import { useVoiceBubblePlayer } from "@/features/messaging/useVoicePlayer";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -54,7 +54,7 @@ export default function VoiceMessageBubble({
   const bars = useMemo(() => seededBars(message.id, BAR_COUNT), [message.id]);
 
   const fg = isMine ? c["primary-foreground"] : c.foreground;
-  const trackDim = isMine ? "rgba(255,255,255,0.35)" : c.border;
+  const trackDim = isMine ? withAlpha(c["primary-foreground"], 0.3) : c.border;
   const played = isMine ? c["primary-foreground"] : c.primary;
 
   const shownSeconds =
@@ -78,7 +78,9 @@ export default function VoiceMessageBubble({
         className="h-9 w-9 items-center justify-center rounded-full active:opacity-70"
         style={{
           flexShrink: 0,
-          backgroundColor: isMine ? "rgba(255,255,255,0.2)" : c.muted,
+          backgroundColor: isMine
+            ? withAlpha(c["primary-foreground"], 0.12)
+            : c.muted,
         }}
       >
         {player.loadFailed ? (
@@ -132,7 +134,9 @@ export default function VoiceMessageBubble({
           flexShrink: 0,
           minWidth: 34,
           textAlign: "right",
-          color: isMine ? "rgba(255,255,255,0.75)" : c["muted-foreground"],
+          color: isMine
+            ? withAlpha(c["primary-foreground"], 0.8)
+            : c["muted-foreground"],
         }}
       >
         {clock(shownSeconds)}

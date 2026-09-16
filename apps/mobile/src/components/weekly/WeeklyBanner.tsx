@@ -55,15 +55,22 @@ export function WeeklyBanner({
   onPress,
   accessibilityLabel,
   onSlidePress,
+  onSlideShown,
 }: {
   slides: WeeklyBannerSlide[];
   height: number;
   eyebrow: ReactNode;
   children: ReactNode;
-  /** When set, tapping the banner opens the edition (the teaser). */
-  onPress?: () => void;
+  /**
+   * When set, tapping the banner body calls this with the slide on show —
+   * the Weekly teaser opens its edition, the Featured banner opens the
+   * listing itself.
+   */
+  onPress?: (slide: WeeklyBannerSlide | null) => void;
   accessibilityLabel?: string;
   onSlidePress: (slide: WeeklyBannerSlide) => void;
+  /** Fired when a slide comes on show (e.g. to count a sponsored impression). */
+  onSlideShown?: (slide: WeeklyBannerSlide) => void;
 }) {
   const count = slides.length;
   const rotating = count > 1;
@@ -188,11 +195,28 @@ export function WeeklyBanner({
 
   const slide = count > 0 ? slides[index] : null;
 
+  const onShownRef = useRef(onSlideShown);
+  onShownRef.current = onSlideShown;
+  useEffect(() => {
+    if (slide) onShownRef.current?.(slide);
+  }, [slide]);
+
+  // The banner is dark (photo + INK scrim) in both themes. On the dark
+  // theme's near-black page its lower edge dissolved into the background, so
+  // it carries a hairline in the theme's border colour — invisible against
+  // the light page, a clean edge against the dark one.
+  const c = useThemeColors();
+
   return (
     <GestureDetector gesture={swipe}>
       <View
         className="mx-4 overflow-hidden rounded-3xl"
-        style={{ height, backgroundColor: INK }}
+        style={{
+          height,
+          backgroundColor: INK,
+          borderWidth: 1,
+          borderColor: c.border,
+        }}
       >
         <View
           style={StyleSheet.absoluteFill}
@@ -220,7 +244,7 @@ export function WeeklyBanner({
 
         {onPress ? (
           <Pressable
-            onPress={onPress}
+            onPress={() => onPress(slide)}
             onPressIn={() => setTouching(true)}
             onPressOut={() => setTouching(false)}
             accessibilityRole="button"

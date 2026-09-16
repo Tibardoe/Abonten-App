@@ -8,8 +8,8 @@ import { FlatList, Pressable, View } from "react-native";
 
 // Native echo of the web EventsSlider / PlacesSlider — a titled horizontal
 // strip of cards above the filterable "All" list, with a "View all" action
-// that opens the full window (app/(app)/explore/[type]). Featured events get
-// the FeaturedEventsCarousel banner treatment instead of this row.
+// that opens the full window (app/(app)/explore/[type]). Featured events and
+// places are shown in the Featured banner (DiscoveryHero) instead.
 //
 // Header styling matches the web EventsSlider exactly: the title is
 // deliberately quieter than the "All events" heading below it — an uppercase,

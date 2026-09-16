@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-15
+lastReviewed: 2026-09-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,24 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-16 — Mobile: iOS TestFlight QA round 2
+
+- **Fix — maps stopped responding after opening a detail screen (iOS)**: the event/place mini map set `pointerEvents="none"` on the MapView. Native views are recycled on the new architecture; react-native-maps resets its cached props on reuse, so the recycled view kept `userInteractionEnabled = NO` and the next Explore map or "Choose on map" picker drew but ignored every touch. The mini map is now `StaticMapPreview` (touch blocking on a wrapper view only; tap opens directions).
+- **Fix — chat shook while typing (iOS)**: the composer set its height from `onContentSizeChange` + 20 px; iOS already counts padding in the content size and a non-scrolling UITextView reports its own frame, so the height grew, capped, shrank and repeated. The field now sizes itself between a min and max height.
+- **Fix — Share in the event card menu did nothing (iOS)**: the native share sheet was requested while the menu's modal was still dismissing. It now runs from the sheet's `onDismiss`; share failures show a toast (`useShareLink`), cancelling is silent, and an event without a code no longer shares a broken `/events/` link.
+- **Fix — bottom sheets**: `<Sheet>` presented with `animationType="slide"`, which slid the dim backdrop up with the panel so it looked like a second sheet. The backdrop now fades and the panel slides separately (reduced motion respected); the Modal stays mounted until the exit animation ends. Applies to every sheet.
+- **Fix — wrong-colour flash under transitions**: `expo.backgroundColor` never reached the native root because `expo-system-ui` was not installed. It is now a dependency (**native rebuild required**), and the root view / window is painted with the live theme background on every theme change (guarded so an OTA update on an older binary is a no-op).
+- **Fix — keyboard covered Send code / Verify**: new `KeyboardRevealGroup` (`@abonten/ui-native`) keeps a field and its action in view together; `KeyboardAwareScrollView` also reveals raw TextInputs via the platform's focused-input lookup.
+- **Fix — video highlight progress moved in steps**: the bar is a UI-thread linear animation re-aimed at each playback time update, held while paused or buffering.
+- **Fix — own chat bubble timestamps/ticks at 1.5–1.7:1 contrast**: drawn in the bubble's dark foreground ink at 80% (4.4:1 light, 5.3:1 dark); the same ink replaces white accents in reply quotes, voice and file bubbles. `text-primary-foreground/NN` classes (which NativeWind cannot apply to these tokens) removed.
+- **Behaviour change — Explore Featured banner**: the Abonten Weekly banner is unchanged; Featured events / places below it now use the same banner (`FeaturedBanner` on `WeeklyBanner`): listings cross-fade behind the text with story segments, a caption card, swipe and pause, full size (340–420 pt) with a "Featured" / "Sponsored" disclosure chip; tapping opens the listing on show. Sponsored places log `promotion_impression` from the app. Filter chips have fixed spacing below it. The Weekly/Featured banner now has a hairline border so its dark edge no longer dissolves into the dark-theme page.
+- **Fix — blank white map markers**: a photo marker showed an empty white disc while its photo loaded or when it failed; the brand fill and icon now sit under the photo.
+- **Behaviour change — side menu keeps its context**: Back from a menu destination reopens the menu; explicitly closing it returns to the underlying screen.
+- **Behaviour change — place details**: Directions and Check in sit beneath the location map, as on event details. Directions open Apple Maps (iOS) / the `geo:` chooser (Android) with coordinates.
+- **Fix — shared links doubled on iOS** ("Title https://… https://…"): iOS now gets the link only as `url`; Android keeps it in the message.
+- **Fix — closing the Google sign-in page showed an error** under the phone field: cancelling is now silent and real Google failures show a toast.
+- **Behaviour change — chat**: header leads with the other person, with live "typing…" / "In this chat" (Realtime Presence); richer empty thread; inbox skeleton rows; characters-left counter near the message limit.
 
 ## 2026-09-15 — Mobile: iOS TestFlight QA round 1
 

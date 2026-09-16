@@ -9,18 +9,29 @@ import { useAnchorMeasure } from "./contextMenu/useAnchorMeasure";
 
 const HEIGHT = 54;
 
-// Chat-screen header: back · tappable subject (event / place name + a
-// one-word context line) · overflow menu. The subject opens the underlying
-// event or place detail screen, so the conversation always stays anchored to
-// what it's about.
+// Chat-screen header: back · who you're talking to, and what about · menu.
+//
+// The person leads when there is one (their avatar and name), with the
+// subject — "Event · Accra after dark" — on the line beneath; a support
+// thread or one with no other participant yet leads with the subject. That
+// second line turns into live status when there is some: "typing…" while
+// they type, "In this chat" while they have the thread open. Status is
+// always words (plus a dot), never colour alone. Tapping the title opens the
+// event or place the conversation is about.
 export function ConversationHeader({
   context,
   currentUserId,
   onMenu,
+  typing = false,
+  present = false,
 }: {
   context: ConversationContext | null | undefined;
   currentUserId: string | undefined;
   onMenu: (anchor: Rect | null) => void;
+  /** The other participant is typing right now. */
+  typing?: boolean;
+  /** The other participant has this conversation open right now. */
+  present?: boolean;
 }) {
   const { ref: menuRef, measure: measureMenu } = useAnchorMeasure();
   const c = useThemeColors();
@@ -45,6 +56,17 @@ export function ConversationHeader({
   const other = context?.participants.find(
     (p) => p.user_id !== currentUserId && p.profile,
   );
+  const otherName =
+    context?.type !== "support"
+      ? other?.profile?.full_name || other?.profile?.username || null
+      : null;
+  const title = otherName ?? subjectName;
+  const about = otherName
+    ? contextLine
+      ? `${contextLine} · ${subjectName}`
+      : subjectName
+    : contextLine;
+  const closedNote = context?.status === "closed" ? " · Closed" : "";
 
   function openSubject() {
     if (context?.subject.event) {
@@ -85,6 +107,17 @@ export function ConversationHeader({
 
         <Pressable
           accessibilityRole={subjectTappable ? "button" : "header"}
+          accessibilityLabel={[
+            title,
+            typing ? "typing" : present ? "in this chat" : about,
+          ]
+            .filter(Boolean)
+            .join(", ")}
+          accessibilityHint={
+            subjectTappable
+              ? `Opens the ${context?.subject.event ? "event" : "place"}`
+              : undefined
+          }
           onPress={subjectTappable ? openSubject : undefined}
           className="flex-1 flex-row items-center gap-2 active:opacity-70"
         >
@@ -111,12 +144,32 @@ export function ConversationHeader({
           )}
           <View className="flex-1">
             <AppText variant="bodyStrong" numberOfLines={1}>
-              {subjectName}
+              {title}
             </AppText>
-            {contextLine ? (
+            {typing ? (
+              <AppText
+                variant="caption"
+                tone="brand"
+                numberOfLines={1}
+                className="font-semibold"
+                accessibilityLiveRegion="polite"
+              >
+                typing…
+              </AppText>
+            ) : present ? (
+              <View className="flex-row items-center gap-1.5">
+                <View
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: c.success }}
+                />
+                <AppText variant="caption" numberOfLines={1}>
+                  In this chat
+                </AppText>
+              </View>
+            ) : about || closedNote ? (
               <AppText variant="caption" numberOfLines={1}>
-                {contextLine}
-                {context?.status === "closed" ? " · Closed" : ""}
+                {about}
+                {closedNote}
               </AppText>
             ) : null}
           </View>

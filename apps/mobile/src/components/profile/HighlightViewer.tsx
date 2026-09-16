@@ -91,6 +91,10 @@ export function HighlightViewer({
   const [holding, setHolding] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // Mirror for player callbacks: a pause event from the previous slide's
+  // teardown must not paint that slide's position onto the next bar.
+  const loadedRef = useRef(false);
+  loadedRef.current = loaded;
 
   const group = groups[groupIndex] ?? [];
   const slide = group[slideIndex];
@@ -110,7 +114,9 @@ export function HighlightViewer({
 
   const player = useVideoPlayer(null, (p) => {
     p.loop = false;
-    p.timeUpdateEventInterval = 0.25;
+    // Only a sync signal now — the bar itself is animated on the UI thread
+    // between updates (see "drive the bar" below), so this can stay coarse.
+    p.timeUpdateEventInterval = 0.5;
   });
 
   // expo-video releases the player synchronously when this component
@@ -207,6 +213,7 @@ export function HighlightViewer({
   useEffect(() => {
     cancelAnimation(progress);
     progress.value = 0;
+    loadedRef.current = false;
     setLoaded(false);
   }, [slide?.id]);
 
@@ -253,10 +260,45 @@ export function HighlightViewer({
     let statusSub: { remove: () => void } | undefined;
     let endSub: { remove: () => void } | undefined;
     let timeSub: { remove: () => void } | undefined;
+    let playingSub: { remove: () => void } | undefined;
     runPlayer((p) => {
+      // The bar used to be SET from each time update, so it moved in 250 ms
+      // jumps while image slides glided. Now every update re-aims one linear
+      // UI-thread animation at "100% when the video ends", starting from
+      // wherever the bar currently is: between updates it moves every frame,
+      // and any drift from real playback is absorbed smoothly by the next
+      // re-aim instead of snapping. Pausing, buffering or a stall stops it on
+      // the exact playback position.
+      const syncBar = (playing: boolean) => {
+        if (!loadedRef.current) return;
+        const dur = p.duration || slide?.media_duration || 0;
+        if (dur <= 0) return;
+        const at = Math.min(1, Math.max(0, p.currentTime / dur));
+        cancelAnimation(progress);
+        if (!playing) {
+          progress.value = at;
+          return;
+        }
+        // A jump of more than half a second (seek, a previous slide's value)
+        // is corrected at once; small drift is left to the animation.
+        if (Math.abs(progress.value - at) * dur > 0.5) progress.value = at;
+        const rate = p.playbackRate > 0 ? p.playbackRate : 1;
+        const remainingMs = ((dur - p.currentTime) * 1000) / rate;
+        progress.value = withTiming(1, {
+          duration: Math.max(0, remainingMs),
+          easing: Easing.linear,
+        });
+      };
       statusSub = p.addListener("statusChange", ({ status }) => {
         if (status === "readyToPlay") {
+          loadedRef.current = true;
           setLoaded(true);
+          syncBar(p.playing);
+          return;
+        }
+        // Buffering: hold the bar where playback actually is.
+        if (status === "loading") {
+          syncBar(false);
           return;
         }
         if (status !== "error" || !slide) return;
@@ -278,16 +320,18 @@ export function HighlightViewer({
           .catch(() => nextSlide());
       });
       endSub = p.addListener("playToEnd", () => nextSlide());
-      timeSub = p.addListener("timeUpdate", (e) => {
-        const dur = p.duration || slide?.media_duration || 0;
-        if (dur > 0) progress.value = Math.min(1, e.currentTime / dur);
-      });
+
+      timeSub = p.addListener("timeUpdate", () => syncBar(p.playing));
+      playingSub = p.addListener("playingChange", ({ isPlaying }) =>
+        syncBar(isPlaying),
+      );
     });
     return () => {
       try {
         statusSub?.remove();
         endSub?.remove();
         timeSub?.remove();
+        playingSub?.remove();
       } catch {
         // player released on unmount
       }

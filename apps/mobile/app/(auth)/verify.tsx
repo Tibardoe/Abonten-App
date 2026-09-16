@@ -14,6 +14,7 @@ import {
   Button,
   Icon,
   KeyboardAwareScrollView,
+  KeyboardRevealGroup,
   OtpInput,
 } from "@abonten/ui-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -245,70 +246,72 @@ export default function Verify() {
               </AppText>
             </View>
 
-            <View className="gap-3">
-              <OtpInput
-                value={code}
-                onChange={(v) => {
-                  setCode(v);
-                  if (error) setError(null);
-                }}
-                onComplete={verify}
-                length={codeLength}
-                disabled={busy}
-                invalid={!!error}
-              />
+            <KeyboardRevealGroup className="gap-8">
+              <View className="gap-3">
+                <OtpInput
+                  value={code}
+                  onChange={(v) => {
+                    setCode(v);
+                    if (error) setError(null);
+                  }}
+                  onComplete={verify}
+                  length={codeLength}
+                  disabled={busy}
+                  invalid={!!error}
+                />
 
-              {error ? (
-                <View className="flex-row items-center justify-center gap-1.5">
-                  <Icon name="alert-circle" size={15} tone="destructive" />
-                  <AppText variant="small" tone="error">
-                    {error}
-                  </AppText>
-                </View>
-              ) : notice ? (
-                <View className="flex-row items-center justify-center gap-1.5">
-                  <Icon name="checkmark-circle" size={15} tone="primary" />
-                  <AppText variant="muted">{notice}</AppText>
-                </View>
-              ) : null}
-            </View>
+                {error ? (
+                  <View className="flex-row items-center justify-center gap-1.5">
+                    <Icon name="alert-circle" size={15} tone="destructive" />
+                    <AppText variant="small" tone="error">
+                      {error}
+                    </AppText>
+                  </View>
+                ) : notice ? (
+                  <View className="flex-row items-center justify-center gap-1.5">
+                    <Icon name="checkmark-circle" size={15} tone="primary" />
+                    <AppText variant="muted">{notice}</AppText>
+                  </View>
+                ) : null}
+              </View>
 
-            <View className="gap-4">
-              <Button
-                title={busy ? "Verifying…" : "Verify"}
-                fullWidth
-                loading={busy}
-                disabled={busy || code.length < codeLength}
-                onPress={() => verify(code)}
-              />
+              <View className="gap-4">
+                <Button
+                  title={busy ? "Verifying…" : "Verify"}
+                  fullWidth
+                  loading={busy}
+                  disabled={busy || code.length < codeLength}
+                  onPress={() => verify(code)}
+                />
 
-              <Pressable
-                onPress={resend}
-                disabled={secondsLeft > 0 || resending || busy}
-                hitSlop={8}
-                className="active:opacity-60"
-              >
-                <AppText variant="muted" className="text-center">
-                  {resending
-                    ? "Sending…"
-                    : secondsLeft > 0
-                      ? `Resend code in ${secondsLeft}s`
-                      : "Resend code"}
-                </AppText>
-              </Pressable>
-
-              <Pressable onPress={() => router.back()} disabled={busy}>
-                <AppText
-                  variant="small"
-                  tone="brand"
-                  className="text-center font-semibold"
+                <Pressable
+                  onPress={resend}
+                  disabled={secondsLeft > 0 || resending || busy}
+                  hitSlop={8}
+                  className="active:opacity-60"
                 >
-                  {channel === "email"
-                    ? "Use a different email"
-                    : "Use a different number"}
-                </AppText>
-              </Pressable>
-            </View>
+                  <AppText variant="muted" className="text-center">
+                    {resending
+                      ? "Sending…"
+                      : secondsLeft > 0
+                        ? `Resend code in ${secondsLeft}s`
+                        : "Resend code"}
+                  </AppText>
+                </Pressable>
+
+                <Pressable onPress={() => router.back()} disabled={busy}>
+                  <AppText
+                    variant="small"
+                    tone="brand"
+                    className="text-center font-semibold"
+                  >
+                    {channel === "email"
+                      ? "Use a different email"
+                      : "Use a different number"}
+                  </AppText>
+                </Pressable>
+              </View>
+            </KeyboardRevealGroup>
           </View>
         </KeyboardAwareScrollView>
       </View>

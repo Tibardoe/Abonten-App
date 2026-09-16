@@ -113,15 +113,17 @@ function PhotoMarker({
   url,
   kind,
   selected,
-  onImageLoad,
+  onImageSettled,
 }: {
   url: string | null;
   kind: "event" | "place";
   selected: boolean;
-  onImageLoad?: () => void;
+  /** The photo finished loading OR failed — rasterising can stop either way. */
+  onImageSettled?: () => void;
 }) {
   const c = useThemeColors();
   const size = selected ? 56 : 44;
+  const [failed, setFailed] = useState(false);
   return (
     <View
       style={{
@@ -138,7 +140,13 @@ function PhotoMarker({
           borderRadius: size / 2,
           borderWidth: 3,
           borderColor: selected ? c.primary : "#fff",
-          backgroundColor: selected ? c.primary : c.card,
+          // The brand fill + icon sit UNDER the photo. They used to be the
+          // fallback for "no photo" only, so while a photo was still loading
+          // (or when it failed) the marker was a blank white disc — the
+          // card background inside a white ring.
+          backgroundColor: c.primary,
+          alignItems: "center",
+          justifyContent: "center",
           overflow: "hidden",
           shadowColor: "#000",
           shadowOpacity: 0.35,
@@ -147,29 +155,23 @@ function PhotoMarker({
           elevation: 6,
         }}
       >
-        {url ? (
+        <Icon
+          name={kind === "event" ? "ticket" : "location"}
+          size={20}
+          color="#fff"
+        />
+        {url && !failed ? (
           <RNImage
             source={{ uri: url }}
-            style={{ width: "100%", height: "100%" }}
+            style={{ position: "absolute", width: "100%", height: "100%" }}
             resizeMode="cover"
-            onLoad={onImageLoad}
-          />
-        ) : (
-          <View
-            style={{
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: c.primary,
+            onLoad={onImageSettled}
+            onError={() => {
+              setFailed(true);
+              onImageSettled?.();
             }}
-          >
-            <Icon
-              name={kind === "event" ? "ticket" : "location"}
-              size={20}
-              color="#fff"
-            />
-          </View>
-        )}
+          />
+        ) : null}
       </View>
     </View>
   );
@@ -540,8 +542,8 @@ export function SocialMap({
               <Marker
                 key={cl.item.id}
                 coordinate={{ latitude: cl.lat, longitude: cl.lng }}
-                // Keep re-rasterising until the photo has loaded (or forever
-                // if there's no photo — the fallback view is cheap). A
+                // Keep re-rasterising until the photo has loaded or failed
+                // (or forever if there's no photo — that view is cheap). A
                 // selected marker also re-tracks so its ring updates.
                 tracksViewChanges={
                   !loaded.has(cl.item.id) || cl.item.id === selectedId
@@ -556,7 +558,7 @@ export function SocialMap({
                   url={cl.item.imageUrl}
                   kind={cl.item.kind}
                   selected={cl.item.id === selectedId}
-                  onImageLoad={() => markLoaded(cl.item.id)}
+                  onImageSettled={() => markLoaded(cl.item.id)}
                 />
               </Marker>
             ) : (

@@ -6,15 +6,15 @@ import {
 import { clockTime } from "@/features/messaging/messagingTime";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import { View } from "react-native";
 import { ChatImage } from "../ChatImage";
 import { FileAttachmentCard } from "../FileAttachmentCard";
 import {
   DeletedTombstone,
-  ON_PRIMARY_DIM,
   StatusTicks,
   bubbleShapeClass,
+  onPrimaryInk,
 } from "../MessageBubble";
 import { ReplyQuote } from "../ReplyQuote";
 
@@ -25,6 +25,7 @@ import { ReplyQuote } from "../ReplyQuote";
 // the clone's height matches the measured anchor exactly (no menu overlap).
 
 function AudioPreview({ isMine }: { isMine: boolean }) {
+  const c = useThemeColors();
   return (
     <View
       className="flex-row items-center gap-2 py-1"
@@ -41,7 +42,7 @@ function AudioPreview({ isMine }: { isMine: boolean }) {
               borderRadius: 2,
               height: 6 + ((i * 7) % 16),
               backgroundColor: isMine
-                ? "rgba(255,255,255,0.55)"
+                ? withAlpha(c["primary-foreground"], 0.45)
                 : "rgba(0,0,0,0.25)",
             }}
           />
@@ -49,7 +50,7 @@ function AudioPreview({ isMine }: { isMine: boolean }) {
       </View>
       <AppText
         variant="caption"
-        className={isMine ? "text-primary-foreground/80" : undefined}
+        className={isMine ? "text-primary-foreground" : undefined}
       >
         Voice message
       </AppText>
@@ -72,7 +73,7 @@ export function MessagePreviewCard({
   const c = useThemeColors();
   const deleted = !!message.deleted_at;
   const footerColor =
-    isMine && !deleted ? ON_PRIMARY_DIM : c["muted-foreground"];
+    isMine && !deleted ? onPrimaryInk(c).dim : c["muted-foreground"];
   const isAudio = message.message_type === "audio";
   const isImage =
     message.message_type === "image" && message.attachments.length > 0;

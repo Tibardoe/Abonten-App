@@ -1,7 +1,7 @@
 import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageReplyPreview } from "@abonten/types/messagingType";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import { Image } from "expo-image";
 import { Pressable, View, useWindowDimensions } from "react-native";
 
@@ -66,13 +66,17 @@ export function ReplyQuote({
   const durLabel =
     reply.duration_seconds != null ? mmss(reply.duration_seconds) : null;
 
-  const rail = onPrimary ? "rgba(255,255,255,0.75)" : c.primary;
-  const surface = onPrimary ? "rgba(255,255,255,0.16)" : c.accent;
+  // On the teal bubble the quote is drawn in the bubble's own dark ink (a
+  // white rail and wash disappeared into the light-theme teal).
+  const rail = onPrimary ? withAlpha(c["primary-foreground"], 0.55) : c.primary;
+  const surface = onPrimary
+    ? withAlpha(c["primary-foreground"], 0.1)
+    : c.accent;
   const titleClass = onPrimary ? "text-primary-foreground" : "text-primary";
   const bodyClass = onPrimary
-    ? "text-primary-foreground/85"
+    ? "text-primary-foreground"
     : "text-muted-foreground";
-  const glyphColor = onPrimary ? "rgba(255,255,255,0.92)" : c.primary;
+  const glyphColor = onPrimary ? c["primary-foreground"] : c.primary;
 
   const kind = deleted
     ? "Deleted message"

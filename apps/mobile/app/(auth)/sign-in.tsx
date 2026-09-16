@@ -13,6 +13,8 @@ import {
   Button,
   Icon,
   KeyboardAwareScrollView,
+  KeyboardRevealGroup,
+  useToast,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
@@ -22,6 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SignIn() {
   const router = useRouter();
+  const toast = useToast();
   const c = useThemeColors();
   const insets = useSafeAreaInsets();
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
@@ -75,9 +78,13 @@ export default function SignIn() {
     setBusy("google");
     try {
       const res = await signInWithGoogle();
-      if (!res.ok) {
+      // A Google failure is reported as a toast — `error` belongs to the
+      // phone field and would outline it red for a problem it didn't have.
+      if (!res.ok && !res.cancelled) {
         hapticError();
-        setError(res.message);
+        toast.error("Couldn't sign in with Google", {
+          description: res.message,
+        });
       }
       // On success SessionProvider's onAuthStateChange routes into the app.
     } finally {
@@ -167,7 +174,7 @@ export default function SignIn() {
               <View className="h-px flex-1 bg-border" />
             </View>
 
-            <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+            <KeyboardRevealGroup className="gap-3 rounded-2xl border border-border bg-card p-4">
               <AppText variant="label">Phone number</AppText>
               <View className="flex-row gap-2">
                 <CountryCodeField value={country} onChange={setCountry} />
@@ -215,7 +222,7 @@ export default function SignIn() {
                 onPress={sendCode}
                 className="mt-1"
               />
-            </View>
+            </KeyboardRevealGroup>
 
             <InviteCodeField />
 

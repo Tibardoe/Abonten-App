@@ -52,9 +52,12 @@ const LazyVoiceComposer = lazy(async () => ({
 }));
 
 const MAX_ATTACHMENTS = 4;
-// One line of 16px text + the field's vertical padding; grows to ~5 lines.
+// One line of 16px text + the field's vertical padding; grows to ~5 lines,
+// then scrolls inside itself.
 const INPUT_MIN_HEIGHT = 42;
 const INPUT_MAX_HEIGHT = 124;
+// Show a remaining-characters count only once it matters.
+const COUNTER_FROM = MESSAGE_MAX_LENGTH - 200;
 
 function kindToType(kind: StagedAttachment["kind"]): OutboxMessageType {
   if (kind === "image") return "image";
@@ -193,13 +196,17 @@ export function Composer({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [preview, setPreview] = useState<StagedAttachment | null>(null);
   const [previewSending, setPreviewSending] = useState(false);
-  // The field's height is driven explicitly from its content size. Left to
-  // the platform, an iOS multiline TextInput that had grown for a long
-  // paste kept its tall frame after the text was sent and cleared — a blank
-  // band the height of the old text sitting above the keyboard until the
-  // next keystroke. Clearing the text resets the height here in the same
-  // update that empties the field.
-  const [inputHeight, setInputHeight] = useState(INPUT_MIN_HEIGHT);
+  // The field sizes ITSELF to its text, between a min and max height (the
+  // renderer measures a multiline TextInput's content natively on both
+  // platforms, so a cleared field shrinks back in the same commit).
+  //
+  // It used to set `height` from onContentSizeChange + 20px of padding. On
+  // iOS that feedback loop never settled: UIKit already counts the padding
+  // in contentSize, and a UITextView with scrolling off reports its own
+  // frame as its content size — so each height change reported a size 20px
+  // taller, the field grew to the cap, switched scrolling on, reported the
+  // real (short) size, shrank, and started again. The whole thread and the
+  // composer shook on every keystroke until the screen was left.
 
   const hasContent = text.trim().length > 0 || staged.length > 0;
   const canSend = !disabled && !uploading && hasContent;
@@ -244,7 +251,6 @@ export function Composer({
     const toUpload = staged;
 
     setText("");
-    setInputHeight(INPUT_MIN_HEIGHT);
     setStaged([]);
     onTyping(false);
 
@@ -436,39 +442,43 @@ export function Composer({
           <Icon name="add" size={26} tone="muted" />
         </Pressable>
 
-        <TextInput
-          value={text}
-          onChangeText={(v) => {
-            setText(v);
-            if (v.length === 0) setInputHeight(INPUT_MIN_HEIGHT);
-            onTyping(v.trim().length > 0);
-          }}
-          onContentSizeChange={(e) => {
-            const h = e.nativeEvent.contentSize.height;
-            // Padding is outside the reported content height.
-            const next = Math.ceil(h) + 20;
-            setInputHeight(
-              Math.min(INPUT_MAX_HEIGHT, Math.max(INPUT_MIN_HEIGHT, next)),
-            );
-          }}
-          onBlur={() => onTyping(false)}
-          placeholder="Message"
-          placeholderTextColor={c["muted-foreground"]}
-          multiline
-          maxLength={MESSAGE_MAX_LENGTH}
-          scrollEnabled={inputHeight >= INPUT_MAX_HEIGHT}
-          accessibilityLabel="Message"
-          className="flex-1 rounded-[22px] border border-input bg-background px-4 text-[16px] text-foreground"
-          style={[
-            {
-              height: text.length === 0 ? INPUT_MIN_HEIGHT : inputHeight,
-              paddingTop: 10,
-              paddingBottom: 10,
-              textAlignVertical: "center",
-            },
-            family.body ? { fontFamily: family.body } : null,
-          ]}
-        />
+        <View className="flex-1">
+          <TextInput
+            value={text}
+            onChangeText={(v) => {
+              setText(v);
+              onTyping(v.trim().length > 0);
+            }}
+            onBlur={() => onTyping(false)}
+            placeholder="Message"
+            placeholderTextColor={c["muted-foreground"]}
+            multiline
+            maxLength={MESSAGE_MAX_LENGTH}
+            accessibilityLabel="Message"
+            className="rounded-[22px] border border-input bg-background px-4 text-[16px] text-foreground"
+            style={[
+              {
+                minHeight: INPUT_MIN_HEIGHT,
+                maxHeight: INPUT_MAX_HEIGHT,
+                paddingTop: 10,
+                paddingBottom: 10,
+                // Android-only: keeps a single line centred in the pill.
+                textAlignVertical: "center",
+              },
+              family.body ? { fontFamily: family.body } : null,
+            ]}
+          />
+          {text.length >= COUNTER_FROM ? (
+            <AppText
+              variant="caption"
+              tone={text.length >= MESSAGE_MAX_LENGTH ? "error" : "muted"}
+              className="mt-1 text-right"
+              accessibilityLiveRegion="polite"
+            >
+              {MESSAGE_MAX_LENGTH - text.length} characters left
+            </AppText>
+          ) : null}
+        </View>
 
         {trailingButton}
       </View>

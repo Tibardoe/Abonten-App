@@ -10,6 +10,7 @@ import { ConversationRow } from "@/components/messaging/ConversationRow";
 import { InboxFilterChips } from "@/components/messaging/InboxFilterChips";
 import { InboxSearchBar } from "@/components/messaging/InboxSearchBar";
 import type { Rect } from "@/components/messaging/contextMenu/menuPlacement";
+import { ConversationListSkeleton } from "@/components/skeletons";
 import { useInboxPrefs } from "@/features/messaging/inboxPrefs";
 import type { ConversationListNarrow } from "@/features/messaging/keys";
 import {
@@ -217,9 +218,7 @@ export default function Messages() {
         refreshControl={<Refresher onRefresh={() => q.refetch()} />}
         ListEmptyComponent={
           q.isLoading ? (
-            <View className="items-center py-16">
-              <Spinner />
-            </View>
+            <ConversationListSkeleton />
           ) : (
             <EmptyState
               icon={

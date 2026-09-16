@@ -73,6 +73,7 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
+      "expo-system-ui",
       [
         "expo-secure-store",
         {

@@ -9,7 +9,11 @@ import { VOICE_SUPPORTED } from "@/features/messaging/voiceSupport";
 import { hapticLight, hapticMedium } from "@/lib/haptics";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon } from "@abonten/ui-native";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import {
+  type ThemeColors,
+  useThemeColors,
+  withAlpha,
+} from "@abonten/ui-native/theme";
 import { Suspense, lazy, memo, useCallback, useEffect } from "react";
 import { ActivityIndicator, Pressable, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -74,18 +78,22 @@ type Props = {
 };
 
 // Delivery state for an own message. Lives on a PRIMARY (teal) bubble, so
-// every glyph is drawn in the bubble's foreground colour — the previous
-// "primary" tint for a read receipt was teal-on-teal and effectively
-// invisible, and "muted" grey sat at ~2:1 against the fill. Read state is
-// carried by the double tick AND full opacity, unsent by the clock glyph,
-// failed by wording — never by colour alone.
+// every glyph is drawn in the bubble's own foreground ink — the same dark
+// ink as the message text. (It was translucent white, which measured 1.7:1
+// on the light-theme teal and 1.5:1 on the dark one: timestamps and ticks
+// were barely there. The 80% ink is 4.4:1 and 5.3:1.) Read state is carried
+// by the double tick AND full strength, unsent by the clock glyph, failed by
+// wording — never by colour alone.
 //   • sending  → clock, dimmed
 //   • sent     → single tick, dimmed
 //   • read     → double tick, full strength
-//   • failed   → alert + "Tap to retry" in the bubble's error colour
-const ON_PRIMARY = "rgba(255,255,255,0.92)";
-export const ON_PRIMARY_DIM = "rgba(255,255,255,0.62)";
-const ON_PRIMARY_ERROR = "#FFD9D9";
+//   • failed   → alert + "Tap to retry"
+export function onPrimaryInk(c: ThemeColors): { strong: string; dim: string } {
+  return {
+    strong: c["primary-foreground"],
+    dim: withAlpha(c["primary-foreground"], 0.8),
+  };
+}
 
 export function StatusTicks({
   pending,
@@ -101,7 +109,7 @@ export function StatusTicks({
 }) {
   const c = useThemeColors();
   if (pending?.status === "failed") {
-    const errorColor = onPrimary ? ON_PRIMARY_ERROR : c.destructive;
+    const errorColor = onPrimary ? onPrimaryInk(c).strong : c.destructive;
     return (
       <Pressable
         onPress={onRetry}
@@ -121,8 +129,9 @@ export function StatusTicks({
       </Pressable>
     );
   }
-  const dim = onPrimary ? ON_PRIMARY_DIM : c["muted-foreground"];
-  const strong = onPrimary ? ON_PRIMARY : c.primary;
+  const ink = onPrimaryInk(c);
+  const dim = onPrimary ? ink.dim : c["muted-foreground"];
+  const strong = onPrimary ? ink.strong : c.primary;
   if (pending?.status === "sending") {
     return (
       <View accessible accessibilityLabel="Sending">
@@ -335,7 +344,7 @@ export const MessageBubble = memo(function MessageBubble({
   // Timestamp / "edited" colour: dimmed white on the teal bubble, the
   // muted token everywhere else (incoming bubbles and deleted tombstones).
   const footerColor =
-    isMine && !deleted ? ON_PRIMARY_DIM : c["muted-foreground"];
+    isMine && !deleted ? onPrimaryInk(c).dim : c["muted-foreground"];
 
   const bubbleBody = (
     <>
@@ -366,7 +375,7 @@ export const MessageBubble = memo(function MessageBubble({
             />
             <AppText
               variant="caption"
-              className={isMine ? "text-primary-foreground/80" : undefined}
+              className={isMine ? "text-primary-foreground" : undefined}
             >
               Voice message
             </AppText>
@@ -402,7 +411,7 @@ export const MessageBubble = memo(function MessageBubble({
             />
             <AppText
               variant="caption"
-              className={isMine ? "text-primary-foreground/80" : undefined}
+              className={isMine ? "text-primary-foreground" : undefined}
             >
               Voice message · update the app to play
             </AppText>

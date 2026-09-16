@@ -1,6 +1,7 @@
 import { useAttachmentUrl } from "@/features/messaging/useAttachmentUrl";
 import type { MessageRow } from "@abonten/api-client";
 import { AppText, Icon, useToast } from "@abonten/ui-native";
+import { useThemeColors, withAlpha } from "@abonten/ui-native/theme";
 import * as WebBrowser from "expo-web-browser";
 import { ActivityIndicator, Pressable, View } from "react-native";
 
@@ -30,6 +31,7 @@ export function FileAttachmentCard({
   isMine: boolean;
 }) {
   const toast = useToast();
+  const c = useThemeColors();
   const signed = useAttachmentUrl(attachment.storage_path);
   const size = formatBytes(attachment.file_size);
 
@@ -56,7 +58,9 @@ export function FileAttachmentCard({
       <View
         className="h-9 w-9 items-center justify-center rounded-lg"
         style={{
-          backgroundColor: isMine ? "rgba(255,255,255,0.2)" : undefined,
+          backgroundColor: isMine
+            ? withAlpha(c["primary-foreground"], 0.12)
+            : undefined,
         }}
       >
         {signed.isFetching && !signed.data ? (
@@ -79,7 +83,7 @@ export function FileAttachmentCard({
         </AppText>
         <AppText
           variant="caption"
-          className={isMine ? "text-primary-foreground/70" : undefined}
+          className={isMine ? "text-primary-foreground" : undefined}
         >
           {signed.isError ? "Unavailable" : (size ?? "Tap to open")}
         </AppText>

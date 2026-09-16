@@ -10,7 +10,8 @@ import {
   useReferralCode,
 } from "@/features/rewards/useReferralCode";
 import { setPendingRedirect } from "@/lib/authRedirect";
-import { shareEvent } from "@/lib/share";
+import { eventShareUrl } from "@/lib/share";
+import { useShareLink } from "@/lib/useShareLink";
 import type { Occurrence } from "@abonten/types/occurrenceType";
 import type { UserPostType } from "@abonten/types/postsType";
 import {
@@ -175,6 +176,11 @@ export function EventCardMenu({
   const referralCode = useReferralCode();
   const favorited = useIsFavorited("event", event.id).data ?? false;
   const toggle = useToggleFavorite("event", event.id);
+  const share = useShareLink();
+  // Share opens the native share sheet, which iOS will not present while
+  // this sheet's modal is still dismissing — it silently never appeared.
+  // Queue it and run it from the sheet's onDismiss instead.
+  const handoff = useModalHandoff();
 
   const isOrganizer = !!session && session.user.id === event.organizer_id;
   const isCancelled = event.status === "canceled";
@@ -198,7 +204,12 @@ export function EventCardMenu({
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title={event.title}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      onDismiss={handoff.onDismiss}
+      title={event.title}
+    >
       <View className="gap-1">
         {canRemind && remindStart ? (
           <ReminderMenuRow
@@ -220,14 +231,15 @@ export function EventCardMenu({
           icon="share-outline"
           label="Share"
           onPress={() => {
-            onClose();
-            shareEvent(event.title, event.event_code, referralCode).then(
-              (shared) => {
-                if (shared && session) {
+            const url = eventShareUrl(event.event_code, referralCode);
+            handoff.after(() => {
+              void share(event.title, url).then((outcome) => {
+                if (outcome.kind === "shared" && session) {
                   logEventShare(session.user.id, event.id, referralCode);
                 }
-              },
-            );
+              });
+            });
+            onClose();
           }}
         />
 

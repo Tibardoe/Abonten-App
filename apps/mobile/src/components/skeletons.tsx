@@ -80,6 +80,26 @@ export function NotificationsSkeleton({ count = 7 }: { count?: number }) {
   );
 }
 
+/** Inbox rows: avatar, name + time, one preview line — ConversationRow's shape. */
+export function ConversationListSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <View>
+      {keys(count).map((k, i) => (
+        <View key={k} className="flex-row items-center gap-3.5 px-4 py-3.5">
+          <Skeleton width={52} height={52} radius={999} />
+          <View className="flex-1 gap-2">
+            <View className="flex-row items-center justify-between gap-3">
+              <Skeleton width={i % 3 === 0 ? "58%" : "44%"} height={14} />
+              <Skeleton width={36} height={11} />
+            </View>
+            <Skeleton width={i % 2 === 0 ? "82%" : "66%"} height={12} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** Generic bordered-card rows (organizer lists, payouts, etc.). */
 export function RowListSkeleton({
   count = 5,
