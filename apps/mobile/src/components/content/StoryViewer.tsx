@@ -60,6 +60,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ContentCta } from "./ContentCta";
+import { FollowButton } from "./FollowButton";
 
 export type StoryQueueEntry = {
   publisherKind: ContentPublisherKind;
@@ -643,6 +645,18 @@ function StorySlide({
               {formatStoryAge(story.publishedAt)}
             </AppText>
           </Pressable>
+          {!isAuthor &&
+          !story.viewer.following &&
+          story.publisher.kind !== "abonten" ? (
+            <FollowButton
+              kind={story.publisher.kind === "place" ? "place" : "organizer"}
+              targetId={story.publisher.id}
+              ownerId={story.publisher.ownerId ?? story.authorId}
+              label={story.publisher.name}
+              known={story.viewer.following}
+              onMedia
+            />
+          ) : null}
           <Pressable
             onPress={() => setMenuOpen((v) => !v)}
             hitSlop={10}
@@ -680,23 +694,9 @@ function StorySlide({
           <AppText className="text-[14px] text-white">{story.caption}</AppText>
         ) : null}
         {story.event || story.place ? (
-          <View>
-            <Pressable
-              onPress={() => {
-                const route = story.event
-                  ? `/(app)/event/${story.event.id}`
-                  : `/(app)/place/${story.place?.id}`;
-                onClose();
-                router.push(route as never);
-              }}
-              className="flex-row items-center justify-between rounded-lg bg-white px-3 py-2.5"
-            >
-              <AppText className="text-[14px] font-semibold text-black">
-                {story.event ? story.event.title : story.place?.name}
-              </AppText>
-              <Icon name="chevron-forward" size={16} color="#000" />
-            </Pressable>
-          </View>
+          // Same live-state button as a Spotlight: a cancelled, ended or
+          // sold-out event says so instead of offering a stale link.
+          <ContentCta post={story} onNavigate={onClose} />
         ) : null}
         <View className="flex-row items-center gap-2">
           {isAuthor ? (

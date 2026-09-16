@@ -43,6 +43,7 @@ import { dataOf, messageOf } from "../lib/result";
 import { shareContent } from "../lib/share";
 import ContentCtaButton from "../molecules/ContentCtaButton";
 import ContentMoreMenu from "../molecules/ContentMoreMenu";
+import FollowButton from "../molecules/FollowButton";
 import ContentCommentsSheet from "./ContentCommentsSheet";
 
 export type StoryQueueEntry = {
@@ -476,6 +477,19 @@ function StorySlide({
             className="pointer-events-auto"
           />
           <div className="pointer-events-auto flex items-center">
+            {!isAuthor &&
+            !story.viewer.following &&
+            story.publisher.kind !== "abonten" ? (
+              <FollowButton
+                kind={story.publisher.kind === "place" ? "place" : "organizer"}
+                targetId={story.publisher.id}
+                ownerId={story.publisher.ownerId ?? story.authorId}
+                label={story.publisher.name}
+                known={story.viewer.following}
+                variant="overlay"
+                className="mr-1 px-2.5 py-1 text-xs"
+              />
+            ) : null}
             <button
               type="button"
               onClick={() => setUserPaused((v) => !v)}

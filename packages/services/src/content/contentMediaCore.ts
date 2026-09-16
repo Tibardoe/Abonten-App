@@ -330,7 +330,9 @@ export async function registerContentMediaCore(
         resource_type: "video",
         format: "jpg",
         version: resource.version,
-        transformation: [{ width: 480, height: 854, crop: "fill" }],
+        // "limit" keeps the video's own shape, so the poster lines up with
+        // the video instead of showing around a letterboxed frame.
+        transformation: [{ width: 480, height: 854, crop: "limit" }],
         secure: true,
         ...(trim ? { start_offset: trim.start } : {}),
       })

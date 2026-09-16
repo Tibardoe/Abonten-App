@@ -20,7 +20,6 @@ import {
   FlatList,
   Pressable,
   ScrollView,
-  StatusBar,
   View,
   type ViewToken,
 } from "react-native";
@@ -233,7 +232,6 @@ export default function SpotlightFeedScreen() {
       className="flex-1 bg-black"
       onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
     >
-      <StatusBar barStyle="light-content" />
       {needsLocation && location === null ? (
         <LocationProbe onResult={setLocation} />
       ) : null}

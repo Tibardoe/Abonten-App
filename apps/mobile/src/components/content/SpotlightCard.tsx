@@ -92,8 +92,15 @@ export const SpotlightCard = memo(function SpotlightCard({
     if (active) holdPlayback?.(held);
   }, [active, held, holdPlayback]);
 
+  // The poster stays only until the video draws its first frame: a poster
+  // left underneath shows through the letterbox of a video whose shape
+  // differs from it.
+  const [firstFrame, setFirstFrame] = useState(false);
   useEffect(() => {
-    if (!active) setPaused(false);
+    if (!active) {
+      setPaused(false);
+      setFirstFrame(false);
+    }
   }, [active]);
 
   // Images count as watched while their page is on screen.
@@ -175,7 +182,7 @@ export const SpotlightCard = memo(function SpotlightCard({
         onLongPress={() => setOptionsOpen(true)}
         accessibilityLabel={isVideo ? "Play or pause" : "Spotlight photo"}
       >
-        {poster ? (
+        {poster && !(active && isVideo && firstFrame) ? (
           <Image
             source={{ uri: poster }}
             style={StyleSheet.absoluteFill}
@@ -189,6 +196,7 @@ export const SpotlightCard = memo(function SpotlightCard({
             style={StyleSheet.absoluteFill}
             contentFit="contain"
             nativeControls={false}
+            onFirstFrameRender={() => setFirstFrame(true)}
           />
         ) : null}
       </Pressable>
@@ -343,6 +351,7 @@ export const SpotlightCard = memo(function SpotlightCard({
               targetId={post.publisher.id}
               ownerId={post.publisher.ownerId ?? post.authorId}
               label={post.publisher.name}
+              known={post.viewer.following}
               onMedia
             />
           ) : null}

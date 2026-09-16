@@ -19,6 +19,7 @@ export default function FollowButton({
   showCount = false,
   variant = "default",
   className,
+  known,
 }: {
   kind: FollowTargetKind;
   targetId: string;
@@ -28,17 +29,26 @@ export default function FollowButton({
   /** "overlay" for use on top of media. */
   variant?: "default" | "overlay";
   className?: string;
+  /** The viewer's follow state when a post document already carries it. */
+  known?: boolean;
 }) {
   const { program } = useContentProgram();
   const { data: user } = useCurrentUser();
   const requireAuth = useRequireAuth();
   const visible = program.spotlight || program.stories;
-  const { status, toggle } = useFollow(kind, targetId, visible);
+  // Cards pass what the post document already says, so a feed page doesn't
+  // make one follow-status request per publisher.
+  const { status, toggle } = useFollow(
+    kind,
+    targetId,
+    visible,
+    showCount ? undefined : known,
+  );
 
   if (!visible) return null;
   if (user && ownerId && user.id === ownerId) return null;
 
-  const following = !!status.data?.following;
+  const following = status.data?.following ?? known ?? false;
   const count = status.data?.followerCount ?? 0;
 
   return (

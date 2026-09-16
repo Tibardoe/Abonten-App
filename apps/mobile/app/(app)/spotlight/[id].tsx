@@ -5,7 +5,7 @@ import { AppText, Button, Icon } from "@abonten/ui-native";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer } from "expo-video";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, StatusBar, View } from "react-native";
+import { ActivityIndicator, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // One Spotlight opened from a shared link, a notification or a profile grid.
@@ -80,7 +80,6 @@ export default function SpotlightPostScreen() {
       className="flex-1 bg-black"
       onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
     >
-      <StatusBar barStyle="light-content" />
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#fff" />

@@ -6,7 +6,7 @@ import { usePushRegistration } from "@/features/notifications/usePushRegistratio
 import { HighlightUploadProvider } from "@/features/profile/HighlightUploadProvider";
 import { useRemindersSync } from "@/features/reminders/useRemindersSync";
 import { useInviteBinding } from "@/features/rewards/useInviteBinding";
-import { useThemeColors } from "@abonten/ui-native/theme";
+import { useTheme, useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
 
 // The (app) group is a native stack: the (tabs) group is the anchor screen,
@@ -25,12 +25,16 @@ function StackHost() {
   // Apply a friend's invite held on this device once someone is signed in.
   useInviteBinding();
   const c = useThemeColors();
+  const { scheme } = useTheme();
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: c.background },
+        // Status icons follow the app's own theme on every screen; the
+        // full-screen media screens below override it with white.
+        statusBarStyle: scheme === "dark" ? "light" : "dark",
       }}
     >
       <Stack.Screen name="(tabs)" />
@@ -54,9 +58,21 @@ function StackHost() {
         // The trim bar has edge-adjacent handles; see highlight/new.
         options={{ animation: "slide_from_bottom", gestureEnabled: false }}
       />
-      <Stack.Screen name="spotlight/index" options={{ animation: "fade" }} />
-      <Stack.Screen name="spotlight/[id]" options={{ animation: "fade" }} />
-      <Stack.Screen name="story/[id]" options={{ animation: "fade" }} />
+      {/* Black full-screen media: white status icons, set per screen so a
+          screen pushed on top gets its own style back (an in-screen
+          <StatusBar> kept white icons over the next screen's white header). */}
+      <Stack.Screen
+        name="spotlight/index"
+        options={{ animation: "fade", statusBarStyle: "light" }}
+      />
+      <Stack.Screen
+        name="spotlight/[id]"
+        options={{ animation: "fade", statusBarStyle: "light" }}
+      />
+      <Stack.Screen
+        name="story/[id]"
+        options={{ animation: "fade", statusBarStyle: "light" }}
+      />
       <Stack.Screen name="buy/[eventId]" />
       <Stack.Screen
         name="checkout/[sessionId]"

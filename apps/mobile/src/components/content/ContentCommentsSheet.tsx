@@ -16,7 +16,7 @@ import {
   useToast,
 } from "@abonten/ui-native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, TextInput, View } from "react-native";
 
 // Comments on a Spotlight or Story, in a bottom sheet. Replies are one level
@@ -42,6 +42,11 @@ export function ContentCommentsSheet({
   const [replyTo, setReplyTo] = useState<ContentComment | null>(null);
   const [sending, setSending] = useState(false);
   const [report, setReport] = useState<ContentComment | null>(null);
+  const input = useRef<TextInput>(null);
+  // Tapping Reply goes straight to typing.
+  useEffect(() => {
+    if (replyTo) input.current?.focus();
+  }, [replyTo]);
 
   const top = useComments(postId, null, open);
   const comments = top.data?.pages.flatMap((p) => p.comments) ?? [];
@@ -101,6 +106,7 @@ export function ContentCommentsSheet({
               ) : null}
               <View className="flex-row items-end gap-2">
                 <TextInput
+                  ref={input}
                   value={body}
                   onChangeText={setBody}
                   maxLength={MAX_COMMENT_LENGTH}

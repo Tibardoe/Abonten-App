@@ -419,6 +419,7 @@ export default function SpotlightCard({
               targetId={publisherTarget.id}
               ownerId={post.publisher.ownerId ?? post.authorId}
               label={post.publisher.name}
+              known={post.viewer.following}
               variant="overlay"
               className="px-2.5 py-1 text-xs"
             />

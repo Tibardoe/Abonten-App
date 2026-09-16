@@ -15,6 +15,8 @@ export function useFollow(
   kind: FollowTargetKind,
   targetId: string,
   enabled = true,
+  /** Already known from a post document: skip the status request. */
+  known?: boolean,
 ) {
   const { data: user } = useCurrentUser();
   const qc = useQueryClient();
@@ -23,7 +25,7 @@ export function useFollow(
 
   const status = useQuery({
     queryKey: key,
-    enabled: enabled && !!targetId,
+    enabled: enabled && !!targetId && known === undefined,
     queryFn: async (): Promise<FollowStatus> =>
       dataOf(await getFollowStatus({ targetKind: kind, targetId })) ?? {
         following: false,
@@ -36,7 +38,11 @@ export function useFollow(
     mutationFn: (following: boolean) =>
       setFollow({ targetKind: kind, targetId, following }),
     onMutate: (following) => {
-      const previous = qc.getQueryData<FollowStatus>(key);
+      const previous =
+        qc.getQueryData<FollowStatus>(key) ??
+        (known === undefined
+          ? undefined
+          : { following: known, followerCount: 0 });
       if (previous) {
         const delta = following === previous.following ? 0 : following ? 1 : -1;
         qc.setQueryData<FollowStatus>(key, {
