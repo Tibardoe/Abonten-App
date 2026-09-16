@@ -65,7 +65,8 @@ Programme settings → **Promotion pricing and reach estimates** (needs `spotlig
 - **Cost per 1,000 sponsored impressions** — sets how many impressions a budget buys and so where delivery stops.
 - **Impressions per person reached, estimate range** — turn impressions into the reach range advertisers see.
 - **Planning floors** (daily viewers, 28-day audience) — used only while the measured audience (shown at the top, refreshed nightly) is smaller. With no floor and no measured audience, promotions cannot be sold ("We can't estimate reach yet").
-- **Daily fill, most of the audience one promotion can reach, audience left with a location target, refuse under** — how conservative the estimate is and when a budget is too big for the audience.
+- **Daily fill, most of the audience one promotion can reach, refuse under** — how conservative the estimate is and when a budget is too big for the audience.
+- **Audience assumed within a location target** — one share for each distance advertisers can pick (5, 10, 25, 50 km). A wider distance can't have a smaller share. Estimates only: delivery always checks the viewer's real distance.
 - **Pacing** — how far ahead of an even pace a promotion may deliver.
 
 The card shows what each suggested budget estimates today. These are working assumptions (decision **S2**); compare estimates with delivered reach on finished promotions before changing them.

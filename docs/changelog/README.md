@@ -16,6 +16,15 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-17 — Spotlight & Stories: pre-merge follow-up
+
+- **Fix — Cloudinary sweep scope**: Spotlight / Story uploads now go to `content_media/<environment>/<user id>` and the daily never-registered sweep lists only its own environment's folder, so production's sweep can't destroy preview or local uploads in the shared Cloudinary account (and the reverse). Architecture 1.2 §3 and §11, scheduled-jobs, PROJECT.md §34.6.
+- **Fix — dispatch cadence** (migration `20260917090000`): `storage-purge-dispatch` called the maintenance route every 10 minutes until a sweep had been recorded; the sweep now triggers a call at most once every 20 hours.
+- **Changed — reach estimate by radius** (migration `20260917090100`): `location_audience_share_bps` replaced by `location_audience_share_by_radius` (5 / 10 / 25 / 50 km), editable in Admin › Spotlight & Stories › Settings. Architecture §8, admin handbook, decision S2.
+- **Fix — apps**: people reached in the web and mobile promotions lists; mobile feed tab row no longer cuts a label against the create button (edge fades, chosen tab kept in view); `abonten://spotlight/campaign/<id>` (and post, promote, manage) opened the feed instead; the Spotlight / Story status bar change could not work on iOS (needs a view-controller-based status bar that Expo turns off) and forced white icons on the "Story ended" page — now `MediaStatusBar`.
+- **Added — delivery simulation**: `scripts/perf/promotion-delivery-simulation.sql` and [perf/promotion-delivery-2026-09](../architecture/perf/promotion-delivery-2026-09.md).
+- **Verified**: Paystack test-mode card payment on web; estimate by radius on Android, admin and integration tests; environment folder with a real upload; emulator checks; iOS bundle export (architecture §13).
+
 ## 2026-09-16 — Spotlight & Stories: pre-merge audit and reach-based promotions
 
 - **Changed — promotions are sold by budget and estimated reach, not fixed time plans** (migration `20260916130000`): `content_promotion_pricing` (admin-editable, versioned, audited), nightly `content_audience_snapshot`, server-side estimate with refusal when the audience is too small, spend per delivered sponsored impression, stop at budget delivered or run end, separate reach / impressions / views / taps / follows / conversions, `sponsored_delivery_enabled`, `SPOTLIGHT_PROMOTIONS_KILL_SWITCH`, pacing and fair rotation. Presets removed. Architecture (1.1) §8, admin handbook (pricing section, refunds, stopping), decisions S1–S3 rewritten, scheduled-jobs, secrets-and-environment, PROJECT.md §34.5.
