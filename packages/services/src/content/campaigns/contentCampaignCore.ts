@@ -495,7 +495,7 @@ export async function advertiserCampaignActionCore(
     p_to: to,
     p_actor_id: userId,
     p_actor_kind: "advertiser",
-    p_reason: input.reason ?? undefined,
+    p_reason: (input.reason ?? null) as unknown as string,
   });
   if (error) {
     if (error.code === "22023") return { status: 409, message: error.message };

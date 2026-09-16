@@ -64,14 +64,14 @@ export async function getContentFeedCore(
   const pageSize = settings.feed_page_size;
 
   const { data: ranked, error } = await supabase.rpc("content_feed", {
-    p_viewer: userId as unknown as string,
+    p_viewer: (userId ?? null) as unknown as string,
     p_surface: surface,
-    p_lat: input.lat as unknown as number,
-    p_lng: input.lng as unknown as number,
-    p_radius_km: input.radiusKm as unknown as number,
+    p_lat: (input.lat ?? null) as unknown as number,
+    p_lng: (input.lng ?? null) as unknown as number,
+    p_radius_km: (input.radiusKm ?? null) as unknown as number,
     p_as_of: asOf,
-    p_cursor_score: cursor?.score as unknown as number,
-    p_cursor_id: cursor?.id as unknown as string,
+    p_cursor_score: (cursor?.score ?? null) as unknown as number,
+    p_cursor_id: (cursor?.id ?? null) as unknown as string,
     p_limit: pageSize,
   });
   if (error) {
@@ -96,10 +96,10 @@ export async function getContentFeedCore(
     const { data: cands, error: candError } = await supabase.rpc(
       "content_sponsored_candidates",
       {
-        p_viewer: userId as unknown as string,
+        p_viewer: (userId ?? null) as unknown as string,
         p_viewer_key: viewerKey,
-        p_lat: input.lat as unknown as number,
-        p_lng: input.lng as unknown as number,
+        p_lat: (input.lat ?? null) as unknown as number,
+        p_lng: (input.lng ?? null) as unknown as number,
         p_limit: 3,
       },
     );
@@ -155,7 +155,7 @@ export async function searchSpotlightCore(
   if (!program.spotlight) return { status: 200, data: { posts: [] } };
   const { data, error } = await supabase.rpc("search_spotlight", {
     p_query: query,
-    p_viewer: userId as unknown as string,
+    p_viewer: (userId ?? null) as unknown as string,
     p_limit: 20,
   });
   if (error) {

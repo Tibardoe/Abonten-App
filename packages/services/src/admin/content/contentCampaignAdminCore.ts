@@ -191,7 +191,7 @@ export async function campaignActionAdminCore(
       p_to: to,
       p_actor_id: ctx.userId,
       p_actor_kind: "admin",
-      p_reason: input.reason ?? undefined,
+      p_reason: (input.reason ?? null) as unknown as string,
     },
   );
   if (error) {
