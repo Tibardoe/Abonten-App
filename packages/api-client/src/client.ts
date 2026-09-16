@@ -46,7 +46,6 @@ import type {
   ContentCampaignCheckoutResult,
   ContentCampaignCreateResult,
   ContentCampaignDetailResult,
-  ContentCampaignPresetsResult,
   ContentCampaignResult,
   ContentCampaignsResult,
   ContentCommentResult,
@@ -62,6 +61,8 @@ import type {
   ContentPostResult,
   ContentPostsPageResult,
   ContentProgramResult,
+  ContentPromotionEstimateResult,
+  ContentPromotionOptionsResult,
   ContentPublisherKind,
   ContentReactionEmoji,
   ContentShareChannel,
@@ -2658,10 +2659,23 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body, auth: true },
         );
       },
-      campaignPresets() {
-        return request<ContentCampaignPresetsResult>(
-          "/api/mobile/content/campaigns/presets",
+      promotionOptions() {
+        return request<ContentPromotionOptionsResult>(
+          "/api/mobile/content/campaigns/options",
           { method: "GET", auth: true },
+        );
+      },
+      estimatePromotion(body: {
+        postId: string;
+        budgetMinor: number;
+        durationDays: number;
+        targeting:
+          | { area: "everywhere" }
+          | { area: "near_post"; radiusKm: number };
+      }) {
+        return request<ContentPromotionEstimateResult>(
+          "/api/mobile/content/campaigns/estimate",
+          { method: "POST", body, auth: true },
         );
       },
       campaigns() {
@@ -2675,15 +2689,13 @@ export function createApiClient(options: ApiClientOptions) {
       },
       createCampaign(body: {
         postId: string;
-        presetId: number;
+        budgetMinor: number;
+        durationDays: number;
         objective: string;
         startsAt: string;
-        targeting?: {
-          lat?: number;
-          lng?: number;
-          radiusKm?: number;
-          categories?: string[];
-        };
+        targeting:
+          | { area: "everywhere" }
+          | { area: "near_post"; radiusKm: number };
       }) {
         return request<ContentCampaignCreateResult>(
           "/api/mobile/content/campaigns",

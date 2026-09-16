@@ -16,6 +16,7 @@ import type { AdminCampaignActionInput } from "@abonten/validation/contentSchema
 import {
   CAMPAIGN_SELECT,
   getContentCampaignHistoryCore,
+  loadCampaignMetrics,
   mapCampaign,
 } from "../../content/campaigns/contentCampaignCore";
 import { notifyCampaign } from "../../content/contentNotifyCore";
@@ -123,6 +124,7 @@ export async function getCampaignAdminCore(
   }
   if (!data) return { status: 404, message: "Campaign not found." };
   const campaign = mapCampaign(data as never);
+  campaign.metrics = await loadCampaignMetrics(supabase, campaignId);
   const history = await getContentCampaignHistoryCore(supabase, campaignId);
   let transaction = null;
   if (campaign.transactionId) {

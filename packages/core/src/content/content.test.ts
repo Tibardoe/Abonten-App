@@ -1,8 +1,8 @@
 import type { ContentPostDocument } from "@abonten/types/contentType";
 import { describe, expect, it } from "vitest";
 import {
+  deliveredSpendMinor,
   formatMinor,
-  projectedSpentMinor,
   refundableMinor,
 } from "./campaignMoney";
 import {
@@ -171,28 +171,19 @@ describe("campaign state machine", () => {
 });
 
 describe("campaign money", () => {
-  it("accrues pro rata and caps at paid", () => {
+  it("charges only for delivered impressions and caps at paid", () => {
+    const base = { paidMinor: 5000, impressionGoal: 4545, cpmMinor: 1100 };
+    expect(deliveredSpendMinor({ ...base, impressions: 0 })).toBe(0);
+    // 1,000 impressions at GH₵ 11 per 1,000
+    expect(deliveredSpendMinor({ ...base, impressions: 1000 })).toBe(1100);
+    // rounds down: 1 impression is 1.1 pesewas -> 1
+    expect(deliveredSpendMinor({ ...base, impressions: 1 })).toBe(1);
+    // goal delivered -> the whole budget, not 4,999
+    expect(deliveredSpendMinor({ ...base, impressions: 4545 })).toBe(5000);
+    expect(deliveredSpendMinor({ ...base, impressions: 9999 })).toBe(5000);
     expect(
-      projectedSpentMinor({
-        paidMinor: 5000,
-        activeSeconds: 0,
-        durationDays: 3,
-      }),
+      deliveredSpendMinor({ ...base, paidMinor: 0, impressions: 100 }),
     ).toBe(0);
-    expect(
-      projectedSpentMinor({
-        paidMinor: 5000,
-        activeSeconds: 86_400 * 1.5,
-        durationDays: 3,
-      }),
-    ).toBe(2500);
-    expect(
-      projectedSpentMinor({
-        paidMinor: 5000,
-        activeSeconds: 86_400 * 9,
-        durationDays: 3,
-      }),
-    ).toBe(5000);
   });
   it("refunds only the unspent remainder of a finished campaign", () => {
     expect(

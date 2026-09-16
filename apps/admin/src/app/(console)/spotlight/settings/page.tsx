@@ -4,10 +4,11 @@ import { loadContentSettings } from "@/lib/data";
 import { STEP_UP_MAX_AGE_MS } from "@abonten/core/adminPermissions";
 import { SpotlightTabs } from "../SpotlightTabs";
 import { ContentSettingsForm } from "./ContentSettingsForm";
+import { PromotionPricingForm } from "./PromotionPricingForm";
 
 export default async function SpotlightSettingsPage() {
   await requirePermissionPage("spotlight.view");
-  const { ctx, settings } = await loadContentSettings();
+  const { ctx, settings, pricing } = await loadContentSettings();
   const stepUpFresh =
     !!ctx.reauthenticatedAt &&
     Date.now() - ctx.reauthenticatedAt < STEP_UP_MAX_AGE_MS;
@@ -35,6 +36,20 @@ export default async function SpotlightSettingsPage() {
           stepUpFresh={stepUpFresh}
         />
       )}
+      <div className="mt-4">
+        {pricing.status !== 200 || !pricing.data ? (
+          <EmptyState>
+            {pricing.message ?? "Couldn't load promotion pricing."}
+          </EmptyState>
+        ) : (
+          <PromotionPricingForm
+            {...pricing.data}
+            editable={
+              ctx.permissions.includes("spotlight.configure") && stepUpFresh
+            }
+          />
+        )}
+      </div>
     </div>
   );
 }

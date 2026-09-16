@@ -186,7 +186,7 @@ export default async function SpotlightOverviewPage({
               <Stat
                 label="Delivered"
                 value={formatMinor(overview.data.campaigns.spentMinor)}
-                hint="Accrued by time run"
+                hint="Recognised per delivered sponsored impression"
               />
               <Stat
                 label="Refunded"
@@ -195,6 +195,17 @@ export default async function SpotlightOverviewPage({
               <Stat
                 label="Sponsored impressions"
                 value={n(overview.data.campaigns.impressions)}
+                hint="Times shown"
+              />
+              <Stat
+                label="Reach"
+                value={n(overview.data.campaigns.reach)}
+                hint="Distinct devices, summed per promotion"
+              />
+              <Stat
+                label="Unused budget to decide"
+                value={formatMinor(overview.data.campaigns.unusedToReviewMinor)}
+                hint="Completed or cancelled, not refunded"
               />
             </div>
           </section>

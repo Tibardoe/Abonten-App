@@ -17,6 +17,7 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ContentSettingsInput } from "@abonten/validation/contentSchemas";
 import {
   isSpotlightKillSwitchOn,
+  isSpotlightPromotionsKillSwitchOn,
   isStoriesKillSwitchOn,
   mapContentSettings,
   readContentSettings,
@@ -72,7 +73,7 @@ export async function getContentSettingsCore(
 ): Promise<
   AdminEnvelope<{
     settings: ContentSettings;
-    killSwitches: { spotlight: boolean; stories: boolean };
+    killSwitches: { spotlight: boolean; stories: boolean; promotions: boolean };
   }>
 > {
   try {
@@ -89,6 +90,7 @@ export async function getContentSettingsCore(
       killSwitches: {
         spotlight: isSpotlightKillSwitchOn(),
         stories: isStoriesKillSwitchOn(),
+        promotions: isSpotlightPromotionsKillSwitchOn(),
       },
     },
   };
@@ -101,6 +103,7 @@ const COLUMN: Record<keyof ContentSettingsInput["patch"], string> = {
   spotlightCommentsEnabled: "spotlight_comments_enabled",
   spotlightDownloadsEnabled: "spotlight_downloads_enabled",
   spotlightPromotionsEnabled: "spotlight_promotions_enabled",
+  sponsoredDeliveryEnabled: "sponsored_delivery_enabled",
   nearbyEnabled: "nearby_enabled",
   trendingEnabled: "trending_enabled",
   happeningSoonEnabled: "happening_soon_enabled",

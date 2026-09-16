@@ -413,12 +413,35 @@ export function useCampaign(campaignId: string | undefined) {
   });
 }
 
-export function useCampaignPresets(enabled: boolean) {
+export function usePromotionOptions(enabled: boolean) {
   return useQuery({
-    queryKey: [...CONTENT_KEY, "campaign-presets"],
+    queryKey: [...CONTENT_KEY, "promotion-options"],
     enabled,
-    queryFn: async () => unwrap(await api.content.campaignPresets()),
-    staleTime: 10 * 60_000,
+    queryFn: async () => unwrap(await api.content.promotionOptions()),
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Server-priced estimate; the caller debounces the request. */
+export function usePromotionEstimate(
+  request: {
+    postId: string;
+    budgetMinor: number;
+    durationDays: number;
+    targeting: { area: "everywhere" } | { area: "near_post"; radiusKm: number };
+  } | null,
+) {
+  return useQuery({
+    queryKey: [...CONTENT_KEY, "promotion-estimate", JSON.stringify(request)],
+    enabled: !!request,
+    placeholderData: (prev) => prev,
+    retry: false,
+    queryFn: async () =>
+      unwrap(
+        await api.content.estimatePromotion(
+          request as NonNullable<typeof request>,
+        ),
+      ),
   });
 }
 

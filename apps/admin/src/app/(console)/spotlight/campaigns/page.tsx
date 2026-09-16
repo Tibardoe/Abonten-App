@@ -83,7 +83,7 @@ export default async function SpotlightCampaignsPage({
                 <Th>Spotlight</Th>
                 <Th>Advertiser</Th>
                 <Th>Status</Th>
-                <Th>Plan</Th>
+                <Th>Budget</Th>
                 <Th>Paid / delivered / refunded</Th>
                 <Th>Delivery</Th>
                 <Th>Updated</Th>
@@ -119,8 +119,8 @@ export default async function SpotlightCampaignsPage({
                     </Badge>
                   </Td>
                   <Td className="text-xs">
-                    {formatMinor(c.budgetMinor, c.currency)} · {c.durationDays}{" "}
-                    days
+                    {formatMinor(c.budgetMinor, c.currency)} · up to{" "}
+                    {c.durationDays} days
                   </Td>
                   <Td className="text-xs tabular-nums">
                     {formatMinor(c.paidMinor, c.currency)} /{" "}
@@ -128,8 +128,9 @@ export default async function SpotlightCampaignsPage({
                     {formatMinor(c.refundedMinor, c.currency)}
                   </Td>
                   <Td className="text-xs tabular-nums text-muted-foreground">
-                    {c.impressions.toLocaleString("en-GH")} impressions ·{" "}
-                    {c.clicks.toLocaleString("en-GH")} taps
+                    {c.reach.toLocaleString("en-GH")} reached ·{" "}
+                    {c.impressions.toLocaleString("en-GH")} /{" "}
+                    {c.impressionGoal.toLocaleString("en-GH")} impressions
                   </Td>
                   <Td className="text-xs text-muted-foreground">
                     {timeAgo(c.updatedAt)}

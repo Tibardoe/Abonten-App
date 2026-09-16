@@ -454,6 +454,30 @@ export type Database = {
           },
         ];
       };
+      content_audience_snapshot: {
+        Row: {
+          computed_at: string | null;
+          daily_viewers: number;
+          days_observed: number;
+          id: number;
+          reach_28d: number;
+        };
+        Insert: {
+          computed_at?: string | null;
+          daily_viewers?: number;
+          days_observed?: number;
+          id?: number;
+          reach_28d?: number;
+        };
+        Update: {
+          computed_at?: string | null;
+          daily_viewers?: number;
+          days_observed?: number;
+          id?: number;
+          reach_28d?: number;
+        };
+        Relationships: [];
+      };
       content_campaign: {
         Row: {
           activated_at: string | null;
@@ -464,20 +488,29 @@ export type Database = {
           checkout_id: string | null;
           click_count: number;
           completed_at: string | null;
+          completion_count: number;
           conversion_count: number;
+          cpm_minor: number;
           created_at: string;
           currency: string;
           duration_days: number;
+          end_reason: string | null;
           ends_at: string;
+          estimate_basis: string;
+          estimated_impressions: number;
+          estimated_reach_high: number;
+          estimated_reach_low: number;
           id: string;
           impression_count: number;
+          impression_goal: number;
           last_accrued_at: string | null;
           objective: string;
           paid_minor: number;
           pause_reason: string | null;
           pause_source: string | null;
           post_id: string;
-          preset_id: number;
+          pricing_version: number;
+          reach_count: number;
           refund_requested_at: string | null;
           refunded_minor: number;
           review_reason: string | null;
@@ -503,20 +536,29 @@ export type Database = {
           checkout_id?: string | null;
           click_count?: number;
           completed_at?: string | null;
+          completion_count?: number;
           conversion_count?: number;
+          cpm_minor: number;
           created_at?: string;
           currency?: string;
           duration_days: number;
+          end_reason?: string | null;
           ends_at: string;
+          estimate_basis?: string;
+          estimated_impressions?: number;
+          estimated_reach_high?: number;
+          estimated_reach_low?: number;
           id?: string;
           impression_count?: number;
+          impression_goal: number;
           last_accrued_at?: string | null;
           objective?: string;
           paid_minor?: number;
           pause_reason?: string | null;
           pause_source?: string | null;
           post_id: string;
-          preset_id: number;
+          pricing_version: number;
+          reach_count?: number;
           refund_requested_at?: string | null;
           refunded_minor?: number;
           review_reason?: string | null;
@@ -542,20 +584,29 @@ export type Database = {
           checkout_id?: string | null;
           click_count?: number;
           completed_at?: string | null;
+          completion_count?: number;
           conversion_count?: number;
+          cpm_minor?: number;
           created_at?: string;
           currency?: string;
           duration_days?: number;
+          end_reason?: string | null;
           ends_at?: string;
+          estimate_basis?: string;
+          estimated_impressions?: number;
+          estimated_reach_high?: number;
+          estimated_reach_low?: number;
           id?: string;
           impression_count?: number;
+          impression_goal?: number;
           last_accrued_at?: string | null;
           objective?: string;
           paid_minor?: number;
           pause_reason?: string | null;
           pause_source?: string | null;
           post_id?: string;
-          preset_id?: number;
+          pricing_version?: number;
+          reach_count?: number;
           refund_requested_at?: string | null;
           refunded_minor?: number;
           review_reason?: string | null;
@@ -601,13 +652,6 @@ export type Database = {
             referencedRelation: "content_post";
             referencedColumns: ["id"];
           },
-          {
-            foreignKeyName: "content_campaign_preset_id_fkey";
-            columns: ["preset_id"];
-            isOneToOne: false;
-            referencedRelation: "content_campaign_preset";
-            referencedColumns: ["id"];
-          },
         ];
       };
       content_campaign_checkout: {
@@ -619,7 +663,6 @@ export type Database = {
           expires_at: string | null;
           id: string;
           owner_id: string;
-          preset_id: number;
           status: string;
           total_price: number;
           unit_price: number;
@@ -632,7 +675,6 @@ export type Database = {
           expires_at?: string | null;
           id?: string;
           owner_id: string;
-          preset_id: number;
           status?: string;
           total_price: number;
           unit_price: number;
@@ -645,7 +687,6 @@ export type Database = {
           expires_at?: string | null;
           id?: string;
           owner_id?: string;
-          preset_id?: number;
           status?: string;
           total_price?: number;
           unit_price?: number;
@@ -671,13 +712,6 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "user_profile_details";
             referencedColumns: ["user_id"];
-          },
-          {
-            foreignKeyName: "content_campaign_checkout_preset_id_fkey";
-            columns: ["preset_id"];
-            isOneToOne: false;
-            referencedRelation: "content_campaign_preset";
-            referencedColumns: ["id"];
           },
         ];
       };
@@ -816,39 +850,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
-      };
-      content_campaign_preset: {
-        Row: {
-          budget_minor: number;
-          currency: string;
-          duration_days: number;
-          estimated_impressions: number;
-          id: number;
-          is_active: boolean;
-          label: string;
-          position: number;
-        };
-        Insert: {
-          budget_minor: number;
-          currency?: string;
-          duration_days: number;
-          estimated_impressions?: number;
-          id: number;
-          is_active?: boolean;
-          label: string;
-          position?: number;
-        };
-        Update: {
-          budget_minor?: number;
-          currency?: string;
-          duration_days?: number;
-          estimated_impressions?: number;
-          id?: number;
-          is_active?: boolean;
-          label?: string;
-          position?: number;
-        };
-        Relationships: [];
       };
       content_click: {
         Row: {
@@ -1529,6 +1530,7 @@ export type Database = {
           rank_weight_urgency: number;
           raw_view_retention_days: number;
           sponsored_daily_cap_per_viewer: number;
+          sponsored_delivery_enabled: boolean;
           sponsored_max_share_bps: number;
           sponsored_min_gap: number;
           spotlight_audience: string;
@@ -1578,6 +1580,7 @@ export type Database = {
           rank_weight_urgency?: number;
           raw_view_retention_days?: number;
           sponsored_daily_cap_per_viewer?: number;
+          sponsored_delivery_enabled?: boolean;
           sponsored_max_share_bps?: number;
           sponsored_min_gap?: number;
           spotlight_audience?: string;
@@ -1627,6 +1630,7 @@ export type Database = {
           rank_weight_urgency?: number;
           raw_view_retention_days?: number;
           sponsored_daily_cap_per_viewer?: number;
+          sponsored_delivery_enabled?: boolean;
           sponsored_max_share_bps?: number;
           sponsored_min_gap?: number;
           spotlight_audience?: string;
@@ -1651,6 +1655,81 @@ export type Database = {
           updated_at?: string;
           updated_by?: string | null;
           views_per_viewer_per_minute?: number;
+        };
+        Relationships: [];
+      };
+      content_promotion_pricing: {
+        Row: {
+          audience_floor_daily_viewers: number;
+          audience_floor_reach: number;
+          avg_frequency: number;
+          budget_step_minor: number;
+          category_audience_share_bps: number;
+          cpm_minor: number;
+          currency: string;
+          daily_fill_bps: number;
+          default_duration_days: number;
+          duration_options_days: number[];
+          estimate_spread_bps: number;
+          id: number;
+          location_audience_share_bps: number;
+          max_budget_minor: number;
+          max_reach_share_bps: number;
+          min_budget_minor: number;
+          min_deliverable_bps: number;
+          pacing_multiplier: number;
+          suggested_budgets_minor: number[];
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+        };
+        Insert: {
+          audience_floor_daily_viewers?: number;
+          audience_floor_reach?: number;
+          avg_frequency?: number;
+          budget_step_minor?: number;
+          category_audience_share_bps?: number;
+          cpm_minor?: number;
+          currency?: string;
+          daily_fill_bps?: number;
+          default_duration_days?: number;
+          duration_options_days?: number[];
+          estimate_spread_bps?: number;
+          id?: number;
+          location_audience_share_bps?: number;
+          max_budget_minor?: number;
+          max_reach_share_bps?: number;
+          min_budget_minor?: number;
+          min_deliverable_bps?: number;
+          pacing_multiplier?: number;
+          suggested_budgets_minor?: number[];
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+        };
+        Update: {
+          audience_floor_daily_viewers?: number;
+          audience_floor_reach?: number;
+          avg_frequency?: number;
+          budget_step_minor?: number;
+          category_audience_share_bps?: number;
+          cpm_minor?: number;
+          currency?: string;
+          daily_fill_bps?: number;
+          default_duration_days?: number;
+          duration_options_days?: number[];
+          estimate_spread_bps?: number;
+          id?: number;
+          location_audience_share_bps?: number;
+          max_budget_minor?: number;
+          max_reach_share_bps?: number;
+          min_budget_minor?: number;
+          min_deliverable_bps?: number;
+          pacing_multiplier?: number;
+          suggested_budgets_minor?: number[];
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
         };
         Relationships: [];
       };
@@ -12457,6 +12536,7 @@ export type Database = {
         Returns: Json;
       };
       content_attribute_conversions: { Args: never; Returns: number };
+      content_audience_refresh: { Args: never; Returns: Json };
       content_campaign_accrue: {
         Args: { p_campaign_id: string };
         Returns: number;
@@ -12467,6 +12547,10 @@ export type Database = {
           p_transaction_id: string;
           p_user_id: string;
         };
+        Returns: Json;
+      };
+      content_campaign_metrics: {
+        Args: { p_campaign_id: string };
         Returns: Json;
       };
       content_campaign_reconcile: { Args: never; Returns: Json };
@@ -12501,20 +12585,29 @@ export type Database = {
           checkout_id: string | null;
           click_count: number;
           completed_at: string | null;
+          completion_count: number;
           conversion_count: number;
+          cpm_minor: number;
           created_at: string;
           currency: string;
           duration_days: number;
+          end_reason: string | null;
           ends_at: string;
+          estimate_basis: string;
+          estimated_impressions: number;
+          estimated_reach_high: number;
+          estimated_reach_low: number;
           id: string;
           impression_count: number;
+          impression_goal: number;
           last_accrued_at: string | null;
           objective: string;
           paid_minor: number;
           pause_reason: string | null;
           pause_source: string | null;
           post_id: string;
-          preset_id: number;
+          pricing_version: number;
+          reach_count: number;
           refund_requested_at: string | null;
           refunded_minor: number;
           review_reason: string | null;

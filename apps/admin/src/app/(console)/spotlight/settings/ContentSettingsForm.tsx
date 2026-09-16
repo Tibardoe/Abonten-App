@@ -47,6 +47,11 @@ const SPOTLIGHT_TOGGLES: { key: BoolKey; label: string; hint?: string }[] = [
     label: "Paid promotions",
     hint: "Lets people pay to promote a Spotlight. Every promotion still needs approval here before it runs.",
   },
+  {
+    key: "sponsoredDeliveryEnabled",
+    label: "Show sponsored posts in feeds",
+    hint: "Off stops every running promotion from being shown (nothing is charged while off). Organic Spotlight is not affected.",
+  },
 ];
 
 const STORY_TOGGLES: { key: BoolKey; label: string; hint?: string }[] = [
@@ -260,7 +265,7 @@ export function ContentSettingsForm({
   stepUpFresh,
 }: {
   settings: ContentSettings;
-  killSwitches: { spotlight: boolean; stories: boolean };
+  killSwitches: { spotlight: boolean; stories: boolean; promotions: boolean };
   canConfigure: boolean;
   stepUpFresh: boolean;
 }) {
@@ -352,12 +357,15 @@ export function ContentSettingsForm({
 
   return (
     <div className="space-y-4">
-      {killSwitches.spotlight || killSwitches.stories ? (
+      {killSwitches.spotlight ||
+      killSwitches.stories ||
+      killSwitches.promotions ? (
         <Card className="border-destructive/40 p-3 text-sm">
           A deploy-level kill switch is set (
           {[
             killSwitches.spotlight && "SPOTLIGHT_KILL_SWITCH",
             killSwitches.stories && "STORIES_KILL_SWITCH",
+            killSwitches.promotions && "SPOTLIGHT_PROMOTIONS_KILL_SWITCH",
           ]
             .filter(Boolean)
             .join(", ")}

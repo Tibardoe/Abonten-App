@@ -209,7 +209,9 @@ export default async function page({
           orderSummary={{
             type: "spotlight-promotion",
             postCaption: data.postCaption,
-            presetLabel: data.presetLabel,
+            summaryLabel: data.summaryLabel,
+            estimatedReachLow: data.estimatedReachLow,
+            estimatedReachHigh: data.estimatedReachHigh,
             totalAmount: data.totalPrice,
           }}
           checkoutId={checkoutId}

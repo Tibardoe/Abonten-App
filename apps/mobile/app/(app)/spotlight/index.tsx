@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
+import { useCoarseLocation } from "@/features/content/useCoarseLocation";
 import { flattenFeed, useContentFeed } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
@@ -62,16 +63,23 @@ export default function SpotlightFeedScreen() {
     isFallback: boolean;
   } | null>(null);
   const locating = needsLocation && location === null;
-  const coords =
-    needsLocation && location && !location.isFallback
+  // Other tabs use a rough position only if location is already allowed,
+  // so a promotion aimed at an area can reach people there.
+  const coarse = useCoarseLocation(!needsLocation);
+  const coords = needsLocation
+    ? location && !location.isFallback
       ? { lat: location.lat, lng: location.lng }
-      : null;
+      : null
+    : coarse.coords;
   const needsSignIn = surface === "following" && !session;
 
   const feed = useContentFeed(
     surface,
     coords,
-    ready && program.spotlight && !needsSignIn && (!needsLocation || !!coords),
+    ready &&
+      program.spotlight &&
+      !needsSignIn &&
+      (needsLocation ? !!coords : coarse.done),
   );
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const items = flattenFeed(feed.data?.pages).filter(
@@ -217,7 +225,8 @@ export default function SpotlightFeedScreen() {
   }
 
   const loading =
-    !ready || (!empty && (feed.isLoading || (needsLocation && locating)));
+    !ready ||
+    (!empty && (feed.isLoading || (needsLocation ? locating : !coarse.done)));
 
   return (
     <View

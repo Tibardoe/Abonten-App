@@ -15,7 +15,9 @@ import { formatMinor } from "@abonten/core/content/campaignMoney";
 import {
   CAMPAIGN_OBJECTIVE_LABEL,
   CAMPAIGN_STATUS_LABEL,
+  PROMOTION_END_REASON_LABEL,
 } from "@abonten/core/content/copy";
+import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import Link from "next/link";
 import { SpotlightTabs } from "../../SpotlightTabs";
 import { campaignTone } from "../campaignTone";
@@ -54,21 +56,45 @@ export default async function SpotlightCampaignDetailPage({
     ],
     ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
     [
-      "Plan",
-      `${formatMinor(c.budgetMinor, c.currency)} · ${c.durationDays} days`,
+      "Budget",
+      `${formatMinor(c.budgetMinor, c.currency)} · up to ${c.durationDays} days`,
     ],
     [
       "Runs",
       `${formatAccraDateTime(c.startsAt)} → ${formatAccraDateTime(c.endsAt)}`,
     ],
+    [
+      "Priced at",
+      `${formatMinor(c.cpmMinor, c.currency)} per 1,000 · pricing v${c.pricingVersion}`,
+    ],
     ["Paid", formatMinor(c.paidMinor, c.currency)],
-    ["Delivered", formatMinor(c.spentMinor, c.currency)],
+    ["Delivered (spent)", formatMinor(c.spentMinor, c.currency)],
     ["Refunded", formatMinor(c.refundedMinor, c.currency)],
     ["Refundable now", formatMinor(c.refundableMinor, c.currency)],
-    ["Impressions", c.impressions.toLocaleString("en-GH")],
-    ["Views", c.views.toLocaleString("en-GH")],
-    ["Taps", c.clicks.toLocaleString("en-GH")],
-    ["Conversions", c.conversions.toLocaleString("en-GH")],
+    ["Ended", c.endReason ? PROMOTION_END_REASON_LABEL[c.endReason] : "—"],
+  ];
+  const m = c.metrics;
+  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GH");
+  // Reach = distinct devices shown the promotion; impressions = times shown.
+  const delivery: [string, string][] = [
+    [
+      "Estimated reach (sold)",
+      `${formatReachRange({ reachLow: c.estimatedReachLow, reachHigh: c.estimatedReachHigh })} · ${c.estimateBasis}`,
+    ],
+    ["Reach", n(m?.reach ?? c.reach)],
+    [
+      "Impressions",
+      `${n(m?.impressions ?? c.impressions)} / ${n(c.impressionGoal)} (${((m?.deliveryBps ?? 0) / 100).toFixed(1)} %)`,
+    ],
+    ["Meaningful views", n(m?.meaningfulViews ?? c.views)],
+    ["Completions", n(m?.completions ?? c.completions)],
+    ["Profile taps", n(m?.clicks.profile)],
+    ["Event taps", n(m?.clicks.event)],
+    ["Place taps", n(m?.clicks.place)],
+    ["Button taps", n(m?.clicks.cta)],
+    ["Follows after seeing it", n(m?.follows)],
+    ["Ticket purchases", n(m?.conversions.ticketPurchases)],
+    ["Reservations", n(m?.conversions.reservations)],
   ];
 
   return (
@@ -98,6 +124,18 @@ export default async function SpotlightCampaignDetailPage({
                 <div className="font-medium">{value}</div>
               </div>
             ))}
+          </Card>
+
+          <Card className="space-y-2 p-4 text-sm">
+            <p className="font-semibold">Delivery</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {delivery.map(([label, value]) => (
+                <div key={label}>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="font-medium tabular-nums">{value}</p>
+                </div>
+              ))}
+            </div>
           </Card>
 
           <Card className="space-y-1 p-4 text-sm">

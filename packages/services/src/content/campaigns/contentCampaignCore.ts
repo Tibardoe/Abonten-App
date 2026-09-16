@@ -10,7 +10,7 @@ import type {
   ContentCampaignCheckout,
   ContentCampaignEvent,
   ContentCampaignLedgerEntry,
-  ContentCampaignPreset,
+  ContentCampaignMetrics,
   ContentCampaignStatus,
 } from "@abonten/types/contentType";
 import type { Database } from "@abonten/types/database.types";
@@ -18,12 +18,12 @@ import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { CreateContentCampaignInput } from "@abonten/validation/contentSchemas";
 import { checkRateLimit } from "../../security/rateLimit";
 import { notifyCampaign } from "../contentNotifyCore";
-import { resolveContentAccess } from "../contentProgram";
-import { type Envelope, FAIL, accountIsRestricted } from "../contentShared";
+import { type Envelope, FAIL } from "../contentShared";
+import { quotePromotion, undeliverableMessage } from "./contentPromotionCore";
 
-// Promoted Spotlight campaigns, advertiser side: presets, creating a
-// campaign, starting its money-path checkout, reading and pausing /
-// resuming / cancelling. Money moves only through the SQL functions of
+// Promoted Spotlight campaigns, advertiser side: creating a campaign from a
+// server-priced budget quote (contentPromotionCore), starting its
+// money-path checkout, reading and pausing / resuming / cancelling. Money moves only through the SQL functions of
 // migration 20260916120200; the state machine is
 // content_campaign_transition(). Payment is the existing Paystack path with
 // a fifth payment_attempt target (content_campaign_checkout_id).
@@ -64,13 +64,20 @@ export function mapCampaign(
     postId: row.post_id,
     advertiserId: row.advertiser_id,
     objective: row.objective as ContentCampaign["objective"],
-    presetId: row.preset_id,
     budgetMinor: Number(row.budget_minor),
     currency: row.currency,
     durationDays: row.duration_days,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     status: row.status as ContentCampaignStatus,
+    pricingVersion: row.pricing_version,
+    cpmMinor: row.cpm_minor,
+    impressionGoal: Number(row.impression_goal),
+    estimatedImpressions: Number(row.estimated_impressions),
+    estimatedReachLow: row.estimated_reach_low,
+    estimatedReachHigh: row.estimated_reach_high,
+    estimateBasis: row.estimate_basis as ContentCampaign["estimateBasis"],
+    endReason: row.end_reason as ContentCampaign["endReason"],
     targeting: {
       lat: row.targeting_lat ?? null,
       lng: row.targeting_lng ?? null,
@@ -89,7 +96,9 @@ export function mapCampaign(
     pauseReason: row.pause_reason,
     pauseSource: row.pause_source as ContentCampaign["pauseSource"],
     impressions: row.impression_count,
+    reach: row.reach_count,
     views: row.view_count,
+    completions: row.completion_count,
     clicks: row.click_count,
     conversions: row.conversion_count,
     activatedAt: row.activated_at,
@@ -120,31 +129,6 @@ export function mapCampaign(
 export const CAMPAIGN_SELECT =
   "*, content_post(id, caption, kind, event_id, place_id, content_media!content_media_post_id_fkey(thumbnail_url, position)), advertiser:user_info!content_campaign_advertiser_id_fkey(id, username, full_name)";
 
-export async function listCampaignPresetsCore(
-  supabase: ServiceRoleClient,
-): Promise<Envelope<ContentCampaignPreset[]>> {
-  const { data, error } = await supabase
-    .from("content_campaign_preset")
-    .select("*")
-    .eq("is_active", true)
-    .order("position");
-  if (error) {
-    logger.error(`listCampaignPresetsCore failed: ${error.message}`);
-    return FAIL;
-  }
-  return {
-    status: 200,
-    data: (data ?? []).map((p) => ({
-      id: p.id,
-      label: p.label,
-      budgetMinor: Number(p.budget_minor),
-      currency: p.currency,
-      durationDays: p.duration_days,
-      estimatedImpressions: p.estimated_impressions,
-    })),
-  };
-}
-
 /**
  * Creates a campaign in `pending_payment` with its checkout. Returns the
  * checkout the web /checkout page or the mobile payment screen pays.
@@ -156,35 +140,19 @@ export async function createContentCampaignCore(
 ): Promise<
   Envelope<{ campaign: ContentCampaign; checkout: ContentCampaignCheckout }>
 > {
-  const { program } = await resolveContentAccess(supabase, userId);
-  if (!program.spotlightPromotions) {
-    return { status: 403, message: "Promotions aren't available yet." };
-  }
-  if (await accountIsRestricted(supabase, userId)) {
-    return { status: 403, message: "Your account has been restricted." };
-  }
   if (!(await checkRateLimit(`content-campaign:${userId}`, 20, 3600))) {
     return {
       status: 429,
       message: "Too many campaigns started. Please try again later.",
     };
   }
-  const { data: post } = await supabase
-    .from("content_post")
-    .select("id, kind, author_id, status, moderation_state, location, category")
-    .eq("id", input.postId)
-    .maybeSingle();
-  if (!post || post.author_id !== userId) {
-    return { status: 404, message: "Spotlight not found." };
+  const quote = await quotePromotion(supabase, userId, input);
+  if (quote.status !== 200 || !quote.data) {
+    return { status: quote.status, message: quote.message };
   }
-  if (post.kind !== "spotlight") {
-    return { status: 400, message: "Only a Spotlight can be promoted." };
-  }
-  if (post.status !== "published" || post.moderation_state !== "visible") {
-    return {
-      status: 400,
-      message: "Publish the Spotlight before promoting it.",
-    };
+  const { estimate, post } = quote.data;
+  if (!estimate.deliverable) {
+    return { status: 409, message: undeliverableMessage(estimate) };
   }
   const { data: live } = await supabase
     .from("content_campaign")
@@ -206,14 +174,6 @@ export async function createContentCampaignCore(
       message: "This Spotlight already has a campaign in progress.",
     };
   }
-  const { data: preset } = await supabase
-    .from("content_campaign_preset")
-    .select("*")
-    .eq("id", input.presetId)
-    .eq("is_active", true)
-    .maybeSingle();
-  if (!preset)
-    return { status: 404, message: "That option is no longer available." };
 
   const startsAt = new Date(input.startsAt);
   const now = Date.now();
@@ -225,10 +185,8 @@ export async function createContentCampaignCore(
   }
   const effectiveStart = new Date(Math.max(startsAt.getTime(), now));
   const endsAt = new Date(
-    effectiveStart.getTime() + preset.duration_days * 86_400_000,
+    effectiveStart.getTime() + estimate.durationDays * 86_400_000,
   );
-  const t = input.targeting;
-  const hasCentre = t.lat != null && t.lng != null;
 
   const { data: campaign, error: campaignError } = await supabase
     .from("content_campaign")
@@ -236,18 +194,25 @@ export async function createContentCampaignCore(
       post_id: post.id,
       advertiser_id: userId,
       objective: input.objective,
-      preset_id: preset.id,
-      budget_minor: preset.budget_minor,
-      currency: preset.currency,
-      duration_days: preset.duration_days,
+      budget_minor: estimate.budgetMinor,
+      currency: estimate.currency,
+      duration_days: estimate.durationDays,
       starts_at: effectiveStart.toISOString(),
       ends_at: endsAt.toISOString(),
       status: "draft",
-      targeting_location: hasCentre
-        ? `SRID=4326;POINT(${t.lng} ${t.lat})`
-        : null,
-      targeting_radius_km: hasCentre ? (t.radiusKm ?? 25) : null,
-      targeting_categories: t.categories ?? [],
+      targeting_location: post.targetingLocation,
+      targeting_radius_km: post.targetingRadiusKm,
+      // Interest/category targeting is not offered: nothing reliable says
+      // what a viewer is interested in, and targeting the post's own
+      // category would change nothing.
+      targeting_categories: [],
+      pricing_version: estimate.pricingVersion,
+      cpm_minor: estimate.cpmMinor,
+      impression_goal: estimate.impressionGoal,
+      estimated_impressions: estimate.estimatedImpressions,
+      estimated_reach_low: estimate.reachLow,
+      estimated_reach_high: estimate.reachHigh,
+      estimate_basis: estimate.basis,
     } as never)
     .select("*")
     .single();
@@ -263,10 +228,9 @@ export async function createContentCampaignCore(
     .insert({
       campaign_id: campaign.id,
       owner_id: userId,
-      preset_id: preset.id,
-      unit_price: Number(preset.budget_minor) / 100,
-      total_price: Number(preset.budget_minor) / 100,
-      currency: preset.currency,
+      unit_price: estimate.budgetMinor / 100,
+      total_price: estimate.budgetMinor / 100,
+      currency: estimate.currency,
       status: "pending",
       expires_at: getCheckoutExpiryTimestamp().toISOString(),
     })
@@ -312,7 +276,9 @@ export async function createContentCampaignCore(
         totalPrice: Number(checkout.total_price),
         currency: checkout.currency,
         expiresAt: checkout.expires_at,
-        presetLabel: preset.label,
+        summaryLabel: summaryLabel(estimate.budgetMinor, estimate.durationDays),
+        estimatedReachLow: estimate.reachLow,
+        estimatedReachHigh: estimate.reachHigh,
         postCaption: null,
       },
     },
@@ -328,7 +294,7 @@ export async function getContentCampaignCheckoutCore(
   const { data, error } = await supabase
     .from("content_campaign_checkout")
     .select(
-      "*, content_campaign_preset(label), content_campaign!content_campaign_checkout_campaign_id_fkey(post_id, content_post(caption))",
+      "*, content_campaign!content_campaign_checkout_campaign_id_fkey(post_id, content_post(caption))",
     )
     .eq("id", checkoutId)
     .eq("owner_id", userId)
@@ -353,8 +319,12 @@ export async function getContentCampaignCheckoutCore(
       totalPrice: Number(data.total_price),
       currency: data.currency,
       expiresAt: data.expires_at,
-      presetLabel:
-        (data.content_campaign_preset as { label: string } | null)?.label ?? "",
+      summaryLabel: summaryLabel(
+        campaign.data.budgetMinor,
+        campaign.data.durationDays,
+      ),
+      estimatedReachLow: campaign.data.estimatedReachLow,
+      estimatedReachHigh: campaign.data.estimatedReachHigh,
       postCaption:
         (
           data.content_campaign as {
@@ -382,7 +352,33 @@ export async function getContentCampaignCore(
     return FAIL;
   }
   if (!data) return { status: 404, message: "Campaign not found." };
-  return { status: 200, data: mapCampaign(withTargeting(data as never)) };
+  const campaign = mapCampaign(withTargeting(data as never));
+  campaign.metrics = await loadCampaignMetrics(supabase, campaignId);
+  return { status: 200, data: campaign };
+}
+
+export async function loadCampaignMetrics(
+  supabase: ServiceRoleClient,
+  campaignId: string,
+): Promise<ContentCampaignMetrics | null> {
+  const { data, error } = await supabase.rpc("content_campaign_metrics", {
+    p_campaign_id: campaignId,
+  });
+  if (error) {
+    logger.error(`content_campaign_metrics failed: ${error.message}`);
+    return null;
+  }
+  return (data as unknown as ContentCampaignMetrics | null) ?? null;
+}
+
+/** "GH₵ 50 budget · up to 7 days" */
+export function summaryLabel(
+  budgetMinor: number,
+  durationDays: number,
+): string {
+  const cedis = budgetMinor / 100;
+  const amount = Number.isInteger(cedis) ? cedis.toString() : cedis.toFixed(2);
+  return `GH₵ ${amount} budget · up to ${durationDays} day${durationDays === 1 ? "" : "s"}`;
 }
 
 // PostgREST returns the geography column as WKB hex; the same parser the

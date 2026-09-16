@@ -16,6 +16,7 @@ import {
   refundCampaignAdminCore,
 } from "@abonten/services/admin/content/contentCampaignAdminCore";
 import { updateContentSettingsCore } from "@abonten/services/admin/content/contentPlatformAdminCore";
+import { updatePromotionPricingAdminCore } from "@abonten/services/admin/content/contentPromotionPricingAdminCore";
 import { updateDiscoverySettingsCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
 import { exportCampaignStatsCsvCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
@@ -173,6 +174,7 @@ import {
   adminCampaignActionSchema,
   adminCampaignRefundSchema,
   contentSettingsSchema,
+  promotionPricingSchema,
 } from "@abonten/validation/contentSchemas";
 import {
   fieldOpsAddMemberSchema,
@@ -2026,6 +2028,25 @@ export async function updateContentSettings(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "updateContentSettings");
+  }
+}
+
+export async function updatePromotionPricing(input: unknown) {
+  const parsed = promotionPricingSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await updatePromotionPricingAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) revalidatePath("/spotlight/settings");
+    return res;
+  } catch (e) {
+    return adminError(e, "updatePromotionPricing");
   }
 }
 

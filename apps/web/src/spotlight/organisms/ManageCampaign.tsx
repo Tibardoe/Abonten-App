@@ -9,7 +9,10 @@ import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachin
 import {
   CAMPAIGN_OBJECTIVE_LABEL,
   CAMPAIGN_STATUS_LABEL,
+  PROMOTION_END_REASON_LABEL,
+  PROMOTION_ESTIMATE_NOTE,
 } from "@abonten/core/content/copy";
+import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -81,18 +84,43 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
     c.pauseSource === "advertiser";
   const canCancel = canTransitionCampaign(c.status, "cancelled", "advertiser");
 
-  const stats: [string, string][] = [
-    ["Plan", `${c.durationDays} days`],
-    ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
-    ["Paid", formatMinor(c.paidMinor, c.currency)],
+  const m = c.metrics;
+  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
+  const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
+  const budget: [string, string][] = [
+    ["Budget", formatMinor(c.budgetMinor, c.currency)],
     ["Used so far", formatMinor(c.spentMinor, c.currency)],
+    ["Unused", formatMinor(unused, c.currency)],
     ["Refunded", formatMinor(c.refundedMinor, c.currency)],
-    ["Impressions", c.impressions.toLocaleString()],
-    ["Views", c.views.toLocaleString()],
-    ["Taps", c.clicks.toLocaleString()],
-    ["Conversions", c.conversions.toLocaleString()],
+    ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
+    ["Runs for up to", `${c.durationDays} days`],
     ["Starts", when(c.startsAt)],
-    ["Ends", when(c.endsAt)],
+    ["Ends by", when(c.endsAt)],
+  ];
+  // Reach is people; impressions are times shown. Kept apart on purpose.
+  const delivery: [string, string][] = [
+    [
+      "Estimated reach",
+      formatReachRange({
+        reachLow: c.estimatedReachLow,
+        reachHigh: c.estimatedReachHigh,
+      }),
+    ],
+    ["People reached", n(m?.reach ?? c.reach)],
+    [
+      "Sponsored impressions",
+      `${n(m?.impressions ?? c.impressions)} of ${n(c.impressionGoal)}`,
+    ],
+    ["Meaningful views", n(m?.meaningfulViews ?? c.views)],
+    ["Completed views", n(m?.completions ?? c.completions)],
+    ["Profile visits", n(m?.clicks.profile)],
+    ["Event taps", n(m?.clicks.event)],
+    ["Place taps", n(m?.clicks.place)],
+    ["New followers", n(m?.follows)],
+    [
+      "Tickets / reservations",
+      `${n(m?.conversions.ticketPurchases)} / ${n(m?.conversions.reservations)}`,
+    ],
   ];
 
   return (
@@ -142,14 +170,32 @@ export default function ManageCampaign({ campaignId }: { campaignId: string }) {
         </p>
       ) : null}
 
-      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {stats.map(([label, value]) => (
-          <div key={label} className="rounded-lg border p-3">
-            <dt className="text-xs text-muted-foreground">{label}</dt>
-            <dd className="text-sm font-semibold">{value}</dd>
-          </div>
-        ))}
-      </dl>
+      {c.status === "completed" && c.endReason ? (
+        <p className="rounded-md border p-3 text-sm text-muted-foreground">
+          {PROMOTION_END_REASON_LABEL[c.endReason]}.
+          {unused > 0
+            ? ` ${formatMinor(unused, c.currency)} of the budget wasn't used.`
+            : ""}
+        </p>
+      ) : null}
+
+      {[
+        { title: "Budget", rows: budget },
+        { title: "Delivery", rows: delivery },
+      ].map((group) => (
+        <section key={group.title} className="space-y-2">
+          <h2 className="text-lg font-semibold">{group.title}</h2>
+          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {group.rows.map(([label, value]) => (
+              <div key={label} className="rounded-lg border p-3">
+                <dt className="text-xs text-muted-foreground">{label}</dt>
+                <dd className="text-sm font-semibold">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ))}
+      <p className="text-xs text-muted-foreground">{PROMOTION_ESTIMATE_NOTE}</p>
 
       <div className="flex flex-wrap gap-2">
         {canPause ? (

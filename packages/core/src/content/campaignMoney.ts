@@ -1,17 +1,23 @@
-// Campaign money in pesewas (integers). Mirrors content_campaign_accrue and
-// content_campaign_refundable_minor so the UI can project spend and refunds
-// exactly as the database will record them.
+// Campaign money in pesewas (integers). Mirrors content_campaign_accrue
+// (migration 20260916130000) and content_campaign_refundable_minor so the UI
+// can project spend and refunds exactly as the database records them.
 
-export function projectedSpentMinor(input: {
+/**
+ * Spend recognised for delivery: delivered sponsored impressions × cost per
+ * 1,000, rounded down (never a charge for part of an impression), the whole
+ * amount paid once the impression goal is delivered, never more than paid.
+ */
+export function deliveredSpendMinor(input: {
   paidMinor: number;
-  activeSeconds: number;
-  durationDays: number;
+  impressions: number;
+  impressionGoal: number;
+  cpmMinor: number;
 }): number {
-  const durationSeconds = input.durationDays * 86_400;
-  if (durationSeconds <= 0 || input.paidMinor <= 0) return 0;
-  const raw = Math.round(
-    (input.paidMinor * input.activeSeconds) / durationSeconds,
-  );
+  if (input.paidMinor <= 0) return 0;
+  if (input.impressionGoal > 0 && input.impressions >= input.impressionGoal) {
+    return input.paidMinor;
+  }
+  const raw = Math.floor((input.impressions * input.cpmMinor) / 1000);
   return Math.min(input.paidMinor, Math.max(0, raw));
 }
 

@@ -25,6 +25,14 @@ export function isSpotlightKillSwitchOn(): boolean {
   return process.env.SPOTLIGHT_KILL_SWITCH === "true";
 }
 
+/**
+ * Emergency stop for paid promotions only: no new promotions are sold and no
+ * sponsored post is served. Organic Spotlight keeps working.
+ */
+export function isSpotlightPromotionsKillSwitchOn(): boolean {
+  return process.env.SPOTLIGHT_PROMOTIONS_KILL_SWITCH === "true";
+}
+
 /** Emergency stop for Stories: tray, viewer, posting. */
 export function isStoriesKillSwitchOn(): boolean {
   return process.env.STORIES_KILL_SWITCH === "true";
@@ -172,7 +180,10 @@ export async function resolveContentAccess(
       spotlightComments: spotlight && row.spotlight_comments_enabled,
       spotlightDownloads: spotlight && row.spotlight_downloads_enabled,
       spotlightPromotions:
-        spotlight && row.spotlight_promotions_enabled && canPublish,
+        spotlight &&
+        row.spotlight_promotions_enabled &&
+        !isSpotlightPromotionsKillSwitchOn() &&
+        canPublish,
       nearby: spotlight && row.nearby_enabled,
       trending: spotlight && row.trending_enabled,
       happeningSoon: spotlight && row.happening_soon_enabled,
@@ -207,6 +218,7 @@ export function mapContentSettings(row: ContentSettingRow): ContentSettings {
     spotlightCommentsEnabled: row.spotlight_comments_enabled,
     spotlightDownloadsEnabled: row.spotlight_downloads_enabled,
     spotlightPromotionsEnabled: row.spotlight_promotions_enabled,
+    sponsoredDeliveryEnabled: row.sponsored_delivery_enabled,
     nearbyEnabled: row.nearby_enabled,
     trendingEnabled: row.trending_enabled,
     happeningSoonEnabled: row.happening_soon_enabled,

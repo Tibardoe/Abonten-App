@@ -369,13 +369,87 @@ export type ContentCampaignObjective =
   | "ticket_sales"
   | "reservations";
 
-export type ContentCampaignPreset = {
-  id: number;
-  label: string;
-  budgetMinor: number;
+/** Server-side pricing and estimate assumptions (content_promotion_pricing). */
+export type ContentPromotionPricing = {
+  version: number;
   currency: string;
+  minBudgetMinor: number;
+  maxBudgetMinor: number;
+  budgetStepMinor: number;
+  suggestedBudgetsMinor: number[];
+  durationOptionsDays: number[];
+  defaultDurationDays: number;
+  /** Cost of 1,000 delivered sponsored impressions, pesewas. */
+  cpmMinor: number;
+  avgFrequency: number;
+  estimateSpreadBps: number;
+  audienceFloorDailyViewers: number;
+  audienceFloorReach: number;
+  dailyFillBps: number;
+  maxReachShareBps: number;
+  locationAudienceShareBps: number;
+  categoryAudienceShareBps: number;
+  minDeliverableBps: number;
+  pacingMultiplier: number;
+  updatedAt: string;
+  updatedBy: string | null;
+};
+
+/** What the promote screen needs before it asks for an estimate. */
+export type ContentPromotionOptions = {
+  currency: string;
+  minBudgetMinor: number;
+  maxBudgetMinor: number;
+  budgetStepMinor: number;
+  suggestedBudgetsMinor: number[];
+  durationOptionsDays: number[];
+  defaultDurationDays: number;
+  radiusOptionsKm: number[];
+};
+
+export type ContentPromotionAudience = {
+  dailyViewers: number;
+  reach28d: number;
+  daysObserved: number;
+  computedAt: string | null;
+};
+
+export type ContentPromotionTargetingInput =
+  | { area: "everywhere" }
+  | { area: "near_post"; radiusKm: number };
+
+export type ContentPromotionEstimate = {
+  pricingVersion: number;
+  currency: string;
+  budgetMinor: number;
   durationDays: number;
+  cpmMinor: number;
+  /** Sponsored impressions the budget pays for; delivery stops here. */
+  impressionGoal: number;
+  /** Impressions the audience can realistically take in the run. */
   estimatedImpressions: number;
+  reachLow: number;
+  reachHigh: number;
+  /** observed = from real audience data; assumed = admin floor; no_data = can't estimate. */
+  basis: "observed" | "assumed" | "no_data";
+  deliverableBps: number;
+  /** False when the server will refuse to sell this budget/audience. */
+  deliverable: boolean;
+  limitedBy: "budget" | "audience";
+};
+
+export type ContentCampaignMetrics = {
+  impressionGoal: number;
+  impressions: number;
+  reach: number;
+  meaningfulViews: number;
+  completions: number;
+  deliveryBps: number;
+  estimatedReachLow: number;
+  estimatedReachHigh: number;
+  clicks: { profile: number; event: number; place: number; cta: number };
+  follows: number;
+  conversions: { ticketPurchases: number; reservations: number };
 };
 
 export type ContentCampaignTargeting = {
@@ -390,13 +464,21 @@ export type ContentCampaign = {
   postId: string;
   advertiserId: string;
   objective: ContentCampaignObjective;
-  presetId: number;
   budgetMinor: number;
   currency: string;
+  /** Longest the campaign may run once approved (a delivery limit). */
   durationDays: number;
   startsAt: string;
   endsAt: string;
   status: ContentCampaignStatus;
+  pricingVersion: number;
+  cpmMinor: number;
+  impressionGoal: number;
+  estimatedImpressions: number;
+  estimatedReachLow: number;
+  estimatedReachHigh: number;
+  estimateBasis: ContentPromotionEstimate["basis"];
+  endReason: "budget_delivered" | "run_ended" | null;
   targeting: ContentCampaignTargeting;
   paidMinor: number;
   spentMinor: number;
@@ -409,7 +491,9 @@ export type ContentCampaign = {
   pauseReason: string | null;
   pauseSource: "advertiser" | "admin" | "system" | null;
   impressions: number;
+  reach: number;
   views: number;
+  completions: number;
   clicks: number;
   conversions: number;
   activatedAt: string | null;
@@ -417,6 +501,8 @@ export type ContentCampaign = {
   createdAt: string;
   updatedAt: string;
   version: number;
+  /** Delivery breakdown; present on single-campaign reads. */
+  metrics?: ContentCampaignMetrics | null;
   /** Denormalised for lists. */
   post?: {
     id: string;
@@ -440,7 +526,10 @@ export type ContentCampaignCheckout = {
   totalPrice: number;
   currency: string;
   expiresAt: string | null;
-  presetLabel: string;
+  /** e.g. "GH₵ 50 budget · up to 7 days" */
+  summaryLabel: string;
+  estimatedReachLow: number;
+  estimatedReachHigh: number;
   postCaption: string | null;
 };
 
@@ -471,6 +560,7 @@ export type ContentSettings = {
   spotlightCommentsEnabled: boolean;
   spotlightDownloadsEnabled: boolean;
   spotlightPromotionsEnabled: boolean;
+  sponsoredDeliveryEnabled: boolean;
   nearbyEnabled: boolean;
   trendingEnabled: boolean;
   happeningSoonEnabled: boolean;
@@ -554,8 +644,10 @@ export type ContentAdminOverview = {
     spentMinor: number;
     refundedMinor: number;
     impressions: number;
+    reach: number;
     clicks: number;
     conversions: number;
+    unusedToReviewMinor: number;
   };
 };
 

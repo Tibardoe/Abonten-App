@@ -1910,7 +1910,6 @@ export type {
   ContentCampaignEvent,
   ContentCampaignLedgerEntry,
   ContentCampaignObjective,
-  ContentCampaignPreset,
   ContentCampaignStatus,
   ContentClickKind,
   ContentComment,
@@ -1998,8 +1997,11 @@ export type StorySequenceResult = ApiEnvelope<
 export type ContentInsightsResult = ApiEnvelope<
   import("@abonten/types/contentType").ContentInsights
 >;
-export type ContentCampaignPresetsResult = ApiEnvelope<
-  import("@abonten/types/contentType").ContentCampaignPreset[]
+export type ContentPromotionOptionsResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentPromotionOptions
+>;
+export type ContentPromotionEstimateResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentPromotionEstimate
 >;
 export type ContentCampaignsResult = ApiEnvelope<
   import("@abonten/types/contentType").ContentCampaign[]

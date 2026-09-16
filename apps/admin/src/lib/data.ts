@@ -38,6 +38,7 @@ import {
   listContentCommentsAdminCore,
   listContentPostsAdminCore,
 } from "@abonten/services/admin/content/contentPlatformAdminCore";
+import { getPromotionPricingAdminCore } from "@abonten/services/admin/content/contentPromotionPricingAdminCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
 import { getDiscoveryOverviewCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
 import { getCampaignAnalyticsCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
@@ -742,8 +743,11 @@ export async function loadContentOverview(
 
 export async function loadContentSettings() {
   const ctx = await requireAdmin();
-  const settings = await getContentSettingsCore(getServiceClient(), ctx);
-  return { ctx, settings };
+  const [settings, pricing] = await Promise.all([
+    getContentSettingsCore(getServiceClient(), ctx),
+    getPromotionPricingAdminCore(getServiceClient(), ctx),
+  ]);
+  return { ctx, settings, pricing };
 }
 
 export async function loadContentPosts(

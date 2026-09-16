@@ -9,7 +9,10 @@ import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachin
 import {
   CAMPAIGN_OBJECTIVE_LABEL,
   CAMPAIGN_STATUS_LABEL,
+  PROMOTION_END_REASON_LABEL,
+  PROMOTION_ESTIMATE_NOTE,
 } from "@abonten/core/content/copy";
+import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import {
   AppText,
   Button,
@@ -87,19 +90,41 @@ export default function CampaignScreen() {
     c.pauseSource === "advertiser";
   const canCancel = canTransitionCampaign(c.status, "cancelled", "advertiser");
 
+  const m = c.metrics;
+  const n = (v: number | undefined) => (v ?? 0).toLocaleString("en-GB");
+  const unused = Math.max(0, c.paidMinor - c.spentMinor - c.refundedMinor);
   const rows: [string, string][] = [
     ["Status", CAMPAIGN_STATUS_LABEL[c.status]],
     ["Goal", CAMPAIGN_OBJECTIVE_LABEL[c.objective]],
-    [
-      "Plan",
-      `${formatMinor(c.budgetMinor, c.currency)} · ${c.durationDays} days`,
-    ],
-    ["Paid", formatMinor(c.paidMinor, c.currency)],
+    ["Budget", formatMinor(c.budgetMinor, c.currency)],
+    ["Runs for up to", `${c.durationDays} days`],
     ["Used so far", formatMinor(c.spentMinor, c.currency)],
+    ["Unused", formatMinor(unused, c.currency)],
     ["Refunded", formatMinor(c.refundedMinor, c.currency)],
-    ["Impressions", c.impressions.toLocaleString()],
-    ["Views", c.views.toLocaleString()],
-    ["Taps", c.clicks.toLocaleString()],
+  ];
+  // Reach is people; impressions are times shown.
+  const delivery: [string, string][] = [
+    [
+      "Estimated reach",
+      formatReachRange({
+        reachLow: c.estimatedReachLow,
+        reachHigh: c.estimatedReachHigh,
+      }),
+    ],
+    ["People reached", n(m?.reach ?? c.reach)],
+    [
+      "Sponsored impressions",
+      `${n(m?.impressions ?? c.impressions)} of ${n(c.impressionGoal)}`,
+    ],
+    ["Meaningful views", n(m?.meaningfulViews ?? c.views)],
+    ["Completed views", n(m?.completions ?? c.completions)],
+    ["Profile visits", n(m?.clicks.profile)],
+    ["Event / place taps", `${n(m?.clicks.event)} / ${n(m?.clicks.place)}`],
+    ["New followers", n(m?.follows)],
+    [
+      "Tickets / reservations",
+      `${n(m?.conversions.ticketPurchases)} / ${n(m?.conversions.reservations)}`,
+    ],
   ];
 
   return (
@@ -128,20 +153,42 @@ export default function CampaignScreen() {
           </AppText>
         ) : null}
 
-        <View className="rounded-xl border border-border bg-card">
-          {rows.map(([label, value], i) => (
-            <View
-              key={label}
-              className={[
-                "flex-row justify-between px-4 py-3",
-                i > 0 ? "border-t border-border" : "",
-              ].join(" ")}
-            >
-              <AppText variant="meta">{label}</AppText>
-              <AppText variant="metaStrong">{value}</AppText>
+        {c.status === "completed" && c.endReason ? (
+          <AppText variant="muted">
+            {PROMOTION_END_REASON_LABEL[c.endReason]}.
+            {unused > 0
+              ? ` ${formatMinor(unused, c.currency)} of the budget wasn't used.`
+              : ""}
+          </AppText>
+        ) : null}
+
+        {[
+          { title: "Budget", list: rows },
+          { title: "Delivery", list: delivery },
+        ].map((group) => (
+          <View key={group.title} className="gap-2">
+            <AppText variant="label">{group.title}</AppText>
+            <View className="rounded-xl border border-border bg-card">
+              {group.list.map(([label, value], i) => (
+                <View
+                  key={label}
+                  className={[
+                    "flex-row justify-between gap-3 px-4 py-3",
+                    i > 0 ? "border-t border-border" : "",
+                  ].join(" ")}
+                >
+                  <AppText variant="meta">{label}</AppText>
+                  <AppText variant="metaStrong" className="shrink text-right">
+                    {value}
+                  </AppText>
+                </View>
+              ))}
             </View>
-          ))}
-        </View>
+          </View>
+        ))}
+        <AppText variant="caption" tone="muted">
+          {PROMOTION_ESTIMATE_NOTE}
+        </AppText>
 
         <View className="gap-2">
           {canPause ? (

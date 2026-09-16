@@ -67,6 +67,42 @@ export const CAMPAIGN_OBJECTIVE_LABEL: Record<
   reservations: "More reservations",
 };
 
+// ── Promotions (reach-based) ─────────────────────────────────────────
+// A promotion buys extra distribution, never a number of views. Every
+// number shown to an advertiser before or during a run is an estimate.
+
+export const PROMOTION_INTRO =
+  "Promoting shows your Spotlight to more people in their feeds, marked “Sponsored”. You choose a budget and who should see it; we estimate how many people it could reach.";
+
+export const PROMOTION_ESTIMATE_NOTE =
+  "This is an estimate, not a guarantee. Actual reach depends on how many people in your audience open Spotlight, how often, and what else is being promoted at the same time.";
+
+export const PROMOTION_BILLING_NOTE =
+  "You pay the budget up front. It is used only as your Spotlight is shown as sponsored, and the promotion stops when the budget is used or the run ends, whichever comes first. If it ends before the budget is used, the unused amount is shown on the promotion page.";
+
+export const PROMOTION_REVIEW_NOTE =
+  "Every promotion is reviewed before it runs. If it isn't approved, you're refunded in full.";
+
+export const PROMOTION_CASH_NOTE =
+  "Paid by card or mobile money. Abonten Credit can't be used for promotions.";
+
+export const PROMOTION_ESTIMATE_BASIS_LABEL: Record<
+  "observed" | "assumed" | "no_data",
+  string
+> = {
+  observed: "Based on recent Spotlight activity.",
+  assumed: "Based on our planning figures while Spotlight is new.",
+  no_data: "We can't estimate reach yet.",
+};
+
+export const PROMOTION_END_REASON_LABEL: Record<
+  "budget_delivered" | "run_ended",
+  string
+> = {
+  budget_delivered: "Budget fully used",
+  run_ended: "Run ended before the budget was used",
+};
+
 export const CAMPAIGN_OBJECTIVES: readonly ContentCampaignObjective[] = [
   "views",
   "profile_visits",

@@ -64,6 +64,67 @@ function useBrowserCoords(wanted: boolean) {
   return { coords, state };
 }
 
+/**
+ * A rough position for the other tabs, only when the browser has already
+ * been allowed location for this site: never prompts. Rounded to about a
+ * kilometre and sent with the feed request so a promotion aimed at an area
+ * can reach people there; not stored.
+ */
+function useSilentCoords(wanted: boolean) {
+  const [state, setState] = useState<{ coords: FeedCoords; done: boolean }>({
+    coords: null,
+    done: !wanted,
+  });
+  useEffect(() => {
+    if (!wanted) return;
+    let cancelled = false;
+    const finish = (coords: FeedCoords) => {
+      if (!cancelled) setState({ coords, done: true });
+    };
+    const timer = setTimeout(() => finish(null), 1500);
+    const perms =
+      typeof navigator !== "undefined" ? navigator.permissions : undefined;
+    if (!perms?.query || !navigator.geolocation) {
+      clearTimeout(timer);
+      finish(null);
+      return;
+    }
+    perms
+      .query({ name: "geolocation" as PermissionName })
+      .then((status) => {
+        if (status.state !== "granted") {
+          clearTimeout(timer);
+          finish(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            clearTimeout(timer);
+            const round = (n: number) => Math.round(n * 100) / 100;
+            finish({
+              lat: round(pos.coords.latitude),
+              lng: round(pos.coords.longitude),
+            });
+          },
+          () => {
+            clearTimeout(timer);
+            finish(null);
+          },
+          { maximumAge: 60 * 60 * 1000, timeout: 1200 },
+        );
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        finish(null);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [wanted]);
+  return state;
+}
+
 export default function SpotlightFeed() {
   const { program, ready } = useContentProgram();
   const { data: user } = useCurrentUser();
@@ -81,8 +142,13 @@ export default function SpotlightFeed() {
   );
 
   const needsSignIn = surface === "following" && !user;
-  const { coords, state: geoState } = useBrowserCoords(surface === "nearby");
-  const waitingForCoords = surface === "nearby" && geoState !== "ok";
+  const { coords: nearbyCoords, state: geoState } = useBrowserCoords(
+    surface === "nearby",
+  );
+  const silent = useSilentCoords(surface !== "nearby");
+  const coords = surface === "nearby" ? nearbyCoords : silent.coords;
+  const waitingForCoords =
+    surface === "nearby" ? geoState !== "ok" : !silent.done;
 
   const feed = useContentFeed(
     surface,

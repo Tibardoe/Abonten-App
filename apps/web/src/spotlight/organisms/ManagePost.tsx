@@ -317,6 +317,16 @@ function EditPost({
           postId={post.id}
           hasEvent={!!post.event}
           hasPlace={!!post.place || post.publisher.kind === "place"}
+          locationLabel={
+            post.location
+              ? (post.place?.name ??
+                post.event?.title ??
+                (post.publisher.kind === "place"
+                  ? post.publisher.name
+                  : null) ??
+                "this Spotlight's location")
+              : null
+          }
           onClose={() => setPromoting(false)}
         />
       ) : null}

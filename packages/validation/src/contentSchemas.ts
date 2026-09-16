@@ -275,20 +275,41 @@ export const contentInsightsRequestSchema = z.object({
 
 // ── Campaigns (advertiser) ───────────────────────────────────────────
 
-export const createContentCampaignSchema = z.object({
+export const RADIUS_OPTIONS_KM = [5, 10, 25, 50] as const;
+
+// Where a promotion is shown. "near_post" uses the Spotlight's own location
+// (its event or place), read on the server — the client never sends
+// coordinates for targeting.
+export const promotionTargetingSchema = z
+  .discriminatedUnion("area", [
+    z.object({ area: z.literal("everywhere") }),
+    z.object({
+      area: z.literal("near_post"),
+      radiusKm: z
+        .number()
+        .int()
+        .refine((n) => (RADIUS_OPTIONS_KM as readonly number[]).includes(n), {
+          message: "Choose a distance.",
+        }),
+    }),
+  ])
+  .default({ area: "everywhere" });
+
+export const estimateContentPromotionSchema = z.object({
   postId: uuid,
-  presetId: z.number().int().positive(),
-  objective: z.enum(CAMPAIGN_OBJECTIVES as unknown as [string, ...string[]]),
-  startsAt: z.string().datetime({ offset: true }),
-  targeting: z
-    .object({
-      lat: optionalNumber(-90, 90),
-      lng: optionalNumber(-180, 180),
-      radiusKm: optionalNumber(1, 500),
-      categories: z.array(z.string().max(60)).max(10).default([]),
-    })
-    .default({ categories: [] }),
+  budgetMinor: z.number().int().positive().max(100_000_000),
+  durationDays: z.number().int().min(1).max(60),
+  targeting: promotionTargetingSchema,
 });
+export type EstimateContentPromotionInput = z.infer<
+  typeof estimateContentPromotionSchema
+>;
+
+export const createContentCampaignSchema =
+  estimateContentPromotionSchema.extend({
+    objective: z.enum(CAMPAIGN_OBJECTIVES as unknown as [string, ...string[]]),
+    startsAt: z.string().datetime({ offset: true }),
+  });
 export type CreateContentCampaignInput = z.infer<
   typeof createContentCampaignSchema
 >;
@@ -320,6 +341,7 @@ export const contentSettingsSchema = z.object({
       spotlightCommentsEnabled: z.boolean(),
       spotlightDownloadsEnabled: z.boolean(),
       spotlightPromotionsEnabled: z.boolean(),
+      sponsoredDeliveryEnabled: z.boolean(),
       nearbyEnabled: z.boolean(),
       trendingEnabled: z.boolean(),
       happeningSoonEnabled: z.boolean(),
@@ -412,6 +434,40 @@ export const adminCampaignActionSchema = z.object({
 export type AdminCampaignActionInput = z.infer<
   typeof adminCampaignActionSchema
 >;
+
+const bps = z.number().int().min(0).max(10000);
+const minor = z.number().int().min(1).max(10_000_000);
+
+export const promotionPricingSchema = z.object({
+  expectedVersion: z.number().int().min(1),
+  reason,
+  patch: z
+    .object({
+      minBudgetMinor: minor,
+      maxBudgetMinor: minor,
+      budgetStepMinor: z.number().int().min(1).max(100_000),
+      suggestedBudgetsMinor: z.array(minor).min(1).max(6),
+      durationOptionsDays: z
+        .array(z.number().int().min(1).max(60))
+        .min(1)
+        .max(6),
+      defaultDurationDays: z.number().int().min(1).max(60),
+      cpmMinor: z.number().int().min(10).max(1_000_000),
+      avgFrequency: z.number().min(1).max(10),
+      estimateSpreadBps: z.number().int().min(0).max(5000),
+      audienceFloorDailyViewers: z.number().int().min(0).max(10_000_000),
+      audienceFloorReach: z.number().int().min(0).max(100_000_000),
+      dailyFillBps: bps.min(1),
+      maxReachShareBps: bps.min(1),
+      locationAudienceShareBps: bps.min(1),
+      categoryAudienceShareBps: bps.min(1),
+      minDeliverableBps: bps,
+      pacingMultiplier: z.number().min(1).max(20),
+    })
+    .strict()
+    .partial(),
+});
+export type PromotionPricingInput = z.infer<typeof promotionPricingSchema>;
 
 export const adminCampaignRefundSchema = z.object({
   campaignId: uuid,

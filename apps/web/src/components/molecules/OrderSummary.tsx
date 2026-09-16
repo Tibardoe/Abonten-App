@@ -1,10 +1,17 @@
+import {
+  PROMOTION_ESTIMATE_NOTE,
+  PROMOTION_REVIEW_NOTE,
+} from "@abonten/core/content/copy";
+import { formatReachRange } from "@abonten/core/content/promotionEstimate";
 import type { PlacePromotionSummaryProps } from "@abonten/types/placeType";
 import type { EventPromotionSummaryProps } from "@abonten/types/postsType";
 
 export type SpotlightPromotionSummaryProps = {
   type: "spotlight-promotion";
   postCaption: string | null;
-  presetLabel: string;
+  summaryLabel: string;
+  estimatedReachLow: number;
+  estimatedReachHigh: number;
   totalAmount: number;
 };
 
@@ -24,7 +31,7 @@ type OrderSummaryProps = {
  */
 export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
   if (orderSummary.type === "spotlight-promotion") {
-    const { postCaption, presetLabel, totalAmount } = orderSummary;
+    const { postCaption, summaryLabel, totalAmount } = orderSummary;
 
     return (
       <div className="border border-border rounded-2xl shadow-lg p-6 space-y-4 bg-card text-card-foreground">
@@ -40,13 +47,23 @@ export default function OrderSummary({ orderSummary }: OrderSummaryProps) {
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium">Plan:</p>
-          <p className="text-card-foreground font-semibold">{presetLabel}</p>
+          <p className="font-medium">Budget:</p>
+          <p className="text-card-foreground font-semibold">{summaryLabel}</p>
+        </div>
+
+        <div className="text-sm text-muted-foreground">
+          <p className="font-medium">Estimated reach:</p>
+          <p className="text-card-foreground font-semibold">
+            {formatReachRange({
+              reachLow: orderSummary.estimatedReachLow,
+              reachHigh: orderSummary.estimatedReachHigh,
+            })}
+          </p>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Every promotion is reviewed before it runs. It is shown with a
-          Sponsored label. If it is not approved you are refunded in full.
+          {PROMOTION_ESTIMATE_NOTE} {PROMOTION_REVIEW_NOTE} It is shown with a
+          Sponsored label.
         </p>
 
         <div className="flex justify-between pt-2 border-t border-border font-bold text-card-foreground">

@@ -125,8 +125,8 @@ export async function loadPromotionOrder(
   };
 }
 
-// A campaign checkout is priced from its preset (budget_minor), never from
-// the checkout row a client could once have written.
+// A campaign checkout is priced from its campaign's server-set budget
+// (budget_minor), never from anything a client sent.
 async function loadCampaignOrder(
   supabase: SupabaseClient<Database>,
   userId: string,
@@ -135,7 +135,7 @@ async function loadCampaignOrder(
   const { data, error } = await supabase
     .from("content_campaign_checkout")
     .select(
-      "id, status, currency, expires_at, preset:content_campaign_preset(budget_minor, currency, label)",
+      "id, status, currency, expires_at, campaign:content_campaign!content_campaign_checkout_campaign_id_fkey(budget_minor, currency, duration_days)",
     )
     .eq("id", checkoutId)
     .eq("owner_id", userId)
@@ -144,19 +144,19 @@ async function loadCampaignOrder(
     logger.error(`loadCampaignOrder failed: ${error.message}`);
     throw new Error("Failed to load the campaign checkout");
   }
-  const preset = data?.preset as unknown as {
+  const campaign = data?.campaign as unknown as {
     budget_minor: number;
     currency: string;
-    label: string;
+    duration_days: number;
   } | null;
-  if (!data || !preset) return null;
+  if (!data || !campaign) return null;
   return {
     checkoutId: data.id,
     status: data.status,
-    orderTotalMinor: Number(preset.budget_minor),
-    currency: preset.currency ?? data.currency,
+    orderTotalMinor: Number(campaign.budget_minor),
+    currency: campaign.currency ?? data.currency,
     expiresAt: data.expires_at,
-    label: `a Spotlight promotion (${preset.label})`,
+    label: `a Spotlight promotion (GH₵ ${(Number(campaign.budget_minor) / 100).toFixed(2)} budget)`,
   };
 }
 

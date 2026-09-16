@@ -12,7 +12,10 @@ import type {
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { ContentFeedRequest } from "@abonten/validation/contentSchemas";
 import { deriveSigningKey, hmacBase64Url } from "../security/signing";
-import { resolveContentAccess } from "./contentProgram";
+import {
+  isSpotlightPromotionsKillSwitchOn,
+  resolveContentAccess,
+} from "./contentProgram";
 import { type Envelope, FAIL, loadPostDocuments } from "./contentShared";
 
 // The Spotlight feed. Organic ranking happens in content_feed() (one SQL
@@ -21,7 +24,16 @@ import { type Envelope, FAIL, loadPostDocuments } from "./contentShared";
 // limits, so the feed can never become an advertisement wall. The cursor
 // freezes `asOf` for the paging session so page 2 never reorders page 1.
 
-type FeedCursor = { asOf: string; score: number; id: string; page: number };
+type FeedCursor = {
+  asOf: string;
+  score: number;
+  id: string;
+  page: number;
+  /** Posts already shown as sponsored in this paging session. */
+  shown?: string[];
+};
+
+const MAX_SHOWN = 40;
 
 /** Hash the device key so the raw install id is never stored. */
 export function hashViewerKey(
@@ -79,45 +91,70 @@ export async function getContentFeedCore(
     return FAIL;
   }
   const rows = ranked ?? [];
+  // A post already shown as sponsored earlier in this session is not
+  // repeated organically on a later page.
+  const shownBefore = new Set(
+    (Array.isArray(cursor?.shown) ? cursor.shown : [])
+      .filter((id): id is string => typeof id === "string")
+      .slice(-MAX_SHOWN),
+  );
   const organic = await loadPostDocuments(
     supabase,
     userId,
-    rows.map((r) => r.post_id),
+    rows.map((r) => r.post_id).filter((id) => !shownBefore.has(id)),
   );
 
   let sponsored: SponsoredCandidate[] = [];
+  // Sponsored delivery has its own switch (and the promotions kill switch)
+  // so staff can stop paid placements without touching organic Spotlight.
+  // A failure here only drops the sponsored slots, never the page.
   if (
-    program.spotlightPromotions !== undefined &&
-    settings.spotlight_promotions_enabled &&
+    settings.sponsored_delivery_enabled &&
+    !isSpotlightPromotionsKillSwitchOn() &&
     organic.length > 0 &&
     (surface === "for_you" || surface === "nearby" || surface === "trending")
   ) {
-    const viewerKey = hashViewerKey(input.viewerKey, `ip:${context.ip}`);
-    const { data: cands, error: candError } = await supabase.rpc(
-      "content_sponsored_candidates",
-      {
-        p_viewer: (userId ?? null) as unknown as string,
-        p_viewer_key: viewerKey,
-        p_lat: (input.lat ?? null) as unknown as number,
-        p_lng: (input.lng ?? null) as unknown as number,
-        p_limit: 3,
-      },
-    );
-    if (candError) {
-      logger.error(`content_sponsored_candidates failed: ${candError.message}`);
-    } else if (cands && cands.length > 0) {
-      const docs = await loadPostDocuments(
-        supabase,
-        userId,
-        cands.map((c) => c.post_id),
+    try {
+      const viewerKey = hashViewerKey(input.viewerKey, `ip:${context.ip}`);
+      const { data: cands, error: candError } = await supabase.rpc(
+        "content_sponsored_candidates",
+        {
+          p_viewer: (userId ?? null) as unknown as string,
+          p_viewer_key: viewerKey,
+          p_lat: (input.lat ?? null) as unknown as number,
+          p_lng: (input.lng ?? null) as unknown as number,
+          p_limit: 5,
+        },
       );
-      const byId = new Map(docs.map((d) => [d.id, d]));
-      sponsored = cands
-        .map((c) => {
-          const post = byId.get(c.post_id);
-          return post ? { campaignId: c.campaign_id, post } : null;
-        })
-        .filter((c): c is SponsoredCandidate => c !== null);
+      if (candError) {
+        logger.error(
+          `content_sponsored_candidates failed: ${candError.message}`,
+        );
+      } else {
+        // One campaign slot per post per session: the frequency cap only
+        // sees impressions once telemetry is flushed, so a fast scroller
+        // would otherwise get the same promotion on consecutive pages.
+        const fresh = (cands ?? []).filter((c) => !shownBefore.has(c.post_id));
+        if (fresh.length > 0) {
+          const docs = await loadPostDocuments(
+            supabase,
+            userId,
+            fresh.map((c) => c.post_id),
+          );
+          const byId = new Map(docs.map((d) => [d.id, d]));
+          sponsored = fresh
+            .map((c) => {
+              const post = byId.get(c.post_id);
+              return post ? { campaignId: c.campaign_id, post } : null;
+            })
+            .filter((c): c is SponsoredCandidate => c !== null);
+        }
+      }
+    } catch (e) {
+      logger.error(
+        `sponsored placement skipped: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      sponsored = [];
     }
   }
 
@@ -125,6 +162,10 @@ export async function getContentFeedCore(
     maxShareBps: settings.sponsored_max_share_bps,
     minGap: settings.sponsored_min_gap,
   });
+  const shown = [
+    ...shownBefore,
+    ...items.filter((i) => i.sponsored).map((i) => i.post.id),
+  ].slice(-MAX_SHOWN);
   const last = rows[rows.length - 1];
   const hasNextPage = rows.length >= pageSize;
   return {
@@ -140,6 +181,7 @@ export async function getContentFeedCore(
               score: Number(last.score),
               id: last.post_id,
               page: (cursor?.page ?? 0) + 1,
+              shown,
             })
           : null,
     },
