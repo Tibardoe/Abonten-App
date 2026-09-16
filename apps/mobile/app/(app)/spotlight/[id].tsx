@@ -1,3 +1,4 @@
+import { MediaStatusBar } from "@/components/app/MediaStatusBar";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
 import { useContentPost } from "@/features/content/useContent";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
@@ -80,6 +81,7 @@ export default function SpotlightPostScreen() {
       className="flex-1 bg-black"
       onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
     >
+      <MediaStatusBar />
       {query.isLoading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#fff" />

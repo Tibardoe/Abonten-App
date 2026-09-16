@@ -1,5 +1,6 @@
 import { ReportSheet } from "@/components/ReportSheet";
 import { AppHeader } from "@/components/app/AppHeader";
+import { MediaStatusBar } from "@/components/app/MediaStatusBar";
 import { ContentCommentsSheet } from "@/components/content/ContentCommentsSheet";
 import { StoryViewer } from "@/components/content/StoryViewer";
 import { publisherRoute } from "@/features/content/contentLinks";
@@ -48,6 +49,7 @@ export default function StoryLinkScreen() {
   if (q.isLoading) {
     return (
       <View className="flex-1 bg-black">
+        <MediaStatusBar />
         <Spinner />
       </View>
     );
@@ -56,6 +58,7 @@ export default function StoryLinkScreen() {
   if (post && post.kind === "story") {
     return (
       <View className="flex-1 bg-black">
+        <MediaStatusBar />
         {viewerOpen ? (
           <StoryViewer
             queue={[

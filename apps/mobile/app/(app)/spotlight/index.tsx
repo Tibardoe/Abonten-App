@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { MediaStatusBar } from "@/components/app/MediaStatusBar";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
 import { useCoarseLocation } from "@/features/content/useCoarseLocation";
 import { flattenFeed, useContentFeed } from "@/features/content/useContent";
@@ -24,6 +25,7 @@ import {
   type ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 function surfaceAvailable(s: ContentFeedSurface, p: ContentProgram) {
   if (s === "nearby") return p.nearby;
@@ -183,6 +185,34 @@ export default function SpotlightFeedScreen() {
     setActiveIndex(0);
   };
 
+  // The tab row scrolls sideways on narrow phones: keep the selected tab in
+  // view (centred where possible) and fade an edge while tabs are hidden
+  // past it, instead of cutting a label in half against a button.
+  const tabsRef = useRef<ScrollView>(null);
+  const tabFrames = useRef<
+    Partial<Record<ContentFeedSurface, { x: number; width: number }>>
+  >({});
+  const tabsWidth = useRef(0);
+  const tabsContentWidth = useRef(0);
+  const tabsScrollX = useRef(0);
+  const [tabsFade, setTabsFade] = useState({ start: false, end: false });
+  const updateTabsFade = useCallback(() => {
+    const overflow = tabsContentWidth.current > tabsWidth.current + 1;
+    const start = overflow && tabsScrollX.current > 4;
+    const end =
+      overflow &&
+      tabsScrollX.current + tabsWidth.current < tabsContentWidth.current - 4;
+    setTabsFade((prev) =>
+      prev.start === start && prev.end === end ? prev : { start, end },
+    );
+  }, []);
+  useEffect(() => {
+    const frame = tabFrames.current[surface];
+    if (!frame || tabsWidth.current === 0) return;
+    const x = Math.max(0, frame.x - (tabsWidth.current - frame.width) / 2);
+    tabsRef.current?.scrollTo({ x, animated: true });
+  }, [surface]);
+
   let empty: {
     title: string;
     body: string;
@@ -232,6 +262,7 @@ export default function SpotlightFeedScreen() {
       className="flex-1 bg-black"
       onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
     >
+      <MediaStatusBar />
       {needsLocation && location === null ? (
         <LocationProbe onResult={setLocation} />
       ) : null}
@@ -309,34 +340,58 @@ export default function SpotlightFeedScreen() {
         >
           <Icon name="arrow-back" size={24} color="#fff" />
         </Pressable>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerClassName="gap-1.5 pr-2"
-          className="flex-1"
-        >
-          {surfaces.map((s) => (
-            <Pressable
-              key={s}
-              onPress={() => selectSurface(s)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: surface === s }}
-              className={[
-                "rounded-full px-3 py-1.5",
-                surface === s ? "bg-white" : "bg-black/40",
-              ].join(" ")}
-            >
-              <AppText
+        <View className="flex-1">
+          <ScrollView
+            ref={tabsRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerClassName="gap-1.5 px-2"
+            scrollEventThrottle={32}
+            onLayout={(e) => {
+              tabsWidth.current = e.nativeEvent.layout.width;
+              updateTabsFade();
+            }}
+            onContentSizeChange={(w) => {
+              tabsContentWidth.current = w;
+              updateTabsFade();
+            }}
+            onScroll={(e) => {
+              tabsScrollX.current = e.nativeEvent.contentOffset.x;
+              updateTabsFade();
+            }}
+          >
+            {surfaces.map((s) => (
+              <Pressable
+                key={s}
+                onPress={() => selectSurface(s)}
+                onLayout={(e) => {
+                  tabFrames.current[s] = {
+                    x: e.nativeEvent.layout.x,
+                    width: e.nativeEvent.layout.width,
+                  };
+                }}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: surface === s }}
                 className={[
-                  "text-[13px] font-semibold",
-                  surface === s ? "text-black" : "text-white",
+                  "rounded-full px-3 py-1.5",
+                  surface === s ? "bg-white" : "bg-black/40",
                 ].join(" ")}
               >
-                {FEED_SURFACE_LABEL[s]}
-              </AppText>
-            </Pressable>
-          ))}
-        </ScrollView>
+                <AppText
+                  numberOfLines={1}
+                  className={[
+                    "text-[13px] font-semibold",
+                    surface === s ? "text-black" : "text-white",
+                  ].join(" ")}
+                >
+                  {FEED_SURFACE_LABEL[s]}
+                </AppText>
+              </Pressable>
+            ))}
+          </ScrollView>
+          {tabsFade.start ? <TabsEdgeFade side="start" /> : null}
+          {tabsFade.end ? <TabsEdgeFade side="end" /> : null}
+        </View>
         {program.canPublish && program.spotlightPosting ? (
           <Pressable
             onPress={() => router.push("/(app)/spotlight/new?kind=spotlight")}
@@ -350,6 +405,37 @@ export default function SpotlightFeedScreen() {
         ) : null}
       </View>
     </View>
+  );
+}
+
+function TabsEdgeFade({ side }: { side: "start" | "end" }) {
+  const id = `tabs-fade-${side}`;
+  return (
+    <Svg
+      pointerEvents="none"
+      width={44}
+      height="100%"
+      style={{
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        ...(side === "start" ? { left: 0 } : { right: 0 }),
+      }}
+    >
+      <Defs>
+        <LinearGradient
+          id={id}
+          x1={side === "start" ? "1" : "0"}
+          y1="0"
+          x2={side === "start" ? "0" : "1"}
+          y2="0"
+        >
+          <Stop offset="0" stopColor="#000" stopOpacity="0" />
+          <Stop offset="1" stopColor="#000" stopOpacity="0.85" />
+        </LinearGradient>
+      </Defs>
+      <Rect x="0" y="0" width="100%" height="100%" fill={`url(#${id})`} />
+    </Svg>
   );
 }
 

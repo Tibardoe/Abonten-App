@@ -87,15 +87,27 @@ export async function redirectSystemPath({
       }
       return "/(app)/weekly";
     }
-    // Spotlight and Stories: /spotlight, /spotlight/<post id>, /stories/<post id>.
-    // Ids are checked by shape only; the screens ask the API, which applies
-    // the programme switch, moderation and blocks.
+    // Spotlight and Stories: /spotlight, /spotlight/<post id>, /stories/<post id>,
+    // plus the creator screens the app itself links to (promotion payment
+    // returns, notifications): spotlight/campaign/<id>, spotlight/post/<id>,
+    // spotlight/promote/<post id>, spotlight/manage. Ids are checked by shape
+    // only; the screens ask the API, which applies the programme switch,
+    // ownership, moderation and blocks.
     const uuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (parts[0] === "spotlight") {
-      const id = parts[1] ? decodeURIComponent(parts[1]) : null;
-      return id && uuid.test(id)
-        ? `/(app)/spotlight/${id}`
+      const first = parts[1] ? decodeURIComponent(parts[1]) : null;
+      const second = parts[2] ? decodeURIComponent(parts[2]) : null;
+      if (first === "manage") return "/(app)/spotlight/manage";
+      if (
+        (first === "campaign" || first === "post" || first === "promote") &&
+        second &&
+        uuid.test(second)
+      ) {
+        return `/(app)/spotlight/${first}/${second}`;
+      }
+      return first && uuid.test(first)
+        ? `/(app)/spotlight/${first}`
         : "/(app)/spotlight";
     }
     if (parts[0] === "stories" && parts[1]) {

@@ -8,6 +8,7 @@ import { useRemindersSync } from "@/features/reminders/useRemindersSync";
 import { useInviteBinding } from "@/features/rewards/useInviteBinding";
 import { useTheme, useThemeColors } from "@abonten/ui-native/theme";
 import { Stack } from "expo-router";
+import { Platform } from "react-native";
 
 // The (app) group is a native stack: the (tabs) group is the anchor screen,
 // and every other screen (details, organizer, settings, notifications, the
@@ -32,9 +33,12 @@ function StackHost() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: c.background },
-        // Status icons follow the app's own theme on every screen; the
-        // full-screen media screens below override it with white.
-        statusBarStyle: scheme === "dark" ? "light" : "dark",
+        // Android: status icons follow the app's own theme on every screen;
+        // full-screen media screens switch to white with <MediaStatusBar>.
+        // iOS keeps expo-status-bar in the root layout (see MediaStatusBar).
+        ...(Platform.OS === "android"
+          ? { statusBarStyle: scheme === "dark" ? "light" : "dark" }
+          : {}),
       }}
     >
       <Stack.Screen name="(tabs)" />
@@ -58,21 +62,11 @@ function StackHost() {
         // The trim bar has edge-adjacent handles; see highlight/new.
         options={{ animation: "slide_from_bottom", gestureEnabled: false }}
       />
-      {/* Black full-screen media: white status icons, set per screen so a
-          screen pushed on top gets its own style back (an in-screen
-          <StatusBar> kept white icons over the next screen's white header). */}
-      <Stack.Screen
-        name="spotlight/index"
-        options={{ animation: "fade", statusBarStyle: "light" }}
-      />
-      <Stack.Screen
-        name="spotlight/[id]"
-        options={{ animation: "fade", statusBarStyle: "light" }}
-      />
-      <Stack.Screen
-        name="story/[id]"
-        options={{ animation: "fade", statusBarStyle: "light" }}
-      />
+      {/* Black full-screen media; white status icons come from
+          <MediaStatusBar> inside each screen. */}
+      <Stack.Screen name="spotlight/index" options={{ animation: "fade" }} />
+      <Stack.Screen name="spotlight/[id]" options={{ animation: "fade" }} />
+      <Stack.Screen name="story/[id]" options={{ animation: "fade" }} />
       <Stack.Screen name="buy/[eventId]" />
       <Stack.Screen
         name="checkout/[sessionId]"

@@ -258,8 +258,9 @@ function Campaigns() {
               {item.post?.caption?.trim() || "Spotlight"}
             </AppText>
             <AppText variant="caption" tone="muted">
-              {item.impressions.toLocaleString()} impressions ·{" "}
-              {item.clicks.toLocaleString()} taps
+              {countLabel(item.reach, "person", "people")} reached ·{" "}
+              {countLabel(item.impressions, "impression")} ·{" "}
+              {countLabel(item.clicks, "tap")}
             </AppText>
           </View>
           <AppText variant="bodyStrong">

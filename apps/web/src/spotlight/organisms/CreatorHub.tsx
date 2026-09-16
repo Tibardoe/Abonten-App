@@ -375,8 +375,9 @@ function OwnCampaigns() {
                 {c.post?.caption?.trim() || "Spotlight"}
               </p>
               <p className="text-xs text-muted-foreground">
-                {c.impressions.toLocaleString()} impressions ·{" "}
-                {c.clicks.toLocaleString()} clicks
+                {countLabel(c.reach, "person", "people")} reached ·{" "}
+                {countLabel(c.impressions, "impression")} ·{" "}
+                {countLabel(c.clicks, "click")}
               </p>
             </div>
             <span className="shrink-0 text-sm font-semibold">
