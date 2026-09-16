@@ -418,3 +418,14 @@ export const adminCampaignRefundSchema = z.object({
   expectedVersion: z.number().int().min(1),
   reason,
 });
+
+// ── Small shared request shapes ──────────────────────────────────────
+
+export const cursorRequestSchema = z.object({ cursor: optionalString });
+
+export const ownContentRequestSchema = z.object({
+  kind: contentKindSchema.optional(),
+  cursor: optionalString,
+});
+
+export const checkoutIdSchema = z.object({ checkoutId: uuid });

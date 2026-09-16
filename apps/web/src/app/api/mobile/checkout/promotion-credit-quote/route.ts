@@ -3,7 +3,7 @@ import { apiJson, fromActionResult } from "@/app/api/mobile/_lib/response";
 import { logger } from "@abonten/core/logger";
 import { getPromotionCreditQuoteCore } from "@abonten/services/rewards/creditRedemptionCore";
 
-// GET /api/mobile/checkout/promotion-credit-quote?kind=event|place&checkoutId=…
+// GET /api/mobile/checkout/promotion-credit-quote?kind=event|place|spotlight&checkoutId=…
 // How much Abonten Credit the "Use credit" switch can apply to a pending
 // promotion checkout. Same service as the getPromotionCreditQuote action.
 export async function GET(req: Request) {
@@ -15,10 +15,13 @@ export async function GET(req: Request) {
     const kind = url.searchParams.get("kind");
     const checkoutId = url.searchParams.get("checkoutId");
 
-    if ((kind !== "event" && kind !== "place") || !checkoutId) {
+    if (
+      (kind !== "event" && kind !== "place" && kind !== "spotlight") ||
+      !checkoutId
+    ) {
       return apiJson({
         status: 400,
-        message: "kind (event | place) and checkoutId are required",
+        message: "kind (event | place | spotlight) and checkoutId are required",
       });
     }
 
