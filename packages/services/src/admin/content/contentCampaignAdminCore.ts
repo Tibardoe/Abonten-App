@@ -213,6 +213,19 @@ export async function campaignActionAdminCore(
     after: { status: newStatus },
     requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
   });
+  // A rejected promotion never ran: return the money now rather than
+  // leaving it for a second, separate refund step.
+  let refundNote: string | null = null;
+  if (newStatus === "rejected") {
+    const refund = await executeCampaignRefund(supabase, ctx, {
+      campaignId: input.campaignId,
+      reason: `Rejected: ${input.reason ?? ""}`.trim(),
+      requestMeta,
+    });
+    if (refund.status !== 200 && refund.status !== 409) {
+      refundNote = refund.message ?? "The automatic refund failed.";
+    }
+  }
   await notifyCampaign(supabase, {
     id: input.campaignId,
     advertiserId: before.advertiser_id,
@@ -223,9 +236,14 @@ export async function campaignActionAdminCore(
         : null,
   });
   const full = await getCampaignAdminCore(supabase, ctx, input.campaignId);
+  const message = refundNote
+    ? `Rejected, but the refund needs attention: ${refundNote}`
+    : newStatus === "rejected"
+      ? "Rejected and refunded."
+      : "Done.";
   return full.status === 200 && full.data
-    ? { status: 200, message: "Done.", data: full.data.campaign }
-    : { status: 200, message: "Done." };
+    ? { status: 200, message, data: full.data.campaign }
+    : { status: 200, message };
 }
 
 /**
@@ -246,7 +264,7 @@ export async function refundCampaignAdminCore(
   }
   const { data: campaign } = await supabase
     .from("content_campaign")
-    .select("id, status, version, advertiser_id, transaction_id, currency")
+    .select("id, version")
     .eq("id", input.campaignId)
     .maybeSingle();
   if (!campaign) return { status: 404, message: "Campaign not found." };
@@ -256,6 +274,29 @@ export async function refundCampaignAdminCore(
       message: "This campaign changed. Reload and try again.",
     };
   }
+  return executeCampaignRefund(supabase, ctx, {
+    campaignId: input.campaignId,
+    reason: input.reason,
+    requestMeta,
+  });
+}
+
+/**
+ * Records and requests the refund of whatever the ledger says is still
+ * refundable. Shared by the explicit refund action and by a rejection (a
+ * rejected promotion never ran, so it is returned in full straight away).
+ */
+async function executeCampaignRefund(
+  supabase: ServiceRoleClient,
+  ctx: AdminContext,
+  input: { campaignId: string; reason: string; requestMeta?: RequestMeta },
+): Promise<AdminEnvelope<{ refundedMinor: number }>> {
+  const { data: campaign } = await supabase
+    .from("content_campaign")
+    .select("id, advertiser_id, transaction_id")
+    .eq("id", input.campaignId)
+    .maybeSingle();
+  if (!campaign) return { status: 404, message: "Campaign not found." };
   const { data: refundable } = await supabase.rpc(
     "content_campaign_refundable_minor",
     {
@@ -329,7 +370,7 @@ export async function refundCampaignAdminCore(
     summary: `Refunded ${amount} pesewas of an unspent campaign budget`,
     reason: input.reason,
     after: { refunded_minor: amount, transaction_id: campaign.transaction_id },
-    requestMeta: { ...(requestMeta ?? {}), roles: ctx.roles },
+    requestMeta: { ...(input.requestMeta ?? {}), roles: ctx.roles },
   });
   await notifyCampaign(supabase, {
     id: input.campaignId,

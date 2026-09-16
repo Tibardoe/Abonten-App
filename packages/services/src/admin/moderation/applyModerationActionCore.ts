@@ -6,6 +6,7 @@ import type {
 } from "@abonten/types/adminTypes";
 import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
+import { notifyModeration } from "../../content/contentNotifyCore";
 import {
   type AdminEnvelope,
   assertPermission,
@@ -96,6 +97,31 @@ export async function applyModerationActionCore(
       replayed: result.idempotent_replay,
     },
   });
+
+  // Tell a Spotlight / Story author what happened to their post (once, not
+  // on a replay). Comments are not announced.
+  if (
+    !result.idempotent_replay &&
+    result.new_state &&
+    (input.targetType === "spotlight" || input.targetType === "story")
+  ) {
+    const { data: post } = await supabase
+      .from("content_post")
+      .select("id, kind, author_id")
+      .eq("id", input.targetId)
+      .maybeSingle();
+    if (post) {
+      await notifyModeration(
+        supabase,
+        {
+          id: post.id,
+          kind: post.kind as "spotlight" | "story",
+          authorId: post.author_id,
+        },
+        result.new_state,
+      );
+    }
+  }
 
   return {
     status: 200,

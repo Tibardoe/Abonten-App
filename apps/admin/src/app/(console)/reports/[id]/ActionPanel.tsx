@@ -28,6 +28,9 @@ const MODERATABLE: ReportTargetType[] = [
   "highlight",
   "message",
   "conversation",
+  "spotlight",
+  "story",
+  "content_comment",
 ];
 
 type Res = { status: number; message?: string };

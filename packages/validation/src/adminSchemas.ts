@@ -82,6 +82,9 @@ export const moderationActionSchema = z.object({
     "highlight",
     "message",
     "conversation",
+    "spotlight",
+    "story",
+    "content_comment",
   ]),
   targetId: z.string().uuid(),
   action: z.enum([

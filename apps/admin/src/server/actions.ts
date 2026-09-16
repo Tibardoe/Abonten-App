@@ -11,6 +11,11 @@ import { createSsrClient } from "@/lib/supabaseServer";
 import { cedisToCreditMinor } from "@abonten/core/rewards/creditAmount";
 import { adminError as toAdminEnvelope } from "@abonten/services/admin/adminContext";
 import { reviewClaimCore } from "@abonten/services/admin/claims/claimsAdminCore";
+import {
+  campaignActionAdminCore,
+  refundCampaignAdminCore,
+} from "@abonten/services/admin/content/contentCampaignAdminCore";
+import { updateContentSettingsCore } from "@abonten/services/admin/content/contentPlatformAdminCore";
 import { updateDiscoverySettingsCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
 import { exportCampaignStatsCsvCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
 import {
@@ -164,6 +169,11 @@ import {
   supportStatusSchema,
   verificationNoteSchema,
 } from "@abonten/validation/adminSchemas";
+import {
+  adminCampaignActionSchema,
+  adminCampaignRefundSchema,
+  contentSettingsSchema,
+} from "@abonten/validation/contentSchemas";
 import {
   fieldOpsAddMemberSchema,
   fieldOpsAdminCommissionReverseSchema,
@@ -1990,5 +2000,76 @@ export async function updateWeeklySettings(input: unknown) {
     return res;
   } catch (e) {
     return adminError(e, "updateWeeklySettings");
+  }
+}
+
+// ── Spotlight + Stories ─────────────────────────────────────
+// spotlight.configure and spotlight.campaigns.review are in
+// STEP_UP_PERMISSIONS; a refund also needs finance.refund.
+
+export async function updateContentSettings(input: unknown) {
+  const parsed = contentSettingsSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await updateContentSettingsCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/spotlight");
+      revalidatePath("/spotlight/settings");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "updateContentSettings");
+  }
+}
+
+export async function contentCampaignAction(input: unknown) {
+  const parsed = adminCampaignActionSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await campaignActionAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/spotlight/campaigns");
+      revalidatePath(`/spotlight/campaigns/${parsed.data.campaignId}`);
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "contentCampaignAction");
+  }
+}
+
+export async function refundContentCampaign(input: unknown) {
+  const parsed = adminCampaignRefundSchema.safeParse(input);
+  if (!parsed.success) return firstIssue(parsed.error);
+  try {
+    const ctx = await requireAdmin({ redirectOnFail: false });
+    assertStepUpFresh(ctx);
+    const res = await refundCampaignAdminCore(
+      svc(),
+      ctx,
+      parsed.data,
+      await currentRequestMeta(),
+    );
+    if (res.status === 200) {
+      revalidatePath("/spotlight/campaigns");
+      revalidatePath(`/spotlight/campaigns/${parsed.data.campaignId}`);
+      revalidatePath("/finance");
+    }
+    return res;
+  } catch (e) {
+    return adminError(e, "refundContentCampaign");
   }
 }
