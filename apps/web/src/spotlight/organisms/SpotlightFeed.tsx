@@ -208,7 +208,17 @@ export default function SpotlightFeed() {
   const scrollToIndex = useCallback((index: number) => {
     const root = scroller.current;
     const target = root?.querySelector<HTMLElement>(`[data-index="${index}"]`);
-    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!root || !target) return;
+    // Scroll only the feed pane: scrollIntoView also scrolls the window,
+    // which pushed the card's top (and its Sponsored label) under the
+    // header on every arrow key.
+    root.scrollTo({
+      top:
+        target.getBoundingClientRect().top -
+        root.getBoundingClientRect().top +
+        root.scrollTop,
+      behavior: "smooth",
+    });
   }, []);
 
   useEffect(() => {

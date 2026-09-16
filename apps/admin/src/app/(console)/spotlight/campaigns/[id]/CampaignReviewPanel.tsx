@@ -201,9 +201,9 @@ export function CampaignReviewPanel({
         </p>
       ) : null}
       <p className="text-xs text-muted-foreground">
-        Approve before the start date and it runs from the start date. Delivery
-        is billed by time run; the unused remainder of a cancelled or rejected
-        promotion is refundable.
+        Approve before the start date and it runs from the start date. Spend is
+        recognised only per delivered sponsored impression; the unused budget of
+        a completed, cancelled or rejected promotion is refundable.
       </p>
     </Card>
   );
