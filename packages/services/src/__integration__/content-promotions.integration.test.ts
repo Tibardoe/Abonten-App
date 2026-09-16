@@ -15,7 +15,10 @@ import {
   readPromotionPricing,
 } from "../content/campaigns/contentPromotionCore";
 import { getContentFeedCore } from "../content/contentFeedCore";
-import { createContentPostCore } from "../content/contentPostCore";
+import {
+  createContentPostCore,
+  deleteContentPostCore,
+} from "../content/contentPostCore";
 import { resetContentSettingsCache } from "../content/contentProgram";
 import { ingestContentViewsCore } from "../content/contentTelemetryCore";
 import { insertPlacePromotionCheckoutCore } from "../places/placePromotionCore";
@@ -994,6 +997,28 @@ describe("promotion checkout cancellation", () => {
     expect((await campaignRow(campaign.id)).status).toBe("cancelled");
     const again = await startCampaign(postId);
     expect(again.campaign.status).toBe("pending_payment");
+  });
+
+  it("cancels unpaid and running promotions when the Spotlight is deleted", async () => {
+    const unpaidPost = await publishPost();
+    const unpaid = await startCampaign(unpaidPost);
+    expect(
+      (await deleteContentPostCore(svc, organizer.id, unpaidPost)).status,
+    ).toBe(200);
+    expect((await campaignRow(unpaid.campaign.id)).status).toBe("cancelled");
+    const { data: checkout } = await svc
+      .from("content_campaign_checkout")
+      .select("status")
+      .eq("id", unpaid.checkout.id)
+      .single();
+    expect(must(checkout).status).toBe("cancelled");
+
+    const livePost = await publishPost();
+    const live = await liveCampaign(livePost);
+    expect(
+      (await deleteContentPostCore(svc, organizer.id, livePost)).status,
+    ).toBe(200);
+    expect((await campaignRow(live)).status).toBe("cancelled");
   });
 
   it("cancels a paid Spotlight promotion before or after approval, but not a finished one", async () => {

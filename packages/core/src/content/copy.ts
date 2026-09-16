@@ -114,7 +114,13 @@ export const CAMPAIGN_OBJECTIVES: readonly ContentCampaignObjective[] = [
 
 /** The CTA a post's attachment earns, based only on live entity state. */
 export function contentCtaLabel(post: {
-  event: { available: boolean; status: string; archived: boolean } | null;
+  event: {
+    available: boolean;
+    status: string;
+    archived: boolean;
+    ended?: boolean;
+    soldOut?: boolean;
+  } | null;
   place: { available: boolean; temporaryStatus: string | null } | null;
   publisher: { kind: "organizer" | "place" | "abonten" };
 }): { label: string; target: "event" | "place" | "profile" | null } {
@@ -122,8 +128,21 @@ export function contentCtaLabel(post: {
     if (post.event.status === "canceled") {
       return { label: "Event cancelled", target: null };
     }
-    if (!post.event.available) {
+    if (post.event.ended) {
       return { label: "Event has ended", target: null };
+    }
+    if (!post.event.available) {
+      // Older documents carry no `ended`; unavailable then meant ended.
+      return {
+        label:
+          post.event.ended === undefined
+            ? "Event has ended"
+            : "Event unavailable",
+        target: null,
+      };
+    }
+    if (post.event.soldOut) {
+      return { label: "Sold out", target: "event" };
     }
     return { label: "View event", target: "event" };
   }

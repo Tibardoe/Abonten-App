@@ -13,5 +13,7 @@ export async function recordContentShare(input: unknown) {
   const caller = await resolveContentCaller();
   const parsed = parseContentInput(contentShareSchema, input);
   if (parsed.error) return parsed.error;
-  return recordContentShareCore(caller.svc, caller.userId, parsed.data);
+  return recordContentShareCore(caller.svc, caller.userId, parsed.data, {
+    ip: await contentRequestIp(),
+  });
 }

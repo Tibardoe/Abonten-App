@@ -5,6 +5,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   createContentCommentCore,
   deleteContentCommentCore,
+  listContentCommentsCore,
+  recordContentShareCore,
+  setContentCommentLikeCore,
   setContentLikeCore,
   setContentReactionCore,
   setNotInterestedCore,
@@ -593,5 +596,281 @@ describe("moderation notices", () => {
     expect(
       (data ?? []).some((n) => (n.data as { postId?: string })?.postId === id),
     ).toBe(true);
+  });
+});
+
+describe("pre-merge hardening", () => {
+  it("hides comments from blocked people and when Spotlight is off, and guards comment likes", async () => {
+    const id = await publishPost("spotlight");
+    const c = await createContentCommentCore(svc, organizer.id, {
+      postId: id,
+      body: "Doors open at eight",
+    });
+    expect(c.status).toBe(200);
+    const commentId = must(c.data).id;
+
+    expect(
+      (await listContentCommentsCore(svc, viewer.id, { postId: id })).status,
+    ).toBe(200);
+
+    await svc
+      .from("conversation_block")
+      .insert({ blocker_id: organizer.id, blocked_id: viewer.id } as never);
+    try {
+      expect(
+        (await listContentCommentsCore(svc, viewer.id, { postId: id })).status,
+      ).toBe(404);
+      expect(
+        (
+          await setContentCommentLikeCore(svc, viewer.id, {
+            commentId,
+            liked: true,
+          })
+        ).status,
+      ).toBe(403);
+    } finally {
+      await svc
+        .from("conversation_block")
+        .delete()
+        .eq("blocker_id", organizer.id)
+        .eq("blocked_id", viewer.id);
+    }
+
+    expect(
+      (
+        await setContentCommentLikeCore(svc, viewer.id, {
+          commentId,
+          liked: true,
+        })
+      ).status,
+    ).toBe(200);
+    await svc
+      .from("content_post")
+      .update({ moderation_state: "removed" } as never)
+      .eq("id", id);
+    expect(
+      (
+        await setContentCommentLikeCore(svc, viewer.id, {
+          commentId,
+          liked: false,
+        })
+      ).status,
+    ).toBe(404);
+    await svc
+      .from("content_post")
+      .update({ moderation_state: "visible" } as never)
+      .eq("id", id);
+
+    await setSettings({ spotlight_enabled: false });
+    expect(
+      (await listContentCommentsCore(svc, stranger.id, { postId: id })).status,
+    ).toBe(403);
+  });
+
+  it("limits signed-out shares per network address", async () => {
+    await setSettings({ spotlight_audience: "all" });
+    const id = await publishPost("spotlight");
+    const ip = `203.0.113.${Math.floor(Math.random() * 200) + 20}`;
+    const results: number[] = [];
+    for (let i = 0; i < 11; i += 1) {
+      const res = await recordContentShareCore(
+        svc,
+        null,
+        { postId: id, channel: "copy_link" } as never,
+        { ip },
+      );
+      results.push(res.status);
+    }
+    expect(results.slice(0, 10).every((r) => r === 200)).toBe(true);
+    expect(results[10]).toBe(429);
+  });
+
+  it("tells the card an attached event is sold out or over", async () => {
+    const id = await publishPost("spotlight", { eventId });
+    const read = async () => {
+      const res = await getContentPostCore(svc, viewer.id, id);
+      expect(res.status).toBe(200);
+      return res.status === 200 ? res.data.post.event : null;
+    };
+    expect((await read())?.soldOut).toBe(false);
+
+    const { data: types } = await svc
+      .from("ticket_type")
+      .select("id, quantity")
+      .eq("event_id", eventId);
+    await svc
+      .from("ticket_type")
+      .update({ quantity: 0 } as never)
+      .eq("event_id", eventId);
+    const soldOut = await read();
+    expect(soldOut?.soldOut).toBe(true);
+    expect(soldOut?.available).toBe(true);
+    for (const t of types ?? []) {
+      await svc
+        .from("ticket_type")
+        .update({ quantity: t.quantity } as never)
+        .eq("id", t.id);
+    }
+
+    const { data: ev } = await svc
+      .from("event")
+      .select("starts_at, ends_at")
+      .eq("id", eventId)
+      .single();
+    const { data: occ } = await svc
+      .from("event_occurrence")
+      .select("id, starts_at, ends_at")
+      .eq("event_id", eventId);
+    const past = {
+      starts_at: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+      ends_at: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    };
+    await svc
+      .from("event")
+      .update(past as never)
+      .eq("id", eventId);
+    await svc
+      .from("event_occurrence")
+      .update(past as never)
+      .eq("event_id", eventId);
+    try {
+      const over = await read();
+      expect(over?.ended).toBe(true);
+      expect(over?.available).toBe(false);
+    } finally {
+      await svc
+        .from("event")
+        .update(must(ev) as never)
+        .eq("id", eventId);
+      for (const o of occ ?? []) {
+        await svc
+          .from("event_occurrence")
+          .update({ starts_at: o.starts_at, ends_at: o.ends_at } as never)
+          .eq("id", o.id);
+      }
+    }
+  });
+
+  it("keeps a Story visible until its database expiry and drops it the moment after", async () => {
+    const id = await publishPost("story");
+    await setFollowCore(svc, viewer.id, {
+      targetKind: "organizer",
+      targetId: organizer.id,
+      following: true,
+    });
+    await svc
+      .from("content_post")
+      .update({
+        expires_at: new Date(Date.now() + 5 * 60_000).toISOString(),
+      } as never)
+      .eq("id", id);
+    expect((await getContentPostCore(svc, viewer.id, id)).status).toBe(200);
+    let tray = must((await getStoryTrayCore(svc, viewer.id)).data);
+    expect(tray.entries.some((e) => e.storyIds.includes(id))).toBe(true);
+
+    await svc
+      .from("content_post")
+      .update({
+        expires_at: new Date(Date.now() - 1000).toISOString(),
+      } as never)
+      .eq("id", id);
+    expect((await getContentPostCore(svc, viewer.id, id)).status).toBe(410);
+    tray = must((await getStoryTrayCore(svc, viewer.id)).data);
+    expect(tray.entries.some((e) => e.storyIds.includes(id))).toBe(false);
+
+    // A suspended author's live Stories disappear too.
+    const live = await publishPost("story");
+    await svc
+      .from("user_info")
+      .update({ status_id: 2 } as never)
+      .eq("id", organizer.id);
+    try {
+      tray = must((await getStoryTrayCore(svc, viewer.id)).data);
+      expect(tray.entries.some((e) => e.storyIds.includes(live))).toBe(false);
+      expect((await getContentPostCore(svc, viewer.id, live)).status).not.toBe(
+        200,
+      );
+    } finally {
+      await svc
+        .from("user_info")
+        .update({ status_id: 1 } as never)
+        .eq("id", organizer.id);
+    }
+  });
+
+  it("keeps Follow separate from Notify me and from muting", async () => {
+    expect(
+      (
+        await setFollowCore(svc, viewer.id, {
+          targetKind: "organizer",
+          targetId: viewer.id,
+          following: true,
+        })
+      ).status,
+    ).toBe(400);
+
+    const countSubs = async () =>
+      (
+        await svc
+          .from("notification_subscription")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", viewer.id)
+      ).count;
+    const before = await countSubs();
+    const on = await setFollowCore(svc, viewer.id, {
+      targetKind: "organizer",
+      targetId: organizer.id,
+      following: true,
+    });
+    expect(must(on.data).following).toBe(true);
+    expect(await countSubs()).toBe(before);
+
+    await setStoryMuteCore(svc, viewer.id, {
+      publisherKind: "organizer",
+      publisherId: organizer.id,
+      muted: true,
+    });
+    const { data: still } = await svc
+      .from("follow")
+      .select("id")
+      .eq("follower_id", viewer.id)
+      .eq("target_id", organizer.id);
+    expect(still).toHaveLength(1);
+    await setStoryMuteCore(svc, viewer.id, {
+      publisherKind: "organizer",
+      publisherId: organizer.id,
+      muted: false,
+    });
+
+    // Suspended people can't follow, and nobody can follow a suspended one.
+    await svc
+      .from("user_info")
+      .update({ status_id: 2 } as never)
+      .eq("id", stranger.id);
+    try {
+      expect(
+        (
+          await setFollowCore(svc, stranger.id, {
+            targetKind: "organizer",
+            targetId: organizer.id,
+            following: true,
+          })
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await setFollowCore(svc, viewer.id, {
+            targetKind: "organizer",
+            targetId: stranger.id,
+            following: true,
+          })
+        ).status,
+      ).toBe(404);
+    } finally {
+      await svc
+        .from("user_info")
+        .update({ status_id: 1 } as never)
+        .eq("id", stranger.id);
+    }
   });
 });

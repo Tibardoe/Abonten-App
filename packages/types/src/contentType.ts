@@ -166,6 +166,10 @@ export type ContentEventSummary = {
   archived: boolean;
   /** Live and not yet ended: the CTA can say "View event". */
   available: boolean;
+  /** Every date is over. */
+  ended: boolean;
+  /** Capacity or ticket stock used up (same rule as the event page). */
+  soldOut: boolean;
 };
 
 export type ContentPlaceSummary = {

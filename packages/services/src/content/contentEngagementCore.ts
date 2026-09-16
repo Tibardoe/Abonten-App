@@ -253,6 +253,7 @@ export async function recordContentShareCore(
   supabase: ServiceRoleClient,
   userId: string | null,
   input: { postId: string; channel: ContentShareChannel },
+  context: { ip?: string | null } = {},
 ): Promise<Envelope<{ counts: ContentCounts }>> {
   const post = await livePost(supabase, input.postId);
   if (!post)
@@ -261,10 +262,21 @@ export async function recordContentShareCore(
   if (post.kind === "story" && !program.storiesSharing) {
     return { status: 403, message: "Sharing is turned off right now." };
   }
+  const { program: shareProgram } = await resolveContentAccess(
+    supabase,
+    userId,
+  );
+  if (
+    !(post.kind === "story" ? shareProgram.stories : shareProgram.spotlight)
+  ) {
+    return { status: 403, message: "Not available yet." };
+  }
+  // Signed-out shares are limited per network address as well as per post,
+  // so share counts (which feed Trending) can't be pumped from one place.
   const key = userId
     ? `content-share:${userId}`
-    : `content-share:anon:${input.postId}`;
-  if (!(await checkRateLimit(key, 60, 3600))) {
+    : `content-share:anon:${context.ip ?? "unknown"}:${input.postId}`;
+  if (!(await checkRateLimit(key, userId ? 60 : 10, 3600))) {
     return { status: 429, message: "Slow down a little." };
   }
   const { error } = await supabase
@@ -379,6 +391,13 @@ export async function listContentCommentsCore(
   const post = await livePost(supabase, input.postId);
   if (!post)
     return { status: 404, message: "This post is no longer available." };
+  const { program } = await resolveContentAccess(supabase, userId);
+  if (!(post.kind === "story" ? program.stories : program.spotlight)) {
+    return { status: 403, message: "Not available yet." };
+  }
+  if (userId && (await usersBlocked(supabase, userId, post.author_id))) {
+    return { status: 404, message: "This post is no longer available." };
+  }
   const cursor = decodeCursor<{ createdAt: string; id: string }>(input.cursor);
   let query = supabase
     .from("content_comment")
@@ -566,11 +585,27 @@ export async function setContentCommentLikeCore(
   }
   const { data: comment } = await supabase
     .from("content_comment")
-    .select("id, status, author_id")
+    .select("id, status, moderation_state, author_id, post_id")
     .eq("id", input.commentId)
     .maybeSingle();
-  if (!comment || comment.status !== "visible") {
+  if (
+    !comment ||
+    comment.status !== "visible" ||
+    !["visible", "restricted"].includes(comment.moderation_state)
+  ) {
     return { status: 404, message: "Comment not found." };
+  }
+  // Same rules as liking the post: live, available, nobody blocked.
+  const g = await guard(supabase, userId, comment.post_id);
+  if (!("post" in g)) return g;
+  if (
+    comment.author_id !== userId &&
+    (await usersBlocked(supabase, userId, comment.author_id))
+  ) {
+    return { status: 403, message: "You can't interact with this comment." };
+  }
+  if (!(await checkRateLimit(`content-comment-like:${userId}`, 300, 3600))) {
+    return { status: 429, message: "Slow down a little." };
   }
   if (input.liked) {
     const { error } = await supabase

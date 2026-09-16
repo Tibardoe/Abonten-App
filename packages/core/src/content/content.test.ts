@@ -283,4 +283,36 @@ describe("cta", () => {
       target: "profile",
     });
   });
+  it("follows the event's live state: ended, hidden, sold out", () => {
+    const base = post("x");
+    const event = {
+      available: true,
+      status: "published",
+      archived: false,
+      ended: false,
+      soldOut: false,
+    };
+    expect(contentCtaLabel({ ...base, event })).toEqual({
+      label: "View event",
+      target: "event",
+    });
+    expect(
+      contentCtaLabel({ ...base, event: { ...event, soldOut: true } }),
+    ).toEqual({ label: "Sold out", target: "event" });
+    expect(
+      contentCtaLabel({
+        ...base,
+        event: { ...event, available: false, ended: true, soldOut: true },
+      }),
+    ).toEqual({ label: "Event has ended", target: null });
+    expect(
+      contentCtaLabel({ ...base, event: { ...event, available: false } }),
+    ).toEqual({ label: "Event unavailable", target: null });
+    expect(
+      contentCtaLabel({
+        ...base,
+        event: { ...event, status: "canceled", available: false },
+      }),
+    ).toEqual({ label: "Event cancelled", target: null });
+  });
 });

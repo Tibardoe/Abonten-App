@@ -19,6 +19,7 @@ import type {
   UpdateContentPostInput,
 } from "@abonten/validation/contentSchemas";
 import { v2 as cloudinary } from "cloudinary";
+import { hasOpenPaymentAttempt } from "../payments/paymentAttempt";
 import { confirmPendingRenditionsCore } from "./contentMediaCore";
 import { resolveContentAccess } from "./contentProgram";
 import {
@@ -283,6 +284,41 @@ export async function deleteContentPostCore(
       p_actor_id: userId,
       p_actor_kind: "advertiser",
       p_reason: "Spotlight deleted by its author",
+    });
+  }
+
+  // An unpaid order for this post is cancelled too, unless a payment is in
+  // flight: cancelling then could strand a real charge, so that one is left
+  // to finish and reaches review, where staff reject it with a full refund.
+  const { data: unpaid } = await supabase
+    .from("content_campaign")
+    .select("id, checkout_id")
+    .eq("post_id", postId)
+    .in("status", ["draft", "pending_payment"]);
+  for (const c of unpaid ?? []) {
+    if (
+      c.checkout_id &&
+      (await hasOpenPaymentAttempt(
+        supabase,
+        "content_campaign_checkout_id",
+        c.checkout_id,
+      ))
+    ) {
+      continue;
+    }
+    if (c.checkout_id) {
+      await supabase
+        .from("content_campaign_checkout")
+        .update({ status: "cancelled" })
+        .eq("id", c.checkout_id)
+        .eq("status", "pending");
+    }
+    await supabase.rpc("content_campaign_transition", {
+      p_campaign_id: c.id,
+      p_to: "cancelled",
+      p_actor_id: userId,
+      p_actor_kind: "advertiser",
+      p_reason: "Spotlight deleted before payment",
     });
   }
 

@@ -11,6 +11,7 @@ export async function POST(req: Request) {
       label: "POST /content/share",
       allowAnonymous: true,
     },
-    ({ svc, userId, data, ip }) => recordContentShareCore(svc, userId, data),
+    ({ svc, userId, data, ip }) =>
+      recordContentShareCore(svc, userId, data, { ip }),
   );
 }
