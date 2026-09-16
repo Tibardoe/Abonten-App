@@ -20,6 +20,7 @@ import { useGetUserLocation } from "@/hooks/useUserLocation";
 import { MessagesNavLink } from "@/messaging/components/MessagesNavLink";
 import RewardsNavLink from "@/rewards/atoms/RewardsNavLink";
 import { signOut } from "@/services/authService";
+import SpotlightNavLink from "@/spotlight/atoms/SpotlightNavLink";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { logger } from "@abonten/core/logger";
@@ -171,6 +172,8 @@ export default function Header() {
               />
 
               <EventUploadButton />
+
+              <SpotlightNavLink />
 
               <RewardsNavLink />
 

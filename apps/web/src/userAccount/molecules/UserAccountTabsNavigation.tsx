@@ -1,5 +1,6 @@
 "use client";
 
+import { useContentProgram } from "@/spotlight/hooks/useContentProgram";
 import { usePathname } from "next/navigation";
 import UserAccountTabsNavButton from "../atoms/UserAccountTabsNavButton";
 
@@ -17,6 +18,7 @@ export default function UserAccountTabsNavigation({
   const username = parts[2]; // "Tibardoe"
 
   const isCurrentUser = username === ownUsername;
+  const { program } = useContentProgram();
 
   return (
     <div className="w-full flex justify-center items-center border-t border-border">
@@ -37,6 +39,14 @@ export default function UserAccountTabsNavigation({
           text="Places"
           username={username}
         />
+
+        {program.spotlight ? (
+          <UserAccountTabsNavButton
+            imgUrl="/assets/images/posts.svg"
+            text="Spotlight"
+            username={username}
+          />
+        ) : null}
 
         {isCurrentUser && (
           <UserAccountTabsNavButton

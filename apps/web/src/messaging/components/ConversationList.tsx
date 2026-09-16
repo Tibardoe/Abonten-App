@@ -21,6 +21,7 @@ import {
   useInboxPrefs,
 } from "@/messaging/hooks/useInboxPrefs";
 import { useOpenConversation } from "@/messaging/hooks/useOpenConversation";
+import StoriesRow from "@/spotlight/organisms/StoriesRow";
 import type { ConversationRoleScope } from "@abonten/types/messagingType";
 import {
   Archive,
@@ -117,6 +118,9 @@ export function ConversationList({ activeId }: { activeId?: string }) {
           {archived ? "Archived" : "Messages"}
         </h1>
       </div>
+
+      {/* Stories (renders nothing while Stories is off for this visitor) */}
+      {!archived ? <StoriesRow className="border-b" /> : null}
 
       {/* Search */}
       <div className="border-b p-2">
