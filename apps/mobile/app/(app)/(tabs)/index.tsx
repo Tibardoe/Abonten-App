@@ -302,7 +302,7 @@ export default function Explore() {
   // they always sit a deliberate distance below the Spotlight (they used to
   // butt straight onto the banner) and the curated rows keep their own.
   const listHeader = (
-    <View className="pt-3">
+    <View>
       <DiscoveryHero
         tab={tab}
         featuredEvents={eventSliders.data.featured}

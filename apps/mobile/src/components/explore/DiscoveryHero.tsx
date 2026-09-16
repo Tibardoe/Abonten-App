@@ -1,37 +1,24 @@
-import {
-  EventSpotlightCard,
-  PlaceSpotlightCard,
-  WeeklySpotlightCard,
-} from "@/components/explore/spotlight/SpotlightCards";
-import { SpotlightCarousel } from "@/components/explore/spotlight/SpotlightCarousel";
+import { FeaturedBanner } from "@/components/explore/FeaturedBanner";
+import { WeeklyTeaserCard } from "@/components/weekly/WeeklyTeaserCard";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
-import { logPlacePromotionImpression } from "@/features/places/placeEngagement";
 import { useWeeklyProgram, useWeeklyTeaser } from "@/features/weekly/useWeekly";
-import {
-  buildSpotlightSlides,
-  spotlightHeight,
-} from "@abonten/core/discovery/spotlight";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
 import { Skeleton } from "@abonten/ui-native";
-import { useCallback, useMemo, useRef } from "react";
 import { View, useWindowDimensions } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
 
-// The ONE promotional slot at the top of Explore: the Spotlight.
+// The promotional slots at the top of Explore:
 //
-// It used to be two heroes — a 380–480px Abonten Weekly banner and, under
-// it, the Featured listings demoted to a 196px peeking row (too small for
-// content businesses pay to promote), each with its own rotation and its own
-// indicator. Now the Weekly edition and the tab's Featured listings are
-// slides of a single carousel: one height, one indicator, one rotation, and
-// every paid slide full size with its disclosure pill. Which slides appear,
-// in what order and how many is decided by @abonten/core/discovery/spotlight.
+//   • the Abonten Weekly banner, when this week's edition is out for the
+//     area (editorial, rotating through the edition's picks), then
+//   • the Featured banner for the current tab — paid events or places shown
+//     the same way the Weekly banner shows its picks (FeaturedBanner reuses
+//     WeeklyBanner), full size with its disclosure.
 //
 // Featured content is independent of the filter sheet: it is a paid
 // placement, not a search result, so a filter that matches nothing must not
-// remove it. While the Weekly teaser is still loading the slot reserves its
-// height, so the feed does not jump when the edition lands.
+// remove it. The Weekly slot reserves its height while the teaser is still
+// loading, so the feed does not jump when the banner lands.
 
 export function DiscoveryHero({
   tab,
@@ -43,7 +30,6 @@ export function DiscoveryHero({
   featuredPlaces: PlaceType[];
 }) {
   const { width } = useWindowDimensions();
-  const height = spotlightHeight(width);
   const { location } = useExploreLocation();
   const { program } = useWeeklyProgram();
   const teaserQ = useWeeklyTeaser(
@@ -51,68 +37,29 @@ export function DiscoveryHero({
     program.teaser && !!location,
   );
   const weeklyPending = program.teaser && !!location && teaserQ.isPending;
-  const weekly = program.teaser ? (teaserQ.data ?? null) : null;
-
-  const slides = useMemo(
-    () =>
-      buildSpotlightSlides({
-        tab,
-        weekly,
-        featuredEvents,
-        featuredPlaces,
-      }),
-    [tab, weekly, featuredEvents, featuredPlaces],
-  );
-
-  // A sponsored place counts one impression when its slide is actually on
-  // screen (not merely loaded into the carousel), once per mount.
-  const counted = useRef(new Set<string>());
-  const onSlideVisible = useCallback((slide: (typeof slides)[number]) => {
-    if (slide.kind !== "place" || counted.current.has(slide.place.id)) return;
-    counted.current.add(slide.place.id);
-    logPlacePromotionImpression(slide.place.id);
-  }, []);
-
-  if (weeklyPending) {
-    return (
-      <View className="px-4">
-        <Skeleton height={height} radius={24} />
-      </View>
-    );
-  }
-
-  if (slides.length === 0) return null;
 
   return (
-    <Animated.View entering={FadeIn.duration(220)}>
-      <SpotlightCarousel
-        // A new tab is a new set of slides: start from the first one.
+    <View>
+      {weeklyPending ? (
+        // Same footprint the Weekly banner will take (see WeeklyTeaserCard's
+        // height rule), so the rest of the feed does not move when it lands.
+        <View className="mb-2 mt-3 px-4">
+          <Skeleton
+            height={Math.round(Math.min(Math.max(width * 1.02, 380), 480))}
+            radius={24}
+          />
+        </View>
+      ) : (
+        <WeeklyTeaserCard />
+      )}
+
+      <FeaturedBanner
+        // A new tab is a new set of listings: start from the first one.
         key={tab}
-        slides={slides}
-        height={height}
-        onSlideVisible={onSlideVisible}
-        renderSlide={(slide, { index, count }) =>
-          slide.kind === "weekly" ? (
-            <WeeklySpotlightCard
-              teaser={slide.weekly}
-              index={index}
-              count={count}
-            />
-          ) : slide.kind === "event" ? (
-            <EventSpotlightCard
-              event={slide.event}
-              index={index}
-              count={count}
-            />
-          ) : (
-            <PlaceSpotlightCard
-              place={slide.place}
-              index={index}
-              count={count}
-            />
-          )
-        }
+        kind={tab}
+        events={featuredEvents}
+        places={featuredPlaces}
       />
-    </Animated.View>
+    </View>
   );
 }

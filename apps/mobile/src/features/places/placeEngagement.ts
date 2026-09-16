@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabase";
 // fire-and-forget write: it never blocks rendering and a failure is ignored.
 //
 // Only `promotion_impression` is sent from the app so far: a Featured
-// (sponsored) place shown in the Explore Spotlight, counted once per place
-// per time the Spotlight is mounted — the same rule as the web
+// (sponsored) place shown in the Explore Featured banner, counted once per place
+// per time the banner is mounted — the same rule as the web
 // FeaturedPlacesSlider, so owners see comparable numbers from both.
 export function logPlacePromotionImpression(placeId: string): void {
   void supabase

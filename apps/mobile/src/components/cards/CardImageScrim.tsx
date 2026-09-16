@@ -2,7 +2,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 // Bottom-weighted dark gradient over a card's cover photo, so a price /
 // rating pill and any overlaid text stay legible on light images. Same
-// technique as the Explore Spotlight's scrim (react-native-svg — already a
+// technique as the Explore banners' scrim (react-native-svg — already a
 // dependency), pulled out so EventCard and PlaceCard share one definition.
 
 const INK = "#0b1116";
