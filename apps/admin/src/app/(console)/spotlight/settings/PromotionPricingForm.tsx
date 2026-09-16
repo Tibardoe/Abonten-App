@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, cn } from "@/components/ui";
+import { formatAccraDateTime } from "@/lib/format";
 import { updatePromotionPricing } from "@/server/actions";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
 import { formatReachRange } from "@abonten/core/content/promotionEstimate";
@@ -205,7 +206,7 @@ export function PromotionPricingForm({
           <p className="text-muted-foreground">Measured</p>
           <p className="font-semibold">
             {audience.computedAt
-              ? `${new Date(audience.computedAt).toLocaleString()} · ${audience.daysObserved} days`
+              ? `${formatAccraDateTime(audience.computedAt)} · ${audience.daysObserved} days`
               : "Not yet"}
           </p>
         </div>
