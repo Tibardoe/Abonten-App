@@ -1,5 +1,6 @@
 import { useSession } from "@/auth/SessionProvider";
 import { AppHeader } from "@/components/app/AppHeader";
+import { StoriesRow } from "@/components/content/StoriesRow";
 import { AddFilterSheet } from "@/components/messaging/AddFilterSheet";
 import { ArchivedEntryRow } from "@/components/messaging/ArchivedEntryRow";
 import {
@@ -206,9 +207,12 @@ export default function Messages() {
         renderItem={renderRow}
         ListHeaderComponent={
           searching || filtered ? null : (
-            <ArchivedEntryRow
-              onPress={() => router.push("/(app)/messages/archived")}
-            />
+            <>
+              <StoriesRow />
+              <ArchivedEntryRow
+                onPress={() => router.push("/(app)/messages/archived")}
+              />
+            </>
           )
         }
         contentContainerClassName="pb-16"

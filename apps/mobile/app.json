@@ -11,16 +11,12 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.abonten.app",
       "appleTeamId": "KDDBR5P4D6",
-      "associatedDomains": [
-        "applinks:abontenhub.com"
-      ],
+      "associatedDomains": ["applinks:abontenhub.com"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -56,12 +52,19 @@
               "scheme": "https",
               "host": "abontenhub.com",
               "pathPrefix": "/weekly"
+            },
+            {
+              "scheme": "https",
+              "host": "abontenhub.com",
+              "pathPrefix": "/spotlight"
+            },
+            {
+              "scheme": "https",
+              "host": "abontenhub.com",
+              "pathPrefix": "/stories"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },

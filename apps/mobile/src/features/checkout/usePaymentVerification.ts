@@ -15,7 +15,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // races the webhook safely behind a CAS lock) and `api.payments.retry`
 // (re-run fulfilment, NEVER re-charges — this is what "Check again" calls).
 
-export type PaymentKind = "ticket" | "event_promotion" | "place_promotion";
+export type PaymentKind =
+  | "ticket"
+  | "event_promotion"
+  | "place_promotion"
+  | "spotlight_promotion";
 
 export type PaymentVerifyState =
   | { status: "verifying"; note?: string }
@@ -49,6 +53,8 @@ const PENDING_NOTE: Record<PaymentKind, string> = {
     "Your payment is still being confirmed. This usually clears within a minute.",
   place_promotion:
     "Your payment is still being confirmed. This usually clears within a minute.",
+  spotlight_promotion:
+    "Your payment is still being confirmed. This usually clears within a minute.",
 };
 
 const FULFILMENT_NOTE: Record<PaymentKind, string> = {
@@ -58,6 +64,8 @@ const FULFILMENT_NOTE: Record<PaymentKind, string> = {
     "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
   place_promotion:
     "Your payment went through, but the promotion isn't active yet. Retry now — you won't be charged again.",
+  spotlight_promotion:
+    "Your payment went through, but the promotion hasn't reached review yet. Retry now — you won't be charged again.",
 };
 
 export function usePaymentVerification(params: PaymentVerificationParams) {

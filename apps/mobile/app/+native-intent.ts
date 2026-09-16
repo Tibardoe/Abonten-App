@@ -87,6 +87,21 @@ export async function redirectSystemPath({
       }
       return "/(app)/weekly";
     }
+    // Spotlight and Stories: /spotlight, /spotlight/<post id>, /stories/<post id>.
+    // Ids are checked by shape only; the screens ask the API, which applies
+    // the programme switch, moderation and blocks.
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (parts[0] === "spotlight") {
+      const id = parts[1] ? decodeURIComponent(parts[1]) : null;
+      return id && uuid.test(id)
+        ? `/(app)/spotlight/${id}`
+        : "/(app)/spotlight";
+    }
+    if (parts[0] === "stories" && parts[1]) {
+      const id = decodeURIComponent(parts[1]);
+      return uuid.test(id) ? `/(app)/story/${id}` : "/(app)/(tabs)/messages";
+    }
     // Conversation deep links (notification tap / cross-device). The segment
     // is already a conversation id — no lookup needed; RLS gates the screen.
     if (parts[0] === "messages") {

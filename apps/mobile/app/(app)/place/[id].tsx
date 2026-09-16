@@ -7,6 +7,8 @@ import { ReportSheet } from "@/components/ReportSheet";
 import { PlacePromptHost } from "@/components/alerts/PlacePromptHost";
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { AppHeader } from "@/components/app/AppHeader";
+import { FollowButton } from "@/components/content/FollowButton";
+import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlightStrip";
 import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
@@ -229,6 +231,12 @@ export default function PlaceDetailScreen() {
       backFallback="/(app)"
       rightAccessory={
         <View className="flex-row items-center gap-1">
+          <FollowButton
+            kind="place"
+            targetId={place?.id}
+            ownerId={place?.owner_id}
+            label={place?.name ?? "this place"}
+          />
           <SubscribeBell
             kind="place"
             targetId={place?.id}
@@ -703,6 +711,12 @@ export default function PlaceDetailScreen() {
               <PhotoGallery photos={place.photos} />
             </View>
           ) : null}
+
+          <PublisherSpotlightStrip
+            publisherKind="place"
+            publisherId={place.id}
+            className="-mx-4"
+          />
 
           {/* Reviews */}
           <View className="gap-3">

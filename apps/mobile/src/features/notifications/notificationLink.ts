@@ -18,6 +18,12 @@ const LINK_RULES: [RegExp, (id: string) => string][] = [
   [/^\/manage\/events\/([^/?#]+)/, (id) => `/(app)/organizer/events/${id}`],
   [/^\/manage\/places\/([^/?#]+)/, (id) => `/(app)/organizer/places/${id}`],
   [/^\/messages\/([^/?#]+)/, (id) => `/(app)/messages/${id}`],
+  [
+    /^\/manage\/spotlight\/campaigns\/([^/?#]+)/,
+    (id) => `/(app)/spotlight/campaign/${id}`,
+  ],
+  [/^\/spotlight\/([^/?#]+)/, (id) => `/(app)/spotlight/${id}`],
+  [/^\/stories\/([^/?#]+)/, (id) => `/(app)/story/${id}`],
   [/^\/events?\/([^/?#]+)/, (id) => `/(app)/event/${id}`],
   // NOTE: no rule for /places/:slug — the native place route is keyed by id,
   // not slug, so a bare slug link can't be routed. New notifications carry
@@ -29,6 +35,8 @@ export function notificationHref(
 ): string | null {
   if (!link) return null;
   if (link === "/settings/edit-profile") return "/(app)/settings/edit-profile";
+  if (link === "/manage/spotlight") return "/(app)/spotlight/manage";
+  if (link === "/spotlight") return "/(app)/spotlight";
   for (const [pattern, build] of LINK_RULES) {
     const match = link.match(pattern);
     if (match) return build(match[1]);
@@ -89,6 +97,17 @@ function targetFromData(
       return data.placeId
         ? `/(app)/organizer/places/${data.placeId}/verification`
         : "/(app)/organizer/verification";
+    case "spotlight":
+      return data.postId ? `/(app)/spotlight/${data.postId}` : null;
+    case "story":
+      return data.postId ? `/(app)/story/${data.postId}` : null;
+    case "content_campaign":
+      return data.campaignId
+        ? `/(app)/spotlight/campaign/${data.campaignId}`
+        : "/(app)/spotlight/manage?tab=campaigns";
+    case "follow":
+      // "Someone followed you": nothing specific to open.
+      return null;
     case "recommendation":
       // One pick opens it; several open the For-you list.
       if (data.eventId) return `/(app)/event/${data.eventId}`;

@@ -129,7 +129,9 @@ export default function PaymentVerificationScreen() {
             <AppText variant="muted" className="text-center">
               {p.kind === "ticket"
                 ? "Your ticket is confirmed and ready in Tickets."
-                : "Your listing is now featured."}
+                : p.kind === "spotlight_promotion"
+                  ? "Your promotion is waiting for review. If it isn't approved, you're refunded in full."
+                  : "Your listing is now featured."}
             </AppText>
             <Button
               title={p.successCtaLabel ?? "View my tickets"}

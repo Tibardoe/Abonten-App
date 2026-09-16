@@ -1562,7 +1562,10 @@ export type SubmitReportBody = {
     | "organizer"
     | "highlight"
     | "message"
-    | "conversation";
+    | "conversation"
+    | "spotlight"
+    | "story"
+    | "content_comment";
   targetId: string;
   category:
     | "spam"

@@ -49,6 +49,14 @@ function StackHost() {
         // would fire mid-trim. Dismiss is the X button / hardware back.
         options={{ animation: "slide_from_bottom", gestureEnabled: false }}
       />
+      <Stack.Screen
+        name="spotlight/new"
+        // The trim bar has edge-adjacent handles; see highlight/new.
+        options={{ animation: "slide_from_bottom", gestureEnabled: false }}
+      />
+      <Stack.Screen name="spotlight/index" options={{ animation: "fade" }} />
+      <Stack.Screen name="spotlight/[id]" options={{ animation: "fade" }} />
+      <Stack.Screen name="story/[id]" options={{ animation: "fade" }} />
       <Stack.Screen name="buy/[eventId]" />
       <Stack.Screen
         name="checkout/[sessionId]"
