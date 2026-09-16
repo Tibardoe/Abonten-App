@@ -47,6 +47,13 @@ All jobs are Postgres `pg_cron` schedules created in `supabase/migrations/` unle
 | `recommendations-purge` | 03:40 | `recommendations_purge()` | Delete picks after 90 days, digests after 180, skip records after 30 | Tables grow; retention promise broken |
 | `weekly-publish-due` | */5 min | `weekly_publish_due()` | Publish scheduled Abonten Weekly editions whose time has come; one that fails its checks stays scheduled and opens an incident | Scheduled editions never go out; `weekly` health check down after 15 minutes |
 | `weekly-housekeeping` | 02:45 | `weekly_housekeeping()` | Remove edition listings whose event or place was deleted; archive editions older than `edition_retention_weeks` (104) | Orphan rows (hidden from readers anyway); old editions stay unarchived |
+| `content-stats-rollup` | :20 hourly | `content_rollup_stats(20000)` | Fold valid Spotlight/Story views and clicks into `content_post_daily_stat` | Creator insights and the admin overview stop moving (raw events are kept) |
+| `content-trending-refresh` | :25 hourly | `content_trending_refresh()` | Recompute `trending_score` over the trending window | Trending tab goes stale |
+| `content-housekeeping` | 03:50 | `content_housekeeping()` | Archive ended Stories, apply retention to deleted posts and raw views, queue unused uploads for Cloudinary deletion | Tables and Cloudinary storage grow; retention promise broken |
+| `content-campaign-tick` | */10 min | `content_campaign_tick()` | Start scheduled promotions, accrue spend by time run, pause promotions whose post is no longer live, complete ended ones | Promotions never start or end; delivered amounts stop moving |
+| `expire-stale-content-campaign-checkouts` | */5 min | `expire_stale_content_campaign_checkouts()` | Expire unpaid promotion checkouts after 30 minutes (skips a live payment attempt) and return the campaign to draft | Stale checkouts block a new promotion on the same post |
+| `content-attribute-conversions` | :35 hourly | `content_attribute_conversions()` | Credit ticket purchases to a promoted post tapped within 7 days | Conversion counts stop |
+| `content-campaign-reconcile` | :10, :40 | `content_campaign_reconcile()` | Promotion ledger vs paid/delivered/refunded amounts, live-without-payment, missing transaction → critical incidents | Money drift goes unnoticed |
 | `cleanupExpiredEvents` | 00:00 | `net.http_get` → edge function `delete-expired-events` → `archive_or_delete_expired_event` | Archive/delete ended events; destroy flyers of hard-deleted ones | Ended events linger (harmless); **SEC-004: the service-role JWT is inline in this cron command — move to Vault (roadmap)** |
 
 ## Operating notes

@@ -44,6 +44,16 @@ Four keys, deliberately separated so triaging a queue does not hand every admin 
 
 super_admin holds all four by rule. Detail: [trust-and-verification.md](trust-and-verification.md); who *should* hold them is decision V2.
 
+### Spotlight & Stories permissions
+
+| Permission | Allows | Seeded roles |
+|---|---|---|
+| `spotlight.view` | The module: overview, posts, comments, promotions, settings (read) | operations, moderator, finance_admin, support_admin, analyst |
+| `spotlight.campaigns.review` | Approve, reject (refunds in full), pause, resume, cancel promotions; with `finance.refund`, refund a cancelled promotion — in `STEP_UP_PERMISSIONS` | operations, finance_admin |
+| `spotlight.configure` | Programme settings — in `STEP_UP_PERMISSIONS` | operations |
+
+Moderating posts and comments uses `moderation.*`. Detail: [spotlight-and-stories.md](spotlight-and-stories.md).
+
 ### Abonten Weekly permissions
 
 | Key | Grants | Seeded to |
@@ -106,6 +116,9 @@ Detail: [weekly-highlights.md](weekly-highlights.md).
 | `fieldops_payout_item` | self | none | none | none |
 | `fieldops_program_setting`, `fieldops_commission_rule`, `fieldops_job_run`, `fieldops_payout_batch` | deny-all policy | — | — | — |
 | `weekly_program_setting`, `weekly_scope`, `weekly_edition`, `weekly_section`, `weekly_item` | none (RLS on, no policy, no client grants) | service role | service role | service role |
+| `content_post`, `content_media`, `content_comment` | live rows (RLS `content_post_is_public`) and own rows | service role | service role | service role |
+| `follow`, `content_like`, `content_reaction`, `content_save`, `content_not_interested`, `content_mute`, `content_story_seen`, `content_comment_like` | own rows | service role | service role | service role |
+| `content_program_setting`, `content_view`, `content_click`, `content_share`, `content_post_daily_stat`, `content_campaign*` | none | service role | service role (ledger: none) | service role (ledger: none) |
 | `admin_*`, `admin_audit_log`, `rate_limit_bucket`, `phone_otp_*`, `app_error_*`, `app_request_metric`, `health_check_result`, `incident`, `observability_config`, `notification_delivery*` | service role only | service role | (audit log: none) | (audit log: none) |
 
 Partitioned tables (`favorite`, `payment_method`, `review`, `user_image_history`, `wallet`, `event_media`, `story`, `event_share`, `media_audit`) inherit their parent's policies; leaves have none of their own.

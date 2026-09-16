@@ -16,6 +16,14 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-16 — Spotlight & Stories
+
+- **New — Spotlight, Stories, follows and promoted Spotlights (switched off)**: architecture [architecture/spotlight-and-stories.md](../architecture/spotlight-and-stories.md) (1.0), operator handbook [admin/spotlight.md](../admin/spotlight.md) (1.0), pre-implementation report [audit/spotlight-stories-pre-implementation-report.md](../audit/spotlight-stories-pre-implementation-report.md).
+- **Updated**: scheduled-jobs (seven content jobs), secrets-and-environment (`SPOTLIGHT_KILL_SWITCH`, `STORIES_KILL_SWITCH`), rollback-and-recovery, feature-inventory, data-model-overview, roles-and-permissions (`spotlight.*`), admin README.
+- **Registers**: legal F5 (user content) and G4 (promoted content); operational S1–S4 (rollout, prices, cancellation refunds, limits).
+- **Fix — staff moderation of messages and conversations**: `moderation_action` refused the `message` and `conversation` targets that `apply_moderation_action` accepts, so every such action failed. Widened with the new content targets (migration `20260916120400`, applied to production).
+- **Fix — advertisers could resume a promotion staff had paused** through the API, and a paused promotion could resume on a hidden post; the transition now checks both (migration `20260916120500`, applied to production).
+
 ## 2026-09-16 — Mobile: iOS TestFlight QA round 2
 
 - **Fix — maps stopped responding after opening a detail screen (iOS)**: the event/place mini map set `pointerEvents="none"` on the MapView. Native views are recycled on the new architecture; react-native-maps resets its cached props on reuse, so the recycled view kept `userInteractionEnabled = NO` and the next Explore map or "Choose on map" picker drew but ignored every touch. The mini map is now `StaticMapPreview` (touch blocking on a wrapper view only; tap opens directions).

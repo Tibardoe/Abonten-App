@@ -40,6 +40,8 @@ complianceReviewRequired: no
 | `RECOMMENDATION_EMAIL_KILL_SWITCH` | flag | Stops recommendation email only: no opt-in, queued emails skipped | follows `discovery_program_setting.recommendations_email_enabled` (legal item G1) |
 | `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY` | public / **secret** | VAPID key pair browsers subscribe with and pushes are signed with. Generate once (`npx web-push generate-vapid-keys`); rotating the pair invalidates every browser subscription | browser notifications hidden, nothing sent |
 | `WEB_PUSH_SUBJECT` | config | Contact push services can reach (`mailto:` or `https:` URL) | browser notifications hidden, nothing sent |
+| `SPOTLIGHT_KILL_SWITCH` | flag | Spotlight emergency stop: feeds, posting, promotions and links report it off on web and mobile | Spotlight follows `content_program_setting` |
+| `STORIES_KILL_SWITCH` | flag | Stories emergency stop: the Stories row, viewer and posting report it off | Stories follow `content_program_setting` |
 | `WEEKLY_KILL_SWITCH` | flag | Abonten Weekly emergency stop: pages show the fallback, teaser and links hidden, mobile API reports it off | Abonten Weekly follows `weekly_program_setting` |
 | `EXPO_ACCESS_TOKEN` | secret | Expo push API auth (optional) | pushes may be rate-limited |
 | `NEXT_PUBLIC_APP_VERSION`, `NEXT_PUBLIC_VERCEL_ENV`, `VERCEL*`, `NODE_ENV`, `CI` | platform | Tagging | — |

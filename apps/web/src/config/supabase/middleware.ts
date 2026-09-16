@@ -56,6 +56,10 @@ export async function updateSession(request: NextRequest) {
     // Abonten Weekly editions and preview links. Visibility is decided by
     // the programme switch in @abonten/services, not by signing in.
     pathname.startsWith("/weekly") ||
+    // Shared Spotlight / Story links: the pages check the programme
+    // audience themselves, so signed-out visitors see them once it is "all".
+    pathname.startsWith("/spotlight") ||
+    pathname.startsWith("/stories/") ||
     pathname.startsWith("/auth") ||
     // Friend invite landing (Abonten Rewards) -- for people who aren't
     // signed up yet.

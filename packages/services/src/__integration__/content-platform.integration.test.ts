@@ -691,6 +691,55 @@ describe("campaign money path", () => {
       .eq("id", campaign.id)
       .single());
 
+    // A pause by staff can't be lifted by the advertiser.
+    const staffPause = await svc.rpc("content_campaign_transition", {
+      p_campaign_id: campaign.id,
+      p_to: "paused",
+      p_actor_id: viewer.id,
+      p_actor_kind: "admin",
+      p_reason: "policy check",
+    } as never);
+    expect(staffPause.error).toBeNull();
+    const sneakyResume = await advertiserCampaignActionCore(svc, organizer.id, {
+      campaignId: campaign.id,
+      action: "resume",
+    });
+    expect(sneakyResume.status).toBe(409);
+    const staffResume = await svc.rpc("content_campaign_transition", {
+      p_campaign_id: campaign.id,
+      p_to: "active",
+      p_actor_id: viewer.id,
+      p_actor_kind: "admin",
+      p_reason: "ok",
+    } as never);
+    expect(staffResume.error).toBeNull();
+
+    // The advertiser's own pause can be lifted by them, but not once the
+    // Spotlight has been hidden.
+    const pauseOwn = await advertiserCampaignActionCore(svc, organizer.id, {
+      campaignId: campaign.id,
+      action: "pause",
+    });
+    expect(pauseOwn.status).toBe(200);
+    await svc
+      .from("content_post")
+      .update({ moderation_state: "hidden" } as never)
+      .eq("id", postId);
+    const resumeHidden = await advertiserCampaignActionCore(svc, organizer.id, {
+      campaignId: campaign.id,
+      action: "resume",
+    });
+    expect(resumeHidden.status).toBe(409);
+    await svc
+      .from("content_post")
+      .update({ moderation_state: "visible" } as never)
+      .eq("id", postId);
+    const resumeOwn = await advertiserCampaignActionCore(svc, organizer.id, {
+      campaignId: campaign.id,
+      action: "resume",
+    });
+    expect(resumeOwn.status).toBe(200);
+
     const pause = await advertiserCampaignActionCore(svc, organizer.id, {
       campaignId: campaign.id,
       action: "pause",

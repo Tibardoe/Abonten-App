@@ -135,6 +135,17 @@ Built 2026-09-13, switched **off**. Design: [architecture/weekly-highlights.md](
 | K3 | Diversity warnings and section size | `max_items_per_section`, `max_per_organizer_per_section`, `exposure_lookback_editions` | 12 listings per section; warn above 1 event per organizer per section; warn about listings in the last 2 editions. Warnings never block. | Keep until the first editions show whether editors find the warnings useful. | Open |
 | K4 | How long editions are kept | `edition_retention_weeks`; `weekly-housekeeping` | Editions archived after 104 weeks, never deleted. They hold no personal data. | Keep. | Open |
 
+## Spotlight & Stories
+
+Built 2026-09-16, switched **off**. Design: [architecture/spotlight-and-stories.md](architecture/spotlight-and-stories.md). Operator handbook: [admin/spotlight.md](admin/spotlight.md).
+
+| # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
+|---|---|---|---|---|---|
+| S1 | When to open Spotlight, Stories and paid promotions, and to whom | `content_program_setting` switches and audiences; `SPOTLIGHT_KILL_SWITCH`, `STORIES_KILL_SWITCH` | All off, audiences `staff`. | Staff for two weeks with real organizer content, then beta organizers and their followers, then Everyone once legal F5 is decided. Promotions last, after G4, with a named person watching the review queue. | Open |
+| S2 | Promotion plans and prices | `content_campaign_preset` rows | 3 days GH₵ 50, 5 days GH₵ 100, 1 week GH₵ 250, 2 weeks GH₵ 500; billed by time run; cash only. | Keep for the first month and compare delivered impressions per cedi with event and place featuring before changing. | Open |
+| S3 | Refunds for cancelled promotions | Admin › Spotlight & Stories › promotion page; `content_campaign_refundable_minor` | Rejected promotions refund in full automatically. Cancelled ones show the unused remainder, refunded only when staff choose to. | Refund the unused remainder for every cancellation except a cancellation for a content-policy breach. | Open |
+| S4 | Limits, ranking weights and retention | `spotlight_posts_per_day` (20), `stories_per_day` (30), `comments_per_hour` (60), `follows_per_hour` (100), ranking weights, sponsored share 20 % and gap 4, `expired_story_retention_days` (30), `deleted_post_retention_days` (30), `raw_view_retention_days` (90) | Working defaults from the settings row. | Keep until staff use shows a reason to change; review retention with the privacy register. | Open |
+
 ## Product
 
 | # | Decision | What it affects | Current implementation (from code) | Recommended default — *recommendation, not approved policy* | Status |
