@@ -102,10 +102,14 @@ export function StoryViewer({
   const close = useCallback(() => {
     if (closedRef.current) return;
     closedRef.current = true;
-    void flushContentViews().finally(() =>
-      qc.invalidateQueries({ queryKey: [...CONTENT_KEY, "stories", "tray"] }),
-    );
     onClose();
+    // The last Story reports its view as it unmounts, so send the batch on
+    // the next tick, then refresh the tray so its ring turns seen.
+    setTimeout(() => {
+      void flushContentViews().finally(() =>
+        qc.invalidateQueries({ queryKey: [...CONTENT_KEY, "stories", "tray"] }),
+      );
+    }, 0);
   }, [onClose, qc]);
 
   const nextEntry = useCallback(() => {

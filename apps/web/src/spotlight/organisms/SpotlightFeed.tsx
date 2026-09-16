@@ -286,7 +286,7 @@ export default function SpotlightFeed() {
 
       <div
         ref={scroller}
-        className="relative h-[calc(100dvh-15rem)] snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-2xl bg-black [scrollbar-width:none] md:h-[calc(100dvh-13rem)] [&::-webkit-scrollbar]:hidden"
+        className="relative h-[calc(100dvh-17rem)] snap-y snap-mandatory overflow-y-auto overscroll-contain rounded-2xl bg-black [scrollbar-width:none] md:h-[calc(100dvh-15rem)] [&::-webkit-scrollbar]:hidden"
       >
         {emptyState ??
           (feed.isLoading || waitingForCoords ? (

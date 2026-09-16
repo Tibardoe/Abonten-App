@@ -328,7 +328,7 @@ export async function getContentCampaignCheckoutCore(
   const { data, error } = await supabase
     .from("content_campaign_checkout")
     .select(
-      "*, content_campaign_preset(label), content_campaign(post_id, content_post(caption))",
+      "*, content_campaign_preset(label), content_campaign!content_campaign_checkout_campaign_id_fkey(post_id, content_post(caption))",
     )
     .eq("id", checkoutId)
     .eq("owner_id", userId)

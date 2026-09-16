@@ -22,6 +22,7 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - **Updated**: scheduled-jobs (seven content jobs), secrets-and-environment (`SPOTLIGHT_KILL_SWITCH`, `STORIES_KILL_SWITCH`), rollback-and-recovery, feature-inventory, data-model-overview, roles-and-permissions (`spotlight.*`), admin README.
 - **Registers**: legal F5 (user content) and G4 (promoted content); operational S1–S4 (rollout, prices, cancellation refunds, limits).
 - **Fix — staff moderation of messages and conversations**: `moderation_action` refused the `message` and `conversation` targets that `apply_moderation_action` accepts, so every such action failed. Widened with the new content targets (migration `20260916120400`, applied to production).
+- **Fix — "Cancel this order" on event, place and Spotlight promotion checkouts failed** since the 2026-09-10 money-path lockdown removed client update rights; the cancel now writes with the service role after checking the owner, and a cancelled Spotlight checkout releases its campaign.
 - **Fix — advertisers could resume a promotion staff had paused** through the API, and a paused promotion could resume on a hidden post; the transition now checks both (migration `20260916120500`, applied to production).
 
 ## 2026-09-16 — Mobile: iOS TestFlight QA round 2
