@@ -8,6 +8,15 @@ import type {
 } from "@abonten/types/contentType";
 
 export const SPOTLIGHT_PRODUCT_NAME = "Spotlight";
+
+/** "1 like", "2 likes", "1,204 views". */
+export function countLabel(
+  n: number,
+  singular: string,
+  plural = `${singular}s`,
+) {
+  return `${n.toLocaleString("en-GB")} ${n === 1 ? singular : plural}`;
+}
 export const STORIES_PRODUCT_NAME = "Stories";
 
 export const SPOTLIGHT_TAGLINE =

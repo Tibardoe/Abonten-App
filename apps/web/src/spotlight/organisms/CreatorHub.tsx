@@ -6,6 +6,7 @@ import { publishContentPost } from "@/actions/content/publishContentPost";
 import { cn } from "@/components/lib/utils";
 import { useToast } from "@/hooks/useToast";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
+import { countLabel } from "@abonten/core/content/copy";
 import { spotlightPath } from "@abonten/core/content/links";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type { ContentKind, ContentOwnPost } from "@abonten/types/contentType";
@@ -276,9 +277,9 @@ function OwnPostRow({ post }: { post: ContentOwnPost }) {
           )}
         </p>
         <p className="text-xs text-muted-foreground">
-          {post.counts.views.toLocaleString()} views ·{" "}
-          {post.counts.likes.toLocaleString()} likes ·{" "}
-          {post.counts.comments.toLocaleString()} comments
+          {countLabel(post.counts.views, "view")} ·{" "}
+          {countLabel(post.counts.likes, "like")} ·{" "}
+          {countLabel(post.counts.comments, "comment")}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1 text-sm">

@@ -999,6 +999,47 @@ describe("promotion checkout cancellation", () => {
     expect(again.campaign.status).toBe("pending_payment");
   });
 
+  it("cancelling an unpaid promotion also closes its checkout, but not mid-payment", async () => {
+    const postId = await publishPost();
+    const { campaign, checkout } = await startCampaign(postId);
+    const { data: attempt } = await svc
+      .from("payment_attempt")
+      .insert({
+        user_id: organizer.id,
+        content_campaign_checkout_id: checkout.id,
+        amount: 50,
+        currency: "GHS",
+        status: "pending",
+        provider: "paystack",
+        provider_reference: `IT-INFLIGHT-${crypto.randomUUID()}`,
+      } as never)
+      .select("id")
+      .single();
+    const blocked = await advertiserCampaignActionCore(svc, organizer.id, {
+      campaignId: campaign.id,
+      action: "cancel",
+    });
+    expect(blocked.status).toBe(409);
+    expect((await campaignRow(campaign.id)).status).toBe("pending_payment");
+
+    await svc
+      .from("payment_attempt")
+      .update({ status: "failed" } as never)
+      .eq("id", must(attempt).id);
+    const ok = await advertiserCampaignActionCore(svc, organizer.id, {
+      campaignId: campaign.id,
+      action: "cancel",
+    });
+    expect(ok.status).toBe(200);
+    expect((await campaignRow(campaign.id)).status).toBe("cancelled");
+    const { data: ck } = await svc
+      .from("content_campaign_checkout")
+      .select("status")
+      .eq("id", checkout.id)
+      .single();
+    expect(must(ck).status).toBe("cancelled");
+  });
+
   it("cancels unpaid and running promotions when the Spotlight is deleted", async () => {
     const unpaidPost = await publishPost();
     const unpaid = await startCampaign(unpaidPost);

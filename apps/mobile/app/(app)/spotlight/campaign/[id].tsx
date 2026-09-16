@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app/AppHeader";
+import { PromotionPaymentSection } from "@/components/organizer/PromotionPaymentSection";
 import {
   useCampaign,
   useInvalidateContent,
@@ -9,6 +10,7 @@ import { canTransitionCampaign } from "@abonten/core/content/campaignStateMachin
 import {
   CAMPAIGN_OBJECTIVE_LABEL,
   CAMPAIGN_STATUS_LABEL,
+  PROMOTION_CASH_NOTE,
   PROMOTION_END_REASON_LABEL,
   PROMOTION_ESTIMATE_NOTE,
 } from "@abonten/core/content/copy";
@@ -138,6 +140,26 @@ export default function CampaignScreen() {
           {c.post?.caption?.trim() || "Spotlight"}
         </AppText>
 
+        {c.status === "pending_payment" && c.checkoutId ? (
+          // Leaving the promote screen before paying must not strand the
+          // order: it can be paid (or cancelled) from here.
+          <View className="gap-2">
+            <AppText variant="muted">
+              Waiting for payment. {PROMOTION_CASH_NOTE}
+            </AppText>
+            <PromotionPaymentSection
+              kind="spotlight"
+              checkoutId={c.checkoutId}
+              entityId={c.id}
+              currency={c.currency}
+              amount={c.budgetMinor / 100}
+              onFeatured={() => {
+                invalidate();
+                q.refetch();
+              }}
+            />
+          </View>
+        ) : null}
         {c.status === "pending_review" ? (
           <AppText variant="muted">
             Payment received. Our team reviews every promotion before it runs.

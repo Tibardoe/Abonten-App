@@ -16,6 +16,7 @@ import type {
 import type { Database } from "@abonten/types/database.types";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { CreateContentCampaignInput } from "@abonten/validation/contentSchemas";
+import { cancelPromotionCheckout } from "../../checkout/checkoutCancellation";
 import { checkRateLimit } from "../../security/rateLimit";
 import { notifyCampaign } from "../contentNotifyCore";
 import { type Envelope, FAIL } from "../contentShared";
@@ -474,11 +475,44 @@ export async function advertiserCampaignActionCore(
 ): Promise<Envelope<ContentCampaign>> {
   const { data: campaign } = await supabase
     .from("content_campaign")
-    .select("id, advertiser_id, status")
+    .select("id, advertiser_id, status, checkout_id")
     .eq("id", input.campaignId)
     .maybeSingle();
   if (!campaign || campaign.advertiser_id !== userId) {
     return { status: 404, message: "Campaign not found." };
+  }
+  // Cancelling an unpaid order goes through the checkout, so its pending
+  // checkout can't still be paid afterwards (a charge against a cancelled
+  // campaign could not be fulfilled), and never while a payment is in
+  // flight.
+  if (
+    input.action === "cancel" &&
+    campaign.checkout_id &&
+    (campaign.status === "pending_payment" || campaign.status === "draft")
+  ) {
+    const res = await cancelPromotionCheckout(
+      supabase,
+      "content_campaign_checkout",
+      "content_campaign_checkout_id",
+      campaign.checkout_id,
+      userId,
+    );
+    if (res.status !== 200) return { status: res.status, message: res.message };
+    const { data: after } = await supabase
+      .from("content_campaign")
+      .select("status")
+      .eq("id", campaign.id)
+      .maybeSingle();
+    if (after?.status !== "cancelled") {
+      await supabase.rpc("content_campaign_transition", {
+        p_campaign_id: campaign.id,
+        p_to: "cancelled",
+        p_actor_id: userId,
+        p_actor_kind: "advertiser",
+        p_reason: "Order cancelled before payment",
+      });
+    }
+    return getContentCampaignCore(supabase, userId, input.campaignId);
   }
   const to =
     input.action === "pause"

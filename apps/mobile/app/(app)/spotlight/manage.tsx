@@ -2,7 +2,7 @@ import { AppHeader, HeaderIconButton } from "@/components/app/AppHeader";
 import { useOwnCampaigns, useOwnContent } from "@/features/content/useContent";
 import { useContentProgram } from "@/features/content/useContentProgram";
 import { formatMinor } from "@abonten/core/content/campaignMoney";
-import { CAMPAIGN_STATUS_LABEL } from "@abonten/core/content/copy";
+import { CAMPAIGN_STATUS_LABEL, countLabel } from "@abonten/core/content/copy";
 import { formatStoryAge } from "@abonten/core/content/storyExpiry";
 import type {
   ContentCampaign,
@@ -198,9 +198,9 @@ function Posts({ kind }: { kind: ContentKind }) {
                 {item.caption?.trim() || "No caption"}
               </AppText>
               <AppText variant="caption" tone="muted">
-                {item.counts.views.toLocaleString()} views ·{" "}
-                {item.counts.likes.toLocaleString()} likes ·{" "}
-                {item.counts.comments.toLocaleString()} comments
+                {countLabel(item.counts.views, "view")} ·{" "}
+                {countLabel(item.counts.likes, "like")} ·{" "}
+                {countLabel(item.counts.comments, "comment")}
               </AppText>
             </View>
             <Icon name="chevron-forward" size={16} tone="muted" />
