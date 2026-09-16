@@ -2,9 +2,9 @@
 title: Spotlight and Stories — short video, temporary Stories, follows and promoted content
 purpose: How Spotlight posts, 24-hour Stories, the follow graph, engagement, telemetry, ranking, moderation and paid Spotlight promotions are modelled, secured, operated and rolled out on web, mobile and the admin console.
 audience: Engineering, operations, finance, security reviewers
-scope: The content_* and follow tables and functions (migrations 20260916120000..120400), @abonten/services content and admin/content modules, /spotlight, /stories and /manage/spotlight on web, /api/mobile/content/**, the mobile Spotlight, Story and creator screens, the Stories row in Messages, Admin › Spotlight & Stories, the seven content cron jobs, and the spotlight-promotion payment path. Not covered - hashtag pages, audio libraries, duets, live streaming and creator payouts, which are not built.
+scope: The content_* and follow tables and functions (migrations 20260916120000..132000), @abonten/services content and admin/content modules, /spotlight, /stories and /manage/spotlight on web, /api/mobile/content/**, the mobile Spotlight, Story and creator screens, the Stories row in Messages, Admin › Spotlight & Stories, the seven content cron jobs, and the spotlight-promotion payment path. Not covered - hashtag pages, audio libraries, duets, live streaming and creator payouts, which are not built.
 status: Approved
-version: 1.0
+version: 1.1
 lastReviewed: 2026-09-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
@@ -20,10 +20,10 @@ The pre-implementation audit that led to these decisions is [audit/spotlight-sto
 
 ## 1. What it is
 
-- **Spotlight**: a persistent feed of short vertical videos and photos posted by organizers, place owners and Abonten staff. Tabs: For you, Following, Nearby, Happening soon, Trending. A post can link an event or a place; its call to action follows the live state of that listing ("View event", "Event has ended", "Place unavailable").
+- **Spotlight**: a persistent feed of short vertical videos and photos posted by organizers, place owners and Abonten staff. Tabs: For you, Following, Nearby, Happening soon, Trending. A post can link an event or a place; its call to action follows the live state of that listing ("View event", "Sold out", "Event cancelled", "Event has ended", "Event unavailable", "Place unavailable"). Stories use the same button.
 - **Stories**: temporary posts (default 24 hours) from the same publishers, shown as a row at the top of Messages, unseen first. A Story holds up to `max_story_items` photos or videos.
 - **Follow**: a public, one-directional follow of an organizer or a place. It fills the Following tab and the Stories row. It is separate from the private "Notify me" bell (`notification_subscription`), which is consent to alerts.
-- **Promoted Spotlights**: a publisher pays a fixed plan to show a live Spotlight in more feeds with a "Sponsored" label. Every promotion is reviewed before it runs.
+- **Promoted Spotlights**: a publisher pays a budget to have a live Spotlight shown to more people, marked "Sponsored". The server prices the budget into sponsored impressions and shows an **estimated** reach range; spend is recognised only for impressions actually delivered. Every promotion is reviewed before it runs.
 
 Ordinary users cannot post. Publishing needs a published live event, a published place, verification as an organizer, or an active admin account (`content_publisher_eligible`).
 
@@ -41,7 +41,8 @@ One post table for both kinds, so moderation, reports, engagement and telemetry 
 | `content_comment`, `content_comment_like` | One-level threads, soft delete, moderation state | select visible comments |
 | `content_view`, `content_click` | Raw telemetry with `valid` and `invalid_reason` | none |
 | `content_post_daily_stat`, `content_rollup_state` | Hourly rollups for insights and admin | none |
-| `content_campaign_preset`, `content_campaign`, `content_campaign_checkout`, `content_campaign_ledger`, `content_campaign_event`, `content_campaign_conversion` | Promotion plans, campaigns, checkout, append-only money ledger, state history, attributed purchases | none |
+| `content_promotion_pricing`, `content_audience_snapshot` | One row each: pricing and estimate assumptions (versioned, admin-editable); measured Spotlight audience (nightly) | none |
+| `content_campaign`, `content_campaign_checkout`, `content_campaign_ledger`, `content_campaign_event`, `content_campaign_conversion` | Campaigns with their price snapshot and delivery counters, checkout, append-only money ledger, state history, attributed purchases | none |
 
 No client role can insert, update or delete any of these tables. Every write goes through `@abonten/services` with the service role after the service has resolved identity and the programme. `content_campaign_ledger` refuses updates and deletes by trigger.
 
@@ -51,17 +52,17 @@ The older empty `story` and `story_default` tables from the original schema are 
 
 ## 3. Publishing
 
-1. The client asks for a Cloudinary signature (`kind: "content"`, folder `content_media/<user id>`), uploads directly, then calls **register media**. `registerContentMediaCore` refuses anything outside the caller's folder, re-reads the asset from the Cloudinary Admin API and checks type, format, size and length there (the client's claims are ignored). Trims are applied as a delivery transformation. Long or large videos get an asynchronous optimised rendition (`playback_status = pending`); the original always plays meanwhile.
+1. The client asks for a Cloudinary signature (`kind: "content"`, folder `content_media/<user id>`), uploads directly, then calls **register media**. `registerContentMediaCore` refuses anything outside the caller's folder, re-reads the asset from the Cloudinary Admin API and checks type, format, size and length there (the client's claims are ignored). The length comes from the Admin API with `media_metadata`; a video whose length cannot be read, or with no picture, is refused. A refused upload is destroyed on Cloudinary at once. A signature for `content` is issued only to people who can post. Trims are applied as a delivery transformation. Long or large videos get an asynchronous optimised rendition (`playback_status = pending`); the original always plays meanwhile.
 2. **Create post** attaches the caller's ready media in order and either keeps a draft or calls `content_post_publish`. `clientRequestId` makes a retried create return the same post.
 3. `content_post_publish(post, actor)` is the only way to publish. It re-checks author, eligibility, the posting switches, the rights acknowledgement, media count and state, daily caps (`spotlight_posts_per_day`, `stories_per_day`), and the linked event or place (live, owned by the publisher or held at the publisher's place). It sets `published_at`, and for Stories `expires_at = now() + story_ttl_hours`.
 
-Deleting a post is a soft delete; an active promotion on it is cancelled. Unused uploads are destroyed after `orphan_media_hours` through `draft_asset_cleanup_queue`.
+Deleting a post is a soft delete; a running promotion on it is cancelled, and an unpaid promotion order for it is cancelled unless a payment is in flight. Registered-but-unused uploads are destroyed after `orphan_media_hours`, media of deleted posts and ended Stories after their retention, through `draft_asset_cleanup_queue`; uploads that never became a `content_media` row are found by a daily sweep of `content_media/` on Cloudinary (see §11).
 
 ## 4. Reading
 
 - **Visibility** is one SQL predicate, `content_post_is_public(status, moderation_state, kind, published_at, expires_at)`: published, `visible` or `restricted`, and not expired for Stories. Documents are built by `content_post_documents(viewer, ids)`, which also drops posts by suspended authors and posts either side has blocked. The author always sees their own post.
 - **Feed** `content_feed(viewer, surface, lat, lng, radius, as_of, cursor_score, cursor_id, limit)` ranks in SQL from settings: recency, engagement, following, proximity, event urgency, a penalty for posts already viewed, and removes not-interested posts and muted publishers. Cursors are keyset `(as_of, score, id)`, so a page never repeats or skips when new posts arrive.
-- **Sponsored slots** are merged in TypeScript (`mergeSponsored`, `@abonten/core/content/feedMerge`): at most `sponsored_max_share_bps` of a page, never closer than `sponsored_min_gap` posts, capped per viewer per day, never a post already on the page. Candidates come from `content_sponsored_candidates`. The slot carries `sponsored.campaignId` and both clients always show the "Sponsored" label.
+- **Sponsored slots** are merged in TypeScript (`mergeSponsored`, `@abonten/core/content/feedMerge`): at most `sponsored_max_share_bps` of a page, never closer than `sponsored_min_gap` posts, capped per viewer per day (`sponsored_daily_cap_per_viewer`), never a post already on the page, and never repeated within one paging session (the cursor carries the posts already shown as sponsored). Candidates come from `content_sponsored_candidates`, which applies the delivery switch, the impression goal, pacing, location targeting, publisher eligibility (active author, published and visible place), blocks and not-interested, and never returns the viewer's own promotion; the campaign furthest behind its plan goes first. A failure there drops the sponsored slots, never the page. The slot carries `sponsored.campaignId` and both clients always show the "Sponsored" label. For you and Trending send a rough position (about 1 km) only when location is already allowed — no prompt, not stored — so a promotion aimed at an area can reach people there.
 - **Story tray** `content_story_tray(viewer)`: own Stories first, then followed publishers with unseen Stories, then seen; muted publishers are flagged. **Story sequence** returns a publisher's live Stories oldest first. An ended Story link answers 410 with the publisher so the page can offer their profile or place.
 - **Search** `search_spotlight(query, viewer, limit)` over captions and hashtags.
 
@@ -87,7 +88,25 @@ Clients batch events (`impression`, `view_start`, `meaningful_view`, `completion
 
 ## 8. Promoted Spotlights (money path)
 
-Fixed billing, no auction. `content_campaign_preset` rows set price and duration (seeded: 3 days GH₵ 50, 5 days GH₵ 100, 1 week GH₵ 250, 2 weeks GH₵ 500). Presets never promise reach.
+**The product is extra distribution, not days and not guaranteed views.** An advertiser chooses a goal, who should see the Spotlight (everyone, or people within 5/10/25/50 km of its event or place), a budget and the longest it may run. The server prices it and shows an estimated reach range. Nothing is promised: every screen says "estimated", and the notes say reach depends on the audience, its activity and other promotions.
+
+### 8.1 Pricing and the estimate
+
+`content_promotion_pricing` (one row, `version` bumped on every change, edited in Admin › Spotlight & Stories › Settings with step-up, a reason and an audit entry) holds the budget range and step, suggested budgets, run-length options, the **cost per 1,000 sponsored impressions** (`cpm_minor`) and the estimate assumptions. `content_audience_snapshot` holds the measured audience: average daily distinct viewing devices over 14 days and distinct devices over 28 days on For you / Nearby / Trending (`content-audience-refresh`, nightly; counts only).
+
+`estimatePromotionReach` (`@abonten/core/content/promotionEstimate`, pure and unit-tested; the server is the only caller that decides anything):
+
+1. **Impression goal** = floor(budget × 1000 ÷ `cpm_minor`) — what the budget buys and where delivery stops.
+2. **Audience** = the measured figures, or the admin planning floors (`audience_floor_daily_viewers`, `audience_floor_reach`) while measured data is thinner; × `location_audience_share_bps` for a location target. `basis` records `observed`, `assumed` (floor used) or `no_data`.
+3. **Deliverable impressions** = daily audience × run days × `sponsored_daily_cap_per_viewer` × `daily_fill_bps`.
+4. **Reach** = expected impressions ÷ `avg_frequency`, capped at `max_reach_share_bps` of the audience, shown as ± `estimate_spread_bps` and rounded.
+5. The server **refuses to sell** when there is no data, or when the forecast delivers less than `min_deliverable_bps` of the goal ("the audience is too small for this budget right now").
+
+Seeded defaults: GH₵ 20–5,000 in GH₵ 5 steps; suggested GH₵ 20 / 50 / 100; runs of 3, 7 or 14 days; GH₵ 11 per 1,000 impressions; 1.5 impressions per person; ±20 %; no planning floor; 30 % daily fill; 60 % max reach share; 30 % audience for a location target; refuse under 50 % deliverable; pacing ×2. With a planning floor of 5,000 daily / 20,000 people, GH₵ 50 over 7 days estimates about 2,400–3,700 people. These are **working assumptions** to be calibrated against real delivery (decision **S2**). The location share does not vary with the radius.
+
+The client sends only the post, goal, audience choice, budget, run length and start. Anything else it sends (an impression goal, a price, a reach figure) is stripped by validation. Creation re-runs the quote and snapshots `pricing_version`, `cpm_minor`, `impression_goal` and the estimate onto the campaign; later price changes never touch it.
+
+### 8.2 Lifecycle
 
 ```text
 draft → pending_payment → payment_confirmed → pending_review → scheduled / active ⇄ paused → completed
@@ -95,15 +114,24 @@ draft → pending_payment → payment_confirmed → pending_review → scheduled
 completed / rejected / cancelled → refunded
 ```
 
-`content_campaign_transition` is the only state machine (mirrored in `@abonten/core/content/campaignStateMachine`); it checks the actor kind for every move and records `content_campaign_event`.
+`content_campaign_transition` is the only state machine (mirrored in `@abonten/core/content/campaignStateMachine`); it checks the actor kind for every move and records `content_campaign_event`. An advertiser may lift only their own pause, and resuming re-checks payment and that the post is still live.
 
-1. **Create** (`createContentCampaignCore`): the post must be the caller's live, visible Spotlight with no other open campaign. The price comes from the preset, never the client. A 30-minute `content_campaign_checkout` is created and the campaign moves to `pending_payment`.
-2. **Pay**: web checkout page `?type=spotlight-promotion` or mobile `POST /api/mobile/checkout/spotlight-promotion-attempt`. Cash only: `PROMOTION_TARGETS.spotlight.creditAllowed = false`, so Abonten Credit is refused. `finalizePaystackPayment` verifies the charge and calls the injected `activateContentCampaign` step.
-3. **Activate** (`content_campaign_activate_from_checkout`): only for a pending checkout with a successful transaction; writes one `payment` ledger row (idempotency key per checkout; a replay answers `replayed: true`) and moves the campaign to `pending_review`.
-4. **Review** in Admin: approve (scheduled or active from `starts_at`), reject (the full amount is refunded immediately), pause, resume, cancel. Needs `spotlight.campaigns.review` with a fresh step-up.
-5. **Delivery**: `content-campaign-tick` (every 10 minutes) starts scheduled campaigns, accrues spend by time run into `accrual` ledger rows, pauses campaigns whose post is no longer live, and completes campaigns at `ends_at`.
-6. **Refunds**: `content_campaign_refundable_minor` = paid − accrued − refunded, only for rejected, cancelled or completed campaigns. `content_campaign_record_refund` writes one `refund` row (once per campaign) and moves the transaction to `refund_pending` before the service asks Paystack for a partial refund; the existing webhook settles it. A cancelled campaign's remainder is refunded by staff from the campaign page (needs `finance.refund` as well). Who decides those refunds is decision **S3**.
-7. **Reconciliation**: `content-campaign-reconcile` (twice an hour) opens critical incidents for ledger drift, a live campaign without payment, or a campaign pointing at a missing or failed transaction.
+1. **Create** (`createContentCampaignCore`): the post must be the caller's live, visible Spotlight with no other open campaign; the quote must be deliverable. A 30-minute `content_campaign_checkout` priced at the budget is created and the campaign moves to `pending_payment`.
+2. **Pay**: web checkout page `?type=spotlight-promotion`, or the mobile promote / campaign screen (`POST /api/mobile/checkout/spotlight-promotion-attempt`). Cash only (card or mobile money); Abonten Credit is refused. `finalizePaystackPayment` verifies the charge with Paystack (the amount must match the attempt) from the client's verify call or the webhook, whichever comes first, and calls `activateContentCampaign`.
+3. **Activate** (`content_campaign_activate_from_checkout`): only for a pending checkout whose total and whose successful transaction both equal the campaign budget; one `payment` ledger row (idempotency key per checkout; a replay answers `replayed: true`); the campaign moves to `pending_review`.
+4. **Review** in Admin: approve (runs from `starts_at` for `duration_days`), reject (the full amount is refunded straight away), pause, resume, cancel. Needs `spotlight.campaigns.review` with a fresh step-up.
+5. **Delivery**: a valid, de-duplicated sponsored impression (one per device per post per hour) moves `impression_count` while it is below the goal; the first one per device moves `reach_count`; meaningful views and completions are counted too. `content_campaign_accrue` recognises spend = floor(impressions × `cpm_minor` ÷ 1000), and the whole amount paid once the goal is delivered, never more than paid. `content-campaign-tick` (every 10 minutes) starts scheduled campaigns, accrues, pauses a campaign whose post, author or publisher place stopped being eligible (only staff can lift that pause), completes a campaign whose goal is delivered (`end_reason = budget_delivered`) and one whose run ended (`run_ended`).
+6. **Stops**: goal delivered, run ended, advertiser cancels, staff pause / reject / cancel, the post is hidden, removed or deleted, the author is restricted, the publisher place is hidden, sponsored delivery switched off (nothing is shown or charged), or the promotions kill switch.
+7. **Cancellation**: an unpaid order is cancelled through its checkout (refused while a payment is in flight, so a charge can never land on a cancelled campaign); a paid one moves to `cancelled` and keeps its unused budget as refundable.
+8. **Refunds**: `content_campaign_refundable_minor` = paid − spent − refunded, for rejected, cancelled or completed campaigns. `content_campaign_record_refund` first recognises any delivery not yet accrued, then writes one `refund` row (once per campaign), moves the transaction to `refund_pending` and the service asks Paystack for the refund; the webhook settles it. Rejection refunds automatically. **Unused budget of a completed or cancelled promotion is refunded only when staff choose to** — whether it should be automatic, and what the advertiser is told, is decision **S3**. The advertiser screens say only that unused budget is shown on the promotion page.
+9. **Accounting**: amount paid = the budget (no fee on top); recognised spend (`accrual` rows) is Abonten revenue; the unused remainder is owed back until refunded or decided otherwise. Promotion money never touches `organizer_ledger_entry`. Estimated reach is guidance, not a liability.
+10. **Reconciliation**: `content-campaign-reconcile` (twice an hour) opens critical incidents for ledger drift, a live campaign without payment, a campaign pointing at a missing or failed transaction, or spend beyond delivered impressions; and a medium incident for a completed campaign with unused budget still unrefunded after 7 days.
+
+### 8.3 Measurement
+
+`content_campaign_metrics(campaign)` keeps the measures apart: **impressions** (times shown, de-duplicated per device per hour) and **reach** (distinct devices) never mix; plus meaningful views (watched past `meaningful_view_ms`), completions, profile / event / place / button taps, follows of the publisher by people shown the promotion within the previous 7 days, and attributed ticket purchases and reservations. Advertisers see these on the promotion page next to the estimate; staff see them on the campaign page and the overview.
+
+Lifecycle analytics come from existing records: `content_campaign_event` (created, submitted, approved, rejected, paused, resumed, cancelled, completed, refunded) and `payment_attempt` (payment started, succeeded, failed).
 
 ## 9. Permissions
 
@@ -117,7 +145,7 @@ Content moderation actions use the existing `moderation.*` permissions.
 
 ## 10. Programme switches and kill switches
 
-`resolveContentAccess` (`packages/services/src/content/contentProgram.ts`) reads the settings row (15-second cache) and fails closed. Separate switches exist for Spotlight, Stories, posting, comments, downloads, reactions, sharing, each feed tab, creator tools and promotions; audiences are `staff`, `beta` (plus `beta_user_ids`) or `all`. Deploy-level emergency stops: `SPOTLIGHT_KILL_SWITCH=true` and `STORIES_KILL_SWITCH=true` on the web deployment (set them on the admin deployment too so the settings page shows a warning).
+`resolveContentAccess` (`packages/services/src/content/contentProgram.ts`) reads the settings row (15-second cache) and fails closed. Separate switches exist for Spotlight, Stories, posting, comments, downloads, reactions, sharing, each feed tab, creator tools and promotions; audiences are `staff`, `beta` (plus `beta_user_ids`) or `all`. `spotlight_promotions_enabled` controls selling new promotions; `sponsored_delivery_enabled` separately controls showing running ones (off: nothing shown, nothing charged, organic Spotlight unaffected). Deploy-level emergency stops: `SPOTLIGHT_KILL_SWITCH=true`, `STORIES_KILL_SWITCH=true` and `SPOTLIGHT_PROMOTIONS_KILL_SWITCH=true` (selling and delivery) on the web deployment (set them on the admin deployment too so the settings page shows a warning). Turning Spotlight off hides every entry point but leaves Messages, events, places and notifications working; turning Stories off removes only the Stories row.
 
 ## 11. Jobs
 
@@ -126,10 +154,12 @@ Content moderation actions use the existing `moderation.*` permissions.
 | `content-stats-rollup` | :20 hourly | Valid views and clicks into daily stats |
 | `content-trending-refresh` | :25 hourly | Recompute `trending_score` over `trending_window_hours` |
 | `content-housekeeping` | 03:50 | Archive ended Stories, purge per retention settings, queue orphan media |
-| `content-campaign-tick` | */10 | Start, accrue, pause, complete campaigns |
+| `content-campaign-tick` | */10 | Start, accrue delivered spend, pause ineligible, complete delivered or ended campaigns |
+| `content-audience-refresh` | 03:15 | Measured audience for the promotion estimate |
 | `expire-stale-content-campaign-checkouts` | */5 | Expire unpaid checkouts (skips a live payment attempt) and return the campaign to draft |
 | `content-attribute-conversions` | :35 hourly | Credit purchases to promoted posts |
 | `content-campaign-reconcile` | :10 and :40 | Money invariants → incidents |
+| `storage-purge-dispatch` (existing) | */10 | Also drains `draft_asset_cleanup_queue` on Cloudinary through `/api/maintenance/storage-purge`, and once a day sweeps `content_media/` for uploads never registered (older than a day) |
 
 ## 12. Surfaces
 
@@ -140,12 +170,15 @@ Content moderation actions use the existing `moderation.*` permissions.
 
 ## 13. Verification
 
-- Integration suite `content-platform.integration.test.ts` (16 tests on the replayed local stack): client writes refused, service-role-only functions, drafts hidden by RLS, programme and audiences, kill switch, publisher eligibility, feed visibility after not-interested / block / moderation, idempotent likes and counters, author comment deletion, reaction replacement, comments switch, follow and tray seen-state, ended Story 410, view de-duplication, moderation notice, and the full campaign path (activation replay, advertiser cannot approve, accrual, cancel, refund once, append-only ledger, reconciliation clean).
-- The suite found two defects that were fixed before release: the feed sent `undefined` RPC arguments that PostgREST drops (no feed could load), and `moderation_action` refused the new targets (plus `message` and `conversation`, which had silently broken staff moderation of messages) — migration `20260916120400`.
-- Full regression: 53 files, 483 integration tests; unit tests core 434 and services 115; typecheck for services, web, admin and mobile; API parity (214 routes); scoped Biome.
-- **Browser run on the local stack** (web and admin dev servers with seeded content): feed with tabs, keyboard like and paging, one muted autoplaying video, comments; Stories row, viewer auto-advance and seen ring; creator hub, composer form, post insights page, promote dialog with the four plans, checkout page (cash only, no credit switch), cancel order; admin promotion queue, detail with ledger and history, approve → scheduled → the tick starts it. The run found and fixed: the checkout page could not load (ambiguous embed between checkout and campaign), **Cancel this order failed for every promotion type** because promotion checkouts lost client update rights in the 2026-09-10 lockdown (event and place promotion cancels were broken in production too; the service now writes with the service role after the owner check and a cancelled Spotlight checkout also cancels its campaign), the Story ring stayed "new" after watching until the next refresh, and the feed pane ran past the bottom of the window.
-- **Not verified**: the mobile app on a device, real Cloudinary uploads and renditions (the composer was opened but no file uploaded), a sponsored slot on screen (the rules are unit-tested), a real Paystack promotion payment and refund, iOS, Android App Links for the new paths (need a native build).
+Pre-merge audit, 2026-09-16 (local Docker stack; web, admin and Metro against it; real Cloudinary account; Paystack **test** mode):
+
+- **Automated**: integration suites `content-platform` (20 tests), `content-promotions` (19: server pricing = shared estimator, refusals, kill switch, no-data refusal, stripped client fields and price snapshot, payment amount check, per-impression billing with reach per device and goal stop, run-end with refund exactly once, staff-pause and hidden-post guards, system pause on removal, sponsored placement without repeats, switches / kill switch / daily cap / pause / hidden / block, fair rotation, pacing and location targeting, event / place / Spotlight checkout cancellation incl. in-flight payment), `cloudinary-cleanup` (3); estimator unit tests (14); full counts in the changelog entry.
+- **Cloudinary (real)**: photo, portrait, landscape, square and silent videos accepted with correct lengths; a 0.5 s clip and a clip over the limit refused and destroyed; the long clip trimmed and accepted; GIF and a fake .mp4 refused by the signed upload; an HD video's rendition went pending → ready and served; the emulator composer uploaded, registered and published a video.
+- **Paystack (test mode)**: mobile money payment from the Android app → verify → review; webhook-only fulfilment; replayed, duplicate, tampered and badly signed webhooks change nothing; staff rejection created a real Paystack refund and the `refund.processed` webhook (twice) settled it once; an invalid payer email fails cleanly.
+- **Android emulator** (dev client built from this branch): Stories row, unseen-first ordering and seen state, viewer (hold to pause, reactions, menu with mute and report), feed tabs, paging, video playback, like, comment and reply, report, profile navigation, the composer (pick, details, upload, publish), edit caption, promote with live estimates, wallet, payment, promotion page with delivery figures, and the programme switched off. Defects found there are listed in the changelog.
+- **Web / admin** in a browser: sponsored slot with its label, keyboard paging, promote dialog estimates (no request loop), checkout summary and cancel, admin approve and reject-with-refund, pricing save (audited), overview figures; no console errors after fixes.
+- **Not verified**: iOS; Android App Links opening from a real `https://abontenhub.com/spotlight` link (needs the production `assetlinks.json` and a release build); a real card payment; promotion delivery against real audience sizes (the estimate assumptions are uncalibrated).
 
 ## 14. Deliberate limits
 
-No hashtag pages, no audio library, no duets or stitches, no live streaming, no creator payouts, no auction pricing, no targeting beyond optional location, no automated content classification, English copy only. Comments are one level deep. Web has no drag-to-reorder in the Story composer.
+No hashtag pages, no audio library, no duets or stitches, no live streaming, no creator payouts, no auction pricing, no interest or category targeting (the `targeting_categories` column is kept empty), location targeting only around the post's own event or place, no automated content classification, English copy only. Comments are one level deep. Web has no drag-to-reorder in the Story composer.

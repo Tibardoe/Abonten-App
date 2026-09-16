@@ -16,6 +16,16 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-16 — Spotlight & Stories: pre-merge audit and reach-based promotions
+
+- **Changed — promotions are sold by budget and estimated reach, not fixed time plans** (migration `20260916130000`): `content_promotion_pricing` (admin-editable, versioned, audited), nightly `content_audience_snapshot`, server-side estimate with refusal when the audience is too small, spend per delivered sponsored impression, stop at budget delivered or run end, separate reach / impressions / views / taps / follows / conversions, `sponsored_delivery_enabled`, `SPOTLIGHT_PROMOTIONS_KILL_SWITCH`, pacing and fair rotation. Presets removed. Architecture (1.1) §8, admin handbook (pricing section, refunds, stopping), decisions S1–S3 rewritten, scheduled-jobs, secrets-and-environment, PROJECT.md §34.5.
+- **Security fix — Cloudinary cleanup queue** (migration `20260916131000`, applied to production): any signed-in user could insert into `draft_asset_cleanup_queue`, whose drain destroys the named asset — i.e. have another user's avatar, flyer or video deleted — or remove queued rows. Client access removed. The queue was also drained only when someone opened the web Drafts page, so deleted Spotlight/Story media stayed on Cloudinary; the storage-purge route now drains it and sweeps never-registered uploads daily.
+- **Fix — media**: video length was never read from Cloudinary (length limits were not enforced); refused uploads are destroyed; content upload signatures only for people who can post.
+- **Fix — payments**: cancelling an unpaid promotion now cancels its checkout (a later charge could not have been fulfilled); an unpaid order is cancelled when its post is deleted; mobile can pay an order left unpaid.
+- **Fix — social**: comments honour the programme switch and blocks; comment likes need a live post and no block and are rate-limited; signed-out shares limited per address; the post's event button says Sold out / Event unavailable (migration `20260916132000`).
+- **Fix — apps**: mobile status bar stayed white over the next screen, poster showed around letterboxed video, one follow request per feed card, upload progress above 100 %, zero-length trim bar, no Follow or live-state button in the Story viewer, plural counts; web keyboard paging scrolled the whole page; admin pricing form hydration error.
+- **Verified**: real Cloudinary uploads and renditions, Paystack test-mode payments / webhooks / refund, Android emulator flows, web and admin in a browser (architecture §13).
+
 ## 2026-09-16 — Spotlight & Stories
 
 - **New — Spotlight, Stories, follows and promoted Spotlights (switched off)**: architecture [architecture/spotlight-and-stories.md](../architecture/spotlight-and-stories.md) (1.0), operator handbook [admin/spotlight.md](../admin/spotlight.md) (1.0), pre-implementation report [audit/spotlight-stories-pre-implementation-report.md](../audit/spotlight-stories-pre-implementation-report.md).

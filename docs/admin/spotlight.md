@@ -39,21 +39,36 @@ Short videos (Spotlight), 24-hour Stories, follows and paid Spotlight promotions
 Every paid promotion waits in **In review** until someone acts. Reviewing needs a fresh identity check (the page shows a button when it is needed).
 
 1. Open the Spotlight from the promotion page and check it against the content policy ([operations/content-moderation-policy.md](../operations/content-moderation-policy.md)). Promoted posts must be the publisher's own content and must not mislead about an event or place.
-2. **Approve** — it runs from its start time for the plan's length.
+2. **Approve** — it runs from its start time for at most its run length, and stops earlier once its budget is delivered.
 3. **Reject and refund** — needs a reason, which the advertiser sees. The whole payment is returned through Paystack straight away. If the message says the refund needs attention, open Finance › Refunds and retry there.
 4. **Pause / Resume / Cancel** a running promotion — pause and cancel need a reason. An advertiser can only resume a pause they made themselves.
 
-Delivery is billed by time run, not by views. We never promise a number of views.
+Promotions are sold by **budget**, not by days. The budget buys sponsored impressions at the cost per 1,000 in the pricing settings; spend is recognised only as impressions are actually delivered, and the promotion stops when the budget is used or the run ends. The advertiser saw an **estimated** reach range when buying, shown on the promotion page as "Estimated reach (sold)" next to what was actually delivered. We never promise a number of views or people.
+
+The promotion page keeps these apart: **Reach** (distinct devices shown it), **Impressions** (times shown, against the goal), meaningful views, completions, taps, follows after seeing it, and attributed purchases.
 
 ### Refunds
 
 - **Rejected**: refunded automatically in full.
-- **Cancelled** (by the advertiser, by staff, or because the post was deleted): the unused part shows as **Refundable now** on the promotion page. Refunding it needs `finance.refund` as well as `spotlight.campaigns.review`. Whether every cancellation is refunded is decision **S3** in [OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md); until it is decided, handle each one case by case and note the reason.
+- **Completed** with budget left (the run ended before the budget was delivered) and **Cancelled** (by the advertiser, by staff, or because the post was deleted): the unused part shows as **Refundable now** on the promotion page, and the overview shows the total as **Unused budget to decide**. A completed promotion still unrefunded after 7 days opens a medium incident as a reminder. Refunding it needs `finance.refund` as well as `spotlight.campaigns.review`. Whether every cancellation is refunded is decision **S3** in [OPERATIONAL_DECISIONS_REQUIRED.md](../OPERATIONAL_DECISIONS_REQUIRED.md); until it is decided, handle each one case by case and note the reason.
 - A promotion can only be refunded once; the button disappears afterwards.
 
 ### Money incidents
 
-`content-campaign-reconcile` opens a critical incident in Monitoring when the ledger and a promotion's paid, delivered or refunded amounts disagree, when a promotion is live without a payment, or when it points at a missing or failed transaction. Do not edit amounts by hand; hand the incident to engineering.
+`content-campaign-reconcile` opens a critical incident in Monitoring when the ledger and a promotion's paid, delivered or refunded amounts disagree, when a promotion is live without a payment, when it points at a missing or failed transaction, or when recognised spend exceeds delivered impressions. Do not edit amounts by hand; hand the incident to engineering.
+
+## Promotion pricing
+
+Programme settings → **Promotion pricing and reach estimates** (needs `spotlight.configure` and a fresh identity check; every save needs a reason, bumps the version and is audited). A change applies to promotions created afterwards; running promotions keep the price they were sold at.
+
+- **Budget range, step, suggested budgets, run lengths** — what advertisers can choose.
+- **Cost per 1,000 sponsored impressions** — sets how many impressions a budget buys and so where delivery stops.
+- **Impressions per person reached, estimate range** — turn impressions into the reach range advertisers see.
+- **Planning floors** (daily viewers, 28-day audience) — used only while the measured audience (shown at the top, refreshed nightly) is smaller. With no floor and no measured audience, promotions cannot be sold ("We can't estimate reach yet").
+- **Daily fill, most of the audience one promotion can reach, audience left with a location target, refuse under** — how conservative the estimate is and when a budget is too big for the audience.
+- **Pacing** — how far ahead of an even pace a promotion may deliver.
+
+The card shows what each suggested budget estimates today. These are working assumptions (decision **S2**); compare estimates with delivered reach on finished promotions before changing them.
 
 ## Switching it on
 
@@ -66,8 +81,9 @@ Order (decision **S1**): staff only for Spotlight and Stories with promotions of
 
 ## Stopping it
 
-- Untick **Spotlight switched on** or **Stories switched on**. Every entry point disappears on web and mobile; posts, follows and promotions are kept. Running promotions keep accruing time, so pause them too if the stop will last.
-- If the console is unavailable, engineering sets `SPOTLIGHT_KILL_SWITCH=true` and/or `STORIES_KILL_SWITCH=true` on the web deployment (and the admin deployment, so this page shows a red warning).
+- Untick **Spotlight switched on** or **Stories switched on**. Every entry point disappears on web and mobile; posts, follows and promotions are kept. Messages, events, places and notifications keep working.
+- To stop paid placements only, untick **Show sponsored posts in feeds** (running promotions show nothing and are not charged; their run time still passes) and/or **Paid promotions** (no new sales).
+- If the console is unavailable, engineering sets `SPOTLIGHT_KILL_SWITCH=true`, `STORIES_KILL_SWITCH=true` and/or `SPOTLIGHT_PROMOTIONS_KILL_SWITCH=true` on the web deployment (and the admin deployment, so this page shows a red warning).
 
 ## Troubleshooting
 
