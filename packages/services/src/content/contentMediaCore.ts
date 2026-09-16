@@ -16,6 +16,7 @@ import type { ContentMediaItem } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import type { RegisterContentMediaInput } from "@abonten/validation/contentSchemas";
 import { v2 as cloudinary } from "cloudinary";
+import { enqueueCloudinaryCleanup } from "../platform/cloudinaryCleanupCore";
 import { checkRateLimit } from "../security/rateLimit";
 import { CONTENT_MEDIA_FOLDER_PREFIX } from "../uploads/cloudinaryUploadSignature";
 import { readContentSettings, resolveContentAccess } from "./contentProgram";
@@ -147,6 +148,45 @@ async function requestRendition(
   }
 }
 
+/**
+ * Whether this person may be given a Cloudinary signature for Spotlight /
+ * Story media at all. A signature authorises a real upload against the
+ * account's storage, so it is only handed to people who could post.
+ */
+export async function canUploadContentMedia(
+  supabase: ServiceRoleClient,
+  userId: string,
+): Promise<boolean> {
+  const { program } = await resolveContentAccess(supabase, userId);
+  if (!program.spotlightPosting && !program.storiesPosting) return false;
+  return !(await accountIsRestricted(supabase, userId));
+}
+
+/**
+ * An upload that registration refused is removed from Cloudinary straight
+ * away (queued for the maintenance drain if that call fails), so a refused
+ * file never keeps using storage.
+ */
+async function discardUpload(
+  supabase: ServiceRoleClient,
+  resource: CloudinaryResource,
+): Promise<void> {
+  const type = resource.resource_type === "video" ? "video" : "image";
+  try {
+    await cloudinary.uploader.destroy(resource.public_id, {
+      resource_type: type,
+      invalidate: true,
+    });
+  } catch (error) {
+    logger.error(
+      `content media: discarding refused upload ${resource.public_id} failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    await enqueueCloudinaryCleanup(supabase, resource.public_id, type);
+  }
+}
+
 export async function registerContentMediaCore(
   supabase: ServiceRoleClient,
   userId: string,
@@ -205,20 +245,26 @@ export async function registerContentMediaCore(
     };
   }
   const isVideo = resource.resource_type === "video";
+  const refuse = async (
+    message: string,
+  ): Promise<Envelope<ContentMediaItem>> => {
+    await discardUpload(supabase, resource);
+    return { status: 400, message };
+  };
   if (
     resource.resource_type === "raw" ||
     isVideo !== (input.resourceType === "video")
   ) {
-    return { status: 400, message: "Unsupported media type." };
+    return refuse("Unsupported media type.");
   }
   if (!isAllowedFormat(resource.format, isVideo)) {
-    return { status: 400, message: "Unsupported file format." };
+    return refuse("Unsupported file format.");
   }
   if (
     resource.bytes >
     (isVideo ? MAX_CONTENT_VIDEO_BYTES : MAX_CONTENT_IMAGE_BYTES)
   ) {
-    return { status: 400, message: "That file is too large." };
+    return refuse("That file is too large.");
   }
 
   const settings = await readContentSettings(supabase);
@@ -234,7 +280,7 @@ export async function registerContentMediaCore(
     const full =
       typeof resource.duration === "number" ? resource.duration : null;
     if (full !== null && full < MIN_VIDEO_SECONDS) {
-      return { status: 400, message: "That video is too short." };
+      return refuse("That video is too short.");
     }
     const start = input.trimStartSeconds;
     const end = input.trimEndSeconds;
@@ -259,10 +305,9 @@ export async function registerContentMediaCore(
       durationSeconds = full;
     }
     if (durationSeconds !== null && durationSeconds > maxSeconds + 0.5) {
-      return {
-        status: 400,
-        message: `Videos can be at most ${maxSeconds} seconds. Trim it and try again.`,
-      };
+      return refuse(
+        `Videos can be at most ${maxSeconds} seconds. Trim it and try again.`,
+      );
     }
   }
 
@@ -375,9 +420,11 @@ export async function deleteContentMediaCore(
     });
   } catch (error) {
     logger.error(`content media destroy failed for ${row.public_id}: ${error}`);
-    await supabase
-      .from("draft_asset_cleanup_queue")
-      .insert({ public_id: row.public_id, resource_type: row.media_type });
+    await enqueueCloudinaryCleanup(
+      supabase,
+      row.public_id,
+      row.media_type === "video" ? "video" : "image",
+    );
   }
   await supabase.from("content_media").delete().eq("id", mediaId);
   return { status: 200, message: "Removed." };

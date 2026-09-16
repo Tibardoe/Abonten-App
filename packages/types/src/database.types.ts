@@ -2884,22 +2884,37 @@ export type Database = {
       };
       draft_asset_cleanup_queue: {
         Row: {
+          attempts: number;
+          claimed_at: string | null;
+          detail: string | null;
+          finished_at: string | null;
           id: number;
           public_id: string;
           queued_at: string;
           resource_type: string;
+          status: string;
         };
         Insert: {
+          attempts?: number;
+          claimed_at?: string | null;
+          detail?: string | null;
+          finished_at?: string | null;
           id?: never;
           public_id: string;
           queued_at?: string;
           resource_type?: string;
+          status?: string;
         };
         Update: {
+          attempts?: number;
+          claimed_at?: string | null;
+          detail?: string | null;
+          finished_at?: string | null;
           id?: never;
           public_id?: string;
           queued_at?: string;
           resource_type?: string;
+          status?: string;
         };
         Relationships: [];
       };
@@ -10274,6 +10289,7 @@ export type Database = {
       };
       storage_purge_config: {
         Row: {
+          content_upload_sweep_at: string | null;
           dispatch_url: string | null;
           id: boolean;
           last_dispatched_at: string | null;
@@ -10281,6 +10297,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          content_upload_sweep_at?: string | null;
           dispatch_url?: string | null;
           id?: boolean;
           last_dispatched_at?: string | null;
@@ -10288,6 +10305,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          content_upload_sweep_at?: string | null;
           dispatch_url?: string | null;
           id?: boolean;
           last_dispatched_at?: string | null;
@@ -12515,6 +12533,22 @@ export type Database = {
       };
       cleanup_expired_drafts: { Args: never; Returns: undefined };
       cleanup_rate_limit_buckets: { Args: never; Returns: undefined };
+      cloudinary_cleanup_claim: {
+        Args: { p_limit?: number };
+        Returns: {
+          cleanup_id: number;
+          public_id: string;
+          resource_type: string;
+        }[];
+      };
+      cloudinary_cleanup_enqueue: {
+        Args: { p_public_id: string; p_resource_type: string };
+        Returns: undefined;
+      };
+      cloudinary_cleanup_finish: {
+        Args: { p_detail?: string; p_ids: number[]; p_status: string };
+        Returns: number;
+      };
       compute_event_promotion_end_date: {
         Args: { p_from_date: string; p_tier_id: number };
         Returns: string;
@@ -12719,6 +12753,10 @@ export type Database = {
         }[];
       };
       content_trending_refresh: { Args: never; Returns: number };
+      content_upload_sweep_claim: {
+        Args: { p_min_hours?: number };
+        Returns: boolean;
+      };
       content_users_blocked: {
         Args: { p_a: string; p_b: string };
         Returns: boolean;

@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/config/supabase/server";
+import { canUploadContentMedia } from "@abonten/services/content/contentMediaCore";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import {
   type UploadSignatureResult,
   buildCloudinaryUploadSignature,
@@ -18,6 +20,12 @@ export default async function getContentUploadSignature(): Promise<UploadSignatu
   } = await supabase.auth.getUser();
   if (!user || error) {
     return { status: 401, message: "Sign in to upload." };
+  }
+  if (!(await canUploadContentMedia(getSupabaseServiceClient(), user.id))) {
+    return {
+      status: 401,
+      message: "Posting isn't available for your account.",
+    };
   }
   return buildCloudinaryUploadSignature(user.id, "content");
 }
