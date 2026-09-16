@@ -8,6 +8,7 @@ import {
   durationProblem,
   estimatePromotionReach,
   formatReachRange,
+  locationShareBps,
   roundReach,
 } from "./promotionEstimate";
 
@@ -28,7 +29,12 @@ const pricing: ContentPromotionPricing = {
   audienceFloorReach: 0,
   dailyFillBps: 3000,
   maxReachShareBps: 6000,
-  locationAudienceShareBps: 3000,
+  locationAudienceShareByRadiusBps: {
+    "5": 1000,
+    "10": 1800,
+    "25": 3000,
+    "50": 4500,
+  },
   categoryAudienceShareBps: 5000,
   minDeliverableBps: 5000,
   pacingMultiplier: 2,
@@ -53,7 +59,7 @@ const estimate = (
     dailyCapPerViewer: 3,
     budgetMinor,
     durationDays: 7,
-    targeting: { location: false },
+    targeting: { radiusKm: null },
     ...overrides,
   });
 
@@ -111,10 +117,28 @@ describe("estimated reach", () => {
     const everywhere = estimate(5000, { audience: small });
     const near = estimate(5000, {
       audience: small,
-      targeting: { location: true },
+      targeting: { radiusKm: 25 },
     });
     expect(near.estimatedImpressions).toBeLessThan(
       everywhere.estimatedImpressions,
+    );
+  });
+  it("estimates a smaller audience for a smaller radius", () => {
+    const small = { ...bigAudience, dailyViewers: 2000, reach28d: 6000 };
+    const at = (radiusKm: number) =>
+      estimate(10000, { audience: small, targeting: { radiusKm } });
+    const [r5, r10, r25, r50] = [at(5), at(10), at(25), at(50)];
+    expect(r5.estimatedImpressions).toBeLessThan(r10.estimatedImpressions);
+    expect(r10.estimatedImpressions).toBeLessThan(r25.estimatedImpressions);
+    expect(r25.estimatedImpressions).toBeLessThan(r50.estimatedImpressions);
+    expect(r5.reachHigh).toBeLessThanOrEqual(r50.reachHigh);
+  });
+  it("reads the share for a radius, the next wider one, or the widest", () => {
+    expect(locationShareBps(pricing, 10)).toBe(1800);
+    expect(locationShareBps(pricing, 7)).toBe(1800);
+    expect(locationShareBps(pricing, 80)).toBe(4500);
+    expect(locationShareBps({ locationAudienceShareByRadiusBps: {} }, 10)).toBe(
+      0,
     );
   });
   it("can't estimate without audience data and refuses to sell", () => {

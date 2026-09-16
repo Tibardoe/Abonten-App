@@ -7,7 +7,10 @@ import type {
   ContentPromotionPricing,
 } from "@abonten/types/contentType";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
-import type { PromotionPricingInput } from "@abonten/validation/contentSchemas";
+import {
+  type PromotionPricingInput,
+  RADIUS_OPTIONS_KM,
+} from "@abonten/validation/contentSchemas";
 import {
   mapPromotionPricing,
   readPromotionAudience,
@@ -64,7 +67,7 @@ export async function getPromotionPricingAdminCore(
       dailyCapPerViewer,
       budgetMinor,
       durationDays: pricing.defaultDurationDays,
-      targeting: { location: false },
+      targeting: { radiusKm: null },
     }),
   );
   return {
@@ -87,7 +90,7 @@ const COLUMN: Record<keyof PromotionPricingInput["patch"], string> = {
   audienceFloorReach: "audience_floor_reach",
   dailyFillBps: "daily_fill_bps",
   maxReachShareBps: "max_reach_share_bps",
-  locationAudienceShareBps: "location_audience_share_bps",
+  locationAudienceShareByRadiusBps: "location_audience_share_by_radius",
   categoryAudienceShareBps: "category_audience_share_bps",
   minDeliverableBps: "min_deliverable_bps",
   pacingMultiplier: "pacing_multiplier",
@@ -184,6 +187,20 @@ export function pricingProblem(p: ContentPromotionPricing): string | null {
   }
   if (!p.durationOptionsDays.includes(p.defaultDurationDays)) {
     return "The default run length must be one of the options.";
+  }
+  const radii = Object.keys(p.locationAudienceShareByRadiusBps)
+    .map(Number)
+    .sort((a, b) => a - b);
+  if (radii.join(",") !== [...RADIUS_OPTIONS_KM].join(",")) {
+    return `Give an audience share for each distance: ${RADIUS_OPTIONS_KM.join(", ")} km.`;
+  }
+  for (let i = 1; i < radii.length; i += 1) {
+    if (
+      p.locationAudienceShareByRadiusBps[String(radii[i])] <
+      p.locationAudienceShareByRadiusBps[String(radii[i - 1])]
+    ) {
+      return "A wider distance can't have a smaller audience share.";
+    }
   }
   if (Math.floor((p.minBudgetMinor * 1000) / p.cpmMinor) < 1) {
     return "The smallest budget must buy at least one impression.";

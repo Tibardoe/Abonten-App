@@ -10,6 +10,7 @@ import type {
   ContentPromotionEstimate,
   ContentPromotionPricing,
 } from "@abonten/types/contentType";
+import { RADIUS_OPTIONS_KM } from "@abonten/validation/contentSchemas";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -83,11 +84,6 @@ const FIELDS: {
     suffix: "basis points",
   },
   {
-    key: "locationAudienceShareBps",
-    label: "Audience left with a location target",
-    suffix: "basis points",
-  },
-  {
     key: "minDeliverableBps",
     label: "Refuse budgets forecast to deliver under",
     suffix: "basis points",
@@ -132,12 +128,21 @@ export function PromotionPricingForm({
   const [durations, setDurations] = useState(
     list(pricing.durationOptionsDays, false),
   );
+  const [radiusShares, setRadiusShares] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      RADIUS_OPTIONS_KM.map((km) => [
+        String(km),
+        String(pricing.locationAudienceShareByRadiusBps[String(km)] ?? ""),
+      ]),
+    ),
+  );
   const [reason, setReason] = useState("");
 
   const save = () =>
     start(async () => {
       setMsg(null);
-      const patch: Record<string, number | number[]> = {};
+      const patch: Record<string, number | number[] | Record<string, number>> =
+        {};
       for (const f of FIELDS) {
         const n = Number(values[f.key]);
         if (!Number.isFinite(n)) {
@@ -153,6 +158,19 @@ export function PromotionPricingForm({
           .map((t) => (cedis ? Math.round(Number(t) * 100) : Number(t)));
       patch.suggestedBudgetsMinor = parseList(suggested, true);
       patch.durationOptionsDays = parseList(durations, false);
+      const shares: Record<string, number> = {};
+      for (const km of RADIUS_OPTIONS_KM) {
+        const n = Number(radiusShares[String(km)]);
+        if (!Number.isInteger(n) || n < 1 || n > 10000) {
+          setMsg({
+            ok: false,
+            text: `Audience within ${km} km must be a whole number from 1 to 10000.`,
+          });
+          return;
+        }
+        shares[String(km)] = n;
+      }
+      patch.locationAudienceShareByRadiusBps = shares;
       if (
         !window.confirm(
           "New prices and estimates apply to promotions created from now on. Running promotions keep the price they were sold at. Continue?",
@@ -290,6 +308,40 @@ export function PromotionPricingForm({
           <p className="text-xs text-muted-foreground">days, comma separated</p>
         </div>
       </div>
+
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium">
+          Audience assumed within a location target
+        </legend>
+        <p className="text-xs text-muted-foreground">
+          Share of the whole Spotlight audience (basis points) estimated to be
+          within each distance an advertiser can choose. Estimates only;
+          delivery always checks the real distance. Wider distances can&apos;t
+          have a smaller share.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {RADIUS_OPTIONS_KM.map((km) => (
+            <div key={km} className="text-sm">
+              <label htmlFor={`pricing-radius-${km}`} className="block">
+                Within {km} km
+              </label>
+              <input
+                id={`pricing-radius-${km}`}
+                inputMode="numeric"
+                value={radiusShares[String(km)]}
+                disabled={!editable}
+                onChange={(e) =>
+                  setRadiusShares((prev) => ({
+                    ...prev,
+                    [String(km)]: e.target.value,
+                  }))
+                }
+                className={cn(input, "mt-1 w-28")}
+              />
+            </div>
+          ))}
+        </div>
+      </fieldset>
 
       <div className="space-y-2">
         <label htmlFor="pricing-reason" className="text-sm font-semibold">

@@ -94,7 +94,7 @@ async function publishPost(
     .insert({
       owner_id: organizer.id,
       media_type: "image",
-      public_id: `content_media/${organizer.id}/promo_${token}`,
+      public_id: `content_media/development/${organizer.id}/promo_${token}`,
       version: 1,
       bytes: 1000,
       width: 720,
@@ -335,12 +335,37 @@ describe("pricing and estimates", () => {
         dailyCapPerViewer: 3,
         budgetMinor: 5000,
         durationDays: 7,
-        targeting: { location: false },
+        targeting: { radiusKm: null },
       }),
     );
     expect(must(res.data).impressionGoal).toBe(4545);
     expect(must(res.data).deliverable).toBe(true);
     expect(must(res.data).reachLow).toBeGreaterThan(0);
+
+    // A location target estimates the audience within the chosen distance.
+    const nearPost = await publishPost({ eventId });
+    const near = async (radiusKm: number) => {
+      const r = await estimateContentPromotionCore(svc, organizer.id, {
+        postId: nearPost,
+        budgetMinor: 50000,
+        durationDays: 3,
+        targeting: { area: "near_post", radiusKm },
+      });
+      expect(r.status, r.message).toBe(200);
+      expect(r.data).toEqual(
+        estimatePromotionReach({
+          pricing,
+          audience,
+          dailyCapPerViewer: 3,
+          budgetMinor: 50000,
+          durationDays: 3,
+          targeting: { radiusKm },
+        }),
+      );
+      return must(r.data);
+    };
+    const [r5, r50] = [await near(5), await near(50)];
+    expect(r5.estimatedImpressions).toBeLessThan(r50.estimatedImpressions);
   });
 
   it("refuses other people's posts, bad budgets, bad run lengths and a location it doesn't have", async () => {

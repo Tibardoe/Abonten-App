@@ -13,7 +13,7 @@ import type {
 //      — what the budget pays for, and where delivery stops.
 //   2. audience          = observed daily viewers / 28-day distinct viewers,
 //      or the admin-set floor when observed data is thinner, times the share
-//      left by a location target.
+//      assumed to be within the chosen radius of a location target.
 //   3. deliverable       = daily audience × run days × per-viewer daily cap ×
 //      expected fill. Fewer impressions than the goal means the run is too
 //      short or the audience too small for the budget.
@@ -28,7 +28,8 @@ export type PromotionEstimateInput = {
   dailyCapPerViewer: number;
   budgetMinor: number;
   durationDays: number;
-  targeting: { location: boolean };
+  /** Null = shown everywhere; otherwise the location target's radius. */
+  targeting: { radiusKm: number | null };
 };
 
 /** A human-sized number: tens under 100, fifties under 1,000, then hundreds. */
@@ -71,6 +72,25 @@ export function durationProblem(
     : "Choose how long the promotion can run.";
 }
 
+/**
+ * Audience share (basis points) assumed within a radius: the configured
+ * figure for that radius, else the nearest configured larger radius, else
+ * the largest. Nothing configured means no estimate can be made.
+ */
+export function locationShareBps(
+  pricing: Pick<ContentPromotionPricing, "locationAudienceShareByRadiusBps">,
+  radiusKm: number,
+): number {
+  const entries = Object.entries(pricing.locationAudienceShareByRadiusBps ?? {})
+    .map(([km, bps]) => [Number(km), Number(bps)] as const)
+    .filter(([km, bps]) => Number.isFinite(km) && Number.isFinite(bps))
+    .sort((a, b) => a[0] - b[0]);
+  if (entries.length === 0) return 0;
+  const match =
+    entries.find(([km]) => km >= radiusKm) ?? entries[entries.length - 1];
+  return Math.min(10_000, Math.max(0, match[1]));
+}
+
 export function estimatePromotionReach(
   input: PromotionEstimateInput,
 ): ContentPromotionEstimate {
@@ -87,9 +107,10 @@ export function estimatePromotionReach(
   const basis: ContentPromotionEstimate["basis"] =
     daily <= 0 || pool <= 0 ? "no_data" : useFloor ? "assumed" : "observed";
 
-  const share = input.targeting.location
-    ? pricing.locationAudienceShareBps / 10_000
-    : 1;
+  const share =
+    input.targeting.radiusKm === null
+      ? 1
+      : locationShareBps(pricing, input.targeting.radiusKm) / 10_000;
   const maxImpressions = Math.floor(
     daily *
       share *

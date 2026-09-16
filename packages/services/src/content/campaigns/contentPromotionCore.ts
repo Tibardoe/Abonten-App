@@ -46,7 +46,9 @@ export function mapPromotionPricing(row: PricingRow): ContentPromotionPricing {
     audienceFloorReach: row.audience_floor_reach,
     dailyFillBps: row.daily_fill_bps,
     maxReachShareBps: row.max_reach_share_bps,
-    locationAudienceShareBps: row.location_audience_share_bps,
+    locationAudienceShareByRadiusBps: shareByRadius(
+      row.location_audience_share_by_radius,
+    ),
     categoryAudienceShareBps: row.category_audience_share_bps,
     minDeliverableBps: row.min_deliverable_bps,
     pacingMultiplier: Number(row.pacing_multiplier),
@@ -191,7 +193,9 @@ export async function quotePromotion(
     dailyCapPerViewer: settings.sponsored_daily_cap_per_viewer,
     budgetMinor: input.budgetMinor,
     durationDays: input.durationDays,
-    targeting: { location: targetingLocation !== null },
+    targeting: {
+      radiusKm: targetingLocation === null ? null : targetingRadiusKm,
+    },
   });
   return {
     status: 200,
@@ -228,6 +232,16 @@ export function undeliverableMessage(
     return "We can't estimate reach for promotions yet. Please try again later.";
   }
   return "The audience for this promotion is too small for this budget right now. Lower the budget, let it run longer or show it to a wider area.";
+}
+
+function shareByRadius(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: Record<string, number> = {};
+  for (const [km, bps] of Object.entries(raw as Record<string, unknown>)) {
+    const n = Number(bps);
+    if (/^\d+$/.test(km) && Number.isFinite(n)) out[km] = n;
+  }
+  return out;
 }
 
 function pointFromWkb(raw: unknown): { lat: number; lng: number } | null {

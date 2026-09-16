@@ -391,7 +391,8 @@ export type ContentPromotionPricing = {
   audienceFloorReach: number;
   dailyFillBps: number;
   maxReachShareBps: number;
-  locationAudienceShareBps: number;
+  /** Audience share within each selectable radius, keyed by km ("5", "10"…). */
+  locationAudienceShareByRadiusBps: Record<string, number>;
   categoryAudienceShareBps: number;
   minDeliverableBps: number;
   pacingMultiplier: number;

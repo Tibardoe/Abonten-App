@@ -459,7 +459,10 @@ export const promotionPricingSchema = z.object({
       audienceFloorReach: z.number().int().min(0).max(100_000_000),
       dailyFillBps: bps.min(1),
       maxReachShareBps: bps.min(1),
-      locationAudienceShareBps: bps.min(1),
+      locationAudienceShareByRadiusBps: z.record(
+        z.string().regex(/^\d+$/),
+        bps.min(1),
+      ),
       categoryAudienceShareBps: bps.min(1),
       minDeliverableBps: bps,
       pacingMultiplier: z.number().min(1).max(20),

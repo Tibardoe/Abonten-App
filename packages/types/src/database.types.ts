@@ -1672,7 +1672,7 @@ export type Database = {
           duration_options_days: number[];
           estimate_spread_bps: number;
           id: number;
-          location_audience_share_bps: number;
+          location_audience_share_by_radius: Json;
           max_budget_minor: number;
           max_reach_share_bps: number;
           min_budget_minor: number;
@@ -1696,7 +1696,7 @@ export type Database = {
           duration_options_days?: number[];
           estimate_spread_bps?: number;
           id?: number;
-          location_audience_share_bps?: number;
+          location_audience_share_by_radius?: Json;
           max_budget_minor?: number;
           max_reach_share_bps?: number;
           min_budget_minor?: number;
@@ -1720,7 +1720,7 @@ export type Database = {
           duration_options_days?: number[];
           estimate_spread_bps?: number;
           id?: number;
-          location_audience_share_bps?: number;
+          location_audience_share_by_radius?: Json;
           max_budget_minor?: number;
           max_reach_share_bps?: number;
           min_budget_minor?: number;
