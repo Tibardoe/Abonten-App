@@ -58,8 +58,28 @@ export type UploadSignatureKind =
   | "event_review_photo"
   | "place_review_photo";
 
-/** Folder every Spotlight / Story upload is bound to (+ "/<user id>"). */
+/** Root of every Spotlight / Story upload (+ "/<environment>/<user id>"). */
 export const CONTENT_MEDIA_FOLDER_PREFIX = "content_media";
+
+/**
+ * The Cloudinary account is shared by production, preview deployments and
+ * local development, but each has its own database. Spotlight / Story
+ * uploads are filed under their environment so the daily sweep for
+ * never-registered uploads (platform/cloudinaryCleanupCore) only ever looks
+ * at uploads its own database could have registered.
+ */
+export function contentMediaEnvironment():
+  | "production"
+  | "preview"
+  | "development" {
+  const env = process.env.VERCEL_ENV;
+  return env === "production" || env === "preview" ? env : "development";
+}
+
+/** content_media/<environment>/ — with a trailing slash. */
+export function contentMediaEnvironmentPrefix(): string {
+  return `${CONTENT_MEDIA_FOLDER_PREFIX}/${contentMediaEnvironment()}/`;
+}
 
 const FOLDER_PREFIX: Record<UploadSignatureKind, string> = {
   avatar: "user_profiles",
@@ -140,7 +160,10 @@ export async function buildCloudinaryUploadSignature(
   }
 
   const timestamp = Math.round(Date.now() / 1000);
-  const folder = `${FOLDER_PREFIX[kind]}/${userId}`;
+  const folder =
+    kind === "content"
+      ? `${contentMediaEnvironmentPrefix()}${userId}`
+      : `${FOLDER_PREFIX[kind]}/${userId}`;
   const { allowedFormats } = UPLOAD_CONSTRAINTS[kind];
 
   // Every signed param must be echoed verbatim by the client or Cloudinary's

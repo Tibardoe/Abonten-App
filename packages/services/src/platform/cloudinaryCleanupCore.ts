@@ -2,7 +2,7 @@ import { logger } from "@abonten/core/logger";
 import type { ServiceRoleClient } from "@abonten/types/supabaseClientType";
 import { v2 as cloudinary } from "cloudinary";
 import { getSupabaseServiceClient } from "../supabase/serviceClient";
-import { CONTENT_MEDIA_FOLDER_PREFIX } from "../uploads/cloudinaryUploadSignature";
+import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -15,9 +15,11 @@ cloudinary.config({
 // due and queues it in draft_asset_cleanup_queue; only the Cloudinary API
 // can destroy an asset, so POST /api/maintenance/storage-purge (poked by the
 // storage-purge-dispatch cron) drains the queue here. Once a day it also
-// sweeps content_media/ on Cloudinary for uploads that were never
-// registered as a content_media row — the person left before saving, or
-// registration refused the file — which nothing else would ever find.
+// sweeps content_media/<this environment>/ on Cloudinary for uploads that
+// were never registered as a content_media row — the person left before
+// saving, or registration refused the file — which nothing else would ever
+// find. Only this environment's folder: the Cloudinary account is shared
+// with other environments whose uploads this database has never seen.
 // Service role only; never a Server Action.
 
 const BATCH = 50;
@@ -165,6 +167,7 @@ export async function sweepUnregisteredContentUploadsCore(
   }
   if (!due) return { ran: false, scanned: 0, queued: 0 };
 
+  const prefix = contentMediaEnvironmentPrefix();
   let scanned = 0;
   let queued = 0;
   for (const resourceType of ["image", "video"] as const) {
@@ -175,7 +178,7 @@ export async function sweepUnregisteredContentUploadsCore(
       >;
       try {
         result = await listResources({
-          prefix: `${CONTENT_MEDIA_FOLDER_PREFIX}/`,
+          prefix,
           resourceType,
           nextCursor: cursor,
         });
@@ -188,7 +191,9 @@ export async function sweepUnregisteredContentUploadsCore(
         break;
       }
       const old = (result.resources ?? []).filter(
-        (r) => now() - Date.parse(r.created_at) > UNREGISTERED_GRACE_MS,
+        (r) =>
+          r.public_id.startsWith(prefix) &&
+          now() - Date.parse(r.created_at) > UNREGISTERED_GRACE_MS,
       );
       scanned += result.resources?.length ?? 0;
       // Chunked: a long id list would not fit in one request URL.

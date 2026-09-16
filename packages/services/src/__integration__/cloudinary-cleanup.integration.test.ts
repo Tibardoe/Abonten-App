@@ -72,9 +72,9 @@ describe("cloudinary cleanup queue", () => {
   });
 
   it("drains once, treats 'not found' as done and retries failures", async () => {
-    const ok = `content_media/${user.id}/${tag}-ok`;
-    const gone = `content_media/${user.id}/${tag}-gone`;
-    const flaky = `content_media/${user.id}/${tag}-flaky`;
+    const ok = `content_media/development/${user.id}/${tag}-ok`;
+    const gone = `content_media/development/${user.id}/${tag}-gone`;
+    const flaky = `content_media/development/${user.id}/${tag}-flaky`;
     await enqueueCloudinaryCleanup(svc, ok, "video");
     await enqueueCloudinaryCleanup(svc, ok, "video"); // no duplicate
     await enqueueCloudinaryCleanup(svc, gone, "image");
@@ -112,9 +112,13 @@ describe("cloudinary cleanup queue", () => {
     const now = Date.now();
     const old = new Date(now - 3 * 86_400_000).toISOString();
     const fresh = new Date(now - 60_000).toISOString();
-    const registered = `content_media/${user.id}/${tag}-registered`;
-    const abandoned = `content_media/${user.id}/${tag}-abandoned`;
-    const inFlight = `content_media/${user.id}/${tag}-inflight`;
+    const registered = `content_media/development/${user.id}/${tag}-registered`;
+    const abandoned = `content_media/development/${user.id}/${tag}-abandoned`;
+    const inFlight = `content_media/development/${user.id}/${tag}-inflight`;
+    // Another environment's upload (the Cloudinary account is shared): this
+    // database never registered it, and the sweep must never touch it.
+    const otherEnv = `content_media/production/${user.id}/${tag}-prod`;
+    const legacy = `content_media/${user.id}/${tag}-legacy`;
     await svc.from("content_media").insert({
       owner_id: user.id,
       media_type: "image",
@@ -126,16 +130,26 @@ describe("cloudinary cleanup queue", () => {
       playback_status: "none",
     } as never);
 
-    const list = async ({ resourceType }: { resourceType: string }) => ({
-      resources:
-        resourceType === "image"
-          ? [
-              { public_id: registered, created_at: old },
-              { public_id: abandoned, created_at: old },
-              { public_id: inFlight, created_at: fresh },
-            ]
-          : [],
-    });
+    const prefixes: string[] = [];
+    const list = async ({
+      resourceType,
+      prefix,
+    }: { resourceType: string; prefix: string }) => {
+      prefixes.push(prefix);
+      return {
+        resources:
+          resourceType === "image"
+            ? [
+                { public_id: registered, created_at: old },
+                { public_id: abandoned, created_at: old },
+                { public_id: inFlight, created_at: fresh },
+                // Returned anyway, as if the listing ignored the prefix.
+                { public_id: otherEnv, created_at: old },
+                { public_id: legacy, created_at: old },
+              ]
+            : [],
+      };
+    };
     const first = await sweepUnregisteredContentUploadsCore({
       client: svc,
       listResources: list,
@@ -144,6 +158,9 @@ describe("cloudinary cleanup queue", () => {
     });
     expect(first.ran).toBe(true);
     expect(first.queued).toBe(1);
+    expect(new Set(prefixes)).toEqual(new Set(["content_media/development/"]));
+    expect(await rowsFor(otherEnv)).toHaveLength(0);
+    expect(await rowsFor(legacy)).toHaveLength(0);
     expect(await rowsFor(abandoned)).toHaveLength(1);
     expect(await rowsFor(registered)).toHaveLength(0);
     expect(await rowsFor(inFlight)).toHaveLength(0);

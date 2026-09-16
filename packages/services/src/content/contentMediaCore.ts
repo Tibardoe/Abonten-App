@@ -18,7 +18,7 @@ import type { RegisterContentMediaInput } from "@abonten/validation/contentSchem
 import { v2 as cloudinary } from "cloudinary";
 import { enqueueCloudinaryCleanup } from "../platform/cloudinaryCleanupCore";
 import { checkRateLimit } from "../security/rateLimit";
-import { CONTENT_MEDIA_FOLDER_PREFIX } from "../uploads/cloudinaryUploadSignature";
+import { contentMediaEnvironmentPrefix } from "../uploads/cloudinaryUploadSignature";
 import { readContentSettings, resolveContentAccess } from "./contentProgram";
 import { type Envelope, FAIL, accountIsRestricted } from "./contentShared";
 
@@ -30,7 +30,7 @@ cloudinary.config({
 });
 
 // The media half of the content pipeline. The bytes go browser/app ->
-// Cloudinary with a signature bound to `content_media/<user id>`; this
+// Cloudinary with a signature bound to `content_media/<environment>/<user id>`; this
 // registers the upload as a content_media row. Unlike the highlight flow, it
 // never trusts the client's bytes, duration, dimensions or format: it asks
 // Cloudinary's Admin API for the stored asset's own record and applies the
@@ -223,7 +223,7 @@ export async function registerContentMediaCore(
     };
   }
 
-  const expectedPrefix = `${CONTENT_MEDIA_FOLDER_PREFIX}/${userId}/`;
+  const expectedPrefix = `${contentMediaEnvironmentPrefix()}${userId}/`;
   if (!input.publicId.startsWith(expectedPrefix)) {
     return { status: 403, message: "Not authorized for this media." };
   }

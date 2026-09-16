@@ -83,7 +83,7 @@ async function makeMedia(ownerId: string, type: "image" | "video" = "image") {
     .insert({
       owner_id: ownerId,
       media_type: type,
-      public_id: `content_media/${ownerId}/it_${token}`,
+      public_id: `content_media/development/${ownerId}/it_${token}`,
       version: 1,
       bytes: 1000,
       width: 720,

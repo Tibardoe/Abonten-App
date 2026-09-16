@@ -9,7 +9,7 @@ import {
 } from "@abonten/services/uploads/cloudinaryUploadSignature";
 
 // Signs a direct browser -> Cloudinary upload for Spotlight and Story media,
-// scoped to content_media/<user id>. registerContentMedia later re-reads the
+// scoped to content_media/<environment>/<user id>. registerContentMedia later re-reads the
 // asset from Cloudinary and refuses anything outside that folder. Mobile uses
 // POST /api/mobile/uploads/signature with kind "content".
 export default async function getContentUploadSignature(): Promise<UploadSignatureResult> {
