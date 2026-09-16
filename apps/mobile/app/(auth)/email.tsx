@@ -8,6 +8,7 @@ import {
   Button,
   Icon,
   KeyboardAwareScrollView,
+  KeyboardRevealGroup,
 } from "@abonten/ui-native";
 import { useThemeColors } from "@abonten/ui-native/theme";
 import { useRouter } from "expo-router";
@@ -103,7 +104,7 @@ export default function EmailSignIn() {
               </AppText>
             </View>
 
-            <View className="gap-3 rounded-2xl border border-border bg-card p-4">
+            <KeyboardRevealGroup className="gap-3 rounded-2xl border border-border bg-card p-4">
               <AppText variant="label">Email address</AppText>
               <TextInput
                 className={[
@@ -152,7 +153,7 @@ export default function EmailSignIn() {
                 onPress={sendCode}
                 className="mt-1"
               />
-            </View>
+            </KeyboardRevealGroup>
           </View>
         </KeyboardAwareScrollView>
       </View>

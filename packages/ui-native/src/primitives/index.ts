@@ -114,6 +114,7 @@ export { SheetOption, type SheetOptionProps } from "./SheetOption";
 export {
   KeyboardAwareScrollView,
   type KeyboardAwareScrollViewProps,
+  KeyboardRevealGroup,
   useRevealInput,
 } from "./KeyboardAwareScrollView";
 export { useModalHandoff, runAfterModalDismissal } from "./useModalHandoff";

@@ -1,4 +1,10 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Keyboard,
   Modal,
@@ -14,8 +20,11 @@ import {
   GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
+  Easing,
+  cancelAnimation,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
@@ -52,6 +61,15 @@ import { useKeyboardHeight } from "./useKeyboard";
 // anything less springs back, so a half-committed drag never loses the
 // user's place. It runs on the UI thread via Reanimated, so it tracks the
 // finger even while the screen underneath is busy.
+//
+// Presentation: the backdrop FADES and the panel SLIDES, as two separate
+// animations. This used to be `<Modal animationType="slide">`, which slides
+// the modal's whole window — the dim backdrop included — so opening a sheet
+// showed a grey slab rising from the bottom behind the panel (and sinking
+// again on close) that read as a second sheet. The Modal now presents with
+// no animation of its own and stays mounted until the exit animation has
+// finished, so `onDismiss` still means "fully off screen" on both
+// platforms.
 //
 // The panel is wrapped in its own <GestureHandlerRootView>: an RN <Modal>
 // renders into a SEPARATE native view hierarchy, so the app-root one in
@@ -99,11 +117,17 @@ export function Sheet({
   const { height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const c = useThemeColors();
+  const reduceMotion = useReducedMotion();
 
   // Live drag offset of the panel, and the panel's measured height (the
   // dismissal threshold and the scrim fade are both fractions of it).
   const dragY = useSharedValue(0);
   const panelHeight = useSharedValue(0);
+  // 0 = off screen, 1 = presented. Drives the panel slide AND the backdrop
+  // fade, each through its own animated style.
+  const presence = useSharedValue(0);
+  // The native Modal stays visible while the exit animation runs.
+  const [mounted, setMounted] = useState(open);
 
   // Live keyboard height, from the shared listener hook.
   const kbHeight = useKeyboardHeight();
@@ -112,37 +136,81 @@ export function Sheet({
     // dismissed while its input was focused can leave the keyboard up over
     // the next screen.
     if (!open) Keyboard.dismiss();
-    // Reset the drag on open, so a sheet dismissed by dragging doesn't
-    // reopen already pushed off the bottom of the screen.
-    else dragY.value = 0;
-  }, [open, dragY]);
-
-  // `Modal.onDismiss` is iOS-only. On Android the dialog is gone the moment
-  // `visible` flips, so report the dismissal after the slide-out animation
-  // has had time to finish — same contract for callers on both platforms.
-  const onDismissRef = useRef(onDismiss);
-  onDismissRef.current = onDismiss;
-  const wasOpen = useRef(open);
-  useEffect(() => {
-    if (Platform.OS === "ios") return;
-    const closing = wasOpen.current && !open;
-    wasOpen.current = open;
-    if (!closing) return;
-    const t = setTimeout(() => onDismissRef.current?.(), 260);
-    return () => clearTimeout(t);
   }, [open]);
 
-  const dragStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: dragY.value }],
-  }));
+  // `Modal.onDismiss` is iOS-only (it fires once UIKit has removed the
+  // presented controller). On Android the dialog is gone as soon as
+  // `visible` flips, so report it when the native Modal is unmounted after
+  // the exit animation — same "fully off screen" contract on both
+  // platforms.
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+  const wasMounted = useRef(mounted);
+  useEffect(() => {
+    const closed = wasMounted.current && !mounted;
+    wasMounted.current = mounted;
+    if (closed && Platform.OS !== "ios") onDismissRef.current?.();
+  }, [mounted]);
 
-  // The scrim thins out as the panel is dragged away, so the gesture reads
-  // as letting go of this screen rather than a panel sliding over a constant
-  // wall of grey.
+  const finishExit = useCallback(() => setMounted(false), []);
+  const enterDuration = reduceMotion ? 0 : 280;
+  const exitDuration = reduceMotion ? 0 : 220;
+
+  // Enter / exit. Opening mounts the Modal with the panel parked below the
+  // screen and slides it in once the panel has been measured (onLayout), so
+  // the travel is the panel's own height and short sheets don't lag. Closing
+  // animates out FIRST and only then unmounts the Modal. Reopening mid-exit
+  // simply reverses the animation.
+  const pendingEnter = useRef(false);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      if (panelHeight.value > 0) {
+        cancelAnimation(presence);
+        presence.value = withTiming(1, {
+          duration: enterDuration,
+          easing: Easing.out(Easing.cubic),
+        });
+      } else {
+        pendingEnter.current = true;
+      }
+      return;
+    }
+    pendingEnter.current = false;
+    cancelAnimation(presence);
+    presence.value = withTiming(
+      0,
+      { duration: exitDuration, easing: Easing.in(Easing.cubic) },
+      (finished) => {
+        if (finished) runOnJS(finishExit)();
+      },
+    );
+  }, [open, presence, panelHeight, enterDuration, exitDuration, finishExit]);
+
+  // Fully gone: forget the measured height and any drag, so the next opening
+  // parks below the (possibly different) new content and starts undragged.
+  useEffect(() => {
+    if (mounted) return;
+    panelHeight.value = 0;
+    dragY.value = 0;
+  }, [mounted, panelHeight, dragY]);
+
+  const panelStyle = useAnimatedStyle(() => {
+    // Until measured, park the panel a full window height down so it can
+    // never flash at its resting position for a frame.
+    const travel = panelHeight.value > 0 ? panelHeight.value + 24 : height;
+    return {
+      transform: [{ translateY: (1 - presence.value) * travel + dragY.value }],
+    };
+  });
+
+  // The scrim fades with the presentation and thins out as the panel is
+  // dragged away, so the gesture reads as letting go of this screen rather
+  // than a panel sliding over a constant wall of grey.
   const scrimStyle = useAnimatedStyle(() => {
     const h = panelHeight.value || 1;
-    const progress = Math.min(1, Math.max(0, dragY.value / h));
-    return { opacity: 0.6 * (1 - progress) };
+    const drag = Math.min(1, Math.max(0, dragY.value / h));
+    return { opacity: 0.6 * presence.value * (1 - drag) };
   });
 
   const dragGesture = Gesture.Pan()
@@ -195,9 +263,9 @@ export function Sheet({
 
   return (
     <Modal
-      visible={open}
+      visible={mounted}
       transparent
-      animationType="slide"
+      animationType="none"
       onRequestClose={onClose}
       onDismiss={Platform.OS === "ios" ? onDismiss : undefined}
       statusBarTranslucent
@@ -227,13 +295,20 @@ export function Sheet({
         <Animated.View
           onLayout={(e) => {
             panelHeight.value = e.nativeEvent.layout.height;
+            if (pendingEnter.current) {
+              pendingEnter.current = false;
+              presence.value = withTiming(1, {
+                duration: enterDuration,
+                easing: Easing.out(Easing.cubic),
+              });
+            }
           }}
           className="rounded-t-2xl border-t border-border bg-popover"
           style={[
             { maxHeight, marginBottom: kb },
             minHeight != null ? { minHeight } : null,
             shadow.sheet,
-            dragStyle,
+            panelStyle,
           ]}
         >
           <GestureDetector gesture={dragGesture}>

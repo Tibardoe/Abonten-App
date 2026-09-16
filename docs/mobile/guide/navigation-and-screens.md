@@ -4,8 +4,8 @@ purpose: Every screen in the Android app, how it is reached, and what it does.
 audience: Support, QA, product
 scope: apps/mobile/app (Expo Router)
 status: Approved
-version: 1.1
-lastReviewed: 2026-09-15
+version: 1.2
+lastReviewed: 2026-09-16
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -62,15 +62,24 @@ Since 2026-09-15 (iOS TestFlight QA round 1):
 - **Keyboard**: every form on `KeyboardAwareScrollView` scrolls the focused `<Input>` fully into view above the keyboard, including a growing multiline field; the chat composer resets its height on send.
 - **Modals** hand off in sequence — a sheet or menu that opens another modal (location sheet → map picker, "…" menu → Report, message actions → emoji picker, highlight viewer → Report) closes fully first (`useModalHandoff` / `runAfterModalDismissal` in `@abonten/ui-native`).
 - **Connection pill** under the status bar: Reconnecting… (amber, first 6 s of a drop), You're offline (red), Back online (green); offline is debounced 1.5 s so a return from the background never flashes it.
-- **Side menu**: the identity card opens the public profile; tab rows switch tabs; any route change closes the drawer.
+- **Side menu**: the identity card opens the public profile; tab rows switch tabs; any other route change closes the drawer.
+
+Since 2026-09-16 (iOS TestFlight QA round 2):
+
+- **Side menu is a navigation context**: going Back from a screen opened from the menu (Dashboard, Wallets, Notifications…) lands on the menu again; closing the menu (X, backdrop, swipe, Android back) returns to the screen underneath. Tab rows and Sign in don't reopen it; legal/help links open over it.
+- **Bottom sheets**: the backdrop fades and the panel slides as separate animations (the backdrop used to slide up with the panel and read as a second sheet); `onDismiss` still fires only once the sheet is fully gone.
+- **Keyboard on sign-in**: the whole phone/email card and the OTP block with its Verify button stay above the keyboard (`KeyboardRevealGroup`), not just the field.
+- **Share** from the event card menu opens the native share sheet after the menu has closed (it silently did nothing on iOS); a failure shows a toast, cancelling is silent.
+- **Detail maps**: the small map on event and place details is a static preview; tapping it (or Directions) opens the phone's maps app with the venue's coordinates. Place details show Directions and Check in beneath the map, like Event details.
+- **Highlights**: a video highlight's progress bar moves smoothly with playback and stops while buffering or paused.
 
 ## Explore hero and status badges
 
-One promotional slot (`DiscoveryHero`): when an Abonten Weekly edition is out for the area it is the hero and Featured events/places follow as a compact peeking row; otherwise the Featured carousel is the hero. Featured (paid placement) is never removed by the filter sheet. Event cards carry one bottom-left status pill (Cancelled / Sold out / Ongoing / Ended) instead of a full-image wash. Map clusters that share one spot open a "N at this spot" list on tap.
+One promotional slot, the **Spotlight** (`DiscoveryHero` → `SpotlightCarousel`): a single full-width carousel whose slides are the area's Abonten Weekly edition (first, when one is out) and the current tab's Featured events or places, all at the same responsive hero height with one progress indicator, one auto-rotation (pausable; paused while touched, off-screen, backgrounded or with reduce motion) and each paid slide carrying its disclosure pill ("Featured" for events, "Sponsored" for places). Slide order and the 8-slide cap come from `@abonten/core/discovery/spotlight`. A sponsored place logs a `promotion_impression` when its slide is shown, like the web slider. Featured (paid placement) is never removed by the filter sheet, and active filter chips sit a fixed gap below the Spotlight. Event cards carry one bottom-left status pill (Cancelled / Sold out / Ongoing / Ended) instead of a full-image wash. Map clusters that share one spot open a "N at this spot" list on tap.
 
 ## Chat
 
-Own-message ticks are drawn in the bubble's foreground colour (single = sent, double = read, clock = sending, "Tap to retry" = failed); deleted messages are dashed, muted tombstones with no ticks; http(s)/www links are tappable (own abontenhub.com event / place / weekly / invite / messages links open in the app, everything else in the in-app browser).
+The header leads with the other person's name and avatar (the event or place is the line beneath), which becomes "typing…" while they type and "In this chat" while they have the thread open (Realtime Presence on the private conversation channel — nothing stored). The composer grows with its text up to five lines and shows a characters-left count near the limit; the inbox loads with row skeletons. Own-message ticks and timestamps are drawn in the bubble's dark foreground ink (single = sent, double = read, clock = sending, "Tap to retry" = failed); deleted messages are dashed, muted tombstones with no ticks; http(s)/www links are tappable (own abontenhub.com event / place / weekly / invite / messages links open in the app, everything else in the in-app browser).
 
 ## Events at a place
 

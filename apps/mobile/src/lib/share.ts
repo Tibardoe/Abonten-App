@@ -1,7 +1,7 @@
 import { generateSlug } from "@abonten/core/geerateSlug";
 import { withReferralCode } from "@abonten/core/rewards/referralCode";
 import { weeklyEditionPath } from "@abonten/core/weekly/copy";
-import { Share } from "react-native";
+import { Platform, Share } from "react-native";
 
 // Native share — the mobile stand-in for the web share buttons. The web
 // `getEventShareUrl` builds `${BASE_URL}/events/${slug(eventCode)}`; mobile
@@ -18,16 +18,17 @@ const SITE = "https://abontenhub.com";
 
 /**
  * The public event link. With the signed-in sharer's referral code it gets
- * ?ref=CODE, so a ticket bought through it can earn them credit.
+ * ?ref=CODE, so a ticket bought through it can earn them credit. Null when
+ * the event has no usable code (a draft, or a row missing its code) — a
+ * bare `/events/` link would open the site's 404.
  */
 export function eventShareUrl(
-  eventCode: string,
+  eventCode: string | null | undefined,
   referralCode?: string | null,
-): string {
-  return withReferralCode(
-    `${SITE}/events/${generateSlug(eventCode) ?? ""}`,
-    referralCode ?? null,
-  );
+): string | null {
+  const slug = eventCode ? generateSlug(eventCode) : null;
+  if (!slug) return null;
+  return withReferralCode(`${SITE}/events/${slug}`, referralCode ?? null);
 }
 
 export function placeShareUrl(slug: string): string {
@@ -39,29 +40,55 @@ export function weeklyShareUrl(scopeSlug: string, weekStart: string): string {
   return `${SITE}${weeklyEditionPath(scopeSlug, weekStart)}`;
 }
 
-/** Opens the share sheet; resolves true when the user actually shared. */
-export async function shareLink(title: string, url: string): Promise<boolean> {
+/**
+ * What happened to a share: the person shared it, closed the sheet (never
+ * an error — nothing to report), or the share sheet could not be shown.
+ * Android reports no outcome for a completed share; it resolves "shared"
+ * once the chooser was shown, which is the most the platform tells us.
+ */
+export type ShareOutcome =
+  | { kind: "shared" }
+  | { kind: "dismissed" }
+  | { kind: "failed"; message: string };
+
+/** Opens the platform share sheet with the link. Never throws. */
+export async function shareLink(
+  title: string,
+  url: string | null,
+): Promise<ShareOutcome> {
+  if (!url) {
+    return { kind: "failed", message: "This link isn't available yet." };
+  }
   try {
-    const result = await Share.share({
-      message: `${title}\n${url}`,
-      url,
-      title,
-    });
-    return result.action === Share.sharedAction;
-  } catch {
-    // User dismissed the sheet, or sharing is unavailable — nothing to do.
-    return false;
+    const result = await Share.share(
+      // iOS hands `message` and `url` to the share sheet as two items, and
+      // targets that take both (Copy, Messages, WhatsApp) paste them
+      // together — putting the link in the message as well produced
+      // "Title https://… https://…". So on iOS the link travels only as
+      // `url`. Android ignores `url`, so there it rides in the message.
+      Platform.OS === "ios"
+        ? { message: title, url, title }
+        : { message: `${title}\n${url}`, title },
+      { dialogTitle: title, subject: title },
+    );
+    return result.action === Share.dismissedAction
+      ? { kind: "dismissed" }
+      : { kind: "shared" };
+  } catch (e) {
+    return {
+      kind: "failed",
+      message:
+        e instanceof Error && e.message
+          ? e.message
+          : "The share sheet couldn't be opened.",
+    };
   }
 }
 
 export function shareEvent(
   title: string,
-  eventCode: string,
+  eventCode: string | null | undefined,
   referralCode?: string | null,
-): Promise<boolean> {
+): Promise<ShareOutcome> {
   return shareLink(title, eventShareUrl(eventCode, referralCode));
-}
-
-export function sharePlace(title: string, slug: string): Promise<boolean> {
-  return shareLink(title, placeShareUrl(slug));
 }

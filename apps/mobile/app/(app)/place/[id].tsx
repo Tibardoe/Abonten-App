@@ -7,13 +7,7 @@ import { ReportSheet } from "@/components/ReportSheet";
 import { PlacePromptHost } from "@/components/alerts/PlacePromptHost";
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
 import { AppHeader } from "@/components/app/AppHeader";
-import {
-  MapConfigured,
-  MapErrorBoundary,
-  MapView,
-  Marker,
-  PROVIDER_GOOGLE,
-} from "@/components/map/NativeMap";
+import { StaticMapPreview } from "@/components/map/StaticMapPreview";
 import { BookPlaceSheet } from "@/components/places/BookPlaceSheet";
 import { ClaimPlaceSheet } from "@/components/places/ClaimPlaceSheet";
 import { PlaceReviewSheet } from "@/components/reviews/PlaceReviewSheet";
@@ -37,6 +31,7 @@ import {
 import { PlaceCheckInSheet } from "@/features/rewards/PlaceCheckInSheet";
 import { useCheckIn } from "@/features/rewards/usePlaceVisits";
 import { useRewardsProgram } from "@/features/rewards/useRewards";
+import { openDirections as openMapsDirections } from "@/lib/directions";
 import { placeShareUrl } from "@/lib/share";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
 import { computePlaceOpenStatus } from "@abonten/core/computePlaceOpenStatus";
@@ -328,10 +323,14 @@ export default function PlaceDetailScreen() {
   const upcomingEvents = upcoming.data ?? [];
 
   const openDirections = () => {
-    const q = encodeURIComponent(address ?? place.name);
-    Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${q}`,
-    ).catch(() => {});
+    void openMapsDirections({ label: place.name, address, coords }).then(
+      (opened) => {
+        if (!opened)
+          toast.error("Couldn't open maps", {
+            description: "No maps app is available on this device.",
+          });
+      },
+    );
   };
   const whatsappDigits = place.whatsapp?.replace(/\D/g, "");
   // "Book" is offered on any place to a signed-in user who isn't the owner
@@ -484,54 +483,39 @@ export default function PlaceDetailScreen() {
             />
           ) : null}
 
-          {/* Primary actions */}
-          <View className="flex-row flex-wrap gap-2">
-            <Button
-              title="Directions"
-              variant="outline"
-              size="sm"
-              leftIcon="navigate-outline"
-              className="flex-1"
-              onPress={openDirections}
-            />
-            {session && isVisitor && visitsOn ? (
-              <Button
-                title="Check in"
-                variant="outline"
-                size="sm"
-                leftIcon="qr-code-outline"
-                className="flex-1"
-                loading={checkIn.isPending}
-                onPress={() => setScanOpen(true)}
-              />
-            ) : null}
-            {place.phone ? (
-              <Button
-                title="Call"
-                variant="outline"
-                size="sm"
-                leftIcon="call-outline"
-                className="flex-1"
-                onPress={() =>
-                  Linking.openURL(`tel:${place.phone}`).catch(() => {})
-                }
-              />
-            ) : null}
-            {whatsappDigits ? (
-              <Button
-                title="WhatsApp"
-                variant="outline"
-                size="sm"
-                leftIcon="logo-whatsapp"
-                className="flex-1"
-                onPress={() =>
-                  Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
-                    () => {},
-                  )
-                }
-              />
-            ) : null}
-          </View>
+          {/* Quick contact — Directions and Check in live with the map in
+              the Location card below, the same arrangement as Event
+              Details. */}
+          {place.phone || whatsappDigits ? (
+            <View className="flex-row gap-2">
+              {place.phone ? (
+                <Button
+                  title="Call"
+                  variant="outline"
+                  size="sm"
+                  leftIcon="call-outline"
+                  className="flex-1"
+                  onPress={() =>
+                    Linking.openURL(`tel:${place.phone}`).catch(() => {})
+                  }
+                />
+              ) : null}
+              {whatsappDigits ? (
+                <Button
+                  title="WhatsApp"
+                  variant="outline"
+                  size="sm"
+                  leftIcon="logo-whatsapp"
+                  className="flex-1"
+                  onPress={() =>
+                    Linking.openURL(`https://wa.me/${whatsappDigits}`).catch(
+                      () => {},
+                    )
+                  }
+                />
+              ) : null}
+            </View>
+          ) : null}
 
           {/* Claim this place */}
           {claim?.status === "pending" ? (
@@ -571,54 +555,35 @@ export default function PlaceDetailScreen() {
             <AppText variant="muted">
               {address ?? "Address not specified"}
             </AppText>
-            {MapConfigured && MapView && coords ? (
-              <MapErrorBoundary fallback={null}>
-                {/*
-                  Static preview only — see the same block in
-                  app/(app)/event/[id].tsx. pointerEvents on the MapView alone
-                  did not stop the native Android map swallowing vertical
-                  drags, which trapped the page scroll.
-                */}
-                <View
-                  className="h-40 overflow-hidden rounded-lg"
-                  pointerEvents="none"
-                >
-                  <MapView
-                    style={{ flex: 1 }}
-                    provider={
-                      Platform.OS === "android" ? PROVIDER_GOOGLE : undefined
-                    }
-                    pointerEvents="none"
-                    // Google's lite mode renders a static bitmap: genuinely
-                    // non-interactive, cheap, and it never registers gesture
-                    // recognisers that could linger over the screen. iOS
-                    // (Apple Maps) has no equivalent; the gesture props
-                    // below keep it static there.
-                    liteMode={Platform.OS === "android"}
-                    scrollEnabled={false}
-                    zoomEnabled={false}
-                    rotateEnabled={false}
-                    pitchEnabled={false}
-                    toolbarEnabled={false}
-                    initialRegion={{
-                      latitude: coords.lat,
-                      longitude: coords.lng,
-                      latitudeDelta: 0.02,
-                      longitudeDelta: 0.02,
-                    }}
-                  >
-                    {Marker ? (
-                      <Marker
-                        coordinate={{
-                          latitude: coords.lat,
-                          longitude: coords.lng,
-                        }}
-                      />
-                    ) : null}
-                  </MapView>
-                </View>
-              </MapErrorBoundary>
+            {coords ? (
+              <StaticMapPreview
+                coords={coords}
+                label={address ?? place.name}
+                onPress={openDirections}
+              />
             ) : null}
+
+            <View className="flex-row gap-2 pt-1">
+              <Button
+                title="Directions"
+                variant="outline"
+                size="sm"
+                leftIcon="navigate-outline"
+                className="flex-1"
+                onPress={openDirections}
+              />
+              {session && isVisitor && visitsOn ? (
+                <Button
+                  title="Check in"
+                  variant="outline"
+                  size="sm"
+                  leftIcon="qr-code-outline"
+                  className="flex-1"
+                  loading={checkIn.isPending}
+                  onPress={() => setScanOpen(true)}
+                />
+              ) : null}
+            </View>
           </View>
 
           {/* Contact */}

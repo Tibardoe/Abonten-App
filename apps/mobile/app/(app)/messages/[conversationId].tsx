@@ -191,7 +191,7 @@ export default function ConversationScreen() {
     chat.noteIncoming();
   }, [markNewestRead, chat]);
 
-  const { typingUserIds, sendTyping } = useConversationRealtime(
+  const { typingUserIds, presentUserIds, sendTyping } = useConversationRealtime(
     valid ? conversationId : undefined,
     { onIncomingMessage },
   );
@@ -419,6 +419,8 @@ export default function ConversationScreen() {
         context={context}
         currentUserId={myId}
         onMenu={setConvMenuAnchor}
+        typing={!!otherUserId && typingUserIds.includes(otherUserId)}
+        present={!!otherUserId && presentUserIds.includes(otherUserId)}
       />
 
       <KeyboardAvoidingView
@@ -505,10 +507,30 @@ export default function ConversationScreen() {
               }
               ListEmptyComponent={
                 <View className="flex-1 items-center gap-3 px-8 pt-16">
+                  <View className="h-14 w-14 items-center justify-center rounded-full bg-accent">
+                    <Icon
+                      name={
+                        messagesQ.isError
+                          ? "cloud-offline-outline"
+                          : "chatbubbles-outline"
+                      }
+                      size={26}
+                      tone="primary"
+                    />
+                  </View>
+                  <AppText variant="bodyStrong" className="text-center">
+                    {messagesQ.isError
+                      ? "Couldn't load messages"
+                      : "Start the conversation"}
+                  </AppText>
                   <AppText variant="muted" className="text-center">
                     {messagesQ.isError
-                      ? "Couldn't load messages."
-                      : "No messages yet — say hello."}
+                      ? "Check your connection and try again."
+                      : context?.subject.event
+                        ? `Ask about ${context.subject.event.title} — tickets, timing, anything.`
+                        : context?.subject.place
+                          ? `Ask ${context.subject.place.name} about a visit, a booking or their services.`
+                          : "Say hello — your messages stay in the app."}
                   </AppText>
                   {messagesQ.isError ? (
                     <Button

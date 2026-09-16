@@ -12,6 +12,7 @@ import {
 } from "@/lib/authRedirect";
 import { installGlobalErrorHandler } from "@/lib/errorTracking";
 import { euclidFonts } from "@/lib/fonts";
+import { setNativeRootBackground } from "@/lib/nativeBackground";
 import { startNetworkSync } from "@/lib/network";
 import { queryClient } from "@/lib/queryClient";
 import { Sentry, initSentry, navigationIntegration } from "@/lib/sentry";
@@ -103,6 +104,19 @@ function RootNavigator() {
   useEffect(() => {
     if (!booting) SplashScreen.hideAsync().catch(() => {});
   }, [booting]);
+
+  // Paint the NATIVE root with the theme too — the iOS window and root view
+  // controller, and the Android decor view. They sit under every navigator,
+  // modal and transition; left alone they are system white/black (iOS
+  // leaves the window itself unpainted), which is what showed through
+  // during swipe-back, tab shifts and sheet presentation whenever the
+  // in-app theme differed from what UIKit assumed. expo-system-ui also
+  // stores the colour, so the next cold start paints it natively before any
+  // JavaScript runs.
+  useEffect(() => {
+    if (booting) return;
+    setNativeRootBackground(colors.background);
+  }, [booting, colors.background]);
 
   if (booting) {
     return <BrandedSplash />;

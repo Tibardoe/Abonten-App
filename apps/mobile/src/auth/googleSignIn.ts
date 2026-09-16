@@ -9,7 +9,9 @@ import * as WebBrowser from "expo-web-browser";
 // Requires, in Supabase Auth settings: the redirect URL below added to the
 // allow list, and Google configured as a provider.
 export async function signInWithGoogle(): Promise<
-  { ok: true } | { ok: false; message: string }
+  | { ok: true }
+  | { ok: false; cancelled: true }
+  | { ok: false; cancelled?: false; message: string }
 > {
   const redirectTo = Linking.createURL("auth/callback");
 
@@ -27,8 +29,12 @@ export async function signInWithGoogle(): Promise<
 
   const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
+  // Closing the Google page is a choice, not an error: nothing to report.
+  if (result.type === "cancel" || result.type === "dismiss") {
+    return { ok: false, cancelled: true };
+  }
   if (result.type !== "success") {
-    return { ok: false, message: "Google sign-in was cancelled." };
+    return { ok: false, message: "Google sign-in didn't finish. Try again." };
   }
 
   const code = new URL(result.url).searchParams.get("code");

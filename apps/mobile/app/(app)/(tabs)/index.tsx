@@ -298,19 +298,26 @@ export default function Explore() {
     />
   );
 
+  // Vertical rhythm: the active-filter chips carry their own top spacing, so
+  // they always sit a deliberate distance below the Spotlight (they used to
+  // butt straight onto the banner) and the curated rows keep their own.
   const listHeader = (
-    <View>
+    <View className="pt-3">
       <DiscoveryHero
         tab={tab}
         featuredEvents={eventSliders.data.featured}
         featuredPlaces={placeSliders.data.featured}
       />
 
-      <ActiveFilterChips
-        chips={activeChips}
-        onRemove={removeChip}
-        onClearAll={clearAllChips}
-      />
+      {activeChips.length > 0 ? (
+        <View className="pt-4">
+          <ActiveFilterChips
+            chips={activeChips}
+            onRemove={removeChip}
+            onClearAll={clearAllChips}
+          />
+        </View>
+      ) : null}
 
       {sliders}
 

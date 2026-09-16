@@ -1,37 +1,37 @@
-import { FeaturedBannerCarousel } from "@/components/explore/FeaturedBannerCarousel";
-import { FeaturedEventBanner } from "@/components/explore/FeaturedEventBanner";
-import { FeaturedPlaceBanner } from "@/components/explore/FeaturedPlaceBanner";
-import { WeeklyTeaserCard } from "@/components/weekly/WeeklyTeaserCard";
+import {
+  EventSpotlightCard,
+  PlaceSpotlightCard,
+  WeeklySpotlightCard,
+} from "@/components/explore/spotlight/SpotlightCards";
+import { SpotlightCarousel } from "@/components/explore/spotlight/SpotlightCarousel";
 import { useExploreLocation } from "@/features/discovery/ExploreLocationProvider";
+import { logPlacePromotionImpression } from "@/features/places/placeEngagement";
 import { useWeeklyProgram, useWeeklyTeaser } from "@/features/weekly/useWeekly";
+import {
+  buildSpotlightSlides,
+  spotlightHeight,
+} from "@abonten/core/discovery/spotlight";
 import type { PlaceType } from "@abonten/types/placeType";
 import type { UserPostType } from "@abonten/types/postsType";
-import { SectionTitle, Skeleton } from "@abonten/ui-native";
+import { Skeleton } from "@abonten/ui-native";
+import { useCallback, useMemo, useRef } from "react";
 import { View, useWindowDimensions } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 
-// The ONE promotional slot at the top of Explore.
+// The ONE promotional slot at the top of Explore: the Spotlight.
 //
-// Three kinds of top-of-feed content compete for attention here: the
-// editorial Abonten Weekly edition, paid Featured events and paid Featured
-// places. Stacking a 380–480px Weekly banner over a 250px Featured banner
-// gave two full-bleed heroes with two auto-rotations and two sets of
-// progress dots on one screen, and the first card of real content sat a
-// full screen-height down. This component decides, per tab, what holds the
-// hero:
-//
-//   • Weekly is out for this area → the Weekly banner is the hero, and the
-//     tab's Featured listings follow as a compact peeking row under a
-//     "Featured" title (still the banner design with its ad-disclosure
-//     pill, but demoted: narrower cards, no autoplay, no dots).
-//   • No Weekly edition → the Featured carousel takes the hero slot at
-//     full size, exactly as before.
+// It used to be two heroes — a 380–480px Abonten Weekly banner and, under
+// it, the Featured listings demoted to a 196px peeking row (too small for
+// content businesses pay to promote), each with its own rotation and its own
+// indicator. Now the Weekly edition and the tab's Featured listings are
+// slides of a single carousel: one height, one indicator, one rotation, and
+// every paid slide full size with its disclosure pill. Which slides appear,
+// in what order and how many is decided by @abonten/core/discovery/spotlight.
 //
 // Featured content is independent of the filter sheet: it is a paid
-// placement, not a search result, so a filter that matches nothing must
-// not remove it. And the slot reserves its height while the Weekly teaser
-// is still loading, so the feed does not jump when the banner lands.
-
-const COMPACT_HEIGHT = 196;
+// placement, not a search result, so a filter that matches nothing must not
+// remove it. While the Weekly teaser is still loading the slot reserves its
+// height, so the feed does not jump when the edition lands.
 
 export function DiscoveryHero({
   tab,
@@ -43,6 +43,7 @@ export function DiscoveryHero({
   featuredPlaces: PlaceType[];
 }) {
   const { width } = useWindowDimensions();
+  const height = spotlightHeight(width);
   const { location } = useExploreLocation();
   const { program } = useWeeklyProgram();
   const teaserQ = useWeeklyTeaser(
@@ -50,67 +51,68 @@ export function DiscoveryHero({
     program.teaser && !!location,
   );
   const weeklyPending = program.teaser && !!location && teaserQ.isPending;
-  const weeklyOut = program.teaser && !!teaserQ.data;
+  const weekly = program.teaser ? (teaserQ.data ?? null) : null;
 
-  const featured =
-    tab === "events" ? (
-      <FeaturedBannerCarousel
-        items={featuredEvents}
-        keyExtractor={(e) => e.id}
-        compact={weeklyOut}
-        renderItem={(e) => (
-          <FeaturedEventBanner
-            event={e}
-            height={weeklyOut ? COMPACT_HEIGHT : undefined}
-          />
-        )}
-      />
-    ) : (
-      <FeaturedBannerCarousel
-        items={featuredPlaces}
-        keyExtractor={(p) => p.id}
-        compact={weeklyOut}
-        renderItem={(p) => (
-          <FeaturedPlaceBanner
-            place={p}
-            height={weeklyOut ? COMPACT_HEIGHT : undefined}
-          />
-        )}
-      />
-    );
-  const hasFeatured =
-    tab === "events" ? featuredEvents.length > 0 : featuredPlaces.length > 0;
+  const slides = useMemo(
+    () =>
+      buildSpotlightSlides({
+        tab,
+        weekly,
+        featuredEvents,
+        featuredPlaces,
+      }),
+    [tab, weekly, featuredEvents, featuredPlaces],
+  );
+
+  // A sponsored place counts one impression when its slide is actually on
+  // screen (not merely loaded into the carousel), once per mount.
+  const counted = useRef(new Set<string>());
+  const onSlideVisible = useCallback((slide: (typeof slides)[number]) => {
+    if (slide.kind !== "place" || counted.current.has(slide.place.id)) return;
+    counted.current.add(slide.place.id);
+    logPlacePromotionImpression(slide.place.id);
+  }, []);
 
   if (weeklyPending) {
-    // Same footprint the Weekly banner will take (see WeeklyTeaserCard's
-    // height rule), so the rest of the feed does not move when it arrives.
-    const height = Math.round(Math.min(Math.max(width * 1.02, 380), 480));
     return (
-      <View className="mb-2 mt-3 px-4">
+      <View className="px-4">
         <Skeleton height={height} radius={24} />
       </View>
     );
   }
 
-  if (weeklyOut) {
-    return (
-      <View>
-        <WeeklyTeaserCard />
-        {hasFeatured ? (
-          <View className="gap-2 pt-3">
-            <SectionTitle className="px-4">Featured</SectionTitle>
-            {featured}
-          </View>
-        ) : null}
-      </View>
-    );
-  }
+  if (slides.length === 0) return null;
 
-  if (!hasFeatured) return null;
   return (
-    <View className="gap-2 pt-4">
-      <SectionTitle className="px-4">Featured</SectionTitle>
-      {featured}
-    </View>
+    <Animated.View entering={FadeIn.duration(220)}>
+      <SpotlightCarousel
+        // A new tab is a new set of slides: start from the first one.
+        key={tab}
+        slides={slides}
+        height={height}
+        onSlideVisible={onSlideVisible}
+        renderSlide={(slide, { index, count }) =>
+          slide.kind === "weekly" ? (
+            <WeeklySpotlightCard
+              teaser={slide.weekly}
+              index={index}
+              count={count}
+            />
+          ) : slide.kind === "event" ? (
+            <EventSpotlightCard
+              event={slide.event}
+              index={index}
+              count={count}
+            />
+          ) : (
+            <PlaceSpotlightCard
+              place={slide.place}
+              index={index}
+              count={count}
+            />
+          )
+        }
+      />
+    </Animated.View>
   );
 }

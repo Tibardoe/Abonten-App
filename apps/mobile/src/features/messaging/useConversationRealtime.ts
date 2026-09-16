@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { conversationPreviewFor } from "@abonten/core/messagingInboxCache";
 import { reactionRealtimePatches } from "@abonten/core/messagingReactions";
 import {
+  type ConversationPresenceState,
   MESSAGING_BROADCAST_EVENTS,
   TYPING_THROTTLE_MS,
   TYPING_TTL_MS,
@@ -53,6 +54,10 @@ export function useConversationRealtime(
 
   const [connected, setConnected] = useState(false);
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
+  // Who else has THIS thread open right now (Realtime Presence on the private
+  // channel — ephemeral, never stored). It means "in this chat", not "online
+  // in the app", and the UI says exactly that.
+  const [presentUserIds, setPresentUserIds] = useState<string[]>([]);
 
   const broadcastChannelRef = useRef<RealtimeChannel | null>(null);
   const changesChannelRef = useRef<RealtimeChannel | null>(null);
@@ -264,6 +269,25 @@ export function useConversationRealtime(
         config: { private: true, broadcast: { self: false } },
       });
       broadcastChannelRef.current = broadcastChannel;
+      const readPresence = () => {
+        const state =
+          broadcastChannel.presenceState<ConversationPresenceState>();
+        const ids = new Set<string>();
+        for (const entries of Object.values(state)) {
+          for (const p of entries) {
+            if (p.userId && p.userId !== myId && p.activeInConversation) {
+              ids.add(p.userId);
+            }
+          }
+        }
+        const next = [...ids].sort();
+        setPresentUserIds((prev) =>
+          prev.length === next.length && prev.every((v, i) => v === next[i])
+            ? prev
+            : next,
+        );
+      };
+      broadcastChannel.on("presence", { event: "sync" }, readPresence);
       broadcastChannel.on(
         "broadcast",
         { event: MESSAGING_BROADCAST_EVENTS.typing },
@@ -274,14 +298,37 @@ export function useConversationRealtime(
           else dropTyping(p.userId);
         },
       );
-      broadcastChannel.subscribe();
+      broadcastChannel.subscribe((status) => {
+        if (cancelled || status !== "SUBSCRIBED") return;
+        if (AppState.currentState === "active") void trackPresence(true);
+      });
     })();
+
+    // Only claim to be "in this chat" while the app is actually in front.
+    const trackPresence = async (active: boolean) => {
+      const ch = broadcastChannelRef.current;
+      if (!ch || !myId) return;
+      try {
+        if (active) {
+          await ch.track({
+            userId: myId,
+            activeInConversation: true,
+            at: Date.now(),
+          } satisfies ConversationPresenceState);
+        } else {
+          await ch.untrack();
+        }
+      } catch {
+        // Presence is a nicety; a failed track never affects messaging.
+      }
+    };
 
     // Foreground the app after a spell in the background: the socket may
     // have dropped rows while suspended. Re-push the (possibly refreshed)
     // token and force a reconcile — the same close-the-gap step the
     // `wasConnected` reconnect path does.
     const appStateSub = AppState.addEventListener("change", (next) => {
+      void trackPresence(next === "active");
       if (next === "active") {
         void pushAuthAndRefresh().then(() => {
           if (!cancelled) bump();
@@ -295,6 +342,7 @@ export function useConversationRealtime(
       for (const t of timers.values()) clearTimeout(t);
       timers.clear();
       setTypingUserIds([]);
+      setPresentUserIds([]);
       setConnected(false);
       wasConnected.current = false;
       const bc = broadcastChannelRef.current;
@@ -325,5 +373,5 @@ export function useConversationRealtime(
     [myId],
   );
 
-  return { connected, typingUserIds, sendTyping };
+  return { connected, typingUserIds, presentUserIds, sendTyping };
 }
