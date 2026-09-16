@@ -9,7 +9,10 @@
           { "/": "/places/*", "comment": "Open a place in the app" },
           { "/": "/invite/*", "comment": "Open a friend's invite in the app" },
           { "/": "/weekly", "comment": "Open this week's Abonten Weekly in the app" },
-          { "/": "/weekly/*", "comment": "Open an Abonten Weekly area or edition in the app" }
+          { "/": "/weekly/*", "comment": "Open an Abonten Weekly area or edition in the app" },
+          { "/": "/spotlight", "comment": "Open Spotlight in the app" },
+          { "/": "/spotlight/*", "comment": "Open a Spotlight in the app" },
+          { "/": "/stories/*", "comment": "Open a Story in the app" }
         ]
       }
     ]

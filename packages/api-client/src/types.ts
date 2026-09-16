@@ -236,6 +236,7 @@ export type ChangePhoneResult = {
 export type UploadSignatureKind =
   | "avatar"
   | "highlight"
+  | "content"
   | "place_photo"
   | "event_flyer"
   | "event_review_photo"
@@ -1561,7 +1562,10 @@ export type SubmitReportBody = {
     | "organizer"
     | "highlight"
     | "message"
-    | "conversation";
+    | "conversation"
+    | "spotlight"
+    | "story"
+    | "content_comment";
   targetId: string;
   category:
     | "spam"
@@ -1896,3 +1900,126 @@ export type StartVerificationResult = ApiEnvelope<{ caseId: string }>;
 export type VerificationEvidenceTicketResult =
   ApiEnvelope<VerificationUploadTicket>;
 export type VerificationActionResult = { status: number; message?: string };
+
+// ---- Spotlight + Stories (content platform) ----------------------------
+
+export type {
+  ContentAdminOverview,
+  ContentCampaign,
+  ContentCampaignCheckout,
+  ContentCampaignEvent,
+  ContentCampaignLedgerEntry,
+  ContentCampaignObjective,
+  ContentCampaignStatus,
+  ContentClickKind,
+  ContentComment,
+  ContentCommentsPage,
+  ContentFeedItem,
+  ContentFeedPage,
+  ContentFeedSurface,
+  ContentInsights,
+  ContentKind,
+  ContentMediaItem,
+  ContentOwnPost,
+  ContentPostDocument,
+  ContentProgram,
+  ContentPublisher,
+  ContentPublisherKind,
+  ContentReactionEmoji,
+  ContentShareChannel,
+  ContentViewEventInput,
+  ContentViewKind,
+  ContentViewSurface,
+  FollowStatus,
+  FollowTargetKind,
+  StorySequence,
+  StoryTray,
+  StoryTrayEntry,
+} from "@abonten/types/contentType";
+
+export type ContentProgramResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentProgram
+>;
+export type ContentFeedResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentFeedPage
+>;
+export type ContentPostResult =
+  | {
+      status: 200;
+      data: { post: import("@abonten/types/contentType").ContentPostDocument };
+    }
+  | {
+      status: 410;
+      message: string;
+      data: {
+        expired: true;
+        publisher: import("@abonten/types/contentType").ContentPublisher | null;
+      };
+    }
+  | { status: 400 | 401 | 403 | 404 | 500; message: string };
+export type ContentPostsPageResult = ApiEnvelope<{
+  posts: import("@abonten/types/contentType").ContentPostDocument[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+}>;
+export type ContentOwnPostsResult = ApiEnvelope<{
+  posts: import("@abonten/types/contentType").ContentOwnPost[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+}>;
+export type ContentMediaResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentMediaItem
+>;
+export type ContentDocumentResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentPostDocument
+>;
+export type ContentCountsResult = ApiEnvelope<{
+  liked?: boolean;
+  saved?: boolean;
+  reaction?: import("@abonten/types/contentType").ContentReactionEmoji | null;
+  counts: import("@abonten/types/contentType").ContentCounts;
+}>;
+export type ContentCommentsResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentCommentsPage
+>;
+export type ContentCommentResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentComment
+>;
+export type FollowStatusResult = ApiEnvelope<
+  import("@abonten/types/contentType").FollowStatus
+>;
+export type StoryTrayResult = ApiEnvelope<
+  import("@abonten/types/contentType").StoryTray
+>;
+export type StorySequenceResult = ApiEnvelope<
+  import("@abonten/types/contentType").StorySequence
+>;
+export type ContentInsightsResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentInsights
+>;
+export type ContentPromotionOptionsResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentPromotionOptions
+>;
+export type ContentPromotionEstimateResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentPromotionEstimate
+>;
+export type ContentCampaignsResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentCampaign[]
+>;
+export type ContentCampaignResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentCampaign
+>;
+export type ContentCampaignDetailResult = ApiEnvelope<{
+  campaign: import("@abonten/types/contentType").ContentCampaign;
+  events: import("@abonten/types/contentType").ContentCampaignEvent[];
+  ledger: import("@abonten/types/contentType").ContentCampaignLedgerEntry[];
+}>;
+export type ContentCampaignCreateResult = ApiEnvelope<{
+  campaign: import("@abonten/types/contentType").ContentCampaign;
+  checkout: import("@abonten/types/contentType").ContentCampaignCheckout;
+}>;
+export type ContentCampaignCheckoutResult = ApiEnvelope<
+  import("@abonten/types/contentType").ContentCampaignCheckout & {
+    campaign: import("@abonten/types/contentType").ContentCampaign;
+  }
+>;

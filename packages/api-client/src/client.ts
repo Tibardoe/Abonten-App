@@ -43,6 +43,30 @@ import type {
   CheckoutAttemptResult,
   CheckoutSessionRow,
   CloudinarySignatureData,
+  ContentCampaignCheckoutResult,
+  ContentCampaignCreateResult,
+  ContentCampaignDetailResult,
+  ContentCampaignResult,
+  ContentCampaignsResult,
+  ContentCommentResult,
+  ContentCommentsResult,
+  ContentCountsResult,
+  ContentDocumentResult,
+  ContentFeedResult,
+  ContentFeedSurface,
+  ContentInsightsResult,
+  ContentKind,
+  ContentMediaResult,
+  ContentOwnPostsResult,
+  ContentPostResult,
+  ContentPostsPageResult,
+  ContentProgramResult,
+  ContentPromotionEstimateResult,
+  ContentPromotionOptionsResult,
+  ContentPublisherKind,
+  ContentReactionEmoji,
+  ContentShareChannel,
+  ContentViewEventInput,
   ConversationDetailResult,
   ConversationFilter,
   ConversationMessagesResult,
@@ -119,6 +143,8 @@ import type {
   FieldOpsTerritoriesResult,
   FieldOpsTerritoryResult,
   FieldOpsTerritoryViewResult,
+  FollowStatusResult,
+  FollowTargetKind,
   FreeRsvpBody,
   FreeRsvpResult,
   HighlightPlaybackBody,
@@ -198,6 +224,8 @@ import type {
   SetPlaceStatusBody,
   StartVerificationBody,
   StartVerificationResult,
+  StorySequenceResult,
+  StoryTrayResult,
   SubmitChargeOtpResult,
   SubmitReportBody,
   SubmitReportResult,
@@ -765,9 +793,22 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "POST", body, auth: true },
         );
       },
+      /**
+       * The Spotlight sibling of promotionAttempt — a pending campaign
+       * checkout. Cash only: `useCredit` is refused for this kind.
+       */
+      spotlightPromotionAttempt(body: {
+        contentCampaignCheckoutId: string;
+        paymentMethodId?: string | null;
+      }) {
+        return request<PromotionPaymentAttemptResult>(
+          "/api/mobile/checkout/spotlight-promotion-attempt",
+          { method: "POST", body, auth: true },
+        );
+      },
       /** What the "Use credit" switch can apply to a promotion checkout. */
       promotionCreditQuote(params: {
-        kind: "event" | "place";
+        kind: "event" | "place" | "spotlight";
         checkoutId: string;
       }) {
         const query = new URLSearchParams(params);
@@ -2301,6 +2342,386 @@ export function createApiClient(options: ApiClientOptions) {
         return request<VerificationActionResult>(
           `/api/mobile/verification/cases/${encodeURIComponent(caseId)}/withdraw`,
           { method: "POST", auth: true },
+        );
+      },
+    },
+
+    content: {
+      /** What the caller may use of Spotlight + Stories. Ships off. */
+      program() {
+        return request<ContentProgramResult>("/api/mobile/content/program", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      feed(params: {
+        surface: ContentFeedSurface;
+        cursor?: string | null;
+        lat?: number;
+        lng?: number;
+        radiusKm?: number;
+        viewerKey?: string;
+      }) {
+        const qs = new URLSearchParams();
+        for (const [key, value] of Object.entries(params)) {
+          if (value === undefined || value === null || value === "") continue;
+          qs.set(key, String(value));
+        }
+        return request<ContentFeedResult>(
+          `/api/mobile/content/feed?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      search(q: string) {
+        return request<ApiEnvelope<{ posts: ContentDocumentResult["data"][] }>>(
+          `/api/mobile/content/search?q=${encodeURIComponent(q)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      post(postId: string) {
+        return request<ContentPostResult>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      /** Register a signed Cloudinary upload (uploads.signature("content")). */
+      registerMedia(body: {
+        kind: ContentKind;
+        publicId: string;
+        resourceType: "image" | "video";
+        version: number;
+        trimStartSeconds?: number | null;
+        trimEndSeconds?: number | null;
+      }) {
+        return request<ContentMediaResult>("/api/mobile/content/media", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      deleteMedia(mediaId: string) {
+        return request<ApiEnvelope<undefined>>(
+          `/api/mobile/content/media/${encodeURIComponent(mediaId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      createPost(body: {
+        kind: ContentKind;
+        publisher: { kind: ContentPublisherKind; placeId?: string | null };
+        mediaIds: string[];
+        caption?: string | null;
+        hashtags?: string[];
+        eventId?: string | null;
+        placeId?: string | null;
+        category?: string | null;
+        allowComments?: boolean;
+        allowDownload?: boolean;
+        rightsAcknowledged: true;
+        publish?: boolean;
+        clientRequestId?: string;
+      }) {
+        return request<ContentDocumentResult>("/api/mobile/content/posts", {
+          method: "POST",
+          body,
+          auth: true,
+        });
+      },
+      updatePost(
+        postId: string,
+        patch: {
+          caption?: string | null;
+          hashtags?: string[];
+          eventId?: string | null;
+          placeId?: string | null;
+          allowComments?: boolean;
+          allowDownload?: boolean;
+        },
+      ) {
+        return request<ContentDocumentResult>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}`,
+          { method: "PATCH", body: { patch }, auth: true },
+        );
+      },
+      publishPost(postId: string) {
+        return request<ContentDocumentResult>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}/publish`,
+          { method: "POST", auth: true },
+        );
+      },
+      deletePost(postId: string) {
+        return request<ApiEnvelope<undefined>>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      mine(params: { kind?: ContentKind; cursor?: string | null }) {
+        const qs = new URLSearchParams();
+        if (params.kind) qs.set("kind", params.kind);
+        if (params.cursor) qs.set("cursor", params.cursor);
+        return request<ContentOwnPostsResult>(
+          `/api/mobile/content/mine?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      saved(cursor?: string | null) {
+        const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+        return request<ContentPostsPageResult>(
+          `/api/mobile/content/saved${qs}`,
+          { method: "GET", auth: true },
+        );
+      },
+      publisher(params: {
+        publisherKind: "organizer" | "place";
+        publisherId: string;
+        kind?: ContentKind;
+        cursor?: string | null;
+      }) {
+        const qs = new URLSearchParams();
+        qs.set("publisherKind", params.publisherKind);
+        qs.set("publisherId", params.publisherId);
+        if (params.kind) qs.set("kind", params.kind);
+        if (params.cursor) qs.set("cursor", params.cursor);
+        return request<ContentPostsPageResult>(
+          `/api/mobile/content/publisher?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      download(postId: string) {
+        return request<ApiEnvelope<{ url: string }>>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}/download`,
+          { method: "GET", auth: true },
+        );
+      },
+      insights(postId: string, days = 30) {
+        return request<ContentInsightsResult>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}/insights?days=${days}`,
+          { method: "GET", auth: true },
+        );
+      },
+      like(postId: string, liked: boolean) {
+        return request<ContentCountsResult>("/api/mobile/content/like", {
+          method: "POST",
+          body: { postId, liked },
+          auth: true,
+        });
+      },
+      save(postId: string, saved: boolean) {
+        return request<ContentCountsResult>("/api/mobile/content/save", {
+          method: "POST",
+          body: { postId, saved },
+          auth: true,
+        });
+      },
+      react(postId: string, emoji: ContentReactionEmoji | null) {
+        return request<ContentCountsResult>("/api/mobile/content/react", {
+          method: "POST",
+          body: { postId, emoji },
+          auth: true,
+        });
+      },
+      share(postId: string, channel: ContentShareChannel = "native") {
+        return request<ContentCountsResult>("/api/mobile/content/share", {
+          method: "POST",
+          body: { postId, channel },
+          auth: true,
+        });
+      },
+      notInterested(postId: string, notInterested = true) {
+        return request<ApiEnvelope<{ notInterested: boolean }>>(
+          "/api/mobile/content/not-interested",
+          { method: "POST", body: { postId, notInterested }, auth: true },
+        );
+      },
+      comments(
+        postId: string,
+        params: { parentId?: string | null; cursor?: string | null } = {},
+      ) {
+        const qs = new URLSearchParams();
+        if (params.parentId) qs.set("parentId", params.parentId);
+        if (params.cursor) qs.set("cursor", params.cursor);
+        return request<ContentCommentsResult>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}/comments?${qs.toString()}`,
+          { method: "GET", auth: true },
+        );
+      },
+      comment(postId: string, body: string, parentId?: string | null) {
+        return request<ContentCommentResult>(
+          `/api/mobile/content/posts/${encodeURIComponent(postId)}/comments`,
+          {
+            method: "POST",
+            body: { body, parentId: parentId ?? null },
+            auth: true,
+          },
+        );
+      },
+      deleteComment(commentId: string) {
+        return request<ApiEnvelope<undefined>>(
+          `/api/mobile/content/comments/${encodeURIComponent(commentId)}`,
+          { method: "DELETE", auth: true },
+        );
+      },
+      likeComment(commentId: string, liked: boolean) {
+        return request<ApiEnvelope<{ liked: boolean; likeCount: number }>>(
+          `/api/mobile/content/comments/${encodeURIComponent(commentId)}`,
+          { method: "POST", body: { liked }, auth: true },
+        );
+      },
+      followStatus(targetKind: FollowTargetKind, targetId: string) {
+        return request<FollowStatusResult>(
+          `/api/mobile/content/follow?targetKind=${targetKind}&targetId=${encodeURIComponent(targetId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      setFollow(
+        targetKind: FollowTargetKind,
+        targetId: string,
+        following: boolean,
+      ) {
+        return request<FollowStatusResult>("/api/mobile/content/follow", {
+          method: "POST",
+          body: { targetKind, targetId, following },
+          auth: true,
+        });
+      },
+      following() {
+        return request<
+          ApiEnvelope<
+            {
+              targetKind: FollowTargetKind;
+              targetId: string;
+              name: string;
+              username: string | null;
+              slug: string | null;
+              avatarPublicId: string | null;
+              avatarVersion: string | null;
+              createdAt: string;
+            }[]
+          >
+        >("/api/mobile/content/following", { method: "GET", auth: true });
+      },
+      attachableEvents() {
+        return request<
+          ApiEnvelope<
+            {
+              id: string;
+              title: string;
+              eventCode: string;
+              placeId: string | null;
+              startsAt: string | null;
+            }[]
+          >
+        >("/api/mobile/content/attachable-events", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      storyTray() {
+        return request<StoryTrayResult>("/api/mobile/content/stories/tray", {
+          method: "GET",
+          auth: true,
+        });
+      },
+      storySequence(publisherKind: ContentPublisherKind, publisherId: string) {
+        return request<StorySequenceResult>(
+          `/api/mobile/content/stories/sequence?publisherKind=${publisherKind}&publisherId=${encodeURIComponent(publisherId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      muteStories(
+        publisherKind: ContentPublisherKind,
+        publisherId: string,
+        muted: boolean,
+      ) {
+        return request<ApiEnvelope<{ muted: boolean }>>(
+          "/api/mobile/content/stories/mute",
+          {
+            method: "POST",
+            body: { publisherKind, publisherId, muted },
+            auth: true,
+          },
+        );
+      },
+      /** Batched view telemetry; the server validates every event. */
+      views(viewerKey: string, events: ContentViewEventInput[]) {
+        return request<ApiEnvelope<{ accepted: number; invalid: number }>>(
+          "/api/mobile/content/views",
+          { method: "POST", body: { viewerKey, events }, auth: true },
+        );
+      },
+      click(body: {
+        viewerKey: string;
+        postId: string;
+        kind: "profile" | "event" | "place" | "ticket" | "cta" | "hashtag";
+        campaignId?: string | null;
+      }) {
+        return request<ApiEnvelope<{ accepted: boolean }>>(
+          "/api/mobile/content/clicks",
+          { method: "POST", body, auth: true },
+        );
+      },
+      promotionOptions() {
+        return request<ContentPromotionOptionsResult>(
+          "/api/mobile/content/campaigns/options",
+          { method: "GET", auth: true },
+        );
+      },
+      estimatePromotion(body: {
+        postId: string;
+        budgetMinor: number;
+        durationDays: number;
+        targeting:
+          | { area: "everywhere" }
+          | { area: "near_post"; radiusKm: number };
+      }) {
+        return request<ContentPromotionEstimateResult>(
+          "/api/mobile/content/campaigns/estimate",
+          { method: "POST", body, auth: true },
+        );
+      },
+      campaigns() {
+        return request<ContentCampaignsResult>(
+          "/api/mobile/content/campaigns",
+          {
+            method: "GET",
+            auth: true,
+          },
+        );
+      },
+      createCampaign(body: {
+        postId: string;
+        budgetMinor: number;
+        durationDays: number;
+        objective: string;
+        startsAt: string;
+        targeting:
+          | { area: "everywhere" }
+          | { area: "near_post"; radiusKm: number };
+      }) {
+        return request<ContentCampaignCreateResult>(
+          "/api/mobile/content/campaigns",
+          { method: "POST", body, auth: true },
+        );
+      },
+      campaign(campaignId: string) {
+        return request<ContentCampaignDetailResult>(
+          `/api/mobile/content/campaigns/${encodeURIComponent(campaignId)}`,
+          { method: "GET", auth: true },
+        );
+      },
+      campaignAction(
+        campaignId: string,
+        action: "pause" | "resume" | "cancel",
+        reason?: string,
+      ) {
+        return request<ContentCampaignResult>(
+          `/api/mobile/content/campaigns/${encodeURIComponent(campaignId)}`,
+          { method: "POST", body: { action, reason }, auth: true },
+        );
+      },
+      campaignCheckout(checkoutId: string) {
+        return request<ContentCampaignCheckoutResult>(
+          `/api/mobile/content/campaigns/checkout/${encodeURIComponent(checkoutId)}`,
+          { method: "GET", auth: true },
         );
       },
     },

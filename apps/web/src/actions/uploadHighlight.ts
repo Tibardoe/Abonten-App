@@ -2,6 +2,8 @@
 
 import { createClient } from "@/config/supabase/server";
 import { logger } from "@abonten/core/logger";
+import { enqueueCloudinaryCleanup } from "@abonten/services/platform/cloudinaryCleanupCore";
+import { getSupabaseServiceClient } from "@abonten/services/supabase/serviceClient";
 import { prepareHighlightVideoDelivery } from "@abonten/services/uploads/highlightVideoDelivery";
 import type { HighlightUploadMetadataItem } from "@abonten/types/highlightUploadType";
 import { v2 as cloudinary } from "cloudinary";
@@ -241,8 +243,6 @@ async function cleanupOrphanedAsset(
   publicId: string,
   resourceType: "image" | "video",
 ) {
-  const supabase = await createClient();
-
   try {
     await cloudinary.uploader.destroy(publicId, {
       resource_type: resourceType,
@@ -253,16 +253,11 @@ async function cleanupOrphanedAsset(
       cloudError,
     );
 
-    const { error: queueError } = await supabase
-      .from("draft_asset_cleanup_queue")
-      .insert({ public_id: publicId, resource_type: resourceType });
-
-    if (queueError) {
-      logger.error(
-        "Failed to queue orphaned highlight asset for cleanup:",
-        publicId,
-        queueError,
-      );
-    }
+    // The queue is server-only; the maintenance route drains it.
+    await enqueueCloudinaryCleanup(
+      getSupabaseServiceClient(),
+      publicId,
+      resourceType,
+    );
   }
 }

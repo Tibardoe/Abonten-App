@@ -1,3 +1,4 @@
+import { getContentCampaignCheckout } from "@/actions/content/getContentCampaignCheckout";
 import getEventPromotionCheckout from "@/actions/getEventPromotionCheckout";
 import getPlacePromotionCheckout from "@/actions/getPlacePromotionCheckout";
 import getTicketCheckout from "@/actions/getTicketCheckout";
@@ -132,6 +133,108 @@ export default async function page({
             <CancelPendingCheckoutButton
               checkoutId={checkoutId}
               kind="promotion"
+            />
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Promoted Spotlight campaigns: one standalone purchase, cash only, and
+  // the campaign goes to review (not live) once paid.
+  if (checkoutType === "spotlight-promotion") {
+    const response = await getContentCampaignCheckout({ checkoutId });
+
+    if (response.status !== 200 || !response.data) {
+      return (
+        <p className="p-8 text-center text-muted-foreground">
+          Checkout not found.
+        </p>
+      );
+    }
+
+    const data = response.data;
+    const sessionStatus: CheckoutSessionStatus =
+      data.status === "pending"
+        ? "pending"
+        : data.status === "paid"
+          ? "paid"
+          : "expired";
+    const expiresAt = sessionStatus === "pending" ? data.expiresAt : null;
+
+    const latestAttempt =
+      sessionStatus === "pending"
+        ? await getLatestPaymentAttemptStatus(
+            supabase,
+            "content_campaign_checkout_id",
+            checkoutId,
+          )
+        : null;
+    const isFulfillmentStuck = latestAttempt?.status === "fulfillment_failed";
+    const campaignHref = `/manage/spotlight/campaigns/${data.campaignId}`;
+
+    return (
+      <div className="flex flex-col justify-center gap-5">
+        <div>
+          <PageTitle>Order Summary</PageTitle>
+        </div>
+
+        {sessionStatus === "paid" && (
+          <div className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-medium text-primary text-center">
+            Payment received —{" "}
+            <Link href={campaignHref} className="underline">
+              your promotion is waiting for review
+            </Link>
+            .
+          </div>
+        )}
+
+        {sessionStatus === "expired" && (
+          <div className="space-y-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive text-center">
+            <p>This checkout is no longer open.</p>
+            <Link
+              href="/manage/spotlight"
+              className="inline-block underline font-medium"
+            >
+              Back to Spotlight
+            </Link>
+          </div>
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && expiresAt && (
+          <CheckoutExpiryBanner expiresAt={expiresAt} />
+        )}
+
+        <OrderSummary
+          orderSummary={{
+            type: "spotlight-promotion",
+            postCaption: data.postCaption,
+            summaryLabel: data.summaryLabel,
+            estimatedReachLow: data.estimatedReachLow,
+            estimatedReachHigh: data.estimatedReachHigh,
+            totalAmount: data.totalPrice,
+          }}
+          checkoutId={checkoutId}
+        />
+
+        {sessionStatus === "pending" && isFulfillmentStuck && latestAttempt && (
+          <FulfillmentRecoveryBanner
+            paymentAttemptId={latestAttempt.id}
+            initialMessage="Your payment was successful. We're finishing your promotion now — tap Retry to finish."
+          />
+        )}
+
+        {sessionStatus === "pending" && !isFulfillmentStuck && (
+          <>
+            <PaymentMethodSelector
+              kind="spotlight-promotion"
+              contentCampaignCheckoutId={checkoutId}
+              amount={data.totalPrice}
+              currency={data.currency}
+            />
+            <CancelPendingCheckoutButton
+              checkoutId={checkoutId}
+              kind="spotlight-promotion"
             />
           </>
         )}

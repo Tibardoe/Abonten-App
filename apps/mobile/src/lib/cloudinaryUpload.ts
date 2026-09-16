@@ -56,7 +56,11 @@ function postForm(
 
     if (onProgress) {
       xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) onProgress(e.loaded / e.total);
+        // Android counts the multipart envelope in `loaded` but not in
+        // `total`, so the raw ratio passes 1 ("122%"). Clamp it.
+        if (e.lengthComputable && e.total > 0) {
+          onProgress(Math.min(1, e.loaded / e.total));
+        }
       };
     }
 

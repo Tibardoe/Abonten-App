@@ -16,6 +16,34 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-17 — Spotlight & Stories: pre-merge follow-up
+
+- **Fix — Cloudinary sweep scope**: Spotlight / Story uploads now go to `content_media/<environment>/<user id>` and the daily never-registered sweep lists only its own environment's folder, so production's sweep can't destroy preview or local uploads in the shared Cloudinary account (and the reverse). Architecture 1.2 §3 and §11, scheduled-jobs, PROJECT.md §34.6.
+- **Fix — dispatch cadence** (migration `20260917090000`): `storage-purge-dispatch` called the maintenance route every 10 minutes until a sweep had been recorded; the sweep now triggers a call at most once every 20 hours.
+- **Changed — reach estimate by radius** (migration `20260917090100`): `location_audience_share_bps` replaced by `location_audience_share_by_radius` (5 / 10 / 25 / 50 km), editable in Admin › Spotlight & Stories › Settings. Architecture §8, admin handbook, decision S2.
+- **Fix — apps**: people reached in the web and mobile promotions lists; mobile feed tab row no longer cuts a label against the create button (edge fades, chosen tab kept in view); `abonten://spotlight/campaign/<id>` (and post, promote, manage) opened the feed instead; the Spotlight / Story status bar change could not work on iOS (needs a view-controller-based status bar that Expo turns off) and forced white icons on the "Story ended" page — now `MediaStatusBar`.
+- **Added — delivery simulation**: `scripts/perf/promotion-delivery-simulation.sql` and [perf/promotion-delivery-2026-09](../architecture/perf/promotion-delivery-2026-09.md).
+- **Verified**: Paystack test-mode card payment on web; estimate by radius on Android, admin and integration tests; environment folder with a real upload; emulator checks; iOS bundle export (architecture §13).
+
+## 2026-09-16 — Spotlight & Stories: pre-merge audit and reach-based promotions
+
+- **Changed — promotions are sold by budget and estimated reach, not fixed time plans** (migration `20260916130000`): `content_promotion_pricing` (admin-editable, versioned, audited), nightly `content_audience_snapshot`, server-side estimate with refusal when the audience is too small, spend per delivered sponsored impression, stop at budget delivered or run end, separate reach / impressions / views / taps / follows / conversions, `sponsored_delivery_enabled`, `SPOTLIGHT_PROMOTIONS_KILL_SWITCH`, pacing and fair rotation. Presets removed. Architecture (1.1) §8, admin handbook (pricing section, refunds, stopping), decisions S1–S3 rewritten, scheduled-jobs, secrets-and-environment, PROJECT.md §34.5.
+- **Security fix — Cloudinary cleanup queue** (migration `20260916131000`, applied to production): any signed-in user could insert into `draft_asset_cleanup_queue`, whose drain destroys the named asset — i.e. have another user's avatar, flyer or video deleted — or remove queued rows. Client access removed. The queue was also drained only when someone opened the web Drafts page, so deleted Spotlight/Story media stayed on Cloudinary; the storage-purge route now drains it and sweeps never-registered uploads daily.
+- **Fix — media**: video length was never read from Cloudinary (length limits were not enforced); refused uploads are destroyed; content upload signatures only for people who can post.
+- **Fix — payments**: cancelling an unpaid promotion now cancels its checkout (a later charge could not have been fulfilled); an unpaid order is cancelled when its post is deleted; mobile can pay an order left unpaid.
+- **Fix — social**: comments honour the programme switch and blocks; comment likes need a live post and no block and are rate-limited; signed-out shares limited per address; the post's event button says Sold out / Event unavailable (migration `20260916132000`).
+- **Fix — apps**: mobile status bar stayed white over the next screen, poster showed around letterboxed video, one follow request per feed card, upload progress above 100 %, zero-length trim bar, no Follow or live-state button in the Story viewer, plural counts; web keyboard paging scrolled the whole page; admin pricing form hydration error.
+- **Verified**: real Cloudinary uploads and renditions, Paystack test-mode payments / webhooks / refund, Android emulator flows, web and admin in a browser (architecture §13).
+
+## 2026-09-16 — Spotlight & Stories
+
+- **New — Spotlight, Stories, follows and promoted Spotlights (switched off)**: architecture [architecture/spotlight-and-stories.md](../architecture/spotlight-and-stories.md) (1.0), operator handbook [admin/spotlight.md](../admin/spotlight.md) (1.0), pre-implementation report [audit/spotlight-stories-pre-implementation-report.md](../audit/spotlight-stories-pre-implementation-report.md).
+- **Updated**: scheduled-jobs (seven content jobs), secrets-and-environment (`SPOTLIGHT_KILL_SWITCH`, `STORIES_KILL_SWITCH`), rollback-and-recovery, feature-inventory, data-model-overview, roles-and-permissions (`spotlight.*`), admin README.
+- **Registers**: legal F5 (user content) and G4 (promoted content); operational S1–S4 (rollout, prices, cancellation refunds, limits).
+- **Fix — staff moderation of messages and conversations**: `moderation_action` refused the `message` and `conversation` targets that `apply_moderation_action` accepts, so every such action failed. Widened with the new content targets (migration `20260916120400`, applied to production).
+- **Fix — "Cancel this order" on event, place and Spotlight promotion checkouts failed** since the 2026-09-10 money-path lockdown removed client update rights; the cancel now writes with the service role after checking the owner, and a cancelled Spotlight checkout releases its campaign.
+- **Fix — advertisers could resume a promotion staff had paused** through the API, and a paused promotion could resume on a hidden post; the transition now checks both (migration `20260916120500`, applied to production).
+
 ## 2026-09-16 — Mobile: iOS TestFlight QA round 2
 
 - **Fix — maps stopped responding after opening a detail screen (iOS)**: the event/place mini map set `pointerEvents="none"` on the MapView. Native views are recycled on the new architecture; react-native-maps resets its cached props on reuse, so the recycled view kept `userInteractionEnabled = NO` and the next Explore map or "Choose on map" picker drew but ignored every touch. The mini map is now `StaticMapPreview` (touch blocking on a wrapper view only; tap opens directions).

@@ -50,6 +50,9 @@ type Props = {
   /** First timeline frame, handed up so the filmstrip cell can show a
    * poster instead of a generic video icon. Fires once per clip. */
   onPoster?: (thumb: VideoThumbnail) => void;
+  /** Longest window the handles allow. Highlights use their own cap;
+   * Spotlight and Stories pass the programme's limit. */
+  maxSegmentSeconds?: number;
 };
 
 /** Resolve once the player has a genuinely playable source (or times out /
@@ -80,7 +83,13 @@ function waitForReady(
   });
 }
 
-export function VideoTrimBar({ player, item, onTrimChange, onPoster }: Props) {
+export function VideoTrimBar({
+  player,
+  item,
+  onTrimChange,
+  onPoster,
+  maxSegmentSeconds = MAX_TRIM_SEGMENT_SECONDS,
+}: Props) {
   const duration = Math.max(
     item.durationSeconds ?? player.duration ?? 0,
     0.001,
@@ -230,7 +239,7 @@ export function VideoTrimBar({ player, item, onTrimChange, onPoster }: Props) {
   );
 
   const minPx = xForSec(MIN_TRIM_SEGMENT_SECONDS);
-  const maxPx = xForSec(MAX_TRIM_SEGMENT_SECONDS);
+  const maxPx = xForSec(maxSegmentSeconds);
 
   const startDrag = Gesture.Pan()
     .onBegin(() => {

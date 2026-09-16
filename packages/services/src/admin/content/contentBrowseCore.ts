@@ -31,6 +31,8 @@ type Cfg = {
   /** how a report row references this entity */
   reportTargetType: string;
   permission: AdminPermissionKey;
+  /** Extra equality filters (e.g. content_post.kind). */
+  where?: Record<string, string>;
 };
 
 const CFG: Record<ModeratableTargetType, Cfg> = {
@@ -81,6 +83,32 @@ const CFG: Record<ModeratableTargetType, Cfg> = {
     statusCol: null,
     reportTargetType: "highlight",
     permission: "reviews.view",
+  },
+  spotlight: {
+    table: "content_post",
+    labelCol: "caption",
+    ownerCol: "author_id",
+    statusCol: "status",
+    reportTargetType: "spotlight",
+    permission: "spotlight.view",
+    where: { kind: "spotlight" },
+  },
+  story: {
+    table: "content_post",
+    labelCol: "caption",
+    ownerCol: "author_id",
+    statusCol: "status",
+    reportTargetType: "story",
+    permission: "spotlight.view",
+    where: { kind: "story" },
+  },
+  content_comment: {
+    table: "content_comment",
+    labelCol: "body",
+    ownerCol: "author_id",
+    statusCol: "status",
+    reportTargetType: "content_comment",
+    permission: "spotlight.view",
   },
 };
 
@@ -138,6 +166,9 @@ export async function listModeratableContentCore(
     .order("id", { ascending: false })
     .limit(pageSize + 1);
 
+  for (const [col, val] of Object.entries(cfg.where ?? {})) {
+    query = query.eq(col as never, val as never);
+  }
   if (state === "actioned")
     query = query.not("moderation_state" as never, "is", null);
   else if (state !== "any")

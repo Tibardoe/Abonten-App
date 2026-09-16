@@ -1,7 +1,11 @@
 // Mirrors PaymentMethodSelectorProps["kind"] in PaymentMethodSelector.tsx —
 // kept as a separate alias here (rather than importing the props type) since
 // this file has no other reason to depend on that component.
-export type CheckoutKind = "ticket" | "promotion" | "event-promotion";
+export type CheckoutKind =
+  | "ticket"
+  | "promotion"
+  | "event-promotion"
+  | "spotlight-promotion";
 
 // Shown once Paystack verification has succeeded and the server is issuing
 // the purchased thing (ticket / promotion) — the moment right before the
@@ -11,6 +15,8 @@ const FULFILLMENT_MESSAGE: Record<CheckoutKind, string> = {
   ticket: "Payment successful. Preparing your tickets…",
   promotion: "Payment successful. Activating your promotion…",
   "event-promotion": "Payment successful. Activating your promotion…",
+  "spotlight-promotion":
+    "Payment successful. Sending your Spotlight promotion for review…",
 };
 
 export function getFulfillmentMessage(kind: CheckoutKind): string {

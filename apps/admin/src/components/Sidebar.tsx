@@ -7,6 +7,7 @@ import {
   Bell,
   Building2,
   CalendarDays,
+  Clapperboard,
   ClipboardCheck,
   ClipboardList,
   Compass,
@@ -119,6 +120,12 @@ const ITEMS: Item[] = [
     label: "Discovery",
     icon: Compass,
     permission: "discovery.view",
+  },
+  {
+    href: "/spotlight",
+    label: "Spotlight & Stories",
+    icon: Clapperboard,
+    permission: "spotlight.view",
   },
   {
     href: "/weekly",

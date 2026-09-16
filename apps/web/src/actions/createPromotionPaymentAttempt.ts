@@ -14,7 +14,7 @@ import {
  * mobile POST /api/mobile/checkout/{promotion,place-promotion}-attempt.
  */
 export async function createPromotionPaymentAttempt(input: {
-  kind: "event" | "place";
+  kind: "event" | "place" | "spotlight";
   checkoutId: string;
   paymentMethodId?: string | null;
   useCredit?: boolean;
@@ -32,7 +32,12 @@ export async function createPromotionPaymentAttempt(input: {
     return { status: 401, message: "User not logged in" };
   }
 
-  const type = input.kind === "event" ? "event-promotion" : "promotion";
+  const type =
+    input.kind === "event"
+      ? "event-promotion"
+      : input.kind === "spotlight"
+        ? "spotlight-promotion"
+        : "promotion";
 
   return createPromotionPaymentAttemptCore(
     supabase,

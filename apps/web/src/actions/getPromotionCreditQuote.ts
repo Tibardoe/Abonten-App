@@ -12,7 +12,7 @@ import {
  * GET /api/mobile/checkout/promotion-credit-quote.
  */
 export async function getPromotionCreditQuote(input: {
-  kind: "event" | "place";
+  kind: "event" | "place" | "spotlight";
   checkoutId: string;
 }): Promise<PromotionCreditQuoteResult | { status: 401; message: string }> {
   const supabase = await createClient();

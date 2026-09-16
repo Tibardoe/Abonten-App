@@ -92,9 +92,12 @@ export function useHighlightComposer() {
         continue;
       }
 
-      // expo-image-picker reports video duration in milliseconds.
+      // expo-image-picker reports video duration in milliseconds. Some files
+      // (copied in rather than recorded) come back with 0: treat that as
+      // unknown so the trim bar reads the length from the player instead of
+      // showing a zero-length clip.
       const durationSeconds =
-        isVideo && typeof asset.duration === "number"
+        isVideo && typeof asset.duration === "number" && asset.duration > 0
           ? asset.duration / 1000
           : null;
 

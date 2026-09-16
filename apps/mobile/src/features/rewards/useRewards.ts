@@ -114,7 +114,7 @@ export function useCreditActivity(options?: { enabled?: boolean }) {
  * Null when Rewards or spending on promotions is off, or there's no credit.
  */
 export function usePromotionCreditQuote(
-  kind: "event" | "place",
+  kind: "event" | "place" | "spotlight",
   checkoutId: string | null,
 ) {
   return useQuery({

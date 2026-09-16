@@ -1,5 +1,7 @@
 import { ImageViewer } from "@/components/ImageViewer";
 import { SubscribeBell } from "@/components/alerts/SubscribeBell";
+import { FollowButton } from "@/components/content/FollowButton";
+import { PublisherSpotlightStrip } from "@/components/content/PublisherSpotlightStrip";
 import { HighlightsRow } from "@/components/profile/HighlightsRow";
 import {
   VerifiedPill,
@@ -88,16 +90,25 @@ export function ProfileHeader({
           variant="outline"
           onPress={() => router.push("/(app)/settings/edit-profile")}
         />
-      ) : profile.total_posts > 0 ? (
-        <View className="flex-row">
-          <SubscribeBell
+      ) : (
+        <View className="flex-row items-center gap-2">
+          <FollowButton
             kind="organizer"
             targetId={profile.user_id}
             ownerId={profile.user_id}
             label={`@${profile.username}`}
+            showCount
           />
+          {profile.total_posts > 0 ? (
+            <SubscribeBell
+              kind="organizer"
+              targetId={profile.user_id}
+              ownerId={profile.user_id}
+              label={`@${profile.username}`}
+            />
+          ) : null}
         </View>
-      ) : null}
+      )}
 
       <HighlightsRow
         userId={profile.user_id}
@@ -105,6 +116,12 @@ export function ProfileHeader({
         isOwn={isOwn}
         avatarPublicId={profile.avatar_public_id}
         avatarVersion={profile.avatar_version}
+      />
+
+      <PublisherSpotlightStrip
+        publisherKind="organizer"
+        publisherId={profile.user_id}
+        className="-mx-4"
       />
 
       <ImageViewer

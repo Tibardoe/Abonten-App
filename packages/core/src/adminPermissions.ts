@@ -90,6 +90,9 @@ export const ADMIN_PERMISSION_KEYS: AdminPermissionKey[] = [
   "weekly.edit",
   "weekly.publish",
   "weekly.configure",
+  "spotlight.view",
+  "spotlight.campaigns.review",
+  "spotlight.configure",
 ];
 
 const MODERATOR: AdminPermissionKey[] = [
@@ -118,6 +121,7 @@ const MODERATOR: AdminPermissionKey[] = [
   "monitoring.view",
   "weekly.view",
   "weekly.edit",
+  "spotlight.view",
 ];
 
 const FINANCE_ADMIN: AdminPermissionKey[] = [
@@ -145,6 +149,8 @@ const FINANCE_ADMIN: AdminPermissionKey[] = [
   "fieldops.view",
   "fieldops.commissions.approve",
   "fieldops.commissions.pay",
+  "spotlight.view",
+  "spotlight.campaigns.review",
 ];
 
 const SUPPORT_ADMIN: AdminPermissionKey[] = [
@@ -167,6 +173,7 @@ const SUPPORT_ADMIN: AdminPermissionKey[] = [
   "rewards.view",
   "rewards.goodwill",
   "weekly.view",
+  "spotlight.view",
 ];
 
 const ANALYST: AdminPermissionKey[] = [
@@ -190,6 +197,7 @@ const ANALYST: AdminPermissionKey[] = [
   "fieldops.view",
   "discovery.view",
   "weekly.view",
+  "spotlight.view",
 ];
 
 // Runs the regional promotion programme (Field Ops): campaigns, teams,
@@ -312,6 +320,8 @@ export const STEP_UP_PERMISSIONS: AdminPermissionKey[] = [
   "discovery.configure",
   "weekly.publish",
   "weekly.configure",
+  "spotlight.campaigns.review",
+  "spotlight.configure",
 ];
 
 export const STEP_UP_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes

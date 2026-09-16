@@ -87,6 +87,33 @@ export async function redirectSystemPath({
       }
       return "/(app)/weekly";
     }
+    // Spotlight and Stories: /spotlight, /spotlight/<post id>, /stories/<post id>,
+    // plus the creator screens the app itself links to (promotion payment
+    // returns, notifications): spotlight/campaign/<id>, spotlight/post/<id>,
+    // spotlight/promote/<post id>, spotlight/manage. Ids are checked by shape
+    // only; the screens ask the API, which applies the programme switch,
+    // ownership, moderation and blocks.
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (parts[0] === "spotlight") {
+      const first = parts[1] ? decodeURIComponent(parts[1]) : null;
+      const second = parts[2] ? decodeURIComponent(parts[2]) : null;
+      if (first === "manage") return "/(app)/spotlight/manage";
+      if (
+        (first === "campaign" || first === "post" || first === "promote") &&
+        second &&
+        uuid.test(second)
+      ) {
+        return `/(app)/spotlight/${first}/${second}`;
+      }
+      return first && uuid.test(first)
+        ? `/(app)/spotlight/${first}`
+        : "/(app)/spotlight";
+    }
+    if (parts[0] === "stories" && parts[1]) {
+      const id = decodeURIComponent(parts[1]);
+      return uuid.test(id) ? `/(app)/story/${id}` : "/(app)/(tabs)/messages";
+    }
     // Conversation deep links (notification tap / cross-device). The segment
     // is already a conversation id — no lookup needed; RLS gates the screen.
     if (parts[0] === "messages") {

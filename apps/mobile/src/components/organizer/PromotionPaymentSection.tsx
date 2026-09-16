@@ -6,6 +6,7 @@ import {
   usePromotionCreditQuote,
 } from "@/features/rewards/useRewards";
 import { usePaymentMethods } from "@/features/wallet/usePaymentMethods";
+import { api } from "@/lib/api";
 import type { PaymentMethodRow } from "@abonten/api-client";
 import { formatCredit } from "@abonten/core/rewards/creditAmount";
 import { AppText } from "@abonten/ui-native";
@@ -41,15 +42,18 @@ export function PromotionPaymentSection({
   currency: string;
   amount: number;
   onFeatured: () => void;
-  kind?: "event" | "place";
+  /** "spotlight" is a promoted Spotlight campaign: cash only, and on
+   *  success it waits for review instead of going live. */
+  kind?: "event" | "place" | "spotlight";
 }) {
   const router = useRouter();
   const { data: methodsRes } = usePaymentMethods();
   const methods = methodsRes?.status === 200 ? (methodsRes.data ?? []) : [];
 
+  // Credit can't be used for Spotlight promotions, so there is no quote.
   const { data: quote, refetch: refetchQuote } = usePromotionCreditQuote(
     kind,
-    checkoutId,
+    kind === "spotlight" ? null : checkoutId,
   );
   const invalidateCredit = useInvalidateCredit();
   const [useCreditChoice, setUseCreditChoice] = useState<boolean | null>(null);
@@ -62,8 +66,11 @@ export function PromotionPaymentSection({
 
   const createEventAttempt = useCreatePromotionAttempt();
   const createPlaceAttempt = useCreatePlacePromotionAttempt();
+  const [creatingSpotlight, setCreatingSpotlight] = useState(false);
   const creatingAttempt =
-    createEventAttempt.isPending || createPlaceAttempt.isPending;
+    createEventAttempt.isPending ||
+    createPlaceAttempt.isPending ||
+    creatingSpotlight;
 
   const chosenId = selectedId ?? methods.find((m) => m.is_default)?.id ?? null;
   const canPay = creditCoversAll || !!chosenId;
@@ -73,18 +80,33 @@ export function PromotionPaymentSection({
     setError(null);
 
     const paymentMethodId = creditCoversAll ? null : chosenId;
-    const res =
-      kind === "place"
-        ? await createPlaceAttempt.mutateAsync({
-            placePromotionCheckoutId: checkoutId,
-            paymentMethodId,
-            useCredit,
-          })
-        : await createEventAttempt.mutateAsync({
-            eventPromotionCheckoutId: checkoutId,
-            paymentMethodId,
-            useCredit,
-          });
+    let res: Awaited<ReturnType<typeof api.checkout.promotionAttempt>>;
+    if (kind === "spotlight") {
+      setCreatingSpotlight(true);
+      try {
+        res = await api.checkout.spotlightPromotionAttempt({
+          contentCampaignCheckoutId: checkoutId,
+          paymentMethodId,
+        });
+      } catch {
+        setError("Couldn't start the payment. Check your connection.");
+        return;
+      } finally {
+        setCreatingSpotlight(false);
+      }
+    } else
+      res =
+        kind === "place"
+          ? await createPlaceAttempt.mutateAsync({
+              placePromotionCheckoutId: checkoutId,
+              paymentMethodId,
+              useCredit,
+            })
+          : await createEventAttempt.mutateAsync({
+              eventPromotionCheckoutId: checkoutId,
+              paymentMethodId,
+              useCredit,
+            });
 
     if (res.status !== 200) {
       setError(
@@ -119,26 +141,37 @@ export function PromotionPaymentSection({
 
     const attemptId = res.data.attempt.id;
     const successHref =
-      kind === "place"
-        ? `/(app)/organizer/places/${entityId}`
-        : `/(app)/organizer/events/${entityId}`;
+      kind === "spotlight"
+        ? `/(app)/spotlight/campaign/${entityId}`
+        : kind === "place"
+          ? `/(app)/organizer/places/${entityId}`
+          : `/(app)/organizer/events/${entityId}`;
 
     router.push({
       pathname: "/(app)/payment/[attemptId]",
       params: {
         attemptId,
-        kind: kind === "place" ? "place_promotion" : "event_promotion",
+        kind:
+          kind === "spotlight"
+            ? "spotlight_promotion"
+            : kind === "place"
+              ? "place_promotion"
+              : "event_promotion",
         // Credit-only: already finalized server-side, so the verification
         // screen confirms it on its first check instead of waiting on a
         // charge.
         mode: ps ? ps.mode : "direct",
         deepLink: `abonten://promotion/${checkoutId}`,
-        contextTitle: `Feature this ${kind}`,
+        contextTitle:
+          kind === "spotlight"
+            ? "Promote your Spotlight"
+            : `Feature this ${kind}`,
         amountLabel: ps
           ? `${currency} ${payAmount.toFixed(2)}`
           : `Paid with ${formatCredit(res.data.credit?.appliedMinor ?? 0)} credit`,
         successHref,
-        successCtaLabel: `View ${kind}`,
+        successCtaLabel:
+          kind === "spotlight" ? "View promotion" : `View ${kind}`,
         ...(ps === null
           ? {
               chargeStatus: "success",

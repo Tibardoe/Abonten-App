@@ -28,4 +28,12 @@ export type PaymentFulfillmentDeps = {
     checkoutId: string,
     authOverride: AuthOverride,
   ) => Promise<FulfilmentResult>;
+  /** @abonten/services content/campaigns/activateContentCampaignCore.ts — a
+   *  paid Spotlight campaign becomes pending_review. Framework-free, so the
+   *  package can supply it, but injected like the others so every transport
+   *  passes one object. */
+  activateContentCampaign?: (
+    checkoutId: string,
+    authOverride: AuthOverride,
+  ) => Promise<FulfilmentResult>;
 };

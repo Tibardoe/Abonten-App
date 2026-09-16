@@ -1,6 +1,7 @@
 import activateEventPromotion from "@/utils/activateEventPromotion";
 import activatePlacePromotion from "@/utils/activatePlacePromotion";
 import generateTicket from "@/utils/generateTicket";
+import activateContentCampaign from "@abonten/services/content/campaigns/activateContentCampaignCore";
 import type { PaymentFulfillmentDeps } from "@abonten/services/payments/fulfillmentDeps";
 
 // The concrete apps/web implementations of the three purchase-fulfilment
@@ -15,4 +16,7 @@ export const paymentFulfillmentDeps: PaymentFulfillmentDeps = {
   issueTickets: generateTicket,
   activatePlacePromotion,
   activateEventPromotion,
+  // Framework-free, so it lives in the package; still injected here so the
+  // web actions, the mobile routes and the webhook all pass one object.
+  activateContentCampaign,
 };

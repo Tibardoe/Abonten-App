@@ -105,6 +105,13 @@ export async function createPromotionPaymentAttemptCore(
 
   await supabase.rpc(cfg.sweepRpc);
 
+  if (input.useCredit && !cfg.creditAllowed) {
+    return {
+      status: 400,
+      message: "Abonten Credit can't be used on this purchase.",
+    };
+  }
+
   if (input.useCredit) {
     return startCreditPayment(
       supabase,

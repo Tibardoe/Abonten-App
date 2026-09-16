@@ -1,4 +1,5 @@
 import { useSession } from "@/auth/SessionProvider";
+import { useContentProgram } from "@/features/content/useContentProgram";
 import { unregisterPushToken } from "@/features/notifications/usePushRegistration";
 import { useProfile } from "@/features/profile/useProfile";
 import { useIsOrganizer, useIsPlaceOwner } from "@/features/roles/useRoles";
@@ -132,6 +133,7 @@ export function AppDrawer() {
   const isOrganizer = useIsOrganizer();
   const isPlaceOwner = useIsPlaceOwner();
   const { program: weekly } = useWeeklyProgram();
+  const { program: content } = useContentProgram();
   const router = useRouter();
   const t = useTranslations("navigation");
   const tSettings = useTranslations("settings");
@@ -405,6 +407,13 @@ export function AppDrawer() {
                 onPress={() => go("/(app)/weekly")}
               />
             ) : null}
+            {content.spotlight ? (
+              <Row
+                icon="play-circle-outline"
+                label="Spotlight"
+                onPress={() => go("/(app)/spotlight")}
+              />
+            ) : null}
             {session ? (
               <>
                 <Pressable
@@ -481,6 +490,14 @@ export function AppDrawer() {
                     icon="storefront-outline"
                     label="My places"
                     onPress={() => go("/(app)/organizer/places")}
+                  />
+                ) : null}
+                {content.canPublish &&
+                (content.spotlightPosting || content.storiesPosting) ? (
+                  <Row
+                    icon="videocam-outline"
+                    label="Spotlight & Stories"
+                    onPress={() => go("/(app)/spotlight/manage")}
                   />
                 ) : null}
 

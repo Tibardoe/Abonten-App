@@ -119,6 +119,21 @@ const TARGET_SNAPSHOT: Record<
     columns:
       "id, type, event_id, place_id, created_by, status, moderation_state, created_at",
   },
+  spotlight: {
+    table: "content_post",
+    columns:
+      "id, kind, author_id, publisher_kind, caption, status, moderation_state, published_at, expires_at, event_id, place_id",
+  },
+  story: {
+    table: "content_post",
+    columns:
+      "id, kind, author_id, publisher_kind, caption, status, moderation_state, published_at, expires_at, event_id, place_id",
+  },
+  content_comment: {
+    table: "content_comment",
+    columns:
+      "id, post_id, author_id, body, status, moderation_state, created_at",
+  },
 };
 
 async function fetchTargetSnapshot(

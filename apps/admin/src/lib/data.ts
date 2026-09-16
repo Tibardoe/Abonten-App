@@ -27,6 +27,18 @@ import {
   contentModerationCountsCore,
   listModeratableContentCore,
 } from "@abonten/services/admin/content/contentBrowseCore";
+import {
+  getCampaignAdminCore,
+  listCampaignsAdminCore,
+} from "@abonten/services/admin/content/contentCampaignAdminCore";
+import {
+  getContentOverviewCore,
+  getContentPostAdminCore,
+  getContentSettingsCore,
+  listContentCommentsAdminCore,
+  listContentPostsAdminCore,
+} from "@abonten/services/admin/content/contentPlatformAdminCore";
+import { getPromotionPricingAdminCore } from "@abonten/services/admin/content/contentPromotionPricingAdminCore";
 import { getDashboardCore } from "@abonten/services/admin/dashboard/getDashboardCore";
 import { getDiscoveryOverviewCore } from "@abonten/services/admin/discovery/discoveryAdminCore";
 import { getCampaignAnalyticsCore } from "@abonten/services/admin/fieldOps/analyticsAdminCore";
@@ -713,4 +725,75 @@ export async function loadWeeklySettings() {
   const ctx = await requireAdmin();
   const settings = await getWeeklySettingsCore(getServiceClient(), ctx);
   return { ctx, settings };
+}
+
+// ── Spotlight + Stories ─────────────────────────────────────
+
+export async function loadContentOverview(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  const ctx = await requireAdmin();
+  const range = parseAdminRangeParams(searchParams);
+  const overview = await getContentOverviewCore(getServiceClient(), ctx, {
+    from: range.from,
+    to: range.to,
+  });
+  return { ctx, range, overview };
+}
+
+export async function loadContentSettings() {
+  const ctx = await requireAdmin();
+  const [settings, pricing] = await Promise.all([
+    getContentSettingsCore(getServiceClient(), ctx),
+    getPromotionPricingAdminCore(getServiceClient(), ctx),
+  ]);
+  return { ctx, settings, pricing };
+}
+
+export async function loadContentPosts(
+  filters: Parameters<typeof listContentPostsAdminCore>[2],
+) {
+  const ctx = await requireAdmin();
+  const list = await listContentPostsAdminCore(
+    getServiceClient(),
+    ctx,
+    filters,
+  );
+  return { ctx, list };
+}
+
+export async function loadContentPost(postId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getContentPostAdminCore(getServiceClient(), ctx, postId);
+  return { ctx, detail };
+}
+
+export async function loadContentComments(
+  filters: Parameters<typeof listContentCommentsAdminCore>[2],
+) {
+  const ctx = await requireAdmin();
+  const list = await listContentCommentsAdminCore(
+    getServiceClient(),
+    ctx,
+    filters,
+  );
+  return { ctx, list };
+}
+
+export async function loadContentCampaigns(
+  filters: Parameters<typeof listCampaignsAdminCore>[2],
+) {
+  const ctx = await requireAdmin();
+  const list = await listCampaignsAdminCore(getServiceClient(), ctx, filters);
+  return { ctx, list };
+}
+
+export async function loadContentCampaign(campaignId: string) {
+  const ctx = await requireAdmin();
+  const detail = await getCampaignAdminCore(
+    getServiceClient(),
+    ctx,
+    campaignId,
+  );
+  return { ctx, detail };
 }

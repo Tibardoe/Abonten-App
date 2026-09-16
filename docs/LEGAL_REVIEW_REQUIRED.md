@@ -81,6 +81,7 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 | F2 | Google Play Data safety form must match the Privacy Policy (data types, sharing, deletion) | Play listing | Compliance review at each release | Open |
 | F3 | Apple App Store privacy labels and account-deletion requirement (when iOS ships) | Future iOS listing | Prepare when applicable | Open |
 | F4 | Trademark status of the Abonten name and logo | Terms §17 | Confirm registration | Open |
+| F5 | Spotlight and Stories user content (built 2026-09-16, switched off): the licence publishers grant, the rights acknowledgement shown before posting (`CONTENT_RIGHTS_ACKNOWLEDGEMENT`), copyright and likeness takedowns through the report flow, whether music in uploaded videos is permitted, and the download option (off by default, author opt-in) | Terms §13, §17; `architecture/spotlight-and-stories.md` §3, §7 | Confirm before the Spotlight or Stories audience is Everyone | Open |
 
 ## G. Communications
 
@@ -88,6 +89,7 @@ Status values: **Open** · **In review** · **Decided** (record the decision and
 |---|---|---|---|---|
 | G1 | If marketing emails or SMS are ever introduced: consent capture and opt-out under Act 843. **2026-09-15: a recommendation digest email is built and switched off** (`discovery_program_setting.recommendations_email_enabled = false`): opt-in only from settings, a consent record (`notification_consent_event`), a signed unsubscribe link, RFC 8058 one-click unsubscribe, the push's caps. Confirm this design meets Act 843 before the switch is turned on. | Privacy §8; `architecture/discovery-search-and-recommendations.md` §4.4 | Decide before the recommendation email switch is turned on | Open |
 | G2 | Reward-notice emails: confirm they are service messages, not marketing, given the existing opt-out | Privacy §8 | Confirm | Open |
+| G4 | Promoted Spotlights (built 2026-09-16, switched off): the "Sponsored" disclosure wording and placement, advertiser terms (review before running, full refund on rejection, time-based billing, no promised reach), whether sponsored content needs any further labelling for events that sell tickets, and engagement notices (likes, comments, follows) as service messages | Terms; `architecture/spotlight-and-stories.md` §4, §8 | Confirm before paid promotions are switched on for anyone outside staff | Open |
 | G3 | Recommendation push notices and alerts (Discovery): confirm that an explicit in-app opt-in, a per-category switch, one-tap stop and a two-week pause meet Act 843 for promotional push; confirm how long the opt-in records (`notification_prompt_state`, and `notification_consent_event` for email) must be kept. Recommendation email is built but off; turning it on falls under G1. | Privacy §8; `architecture/discovery-search-and-recommendations.md` §4 | Confirm before switching shadow mode off for anyone outside staff | Open |
 
 ## H. Placeholders standing in for information not yet provided

@@ -21,6 +21,9 @@ const TYPES: { key: ModeratableTargetType; label: string }[] = [
   { key: "place_review", label: "Place reviews" },
   { key: "user_review", label: "User reviews" },
   { key: "highlight", label: "Highlights" },
+  { key: "spotlight", label: "Spotlights" },
+  { key: "story", label: "Stories" },
+  { key: "content_comment", label: "Spotlight comments" },
 ];
 
 const STATES: { key: string; label: string }[] = [

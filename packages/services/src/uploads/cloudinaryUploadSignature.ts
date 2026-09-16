@@ -52,14 +52,41 @@ cloudinary.config({
 export type UploadSignatureKind =
   | "avatar"
   | "highlight"
+  | "content"
   | "place_photo"
   | "event_flyer"
   | "event_review_photo"
   | "place_review_photo";
 
+/** Root of every Spotlight / Story upload (+ "/<environment>/<user id>"). */
+export const CONTENT_MEDIA_FOLDER_PREFIX = "content_media";
+
+/**
+ * The Cloudinary account is shared by production, preview deployments and
+ * local development, but each has its own database. Spotlight / Story
+ * uploads are filed under their environment so the daily sweep for
+ * never-registered uploads (platform/cloudinaryCleanupCore) only ever looks
+ * at uploads its own database could have registered.
+ */
+export function contentMediaEnvironment():
+  | "production"
+  | "preview"
+  | "development" {
+  const env = process.env.VERCEL_ENV;
+  return env === "production" || env === "preview" ? env : "development";
+}
+
+/** content_media/<environment>/ — with a trailing slash. */
+export function contentMediaEnvironmentPrefix(): string {
+  return `${CONTENT_MEDIA_FOLDER_PREFIX}/${contentMediaEnvironment()}/`;
+}
+
 const FOLDER_PREFIX: Record<UploadSignatureKind, string> = {
   avatar: "user_profiles",
   highlight: "highlight_media",
+  // Spotlight + Stories media: registered afterwards by
+  // content/contentMediaCore, which re-reads the asset from Cloudinary.
+  content: CONTENT_MEDIA_FOLDER_PREFIX,
   place_photo: "place_photos",
   // The web saveEventFlyerToCloudinary uploads to a flat "event_flyers"
   // folder; the signed mobile upload scopes it per user like every other
@@ -79,6 +106,9 @@ const UPLOAD_CONSTRAINTS: Record<
 > = {
   avatar: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
   highlight: {
+    allowedFormats: `${ALLOWED_IMAGE_UPLOAD_FORMATS},${ALLOWED_VIDEO_UPLOAD_FORMATS}`,
+  },
+  content: {
     allowedFormats: `${ALLOWED_IMAGE_UPLOAD_FORMATS},${ALLOWED_VIDEO_UPLOAD_FORMATS}`,
   },
   place_photo: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
@@ -130,7 +160,10 @@ export async function buildCloudinaryUploadSignature(
   }
 
   const timestamp = Math.round(Date.now() / 1000);
-  const folder = `${FOLDER_PREFIX[kind]}/${userId}`;
+  const folder =
+    kind === "content"
+      ? `${contentMediaEnvironmentPrefix()}${userId}`
+      : `${FOLDER_PREFIX[kind]}/${userId}`;
   const { allowedFormats } = UPLOAD_CONSTRAINTS[kind];
 
   // Every signed param must be echoed verbatim by the client or Cloudinary's

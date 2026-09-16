@@ -20,6 +20,9 @@ const TARGET_TYPES = [
   "highlight",
   "message",
   "conversation",
+  "spotlight",
+  "story",
+  "content_comment",
 ] as const satisfies readonly ReportTargetType[];
 
 const CATEGORIES = [

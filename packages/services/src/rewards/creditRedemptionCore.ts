@@ -17,15 +17,27 @@ import { rewardsKillSwitchOn } from "./rewardsProgramQuery";
 // migration lock_money_path_client_writes -- but pricing from the tier keeps
 // a single source of truth for cash and credit orders alike.)
 
-export type PromotionKind = "event" | "place";
+export type PromotionKind = "event" | "place" | "spotlight";
 
 type PromotionTarget = {
-  checkoutTable: "event_promotion_checkout" | "place_promotion_checkout";
-  targetType: "event_promotion_checkout" | "place_promotion_checkout";
-  attemptColumn: "event_promotion_checkout_id" | "place_promotion_checkout_id";
+  checkoutTable:
+    | "event_promotion_checkout"
+    | "place_promotion_checkout"
+    | "content_campaign_checkout";
+  targetType:
+    | "event_promotion_checkout"
+    | "place_promotion_checkout"
+    | "content_campaign_checkout";
+  attemptColumn:
+    | "event_promotion_checkout_id"
+    | "place_promotion_checkout_id"
+    | "content_campaign_checkout_id";
   sweepRpc:
     | "expire_stale_event_promotion_checkouts"
-    | "expire_stale_place_promotion_checkouts";
+    | "expire_stale_place_promotion_checkouts"
+    | "expire_stale_content_campaign_checkouts";
+  /** Credit tender is not offered for this kind (cash only). */
+  creditAllowed: boolean;
 };
 
 export const PROMOTION_TARGETS: Record<PromotionKind, PromotionTarget> = {
@@ -34,12 +46,24 @@ export const PROMOTION_TARGETS: Record<PromotionKind, PromotionTarget> = {
     targetType: "event_promotion_checkout",
     attemptColumn: "event_promotion_checkout_id",
     sweepRpc: "expire_stale_event_promotion_checkouts",
+    creditAllowed: true,
   },
   place: {
     checkoutTable: "place_promotion_checkout",
     targetType: "place_promotion_checkout",
     attemptColumn: "place_promotion_checkout_id",
     sweepRpc: "expire_stale_place_promotion_checkouts",
+    creditAllowed: true,
+  },
+  // Promoted Spotlight campaigns (content platform, 2026-09-16). Cash only in
+  // version 1: the campaign ledger has no credit leg, so no reservation is
+  // ever made for this kind.
+  spotlight: {
+    checkoutTable: "content_campaign_checkout",
+    targetType: "content_campaign_checkout",
+    attemptColumn: "content_campaign_checkout_id",
+    sweepRpc: "expire_stale_content_campaign_checkouts",
+    creditAllowed: false,
   },
 };
 
@@ -69,6 +93,8 @@ export async function loadPromotionOrder(
   kind: PromotionKind,
   checkoutId: string,
 ): Promise<PromotionOrder | null> {
+  if (kind === "spotlight")
+    return loadCampaignOrder(supabase, userId, checkoutId);
   const select =
     kind === "event"
       ? "id, status, currency, expires_at, tier:event_promotion_tier(price, currency), entity:event(title)"
@@ -96,6 +122,41 @@ export async function loadPromotionOrder(
     currency: row.tier.currency ?? row.currency,
     expiresAt: row.expires_at,
     label: name ? `a feature for ${name}` : "a promotion",
+  };
+}
+
+// A campaign checkout is priced from its campaign's server-set budget
+// (budget_minor), never from anything a client sent.
+async function loadCampaignOrder(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  checkoutId: string,
+): Promise<PromotionOrder | null> {
+  const { data, error } = await supabase
+    .from("content_campaign_checkout")
+    .select(
+      "id, status, currency, expires_at, campaign:content_campaign!content_campaign_checkout_campaign_id_fkey(budget_minor, currency, duration_days)",
+    )
+    .eq("id", checkoutId)
+    .eq("owner_id", userId)
+    .maybeSingle();
+  if (error) {
+    logger.error(`loadCampaignOrder failed: ${error.message}`);
+    throw new Error("Failed to load the campaign checkout");
+  }
+  const campaign = data?.campaign as unknown as {
+    budget_minor: number;
+    currency: string;
+    duration_days: number;
+  } | null;
+  if (!data || !campaign) return null;
+  return {
+    checkoutId: data.id,
+    status: data.status,
+    orderTotalMinor: Number(campaign.budget_minor),
+    currency: campaign.currency ?? data.currency,
+    expiresAt: data.expires_at,
+    label: `a Spotlight promotion (GH₵ ${(Number(campaign.budget_minor) / 100).toFixed(2)} budget)`,
   };
 }
 
@@ -222,6 +283,18 @@ export async function getPromotionCreditQuoteCore(
       return {
         status: 410,
         message: "This checkout has expired. Please start again.",
+      };
+    }
+    if (!PROMOTION_TARGETS[input.kind].creditAllowed) {
+      return {
+        status: 200,
+        data: quoteCredit(order, {
+          spendableMinor: 0,
+          blockedReason: "redemption_off",
+          minCashChargeMinor: 100,
+          maxShareBps: 0,
+          allowFullCredit: false,
+        }),
       };
     }
     const spendable = await getSpendableCredit(userId, "promotions");

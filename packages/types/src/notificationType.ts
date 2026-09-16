@@ -21,7 +21,11 @@ export type NotificationEntityKind =
   | "rewards"
   | "fieldops"
   | "verification"
-  | "recommendation";
+  | "recommendation"
+  | "spotlight"
+  | "story"
+  | "follow"
+  | "content_campaign";
 
 export type NotificationData = {
   kind?: NotificationEntityKind;
@@ -39,6 +43,13 @@ export type NotificationData = {
   conversationId?: string;
   /** With kind "recommendation": the digest this notice announced. */
   digestId?: string;
+  /** With kind "spotlight" / "story": the post. */
+  postId?: string;
+  commentId?: string;
+  /** With kind "content_campaign": the promotion. */
+  campaignId?: string;
+  /** Aggregated notices ("X and 3 others liked…"): who, newest first. */
+  actorIds?: string[];
 };
 
 export type NotificationType = {

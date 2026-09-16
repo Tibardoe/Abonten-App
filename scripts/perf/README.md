@@ -44,3 +44,19 @@ pseudo-words (~0.2%) and 20,000 rare pseudo-words (~5 events each).
 - Everything runs in one transaction, so tables created or filled in it have
   no autovacuum statistics until the script runs `ANALYZE`. The seed analyzes
   after loading.
+
+## Promotion delivery simulation
+
+`promotion-delivery-simulation.sql` runs a simulated week of Spotlight
+promotion delivery (8,000 devices, about 3,000 a day, three promotions side by
+side) through the real candidate, ingest, accrual, tick and reconciliation
+functions, prints per-day and final figures, and rolls back. It needs three
+live Spotlight posts on the local stack (any integration run leaves them) and
+takes about three minutes.
+
+```sh
+cat scripts/perf/promotion-delivery-simulation.sql \
+  | docker exec -i supabase_db_Abonten-App psql -U postgres -v ON_ERROR_STOP=1
+```
+
+Results: `docs/architecture/perf/promotion-delivery-2026-09.md`.

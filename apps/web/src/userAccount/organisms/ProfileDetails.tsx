@@ -13,6 +13,7 @@ import UserAccountTabsNavigation from "../molecules/UserAccountTabsNavigation";
 
 import { getOrganizerVerified } from "@/actions/verification/getOrganizerVerified";
 import SubscribeBell from "@/discovery/molecules/SubscribeBell";
+import FollowButton from "@/spotlight/molecules/FollowButton";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 type LayoutUserProp = {
   username: string;
@@ -100,6 +101,12 @@ export default async function ProfileDetails({
                   label={`@${data?.username ?? username}`}
                 />
               ) : null}
+              <FollowButton
+                kind="organizer"
+                targetId={userDetails.data.user_id}
+                ownerId={userDetails.data.user_id}
+                label={`@${data?.username ?? username}`}
+              />
               <AddReviewButton username={username} />
               <ReportButton
                 targetType="user"
@@ -218,6 +225,12 @@ export default async function ProfileDetails({
                     label={`@${data?.username ?? username}`}
                   />
                 ) : null}
+                <FollowButton
+                  kind="organizer"
+                  targetId={userDetails.data.user_id}
+                  ownerId={userDetails.data.user_id}
+                  label={`@${data?.username ?? username}`}
+                />
                 <AddReviewButton username={username} />
                 <ReportButton
                   targetType="user"

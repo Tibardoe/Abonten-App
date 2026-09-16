@@ -19,6 +19,8 @@ import PlaceOpeningHoursTable from "@/places/molecules/PlaceOpeningHoursTable";
 import PlaceWebsiteLink from "@/places/molecules/PlaceWebsiteLink";
 import PlaceActionButtons from "@/places/organisms/PlaceActionButtons";
 import PlaceReviewsSection from "@/places/organisms/PlaceReviewsSection";
+import FollowButton from "@/spotlight/molecules/FollowButton";
+import PublisherSpotlightGrid from "@/spotlight/organisms/PublisherSpotlightGrid";
 import { placeJsonLd } from "@/utils/structuredData";
 import VerifiedBadgePopover from "@/verification/molecules/VerifiedBadgePopover";
 import { buildCloudinaryUrl } from "@abonten/core/cloudinaryUrl";
@@ -188,6 +190,14 @@ export default async function page({
                 ownerId={place.owner_id}
               />
               <AddPlaceToFavoriteButton placeId={place.id} compact />
+              <FollowButton
+                kind="place"
+                targetId={place.id}
+                ownerId={place.owner_id}
+                label={place.name}
+                variant="overlay"
+                className="px-2.5 py-1 text-xs md:text-sm"
+              />
               <SubscribeBell
                 kind="place"
                 targetId={place.id}
@@ -370,6 +380,14 @@ export default async function page({
                 </div>
               </div>
             )}
+
+            {/* Spotlight (hidden while off for the visitor or empty) */}
+            <PublisherSpotlightGrid
+              publisherKind="place"
+              publisherId={place.id}
+              title="Spotlight"
+              hideWhenEmpty
+            />
 
             {/* Reviews */}
             <PlaceReviewsSection

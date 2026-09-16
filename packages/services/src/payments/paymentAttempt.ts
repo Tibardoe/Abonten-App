@@ -55,7 +55,8 @@ export async function upsertPaymentAttemptForSession(
   matchColumn:
     | "checkout_session_id"
     | "place_promotion_checkout_id"
-    | "event_promotion_checkout_id",
+    | "event_promotion_checkout_id"
+    | "content_campaign_checkout_id",
   matchValue: string,
   amount: number,
   currency: string,
@@ -140,7 +141,8 @@ export async function upsertPaymentAttemptForSession(
 type CheckoutMatchColumn =
   | "checkout_session_id"
   | "place_promotion_checkout_id"
-  | "event_promotion_checkout_id";
+  | "event_promotion_checkout_id"
+  | "content_campaign_checkout_id";
 
 /**
  * The Phase 12 payment-race guard: is a payment currently in flight for this
