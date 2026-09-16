@@ -48,6 +48,7 @@ type CloudinaryResource = {
   width?: number;
   height?: number;
   duration?: number;
+  has_video?: boolean;
   secure_url: string;
 };
 
@@ -104,6 +105,9 @@ async function fetchResource(
     const res = (await cloudinary.api.resource(publicId, {
       resource_type: resourceType,
       type: "upload",
+      // Without this the Admin API omits a video's duration, and the length
+      // limit could never be applied (found with a real upload, 2026-09-16).
+      ...(resourceType === "video" ? { media_metadata: true } : {}),
     })) as CloudinaryResource;
     return res;
   } catch (error) {
@@ -279,7 +283,17 @@ export async function registerContentMediaCore(
   if (isVideo) {
     const full =
       typeof resource.duration === "number" ? resource.duration : null;
-    if (full !== null && full < MIN_VIDEO_SECONDS) {
+    // Fail closed: a length we can't read can't be checked against the
+    // limit, and a file with no picture isn't a video post.
+    if (full === null) {
+      return refuse(
+        "We couldn't read this video's length. Try exporting it again.",
+      );
+    }
+    if (resource.has_video === false) {
+      return refuse("That file has no video picture.");
+    }
+    if (full < MIN_VIDEO_SECONDS) {
       return refuse("That video is too short.");
     }
     const start = input.trimStartSeconds;
