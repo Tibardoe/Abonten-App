@@ -2,6 +2,7 @@
 
 import cancelEventPromotionCheckout from "@/actions/cancelEventPromotionCheckout";
 import cancelPlacePromotionCheckout from "@/actions/cancelPlacePromotionCheckout";
+import { cancelContentCampaignCheckout } from "@/actions/content/cancelContentCampaignCheckout";
 import ConfirmDeleteModal from "@/components/organisms/ConfirmDeleteModal";
 import { useToast } from "@/hooks/useToast";
 import { useMutation } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import { MdDeleteOutline } from "react-icons/md";
 
 type CancelPendingCheckoutButtonProps = {
   checkoutId: string;
-  kind: "event-promotion" | "promotion";
+  kind: "event-promotion" | "promotion" | "spotlight-promotion";
 };
 
 /**
@@ -34,7 +35,9 @@ export default function CancelPendingCheckoutButton({
     mutationFn: () =>
       kind === "event-promotion"
         ? cancelEventPromotionCheckout(checkoutId)
-        : cancelPlacePromotionCheckout(checkoutId),
+        : kind === "spotlight-promotion"
+          ? cancelContentCampaignCheckout(checkoutId)
+          : cancelPlacePromotionCheckout(checkoutId),
 
     onSuccess: (response) => {
       setShowConfirm(false);

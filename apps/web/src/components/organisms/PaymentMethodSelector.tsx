@@ -53,6 +53,14 @@ type PaymentMethodSelectorProps = (
       amount: number;
       currency: string;
     }
+  | {
+      // Promoted Spotlight campaign. Cash only: the server never offers
+      // credit for it, so the quote below always comes back empty.
+      kind: "spotlight-promotion";
+      contentCampaignCheckoutId: string;
+      amount: number;
+      currency: string;
+    }
 ) & {
   // Purely informational — lets a wrapping component (e.g. a collapsible
   // panel) show the current phase/selected wallet without owning any
@@ -170,7 +178,12 @@ export default function PaymentMethodSelector(
       ? { kind: "place" as const, checkoutId: props.placePromotionCheckoutId }
       : props.kind === "event-promotion"
         ? { kind: "event" as const, checkoutId: props.eventPromotionCheckoutId }
-        : null;
+        : props.kind === "spotlight-promotion"
+          ? {
+              kind: "spotlight" as const,
+              checkoutId: props.contentCampaignCheckoutId,
+            }
+          : null;
   const { data: creditQuoteResponse, refetch: refetchCreditQuote } = useQuery({
     queryKey: [
       "promotion-credit-quote",
@@ -206,13 +219,13 @@ export default function PaymentMethodSelector(
   const amount =
     useCredit && creditQuote
       ? creditMinorToCedis(creditQuote.cashMinor)
-      : props.kind === "promotion" || props.kind === "event-promotion"
+      : props.kind !== "ticket"
         ? props.amount
         : prepared?.status === 200
           ? prepared.grandTotal
           : 0;
   const currency =
-    props.kind === "promotion" || props.kind === "event-promotion"
+    props.kind !== "ticket"
       ? props.currency
       : prepared?.status === 200
         ? prepared.currency
@@ -372,6 +385,8 @@ export default function PaymentMethodSelector(
       invalidateEventListQueries(queryClient);
     } else if (props.kind === "promotion") {
       invalidatePlaceListQueries(queryClient);
+    } else if (props.kind === "spotlight-promotion") {
+      queryClient.invalidateQueries({ queryKey: ["content", "campaigns"] });
     }
     if (promotionTarget) {
       queryClient.invalidateQueries({ queryKey: ["promotion-credit-quote"] });

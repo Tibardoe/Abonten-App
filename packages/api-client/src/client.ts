@@ -2598,6 +2598,22 @@ export function createApiClient(options: ApiClientOptions) {
           >
         >("/api/mobile/content/following", { method: "GET", auth: true });
       },
+      attachableEvents() {
+        return request<
+          ApiEnvelope<
+            {
+              id: string;
+              title: string;
+              eventCode: string;
+              placeId: string | null;
+              startsAt: string | null;
+            }[]
+          >
+        >("/api/mobile/content/attachable-events", {
+          method: "GET",
+          auth: true,
+        });
+      },
       storyTray() {
         return request<StoryTrayResult>("/api/mobile/content/stories/tray", {
           method: "GET",

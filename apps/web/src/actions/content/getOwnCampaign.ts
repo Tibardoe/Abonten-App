@@ -22,7 +22,12 @@ export async function getOwnCampaign(input: unknown) {
     caller.userId,
     parsed.data.campaignId,
   );
-  if (campaign.status !== 200 || !campaign.data) return campaign;
+  if (campaign.status !== 200 || !campaign.data) {
+    return {
+      status: campaign.status,
+      message: campaign.message ?? "Campaign not found.",
+    };
+  }
   const history = await getContentCampaignHistoryCore(
     caller.svc,
     parsed.data.campaignId,

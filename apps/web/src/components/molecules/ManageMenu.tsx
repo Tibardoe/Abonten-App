@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useContentProgram } from "@/spotlight/hooks/useContentProgram";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,6 +16,7 @@ import { GiPartyFlags } from "react-icons/gi";
 import {
   IoCalendarNumberOutline,
   IoCalendarOutline,
+  IoPlayCircleOutline,
   IoStorefrontOutline,
 } from "react-icons/io5";
 import {
@@ -56,6 +58,10 @@ export default function ManageMenu({
   const isMyEventsActive = pathname.startsWith("/manage/my-events");
   const isDraftsActive = pathname.startsWith("/manage/drafts");
   const isBookingsActive = pathname.startsWith(`/user/${username}/bookings`);
+  const isSpotlightActive = pathname.startsWith("/manage/spotlight");
+  const { program } = useContentProgram();
+  const showSpotlight =
+    program.canPublish && (program.spotlightPosting || program.storiesPosting);
 
   const isManageActive =
     isDashboardActive ||
@@ -64,7 +70,8 @@ export default function ManageMenu({
     isPlacesActive ||
     isMyEventsActive ||
     isDraftsActive ||
-    isBookingsActive;
+    isBookingsActive ||
+    isSpotlightActive;
 
   const itemClass = (active: boolean) => cn("gap-2", active && "text-primary");
 
@@ -122,6 +129,19 @@ export default function ManageMenu({
             >
               <IoCalendarNumberOutline className="text-lg" />
               {t("manageEvents")}
+            </Link>
+          </DropdownMenuItem>
+        )}
+
+        {showSpotlight && (
+          <DropdownMenuItem asChild>
+            <Link
+              href="/manage/spotlight"
+              onClick={onNavigate}
+              className={itemClass(isSpotlightActive)}
+            >
+              <IoPlayCircleOutline className="text-lg" />
+              Spotlight &amp; Stories
             </Link>
           </DropdownMenuItem>
         )}
