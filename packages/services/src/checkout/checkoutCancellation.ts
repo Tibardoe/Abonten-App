@@ -17,10 +17,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 type PromotionCheckoutTable =
   | "event_promotion_checkout"
-  | "place_promotion_checkout";
+  | "place_promotion_checkout"
+  | "content_campaign_checkout";
 type PromotionPaymentAttemptColumn =
   | "event_promotion_checkout_id"
-  | "place_promotion_checkout_id";
+  | "place_promotion_checkout_id"
+  | "content_campaign_checkout_id";
 
 type CancelPromotionCheckoutResult =
   | { status: 200; message: string }

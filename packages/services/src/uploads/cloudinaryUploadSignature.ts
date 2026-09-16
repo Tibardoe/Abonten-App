@@ -52,14 +52,21 @@ cloudinary.config({
 export type UploadSignatureKind =
   | "avatar"
   | "highlight"
+  | "content"
   | "place_photo"
   | "event_flyer"
   | "event_review_photo"
   | "place_review_photo";
 
+/** Folder every Spotlight / Story upload is bound to (+ "/<user id>"). */
+export const CONTENT_MEDIA_FOLDER_PREFIX = "content_media";
+
 const FOLDER_PREFIX: Record<UploadSignatureKind, string> = {
   avatar: "user_profiles",
   highlight: "highlight_media",
+  // Spotlight + Stories media: registered afterwards by
+  // content/contentMediaCore, which re-reads the asset from Cloudinary.
+  content: CONTENT_MEDIA_FOLDER_PREFIX,
   place_photo: "place_photos",
   // The web saveEventFlyerToCloudinary uploads to a flat "event_flyers"
   // folder; the signed mobile upload scopes it per user like every other
@@ -79,6 +86,9 @@ const UPLOAD_CONSTRAINTS: Record<
 > = {
   avatar: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },
   highlight: {
+    allowedFormats: `${ALLOWED_IMAGE_UPLOAD_FORMATS},${ALLOWED_VIDEO_UPLOAD_FORMATS}`,
+  },
+  content: {
     allowedFormats: `${ALLOWED_IMAGE_UPLOAD_FORMATS},${ALLOWED_VIDEO_UPLOAD_FORMATS}`,
   },
   place_photo: { allowedFormats: ALLOWED_IMAGE_UPLOAD_FORMATS },

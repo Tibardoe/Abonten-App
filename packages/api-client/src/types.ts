@@ -236,6 +236,7 @@ export type ChangePhoneResult = {
 export type UploadSignatureKind =
   | "avatar"
   | "highlight"
+  | "content"
   | "place_photo"
   | "event_flyer"
   | "event_review_photo"

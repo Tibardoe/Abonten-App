@@ -59,7 +59,9 @@ type TargetTableName =
   | "user_info"
   | "highlight"
   | "message"
-  | "conversation";
+  | "conversation"
+  | "content_post"
+  | "content_comment";
 
 const TARGET_TABLE: Record<
   ReportTargetType,
@@ -78,6 +80,11 @@ const TARGET_TABLE: Record<
   // you can only report a message you can actually see.
   message: { table: "message", idColumn: "id" },
   conversation: { table: "conversation", idColumn: "id" },
+  // Spotlight and Stories share one post table; the RLS public-select
+  // policy means an unpublished or expired post reads as "does not exist".
+  spotlight: { table: "content_post", idColumn: "id" },
+  story: { table: "content_post", idColumn: "id" },
+  content_comment: { table: "content_comment", idColumn: "id" },
 };
 
 function seedPriority(category: ReportCategory): ReportPriority {

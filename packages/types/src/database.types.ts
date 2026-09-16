@@ -454,6 +454,1455 @@ export type Database = {
           },
         ];
       };
+      content_campaign: {
+        Row: {
+          activated_at: string | null;
+          active_seconds: number;
+          advertiser_id: string;
+          budget_minor: number;
+          cancelled_at: string | null;
+          checkout_id: string | null;
+          click_count: number;
+          completed_at: string | null;
+          conversion_count: number;
+          created_at: string;
+          currency: string;
+          duration_days: number;
+          ends_at: string;
+          id: string;
+          impression_count: number;
+          last_accrued_at: string | null;
+          objective: string;
+          paid_minor: number;
+          pause_reason: string | null;
+          pause_source: string | null;
+          post_id: string;
+          preset_id: number;
+          refund_requested_at: string | null;
+          refunded_minor: number;
+          review_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          spent_minor: number;
+          starts_at: string;
+          status: string;
+          targeting_categories: string[];
+          targeting_location: unknown;
+          targeting_radius_km: number | null;
+          transaction_id: string | null;
+          updated_at: string;
+          version: number;
+          view_count: number;
+        };
+        Insert: {
+          activated_at?: string | null;
+          active_seconds?: number;
+          advertiser_id: string;
+          budget_minor: number;
+          cancelled_at?: string | null;
+          checkout_id?: string | null;
+          click_count?: number;
+          completed_at?: string | null;
+          conversion_count?: number;
+          created_at?: string;
+          currency?: string;
+          duration_days: number;
+          ends_at: string;
+          id?: string;
+          impression_count?: number;
+          last_accrued_at?: string | null;
+          objective?: string;
+          paid_minor?: number;
+          pause_reason?: string | null;
+          pause_source?: string | null;
+          post_id: string;
+          preset_id: number;
+          refund_requested_at?: string | null;
+          refunded_minor?: number;
+          review_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          spent_minor?: number;
+          starts_at: string;
+          status?: string;
+          targeting_categories?: string[];
+          targeting_location?: unknown;
+          targeting_radius_km?: number | null;
+          transaction_id?: string | null;
+          updated_at?: string;
+          version?: number;
+          view_count?: number;
+        };
+        Update: {
+          activated_at?: string | null;
+          active_seconds?: number;
+          advertiser_id?: string;
+          budget_minor?: number;
+          cancelled_at?: string | null;
+          checkout_id?: string | null;
+          click_count?: number;
+          completed_at?: string | null;
+          conversion_count?: number;
+          created_at?: string;
+          currency?: string;
+          duration_days?: number;
+          ends_at?: string;
+          id?: string;
+          impression_count?: number;
+          last_accrued_at?: string | null;
+          objective?: string;
+          paid_minor?: number;
+          pause_reason?: string | null;
+          pause_source?: string | null;
+          post_id?: string;
+          preset_id?: number;
+          refund_requested_at?: string | null;
+          refunded_minor?: number;
+          review_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          spent_minor?: number;
+          starts_at?: string;
+          status?: string;
+          targeting_categories?: string[];
+          targeting_location?: unknown;
+          targeting_radius_km?: number | null;
+          transaction_id?: string | null;
+          updated_at?: string;
+          version?: number;
+          view_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_campaign_advertiser_id_fkey";
+            columns: ["advertiser_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_campaign_advertiser_id_fkey";
+            columns: ["advertiser_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_campaign_checkout_fkey";
+            columns: ["checkout_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign_checkout";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_campaign_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_campaign_preset_id_fkey";
+            columns: ["preset_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign_preset";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_campaign_checkout: {
+        Row: {
+          campaign_id: string;
+          completed_at: string | null;
+          created_at: string;
+          currency: string;
+          expires_at: string | null;
+          id: string;
+          owner_id: string;
+          preset_id: number;
+          status: string;
+          total_price: number;
+          unit_price: number;
+        };
+        Insert: {
+          campaign_id: string;
+          completed_at?: string | null;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string | null;
+          id?: string;
+          owner_id: string;
+          preset_id: number;
+          status?: string;
+          total_price: number;
+          unit_price: number;
+        };
+        Update: {
+          campaign_id?: string;
+          completed_at?: string | null;
+          created_at?: string;
+          currency?: string;
+          expires_at?: string | null;
+          id?: string;
+          owner_id?: string;
+          preset_id?: number;
+          status?: string;
+          total_price?: number;
+          unit_price?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_campaign_checkout_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_campaign_checkout_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_campaign_checkout_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_campaign_checkout_preset_id_fkey";
+            columns: ["preset_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign_preset";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_campaign_conversion: {
+        Row: {
+          campaign_id: string | null;
+          click_id: number | null;
+          created_at: string;
+          id: number;
+          kind: string;
+          post_id: string;
+          source_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          campaign_id?: string | null;
+          click_id?: number | null;
+          created_at?: string;
+          id?: never;
+          kind: string;
+          post_id: string;
+          source_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          campaign_id?: string | null;
+          click_id?: number | null;
+          created_at?: string;
+          id?: never;
+          kind?: string;
+          post_id?: string;
+          source_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_campaign_conversion_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_campaign_conversion_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_campaign_event: {
+        Row: {
+          actor_id: string | null;
+          actor_kind: string;
+          campaign_id: string;
+          created_at: string;
+          from_status: string | null;
+          id: number;
+          reason: string | null;
+          to_status: string;
+        };
+        Insert: {
+          actor_id?: string | null;
+          actor_kind: string;
+          campaign_id: string;
+          created_at?: string;
+          from_status?: string | null;
+          id?: never;
+          reason?: string | null;
+          to_status: string;
+        };
+        Update: {
+          actor_id?: string | null;
+          actor_kind?: string;
+          campaign_id?: string;
+          created_at?: string;
+          from_status?: string | null;
+          id?: never;
+          reason?: string | null;
+          to_status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_campaign_event_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_campaign_ledger: {
+        Row: {
+          actor_id: string | null;
+          amount_minor: number;
+          campaign_id: string;
+          created_at: string;
+          currency: string;
+          entry_type: string;
+          id: number;
+          idempotency_key: string;
+          note: string | null;
+          transaction_id: string | null;
+        };
+        Insert: {
+          actor_id?: string | null;
+          amount_minor: number;
+          campaign_id: string;
+          created_at?: string;
+          currency?: string;
+          entry_type: string;
+          id?: never;
+          idempotency_key: string;
+          note?: string | null;
+          transaction_id?: string | null;
+        };
+        Update: {
+          actor_id?: string | null;
+          amount_minor?: number;
+          campaign_id?: string;
+          created_at?: string;
+          currency?: string;
+          entry_type?: string;
+          id?: never;
+          idempotency_key?: string;
+          note?: string | null;
+          transaction_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_campaign_ledger_campaign_id_fkey";
+            columns: ["campaign_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_campaign_preset: {
+        Row: {
+          budget_minor: number;
+          currency: string;
+          duration_days: number;
+          estimated_impressions: number;
+          id: number;
+          is_active: boolean;
+          label: string;
+          position: number;
+        };
+        Insert: {
+          budget_minor: number;
+          currency?: string;
+          duration_days: number;
+          estimated_impressions?: number;
+          id: number;
+          is_active?: boolean;
+          label: string;
+          position?: number;
+        };
+        Update: {
+          budget_minor?: number;
+          currency?: string;
+          duration_days?: number;
+          estimated_impressions?: number;
+          id?: number;
+          is_active?: boolean;
+          label?: string;
+          position?: number;
+        };
+        Relationships: [];
+      };
+      content_click: {
+        Row: {
+          campaign_id: string | null;
+          created_at: string;
+          id: number;
+          invalid_reason: string | null;
+          kind: string;
+          post_id: string;
+          valid: boolean;
+          viewer_id: string | null;
+          viewer_key: string;
+        };
+        Insert: {
+          campaign_id?: string | null;
+          created_at?: string;
+          id?: never;
+          invalid_reason?: string | null;
+          kind: string;
+          post_id: string;
+          valid?: boolean;
+          viewer_id?: string | null;
+          viewer_key: string;
+        };
+        Update: {
+          campaign_id?: string | null;
+          created_at?: string;
+          id?: never;
+          invalid_reason?: string | null;
+          kind?: string;
+          post_id?: string;
+          valid?: boolean;
+          viewer_id?: string | null;
+          viewer_key?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_click_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_comment: {
+        Row: {
+          author_id: string;
+          body: string;
+          created_at: string;
+          deleted_at: string | null;
+          id: string;
+          like_count: number;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          moderation_state: string;
+          parent_id: string | null;
+          post_id: string;
+          reply_count: number;
+          status: string;
+          updated_at: string;
+        };
+        Insert: {
+          author_id: string;
+          body: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          like_count?: number;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          moderation_state?: string;
+          parent_id?: string | null;
+          post_id: string;
+          reply_count?: number;
+          status?: string;
+          updated_at?: string;
+        };
+        Update: {
+          author_id?: string;
+          body?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          id?: string;
+          like_count?: number;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          moderation_state?: string;
+          parent_id?: string | null;
+          post_id?: string;
+          reply_count?: number;
+          status?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_comment_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_comment_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_comment_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_comment_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_comment_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "content_comment";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_comment_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_comment_like: {
+        Row: {
+          comment_id: string;
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          comment_id: string;
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          comment_id?: string;
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_comment_like_comment_id_fkey";
+            columns: ["comment_id"];
+            isOneToOne: false;
+            referencedRelation: "content_comment";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_comment_like_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_comment_like_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_like: {
+        Row: {
+          created_at: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          post_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_like_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_like_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_like_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_media: {
+        Row: {
+          bytes: number;
+          created_at: string;
+          deleted_at: string | null;
+          duration_seconds: number | null;
+          failure_reason: string | null;
+          format: string | null;
+          height: number | null;
+          id: string;
+          media_type: string;
+          media_url: string;
+          owner_id: string;
+          playback_status: string;
+          playback_url: string | null;
+          position: number;
+          post_id: string | null;
+          poster_url: string | null;
+          public_id: string;
+          purged_at: string | null;
+          status: string;
+          thumbnail_url: string | null;
+          trim_end_seconds: number | null;
+          trim_start_seconds: number | null;
+          updated_at: string;
+          version: number;
+          width: number | null;
+        };
+        Insert: {
+          bytes: number;
+          created_at?: string;
+          deleted_at?: string | null;
+          duration_seconds?: number | null;
+          failure_reason?: string | null;
+          format?: string | null;
+          height?: number | null;
+          id?: string;
+          media_type: string;
+          media_url: string;
+          owner_id: string;
+          playback_status?: string;
+          playback_url?: string | null;
+          position?: number;
+          post_id?: string | null;
+          poster_url?: string | null;
+          public_id: string;
+          purged_at?: string | null;
+          status?: string;
+          thumbnail_url?: string | null;
+          trim_end_seconds?: number | null;
+          trim_start_seconds?: number | null;
+          updated_at?: string;
+          version: number;
+          width?: number | null;
+        };
+        Update: {
+          bytes?: number;
+          created_at?: string;
+          deleted_at?: string | null;
+          duration_seconds?: number | null;
+          failure_reason?: string | null;
+          format?: string | null;
+          height?: number | null;
+          id?: string;
+          media_type?: string;
+          media_url?: string;
+          owner_id?: string;
+          playback_status?: string;
+          playback_url?: string | null;
+          position?: number;
+          post_id?: string | null;
+          poster_url?: string | null;
+          public_id?: string;
+          purged_at?: string | null;
+          status?: string;
+          thumbnail_url?: string | null;
+          trim_end_seconds?: number | null;
+          trim_start_seconds?: number | null;
+          updated_at?: string;
+          version?: number;
+          width?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_media_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_media_owner_id_fkey";
+            columns: ["owner_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_media_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_mute: {
+        Row: {
+          created_at: string;
+          publisher_id: string;
+          publisher_kind: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          publisher_id: string;
+          publisher_kind: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          publisher_id?: string;
+          publisher_kind?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_mute_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_mute_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_not_interested: {
+        Row: {
+          created_at: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          post_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_not_interested_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_not_interested_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_not_interested_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_post: {
+        Row: {
+          allow_comments: boolean;
+          allow_download: boolean;
+          author_id: string;
+          caption: string | null;
+          category: string | null;
+          comment_count: number;
+          cover_media_id: string | null;
+          created_at: string;
+          deleted_at: string | null;
+          event_id: string | null;
+          expires_at: string | null;
+          hashtags: string[];
+          id: string;
+          impression_count: number;
+          kind: string;
+          like_count: number;
+          location: unknown;
+          location_source: string | null;
+          moderated_at: string | null;
+          moderated_by: string | null;
+          moderation_reason: string | null;
+          moderation_state: string;
+          place_id: string | null;
+          published_at: string | null;
+          publisher_kind: string;
+          publisher_place_id: string | null;
+          reaction_count: number;
+          rights_acknowledged_at: string | null;
+          save_count: number;
+          search_tsv: unknown;
+          share_count: number;
+          status: string;
+          trending_computed_at: string | null;
+          trending_score: number;
+          updated_at: string;
+          version: number;
+          view_count: number;
+        };
+        Insert: {
+          allow_comments?: boolean;
+          allow_download?: boolean;
+          author_id: string;
+          caption?: string | null;
+          category?: string | null;
+          comment_count?: number;
+          cover_media_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          event_id?: string | null;
+          expires_at?: string | null;
+          hashtags?: string[];
+          id?: string;
+          impression_count?: number;
+          kind: string;
+          like_count?: number;
+          location?: unknown;
+          location_source?: string | null;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          moderation_state?: string;
+          place_id?: string | null;
+          published_at?: string | null;
+          publisher_kind?: string;
+          publisher_place_id?: string | null;
+          reaction_count?: number;
+          rights_acknowledged_at?: string | null;
+          save_count?: number;
+          search_tsv?: unknown;
+          share_count?: number;
+          status?: string;
+          trending_computed_at?: string | null;
+          trending_score?: number;
+          updated_at?: string;
+          version?: number;
+          view_count?: number;
+        };
+        Update: {
+          allow_comments?: boolean;
+          allow_download?: boolean;
+          author_id?: string;
+          caption?: string | null;
+          category?: string | null;
+          comment_count?: number;
+          cover_media_id?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+          event_id?: string | null;
+          expires_at?: string | null;
+          hashtags?: string[];
+          id?: string;
+          impression_count?: number;
+          kind?: string;
+          like_count?: number;
+          location?: unknown;
+          location_source?: string | null;
+          moderated_at?: string | null;
+          moderated_by?: string | null;
+          moderation_reason?: string | null;
+          moderation_state?: string;
+          place_id?: string | null;
+          published_at?: string | null;
+          publisher_kind?: string;
+          publisher_place_id?: string | null;
+          reaction_count?: number;
+          rights_acknowledged_at?: string | null;
+          save_count?: number;
+          search_tsv?: unknown;
+          share_count?: number;
+          status?: string;
+          trending_computed_at?: string | null;
+          trending_score?: number;
+          updated_at?: string;
+          version?: number;
+          view_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_post_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_post_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_post_cover_media_fkey";
+            columns: ["cover_media_id"];
+            isOneToOne: false;
+            referencedRelation: "content_media";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_post_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "event";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_post_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_post_moderated_by_fkey";
+            columns: ["moderated_by"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+          {
+            foreignKeyName: "content_post_place_id_fkey";
+            columns: ["place_id"];
+            isOneToOne: false;
+            referencedRelation: "place";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_post_publisher_place_id_fkey";
+            columns: ["publisher_place_id"];
+            isOneToOne: false;
+            referencedRelation: "place";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_post_daily_stat: {
+        Row: {
+          comments: number;
+          completions: number;
+          cta_clicks: number;
+          day: string;
+          event_clicks: number;
+          impressions: number;
+          likes: number;
+          meaningful_views: number;
+          place_clicks: number;
+          post_id: string;
+          profile_clicks: number;
+          replays: number;
+          saves: number;
+          shares: number;
+          ticket_clicks: number;
+          unique_viewers: number;
+          updated_at: string;
+          view_starts: number;
+          watched_ms_total: number;
+        };
+        Insert: {
+          comments?: number;
+          completions?: number;
+          cta_clicks?: number;
+          day: string;
+          event_clicks?: number;
+          impressions?: number;
+          likes?: number;
+          meaningful_views?: number;
+          place_clicks?: number;
+          post_id: string;
+          profile_clicks?: number;
+          replays?: number;
+          saves?: number;
+          shares?: number;
+          ticket_clicks?: number;
+          unique_viewers?: number;
+          updated_at?: string;
+          view_starts?: number;
+          watched_ms_total?: number;
+        };
+        Update: {
+          comments?: number;
+          completions?: number;
+          cta_clicks?: number;
+          day?: string;
+          event_clicks?: number;
+          impressions?: number;
+          likes?: number;
+          meaningful_views?: number;
+          place_clicks?: number;
+          post_id?: string;
+          profile_clicks?: number;
+          replays?: number;
+          saves?: number;
+          shares?: number;
+          ticket_clicks?: number;
+          unique_viewers?: number;
+          updated_at?: string;
+          view_starts?: number;
+          watched_ms_total?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_post_daily_stat_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      content_program_setting: {
+        Row: {
+          beta_user_ids: string[];
+          comments_per_hour: number;
+          creator_posting_enabled: boolean;
+          deleted_post_retention_days: number;
+          expired_story_retention_days: number;
+          feed_page_size: number;
+          follows_per_hour: number;
+          happening_soon_days: number;
+          happening_soon_enabled: boolean;
+          id: number;
+          max_story_items: number;
+          meaningful_view_ms: number;
+          nearby_default_radius_km: number;
+          nearby_enabled: boolean;
+          orphan_media_hours: number;
+          rank_seen_penalty: number;
+          rank_weight_engagement: number;
+          rank_weight_following: number;
+          rank_weight_proximity: number;
+          rank_weight_recency: number;
+          rank_weight_urgency: number;
+          raw_view_retention_days: number;
+          sponsored_daily_cap_per_viewer: number;
+          sponsored_max_share_bps: number;
+          sponsored_min_gap: number;
+          spotlight_audience: string;
+          spotlight_comments_enabled: boolean;
+          spotlight_downloads_enabled: boolean;
+          spotlight_enabled: boolean;
+          spotlight_posting_enabled: boolean;
+          spotlight_posts_per_day: number;
+          spotlight_promotions_enabled: boolean;
+          spotlight_video_max_seconds: number;
+          stories_audience: string;
+          stories_comments_enabled: boolean;
+          stories_enabled: boolean;
+          stories_per_day: number;
+          stories_posting_enabled: boolean;
+          stories_reactions_enabled: boolean;
+          stories_sharing_enabled: boolean;
+          story_ttl_hours: number;
+          story_video_max_seconds: number;
+          trending_enabled: boolean;
+          trending_window_hours: number;
+          updated_at: string;
+          updated_by: string | null;
+          views_per_viewer_per_minute: number;
+        };
+        Insert: {
+          beta_user_ids?: string[];
+          comments_per_hour?: number;
+          creator_posting_enabled?: boolean;
+          deleted_post_retention_days?: number;
+          expired_story_retention_days?: number;
+          feed_page_size?: number;
+          follows_per_hour?: number;
+          happening_soon_days?: number;
+          happening_soon_enabled?: boolean;
+          id?: number;
+          max_story_items?: number;
+          meaningful_view_ms?: number;
+          nearby_default_radius_km?: number;
+          nearby_enabled?: boolean;
+          orphan_media_hours?: number;
+          rank_seen_penalty?: number;
+          rank_weight_engagement?: number;
+          rank_weight_following?: number;
+          rank_weight_proximity?: number;
+          rank_weight_recency?: number;
+          rank_weight_urgency?: number;
+          raw_view_retention_days?: number;
+          sponsored_daily_cap_per_viewer?: number;
+          sponsored_max_share_bps?: number;
+          sponsored_min_gap?: number;
+          spotlight_audience?: string;
+          spotlight_comments_enabled?: boolean;
+          spotlight_downloads_enabled?: boolean;
+          spotlight_enabled?: boolean;
+          spotlight_posting_enabled?: boolean;
+          spotlight_posts_per_day?: number;
+          spotlight_promotions_enabled?: boolean;
+          spotlight_video_max_seconds?: number;
+          stories_audience?: string;
+          stories_comments_enabled?: boolean;
+          stories_enabled?: boolean;
+          stories_per_day?: number;
+          stories_posting_enabled?: boolean;
+          stories_reactions_enabled?: boolean;
+          stories_sharing_enabled?: boolean;
+          story_ttl_hours?: number;
+          story_video_max_seconds?: number;
+          trending_enabled?: boolean;
+          trending_window_hours?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          views_per_viewer_per_minute?: number;
+        };
+        Update: {
+          beta_user_ids?: string[];
+          comments_per_hour?: number;
+          creator_posting_enabled?: boolean;
+          deleted_post_retention_days?: number;
+          expired_story_retention_days?: number;
+          feed_page_size?: number;
+          follows_per_hour?: number;
+          happening_soon_days?: number;
+          happening_soon_enabled?: boolean;
+          id?: number;
+          max_story_items?: number;
+          meaningful_view_ms?: number;
+          nearby_default_radius_km?: number;
+          nearby_enabled?: boolean;
+          orphan_media_hours?: number;
+          rank_seen_penalty?: number;
+          rank_weight_engagement?: number;
+          rank_weight_following?: number;
+          rank_weight_proximity?: number;
+          rank_weight_recency?: number;
+          rank_weight_urgency?: number;
+          raw_view_retention_days?: number;
+          sponsored_daily_cap_per_viewer?: number;
+          sponsored_max_share_bps?: number;
+          sponsored_min_gap?: number;
+          spotlight_audience?: string;
+          spotlight_comments_enabled?: boolean;
+          spotlight_downloads_enabled?: boolean;
+          spotlight_enabled?: boolean;
+          spotlight_posting_enabled?: boolean;
+          spotlight_posts_per_day?: number;
+          spotlight_promotions_enabled?: boolean;
+          spotlight_video_max_seconds?: number;
+          stories_audience?: string;
+          stories_comments_enabled?: boolean;
+          stories_enabled?: boolean;
+          stories_per_day?: number;
+          stories_posting_enabled?: boolean;
+          stories_reactions_enabled?: boolean;
+          stories_sharing_enabled?: boolean;
+          story_ttl_hours?: number;
+          story_video_max_seconds?: number;
+          trending_enabled?: boolean;
+          trending_window_hours?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+          views_per_viewer_per_minute?: number;
+        };
+        Relationships: [];
+      };
+      content_reaction: {
+        Row: {
+          created_at: string;
+          emoji: string;
+          post_id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          emoji: string;
+          post_id: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          emoji?: string;
+          post_id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_reaction_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_reaction_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_reaction_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_rollup_state: {
+        Row: {
+          click_id: number;
+          id: boolean;
+          last_run_at: string | null;
+          view_id: number;
+        };
+        Insert: {
+          click_id?: number;
+          id?: boolean;
+          last_run_at?: string | null;
+          view_id?: number;
+        };
+        Update: {
+          click_id?: number;
+          id?: boolean;
+          last_run_at?: string | null;
+          view_id?: number;
+        };
+        Relationships: [];
+      };
+      content_save: {
+        Row: {
+          created_at: string;
+          post_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          post_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          post_id?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_save_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_save_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_save_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_share: {
+        Row: {
+          channel: string;
+          created_at: string;
+          id: number;
+          post_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          channel?: string;
+          created_at?: string;
+          id?: never;
+          post_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          channel?: string;
+          created_at?: string;
+          id?: never;
+          post_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_share_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_share_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_share_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_story_seen: {
+        Row: {
+          completed: boolean;
+          first_seen_at: string;
+          last_seen_at: string;
+          post_id: string;
+          viewer_id: string;
+        };
+        Insert: {
+          completed?: boolean;
+          first_seen_at?: string;
+          last_seen_at?: string;
+          post_id: string;
+          viewer_id: string;
+        };
+        Update: {
+          completed?: boolean;
+          first_seen_at?: string;
+          last_seen_at?: string;
+          post_id?: string;
+          viewer_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_story_seen_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_story_seen_viewer_id_fkey";
+            columns: ["viewer_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "content_story_seen_viewer_id_fkey";
+            columns: ["viewer_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
+      content_view: {
+        Row: {
+          campaign_id: string | null;
+          created_at: string;
+          id: number;
+          invalid_reason: string | null;
+          kind: string;
+          post_id: string;
+          surface: string;
+          valid: boolean;
+          viewer_id: string | null;
+          viewer_key: string;
+          watched_ms: number;
+        };
+        Insert: {
+          campaign_id?: string | null;
+          created_at?: string;
+          id?: never;
+          invalid_reason?: string | null;
+          kind: string;
+          post_id: string;
+          surface?: string;
+          valid?: boolean;
+          viewer_id?: string | null;
+          viewer_key: string;
+          watched_ms?: number;
+        };
+        Update: {
+          campaign_id?: string | null;
+          created_at?: string;
+          id?: never;
+          invalid_reason?: string | null;
+          kind?: string;
+          post_id?: string;
+          surface?: string;
+          valid?: boolean;
+          viewer_id?: string | null;
+          viewer_key?: string;
+          watched_ms?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "content_view_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "content_post";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       conversation: {
         Row: {
           assigned_at: string | null;
@@ -3944,6 +5393,45 @@ export type Database = {
           },
         ];
       };
+      follow: {
+        Row: {
+          created_at: string;
+          follower_id: string;
+          id: string;
+          target_id: string;
+          target_kind: string;
+        };
+        Insert: {
+          created_at?: string;
+          follower_id: string;
+          id?: string;
+          target_id: string;
+          target_kind: string;
+        };
+        Update: {
+          created_at?: string;
+          follower_id?: string;
+          id?: string;
+          target_id?: string;
+          target_kind?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "follow_follower_id_fkey";
+            columns: ["follower_id"];
+            isOneToOne: false;
+            referencedRelation: "user_info";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "follow_follower_id_fkey";
+            columns: ["follower_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profile_details";
+            referencedColumns: ["user_id"];
+          },
+        ];
+      };
       health_check_result: {
         Row: {
           check_key: string;
@@ -4874,6 +6362,7 @@ export type Database = {
         Row: {
           amount: number;
           checkout_session_id: string | null;
+          content_campaign_checkout_id: string | null;
           created_at: string;
           credit_amount: number;
           credit_reservation_id: string | null;
@@ -4898,6 +6387,7 @@ export type Database = {
         Insert: {
           amount: number;
           checkout_session_id?: string | null;
+          content_campaign_checkout_id?: string | null;
           created_at?: string;
           credit_amount?: number;
           credit_reservation_id?: string | null;
@@ -4922,6 +6412,7 @@ export type Database = {
         Update: {
           amount?: number;
           checkout_session_id?: string | null;
+          content_campaign_checkout_id?: string | null;
           created_at?: string;
           credit_amount?: number;
           credit_reservation_id?: string | null;
@@ -4944,6 +6435,13 @@ export type Database = {
           verified_at?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "payment_attempt_content_campaign_checkout_id_fkey";
+            columns: ["content_campaign_checkout_id"];
+            isOneToOne: false;
+            referencedRelation: "content_campaign_checkout";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "payment_attempt_event_promotion_checkout_id_fkey";
             columns: ["event_promotion_checkout_id"];
@@ -10542,6 +12040,7 @@ export type Database = {
       };
     };
     Functions: {
+      _content_hashtags_text: { Args: { p_tags: string[] }; Returns: string };
       _credit_draw_lots: {
         Args: {
           p_amount_minor: number;
@@ -10953,6 +12452,188 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;
       };
+      content_admin_overview: {
+        Args: { p_from: string; p_to: string };
+        Returns: Json;
+      };
+      content_attribute_conversions: { Args: never; Returns: number };
+      content_campaign_accrue: {
+        Args: { p_campaign_id: string };
+        Returns: number;
+      };
+      content_campaign_activate_from_checkout: {
+        Args: {
+          p_checkout_id: string;
+          p_transaction_id: string;
+          p_user_id: string;
+        };
+        Returns: Json;
+      };
+      content_campaign_reconcile: { Args: never; Returns: Json };
+      content_campaign_record_refund: {
+        Args: {
+          p_actor_id: string;
+          p_amount_minor: number;
+          p_campaign_id: string;
+          p_reason: string;
+        };
+        Returns: Json;
+      };
+      content_campaign_refundable_minor: {
+        Args: { p_campaign_id: string };
+        Returns: number;
+      };
+      content_campaign_tick: { Args: never; Returns: Json };
+      content_campaign_transition: {
+        Args: {
+          p_actor_id: string;
+          p_actor_kind: string;
+          p_campaign_id: string;
+          p_reason?: string;
+          p_to: string;
+        };
+        Returns: {
+          activated_at: string | null;
+          active_seconds: number;
+          advertiser_id: string;
+          budget_minor: number;
+          cancelled_at: string | null;
+          checkout_id: string | null;
+          click_count: number;
+          completed_at: string | null;
+          conversion_count: number;
+          created_at: string;
+          currency: string;
+          duration_days: number;
+          ends_at: string;
+          id: string;
+          impression_count: number;
+          last_accrued_at: string | null;
+          objective: string;
+          paid_minor: number;
+          pause_reason: string | null;
+          pause_source: string | null;
+          post_id: string;
+          preset_id: number;
+          refund_requested_at: string | null;
+          refunded_minor: number;
+          review_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          spent_minor: number;
+          starts_at: string;
+          status: string;
+          targeting_categories: string[];
+          targeting_location: unknown;
+          targeting_radius_km: number | null;
+          transaction_id: string | null;
+          updated_at: string;
+          version: number;
+          view_count: number;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "content_campaign";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
+      content_click_ingest: {
+        Args: {
+          p_campaign: string;
+          p_kind: string;
+          p_post_id: string;
+          p_viewer: string;
+          p_viewer_key: string;
+        };
+        Returns: Json;
+      };
+      content_feed: {
+        Args: {
+          p_as_of: string;
+          p_cursor_id: string;
+          p_cursor_score: number;
+          p_lat: number;
+          p_limit: number;
+          p_lng: number;
+          p_radius_km: number;
+          p_surface: string;
+          p_viewer: string;
+        };
+        Returns: {
+          post_id: string;
+          score: number;
+        }[];
+      };
+      content_housekeeping: { Args: never; Returns: Json };
+      content_post_documents: {
+        Args: { p_ids: string[]; p_viewer: string };
+        Returns: {
+          document: Json;
+          post_id: string;
+        }[];
+      };
+      content_post_insights: {
+        Args: { p_days?: number; p_post_id: string };
+        Returns: Json;
+      };
+      content_post_is_public: {
+        Args: {
+          p_expires_at: string;
+          p_kind: string;
+          p_moderation_state: string;
+          p_published_at: string;
+          p_status: string;
+        };
+        Returns: boolean;
+      };
+      content_post_publish: {
+        Args: { p_actor_id: string; p_post_id: string };
+        Returns: string;
+      };
+      content_publisher_eligible: {
+        Args: {
+          p_publisher_kind: string;
+          p_publisher_place_id: string;
+          p_user_id: string;
+        };
+        Returns: boolean;
+      };
+      content_rollup_stats: { Args: { p_batch?: number }; Returns: Json };
+      content_sponsored_candidates: {
+        Args: {
+          p_lat: number;
+          p_limit: number;
+          p_lng: number;
+          p_viewer: string;
+          p_viewer_key: string;
+        };
+        Returns: {
+          campaign_id: string;
+          post_id: string;
+        }[];
+      };
+      content_story_tray: {
+        Args: { p_viewer: string };
+        Returns: {
+          has_unseen: boolean;
+          is_self: boolean;
+          latest_at: string;
+          publisher_id: string;
+          publisher_kind: string;
+          story_count: number;
+          story_ids: string[];
+        }[];
+      };
+      content_trending_refresh: { Args: never; Returns: number };
+      content_users_blocked: {
+        Args: { p_a: string; p_b: string };
+        Returns: boolean;
+      };
+      content_view_ingest: {
+        Args: { p_events: Json; p_viewer: string; p_viewer_key: string };
+        Returns: Json;
+      };
       create_event: {
         Args: {
           p_address: Json;
@@ -11219,6 +12900,10 @@ export type Database = {
       };
       ensure_future_review_partitions: { Args: never; Returns: undefined };
       event_reminders_enqueue: { Args: never; Returns: number };
+      expire_stale_content_campaign_checkouts: {
+        Args: never;
+        Returns: undefined;
+      };
       expire_stale_event_promotion_checkouts: {
         Args: never;
         Returns: {
@@ -11879,6 +13564,13 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      follow_counts: {
+        Args: { p_ids: string[]; p_kind: string };
+        Returns: {
+          follower_count: number;
+          target_id: string;
+        }[];
       };
       get_active_place_promotions: {
         Args: {
@@ -13006,6 +14698,13 @@ export type Database = {
           verified: boolean;
           website_url: string;
           whatsapp: string;
+        }[];
+      };
+      search_spotlight: {
+        Args: { p_limit?: number; p_query: string; p_viewer: string };
+        Returns: {
+          post_id: string;
+          rank: number;
         }[];
       };
       search_suggest: {

@@ -50,6 +50,7 @@ type PaymentAttemptFullRow = {
   checkout_session_id: string | null;
   place_promotion_checkout_id: string | null;
   event_promotion_checkout_id: string | null;
+  content_campaign_checkout_id: string | null;
   transaction_id: string | null;
   updated_at: string;
 };
@@ -78,7 +79,7 @@ export type FinalizeResult =
   | { status: "not_found" };
 
 const PAYMENT_ATTEMPT_FULL_SELECT =
-  "id, user_id, status, amount, currency, provider, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, transaction_id, updated_at";
+  "id, user_id, status, amount, currency, provider, provider_reference, payment_group_id, checkout_session_id, place_promotion_checkout_id, event_promotion_checkout_id, content_campaign_checkout_id, transaction_id, updated_at";
 
 type Verification = Awaited<ReturnType<typeof verifyTransaction>>;
 
@@ -100,6 +101,12 @@ function reservationTarget(
     return {
       type: "place_promotion_checkout",
       id: attempt.place_promotion_checkout_id,
+    };
+  }
+  if (attempt.content_campaign_checkout_id) {
+    return {
+      type: "content_campaign_checkout",
+      id: attempt.content_campaign_checkout_id,
     };
   }
   return null;
@@ -150,7 +157,9 @@ async function reservedCheckoutLapsed(
   const table =
     reservation.target_type === "event_promotion_checkout"
       ? "event_promotion_checkout"
-      : "place_promotion_checkout";
+      : reservation.target_type === "content_campaign_checkout"
+        ? "content_campaign_checkout"
+        : "place_promotion_checkout";
   const { data } = await getSupabaseServiceClient()
     .from(table)
     .select("status, expires_at")
@@ -522,7 +531,12 @@ async function completeVerifiedPayment({
   gatewayResponse: Json;
   processingCostPesewas: number | null;
 }): Promise<FinalizeResult> {
-  const { issueTickets, activatePlacePromotion, activateEventPromotion } = deps;
+  const {
+    issueTickets,
+    activatePlacePromotion,
+    activateEventPromotion,
+    activateContentCampaign,
+  } = deps;
   const creditOnly = primary.provider === CREDIT_PROVIDER;
 
   // Credit reserved for a checkout that has since lapsed is given back
@@ -806,6 +820,39 @@ async function completeVerifiedPayment({
           .update({
             status: "fulfillment_failed",
             failure_reason: result.message ?? "Promotion activation failed",
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", member.id);
+      }
+    } else if (member.content_campaign_checkout_id) {
+      const result = activateContentCampaign
+        ? await activateContentCampaign(
+            member.content_campaign_checkout_id,
+            authOverride,
+          )
+        : { status: 500, message: "Campaign activation is not wired" };
+
+      if (result.status === 200) {
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "succeeded",
+            paid_at: new Date().toISOString(),
+            verified_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", member.id);
+      } else {
+        logger.error(
+          `finalizePaystackPayment: activateContentCampaign failed for attempt ${member.id}: ${result.status} ${result.message}`,
+        );
+        anyFailed = true;
+        await supabase
+          .from("payment_attempt")
+          .update({
+            status: "fulfillment_failed",
+            failure_reason: result.message ?? "Campaign activation failed",
             verified_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           })

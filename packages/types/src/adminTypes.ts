@@ -90,7 +90,10 @@ export type AdminPermissionKey =
   | "weekly.view"
   | "weekly.edit"
   | "weekly.publish"
-  | "weekly.configure";
+  | "weekly.configure"
+  | "spotlight.view"
+  | "spotlight.campaigns.review"
+  | "spotlight.configure";
 
 export type AdminUserStatus = "active" | "disabled";
 
@@ -118,7 +121,10 @@ export type ReportTargetType =
   | "organizer"
   | "highlight"
   | "message"
-  | "conversation";
+  | "conversation"
+  | "spotlight"
+  | "story"
+  | "content_comment";
 
 export type ReportCategory =
   | "spam"
@@ -219,6 +225,37 @@ export const REPORTABLE_CATEGORIES: Record<ReportTargetType, ReportCategory[]> =
       "spam",
       "other",
     ],
+    spotlight: [
+      "spam",
+      "fraud_scam",
+      "misleading",
+      "inappropriate",
+      "harassment",
+      "safety",
+      "copyright",
+      "impersonation",
+      "fake_listing",
+      "other",
+    ],
+    story: [
+      "spam",
+      "fraud_scam",
+      "misleading",
+      "inappropriate",
+      "harassment",
+      "safety",
+      "copyright",
+      "impersonation",
+      "fake_listing",
+      "other",
+    ],
+    content_comment: [
+      "spam",
+      "harassment",
+      "inappropriate",
+      "misleading",
+      "other",
+    ],
     highlight: [
       "inappropriate",
       "harassment",
@@ -269,6 +306,9 @@ export const REPORT_TARGET_LABEL: Record<ReportTargetType, string> = {
   highlight: "highlight",
   message: "message",
   conversation: "conversation",
+  spotlight: "Spotlight",
+  story: "Story",
+  content_comment: "comment",
 };
 
 export type ReportAttachmentInput = {
@@ -395,7 +435,10 @@ export type ModeratableTargetType =
   | "event_review"
   | "place_review"
   | "user_review"
-  | "highlight";
+  | "highlight"
+  | "spotlight"
+  | "story"
+  | "content_comment";
 
 /**
  * Also moderatable, but only from a report (never browsed in the Content
