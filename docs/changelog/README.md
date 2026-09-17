@@ -21,6 +21,9 @@ Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 - **Changed — navigation**: Spotlight is a bottom tab in place of Tickets; My Tickets is a pushed screen (Account, menu, payment success, notices); the menu no longer lists Spotlight. PROJECT.md §34.7, architecture 1.3 §12.
 - **Added — Story replies in Messages** (migration `20260917120000`, `send_story_reply`, `POST /api/mobile/content/stories/reply`): replies and reactions from the Story viewer are private messages with the Story attached; place Stories use the place conversation, organizer Stories a `direct` conversation. Architecture §5, §13.
 - **Changed — mobile Spotlight, profile and Stories UI**: in-place comments, inline Follow, action rail with Insights, full-width CTA, new More sheet, profile Events/Places selector and Spotlights tab, larger Story rings, more Insights figures and a Promote card; hardware volume unmute through a local native module.
+- **Added — web Story replies**: the web Story viewer has the same reply bar and reactions (`sendStoryReply` Server Action) and web chat shows the Story a message answers. Architecture §12, §13.
+- **Added — `npm run release:native -w @abonten/mobile`**: build and submit a store binary (needed for the volume module). mobile-eas 1.3.
+- **Fix — launch warning**: `redirectSystemPath` defers the launch link by one task so expo-router no longer updates its container before it has mounted (the dev-only "Can't perform a React state update on a component that hasn't mounted yet"; pre-existing, intermittent).
 - **Fix**: the previous Spotlight flashing between pages; a first video Story skipped (and a Story opened from Messages closing at once); the Send tap swallowed while typing a comment; the save count not moving.
 
 ## 2026-09-17 — Spotlight & Stories: pre-merge follow-up

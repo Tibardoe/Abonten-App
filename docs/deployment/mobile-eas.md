@@ -4,8 +4,8 @@ purpose: How the Android app is built, updated over the air and (eventually) sub
 audience: Engineers
 scope: apps/mobile, eas.json, EAS project @abonten-hub/abonten
 status: Approved
-version: 1.2
-lastReviewed: 2026-09-15
+version: 1.3
+lastReviewed: 2026-09-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -38,6 +38,8 @@ eas build --profile production --platform android   # store build
 eas update --channel preview                        # JS-only change to preview installs
 eas update --channel production                     # JS-only change to production installs
 ```
+
+Native release (build, then submit where configured) — `npm run release:native -w @abonten/mobile` (`apps/mobile/scripts/release-native.mjs`; `--platform android|ios`, `--no-submit`, `--dry-run`). It checks eas-cli ≥ 24.5.0 and `eas whoami`, refuses anything but a clean, pushed `main` (`--allow-branch` to override), type-checks, runs `eas build --profile production --non-interactive --wait`, then `eas submit --latest` for each platform with a `submit.production.<platform>` entry. iOS is configured (TestFlight); Android has no Play service account in `eas.json`, so its build is left on EAS for a manual Play Console upload. It never changes `version`: the `volume-observer` module (2026-09-17) is optional at runtime, so JavaScript updates still reach older binaries.
 
 When to build vs update: a change to native modules, permissions (`app.json` plugins), or the Sentry/Expo config needs a **build**; TypeScript/asset changes ship as an **update**. Users receive updates on the next cold start (restart twice to force).
 
