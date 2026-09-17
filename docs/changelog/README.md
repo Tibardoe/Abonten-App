@@ -16,6 +16,13 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-17 — Mobile Spotlight, Stories and navigation interaction pass
+
+- **Changed — navigation**: Spotlight is a bottom tab in place of Tickets; My Tickets is a pushed screen (Account, menu, payment success, notices); the menu no longer lists Spotlight. PROJECT.md §34.7, architecture 1.3 §12.
+- **Added — Story replies in Messages** (migration `20260917120000`, `send_story_reply`, `POST /api/mobile/content/stories/reply`): replies and reactions from the Story viewer are private messages with the Story attached; place Stories use the place conversation, organizer Stories a `direct` conversation. Architecture §5, §13.
+- **Changed — mobile Spotlight, profile and Stories UI**: in-place comments, inline Follow, action rail with Insights, full-width CTA, new More sheet, profile Events/Places selector and Spotlights tab, larger Story rings, more Insights figures and a Promote card; hardware volume unmute through a local native module.
+- **Fix**: the previous Spotlight flashing between pages; a first video Story skipped (and a Story opened from Messages closing at once); the Send tap swallowed while typing a comment; the save count not moving.
+
 ## 2026-09-17 — Spotlight & Stories: pre-merge follow-up
 
 - **Fix — Cloudinary sweep scope**: Spotlight / Story uploads now go to `content_media/<environment>/<user id>` and the daily never-registered sweep lists only its own environment's folder, so production's sweep can't destroy preview or local uploads in the shared Cloudinary account (and the reverse). Architecture 1.2 §3 and §11, scheduled-jobs, PROJECT.md §34.6.
