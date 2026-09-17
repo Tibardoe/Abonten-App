@@ -1,3 +1,4 @@
+import { useContentProgram } from "@/features/content/useContentProgram";
 import { useInboxRealtime } from "@/features/messaging/useInboxRealtime";
 import { useUnreadMessageCount } from "@/features/messaging/useUnreadMessageCount";
 import { useTranslations } from "@abonten/ui-native/i18n";
@@ -60,8 +61,11 @@ function MessagesTabIcon({
   );
 }
 
-// The five bottom tabs — Home · Search · Tickets · Messages · Account, the
-// native echo of the web MobileNavBar. The nav header is hidden here: every
+// The bottom tabs — Home · Search · Spotlight · Messages · Account.
+// Spotlight took the middle slot from Tickets (now a pushed screen reached
+// from Account, the menu and payment success). The Spotlight tab follows
+// the content programme: while Spotlight is off for this person it is
+// hidden rather than shown as a dead end, and the bar has four tabs. The nav header is hidden here: every
 // tab screen draws its own <AppHeader> (branded variant) so the primary
 // screens read the same as the pushed secondary screens.
 //
@@ -74,6 +78,7 @@ export default function TabsLayout() {
   // Keep the badge live while the user is anywhere in the tab bar.
   useInboxRealtime();
   const { data: unread = 0 } = useUnreadMessageCount();
+  const { program } = useContentProgram();
 
   return (
     <Tabs
@@ -120,11 +125,25 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="tickets"
+        name="spotlight"
         options={{
-          title: "Tickets",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="receipt-outline" color={color} size={size} />
+          title: "Spotlight",
+          href: program.spotlight ? undefined : null,
+          // Full-bleed video: the bar goes dark with the screen instead of
+          // a light strip cutting under the feed.
+          sceneStyle: { backgroundColor: "#000" },
+          tabBarActiveTintColor: "#ffffff",
+          tabBarInactiveTintColor: "rgba(255,255,255,0.62)",
+          tabBarStyle: {
+            backgroundColor: "#000",
+            borderTopColor: "rgba(255,255,255,0.12)",
+          } as never,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "play-circle" : "play-circle-outline"}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />

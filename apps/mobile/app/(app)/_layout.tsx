@@ -64,9 +64,14 @@ function StackHost() {
       />
       {/* Black full-screen media; white status icons come from
           <MediaStatusBar> inside each screen. */}
-      <Stack.Screen name="spotlight/index" options={{ animation: "fade" }} />
       <Stack.Screen name="spotlight/[id]" options={{ animation: "fade" }} />
       <Stack.Screen name="story/[id]" options={{ animation: "fade" }} />
+      <Stack.Screen
+        name="story/play"
+        // Fades in over Messages; the viewer has its own drag-down dismiss,
+        // so the iOS edge swipe stays off.
+        options={{ animation: "fade", gestureEnabled: false }}
+      />
       <Stack.Screen name="buy/[eventId]" />
       <Stack.Screen
         name="checkout/[sessionId]"

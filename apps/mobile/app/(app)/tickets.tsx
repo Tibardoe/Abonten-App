@@ -15,10 +15,15 @@ import {
   SegmentedTabs,
   Spinner,
 } from "@abonten/ui-native";
+import { useTranslations } from "@abonten/ui-native/i18n";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
 
+// My Tickets — a pushed screen (Account › My Tickets, the menu, payment
+// success, ticket notifications). It was a bottom tab until Spotlight took
+// that slot.
+//
 // Native echo of the web /manage/my-events tab set. The web strip is a
 // 4-column segmented control where "Active/Past" and "To review/Reviewed"
 // each share one slot behind a popover switcher; on mobile the switcher is
@@ -91,6 +96,7 @@ function TicketFilterList({ tab }: { tab: TicketFilter }) {
 }
 
 export default function Tickets() {
+  const t = useTranslations("navigation");
   const [section, setSection] = useState<Section>("tickets");
   // A notification can open a section directly (`?section=cancelled` from
   // "Event cancelled").
@@ -105,7 +111,7 @@ export default function Tickets() {
 
   return (
     <View className="flex-1 bg-background">
-      <AppHeader variant="branded" />
+      <AppHeader variant="detail" title={t("myEvents")} backFallback="/(app)" />
       <View className="px-4 pb-1 pt-3">
         <SegmentedTabs
           options={[

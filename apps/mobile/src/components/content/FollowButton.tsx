@@ -10,12 +10,19 @@ import { Pressable } from "react-native";
 // Public Follow for an organizer or place: fills the Following feed and the
 // Stories row. Separate from the private "Notify me" bell. Hidden on your
 // own profile or place and while neither Spotlight nor Stories is on.
+//
+// `inline` is the compact pill that sits right after a creator's name on a
+// Spotlight or Story ("@ama  Follow"), so what is being followed is never in
+// doubt. The toggle is optimistic (useFollow rolls back and toasts on a
+// failure) and ignores taps while a request is in flight, so a double tap
+// never sends two.
 export function FollowButton({
   kind,
   targetId,
   ownerId,
   label,
   onMedia = false,
+  inline = false,
   showCount = false,
   known,
 }: {
@@ -25,6 +32,8 @@ export function FollowButton({
   label: string;
   /** White styling for use on top of photos and video. */
   onMedia?: boolean;
+  /** Compact pill beside a name (Spotlight, Story). */
+  inline?: boolean;
   showCount?: boolean;
   /** The viewer's follow state when a post document already carries it. */
   known?: boolean;
@@ -52,30 +61,31 @@ export function FollowButton({
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ selected: following }}
+      accessibilityState={{ selected: following, busy: toggle.isPending }}
       accessibilityLabel={following ? `Unfollow ${label}` : `Follow ${label}`}
-      disabled={toggle.isPending}
-      hitSlop={6}
+      hitSlop={inline ? 10 : 6}
       onPress={() => {
+        if (toggle.isPending) return;
         if (!requireSignIn()) return;
         hapticSelection();
         toggle.mutate(!following);
       }}
       className={[
-        "min-h-[32px] flex-row items-center justify-center rounded-full px-3.5",
+        "flex-row items-center justify-center rounded-full",
+        inline ? "h-7 px-3" : "min-h-[32px] px-3.5",
         onMedia
           ? following
-            ? "border border-white/60 bg-black/30"
+            ? "border border-white/50 bg-black/25"
             : "bg-white"
           : following
             ? "border border-border bg-transparent"
             : "bg-primary",
-        toggle.isPending ? "opacity-60" : "",
       ].join(" ")}
     >
       <AppText
+        numberOfLines={1}
         className={[
-          "text-[13px] font-semibold",
+          inline ? "text-[12px] font-bold" : "text-[13px] font-semibold",
           onMedia
             ? following
               ? "text-white"

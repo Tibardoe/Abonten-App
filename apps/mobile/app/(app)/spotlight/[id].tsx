@@ -2,6 +2,7 @@ import { MediaStatusBar } from "@/components/app/MediaStatusBar";
 import { SpotlightCard } from "@/components/content/SpotlightCard";
 import { useContentPost } from "@/features/content/useContent";
 import { flushContentViews } from "@/features/content/useContentTelemetry";
+import { useVolumeKeys } from "@/features/content/useVolumeKeys";
 import { AppText, Button, Icon } from "@abonten/ui-native";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useVideoPlayer } from "expo-video";
@@ -19,6 +20,7 @@ export default function SpotlightPostScreen() {
   const [height, setHeight] = useState(0);
   const [muted, setMuted] = useState(false);
   const [held, setHeld] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   const res = query.data;
   const post =
@@ -41,6 +43,7 @@ export default function SpotlightPostScreen() {
   useEffect(() => {
     if (!uri) return;
     let cancelled = false;
+    setLoaded(false);
     (async () => {
       try {
         await player.replaceAsync({ uri });
@@ -52,6 +55,7 @@ export default function SpotlightPostScreen() {
         }
       }
       if (!cancelled) {
+        setLoaded(true);
         try {
           player.play();
         } catch {}
@@ -72,9 +76,12 @@ export default function SpotlightPostScreen() {
 
   useEffect(() => () => void flushContentViews(), []);
   const toggleMute = useCallback(() => setMuted((m) => !m), []);
+  useVolumeKeys(isFocused, muted, setMuted);
 
   const back = () =>
-    router.canGoBack() ? router.back() : router.replace("/(app)/spotlight");
+    router.canGoBack()
+      ? router.back()
+      : router.replace("/(app)/(tabs)/spotlight");
 
   return (
     <View
@@ -97,13 +104,14 @@ export default function SpotlightPostScreen() {
           </AppText>
           <Button
             title="More Spotlights"
-            onPress={() => router.replace("/(app)/spotlight")}
+            onPress={() => router.replace("/(app)/(tabs)/spotlight")}
           />
         </View>
       ) : height > 0 ? (
         <SpotlightCard
           item={{ post, sponsored: null }}
           active={isFocused}
+          videoReady={loaded}
           height={height}
           player={player}
           muted={muted}
@@ -111,6 +119,8 @@ export default function SpotlightPostScreen() {
           surface="deep_link"
           onHide={back}
           holdPlayback={setHeld}
+          topInset={insets.top + 48}
+          bottomInset={insets.bottom + 16}
         />
       ) : null}
 

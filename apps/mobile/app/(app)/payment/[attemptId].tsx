@@ -47,7 +47,16 @@ export default function PaymentVerificationScreen() {
     });
 
   const goSuccess = () => {
-    router.replace(p.successHref || "/(app)/(tabs)/tickets");
+    const href = p.successHref || "/(app)/tickets";
+    // Tickets is a pushed screen now (Spotlight took its tab), so land on it
+    // straight above the tabs: Back from "My tickets" should not reopen the
+    // checkout that was just paid.
+    if (href.startsWith("/(app)/tickets")) {
+      if (router.canDismiss()) router.dismissAll();
+      router.push(href as never);
+      return;
+    }
+    router.replace(href as never);
   };
 
   return (

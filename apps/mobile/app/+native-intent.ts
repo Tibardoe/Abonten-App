@@ -108,7 +108,7 @@ export async function redirectSystemPath({
       }
       return first && uuid.test(first)
         ? `/(app)/spotlight/${first}`
-        : "/(app)/spotlight";
+        : "/(app)/(tabs)/spotlight";
     }
     if (parts[0] === "stories" && parts[1]) {
       const id = decodeURIComponent(parts[1]);

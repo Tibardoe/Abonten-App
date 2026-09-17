@@ -36,7 +36,7 @@ export function notificationHref(
   if (!link) return null;
   if (link === "/settings/edit-profile") return "/(app)/settings/edit-profile";
   if (link === "/manage/spotlight") return "/(app)/spotlight/manage";
-  if (link === "/spotlight") return "/(app)/spotlight";
+  if (link === "/spotlight") return "/(app)/(tabs)/spotlight";
   for (const [pattern, build] of LINK_RULES) {
     const match = link.match(pattern);
     if (match) return build(match[1]);
@@ -58,8 +58,8 @@ function targetFromData(
       if (data.ticketId) return `/(app)/ticket/${data.ticketId}`;
       // e.g. "Event cancelled": open the section it's listed in.
       return data.ticketsSection
-        ? `/(app)/(tabs)/tickets?section=${data.ticketsSection}`
-        : "/(app)/(tabs)/tickets";
+        ? `/(app)/tickets?section=${data.ticketsSection}`
+        : "/(app)/tickets";
     case "event":
     case "event_featured":
       return data.eventId ? `/(app)/event/${data.eventId}` : null;
