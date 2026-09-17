@@ -224,6 +224,7 @@ import type {
   SetPlaceStatusBody,
   StartVerificationBody,
   StartVerificationResult,
+  StoryReplyResult,
   StorySequenceResult,
   StoryTrayResult,
   SubmitChargeOtpResult,
@@ -2454,9 +2455,14 @@ export function createApiClient(options: ApiClientOptions) {
           { method: "DELETE", auth: true },
         );
       },
-      mine(params: { kind?: ContentKind; cursor?: string | null }) {
+      mine(params: {
+        kind?: ContentKind;
+        status?: "published" | "draft";
+        cursor?: string | null;
+      }) {
         const qs = new URLSearchParams();
         if (params.kind) qs.set("kind", params.kind);
+        if (params.status) qs.set("status", params.status);
         if (params.cursor) qs.set("cursor", params.cursor);
         return request<ContentOwnPostsResult>(
           `/api/mobile/content/mine?${qs.toString()}`,
@@ -2626,6 +2632,19 @@ export function createApiClient(options: ApiClientOptions) {
           `/api/mobile/content/stories/sequence?publisherKind=${publisherKind}&publisherId=${encodeURIComponent(publisherId)}`,
           { method: "GET", auth: true },
         );
+      },
+      /** A private reply or reaction to a Story; it is sent to Messages. */
+      replyToStory(body: {
+        postId: string;
+        kind: "text" | "reaction";
+        content: string;
+        clientGeneratedId?: string | null;
+      }) {
+        return request<StoryReplyResult>("/api/mobile/content/stories/reply", {
+          method: "POST",
+          body,
+          auth: true,
+        });
       },
       muteStories(
         publisherKind: ContentPublisherKind,
