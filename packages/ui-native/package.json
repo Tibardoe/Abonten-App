@@ -19,6 +19,7 @@
   },
   "peerDependencies": {
     "@expo/vector-icons": "*",
+    "@gorhom/portal": ">=1",
     "expo-haptics": "*",
     "expo-image": "*",
     "expo-secure-store": "*",

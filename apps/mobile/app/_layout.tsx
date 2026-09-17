@@ -20,6 +20,7 @@ import { startSupabaseAutoRefresh } from "@/lib/supabase";
 import { ToastProvider } from "@abonten/ui-native";
 import { I18nProvider } from "@abonten/ui-native/i18n";
 import { ThemeProvider, useTheme } from "@abonten/ui-native/theme";
+import { PortalProvider } from "@gorhom/portal";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import {
@@ -181,8 +182,19 @@ function RootLayout() {
                     (publish -> replace to the new event, and the "Event
                     published" confirmation still lands). */}
                 <ToastProvider>
-                  <StatusBar style="auto" />
-                  <RootNavigator />
+                  {/* Every <Sheet> renders through this portal, into the
+                        app's own view hierarchy instead of an RN <Modal> —
+                        that is what lets the platform's keyboard insets, safe
+                        areas and the root gesture handler reach a sheet at
+                        all (see Sheet.tsx). It sits BELOW the theme, i18n and
+                        session providers because a portal renders its content
+                        at the HOST's position in the tree, so anything above
+                        the host is out of context for a sheet; and ABOVE the
+                        navigator so a sheet covers the tab bar. */}
+                  <PortalProvider>
+                    <StatusBar style="auto" />
+                    <RootNavigator />
+                  </PortalProvider>
                 </ToastProvider>
               </SessionProvider>
             </I18nProvider>

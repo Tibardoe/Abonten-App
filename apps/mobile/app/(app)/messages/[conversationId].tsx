@@ -51,6 +51,7 @@ import {
   AppText,
   Button,
   Icon,
+  Input,
   type IoniconName,
   Refresher,
   Sheet,
@@ -59,16 +60,10 @@ import {
   useKeyboardVisible,
   useToast,
 } from "@abonten/ui-native";
-import { family, useThemeColors } from "@abonten/ui-native/theme";
+import { useThemeColors } from "@abonten/ui-native/theme";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, FlatList, KeyboardAvoidingView, View } from "react-native";
 
 function canEdit(m: MessageRow, myId: string | undefined): boolean {
   if (!myId || m.sender_id !== myId) return false;
@@ -681,15 +676,17 @@ export default function ConversationScreen() {
           />
         }
       >
-        <TextInput
+        {/* The shared <Input>, not a raw TextInput: it tells the sheet it
+            holds a field (so the sheet opens with room above the keyboard,
+            which autoFocus raises immediately) and reports its focus and its
+            growth so the sheet keeps it in view. */}
+        <Input
           value={editText}
           onChangeText={setEditText}
           multiline
           autoFocus
           maxLength={MESSAGE_MAX_LENGTH}
-          placeholderTextColor={c["muted-foreground"]}
-          className="min-h-24 rounded-lg border border-input bg-background p-3 text-[15px] text-foreground"
-          style={family.body ? { fontFamily: family.body } : undefined}
+          className="min-h-24"
         />
       </Sheet>
 
