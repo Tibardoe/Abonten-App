@@ -50,7 +50,7 @@ Do not treat any of the following as confirmed; each stays open in `../LEGAL_REV
 
 | Not established | Register item |
 |---|---|
-| Registration as a data controller with the Data Protection Commission — record: [dpc-registration.md](dpc-registration.md) | A2 |
+| Registration as a data controller with the Data Protection Commission — not in these documents, but established separately on 2026-09-17 by the Commission's own certificate; record: [dpc-registration.md](dpc-registration.md) | A2 (Decided) |
 | The phone numbers and email on Form 3 Part IV are the founder's personal registrar contacts, **not** public channels, and must not be published. (The official channels — support@, privacy@ and security@abontenhub.com — were designated separately on 2026-09-12; see `../LEGAL_REVIEW_REQUIRED.md` A3.) | A3 (Decided) |
 | Business Operating Permit: Form 3 records a BOP *request* with no reference number — record: [business-operating-permit.md](business-operating-permit.md) | A4 |
 | Bank of Ghana, Cyber Security Authority or any other licence, registration or certification | D1, E1 |

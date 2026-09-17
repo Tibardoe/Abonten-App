@@ -38,7 +38,7 @@ Public content is kept inside the web app, not here, so that it is always presen
 | `documentation-audit-matrix.md` | Feature × app × documented/accurate/gap |
 | `documentation-coverage-matrix.md` | Feature × public / internal / technical document — where each thing is documented |
 | `specifications/` | Technical specifications gated on open legal or business decisions (cookie consent, age gate, data export, retention jobs, appeals, contacts) and the P2 roadmap — designs, not approved policy |
-| `legal/` | Legal register, versioning strategy, effective-date log, company registration record, compliance records awaiting evidence (DPC registration, Business Operating Permit) |
+| `legal/` | Legal register, versioning strategy, effective-date log, company registration record, DPC registration record, compliance record awaiting evidence (Business Operating Permit) |
 | `privacy/` | Data inventory, retention and deletion, privacy-rights operations, cookies/storage inventory, processors |
 | `security/` | Application, database, payment, infrastructure and access-control security; secrets and environment |
 | `incident-response/` | Severity model and one runbook per incident family |

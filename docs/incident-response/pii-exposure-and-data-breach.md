@@ -5,7 +5,7 @@ audience: Founder, counsel, engineering
 scope: All personal data in privacy/data-inventory.md
 status: Review required
 version: 1.0
-lastReviewed: 2026-09-12
+lastReviewed: 2026-09-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: yes
@@ -23,7 +23,7 @@ Severity S1. **No external statement without the incident commander's approval.*
 5. **Assess:** number of people; categories (identity, contact, location, payment references, messages, health-adjacent content in messages?, children — none known); likelihood and severity of harm; whether data was merely accessible or actually accessed/exfiltrated.
 6. **Escalate:** founder (commander) → counsel **immediately**. Under Act 843 the Data Protection Commission and affected individuals may need to be notified; **thresholds and timelines are legal item B6 — until confirmed, plan for notification without undue delay.**
 7. **Remediate:** fix root cause; rotate anything possibly exposed; verify with tests; add advisors/tests.
-8. **Communicate:** as decided with counsel — affected users via email (Resend) and in-app Broadcast with plain facts: what happened, what data, what we did, what they should do (e.g. beware of phishing), how to reach us; DPC notification per counsel.
+8. **Communicate:** as decided with counsel — affected users via email (Resend) and in-app Broadcast with plain facts: what happened, what data, what we did, what they should do (e.g. beware of phishing), how to reach us; DPC notification per counsel, quoting Abonten Hub Ltd's registration (certificate PROV2609522, reference DPC/REG/01/01/522-26 — `../legal/dpc-registration.md`).
 9. **Verify:** exposure closed (re-test), no further anomalous access.
 10. **Document:** incident row; a written breach record (what, when, who, decisions, notifications) retained permanently.
 11. **Review:** post-incident review with counsel; update `LEGAL_REVIEW_REQUIRED.md`, `data-inventory.md` and this runbook.

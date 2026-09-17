@@ -137,7 +137,8 @@ Journey index: [journeys/README.md](journeys/README.md). Legal versioning: [lega
 |---|---|
 | ~~Support hours and response target~~ | Closed 2026-09-12 (decision O1) · [Support operating policy](operations/support-operating-policy.md); escalation procedure remains open (O7) |
 | ~~Official support, privacy and security contacts~~ | Closed 2026-09-12 (legal A3) · [Contacts spec](specifications/support-and-security-contacts.md) |
-| DPC registration status; Business Operating Permit | Legal A2, A4 · [DPC record](legal/dpc-registration.md) · [BOP record](legal/business-operating-permit.md) |
+| ~~DPC registration status~~ | Closed 2026-09-17 (legal A2) · [DPC record](legal/dpc-registration.md) |
+| Business Operating Permit | Legal A4 · [BOP record](legal/business-operating-permit.md) |
 | Responsible-disclosure safe harbour | Legal D3 · [Responsible disclosure framework](security/responsible-disclosure.md) |
 | Mobile build / device / production verification | [Release verification](mobile/release-verification.md) · [Open items](operations/open-items.md) M1 |
 | Retention periods for nine data sets | Decisions R1–R9 · [Retention spec](specifications/retention-jobs.md) |

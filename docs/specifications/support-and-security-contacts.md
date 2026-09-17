@@ -27,7 +27,7 @@ complianceReviewRequired: no
 |---|---|---|
 | ~~Entity name, registration number, registered and postal address~~ | Terms §1, Privacy §1 and §15 | **Filled 2026-09-12** from the certified Form 3 — see `../legal/company-registration.md` (A1 Decided) |
 | ~~Support, privacy and security contacts~~ | Terms §19, Privacy §11 and §15, Security page | **Filled 2026-09-12**: support@, privacy@, security@abontenhub.com (A3 Decided) |
-| `[DPC REGISTRATION STATUS — TO BE CONFIRMED]` | Privacy §1 | Data Protection Commission status, only if verified (A2) |
+| ~~`[DPC REGISTRATION STATUS — TO BE CONFIRMED]`~~ | Privacy §1 | **Filled 2026-09-17**: certificate PROV2609522, registered 16 Sep 2026, valid to 15 Sep 2028 (A2 Decided) |
 | `[EFFECTIVE DATE — TO BE CONFIRMED]` | Draft banner of all four documents; `effectiveDate` front matter | Set at approval per `legal/versioning-and-effective-dates.md` |
 
 ## 3. Steps — done and remaining
@@ -48,7 +48,7 @@ complianceReviewRequired: no
 | Item | Decision needed | Register |
 |---|---|---|
 | ~~Entity, registration number, address~~ | Provided 2026-09-12 (certified company documents) | Legal A1 — Decided |
-| Data Protection Commission registration status | Verified fact only — not shown in the company documents | Legal A2 |
+| ~~Data Protection Commission registration status~~ | Provided 2026-09-17 (provisional certificate from the Commission) | Legal A2 — Decided |
 | ~~Support, privacy and security addresses~~ | Provided 2026-09-12 (Workspace aliases) | Legal A3 — Decided |
 | ~~Support hours and response target~~ | Decided 2026-09-12 | Decision O1 — Decided (escalation: O7 open) |
 | Disclosure policy text | Counsel | Decision S2 |
