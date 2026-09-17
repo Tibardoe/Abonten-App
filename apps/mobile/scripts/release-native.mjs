@@ -167,7 +167,9 @@ for (const platform of platforms) {
     "--non-interactive",
     "--wait",
     "--message",
-    `release-native ${commit}`,
+    // No spaces: on Windows the command runs through a shell (for the
+    // eas.cmd shim), which would split a spaced message into extra args.
+    `release-native-${commit}`,
   ]);
 
   if (!submit) continue;
