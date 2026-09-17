@@ -5,7 +5,7 @@ audience: Everyone maintaining documentation
 scope: docs/** and apps/web/src/content/**
 status: Approved
 version: 1.0
-lastReviewed: 2026-09-16
+lastReviewed: 2026-09-17
 technicalOwner: Engineering (repository owner)
 businessOwner: Abonten Hub founder
 legalReviewRequired: no
@@ -15,6 +15,12 @@ complianceReviewRequired: no
 # Documentation changelog
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
+
+## 2026-09-17 — Data Protection Commission registration (legal A2)
+
+- **Decided — A2**: Abonten Hub Ltd is registered with the Data Protection Commission under Act 843. Evidence: the Commission's provisional Certificate of Registration PROV2609522 and covering notice (ref. DPC/REG/01/01/522-26), registered 16 Sep 2026, expires 15 Sep 2028; documents held by the founder, not committed. `legal/dpc-registration.md` 1.1 records it with follow-ups (electronic certificate when the Commission's portal is restored; renewal before 2028-09-15; supervisor question for counsel).
+- **Privacy Policy 1.4-draft**: §1 states the registration; the `[DPC REGISTRATION STATUS — TO BE CONFIRMED]` placeholder and the banner's "status still to be confirmed" wording removed. Still a draft, Review required, no effective date.
+- Registers updated: `LEGAL_REVIEW_REQUIRED.md` (A2, placeholder table, intro), `operations/open-items.md` (A2 closed), contacts spec, company-registration, legal README, docs README, coverage matrix, effective-date log; breach runbook quotes the registration reference for Commission notifications.
 
 ## 2026-09-17 — Mobile Spotlight, Stories and navigation interaction pass
 
