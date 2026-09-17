@@ -16,6 +16,12 @@ complianceReviewRequired: no
 
 Format: `YYYY-MM-DD · area · change · (doc versions affected)`.
 
+## 2026-09-17 — Mobile bottom sheets: the panel no longer moves for the keyboard
+
+- **Fix — `@abonten/ui-native` `<Sheet>`**: focusing an input inside a bottom sheet lifted the whole panel by the keyboard height (`marginBottom`) and re-derived its max/min height from `windowHeight - keyboardHeight`, so the sheet flew up the screen and changed detent — measured on Android: the location sheet's top edge jumped from y=1140 to y=748. The panel's frame is now held still (max/min height come from the full window; the height is pinned while the keyboard is up) and only its interior reflows: an interior spacer driven by `useAnimatedKeyboard` takes the keyboard's height, the scroll view shrinks by that much and the footer rides above the keys. Applies to every bottom sheet in the app.
+- **Changed — one reveal engine**: the "scroll the focused field above the keyboard" logic moved out of `KeyboardAwareScrollView.tsx` into `useKeyboardReveal.ts`, and `<Sheet>` now provides the same `KeyboardAwareContext`. `<Input>` therefore reveals itself inside sheets as it already did in full-screen forms; `<KeyboardRevealGroup>` works in both. Replaces the sheet's previous blind `scrollToEnd()`.
+- **Changed — Android back inside a sheet**: with the keyboard up, back dismisses the keyboard and leaves the sheet (and any half-typed form) open; a second back closes the sheet.
+
 ## 2026-09-17 — Data Protection Commission registration (legal A2)
 
 - **Decided — A2**: Abonten Hub Ltd is registered with the Data Protection Commission under Act 843. Evidence: the Commission's provisional Certificate of Registration PROV2609522 and covering notice (ref. DPC/REG/01/01/522-26), registered 16 Sep 2026, expires 15 Sep 2028; documents held by the founder, not committed. `legal/dpc-registration.md` 1.1 records it with follow-ups (electronic certificate when the Commission's portal is restored; renewal before 2028-09-15; supervisor question for counsel).

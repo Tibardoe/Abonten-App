@@ -7,15 +7,16 @@ import {
 } from "react-native";
 import { useThemeColors } from "../theme/ThemeProvider";
 import { family } from "../theme/tokens";
-import { useRevealInput } from "./KeyboardAwareScrollView";
 import { AppText } from "./Typography";
+import { useRevealInput } from "./useKeyboardReveal";
 
 // Native echo of apps/web/src/components/ui/input.tsx + the shadcn Form
 // field wrapper (label / hint / error). `Field` is RHF-friendly: pass
 // `error` from `formState.errors[name]?.message`.
 //
-// Inside a <KeyboardAwareScrollView> the input reports its focus — and,
-// for a multiline field, its growth while focused — so the scroll view can
+// Inside a keyboard-aware container — <KeyboardAwareScrollView> for a
+// full-screen form, <Sheet> for a bottom sheet — the input reports its focus
+// (and, for a multiline field, its growth while focused) so the container can
 // keep the whole field above the keyboard. Outside one it is a no-op.
 
 export type InputProps = TextInputProps & {

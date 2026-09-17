@@ -24,6 +24,7 @@ import Animated, {
   cancelAnimation,
   runOnJS,
   useAnimatedKeyboard,
+  useAnimatedReaction,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -36,23 +37,44 @@ import { shadow } from "../theme/tokens";
 import { Icon } from "./Icon";
 import { SectionTitle } from "./Typography";
 import { useKeyboardHeight } from "./useKeyboard";
+import { KeyboardAwareContext, useKeyboardReveal } from "./useKeyboardReveal";
 
 // Native echo of apps/web/src/components/atoms/BottomSheet.tsx — the surface
 // the web app uses for the filter modal, date pickers, and anchored menus.
 // Same prop shape (`open` / `onClose` / `title` / `footer`) so those flows
 // port across. Built on RN's Modal so it needs no extra dependency.
 //
-// Keyboard handling: `adjustResize` does NOT apply to content inside a RN
-// <Modal>, and a `KeyboardAvoidingView behavior="padding"` on a flex-end
-// container pushes the WHOLE panel up by the keyboard height without
-// shrinking it — so a tall sheet (location picker, filters) ends up with
-// its header shoved off the top of the screen. Instead we track the
-// keyboard height ourselves and (a) lift the panel by exactly that height
-// so the footer clears the keyboard, and (b) cap the panel's max-height to
-// the space that's left above the keyboard so the title bar and close
-// button stay on-screen. The scroll view then scrolls the focused field
-// into that visible window. Every bottom sheet renders through here, so
-// this behaviour is uniform.
+// Keyboard handling: the PANEL NEVER MOVES.
+//
+// Neither Android's `windowSoftInputMode=adjustResize` nor iOS's
+// `automaticallyAdjustKeyboardInsets` reaches content inside a RN <Modal>
+// (it is a separate native window), so the sheet has to inset itself. The
+// previous version did that by lifting the whole panel — `marginBottom` =
+// keyboard height — and by re-deriving its max/min height from
+// `windowHeight - keyboardHeight`. Focusing the search field in the location
+// sheet therefore translated AND resized the panel in one go: it flew up the
+// screen and changed detent just because a keyboard appeared.
+//
+// Now the panel's frame is held still and only its INTERIOR reflows:
+//
+//   • max/min height come from the full window, never minus the keyboard,
+//     so the detent the sheet opened at is the detent it keeps.
+//   • the moment the keyboard starts coming up the panel's height is pinned
+//     to the height it had at rest, so the inset below cannot grow it.
+//   • an interior spacer at the very bottom of the panel — the last child,
+//     entirely behind the keyboard and therefore invisible — takes the
+//     keyboard's height. The scroll view (the only flexible child) shrinks
+//     by exactly that much and the footer rides just above the keys. The
+//     panel's top edge, height, corners, backdrop and drag are untouched.
+//   • the spacer is driven by `useAnimatedKeyboard`, i.e. the platform's own
+//     keyboard inset read on the UI thread, so the content settles frame by
+//     frame WITH the keyboard rather than jumping after it.
+//   • the focused field is then scrolled into the remaining window by the
+//     shared reveal engine (useKeyboardReveal.ts) — the same one the
+//     full-screen forms use, reached by <Input> through the context below.
+//
+// No keyboard height is ever measured, guessed or hard-coded here, and the
+// panel is never translated by one.
 //
 // Dismissal: tap the scrim, tap the X, hardware back — or drag the grab
 // handle down. The pan gesture is bound to the handle + title bar ONLY,
@@ -194,6 +216,7 @@ export function Sheet({
     if (mounted) return;
     panelHeight.value = 0;
     dragY.value = 0;
+    setRestingHeight(null);
   }, [mounted, panelHeight, dragY]);
 
   const panelStyle = useAnimatedStyle(() => {
@@ -232,50 +255,64 @@ export function Sheet({
       }
     });
 
-  // Guard: only ever apply a lift/clamp while the sheet is actually open, so
-  // a stale height from a previous session can't affect the next open.
+  // Guard: only ever react to the keyboard while the sheet is actually open,
+  // so a stale height from a previous session can't affect the next open.
   const kb = open ? kbHeight : 0;
 
-  // The lift itself is animated, so the sheet and the keyboard move as one
-  // instead of the panel snapping up once the keyboard has finished. Where
-  // the platform reports the keyboard frame by frame to this window the
-  // live value leads; the JS height (which on Android only arrives after the
-  // keyboard is fully open) eases in behind it so it never jumps either.
-  const liveKeyboard = useAnimatedKeyboard();
-  const settledKb = useSharedValue(0);
-  useEffect(() => {
-    settledKb.value = reduceMotion
-      ? kb
-      : withTiming(kb, {
-          duration: kb > 0 ? 220 : 180,
-          easing: kb > 0 ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
-        });
-  }, [kb, settledKb, reduceMotion]);
-  const liftStyle = useAnimatedStyle(() => {
-    const live = open ? liveKeyboard.height.value : 0;
-    return { marginBottom: Math.max(live, settledKb.value) };
+  // The keyboard's overlap with the bottom of the window, read from the
+  // platform on the UI thread. The translucent flags match the app's
+  // edge-to-edge window (android/gradle.properties edgeToEdgeEnabled=true)
+  // and this Modal's `statusBarTranslucent`: the panel is anchored to the
+  // PHYSICAL bottom edge, so the overlap has to be measured from there too —
+  // without them Android reports the IME height minus the navigation bar and
+  // the spacer comes up short.
+  const liveKeyboard = useAnimatedKeyboard({
+    isStatusBarTranslucentAndroid: true,
+    isNavigationBarTranslucentAndroid: true,
   });
 
-  // When the keyboard opens over the sheet, bring the focused field into
-  // view. In every sheet form the text inputs sit at/near the bottom of the
-  // content, and RN's ScrollView does NOT auto-scroll to a focused TextInput
-  // inside a <Modal> (no `adjustResize`), so the field would stay hidden
-  // behind the keyboard until you scrolled by hand.
-  const scrollRef = useRef<ScrollView>(null);
-  useEffect(() => {
-    if (kb <= 0) return;
-    const t = setTimeout(
-      () => scrollRef.current?.scrollToEnd({ animated: true }),
-      Platform.OS === "ios" ? 60 : 140,
-    );
-    return () => clearTimeout(t);
-  }, [kb]);
+  // Is the keyboard on its way up? Taken from the UI-thread value so it
+  // flips on the FIRST frame of the keyboard animation — Android's JS
+  // `keyboardDidShow` only lands once the keyboard has finished, which would
+  // let the panel grow for the whole animation before being pinned.
+  const [keyboardUp, setKeyboardUp] = useState(false);
+  useAnimatedReaction(
+    () => liveKeyboard.height.value > 0,
+    (up, prev) => {
+      if (up !== prev) runOnJS(setKeyboardUp)(up);
+    },
+  );
+  const kbOpen = open && (keyboardUp || kb > 0);
 
-  // Space available for the panel above the keyboard (and below the status
-  // bar). The panel is lifted by `kb` so its footer sits just above the
-  // keyboard; its max-height is clamped to what's left so the header never
-  // runs off the top.
-  const available = Math.max(220, height - kb - insets.top - 8);
+  // The panel's height at rest, i.e. as laid out with the keyboard down.
+  // While the keyboard is up the panel is pinned to it so the interior
+  // spacer shrinks the scroll view instead of growing the sheet.
+  const [restingHeight, setRestingHeight] = useState<number | null>(null);
+
+  // Height of the interior spacer: the keyboard's overlap, taken from
+  // whichever source currently has it. The UI-thread value leads the
+  // animation; the JS one is a floor for the case where a platform reports
+  // the inset late or not at all inside a Modal. Both describe the SAME
+  // quantity — this is not a second keyboard system, just the better of two
+  // readings of one.
+  const keyboardInsetStyle = useAnimatedStyle(() => {
+    if (!open) return { height: 0 };
+    return { height: Math.max(liveKeyboard.height.value, kb) };
+  });
+
+  // Scroll the focused field into whatever room is left above the keyboard,
+  // using the engine the full-screen forms share. <Input> reports its focus
+  // through the context provided around the scroll view below.
+  const scrollRef = useRef<ScrollView>(null);
+  const { context: revealContext, trackScroll } = useKeyboardReveal({
+    scrollRef,
+    keyboardHeight: kb,
+  });
+
+  // Space available for the panel: the whole window below the status bar.
+  // Deliberately NOT reduced by the keyboard — that is what used to change
+  // the sheet's detent the moment an input was focused.
+  const available = Math.max(220, height - insets.top - 8);
   const maxHeight = Math.min(height * maxHeightRatio, available);
   const minHeight =
     minHeightRatio != null
@@ -287,7 +324,18 @@ export function Sheet({
       visible={mounted}
       transparent
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={() => {
+        // Android hardware / gesture back. With the keyboard up, back means
+        // "put the keyboard away" — closing the sheet and losing a
+        // half-typed form is not what the gesture asked for. A second back
+        // then closes the sheet as usual. (Inside a Modal the dialog can
+        // consume the key before the IME does, so this is explicit.)
+        if (kbOpen) {
+          Keyboard.dismiss();
+          return;
+        }
+        onClose();
+      }}
       onDismiss={Platform.OS === "ios" ? onDismiss : undefined}
       statusBarTranslucent
     >
@@ -315,7 +363,14 @@ export function Sheet({
 
         <Animated.View
           onLayout={(e) => {
-            panelHeight.value = e.nativeEvent.layout.height;
+            const h = e.nativeEvent.layout.height;
+            panelHeight.value = h;
+            // Remember the resting height only while the keyboard is down —
+            // that is the height the panel must keep once it comes up. (If
+            // the sheet were ever laid out for the first time with the
+            // keyboard already showing there is no resting height to
+            // preserve, so it simply sizes itself as usual.)
+            if (!kbOpen && h > 0 && h !== restingHeight) setRestingHeight(h);
             if (pendingEnter.current) {
               pendingEnter.current = false;
               presence.value = withTiming(1, {
@@ -328,8 +383,10 @@ export function Sheet({
           style={[
             { maxHeight },
             minHeight != null ? { minHeight } : null,
+            // Pinned while the keyboard is up: the interior spacer below
+            // then shrinks the scroll view instead of stretching the sheet.
+            kbOpen && restingHeight != null ? { height: restingHeight } : null,
             shadow.sheet,
-            liftStyle,
             panelStyle,
           ]}
         >
@@ -369,28 +426,50 @@ export function Sheet({
             </View>
           </GestureDetector>
 
-          <ScrollView
-            ref={scrollRef}
-            style={minHeight != null ? { flexGrow: 1 } : undefined}
-            contentContainerStyle={{
-              padding: 16,
-              paddingBottom: 16 + (footer ? 0 : insets.bottom),
-            }}
-            keyboardShouldPersistTaps="handled"
-          >
-            {children}
-          </ScrollView>
+          <KeyboardAwareContext.Provider value={revealContext}>
+            <ScrollView
+              ref={scrollRef}
+              // `flexShrink` is what lets the keyboard spacer below take its
+              // room from the CONTENT: the scroll view is the panel's only
+              // flexible child, so it is the only thing that gives way.
+              style={[
+                { flexShrink: 1 },
+                minHeight != null ? { flexGrow: 1 } : null,
+              ]}
+              contentContainerStyle={{
+                padding: 16,
+                paddingBottom: 16 + (footer ? 0 : insets.bottom),
+              }}
+              keyboardShouldPersistTaps="handled"
+              // Dragging the content puts the keyboard away, the same
+              // gesture the full-screen forms use.
+              keyboardDismissMode={
+                Platform.OS === "ios" ? "interactive" : "on-drag"
+              }
+              onScroll={trackScroll}
+              scrollEventThrottle={32}
+            >
+              {children}
+            </ScrollView>
+          </KeyboardAwareContext.Provider>
 
           {footer ? (
             <View
               className="border-t border-border px-4 pt-4"
               style={{
-                paddingBottom: 16 + (kb > 0 ? 4 : insets.bottom),
+                // With the keyboard up the home-indicator / gesture strip is
+                // behind the keys, so the safe-area inset would only add a
+                // dead band between the footer and the keyboard.
+                paddingBottom: 16 + (kbOpen ? 4 : insets.bottom),
               }}
             >
               {footer}
             </View>
           ) : null}
+
+          {/* Keyboard inset. Last child, so it sits at the very bottom of
+              the panel — entirely behind the keyboard and never seen. */}
+          <Animated.View pointerEvents="none" style={keyboardInsetStyle} />
         </Animated.View>
       </GestureHandlerRootView>
     </Modal>
