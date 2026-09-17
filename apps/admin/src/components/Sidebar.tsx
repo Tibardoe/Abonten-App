@@ -182,6 +182,19 @@ export function Sidebar({
   const toggleRef = useRef<HTMLButtonElement>(null);
   const visible = ITEMS.filter((i) => permissions.includes(i.permission));
 
+  // Keep the current section in view when the list is scrolled (e.g. landing
+  // on Admin settings, at the bottom of the list, on a short screen).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pathname and open are the triggers
+  useEffect(() => {
+    for (const list of document.querySelectorAll<HTMLElement>(
+      "[data-console-nav-list]",
+    )) {
+      list
+        .querySelector<HTMLElement>('[aria-current="page"]')
+        ?.scrollIntoView({ block: "nearest" });
+    }
+  }, [pathname, open]);
+
   // Navigating closes the drawer; so does Escape.
   // biome-ignore lint/correctness/useExhaustiveDependencies: pathname change is the trigger
   useEffect(() => {
@@ -207,9 +220,9 @@ export function Sidebar({
     <nav
       id={id}
       aria-label="Console sections"
-      className="flex h-full w-56 shrink-0 flex-col gap-1 border-r border-border bg-card px-3 py-4"
+      className="flex h-full w-56 shrink-0 flex-col border-r border-border bg-card py-4"
     >
-      <div className="mb-3 flex items-center justify-between gap-2 px-2">
+      <div className="mb-3 flex shrink-0 items-center justify-between gap-2 px-5">
         <span className="flex items-center gap-2 font-semibold">
           <ClipboardList className="h-5 w-5 text-primary" aria-hidden="true" />
           Abonten Admin
@@ -226,27 +239,37 @@ export function Sidebar({
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      {visible.map((item) => {
-        const active =
-          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              active
-                ? "bg-primary/10 font-medium text-primary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            <Icon className="h-4 w-4" aria-hidden="true" />
-            {item.label}
-          </Link>
-        );
-      })}
+      {/* The section list outgrows short screens (22 sections today), and the
+          console layout is h-screen with overflow hidden, so the list scrolls
+          on its own under the fixed title. */}
+      <div
+        data-console-nav-list
+        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain px-3 pb-2"
+      >
+        {visible.map((item) => {
+          const active =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active
+                  ? "bg-primary/10 font-medium text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 
