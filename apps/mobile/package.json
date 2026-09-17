@@ -21,6 +21,7 @@
     "@abonten/ui-tokens": "*",
     "@abonten/validation": "*",
     "@expo/vector-icons": "^15.0.2",
+    "@gorhom/portal": "^1.0.14",
     "@react-native-community/netinfo": "12.0.1",
     "@sentry/react-native": "~7.11.0",
     "@supabase/supabase-js": "^2.112.4",
