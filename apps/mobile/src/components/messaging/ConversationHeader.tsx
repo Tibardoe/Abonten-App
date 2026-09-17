@@ -61,10 +61,15 @@ export function ConversationHeader({
       ? other?.profile?.full_name || other?.profile?.username || null
       : null;
   const title = otherName ?? subjectName;
+  // A direct conversation (opened by a Story reply) has no event or place;
+  // its stored title is only the organizer's name, which would repeat the
+  // title on one side and name yourself on the other.
   const about = otherName
-    ? contextLine
-      ? `${contextLine} · ${subjectName}`
-      : subjectName
+    ? context?.type === "direct"
+      ? ""
+      : contextLine
+        ? `${contextLine} · ${subjectName}`
+        : subjectName
     : contextLine;
   const closedNote = context?.status === "closed" ? " · Closed" : "";
 
@@ -135,7 +140,9 @@ export function ConversationHeader({
                     ? "storefront-outline"
                     : context?.type === "support"
                       ? "help-buoy-outline"
-                      : "calendar-outline"
+                      : context?.type === "direct"
+                        ? "person-outline"
+                        : "calendar-outline"
                 }
                 size={17}
                 tone="muted"

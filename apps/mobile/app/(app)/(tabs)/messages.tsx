@@ -186,34 +186,38 @@ export default function Messages() {
         onClear={() => setSearchInput("")}
       />
 
-      <InboxFilterChips
-        roleScope={roleScope}
-        onRoleScopeChange={setRoleScope}
-        customFilters={customFilters}
-        onRemoveCustomFilter={toggleCustomFilter}
-        onAddPress={() => setAddFilterOpen(true)}
-      />
-
-      {!searching ? (
-        <AppText variant="meta" className="px-4 pb-1">
-          {MODE_SUBTITLE[roleScope]}
-        </AppText>
-      ) : null}
-
       <FlatList
         className="flex-1"
         data={rows}
         keyExtractor={(c, i) => c?.conversation_id ?? `row-${i}`}
         renderItem={renderRow}
+        // Stories lead the inbox with room of their own, under the search
+        // field and above the filters, instead of squeezed in beneath the
+        // chips. They scroll away with the list, so they never cost the
+        // conversations permanent space; search and filtered views drop them.
         ListHeaderComponent={
-          searching || filtered ? null : (
-            <>
-              <StoriesRow />
+          <>
+            {searching || filtered ? null : <StoriesRow />}
+            <View className="pt-1">
+              <InboxFilterChips
+                roleScope={roleScope}
+                onRoleScopeChange={setRoleScope}
+                customFilters={customFilters}
+                onRemoveCustomFilter={toggleCustomFilter}
+                onAddPress={() => setAddFilterOpen(true)}
+              />
+            </View>
+            {!searching ? (
+              <AppText variant="meta" className="px-4 pb-1">
+                {MODE_SUBTITLE[roleScope]}
+              </AppText>
+            ) : null}
+            {searching || filtered ? null : (
               <ArchivedEntryRow
                 onPress={() => router.push("/(app)/messages/archived")}
               />
-            </>
-          )
+            )}
+          </>
         }
         contentContainerClassName="pb-16"
         onEndReached={onEndReached}
