@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ChatImageThumb } from "./ChatImageThumb";
+import { StoryReplyContext } from "./StoryReplyContext";
 
 function VoiceAttachment({
   attachment,
@@ -302,6 +303,12 @@ export function MessageBubble({
         ) : null}
 
         <div className="flex flex-col">
+          {!deleted ? (
+            <StoryReplyContext
+              systemData={message.system_data}
+              isMine={isMine}
+            />
+          ) : null}
           <div
             onContextMenu={
               actionable

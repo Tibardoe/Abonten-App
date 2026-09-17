@@ -1,6 +1,7 @@
 "use client";
 
 import { getStorySequence } from "@/actions/content/getStorySequence";
+import { sendStoryReply } from "@/actions/content/sendStoryReply";
 import { setStoryMute } from "@/actions/content/setStoryMute";
 import ModalShell from "@/components/atoms/ModalShell";
 import { cn } from "@/components/lib/utils";
@@ -15,15 +16,20 @@ import { IMAGE_DWELL_MS } from "@abonten/core/content/viewTracking";
 import type {
   ContentPostDocument,
   ContentPublisherKind,
+  ContentReactionEmoji,
 } from "@abonten/types/contentType";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  IoChatbubbleOutline,
+  IoArrowUp,
+  IoCheckmarkCircle,
   IoClose,
   IoEyeOutline,
+  IoHeart,
+  IoHeartOutline,
   IoPaperPlaneOutline,
   IoPause,
   IoPlay,
@@ -44,7 +50,6 @@ import { shareContent } from "../lib/share";
 import ContentCtaButton from "../molecules/ContentCtaButton";
 import ContentMoreMenu from "../molecules/ContentMoreMenu";
 import FollowButton from "../molecules/FollowButton";
-import ContentCommentsSheet from "./ContentCommentsSheet";
 
 export type StoryQueueEntry = {
   publisherKind: ContentPublisherKind;
@@ -254,7 +259,14 @@ function StorySlide({
   const [userPaused, setUserPaused] = useState(false);
   const [holding, setHolding] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [replying, setReplying] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [replySending, setReplySending] = useState(false);
+  const [sent, setSent] = useState<{
+    conversationId: string;
+    label: string;
+  } | null>(null);
+  const replyInput = useRef<HTMLInputElement | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -263,7 +275,7 @@ function StorySlide({
 
   const media = story.media[mediaIndex] ?? story.media[0];
   const isVideo = media?.type === "video";
-  const paused = userPaused || holding || menuOpen || commentsOpen || !loaded;
+  const paused = userPaused || holding || menuOpen || replying || !loaded;
   const isAuthor = story.viewer.isAuthor;
 
   const play = usePlaySession({
@@ -311,7 +323,8 @@ function StorySlide({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (commentsOpen || menuOpen) return;
+      // Typing a reply must not page or pause the Story.
+      if (replying || menuOpen) return;
       if (e.key === "ArrowRight") onNext();
       else if (e.key === "ArrowLeft") onPrev();
       else if (e.key === " ") {
@@ -321,7 +334,13 @@ function StorySlide({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [commentsOpen, menuOpen, muted, onNext, onPrev, setMuted]);
+  }, [replying, menuOpen, muted, onNext, onPrev, setMuted]);
+
+  useEffect(() => {
+    if (!sent) return;
+    const t = setTimeout(() => setSent(null), 3200);
+    return () => clearTimeout(t);
+  }, [sent]);
 
   const startHold = () => {
     didHold.current = false;
@@ -360,8 +379,65 @@ function StorySlide({
     engagement.recordShare(channel);
   };
 
-  const canReact = !isAuthor && !!user && program.storiesReactions;
-  const canComment = program.storiesComments && story.allowComments;
+  // Replies and reactions are private messages to the publisher, sent
+  // without leaving the Story (sendStoryReply → Messages).
+  const repliesPossible =
+    !isAuthor && story.publisher.kind !== "abonten" && program.stories;
+  const canReact = repliesPossible && !!user && program.storiesReactions;
+  const canReply =
+    repliesPossible && program.storiesComments && story.allowComments;
+
+  const replyAttempt = useRef<{ text: string; id: string } | null>(null);
+  const sendReplyText = async () => {
+    const text = draft.trim();
+    if (!text || replySending) return;
+    if (replyAttempt.current?.text !== text) {
+      replyAttempt.current = { text, id: crypto.randomUUID() };
+    }
+    setReplySending(true);
+    try {
+      const res = await sendStoryReply({
+        postId: story.id,
+        kind: "text",
+        content: text,
+        clientGeneratedId: replyAttempt.current.id,
+      });
+      const data = dataOf(res);
+      if (!data) {
+        toast.error(messageOf(res, "Couldn't send your reply."));
+        return;
+      }
+      replyAttempt.current = null;
+      setDraft("");
+      replyInput.current?.blur();
+      setSent({ conversationId: data.conversationId, label: "Reply sent" });
+    } catch {
+      toast.error("No connection. Your reply wasn't sent.");
+    } finally {
+      setReplySending(false);
+    }
+  };
+
+  const sendReaction = async (emoji: ContentReactionEmoji) => {
+    if (engagement.reaction === emoji) {
+      // The same emoji again takes the reaction back; nothing is messaged.
+      engagement.react(emoji);
+      return;
+    }
+    const res = await sendStoryReply({
+      postId: story.id,
+      kind: "reaction",
+      content: emoji,
+      clientGeneratedId: crypto.randomUUID(),
+    });
+    const data = dataOf(res);
+    if (!data) {
+      toast.error(messageOf(res, "Couldn't send your reaction."));
+      return;
+    }
+    engagement.setReaction(emoji);
+    setSent({ conversationId: data.conversationId, label: "Reaction sent" });
+  };
 
   return (
     <div className="relative h-full w-full select-none">
@@ -540,45 +616,126 @@ function StorySlide({
           </p>
         ) : null}
         <ContentCtaButton post={story} />
+        {sent ? (
+          <div
+            aria-live="polite"
+            className="mx-auto flex w-fit items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-black shadow"
+          >
+            <IoCheckmarkCircle className="text-primary" aria-hidden />
+            {sent.label}
+            <Link
+              href={`/messages/${sent.conversationId}`}
+              onClick={onClose}
+              className="font-bold text-primary hover:underline"
+            >
+              View chat
+            </Link>
+          </div>
+        ) : null}
+        {replying && canReact ? (
+          <div className="flex justify-between px-1">
+            {CONTENT_REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                // Keep the reply field focused while picking a reaction.
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => sendReaction(emoji)}
+                aria-label={`React ${emoji}`}
+                aria-pressed={engagement.reaction === emoji}
+                className={cn(
+                  "flex h-11 w-11 items-center justify-center rounded-full text-2xl transition-transform hover:scale-110",
+                  engagement.reaction === emoji && "bg-white/25",
+                )}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div className="flex items-center gap-2">
           {isAuthor ? (
-            <span className="flex items-center gap-1 text-sm text-white">
+            <span className="flex flex-1 items-center gap-1 text-sm text-white">
               <IoEyeOutline aria-hidden />
               {engagement.counts.views.toLocaleString()} viewed
             </span>
-          ) : null}
-          {canReact ? (
-            <div className="flex flex-1 items-center gap-1">
-              {CONTENT_REACTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => engagement.react(emoji)}
-                  aria-label={`React ${emoji}`}
-                  aria-pressed={engagement.reaction === emoji}
+          ) : repliesPossible ? (
+            canReply ? (
+              <form
+                className="flex flex-1 items-center gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void sendReplyText();
+                }}
+              >
+                <input
+                  ref={replyInput}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onFocus={() => {
+                    if (!user) {
+                      replyInput.current?.blur();
+                      toast.error("Sign in to reply to Stories.");
+                      return;
+                    }
+                    setReplying(true);
+                  }}
+                  onBlur={() => setReplying(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") replyInput.current?.blur();
+                  }}
+                  maxLength={1000}
+                  placeholder={`Reply to ${publisherLabel(story.publisher)}…`}
+                  aria-label={`Reply privately to ${publisherLabel(story.publisher)}`}
                   className={cn(
-                    "rounded-full px-1.5 py-1 text-xl transition-transform hover:scale-110",
-                    engagement.reaction === emoji && "bg-white/25",
+                    "h-11 min-w-0 flex-1 rounded-full border bg-black/30 px-4 text-sm text-white outline-none placeholder:text-white/75",
+                    replying ? "border-white" : "border-white/60",
                   )}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
+                />
+                {draft.trim() ? (
+                  <button
+                    type="submit"
+                    disabled={replySending}
+                    // Submit without the blur swallowing the click.
+                    onMouseDown={(e) => e.preventDefault()}
+                    aria-label="Send reply"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-black disabled:opacity-60"
+                  >
+                    {replySending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <IoArrowUp className="text-lg" />
+                    )}
+                  </button>
+                ) : canReact ? (
+                  <button
+                    type="button"
+                    onClick={() => sendReaction("❤️")}
+                    aria-label={
+                      engagement.reaction === "❤️"
+                        ? "Remove your heart"
+                        : "Send a heart"
+                    }
+                    aria-pressed={engagement.reaction === "❤️"}
+                    className="rounded-full p-2 text-white hover:bg-white/10"
+                  >
+                    {engagement.reaction === "❤️" ? (
+                      <IoHeart className="text-2xl text-rose-500" />
+                    ) : (
+                      <IoHeartOutline className="text-2xl" />
+                    )}
+                  </button>
+                ) : null}
+              </form>
+            ) : (
+              <span className="flex h-11 flex-1 items-center rounded-full border border-white/30 px-4 text-sm text-white/70">
+                Replies are off for this Story
+              </span>
+            )
           ) : (
             <div className="flex-1" />
           )}
-          {canComment ? (
-            <button
-              type="button"
-              onClick={() => setCommentsOpen(true)}
-              aria-label="Comments"
-              className="rounded-full p-2 text-white hover:bg-white/10"
-            >
-              <IoChatbubbleOutline className="text-xl" />
-            </button>
-          ) : null}
-          {program.storiesSharing ? (
+          {program.storiesSharing && !replying ? (
             <button
               type="button"
               onClick={share}
@@ -590,15 +747,6 @@ function StorySlide({
           ) : null}
         </div>
       </div>
-
-      {commentsOpen ? (
-        <ContentCommentsSheet
-          postId={story.id}
-          open
-          onOpenChange={setCommentsOpen}
-          commentsAllowed={canComment}
-        />
-      ) : null}
     </div>
   );
 }
